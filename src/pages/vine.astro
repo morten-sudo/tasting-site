@@ -34,6 +34,7 @@ import Base from '../layouts/Base.astro';
     id: number; sort_order: number; name: string; producer: string | null;
     style: string | null; vintage: string | null; abv: number | null;
     price_dkk: number | null; description: string | null; orderable: boolean;
+    image_url: string | null; source_url: string | null;
   };
 
   const STYLE_LABELS: Record<string, string> = {
@@ -131,19 +132,43 @@ import Base from '../layouts/Base.astro';
       const ul = el('ul', 'wines');
       for (const w of items) {
         const li = el('li', 'wine');
+
+        const pic = el('div', 'pic');
+        if (w.image_url) {
+          const img = el('img');
+          img.src = w.image_url;
+          img.alt = '';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.referrerPolicy = 'no-referrer';
+          img.addEventListener('error', () => pic.classList.add('empty'));
+          pic.append(img);
+        } else {
+          pic.classList.add('empty');
+        }
+        li.append(pic);
+
         const info = el('div', 'info');
         info.append(el('h3', 'name', w.name));
         const meta = [w.producer, w.abv ? `${w.abv.toString().replace('.', ',')} %` : null]
           .filter(Boolean).join(', ');
         if (meta) info.append(el('p', 'meta', meta));
         if (w.description) info.append(el('p', 'desc', w.description));
-        li.append(info);
+        if (w.source_url) {
+          const a = el('a', 'more', 'Læs mere hos ViniPortugal');
+          a.href = w.source_url;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          info.append(a);
+        }
 
-        const side = el('div', 'side');
-        if (w.price_dkk != null) side.append(el('p', 'price', kr.format(w.price_dkk)));
-        if (ordering && w.orderable) side.append(stepper(w));
-        if (paid.has(w.id)) side.append(el('p', 'paid', 'Betalt'));
-        li.append(side);
+        const buy = el('div', 'buy');
+        if (w.price_dkk != null) buy.append(el('p', 'price', kr.format(w.price_dkk)));
+        if (ordering && w.orderable) buy.append(stepper(w));
+        if (paid.has(w.id)) buy.append(el('p', 'paid', 'Betalt'));
+        info.append(buy);
+
+        li.append(info);
         ul.append(li);
       }
       section.append(ul);
@@ -209,12 +234,28 @@ import Base from '../layouts/Base.astro';
   }
   #wine-list .wines { list-style: none; margin: 0; padding: 0; }
   #wine-list .wine {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
     gap: 1rem;
-    padding: 1rem 0;
+    padding: 1.25rem 0;
     border-bottom: 1px solid var(--lodge-2);
   }
+  #wine-list .pic {
+    width: 4.5rem;
+    height: 9rem;
+    border-radius: 0.5rem;
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #wine-list .pic img { width: 100%; height: 100%; object-fit: contain; }
+  #wine-list .pic.empty {
+    background: linear-gradient(180deg, var(--ruby), var(--tawny));
+    opacity: 0.35;
+  }
+  #wine-list .pic.empty img { display: none; }
   #wine-list .info { min-width: 0; }
   #wine-list .name {
     font-family: var(--body);
@@ -224,15 +265,17 @@ import Base from '../layouts/Base.astro';
     margin: 0 0 0.2rem;
   }
   #wine-list .meta, #wine-list .desc { margin: 0; color: var(--muted); font-size: 0.92rem; }
-  #wine-list .desc { margin-top: 0.35rem; color: var(--paper); }
-  #wine-list .side {
+  #wine-list .desc { margin-top: 0.4rem; color: var(--paper); line-height: 1.5; }
+  #wine-list .more { display: inline-block; margin-top: 0.35rem; font-size: 0.88rem; }
+  #wine-list .buy {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.5rem;
-    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
   }
-  #wine-list .price { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #wine-list .price { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #wine-list .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
 
   #wine-list .stepper {

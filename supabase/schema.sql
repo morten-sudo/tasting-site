@@ -43,6 +43,8 @@ create table if not exists wines (
   description  text,
   orderable    boolean not null default true,
   revealed     boolean not null default true,   -- false = skjult indtil skænket
+  image_url    text,                            -- produktbillede (viniportugal.dk)
+  source_url   text,                            -- produktside hos ViniPortugal
   created_at   timestamptz not null default now()
 );
 
