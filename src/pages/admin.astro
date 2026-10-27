@@ -58,13 +58,31 @@ import Base from '../layouts/Base.astro';
         <p class="hint">Pointtavle til tv'et: <a href="/pointtavle/" target="_blank">/pointtavle/</a></p>
       </section>
 
+      <!-- Betaling for smagningen -->
+      <section class="block">
+        <h2>Betaling for smagningen</h2>
+        <div class="fee-grid">
+          <label for="fee-total">Samlet udgift (kr.)</label>
+          <input id="fee-total" type="number" min="0" step="1" inputmode="decimal" />
+          <p id="fee-suggest" class="hint"></p>
+          <label for="fee-amount">Pris pr. person (kr.)</label>
+          <div class="inline-form">
+            <input id="fee-amount" type="number" min="0" step="1" inputmode="decimal" />
+            <button id="fee-save" class="btn small" type="button">Gem</button>
+          </div>
+          <p id="fee-msg" class="hint" aria-live="polite"></p>
+        </div>
+        <label class="toggle"><input type="checkbox" data-key="tasting_fee_open" /> <span>Vis betaling for gæster, der kommer</span></label>
+        <p id="fee-summary" class="hint fee-summary"></p>
+      </section>
+
       <!-- Deltagere -->
       <section class="block">
         <h2>Deltagere</h2>
         <p id="p-summary" class="hint"></p>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Navn</th><th>Status</th><th>Besked</th><th>Link</th></tr></thead>
+            <thead><tr><th>Navn</th><th>Status</th><th>Smagning betalt</th><th>Besked</th><th>Link</th></tr></thead>
             <tbody id="participants"></tbody>
           </table>
         </div>
@@ -106,7 +124,7 @@ import Base from '../layouts/Base.astro';
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const STATUS: Record<string, string> = { yes: 'Kommer', no: 'Meldt fra', invited: 'Ikke svaret' };
 
-  type P = { id: string; name: string; status: string; diet: string | null; note: string | null; invite_code: string };
+  type P = { id: string; name: string; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean };
   type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
   type OLine = { wine_id: number; quantity: number; unit_price: number };
   type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
@@ -194,9 +212,14 @@ import Base from '../layouts/Base.astro';
   $('logout2').addEventListener('click', logout);
 
   // ---------- Styring ----------
+  let feeTotal = 0;
+  let feeAmount = 0;
+
   async function loadSettings() {
     const { data } = await supabase.from('settings').select('key, value');
     for (const r of data ?? []) {
+      if (r.key === 'tasting_total') { feeTotal = Number(r.value) || 0; ($('fee-total') as HTMLInputElement).value = feeTotal ? String(feeTotal) : ''; }
+      if (r.key === 'tasting_fee') { feeAmount = Number(r.value) || 0; ($('fee-amount') as HTMLInputElement).value = feeAmount ? String(feeAmount) : ''; }
       const box = document.querySelector<HTMLInputElement>(`input[data-key="${r.key}"]`);
       if (box) box.checked = r.value === true;
     }
@@ -207,6 +230,40 @@ import Base from '../layouts/Base.astro';
         .update({ value: box.checked }).eq('key', box.dataset.key!);
       if (error) { box.checked = !box.checked; alert('Ændringen blev ikke gemt.'); }
     });
+  });
+
+  // ---------- Betaling for smagningen ----------
+  function renderFee() {
+    const coming = participants.filter((p) => p.status === 'yes');
+    const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
+    $('fee-suggest').textContent = total && coming.length
+      ? `${coming.length} kommer, så det giver ${kr.format(Math.ceil(total / coming.length))} pr. person (rundet op).`
+      : `${coming.length} kommer.`;
+    const paid = coming.filter((p) => p.tasting_paid);
+    $('fee-summary').textContent = feeAmount
+      ? `${paid.length} af ${coming.length} har betalt (${kr.format(paid.length * feeAmount)} af ${kr.format(coming.length * feeAmount)}).`
+      : 'Ingen pris sat endnu.';
+  }
+
+  $('fee-total').addEventListener('input', renderFee);
+
+  $('fee-save').addEventListener('click', async () => {
+    const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
+    let amount = Number(($('fee-amount') as HTMLInputElement).value) || 0;
+    const coming = participants.filter((p) => p.status === 'yes').length;
+    if (!amount && total && coming) {
+      amount = Math.ceil(total / coming);
+      ($('fee-amount') as HTMLInputElement).value = String(amount);
+    }
+    const [a, b] = await Promise.all([
+      supabase.from('settings').update({ value: total }).eq('key', 'tasting_total'),
+      supabase.from('settings').update({ value: amount }).eq('key', 'tasting_fee'),
+    ]);
+    if (a.error || b.error) { $('fee-msg').textContent = 'Kunne ikke gemme. Prøv igen.'; return; }
+    feeTotal = total;
+    feeAmount = amount;
+    $('fee-msg').textContent = `Gemt: ${kr.format(amount)} pr. person.`;
+    renderFee();
   });
 
   // ---------- Deltagere ----------
@@ -231,10 +288,30 @@ import Base from '../layouts/Base.astro';
         const { error } = await supabase.from('participants').update({ status: sel.value }).eq('id', p.id);
         if (error) { sel.value = p.status; alert('Status blev ikke gemt.'); return; }
         p.status = sel.value;
-        renderSummary();
+        renderParticipants();
       });
       st.append(sel);
       tr.append(st);
+
+      const feeTd = document.createElement('td');
+      if (p.status === 'yes') {
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.className = 'fee-cb';
+        cb.checked = p.tasting_paid;
+        cb.setAttribute('aria-label', `${p.name} har betalt for smagningen`);
+        cb.addEventListener('change', async () => {
+          const { error } = await supabase.from('participants').update({ tasting_paid: cb.checked }).eq('id', p.id);
+          if (error) { cb.checked = !cb.checked; alert('Betaling blev ikke gemt.'); return; }
+          p.tasting_paid = cb.checked;
+          renderFee();
+        });
+        feeTd.append(cb);
+      } else {
+        feeTd.textContent = '–';
+        feeTd.className = 'small';
+      }
+      tr.append(feeTd);
 
       tr.append(cell(p.note || '–', 'small'));
 
@@ -259,6 +336,7 @@ import Base from '../layouts/Base.astro';
   function renderSummary() {
     const c = (s: string) => participants.filter((p) => p.status === s).length;
     $('p-summary').textContent = `${c('yes')} kommer, ${c('invited')} har ikke svaret, ${c('no')} har meldt fra.`;
+    renderFee();
   }
 
   $('add-p').addEventListener('submit', async (e) => {
@@ -386,7 +464,7 @@ import Base from '../layouts/Base.astro';
   // ---------- Opstart ----------
   async function loadAll() {
     const [p, w, o] = await Promise.all([
-      supabase.from('participants').select('id, name, status, diet, note, invite_code'),
+      supabase.from('participants').select('id, name, status, diet, note, invite_code, tasting_paid'),
       supabase.from('wines').select('id, name, price_dkk, sort_order'),
       supabase.from('orders').select(ORDER_SELECT),
     ]);
@@ -396,6 +474,7 @@ import Base from '../layouts/Base.astro';
     renderParticipants();
     renderOrders();
     await loadSettings();
+    renderFee();
     const rows = await fetchLeaderboard();
     if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, 13);
   }
@@ -499,6 +578,20 @@ import Base from '../layouts/Base.astro';
   }
 
   .admin-page .inline-form { display: flex; gap: 0.5rem; }
+  .admin-page .fee-grid { display: grid; gap: 0.35rem; max-width: 26rem; margin-bottom: 1rem; }
+  .admin-page .fee-grid label { margin: 0.4rem 0 0; }
+  .admin-page .fee-grid .hint { margin: 0; font-size: 0.9rem; }
+  .admin-page input[type='number'] {
+    width: 100%;
+    font: inherit;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.8rem;
+  }
+  .admin-page .fee-summary { margin-top: 0.6rem; }
+  .admin-page .fee-cb { width: 1.15rem; height: 1.15rem; accent-color: var(--amber); }
   .admin-page .inline-form input { flex: 1; }
   .admin-page .btn.small { padding: 0.6rem 0.9rem; min-height: 0; font-size: 0.95rem; }
   .admin-page .btn.ghost { background: none; color: var(--amber); border: 1px solid var(--amber); }

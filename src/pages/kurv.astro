@@ -46,7 +46,7 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase, getGuestCode } from '../lib/supabase';
   import { getCart, setQty, clearCart, MAX_PER_WINE } from '../lib/cart';
-  import { EVENT } from '../lib/config';
+  import { payBox } from '../lib/pay';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number };
   type Line = {
@@ -57,8 +57,6 @@ import Base from '../layouts/Base.astro';
   const $ = (id: string) => document.getElementById(id)!;
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const date = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
-  const mobilepay = EVENT.mobilepay.replace(/\s/g, '');
-  const mpPretty = mobilepay.replace(/(\d{2})(?=\d)/g, '$1 ');
 
   const code = getGuestCode();
   let wines = new Map<number, Wine>();
@@ -69,47 +67,6 @@ import Base from '../layouts/Base.astro';
     if (cls) e.className = cls;
     if (text != null) e.textContent = text;
     return e;
-  }
-
-  // Betalingsboks: knap til MobilePay-appen + nummer, beløb og besked med kopier-knapper
-  function payBox(amount: number, orderId: number) {
-    const box = el('div', 'pay');
-    const amountStr = amount.toFixed(2);
-    const comment = `Portvin bestilling ${orderId}`;
-
-    if (!mobilepay) {
-      box.append(el('p', '', `Beløbet på ${kr.format(amount)} betales med MobilePay. Værten fortæller dig hvordan.`));
-      return box;
-    }
-
-    box.append(el('p', 'pay-lead', `Betal ${kr.format(amount)} med MobilePay`));
-
-    const link = el('a', 'btn pay-btn', 'Åbn MobilePay');
-    link.href = `mobilepay://send?phone=${mobilepay}&amount=${amountStr}&comment=${encodeURIComponent(comment)}`;
-    box.append(link);
-
-    const dl = el('dl', 'pay-facts');
-    const row = (label: string, shown: string, copy: string) => {
-      const dt = el('dt', '', label);
-      const dd = el('dd');
-      dd.append(el('span', '', shown));
-      const b = el('button', 'copy', 'Kopiér');
-      b.type = 'button';
-      b.setAttribute('aria-label', `Kopiér ${label.toLowerCase()}`);
-      b.addEventListener('click', async () => {
-        try { await navigator.clipboard.writeText(copy); b.textContent = 'Kopieret'; }
-        catch { b.textContent = copy; }
-        setTimeout(() => (b.textContent = 'Kopiér'), 1500);
-      });
-      dd.append(b);
-      dl.append(dt, dd);
-    };
-    row('Nummer', mpPretty, mobilepay);
-    row('Beløb', kr.format(amount), amountStr.replace('.', ','));
-    row('Besked', comment, comment);
-    box.append(dl);
-    box.append(el('p', 'hint', 'Virker knappen ikke, så åbn MobilePay selv og brug oplysningerne ovenfor.'));
-    return box;
   }
 
   function renderCart() {
@@ -188,7 +145,7 @@ import Base from '../layouts/Base.astro';
       if (!ls[0].paid) {
         const more = el('details', 'pay-more');
         more.append(el('summary', '', 'Sådan betaler du'));
-        more.append(payBox(total, id));
+        more.append(payBox(total, `Portvin bestilling ${id}`));
         card.append(more);
       }
       box.append(card);
@@ -224,7 +181,7 @@ import Base from '../layouts/Base.astro';
     const total = items.reduce((s, i) => s + i.qty * (wines.get(i.wine_id)?.price_dkk ?? 0), 0);
     clearCart();
     $('confirm-title').textContent = `Tak! Din bestilling nr. ${data} er modtaget.`;
-    $('confirm-pay').replaceChildren(payBox(total, Number(data)));
+    $('confirm-pay').replaceChildren(payBox(total, `Portvin bestilling ${data}`));
     $('confirm').hidden = false;
     renderCart();
     await renderHistory();
@@ -331,37 +288,6 @@ import Base from '../layouts/Base.astro';
   .cart-page .order ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.95rem; }
   .cart-page .order-foot { border-top: 1px solid var(--lodge-3); padding-top: 0.5rem; }
 
-  .cart-page .pay { margin-top: 0.75rem; }
-  .cart-page .pay-lead { font-weight: 600; margin-bottom: 0.6rem; }
-  .cart-page .pay-btn { display: block; text-align: center; margin-bottom: 0.9rem; }
-  .cart-page .pay-facts {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.4rem 1rem;
-    margin: 0 0 0.6rem;
-    align-items: center;
-  }
-  .cart-page .pay-facts dt { color: var(--muted); font-size: 0.9rem; }
-  .cart-page .pay-facts dd {
-    margin: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .cart-page .copy {
-    font: inherit;
-    font-size: 0.85rem;
-    color: var(--amber);
-    background: none;
-    border: 1px solid var(--lodge-3);
-    border-radius: 999px;
-    padding: 0.3rem 0.7rem;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .cart-page .pay .hint { font-size: 0.85rem; margin: 0; }
   .cart-page .pay-more { margin-top: 0.6rem; }
   .cart-page .pay-more summary { cursor: pointer; color: var(--amber); font-size: 0.95rem; padding: 0.3rem 0; }
 </style>

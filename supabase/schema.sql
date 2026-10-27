@@ -27,6 +27,7 @@ create table if not exists participants (
   diet          text,
   note          text,
   responded_at  timestamptz,
+  tasting_paid  boolean not null default false,   -- betalt for selve smagningen
   created_at    timestamptz not null default now()
 );
 
@@ -94,7 +95,10 @@ insert into settings (key, value) values
   ('signup_open',   'true'),
   ('orders_open',   'false'),
   ('quiz_open',     'false'),
-  ('quiz_finished', 'false')
+  ('quiz_finished', 'false'),
+  ('tasting_fee_open', 'false'),   -- vis betaling for smagningen
+  ('tasting_fee',      '0'),       -- pris pr. person
+  ('tasting_total',    '0')        -- samlet udgift (kun til udregning i admin)
 on conflict (key) do nothing;
 
 -- ---------------------------------------------------------------------
@@ -238,6 +242,17 @@ language sql stable security definer set search_path = public as $$
   order by o.created_at, w.sort_order;
 $$;
 
+-- Gæstens betaling for smagningen (kun når værten har slået den til, og kun for dem der kommer)
+create or replace function get_tasting_payment(code text)
+returns table (amount numeric, paid boolean)
+language sql stable security definer set search_path = public as $$
+  select (select (value)::text::numeric from settings where key = 'tasting_fee'), p.tasting_paid
+  from participants p
+  where p.invite_code = code
+    and p.status = 'yes'
+    and setting('tasting_fee_open');
+$$;
+
 -- Quizspørgsmål uden facit (facit + forklaring først når quizzen er afsluttet)
 create or replace function get_quiz()
 returns table (id int, sort_order int, question text, options jsonb,
@@ -310,6 +325,7 @@ grant execute on function place_order(text, jsonb)                  to anon, aut
 grant execute on function get_quiz()                                to anon, authenticated;
 grant execute on function get_my_answers(text)                      to anon, authenticated;
 grant execute on function submit_answer(text, int, text)            to anon, authenticated;
+grant execute on function get_tasting_payment(text)                 to anon, authenticated;
 grant execute on function get_leaderboard()                         to anon, authenticated;
 
 -- Live-opdatering af pointtavle og indstillinger

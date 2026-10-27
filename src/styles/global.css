@@ -148,3 +148,36 @@ textarea { min-height: 5rem; resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* MobilePay-betalingsboks (kurv og invitation) */
+  .pay { margin-top: 0.75rem; }
+  .pay-lead { font-weight: 600; margin-bottom: 0.6rem; }
+  .pay-btn { display: block; text-align: center; margin-bottom: 0.9rem; }
+  .pay-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.4rem 1rem;
+    margin: 0 0 0.6rem;
+    align-items: center;
+  }
+  .pay-facts dt { color: var(--muted); font-size: 0.9rem; }
+  .pay-facts dd {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .copy {
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--amber);
+    background: none;
+    border: 1px solid var(--lodge-3);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .pay .hint { font-size: 0.85rem; margin: 0; }
