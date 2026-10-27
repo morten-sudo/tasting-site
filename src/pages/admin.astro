@@ -77,20 +77,35 @@ import Base from '../layouts/Base.astro';
       </section>
 
       <!-- Deltagere -->
-      <section class="block">
-        <h2>Deltagere</h2>
-        <p id="p-summary" class="hint"></p>
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr><th>Navn og e-mail</th><th>Status</th><th>Smagning betalt</th><th>Besked</th><th>Link</th></tr></thead>
-            <tbody id="participants"></tbody>
-          </table>
+      <section class="block guests">
+        <div class="guests-head">
+          <h2>Deltagere</h2>
+          <button id="add-toggle" class="btn small ghost" type="button">Tilføj gæst</button>
         </div>
-        <form id="add-p" class="inline-form">
-          <label for="new-name" class="sr">Navn på ny gæst</label>
-          <input id="new-name" type="text" placeholder="Navn på ny gæst" required />
-          <button class="btn small" type="submit">Tilføj gæst</button>
+
+        <form id="add-p" class="add-form" hidden>
+          <label for="new-name">Navn</label>
+          <input id="new-name" type="text" autocomplete="off" required />
+          <label for="new-email">E-mail <span class="hint">(valgfri)</span></label>
+          <input id="new-email" type="email" autocomplete="off" />
+          <div class="row-actions">
+            <button class="btn small" type="submit">Tilføj</button>
+            <button id="add-cancel" class="text-btn" type="button">Annullér</button>
+          </div>
         </form>
+
+        <div class="filters" role="tablist" aria-label="Vis deltagere">
+          <button type="button" role="tab" data-filter="all" aria-selected="true">Alle <span></span></button>
+          <button type="button" role="tab" data-filter="yes">Kommer <span></span></button>
+          <button type="button" role="tab" data-filter="invited">Ikke svaret <span></span></button>
+          <button type="button" role="tab" data-filter="no">Meldt fra <span></span></button>
+          <button type="button" role="tab" data-filter="noemail">Mangler e-mail <span></span></button>
+        </div>
+        <label for="guest-search" class="sr">Søg efter gæst</label>
+        <input id="guest-search" class="search" type="search" placeholder="Søg efter navn" autocomplete="off" />
+
+        <ul id="guest-list" class="guest-list"></ul>
+        <p id="guest-empty" class="hint" hidden>Ingen gæster matcher.</p>
       </section>
 
       <!-- Bestillinger -->
@@ -263,113 +278,187 @@ import Base from '../layouts/Base.astro';
     feeTotal = total;
     feeAmount = amount;
     $('fee-msg').textContent = `Gemt: ${kr.format(amount)} pr. person.`;
-    renderFee();
+    renderParticipants();
   });
 
   // ---------- Deltagere ----------
-  function renderParticipants() {
-    const tbody = $('participants');
-    tbody.replaceChildren();
-    const order = { yes: 0, invited: 1, no: 2 } as Record<string, number>;
-    const sorted = [...participants].sort((a, b) =>
-      (order[a.status] - order[b.status]) || a.name.localeCompare(b.name, 'da'));
-    for (const p of sorted) {
-      const tr = document.createElement('tr');
-      const nameTd = document.createElement('td');
-      const nm = document.createElement('div');
-      nm.textContent = p.name;
-      const em = document.createElement('input');
-      em.type = 'email';
-      em.className = 'email-input';
-      em.placeholder = 'e-mail';
-      em.value = p.email ?? '';
-      em.setAttribute('aria-label', `E-mail for ${p.name}`);
-      em.addEventListener('change', async () => {
-        const v = em.value.trim().toLowerCase() || null;
-        const { error } = await supabase.from('participants').update({ email: v }).eq('id', p.id);
-        if (error) {
-          em.value = p.email ?? '';
-          alert(error.code === '23505' ? 'Den e-mail bruges allerede af en anden gæst.' : 'E-mailen blev ikke gemt.');
-          return;
-        }
-        p.email = v;
-        em.classList.add('saved');
-        setTimeout(() => em.classList.remove('saved'), 1200);
-      });
-      nameTd.append(nm, em);
-      tr.append(nameTd);
+  const STATUS_ORDER: Record<string, number> = { yes: 0, invited: 1, no: 2 };
+  let guestFilter = 'all';
+  let guestQuery = '';
+  let editingId: string | null = null;
 
-      const st = document.createElement('td');
-      const sel = document.createElement('select');
-      for (const [v, label] of Object.entries(STATUS)) {
-        const o = document.createElement('option');
-        o.value = v; o.textContent = label; o.selected = p.status === v;
-        sel.append(o);
-      }
-      sel.addEventListener('change', async () => {
-        const { error } = await supabase.from('participants').update({ status: sel.value }).eq('id', p.id);
-        if (error) { sel.value = p.status; alert('Status blev ikke gemt.'); return; }
-        p.status = sel.value;
-        renderParticipants();
-      });
-      st.append(sel);
-      tr.append(st);
+  function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
 
-      const feeTd = document.createElement('td');
-      if (p.status === 'yes') {
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.className = 'fee-cb';
-        cb.checked = p.tasting_paid;
-        cb.setAttribute('aria-label', `${p.name} har betalt for smagningen`);
-        cb.addEventListener('change', async () => {
-          const { error } = await supabase.from('participants').update({ tasting_paid: cb.checked }).eq('id', p.id);
-          if (error) { cb.checked = !cb.checked; alert('Betaling blev ikke gemt.'); return; }
-          p.tasting_paid = cb.checked;
-          renderFee();
-        });
-        feeTd.append(cb);
-      } else {
-        feeTd.textContent = '–';
-        feeTd.className = 'small';
-      }
-      tr.append(feeTd);
+  function matches(p: P) {
+    if (guestQuery && !p.name.toLowerCase().includes(guestQuery)) return false;
+    if (guestFilter === 'all') return true;
+    if (guestFilter === 'noemail') return !p.email;
+    return p.status === guestFilter;
+  }
 
-      tr.append(cell(p.note || '–', 'small'));
-
-      const linkTd = document.createElement('td');
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'link-btn';
-      btn.textContent = 'Kopiér link';
-      btn.addEventListener('click', async () => {
-        const url = `${location.origin}/profil/?k=${p.invite_code}`;
-        try { await navigator.clipboard.writeText(url); btn.textContent = 'Kopieret'; }
-        catch { prompt('Kopiér linket:', url); }
-        setTimeout(() => (btn.textContent = 'Kopiér link'), 1500);
-      });
-      linkTd.append(btn);
-      tr.append(linkTd);
-      tbody.append(tr);
+  async function saveGuest(p: P, patch: Partial<P>) {
+    const { error } = await supabase.from('participants').update(patch).eq('id', p.id);
+    if (error) {
+      alert(error.code === '23505' ? 'Den e-mail bruges allerede af en anden gæst.' : 'Ændringen blev ikke gemt. Prøv igen.');
+      return false;
     }
+    Object.assign(p, patch);
+    return true;
+  }
+
+  function guestCard(p: P) {
+    const li = mk('li', 'guest status-' + p.status);
+
+    const top = mk('div', 'guest-top');
+    top.append(mk('span', 'guest-name', p.name), mk('span', 'pill pill-' + p.status, STATUS[p.status] ?? p.status));
+    li.append(top);
+
+    li.append(p.email ? mk('p', 'guest-email', p.email) : mk('p', 'guest-email missing', 'Ingen e-mail'));
+    if (p.note) li.append(mk('p', 'guest-note', p.note));
+
+    const actions = mk('div', 'guest-actions');
+    if (p.status === 'yes' && feeAmount > 0) {
+      const paid = mk('button', 'paid-toggle' + (p.tasting_paid ? ' on' : ''), p.tasting_paid ? 'Smagning betalt' : 'Smagning ikke betalt');
+      paid.type = 'button';
+      paid.setAttribute('aria-pressed', String(p.tasting_paid));
+      paid.addEventListener('click', async () => {
+        if (await saveGuest(p, { tasting_paid: !p.tasting_paid })) { renderParticipants(); renderFee(); }
+      });
+      actions.append(paid);
+    }
+    const copy = mk('button', 'text-btn', 'Kopiér link');
+    copy.type = 'button';
+    copy.addEventListener('click', async () => {
+      const url = `${location.origin}/profil/?k=${p.invite_code}`;
+      try { await navigator.clipboard.writeText(url); copy.textContent = 'Link kopieret'; }
+      catch { prompt('Kopiér linket:', url); }
+      setTimeout(() => (copy.textContent = 'Kopiér link'), 1500);
+    });
+    const edit = mk('button', 'text-btn', editingId === p.id ? 'Luk' : 'Rediger');
+    edit.type = 'button';
+    edit.setAttribute('aria-expanded', String(editingId === p.id));
+    edit.addEventListener('click', () => {
+      editingId = editingId === p.id ? null : p.id;
+      renderParticipants();
+    });
+    actions.append(copy, edit);
+    li.append(actions);
+
+    if (editingId === p.id) li.append(editPanel(p));
+    return li;
+  }
+
+  function editPanel(p: P) {
+    const form = mk('form', 'edit-panel');
+    let status = p.status;
+
+    form.append(mk('p', 'edit-label', 'Status'));
+    const seg = mk('div', 'segmented');
+    for (const [v, label] of Object.entries(STATUS)) {
+      const b = mk('button', '', label);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(v === status));
+      b.addEventListener('click', () => {
+        status = v;
+        seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      });
+      seg.append(b);
+    }
+    form.append(seg);
+
+    const lab = mk('label', 'edit-label', 'E-mail');
+    const id = 'em-' + p.id;
+    lab.htmlFor = id;
+    const em = mk('input');
+    em.type = 'email';
+    em.id = id;
+    em.value = p.email ?? '';
+    em.autocomplete = 'off';
+    form.append(lab, em);
+
+    const row = mk('div', 'row-actions');
+    const save = mk('button', 'btn small', 'Gem');
+    save.type = 'submit';
+    const cancel = mk('button', 'text-btn', 'Annullér');
+    cancel.type = 'button';
+    cancel.addEventListener('click', () => { editingId = null; renderParticipants(); });
+    row.append(save, cancel);
+    form.append(row);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = em.value.trim().toLowerCase() || null;
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert('E-mailen ser ikke rigtig ud.'); return; }
+      save.disabled = true;
+      if (await saveGuest(p, { status, email })) { editingId = null; renderParticipants(); }
+      save.disabled = false;
+    });
+    setTimeout(() => em.focus(), 0);
+    return form;
+  }
+
+  function renderParticipants() {
+    const list = $('guest-list');
+    list.replaceChildren();
+    const sorted = [...participants]
+      .sort((a, b) => (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) || a.name.localeCompare(b.name, 'da'))
+      .filter(matches);
+    for (const p of sorted) list.append(guestCard(p));
+    $('guest-empty').hidden = sorted.length > 0;
     renderSummary();
   }
 
   function renderSummary() {
-    const c = (s: string) => participants.filter((p) => p.status === s).length;
-    $('p-summary').textContent = `${c('yes')} kommer, ${c('invited')} har ikke svaret, ${c('no')} har meldt fra.`;
+    const count: Record<string, number> = {
+      all: participants.length,
+      yes: participants.filter((p) => p.status === 'yes').length,
+      invited: participants.filter((p) => p.status === 'invited').length,
+      no: participants.filter((p) => p.status === 'no').length,
+      noemail: participants.filter((p) => !p.email).length,
+    };
+    document.querySelectorAll<HTMLButtonElement>('.filters button').forEach((b) => {
+      b.querySelector('span')!.textContent = String(count[b.dataset.filter!]);
+      b.setAttribute('aria-selected', String(b.dataset.filter === guestFilter));
+    });
     renderFee();
   }
 
+  document.querySelectorAll<HTMLButtonElement>('.filters button').forEach((b) => {
+    b.addEventListener('click', () => { guestFilter = b.dataset.filter!; renderParticipants(); });
+  });
+  $('guest-search').addEventListener('input', (e) => {
+    guestQuery = (e.target as HTMLInputElement).value.trim().toLowerCase();
+    renderParticipants();
+  });
+
+  $('add-toggle').addEventListener('click', () => {
+    $('add-p').hidden = false;
+    $('add-toggle').hidden = true;
+    ($('new-name') as HTMLInputElement).focus();
+  });
+  $('add-cancel').addEventListener('click', () => {
+    $('add-p').hidden = true;
+    $('add-toggle').hidden = false;
+  });
   $('add-p').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const input = $('new-name') as HTMLInputElement;
-    const name = input.value.trim();
-    if (!name) return;
-    const { data, error } = await supabase.from('participants').insert({ name }).select().single();
-    if (error) { alert('Gæsten blev ikke tilføjet.'); return; }
+    const nameEl = $('new-name') as HTMLInputElement;
+    const emailEl = $('new-email') as HTMLInputElement;
+    const name = nameEl.value.trim();
+    const email = emailEl.value.trim().toLowerCase() || null;
+    if (!name) { nameEl.focus(); return; }
+    const { data, error } = await supabase.from('participants').insert({ name, email }).select().single();
+    if (error) { alert(error.code === '23505' ? 'Den e-mail bruges allerede.' : 'Gæsten blev ikke tilføjet.'); return; }
     participants.push(data as P);
-    input.value = '';
+    nameEl.value = '';
+    emailEl.value = '';
+    $('add-p').hidden = true;
+    $('add-toggle').hidden = false;
     renderParticipants();
   });
 
@@ -496,7 +585,7 @@ import Base from '../layouts/Base.astro';
     renderParticipants();
     renderOrders();
     await loadSettings();
-    renderFee();
+    renderParticipants();
     const rows = await fetchLeaderboard();
     if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, 13);
   }
@@ -656,4 +745,92 @@ import Base from '../layouts/Base.astro';
   .admin-page .order-sub { margin: 0.1rem 0 0; font-size: 0.85rem; }
   .admin-page .order-card ul { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; }
   .admin-page .order-card .toggle { padding: 0; background: none; font-size: 0.92rem; }
+
+  /* Deltagerliste */
+  .admin-page .guests { max-width: 52rem; }
+  .admin-page .guests-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .admin-page .guests-head h2 { margin: 0; }
+  .admin-page .add-form {
+    display: grid; gap: 0.4rem; max-width: 26rem;
+    margin: 1rem 0; padding: 1rem; background: var(--lodge-2); border-radius: 0.6rem;
+  }
+  .admin-page .add-form label { margin: 0.3rem 0 0; }
+  .admin-page .add-form input, .admin-page .search, .admin-page .edit-panel input {
+    width: 100%; font: inherit; color: var(--paper);
+    background: var(--lodge); border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem; padding: 0.6rem 0.75rem;
+  }
+  .admin-page .search { background: var(--lodge-2); margin: 0.25rem 0 0.75rem; }
+  .admin-page .row-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.6rem; }
+
+  .admin-page .filters {
+    display: flex; gap: 0.4rem; overflow-x: auto; padding: 1rem 0 0.5rem;
+    scrollbar-width: none;
+  }
+  .admin-page .filters::-webkit-scrollbar { display: none; }
+  .admin-page .filters button {
+    flex-shrink: 0; font: inherit; font-size: 0.9rem; white-space: nowrap;
+    color: var(--muted); background: none;
+    border: 1px solid var(--lodge-3); border-radius: 999px; padding: 0.4rem 0.8rem;
+    cursor: pointer;
+  }
+  .admin-page .filters button span { font-variant-numeric: tabular-nums; opacity: 0.75; margin-left: 0.15rem; }
+  .admin-page .filters button[aria-selected='true'] { color: var(--lodge); background: var(--paper); border-color: var(--paper); }
+
+  .admin-page .guest-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--lodge-2); }
+  .admin-page .guest { padding: 0.9rem 0; border-bottom: 1px solid var(--lodge-2); }
+  .admin-page .guest-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
+  .admin-page .guest-name { font-weight: 600; font-size: 1.02rem; }
+  .admin-page .pill {
+    flex-shrink: 0; font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px;
+  }
+  .admin-page .pill-yes { color: #0f1a0b; background: var(--ok); }
+  .admin-page .pill-invited { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .admin-page .pill-no { color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); }
+  .admin-page .guest.status-no .guest-name { color: var(--muted); }
+  .admin-page .guest-email { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.88rem; overflow-wrap: anywhere; }
+  .admin-page .guest-email.missing { font-style: italic; opacity: 0.7; }
+  .admin-page .guest-note {
+    margin: 0.5rem 0 0; padding-left: 0.7rem; border-left: 2px solid var(--lodge-3);
+    font-size: 0.9rem; font-style: italic;
+  }
+  .admin-page .guest-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.1rem; margin-top: 0.55rem; }
+  .admin-page .text-btn {
+    font: inherit; font-size: 0.88rem; background: none; border: 0; padding: 0.2rem 0;
+    color: var(--amber); cursor: pointer;
+  }
+  .admin-page .text-btn:hover { color: var(--paper); }
+  .admin-page .paid-toggle {
+    font: inherit; font-size: 0.82rem; cursor: pointer; border-radius: 999px; padding: 0.3rem 0.65rem;
+    color: var(--muted); background: none; border: 1px dashed var(--lodge-3);
+  }
+  .admin-page .paid-toggle.on { color: var(--ok); border: 1px solid var(--ok); }
+  .admin-page .paid-toggle.on::before { content: '✓ '; }
+
+  .admin-page .edit-panel {
+    margin-top: 0.75rem; padding: 0.9rem 1rem; background: var(--lodge-2); border-radius: 0.6rem;
+    display: grid; gap: 0.4rem; max-width: 28rem;
+  }
+  .admin-page .edit-label { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.85rem; font-weight: 400; }
+  .admin-page .segmented { display: flex; border: 1px solid var(--lodge-3); border-radius: 999px; padding: 0.2rem; }
+  .admin-page .segmented button {
+    flex: 1; font: inherit; font-size: 0.88rem; color: var(--muted); background: none; border: 0;
+    border-radius: 999px; padding: 0.45rem 0.3rem; cursor: pointer;
+  }
+  .admin-page .segmented button[aria-pressed='true'] { color: var(--lodge); background: var(--amber); font-weight: 600; }
+
+  @media (min-width: 720px) {
+    .admin-page .guest {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 6.5rem 19.5rem;
+      column-gap: 1.25rem;
+      align-items: start;
+    }
+    .admin-page .guest-top { display: contents; }
+    .admin-page .guest-name { grid-column: 1; grid-row: 1; }
+    .admin-page .pill { grid-column: 2; grid-row: 1; justify-self: start; margin-top: 0.15rem; }
+    .admin-page .guest-email, .admin-page .guest-note { grid-column: 1; }
+    .admin-page .guest-actions { grid-column: 3; grid-row: 1 / span 3; margin-top: 0; justify-content: flex-end; flex-wrap: nowrap; white-space: nowrap; }
+    .admin-page .edit-panel { grid-column: 1 / -1; }
+  }
 </style>
