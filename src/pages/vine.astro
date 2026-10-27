@@ -1,0 +1,273 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Vinene">
+  <section class="wrap vine-page">
+    <h1 class="title">Vinene</h1>
+    <p id="intro" class="lead">Det her skænker vi i aften.</p>
+
+    <p id="order-status" class="message" hidden></p>
+
+    <p id="loading" class="hint">Henter vinene …</p>
+    <p id="load-error" class="message error" hidden>
+      Vinene kunne ikke hentes. Tjek din forbindelse, og genindlæs siden.
+    </p>
+
+    <div id="wine-list"></div>
+  </section>
+
+  <div id="basket" class="basket" hidden>
+    <div class="wrap basket-inner">
+      <div>
+        <span id="basket-count"></span>
+        <strong id="basket-total"></strong>
+      </div>
+      <span id="basket-saved" class="hint" aria-live="polite"></span>
+    </div>
+  </div>
+</Base>
+
+<script>
+  import { supabase, getGuestCode } from '../lib/supabase';
+
+  type Wine = {
+    id: number; sort_order: number; name: string; producer: string | null;
+    style: string | null; vintage: string | null; abv: number | null;
+    price_dkk: number | null; description: string | null; orderable: boolean;
+  };
+
+  const STYLE_LABELS: Record<string, string> = {
+    Vintage: 'Vintage',
+    Tawny: 'Tawny',
+    Rivesaltes: 'Rivesaltes Ambré',
+    White: 'Hvid portvin',
+    Aguardente: 'Druebrændevin',
+  };
+
+  const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
+  const $ = (id: string) => document.getElementById(id)!;
+
+  const code = getGuestCode();
+  const qty = new Map<number, number>();
+  const paid = new Set<number>();
+  let wines: Wine[] = [];
+  let ordering = false;
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function renderBasket() {
+    if (!ordering) return;
+    let bottles = 0, total = 0;
+    for (const w of wines) {
+      const n = qty.get(w.id) ?? 0;
+      bottles += n;
+      total += n * (w.price_dkk ?? 0);
+    }
+    $('basket').hidden = bottles === 0;
+    $('basket-count').textContent = `${bottles} ${bottles === 1 ? 'flaske' : 'flasker'}, i alt `;
+    $('basket-total').textContent = kr.format(total);
+  }
+
+  let saveTimers = new Map<number, number>();
+  function scheduleSave(wineId: number) {
+    clearTimeout(saveTimers.get(wineId));
+    $('basket-saved').textContent = 'Gemmer …';
+    saveTimers.set(wineId, window.setTimeout(async () => {
+      const { error } = await supabase.rpc('set_order', {
+        code, wine: wineId, qty: qty.get(wineId) ?? 0,
+      });
+      $('basket-saved').textContent = error
+        ? 'Kunne ikke gemme. Prøv igen.'
+        : 'Bestilling gemt';
+    }, 500));
+  }
+
+  function stepper(w: Wine) {
+    const box = el('div', 'stepper');
+    const minus = el('button', 'step', '−');
+    const count = el('output', 'count');
+    const plus = el('button', 'step', '+');
+    minus.type = plus.type = 'button';
+    minus.setAttribute('aria-label', `Én flaske færre af ${w.name}`);
+    plus.setAttribute('aria-label', `Én flaske mere af ${w.name}`);
+
+    const sync = () => {
+      const n = qty.get(w.id) ?? 0;
+      count.textContent = String(n);
+      minus.disabled = n === 0 || paid.has(w.id);
+      plus.disabled = paid.has(w.id);
+      box.classList.toggle('active', n > 0);
+    };
+    minus.addEventListener('click', () => {
+      qty.set(w.id, Math.max(0, (qty.get(w.id) ?? 0) - 1));
+      sync(); renderBasket(); scheduleSave(w.id);
+    });
+    plus.addEventListener('click', () => {
+      qty.set(w.id, Math.min(48, (qty.get(w.id) ?? 0) + 1));
+      sync(); renderBasket(); scheduleSave(w.id);
+    });
+    box.append(minus, count, plus);
+    sync();
+    return box;
+  }
+
+  function render() {
+    const list = $('wine-list');
+    list.replaceChildren();
+    const groups = new Map<string, Wine[]>();
+    for (const w of wines) {
+      const key = w.style ?? 'Øvrige';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(w);
+    }
+    for (const [style, items] of groups) {
+      const section = el('section', 'group');
+      section.append(el('h2', '', STYLE_LABELS[style] ?? style));
+      const ul = el('ul', 'wines');
+      for (const w of items) {
+        const li = el('li', 'wine');
+        const info = el('div', 'info');
+        info.append(el('h3', 'name', w.name));
+        const meta = [w.producer, w.abv ? `${w.abv.toString().replace('.', ',')} %` : null]
+          .filter(Boolean).join(', ');
+        if (meta) info.append(el('p', 'meta', meta));
+        if (w.description) info.append(el('p', 'desc', w.description));
+        li.append(info);
+
+        const side = el('div', 'side');
+        if (w.price_dkk != null) side.append(el('p', 'price', kr.format(w.price_dkk)));
+        if (ordering && w.orderable) side.append(stepper(w));
+        if (paid.has(w.id)) side.append(el('p', 'paid', 'Betalt'));
+        li.append(side);
+        ul.append(li);
+      }
+      section.append(ul);
+      list.append(section);
+    }
+    renderBasket();
+  }
+
+  async function load() {
+    const [winesRes, settingsRes] = await Promise.all([
+      supabase.from('wines').select('*').order('sort_order'),
+      supabase.from('settings').select('key, value'),
+    ]);
+    $('loading').hidden = true;
+    if (winesRes.error) { $('load-error').hidden = false; return; }
+    wines = winesRes.data as Wine[];
+
+    const settings = Object.fromEntries((settingsRes.data ?? []).map((s) => [s.key, s.value]));
+    const status = $('order-status');
+
+    if (settings.orders_open === true) {
+      if (code) {
+        const mine = await supabase.rpc('get_my_orders', { code });
+        if (!mine.error && mine.data) {
+          for (const o of mine.data as { wine_id: number; quantity: number; paid: boolean }[]) {
+            qty.set(o.wine_id, o.quantity);
+            if (o.paid) paid.add(o.wine_id);
+          }
+          ordering = true;
+          $('intro').textContent = 'Vælg, hvor mange flasker du vil have af hver. Din bestilling gemmes automatisk.';
+        }
+      } else {
+        status.textContent = 'Bestillingen er åben. Brug linket fra din invitation for at bestille.';
+        status.hidden = false;
+      }
+    } else {
+      status.textContent = 'Du kan bestille vin på selve aftenen og ugen efter. Priserne er pr. flaske.';
+      status.hidden = false;
+    }
+    render();
+  }
+
+  load();
+</script>
+
+<style is:global>
+  .vine-page { padding-top: 2.5rem; padding-bottom: 5rem; }
+  .vine-page .title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3rem, 16vw, 5rem);
+    line-height: 0.9;
+    margin-bottom: 1rem;
+  }
+  .vine-page .lead { font-size: 1.1rem; }
+  .vine-page #order-status { margin: 1.25rem 0 0.5rem; }
+
+  #wine-list .group { margin-top: 2.5rem; }
+  #wine-list .group h2 {
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--lodge-3);
+    margin-bottom: 0;
+  }
+  #wine-list .wines { list-style: none; margin: 0; padding: 0; }
+  #wine-list .wine {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--lodge-2);
+  }
+  #wine-list .info { min-width: 0; }
+  #wine-list .name {
+    font-family: var(--body);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.35;
+    margin: 0 0 0.2rem;
+  }
+  #wine-list .meta, #wine-list .desc { margin: 0; color: var(--muted); font-size: 0.92rem; }
+  #wine-list .desc { margin-top: 0.35rem; color: var(--paper); }
+  #wine-list .side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+  #wine-list .price { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #wine-list .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
+
+  #wine-list .stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--lodge-3);
+    border-radius: 999px;
+    background: var(--lodge-2);
+  }
+  #wine-list .stepper.active { border-color: var(--amber); }
+  #wine-list .step {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    background: none;
+    color: var(--paper);
+    font-size: 1.35rem;
+    cursor: pointer;
+    border-radius: 999px;
+  }
+  #wine-list .step:disabled { color: var(--lodge-3); cursor: default; }
+  #wine-list .count {
+    min-width: 1.5rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .basket {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--lodge-2);
+    border-top: 2px solid var(--amber);
+    padding: 0.9rem 0 calc(0.9rem + env(safe-area-inset-bottom));
+  }
+  .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  #basket-total { font-size: 1.15rem; }
+</style>
