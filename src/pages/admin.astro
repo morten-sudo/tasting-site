@@ -82,7 +82,7 @@ import Base from '../layouts/Base.astro';
         <p id="p-summary" class="hint"></p>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Navn</th><th>Status</th><th>Smagning betalt</th><th>Besked</th><th>Link</th></tr></thead>
+            <thead><tr><th>Navn og e-mail</th><th>Status</th><th>Smagning betalt</th><th>Besked</th><th>Link</th></tr></thead>
             <tbody id="participants"></tbody>
           </table>
         </div>
@@ -124,7 +124,7 @@ import Base from '../layouts/Base.astro';
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const STATUS: Record<string, string> = { yes: 'Kommer', no: 'Meldt fra', invited: 'Ikke svaret' };
 
-  type P = { id: string; name: string; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean };
+  type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean };
   type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
   type OLine = { wine_id: number; quantity: number; unit_price: number };
   type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
@@ -275,7 +275,29 @@ import Base from '../layouts/Base.astro';
       (order[a.status] - order[b.status]) || a.name.localeCompare(b.name, 'da'));
     for (const p of sorted) {
       const tr = document.createElement('tr');
-      tr.append(cell(p.name));
+      const nameTd = document.createElement('td');
+      const nm = document.createElement('div');
+      nm.textContent = p.name;
+      const em = document.createElement('input');
+      em.type = 'email';
+      em.className = 'email-input';
+      em.placeholder = 'e-mail';
+      em.value = p.email ?? '';
+      em.setAttribute('aria-label', `E-mail for ${p.name}`);
+      em.addEventListener('change', async () => {
+        const v = em.value.trim().toLowerCase() || null;
+        const { error } = await supabase.from('participants').update({ email: v }).eq('id', p.id);
+        if (error) {
+          em.value = p.email ?? '';
+          alert(error.code === '23505' ? 'Den e-mail bruges allerede af en anden gæst.' : 'E-mailen blev ikke gemt.');
+          return;
+        }
+        p.email = v;
+        em.classList.add('saved');
+        setTimeout(() => em.classList.remove('saved'), 1200);
+      });
+      nameTd.append(nm, em);
+      tr.append(nameTd);
 
       const st = document.createElement('td');
       const sel = document.createElement('select');
@@ -464,7 +486,7 @@ import Base from '../layouts/Base.astro';
   // ---------- Opstart ----------
   async function loadAll() {
     const [p, w, o] = await Promise.all([
-      supabase.from('participants').select('id, name, status, diet, note, invite_code, tasting_paid'),
+      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid'),
       supabase.from('wines').select('id, name, price_dkk, sort_order'),
       supabase.from('orders').select(ORDER_SELECT),
     ]);
@@ -591,6 +613,19 @@ import Base from '../layouts/Base.astro';
     padding: 0.6rem 0.8rem;
   }
   .admin-page .fee-summary { margin-top: 0.6rem; }
+  .admin-page .email-input {
+    width: 100%;
+    min-width: 9rem;
+    margin-top: 0.3rem;
+    font: inherit;
+    font-size: 0.82rem;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.35rem;
+    padding: 0.25rem 0.4rem;
+  }
+  .admin-page .email-input.saved { border-color: var(--ok); }
   .admin-page .fee-cb { width: 1.15rem; height: 1.15rem; accent-color: var(--amber); }
   .admin-page .inline-form input { flex: 1; }
   .admin-page .btn.small { padding: 0.6rem 0.9rem; min-height: 0; font-size: 0.95rem; }

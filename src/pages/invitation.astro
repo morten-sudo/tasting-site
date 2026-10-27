@@ -47,6 +47,12 @@ import { EVENT } from '../lib/config';
         </fieldset>
 
         <div class="field">
+          <label for="email">Din e-mail <span class="hint">(valgfri)</span></label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="200" />
+          <p class="hint field-hint">Så kan du logge ind med et link på mail, hvis du skifter telefon eller mister invitationen.</p>
+        </div>
+
+        <div class="field">
           <label for="note">Besked til værten <span class="hint">(valgfri)</span></label>
           <textarea id="note" name="note" maxlength="1000"></textarea>
         </div>
@@ -121,6 +127,7 @@ import { EVENT } from '../lib/config';
       (form.querySelector(`input[value="${row.status}"]`) as HTMLInputElement).checked = true;
     }
     $<HTMLTextAreaElement>('note').value = row.note ?? '';
+    $<HTMLInputElement>('email').value = row.email ?? '';
     showCurrent(row.status);
     $('invite').hidden = false;
     loadFee();
@@ -138,6 +145,18 @@ import { EVENT } from '../lib/config';
     submit.disabled = true;
     submit.textContent = 'Sender …';
     const attending = choice === 'yes';
+    const mail = await supabase.rpc('set_my_email', { code, e: $<HTMLInputElement>('email').value });
+    if (mail.error) {
+      submit.disabled = false;
+      submit.textContent = 'Send svar';
+      formError.textContent = mail.error.message.includes('bruges allerede')
+        ? 'Den e-mail er allerede knyttet til en anden gæst.'
+        : mail.error.message.includes('Ugyldig')
+        ? 'E-mailen ser ikke rigtig ud. Ret den, eller lad feltet stå tomt.'
+        : 'Dit svar blev ikke gemt. Tjek din forbindelse og prøv igen.';
+      formError.hidden = false;
+      return;
+    }
     const { data, error } = await supabase.rpc('respond_invite', {
       code,
       attending,
@@ -218,6 +237,16 @@ import { EVENT } from '../lib/config';
     margin: 0;
   }
   .field { margin-bottom: 1.25rem; }
+  .field-hint { margin: 0.35rem 0 0; font-size: 0.88rem; }
+  #email {
+    width: 100%;
+    font: inherit;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem;
+    padding: 0.7rem 0.8rem;
+  }
   #form-error { margin-bottom: 1rem; }
   .small { margin-top: 1.5rem; font-size: 0.9rem; }
 </style>

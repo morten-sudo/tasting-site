@@ -4,41 +4,121 @@ import Base from '../layouts/Base.astro';
 <Base title="Log ind">
   <section class="wrap login-page">
     <h1 class="title">Log ind</h1>
-    <p class="lead">
-      Indsæt linket fra din invitation, eller kun koden til sidst i linket (efter <code>?k=</code>).
-    </p>
-    <form id="form" class="login-form" novalidate>
-      <label for="code">Invitationslink eller kode</label>
-      <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
-      <p id="msg" class="message error" hidden></p>
-      <button class="btn" type="submit">Log ind</button>
-    </form>
-    <p class="hint small">Har du mistet din invitation, så skriv til værten og få et nyt link.</p>
+
+    <p id="checking" class="hint" hidden>Logger dig ind …</p>
+
+    <div id="forms">
+      <!-- 1: E-mail med engangslink -->
+      <form id="mail-form" class="login-form" novalidate>
+        <p class="lead">Skriv din e-mail, så sender vi dig et link, der logger dig ind.</p>
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" inputmode="email" required />
+        <p id="mail-msg" class="message" hidden></p>
+        <button class="btn" type="submit" id="mail-btn">Send login-link</button>
+      </form>
+
+      <!-- 2: Invitationslink eller kode -->
+      <details class="alt">
+        <summary>Har du dit invitationslink i stedet?</summary>
+        <form id="code-form" class="login-form" novalidate>
+          <p>Indsæt linket fra din invitation, eller kun koden til sidst i linket (efter <code>?k=</code>).</p>
+          <label for="code">Invitationslink eller kode</label>
+          <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+          <p id="code-msg" class="message error" hidden></p>
+          <button class="btn" type="submit">Log ind</button>
+        </form>
+      </details>
+
+      <p class="hint small">
+        Kender vi ikke din e-mail, så log ind med dit invitationslink og tilføj den på din side.
+        Har du mistet begge dele, så skriv til værten.
+      </p>
+    </div>
   </section>
 </Base>
 
 <script>
   import { supabase, setGuestCode } from '../lib/supabase';
 
-  const form = document.getElementById('form') as HTMLFormElement;
-  const input = document.getElementById('code') as HTMLInputElement;
-  const msg = document.getElementById('msg')!;
+  const $ = (id: string) => document.getElementById(id)!;
 
+  function show(el: HTMLElement, text: string, ok: boolean) {
+    el.textContent = text;
+    el.className = 'message ' + (ok ? 'ok' : 'error');
+    el.hidden = false;
+  }
+
+  // ---------- Kommer tilbage fra login-mailen ----------
+  async function finishEmailLogin() {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return false;
+    $('forms').hidden = true;
+    $('checking').hidden = false;
+    const { data: code } = await supabase.rpc('my_invite_code');
+    if (code) {
+      setGuestCode(code as string);
+      location.replace('/invitation/');
+      return true;
+    }
+    $('checking').hidden = true;
+    $('forms').hidden = false;
+    show($('mail-msg'), 'Du er logget ind, men e-mailen er ikke på gæstelisten. Brug dit invitationslink, eller skriv til værten.', false);
+    return true;
+  }
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN') finishEmailLogin();
+  });
+  if (location.hash.includes('access_token') || location.search.includes('code=')) {
+    $('forms').hidden = true;
+    $('checking').hidden = false;
+  }
+
+  // ---------- Send login-link ----------
+  $('mail-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('mail-msg');
+    const email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
+    if (!email.includes('@')) { show(msg, 'Skriv en gyldig e-mail.', false); return; }
+
+    const btn = $('mail-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Sender …';
+
+    const { data: known } = await supabase.rpc('guest_email_exists', { e: email });
+    let error = null as null | { status?: number };
+    if (known) {
+      const res = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: location.origin + '/log-ind/', shouldCreateUser: true },
+      });
+      error = res.error;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send login-link';
+    if (error?.status === 429) {
+      show(msg, 'Der er sendt for mange login-mails på kort tid. Vent lidt, eller brug dit invitationslink.', false);
+    } else if (error) {
+      show(msg, 'Mailen kunne ikke sendes. Prøv igen om lidt, eller brug dit invitationslink.', false);
+    } else {
+      show(msg, `Hvis ${email} står på gæstelisten, er der nu sendt et login-link. Tjek din indbakke (og evt. spam).`, true);
+    }
+  });
+
+  // ---------- Invitationslink eller kode ----------
   function extractCode(raw: string) {
     const v = raw.trim();
     const m = v.match(/[?&]k=([A-Za-z0-9]+)/);
     return (m ? m[1] : v).trim();
   }
 
-  form.addEventListener('submit', async (e) => {
+  $('code-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const msg = $('code-msg');
     msg.hidden = true;
-    const code = extractCode(input.value);
-    if (!code) {
-      msg.textContent = 'Indsæt dit link eller din kode.';
-      msg.hidden = false;
-      return;
-    }
+    const code = extractCode(($('code') as HTMLInputElement).value);
+    if (!code) { msg.textContent = 'Indsæt dit link eller din kode.'; msg.hidden = false; return; }
     const { data } = await supabase.rpc('get_invite', { code });
     const row = Array.isArray(data) ? data[0] : null;
     if (!row) {
@@ -49,6 +129,8 @@ import Base from '../layouts/Base.astro';
     setGuestCode(code);
     location.href = '/invitation/';
   });
+
+  finishEmailLogin();
 </script>
 
 <style>
@@ -60,9 +142,21 @@ import Base from '../layouts/Base.astro';
     line-height: 0.9;
     margin-bottom: 1.25rem;
   }
-  .lead { max-width: 32rem; }
-  .login-form { display: grid; gap: 0.6rem; max-width: 26rem; margin-top: 1.25rem; }
+  .lead { max-width: 32rem; margin-bottom: 0.4rem; }
+  .login-form { display: grid; gap: 0.6rem; max-width: 26rem; }
   .login-form .btn { justify-self: start; margin-top: 0.3rem; }
-  .small { margin-top: 1.5rem; font-size: 0.9rem; }
+  .login-form input[type='email'] {
+    width: 100%;
+    font: inherit;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem;
+    padding: 0.7rem 0.8rem;
+  }
+  .alt { margin-top: 2rem; max-width: 26rem; }
+  .alt summary { cursor: pointer; color: var(--amber); padding: 0.3rem 0; }
+  .alt .login-form { margin-top: 0.8rem; }
+  .small { margin-top: 1.75rem; font-size: 0.9rem; max-width: 32rem; }
   code { font-size: 0.9em; color: var(--amber); }
 </style>

@@ -19,6 +19,12 @@ export function setGuestCode(code: string) {
   try { localStorage.setItem(STORAGE_KEY, code); } catch {}
 }
 
+// Log ud: glem koden og afslut en evt. e-mail-session på denne enhed
 export function forgetGuestCode() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  try {
+    const ref = new URL(SUPABASE_URL).hostname.split('.')[0];
+    localStorage.removeItem(`sb-${ref}-auth-token`);
+  } catch {}
+  supabase.auth.signOut({ scope: 'local' }).catch(() => {});
 }
