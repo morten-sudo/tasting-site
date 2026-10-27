@@ -13,7 +13,19 @@ import Base from '../layouts/Base.astro';
       Vinene kunne ikke hentes. Tjek din forbindelse, og genindlæs siden.
     </p>
 
-    <div id="wine-list"></div>
+    <nav id="style-chips" class="chips" aria-label="Spring til en stilart" hidden></nav>
+
+    <div id="wine-list" class="carousel" role="region" aria-roledescription="karrusel" aria-label="Vinene" tabindex="0"></div>
+
+    <div id="carousel-nav" class="carousel-nav" hidden>
+      <button type="button" id="prev" class="nav-btn" aria-label="Forrige vin">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <p id="counter" class="counter" aria-live="polite"></p>
+      <button type="button" id="next" class="nav-btn" aria-label="Næste vin">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
   </section>
 
   <a id="basket" class="basket" href="/kurv/" hidden>
@@ -45,6 +57,17 @@ import Base from '../layouts/Base.astro';
     White: 'Hvid portvin',
     Aguardente: 'Druebrændevin',
   };
+
+  // Farven på stilartens mærke: portvinens skala fra ruby til gammel ravfarve
+  const STYLE_TONES: Record<string, string> = {
+    Vintage: '#a3213a',
+    Tawny: '#b8742e',
+    Rivesaltes: '#9c4a2c',
+    White: '#e0c27a',
+    Aguardente: '#dba65a',
+  };
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const $ = (id: string) => document.getElementById(id)!;
@@ -91,81 +114,152 @@ import Base from '../layouts/Base.astro';
     return btn;
   }
 
+  function wineCard(w: Wine, index: number, total: number) {
+    const li = el('li', 'card');
+    li.dataset.style = w.style ?? 'Øvrige';
+    li.setAttribute('aria-roledescription', 'vin');
+    li.setAttribute('aria-label', `${index + 1} af ${total}: ${w.name}`);
+
+    const pic = el('div', 'pic');
+    if (w.image_url) {
+      const img = el('img');
+      img.src = w.image_url;
+      img.alt = '';
+      img.loading = index < 2 ? 'eager' : 'lazy';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => pic.classList.add('empty'));
+      pic.append(img);
+    } else {
+      pic.classList.add('empty');
+    }
+    const no = el('span', 'no', String(index + 1).padStart(2, '0'));
+    no.setAttribute('aria-hidden', 'true');
+    pic.append(no);
+    li.append(pic);
+
+    const info = el('div', 'info');
+    const tag = el('p', 'style-tag', STYLE_LABELS[w.style ?? ''] ?? w.style ?? '');
+    tag.style.setProperty('--tone', STYLE_TONES[w.style ?? ''] ?? 'var(--amber)');
+    info.append(tag);
+    info.append(el('h3', 'name', w.name));
+    const meta = [w.producer, w.abv ? `${w.abv.toString().replace('.', ',')} %` : null]
+      .filter(Boolean).join(', ');
+    if (meta) info.append(el('p', 'meta', meta));
+    if (w.description) info.append(el('p', 'desc', w.description));
+    if (w.details) {
+      const more = el('details', 'more');
+      more.append(el('summary', '', 'Læs mere'));
+      const dl = el('dl');
+      for (const line of w.details.split('\n')) {
+        const i = line.indexOf(':');
+        if (i > 0 && i < 30) {
+          dl.append(el('dt', '', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
+        } else if (line.trim()) {
+          dl.append(el('dd', '', line.trim()));
+        }
+      }
+      more.append(dl);
+      info.append(more);
+    }
+
+    const buy = el('div', 'buy');
+    if (w.price_dkk != null) {
+      const price = el('p', 'price');
+      price.append(el('span', 'ours', kr.format(w.price_dkk)));
+      if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
+        const normal = el('span', 'normal');
+        normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
+        price.append(normal);
+      }
+      buy.append(price);
+    }
+    if (ordering && w.orderable) buy.append(addButton(w));
+    info.append(buy);
+
+    li.append(info);
+    return li;
+  }
+
+  let cards: HTMLElement[] = [];
+  let current = 0;
+
+  function scrollToCard(i: number) {
+    const track = $('wine-list').querySelector('.track') as HTMLElement;
+    const card = cards[Math.max(0, Math.min(cards.length - 1, i))];
+    if (!track || !card) return;
+    const pad = parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0;
+    track.scrollTo({ left: card.offsetLeft - track.offsetLeft - pad, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  function setCurrent(i: number) {
+    current = i;
+    $('counter').textContent = `${i + 1} af ${cards.length}`;
+    ($('prev') as HTMLButtonElement).disabled = i === 0;
+    ($('next') as HTMLButtonElement).disabled = i === cards.length - 1;
+    const style = cards[i]?.dataset.style;
+    for (const chip of $('style-chips').querySelectorAll<HTMLButtonElement>('button')) {
+      const on = chip.dataset.style === style;
+      chip.classList.toggle('on', on);
+      chip.setAttribute('aria-pressed', String(on));
+    }
+    cards.forEach((c, n) => c.classList.toggle('is-current', n === i));
+  }
+
   function render() {
     const list = $('wine-list');
     list.replaceChildren();
-    const groups = new Map<string, Wine[]>();
-    for (const w of wines) {
-      const key = w.style ?? 'Øvrige';
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(w);
-    }
-    for (const [style, items] of groups) {
-      const section = el('section', 'group');
-      section.append(el('h2', '', STYLE_LABELS[style] ?? style));
-      const ul = el('ul', 'wines');
-      for (const w of items) {
-        const li = el('li', 'wine');
+    const track = el('ul', 'track');
+    cards = wines.map((w, i) => wineCard(w, i, wines.length));
+    track.append(...cards);
+    list.append(track);
 
-        const pic = el('div', 'pic');
-        if (w.image_url) {
-          const img = el('img');
-          img.src = w.image_url;
-          img.alt = '';
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          img.referrerPolicy = 'no-referrer';
-          img.addEventListener('error', () => pic.classList.add('empty'));
-          pic.append(img);
-        } else {
-          pic.classList.add('empty');
-        }
-        li.append(pic);
+    // Stilarter som genveje, i den rækkefølge de skænkes
+    const chips = $('style-chips');
+    chips.replaceChildren();
+    const seen = new Set<string>();
+    wines.forEach((w, i) => {
+      const style = w.style ?? 'Øvrige';
+      if (seen.has(style)) return;
+      seen.add(style);
+      const b = el('button', 'chip', STYLE_LABELS[style] ?? style);
+      b.type = 'button';
+      b.dataset.style = style;
+      b.style.setProperty('--tone', STYLE_TONES[style] ?? 'var(--amber)');
+      b.addEventListener('click', () => scrollToCard(i));
+      chips.append(b);
+    });
+    chips.hidden = seen.size < 2;
+    $('carousel-nav').hidden = cards.length < 2;
 
-        const info = el('div', 'info');
-        info.append(el('h3', 'name', w.name));
-        const meta = [w.producer, w.abv ? `${w.abv.toString().replace('.', ',')} %` : null]
-          .filter(Boolean).join(', ');
-        if (meta) info.append(el('p', 'meta', meta));
-        if (w.description) info.append(el('p', 'desc', w.description));
-        if (w.details) {
-          const more = el('details', 'more');
-          more.append(el('summary', '', 'Læs mere'));
-          const dl = el('dl');
-          for (const line of w.details.split('\n')) {
-            const i = line.indexOf(':');
-            if (i > 0 && i < 30) {
-              dl.append(el('dt', '', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
-            } else if (line.trim()) {
-              dl.append(el('dd', '', line.trim()));
-            }
-          }
-          more.append(dl);
-          info.append(more);
-        }
+    let ticking = false;
+    track.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const x = track.scrollLeft;
+        let best = 0, dist = Infinity;
+        cards.forEach((c, n) => {
+          const d = Math.abs(c.offsetLeft - track.offsetLeft - (parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0) - x);
+          if (d < dist) { dist = d; best = n; }
+        });
+        if (best !== current) setCurrent(best);
+      });
+    }, { passive: true });
 
-        const buy = el('div', 'buy');
-        if (w.price_dkk != null) {
-          const price = el('p', 'price');
-          price.append(el('span', 'ours', kr.format(w.price_dkk)));
-          if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
-            const normal = el('span', 'normal');
-            normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
-            price.append(normal);
-          }
-          buy.append(price);
-        }
-        if (ordering && w.orderable) buy.append(addButton(w));
-        info.append(buy);
+    list.addEventListener('keydown', (e) => {
+      if (e.target !== list) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); scrollToCard(current + 1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); scrollToCard(current - 1); }
+    });
 
-        li.append(info);
-        ul.append(li);
-      }
-      section.append(ul);
-      list.append(section);
-    }
+    setCurrent(0);
     renderBasket();
   }
+
+  $('prev').addEventListener('click', () => scrollToCard(current - 1));
+  $('next').addEventListener('click', () => scrollToCard(current + 1));
 
   async function load() {
     const [winesRes, settingsRes] = await Promise.all([
@@ -210,48 +304,145 @@ import Base from '../layouts/Base.astro';
   .vine-page .lead { font-size: 1.1rem; }
   .vine-page #order-status { margin: 1.25rem 0 0.5rem; }
 
-  #wine-list .group { margin-top: 2.5rem; }
-  #wine-list .group h2 {
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--lodge-3);
-    margin-bottom: 0;
+  /* Stilarter som genveje */
+  .chips {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin: 1.75rem -1rem 0;
+    padding: 0 1rem 0.25rem;
   }
-  #wine-list .wines { list-style: none; margin: 0; padding: 0; }
-  #wine-list .wine {
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--lodge-3);
+    background: none;
+    color: var(--muted);
+    font: 0.95rem/1 var(--body);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip::before {
+    content: '';
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+    background: var(--tone);
+  }
+  .chip:hover { color: var(--paper); }
+  .chip.on { color: var(--paper); border-color: var(--tone); background: var(--lodge-2); }
+
+  /* Karrusellen: én vin ad gangen, næste kigger frem i kanten */
+  .carousel { margin: 1rem -1rem 0; outline-offset: -2px; }
+  .carousel .track {
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem 1rem 0.5rem;
     display: grid;
-    grid-template-columns: 4.5rem 1fr;
-    gap: 1rem;
-    padding: 1.25rem 0;
-    border-bottom: 1px solid var(--lodge-2);
+    grid-auto-flow: column;
+    grid-auto-columns: min(84%, 22rem);
+    gap: 0.9rem;
+    align-items: start;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 1rem;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
-  #wine-list .pic {
-    width: 4.5rem;
-    height: 9rem;
-    border-radius: 0.5rem;
+  .carousel .track::-webkit-scrollbar { display: none; }
+  .carousel .card {
+    scroll-snap-align: start;
+    background: var(--lodge-2);
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: opacity 0.25s;
+    opacity: 0.55;
+  }
+  .carousel .card.is-current { opacity: 1; }
+  .carousel .pic {
+    position: relative;
+    height: 16rem;
     background: var(--paper);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    padding: 1.25rem;
   }
-  #wine-list .pic img { width: 100%; height: 100%; object-fit: contain; }
-  #wine-list .pic.empty {
-    background: linear-gradient(180deg, var(--ruby), var(--tawny));
-    opacity: 0.35;
+  .carousel .pic img { max-width: 100%; max-height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+  .carousel .pic.empty { background: linear-gradient(180deg, var(--ruby), var(--tawny)); }
+  .carousel .pic.empty img { display: none; }
+  .carousel .no {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.85rem;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--lodge);
+    opacity: 0.55;
   }
-  #wine-list .pic.empty img { display: none; }
-  #wine-list .info { min-width: 0; }
-  #wine-list .name {
+  .carousel .info { padding: 1.1rem 1.1rem 1.25rem; }
+  .carousel .style-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.4rem;
+    color: var(--muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .carousel .style-tag::before {
+    content: '';
+    width: 1.5rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--tone);
+  }
+
+  .carousel-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  .counter { margin: 0; min-width: 5.5rem; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .nav-btn {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 1px solid var(--lodge-3);
+    background: none;
+    color: var(--paper);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .nav-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .carousel .info { min-width: 0; }
+  .carousel .name {
     font-family: var(--body);
     font-size: 1.05rem;
     font-weight: 600;
     line-height: 1.35;
     margin: 0 0 0.2rem;
   }
-  #wine-list .meta, #wine-list .desc { margin: 0; color: var(--muted); font-size: 0.92rem; }
-  #wine-list .desc { margin-top: 0.4rem; color: var(--paper); line-height: 1.5; }
-  #wine-list .more { margin-top: 0.5rem; }
-  #wine-list .more summary {
+  .carousel .meta, .carousel .desc { margin: 0; color: var(--muted); font-size: 0.92rem; }
+  .carousel .desc { margin-top: 0.4rem; color: var(--paper); line-height: 1.5; }
+  .carousel .more { margin-top: 0.5rem; }
+  .carousel .more summary {
     cursor: pointer;
     color: var(--amber);
     font-size: 0.92rem;
@@ -261,8 +452,8 @@ import Base from '../layouts/Base.astro';
     align-items: center;
     gap: 0.4rem;
   }
-  #wine-list .more summary::-webkit-details-marker { display: none; }
-  #wine-list .more summary::after {
+  .carousel .more summary::-webkit-details-marker { display: none; }
+  .carousel .more summary::after {
     content: '';
     width: 0.45rem;
     height: 0.45rem;
@@ -271,9 +462,9 @@ import Base from '../layouts/Base.astro';
     transform: rotate(45deg) translateY(-2px);
     transition: transform 0.15s;
   }
-  #wine-list .more[open] summary::after { transform: rotate(-135deg) translateY(-1px); }
-  #wine-list .more[open] summary { color: var(--paper); }
-  #wine-list .more dl {
+  .carousel .more[open] summary::after { transform: rotate(-135deg) translateY(-1px); }
+  .carousel .more[open] summary { color: var(--paper); }
+  .carousel .more dl {
     margin: 0.4rem 0 0;
     padding: 0.8rem 0.9rem;
     background: var(--lodge-2);
@@ -281,10 +472,10 @@ import Base from '../layouts/Base.astro';
     font-size: 0.92rem;
     line-height: 1.5;
   }
-  #wine-list .more dt { color: var(--muted); font-size: 0.85rem; }
-  #wine-list .more dd { margin: 0 0 0.55rem; }
-  #wine-list .more dd:last-child { margin-bottom: 0; }
-  #wine-list .buy {
+  .carousel .more dt { color: var(--muted); font-size: 0.85rem; }
+  .carousel .more dd { margin: 0 0 0.55rem; }
+  .carousel .more dd:last-child { margin-bottom: 0; }
+  .carousel .buy {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -292,7 +483,7 @@ import Base from '../layouts/Base.astro';
     gap: 0.75rem;
     margin-top: 0.75rem;
   }
-  #wine-list .price {
+  .carousel .price {
     margin: 0;
     display: flex;
     flex-direction: column;
@@ -300,11 +491,11 @@ import Base from '../layouts/Base.astro';
     white-space: nowrap;
     line-height: 1.3;
   }
-  #wine-list .price .ours { font-weight: 600; font-size: 1.05rem; }
-  #wine-list .price .normal { color: var(--muted); font-size: 0.85rem; }
-  #wine-list .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
+  .carousel .price .ours { font-weight: 600; font-size: 1.05rem; }
+  .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
+  .carousel .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
 
-  #wine-list .add {
+  .carousel .add {
     font: 600 0.95rem/1 var(--body);
     color: var(--lodge);
     background: var(--amber);
@@ -314,13 +505,13 @@ import Base from '../layouts/Base.astro';
     min-height: 2.75rem;
     cursor: pointer;
   }
-  #wine-list .add:hover { background: var(--paper); }
-  #wine-list .add.in-cart {
+  .carousel .add:hover { background: var(--paper); }
+  .carousel .add.in-cart {
     background: none;
     color: var(--amber);
     box-shadow: inset 0 0 0 1px var(--amber);
   }
-  #wine-list .add.pop { animation: pop 0.25s ease-out; }
+  .carousel .add.pop { animation: pop 0.25s ease-out; }
   @keyframes pop { 50% { transform: scale(1.06); } }
 
   .basket {

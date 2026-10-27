@@ -23,7 +23,8 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     />
   </head>
   <body class:list={{ 'has-hero': hero }}>
-    <header class="site-header wrap">
+    <header class="site-header">
+      <div class="wrap header-inner">
       <div class="top-row">
         <a href="/" class="mark">Portvin 2026</a>
         <div class="user" id="user">
@@ -39,6 +40,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
           Kurv <span id="nav-cart-count" class="badge" hidden></span>
         </a>
       </nav>
+      </div>
     </header>
     <main>
       <slot />
@@ -56,6 +58,12 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       };
       window.addEventListener('cart-change', sync);
       sync();
+
+      if (document.body.classList.contains('has-hero')) {
+        const onScroll = () => document.body.classList.toggle('scrolled', window.scrollY > 24);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
 
       // Log ind/ud for gæster (baseret på invitationskoden)
       const userIn = document.getElementById('user-in')!;
@@ -90,9 +98,20 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
 </html>
 
 <style>
+  /* Menuen bliver stående øverst, når man scroller */
   .site-header {
-    padding-top: 1.25rem;
-    padding-bottom: 0.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(11, 9, 8, 0.92);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--lodge-2);
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+  .header-inner {
+    padding-top: 1rem;
+    padding-bottom: 0.3rem;
   }
   .top-row {
     display: flex;
@@ -152,12 +171,17 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     text-decoration: none;
   }
   /* Forsiden: menuen ligger oven på kælderfotoet */
+  /* Forsiden: gennemsigtig over fotoet, mørk så snart man scroller */
   body.has-hero .site-header {
-    position: absolute;
-    top: 0;
+    position: fixed;
     left: 0;
     right: 0;
-    z-index: 2;
+  }
+  body.has-hero:not(.scrolled) .site-header {
+    background: transparent;
+    border-bottom-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   body.has-hero nav a { color: #d6c7b0; }
   body.has-hero nav a:hover { color: var(--paper); }
