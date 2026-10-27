@@ -7,11 +7,16 @@ import Base from '../layouts/Base.astro';
 
     <!-- Login -->
     <form id="login" class="login" hidden>
-      <p>Log ind med din admin-e-mail. Du får et link tilsendt, som logger dig ind.</p>
       <label for="email">E-mail</label>
-      <input id="email" type="email" autocomplete="email" required />
-      <button class="btn" type="submit">Send login-link</button>
+      <input id="email" type="email" autocomplete="username" required />
+      <label for="password">Adgangskode</label>
+      <input id="password" type="password" autocomplete="current-password" />
+      <button class="btn" type="submit">Log ind</button>
       <p id="login-msg" class="message" hidden></p>
+      <p class="hint">
+        Har du ikke sat en adgangskode, eller har du glemt den?
+        <button id="send-link" class="link-btn" type="button">Send mig et login-link i stedet</button>
+      </p>
     </form>
 
     <p id="not-admin" class="message error" hidden>
@@ -21,6 +26,17 @@ import Base from '../layouts/Base.astro';
 
     <div id="panel" hidden>
       <p class="hint who">Logget ind som <span id="me"></span> · <button id="logout" class="link-btn" type="button">Log ud</button></p>
+
+      <!-- Adgangskode -->
+      <details class="block pw-box">
+        <summary>Sæt eller skift adgangskode</summary>
+        <form id="pw-form" class="login">
+          <label for="new-pw">Ny adgangskode (mindst 8 tegn)</label>
+          <input id="new-pw" type="password" autocomplete="new-password" minlength="8" required />
+          <button class="btn small" type="submit">Gem adgangskode</button>
+          <p id="pw-msg" class="message" hidden></p>
+        </form>
+      </details>
 
       <!-- Knapper -->
       <section class="block">
@@ -98,19 +114,47 @@ import Base from '../layouts/Base.astro';
   }
 
   // ---------- Login ----------
+  function loginMsg(text: string, ok: boolean) {
+    const msg = $('login-msg');
+    msg.hidden = false;
+    msg.className = 'message ' + (ok ? 'ok' : 'error');
+    msg.textContent = text;
+  }
+
   $('login').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = ($('email') as HTMLInputElement).value.trim();
-    const msg = $('login-msg');
+    const password = ($('password') as HTMLInputElement).value;
+    if (!password) { loginMsg('Skriv din adgangskode, eller få et login-link tilsendt.', false); return; }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) loginMsg('Forkert e-mail eller adgangskode.', false);
+  });
+
+  $('send-link').addEventListener('click', async () => {
+    const email = ($('email') as HTMLInputElement).value.trim();
+    if (!email) { loginMsg('Skriv din e-mail først.', false); return; }
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: location.origin + '/admin/', shouldCreateUser: true },
+      options: { emailRedirectTo: location.origin + '/admin/', shouldCreateUser: false },
     });
+    if (!error) loginMsg(`Tjek din indbakke (${email}) og klik på linket.`, true);
+    else if (error.status === 429) loginMsg('Der er sendt for mange login-mails. Vent en time, eller log ind med adgangskode.', false);
+    else loginMsg('Linket kunne ikke sendes. Prøv igen om lidt.', false);
+  });
+
+  $('pw-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = $('new-pw') as HTMLInputElement;
+    const msg = $('pw-msg');
+    const { error } = await supabase.auth.updateUser({ password: input.value });
     msg.hidden = false;
     msg.className = 'message ' + (error ? 'error' : 'ok');
     msg.textContent = error
-      ? 'Linket kunne ikke sendes. Vent et øjeblik, og prøv igen.'
-      : `Tjek din indbakke (${email}) og klik på linket.`;
+      ? (error.message.toLowerCase().includes('weak') || error.message.includes('characters')
+          ? 'Adgangskoden er for svag. Brug mindst 8 tegn.'
+          : 'Adgangskoden blev ikke gemt. Prøv igen.')
+      : 'Adgangskoden er gemt. Næste gang logger du ind med e-mail og adgangskode.';
+    if (!error) input.value = '';
   });
 
   async function logout() {
@@ -349,7 +393,7 @@ import Base from '../layouts/Base.astro';
     margin-bottom: 1.25rem;
   }
   .admin-page .login { display: grid; gap: 0.6rem; max-width: 26rem; }
-  .admin-page input[type='email'] {
+  .admin-page input[type='email'], .admin-page input[type='password'] {
     width: 100%;
     font: inherit;
     color: var(--paper);
@@ -359,6 +403,9 @@ import Base from '../layouts/Base.astro';
     padding: 0.7rem 0.8rem;
   }
   .admin-page .who { margin-bottom: 1rem; }
+  .admin-page .login .btn { margin-top: 0.4rem; justify-self: start; }
+  .admin-page .pw-box summary { cursor: pointer; color: var(--amber); }
+  .admin-page .pw-box .login { margin-top: 0.8rem; }
   .admin-page .block { margin-top: 2.25rem; }
   .admin-page h3 { font-size: 1.05rem; margin-top: 1.5rem; }
 
