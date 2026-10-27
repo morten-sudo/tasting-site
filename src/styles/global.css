@@ -17,6 +17,9 @@
   --display: 'Big Shoulders Stencil Display', 'Arial Narrow', sans-serif;
   --body: 'Literata', Georgia, serif;
 
+  /* Sidemargen: hele siden bruger skærmens bredde */
+  --gutter: clamp(1rem, 4vw, 3rem);
+
   color-scheme: dark;
 }
 
@@ -56,10 +59,12 @@ p { margin: 0 0 1em; }
 
 .wrap {
   width: 100%;
-  max-width: 38rem;
-  margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 var(--gutter);
 }
+
+/* Tekst og formularer holdes i en læsevenlig bredde, selvom siden er bred */
+main p, main .message { max-width: 44rem; }
+textarea, input[type='text'], input[type='email'], input[type='password'], select { max-width: 36rem; }
 
 /* Farveskalaen: ung ruby → gammel tawny */
 .spectrum {

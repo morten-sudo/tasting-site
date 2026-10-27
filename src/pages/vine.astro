@@ -13,8 +13,6 @@ import Base from '../layouts/Base.astro';
       Vinene kunne ikke hentes. Tjek din forbindelse, og genindlæs siden.
     </p>
 
-    <nav id="style-chips" class="chips" aria-label="Spring til en stilart" hidden></nav>
-
     <div id="wine-list" class="carousel" role="region" aria-roledescription="karrusel" aria-label="Vinene" tabindex="0"></div>
 
     <div id="carousel-nav" class="carousel-nav" hidden>
@@ -43,7 +41,7 @@ import Base from '../layouts/Base.astro';
   import { supabase, getGuestCode } from '../lib/supabase';
   import { getCart, cartCount } from '../lib/cart';
 
-  import { type Wine, STYLE_LABELS, STYLE_TONES, styleLabel, styleTone, vintageLabel, kr } from '../lib/wines';
+  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../lib/wines';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -144,12 +142,6 @@ import Base from '../layouts/Base.astro';
     $('counter').textContent = `${i + 1} af ${cards.length}`;
     ($('prev') as HTMLButtonElement).disabled = i === 0;
     ($('next') as HTMLButtonElement).disabled = i === cards.length - 1;
-    const style = cards[i]?.dataset.style;
-    for (const chip of $('style-chips').querySelectorAll<HTMLButtonElement>('button')) {
-      const on = chip.dataset.style === style;
-      chip.classList.toggle('on', on);
-      chip.setAttribute('aria-pressed', String(on));
-    }
     cards.forEach((c, n) => c.classList.toggle('is-current', n === i));
   }
 
@@ -161,22 +153,6 @@ import Base from '../layouts/Base.astro';
     track.append(...cards);
     list.append(track);
 
-    // Stilarter som genveje, i den rækkefølge de skænkes
-    const chips = $('style-chips');
-    chips.replaceChildren();
-    const seen = new Set<string>();
-    wines.forEach((w, i) => {
-      const style = w.style ?? 'Øvrige';
-      if (seen.has(style)) return;
-      seen.add(style);
-      const b = el('button', 'chip', STYLE_LABELS[style] ?? style);
-      b.type = 'button';
-      b.dataset.style = style;
-      b.style.setProperty('--tone', STYLE_TONES[style] ?? 'var(--amber)');
-      b.addEventListener('click', () => scrollToCard(i));
-      chips.append(b);
-    });
-    chips.hidden = seen.size < 2;
     $('carousel-nav').hidden = cards.length < 2;
 
     let ticking = false;
@@ -229,9 +205,6 @@ import Base from '../layouts/Base.astro';
         status.textContent = 'Bestillingen er åben. Brug linket fra din invitation for at bestille.';
         status.hidden = false;
       }
-    } else {
-      status.textContent = 'Du kan bestille vin på selve aftenen og ugen efter. Priserne er pr. flaske.';
-      status.hidden = false;
     }
     render();
   }
@@ -240,6 +213,7 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style is:global>
+  /* Vinsiden bruger hele skærmens bredde */
   .vine-page { padding-top: 2.5rem; padding-bottom: 5rem; }
   .vine-page .title {
     font-family: var(--display);
@@ -251,47 +225,12 @@ import Base from '../layouts/Base.astro';
   .vine-page .lead { font-size: 1.1rem; }
   .vine-page #order-status { margin: 1.25rem 0 0.5rem; }
 
-  /* Stilarter som genveje */
-  .chips {
-    display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-    margin: 1.75rem -1rem 0;
-    padding: 0 1rem 0.25rem;
-  }
-  .chips::-webkit-scrollbar { display: none; }
-  .chip {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.75rem;
-    padding: 0 1rem;
-    border-radius: 999px;
-    border: 1px solid var(--lodge-3);
-    background: none;
-    color: var(--muted);
-    font: 0.95rem/1 var(--body);
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .chip::before {
-    content: '';
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-    background: var(--tone);
-  }
-  .chip:hover { color: var(--paper); }
-  .chip.on { color: var(--paper); border-color: var(--tone); background: var(--lodge-2); }
-
   /* Karrusellen: én vin ad gangen, næste kigger frem i kanten */
-  .carousel { margin: 1rem -1rem 0; outline-offset: -2px; }
+  .carousel { margin: 1.75rem calc(-1 * var(--gutter)) 0; outline-offset: -2px; }
   .carousel .track {
     list-style: none;
     margin: 0;
-    padding: 0.25rem 1rem 0.5rem;
+    padding: 0.25rem var(--gutter) 0.5rem;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: min(84%, 22rem);
@@ -299,7 +238,7 @@ import Base from '../layouts/Base.astro';
     align-items: start;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scroll-padding-left: 1rem;
+    scroll-padding-left: var(--gutter);
     overscroll-behavior-x: contain;
     scrollbar-width: none;
   }
@@ -313,6 +252,10 @@ import Base from '../layouts/Base.astro';
     opacity: 0.55;
   }
   .carousel .card.is-current { opacity: 1; }
+  /* Store skærme: flere vine ad gangen, alle i fuld styrke */
+  @media (min-width: 640px) {
+    .carousel .card { opacity: 1; }
+  }
   .carousel .pic {
     position: relative;
     height: 16rem;

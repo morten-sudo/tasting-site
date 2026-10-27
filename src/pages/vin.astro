@@ -2,16 +2,18 @@
 import Base from '../layouts/Base.astro';
 ---
 <Base title="Vin">
-  <article class="wrap vin-page">
-    <a href="/vine/" class="back">Alle vinene</a>
+  <article class="vin-page">
+    <div class="wrap top">
+      <a href="/vine/" class="back">Alle vinene</a>
+      <p id="loading" class="hint">Henter vinen …</p>
+      <p id="load-error" class="message error" hidden>
+        Vinen kunne ikke findes. <a href="/vine/">Gå tilbage til vinene</a>.
+      </p>
+    </div>
 
-    <p id="loading" class="hint">Henter vinen …</p>
-    <p id="load-error" class="message error" hidden>
-      Vinen kunne ikke findes. <a href="/vine/">Gå tilbage til vinene</a>.
-    </p>
-
-    <div id="wine" hidden>
+    <div id="wine" class="layout" hidden>
       <div id="pic" class="pic"><span id="no" class="no" aria-hidden="true"></span></div>
+      <div class="text">
 
       <p id="style-tag" class="style-tag"></p>
       <h1 id="name" class="name"></h1>
@@ -30,6 +32,7 @@ import Base from '../layouts/Base.astro';
         <a id="prev" class="pager-link prev" hidden></a>
         <a id="next" class="pager-link next" hidden></a>
       </nav>
+      </div>
     </div>
   </article>
 
@@ -164,9 +167,6 @@ import Base from '../layouts/Base.astro';
     } else if (settings.orders_open === true) {
       status.textContent = 'Brug linket fra din invitation for at bestille.';
       status.hidden = false;
-    } else {
-      status.textContent = 'Du kan bestille vin på selve aftenen og ugen efter.';
-      status.hidden = false;
     }
 
     pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], 'Forrige');
@@ -179,7 +179,27 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style is:global>
-  .vin-page { padding-top: 1.25rem; padding-bottom: 6rem; }
+  /* Vinens egen side bruger hele skærmens bredde:
+     billedet går helt ud til kanterne, og på store skærme står billede og tekst side om side */
+  .vin-page { padding-top: 0.5rem; padding-bottom: 6rem; }
+  .vin-page .text { padding: 0 var(--gutter); }
+  @media (min-width: 900px) {
+    .vin-page .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+    .vin-page .layout .pic {
+      position: sticky;
+      top: 6rem;
+      height: calc(100vh - 9rem);
+      max-height: none;
+      margin: 0 0 0 var(--gutter);
+      border-radius: 1rem;
+    }
+    .vin-page .text { max-width: 40rem; padding-left: clamp(2rem, 5vw, 5rem); }
+    .vin-page .style-tag { margin-top: 0.5rem; }
+  }
   .vin-page .back {
     display: inline-flex;
     align-items: center;
@@ -200,11 +220,11 @@ import Base from '../layouts/Base.astro';
 
   .vin-page .pic {
     position: relative;
-    margin-top: 0.5rem;
-    height: 24rem;
-    max-height: 55vh;
+    margin-top: 0.25rem;
+    height: 62vh;
+    min-height: 20rem;
+    max-height: 34rem;
     background: #fff;
-    border-radius: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
