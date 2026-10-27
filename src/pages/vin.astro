@@ -1,0 +1,339 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Vin">
+  <article class="wrap vin-page">
+    <a href="/vine/" class="back">Alle vinene</a>
+
+    <p id="loading" class="hint">Henter vinen …</p>
+    <p id="load-error" class="message error" hidden>
+      Vinen kunne ikke findes. <a href="/vine/">Gå tilbage til vinene</a>.
+    </p>
+
+    <div id="wine" hidden>
+      <div id="pic" class="pic"><span id="no" class="no" aria-hidden="true"></span></div>
+
+      <p id="style-tag" class="style-tag"></p>
+      <h1 id="name" class="name"></h1>
+      <p id="meta" class="meta"></p>
+
+      <div class="buy">
+        <p id="price" class="price"></p>
+        <button id="add" type="button" class="add" hidden>Læg i kurv</button>
+      </div>
+      <p id="order-status" class="hint" hidden></p>
+
+      <p id="desc" class="desc"></p>
+      <dl id="details" class="details" hidden></dl>
+
+      <nav class="pager" aria-label="Andre vine">
+        <a id="prev" class="pager-link prev" hidden></a>
+        <a id="next" class="pager-link next" hidden></a>
+      </nav>
+    </div>
+  </article>
+
+  <a id="basket" class="basket" href="/kurv/" hidden>
+    <div class="wrap basket-inner">
+      <div>
+        <span id="basket-count"></span>
+        <strong id="basket-total"></strong>
+      </div>
+      <span class="basket-go">Gå til kurven</span>
+    </div>
+  </a>
+</Base>
+
+<script>
+  import { supabase, getGuestCode } from '../lib/supabase';
+  import { getCart, addToCart, cartCount } from '../lib/cart';
+  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../lib/wines';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  };
+
+  const id = Number(new URLSearchParams(location.search).get('id'));
+  const code = getGuestCode();
+  let wines: Wine[] = [];
+
+  function renderBasket() {
+    const cart = getCart();
+    let total = 0;
+    for (const w of wines) total += (cart[w.id] ?? 0) * (w.price_dkk ?? 0);
+    const bottles = cartCount(cart);
+    $('basket').hidden = bottles === 0;
+    $('basket-count').textContent = `${bottles} ${bottles === 1 ? 'flaske' : 'flasker'} i kurven, `;
+    $('basket-total').textContent = kr.format(total);
+  }
+
+  function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {
+    if (!w) return;
+    a.href = `/vin/?id=${w.id}`;
+    a.append(el('span', 'dir', label), el('span', 'to', w.name));
+    a.hidden = false;
+  }
+
+  async function load() {
+    const [winesRes, settingsRes] = await Promise.all([
+      supabase.from('wines').select('*').order('sort_order'),
+      supabase.from('settings').select('key, value'),
+    ]);
+    $('loading').hidden = true;
+    wines = (winesRes.data ?? []) as Wine[];
+    const index = wines.findIndex((w) => w.id === id);
+    if (winesRes.error || index < 0) { $('load-error').hidden = false; return; }
+    const w = wines[index];
+
+    document.title = `${w.name} – Portvin 2026`;
+
+    const pic = $('pic');
+    if (w.image_url) {
+      const img = el('img');
+      img.src = w.image_url;
+      img.alt = w.name;
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => pic.classList.add('empty'));
+      pic.prepend(img);
+    } else {
+      pic.classList.add('empty');
+    }
+    $('no').textContent = String(index + 1).padStart(2, '0');
+
+    const tag = $('style-tag');
+    tag.textContent = styleLabel(w);
+    tag.style.setProperty('--tone', styleTone(w));
+    $('name').textContent = w.name;
+    $('meta').textContent = [
+      vintageLabel(w),
+      w.producer,
+      w.abv ? `${w.abv.toString().replace('.', ',')} %` : null,
+    ].filter(Boolean).join(' · ');
+
+    const price = $('price');
+    if (w.price_dkk != null) {
+      price.append(el('span', 'ours', kr.format(w.price_dkk)));
+      if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
+        const normal = el('span', 'normal');
+        normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
+        price.append(normal);
+      }
+    }
+
+    if (w.description) $('desc').textContent = w.description;
+    else $('desc').hidden = true;
+
+    if (w.details) {
+      const dl = $('details');
+      for (const line of w.details.split('\n')) {
+        const i = line.indexOf(':');
+        if (i > 0 && i < 30) {
+          dl.append(el('dt', '', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
+        } else if (line.trim()) {
+          dl.append(el('dd', '', line.trim()));
+        }
+      }
+      dl.hidden = false;
+    }
+
+    // Bestilling
+    const settings = Object.fromEntries((settingsRes.data ?? []).map((s) => [s.key, s.value]));
+    const status = $('order-status');
+    if (settings.orders_open === true && code && w.orderable) {
+      const btn = $('add') as HTMLButtonElement;
+      const sync = () => {
+        const n = getCart()[w.id] ?? 0;
+        btn.textContent = n ? `Læg i kurv (${n} i kurven)` : 'Læg i kurv';
+        btn.classList.toggle('in-cart', n > 0);
+      };
+      btn.addEventListener('click', () => {
+        addToCart(w.id);
+        sync();
+        btn.classList.remove('pop');
+        void btn.offsetWidth;
+        btn.classList.add('pop');
+      });
+      window.addEventListener('cart-change', () => { sync(); renderBasket(); });
+      sync();
+      btn.hidden = false;
+      renderBasket();
+    } else if (settings.orders_open === true) {
+      status.textContent = 'Brug linket fra din invitation for at bestille.';
+      status.hidden = false;
+    } else {
+      status.textContent = 'Du kan bestille vin på selve aftenen og ugen efter.';
+      status.hidden = false;
+    }
+
+    pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], 'Forrige');
+    pagerLink($('next') as HTMLAnchorElement, wines[index + 1], 'Næste');
+
+    $('wine').hidden = false;
+  }
+
+  load();
+</script>
+
+<style is:global>
+  .vin-page { padding-top: 1.25rem; padding-bottom: 6rem; }
+  .vin-page .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 2.75rem;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .vin-page .back::before {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    border-left: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .vin-page .back:hover { color: var(--paper); }
+
+  .vin-page .pic {
+    position: relative;
+    margin-top: 0.5rem;
+    height: 24rem;
+    max-height: 55vh;
+    background: #fff;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow: hidden;
+  }
+  .vin-page .pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .vin-page .pic.empty { background: linear-gradient(180deg, var(--ruby), var(--tawny)); }
+  .vin-page .pic.empty img { display: none; }
+  .vin-page .no {
+    position: absolute;
+    top: 0.7rem;
+    left: 0.95rem;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: var(--lodge);
+    opacity: 0.55;
+  }
+
+  .vin-page .style-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.4rem 0 0.4rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .vin-page .style-tag::before {
+    content: '';
+    width: 1.5rem;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--tone);
+  }
+  .vin-page .name {
+    font-family: var(--body);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0 0 0.3rem;
+  }
+  .vin-page .meta { margin: 0; color: var(--muted); }
+
+  .vin-page .buy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--lodge-3);
+    border-bottom: 1px solid var(--lodge-3);
+  }
+  .vin-page .price {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.3;
+  }
+  .vin-page .price .ours { font-weight: 600; font-size: 1.3rem; }
+  .vin-page .price .normal { color: var(--muted); font-size: 0.88rem; }
+  .vin-page .add {
+    font: 600 1rem/1 var(--body);
+    color: var(--lodge);
+    background: var(--amber);
+    border: 0;
+    border-radius: 999px;
+    padding: 0.85rem 1.25rem;
+    min-height: 3rem;
+    cursor: pointer;
+  }
+  .vin-page .add:hover { background: var(--paper); }
+  .vin-page .add.in-cart { background: none; color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .vin-page .add.pop { animation: pop 0.25s ease-out; }
+  @keyframes pop { 50% { transform: scale(1.06); } }
+  .vin-page #order-status { margin: 0.6rem 0 0; }
+
+  .vin-page .desc { margin-top: 1.4rem; font-size: 1.05rem; line-height: 1.65; }
+  .vin-page .details {
+    margin: 1.25rem 0 0;
+    padding: 1rem 1.1rem;
+    background: var(--lodge-2);
+    border-radius: 0.75rem;
+    line-height: 1.5;
+  }
+  .vin-page .details dt { color: var(--muted); font-size: 0.85rem; }
+  .vin-page .details dd { margin: 0 0 0.7rem; }
+  .vin-page .details dd:last-child { margin-bottom: 0; }
+
+  .vin-page .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .vin-page .pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.75rem;
+    color: var(--paper);
+    text-decoration: none;
+    min-width: 0;
+  }
+  .vin-page .pager-link.next { grid-column: 2; text-align: right; }
+  .vin-page .pager-link:hover { border-color: var(--amber); }
+  .vin-page .pager-link .dir { color: var(--muted); font-size: 0.82rem; }
+  .vin-page .pager-link .to { font-size: 0.95rem; line-height: 1.3; }
+
+  .basket {
+    display: block;
+    color: var(--paper);
+    text-decoration: none;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: var(--lodge-2);
+    border-top: 2px solid var(--amber);
+    padding: 0.9rem 0 calc(0.9rem + env(safe-area-inset-bottom));
+  }
+  .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  #basket-total { font-size: 1.15rem; }
+  .basket-go { color: var(--amber); font-weight: 600; white-space: nowrap; }
+  .basket:hover .basket-go { color: var(--paper); }
+</style>

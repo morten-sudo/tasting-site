@@ -41,31 +41,9 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { supabase, getGuestCode } from '../lib/supabase';
-  import { getCart, addToCart, cartCount } from '../lib/cart';
+  import { getCart, cartCount } from '../lib/cart';
 
-  type Wine = {
-    id: number; sort_order: number; name: string; producer: string | null;
-    style: string | null; vintage: string | null; abv: number | null;
-    price_dkk: number | null; description: string | null; orderable: boolean;
-    image_url: string | null; details: string | null; retail_price_dkk: number | null;
-  };
-
-  const STYLE_LABELS: Record<string, string> = {
-    Vintage: 'Vintage',
-    Tawny: 'Tawny',
-    Rivesaltes: 'Rivesaltes Ambré',
-    White: 'Hvid portvin',
-    Aguardente: 'Druebrændevin',
-  };
-
-  // Farven på stilartens mærke: portvinens skala fra ruby til gammel ravfarve
-  const STYLE_TONES: Record<string, string> = {
-    Vintage: '#a3213a',
-    Tawny: '#b8742e',
-    Rivesaltes: '#9c4a2c',
-    White: '#e0c27a',
-    Aguardente: '#dba65a',
-  };
+  import { type Wine, STYLE_LABELS, STYLE_TONES, styleLabel, styleTone, vintageLabel, kr } from '../lib/wines';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -94,31 +72,14 @@ import Base from '../layouts/Base.astro';
     $('basket-total').textContent = kr.format(total);
   }
 
-  function addButton(w: Wine) {
-    const btn = el('button', 'add');
-    btn.type = 'button';
-    const sync = () => {
-      const n = getCart()[w.id] ?? 0;
-      btn.textContent = n ? `Læg i kurv (${n} i kurven)` : 'Læg i kurv';
-      btn.classList.toggle('in-cart', n > 0);
-    };
-    btn.addEventListener('click', () => {
-      addToCart(w.id);
-      sync();
-      btn.classList.remove('pop');
-      void btn.offsetWidth;
-      btn.classList.add('pop');
-    });
-    window.addEventListener('cart-change', sync);
-    sync();
-    return btn;
-  }
-
   function wineCard(w: Wine, index: number, total: number) {
     const li = el('li', 'card');
     li.dataset.style = w.style ?? 'Øvrige';
     li.setAttribute('aria-roledescription', 'vin');
-    li.setAttribute('aria-label', `${index + 1} af ${total}: ${w.name}`);
+    li.setAttribute('aria-label', `${index + 1} af ${total}`);
+
+    const link = el('a', 'card-link');
+    link.href = `/vin/?id=${w.id}`;
 
     const pic = el('div', 'pic');
     if (w.image_url) {
@@ -136,34 +97,17 @@ import Base from '../layouts/Base.astro';
     const no = el('span', 'no', String(index + 1).padStart(2, '0'));
     no.setAttribute('aria-hidden', 'true');
     pic.append(no);
-    li.append(pic);
+    link.append(pic);
 
     const info = el('div', 'info');
-    const tag = el('p', 'style-tag', STYLE_LABELS[w.style ?? ''] ?? w.style ?? '');
-    tag.style.setProperty('--tone', STYLE_TONES[w.style ?? ''] ?? 'var(--amber)');
+    const tag = el('p', 'style-tag', styleLabel(w));
+    tag.style.setProperty('--tone', styleTone(w));
     info.append(tag);
     info.append(el('h3', 'name', w.name));
-    const meta = [w.producer, w.abv ? `${w.abv.toString().replace('.', ',')} %` : null]
-      .filter(Boolean).join(', ');
-    if (meta) info.append(el('p', 'meta', meta));
-    if (w.description) info.append(el('p', 'desc', w.description));
-    if (w.details) {
-      const more = el('details', 'more');
-      more.append(el('summary', '', 'Læs mere'));
-      const dl = el('dl');
-      for (const line of w.details.split('\n')) {
-        const i = line.indexOf(':');
-        if (i > 0 && i < 30) {
-          dl.append(el('dt', '', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
-        } else if (line.trim()) {
-          dl.append(el('dd', '', line.trim()));
-        }
-      }
-      more.append(dl);
-      info.append(more);
-    }
+    const vin = vintageLabel(w);
+    if (vin) info.append(el('p', 'meta', vin));
 
-    const buy = el('div', 'buy');
+    const foot = el('div', 'foot');
     if (w.price_dkk != null) {
       const price = el('p', 'price');
       price.append(el('span', 'ours', kr.format(w.price_dkk)));
@@ -172,12 +116,15 @@ import Base from '../layouts/Base.astro';
         normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
         price.append(normal);
       }
-      buy.append(price);
+      foot.append(price);
     }
-    if (ordering && w.orderable) buy.append(addButton(w));
-    info.append(buy);
+    const go = el('span', 'go', 'Læs mere');
+    go.setAttribute('aria-hidden', 'true');
+    foot.append(go);
+    info.append(foot);
 
-    li.append(info);
+    link.append(info);
+    li.append(link);
     return li;
   }
 
@@ -276,7 +223,7 @@ import Base from '../layouts/Base.astro';
     if (settings.orders_open === true) {
       if (code) {
         ordering = true;
-        $('intro').textContent = 'Læg de vine, du vil have, i kurven. Du sender bestillingen fra kurven.';
+        $('intro').textContent = 'Tryk på en vin for at læse mere og lægge den i kurven. Du sender bestillingen fra kurven.';
         window.addEventListener('cart-change', renderBasket);
       } else {
         status.textContent = 'Bestillingen er åben. Brug linket fra din invitation for at bestille.';
@@ -389,7 +336,6 @@ import Base from '../layouts/Base.astro';
     color: var(--lodge);
     opacity: 0.55;
   }
-  .carousel .info { padding: 1.1rem 1.1rem 1.25rem; }
   .carousel .style-tag {
     display: flex;
     align-items: center;
@@ -431,57 +377,28 @@ import Base from '../layouts/Base.astro';
   .nav-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
   .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
-  .carousel .info { min-width: 0; }
+  .carousel .card-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .carousel .card-link:focus-visible { outline-offset: -3px; border-radius: 1rem; }
+  .carousel .info { min-width: 0; padding: 1.1rem 1.1rem 1.2rem; }
   .carousel .name {
     font-family: var(--body);
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    line-height: 1.35;
-    margin: 0 0 0.2rem;
+    line-height: 1.3;
+    margin: 0 0 0.15rem;
   }
-  .carousel .meta, .carousel .desc { margin: 0; color: var(--muted); font-size: 0.92rem; }
-  .carousel .desc { margin-top: 0.4rem; color: var(--paper); line-height: 1.5; }
-  .carousel .more { margin-top: 0.5rem; }
-  .carousel .more summary {
-    cursor: pointer;
-    color: var(--amber);
-    font-size: 0.92rem;
-    padding: 0.35rem 0;
-    list-style: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .carousel .more summary::-webkit-details-marker { display: none; }
-  .carousel .more summary::after {
-    content: '';
-    width: 0.45rem;
-    height: 0.45rem;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(45deg) translateY(-2px);
-    transition: transform 0.15s;
-  }
-  .carousel .more[open] summary::after { transform: rotate(-135deg) translateY(-1px); }
-  .carousel .more[open] summary { color: var(--paper); }
-  .carousel .more dl {
-    margin: 0.4rem 0 0;
-    padding: 0.8rem 0.9rem;
-    background: var(--lodge-2);
-    border-radius: 0.5rem;
-    font-size: 0.92rem;
-    line-height: 1.5;
-  }
-  .carousel .more dt { color: var(--muted); font-size: 0.85rem; }
-  .carousel .more dd { margin: 0 0 0.55rem; }
-  .carousel .more dd:last-child { margin-bottom: 0; }
-  .carousel .buy {
+  .carousel .meta { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .carousel .foot {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-top: 0.75rem;
+    margin-top: 0.9rem;
   }
   .carousel .price {
     margin: 0;
@@ -491,28 +408,25 @@ import Base from '../layouts/Base.astro';
     white-space: nowrap;
     line-height: 1.3;
   }
-  .carousel .price .ours { font-weight: 600; font-size: 1.05rem; }
+  .carousel .price .ours { font-weight: 600; font-size: 1.1rem; }
   .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
-  .carousel .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
-
-  .carousel .add {
-    font: 600 0.95rem/1 var(--body);
-    color: var(--lodge);
-    background: var(--amber);
-    border: 0;
-    border-radius: 999px;
-    padding: 0.8rem 1.1rem;
-    min-height: 2.75rem;
-    cursor: pointer;
-  }
-  .carousel .add:hover { background: var(--paper); }
-  .carousel .add.in-cart {
-    background: none;
+  .carousel .go {
     color: var(--amber);
-    box-shadow: inset 0 0 0 1px var(--amber);
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
   }
-  .carousel .add.pop { animation: pop 0.25s ease-out; }
-  @keyframes pop { 50% { transform: scale(1.06); } }
+  .carousel .go::after {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 2px solid currentColor;
+    border-top: 2px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .carousel .card-link:hover .go { color: var(--paper); }
 
   .basket {
     display: block;

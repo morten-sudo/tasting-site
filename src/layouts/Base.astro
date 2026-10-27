@@ -33,7 +33,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
         </div>
       </div>
       <nav aria-label="Hovedmenu">
-        <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vine') }}>Vinene</a>
+        <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vin') }}>Vinene</a>
         <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
         <a href="/invitation/" class:list={{ current: Astro.url.pathname.startsWith('/invitation') }}>Tilmelding</a>
         <a href="/kurv/" id="nav-cart" class:list={['cart-link', { current: Astro.url.pathname.startsWith('/kurv') }]} hidden={!Astro.url.pathname.startsWith('/kurv')}>
