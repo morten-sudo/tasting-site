@@ -1,0 +1,74 @@
+---
+import Base from '../layouts/Base.astro';
+import { EVENT } from '../lib/config';
+---
+<Base>
+  <section class="hero wrap">
+    <h1>Portvin</h1>
+    <p class="when">{EVENT.dateLong}<br />{EVENT.time}</p>
+    {EVENT.place && <p class="where">{EVENT.place}</p>}
+    <div class="spectrum" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <p class="scale-caption">Fra ung ruby til gammel tawny</p>
+  </section>
+
+  <section class="wrap intro">
+    <p>
+      En aften med portvin fra Douro og et smut forbi Rivesaltes. Vi smager os
+      gennem stilarterne, hører historien bag og slutter af med en quiz, hvor
+      pointtavlen følger med hele vejen.
+    </p>
+  </section>
+
+  <section class="wrap rsvp">
+    <h2>Tilmelding</h2>
+    <div id="rsvp-known" hidden>
+      <p>Du har allerede åbnet din invitation på denne telefon eller computer.</p>
+      <a class="btn" href="/invitation/">Se eller ret din tilmelding</a>
+    </div>
+    <p id="rsvp-unknown">
+      Du tilmelder dig via det personlige link i din invitation. Har du ikke fået
+      et, så skriv til værten.
+    </p>
+  </section>
+</Base>
+
+<script>
+  let known = false;
+  try { known = !!localStorage.getItem('portvin_kode'); } catch {}
+  if (known) {
+    document.getElementById('rsvp-known')!.hidden = false;
+    document.getElementById('rsvp-unknown')!.hidden = true;
+  }
+</script>
+
+<style>
+  .hero {
+    padding-top: 12vh;
+    padding-bottom: 2.5rem;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(5rem, 28vw, 10.5rem);
+    line-height: 0.82;
+    letter-spacing: -0.01em;
+    margin: 0 0 1.5rem;
+    color: var(--paper);
+  }
+  .when {
+    font-size: 1.35rem;
+    line-height: 1.35;
+    margin-bottom: 0.4rem;
+  }
+  .where { color: var(--muted); }
+  .spectrum { margin-top: 2rem; }
+  .scale-caption {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .intro p { max-width: 34rem; }
+  .rsvp { margin-top: 2rem; }
+</style>

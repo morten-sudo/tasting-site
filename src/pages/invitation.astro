@@ -1,0 +1,205 @@
+---
+import Base from '../layouts/Base.astro';
+import { EVENT } from '../lib/config';
+---
+<Base title="Din invitation">
+  <section class="wrap page">
+    <p id="loading" class="hint">Henter din invitation …</p>
+
+    <div id="invalid" class="message error" hidden>
+      <p><strong>Linket virker ikke.</strong></p>
+      <p>
+        Tjek, at du har brugt hele linket fra din invitation. Virker det stadig
+        ikke, så skriv til værten og få et nyt.
+      </p>
+    </div>
+
+    <div id="invite" hidden>
+      <h1 class="greeting">Kære <span id="guest-name"></span></h1>
+      <p class="lead">
+        Du er inviteret til portvinssmagning<br />
+        {EVENT.dateLong} {EVENT.time}{EVENT.place && <>, {EVENT.place}</>}.
+      </p>
+
+      <p id="current" class="message ok" hidden></p>
+
+      <form id="rsvp-form" novalidate>
+        <fieldset class="choice">
+          <legend>Kommer du?</legend>
+          <label class="option">
+            <input type="radio" name="attending" value="yes" required />
+            <span>Ja, jeg kommer</span>
+          </label>
+          <label class="option">
+            <input type="radio" name="attending" value="no" />
+            <span>Nej, jeg kan ikke</span>
+          </label>
+        </fieldset>
+
+        <div id="yes-fields" class="field" hidden>
+          <label for="diet">Allergier eller kostbehov</label>
+          <textarea id="diet" name="diet" maxlength="500"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="note">Besked til værten <span class="hint">(valgfri)</span></label>
+          <textarea id="note" name="note" maxlength="1000"></textarea>
+        </div>
+
+        <p id="form-error" class="message error" hidden></p>
+
+        <button type="submit" class="btn" id="submit">Send svar</button>
+      </form>
+
+      <p class="hint small">
+        Du kan altid komme tilbage via dit link og ændre dit svar, så længe
+        tilmeldingen er åben.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase, getGuestCode } from '../lib/supabase';
+  import { EVENT } from '../lib/config';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const code = getGuestCode();
+  const form = $<HTMLFormElement>('rsvp-form');
+  const yesFields = $('yes-fields');
+  const current = $('current');
+  const formError = $('form-error');
+  const submit = $<HTMLButtonElement>('submit');
+
+  let guestName = '';
+
+  function showCurrent(status: string) {
+    if (status === 'yes') {
+      current.textContent = `Du har meldt dig til. Vi ses ${EVENT.dateLong.toLowerCase()} ${EVENT.time}.`;
+      current.hidden = false;
+    } else if (status === 'no') {
+      current.textContent = 'Du har meldt fra. Du kan stadig nå at ombestemme dig.';
+      current.hidden = false;
+    } else {
+      current.hidden = true;
+    }
+  }
+
+  function syncFields() {
+    const v = (form.elements.namedItem('attending') as RadioNodeList).value;
+    yesFields.hidden = v !== 'yes';
+  }
+  form.addEventListener('change', syncFields);
+
+  async function load() {
+    if (!code) {
+      $('loading').hidden = true;
+      $('invalid').hidden = false;
+      return;
+    }
+    const { data, error } = await supabase.rpc('get_invite', { code });
+    $('loading').hidden = true;
+    const row = Array.isArray(data) ? data[0] : null;
+    if (error || !row) {
+      $('invalid').hidden = false;
+      return;
+    }
+    guestName = row.name;
+    $('guest-name').textContent = row.name;
+    if (row.status === 'yes' || row.status === 'no') {
+      (form.querySelector(`input[value="${row.status}"]`) as HTMLInputElement).checked = true;
+    }
+    $<HTMLTextAreaElement>('diet').value = row.diet ?? '';
+    $<HTMLTextAreaElement>('note').value = row.note ?? '';
+    showCurrent(row.status);
+    syncFields();
+    $('invite').hidden = false;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    formError.hidden = true;
+    const choice = (form.elements.namedItem('attending') as RadioNodeList).value;
+    if (!choice) {
+      formError.textContent = 'Vælg, om du kommer eller ej.';
+      formError.hidden = false;
+      return;
+    }
+    submit.disabled = true;
+    submit.textContent = 'Sender …';
+    const attending = choice === 'yes';
+    const { data, error } = await supabase.rpc('respond_invite', {
+      code,
+      attending,
+      diet: attending ? $<HTMLTextAreaElement>('diet').value : null,
+      note: $<HTMLTextAreaElement>('note').value,
+    });
+    submit.disabled = false;
+    submit.textContent = 'Send svar';
+    if (error) {
+      formError.textContent = error.message.includes('lukket')
+        ? 'Tilmeldingen er lukket. Skriv til værten, hvis du skal ændre noget.'
+        : 'Dit svar blev ikke gemt. Tjek din forbindelse og prøv igen.';
+      formError.hidden = false;
+      return;
+    }
+    showCurrent(data as string);
+    current.textContent = (attending ? `Tak, ${guestName}. ` : 'Tak for svaret. ') + current.textContent;
+    current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  load();
+</script>
+
+<style>
+  .page { padding-top: 2.5rem; }
+  .greeting {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 12vw, 4rem);
+    line-height: 0.95;
+    margin-bottom: 1rem;
+  }
+  .lead { font-size: 1.15rem; margin-bottom: 1.5rem; }
+  #current { margin-bottom: 1.5rem; }
+
+  .choice {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .choice legend {
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    padding: 0;
+  }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.6rem;
+    background: var(--lodge-2);
+    font-weight: 400;
+    cursor: pointer;
+    min-height: 3.25rem;
+  }
+  .option:has(input:checked) {
+    border-color: var(--amber);
+    box-shadow: inset 4px 0 0 var(--amber);
+  }
+  .option input {
+    accent-color: var(--amber);
+    width: 1.2rem;
+    height: 1.2rem;
+    margin: 0;
+  }
+  .field { margin-bottom: 1.25rem; }
+  #form-error { margin-bottom: 1rem; }
+  .small { margin-top: 1.5rem; font-size: 0.9rem; }
+</style>

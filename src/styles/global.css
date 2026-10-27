@@ -1,0 +1,123 @@
+/* Portvin 2026 – farver og typografi
+   Kælder-mørk bund, tekst som gammelt etiketpapir, og portvinens
+   farveskala fra ung ruby til gammel tawny som eneste pynt. */
+
+:root {
+  --lodge: #2b1517;      /* bund: mørkt fadtræ */
+  --lodge-2: #3a1e21;    /* flader */
+  --lodge-3: #4c2a2c;    /* kanter */
+  --paper: #efe3cc;      /* tekst */
+  --muted: #c2ab8d;      /* sekundær tekst */
+  --ruby: #a3213a;
+  --tawny: #b8742e;
+  --amber: #dba65a;      /* fokus og links */
+  --ok: #9fbf86;
+  --error: #f08c7a;
+
+  --display: 'Big Shoulders Stencil Display', 'Arial Narrow', sans-serif;
+  --body: 'Literata', Georgia, serif;
+
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--lodge);
+  color: var(--paper);
+  font-family: var(--body);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  font-optical-sizing: auto;
+}
+
+a { color: var(--amber); text-underline-offset: 0.18em; }
+a:hover { color: var(--paper); }
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; }
+
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.9rem;
+  letter-spacing: 0.01em;
+}
+
+p { margin: 0 0 1em; }
+
+.wrap {
+  width: 100%;
+  max-width: 38rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Farveskalaen: ung ruby → gammel tawny */
+.spectrum {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  height: 0.75rem;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.spectrum span:nth-child(1) { background: #5a0a1d; }
+.spectrum span:nth-child(2) { background: #861530; }
+.spectrum span:nth-child(3) { background: #a3213a; }
+.spectrum span:nth-child(4) { background: #9c4a2c; }
+.spectrum span:nth-child(5) { background: #b8742e; }
+.spectrum span:nth-child(6) { background: #dba65a; }
+
+/* Knapper og felter */
+.btn {
+  display: inline-block;
+  font: 600 1.05rem/1 var(--body);
+  padding: 0.95rem 1.4rem;
+  border-radius: 0.6rem;
+  border: 0;
+  background: var(--amber);
+  color: var(--lodge);
+  cursor: pointer;
+  text-decoration: none;
+  min-height: 3rem;
+}
+.btn:hover { background: var(--paper); color: var(--lodge); }
+.btn:disabled { opacity: 0.6; cursor: progress; }
+
+label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+
+textarea, input[type='text'] {
+  width: 100%;
+  font: inherit;
+  color: var(--paper);
+  background: var(--lodge-2);
+  border: 1px solid var(--lodge-3);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.8rem;
+}
+textarea { min-height: 5rem; resize: vertical; }
+
+.hint { color: var(--muted); font-size: 0.95rem; }
+
+.message {
+  padding: 0.9rem 1rem;
+  border-radius: 0.6rem;
+  background: var(--lodge-2);
+  border-left: 4px solid var(--amber);
+}
+.message.error { border-left-color: var(--error); }
+.message.ok { border-left-color: var(--ok); }
+
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
