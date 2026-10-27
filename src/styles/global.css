@@ -1,16 +1,16 @@
 /* Portvin 2026 – farver og typografi
-   Kælder-mørk bund, tekst som gammelt etiketpapir, og portvinens
-   farveskala fra ung ruby til gammel tawny som eneste pynt. */
+   Som portvinskælderen: næsten sort bund, varmt lys på fadene,
+   tekst som gammelt etiketpapir og portvinens farveskala som pynt. */
 
 :root {
-  --lodge: #2b1517;      /* bund: mørkt fadtræ */
-  --lodge-2: #3a1e21;    /* flader */
-  --lodge-3: #4c2a2c;    /* kanter */
-  --paper: #efe3cc;      /* tekst */
-  --muted: #c2ab8d;      /* sekundær tekst */
+  --lodge: #0b0908;      /* bund: kældermørke */
+  --lodge-2: #1a1512;    /* flader */
+  --lodge-3: #2e2620;    /* kanter */
+  --paper: #f3e7d2;      /* tekst */
+  --muted: #a8957c;      /* sekundær tekst */
   --ruby: #a3213a;
   --tawny: #b8742e;
-  --amber: #dba65a;      /* fokus og links */
+  --amber: #e0a95c;      /* lyset på fadene: fokus og links */
   --ok: #9fbf86;
   --error: #f08c7a;
 

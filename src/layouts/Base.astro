@@ -2,8 +2,8 @@
 import '../styles/global.css';
 import { EVENT } from '../lib/config';
 
-interface Props { title?: string }
-const { title } = Astro.props;
+interface Props { title?: string; hero?: boolean }
+const { title, hero = false } = Astro.props;
 const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
 ---
 <!doctype html>
@@ -12,7 +12,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <meta name="theme-color" content="#2b1517" />
+    <meta name="theme-color" content="#0b0908" />
     <title>{pageTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,7 +22,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@600;800&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap"
     />
   </head>
-  <body>
+  <body class:list={{ 'has-hero': hero }}>
     <header class="site-header wrap">
       <div class="top-row">
         <a href="/" class="mark">Portvin 2026</a>
@@ -151,6 +151,16 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     color: var(--paper);
     text-decoration: none;
   }
+  /* Forsiden: menuen ligger oven på kælderfotoet */
+  body.has-hero .site-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+  }
+  body.has-hero nav a { color: #d6c7b0; }
+  body.has-hero nav a:hover { color: var(--paper); }
   main { padding-bottom: 3rem; }
   .site-footer {
     color: var(--muted);
