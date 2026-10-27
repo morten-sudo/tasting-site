@@ -15,6 +15,10 @@ export function getGuestCode(): string | null {
   try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
 }
 
+export function setGuestCode(code: string) {
+  try { localStorage.setItem(STORAGE_KEY, code); } catch {}
+}
+
 export function forgetGuestCode() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
 }

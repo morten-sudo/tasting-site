@@ -24,7 +24,13 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
   </head>
   <body>
     <header class="site-header wrap">
-      <a href="/" class="mark">Portvin 2026</a>
+      <div class="top-row">
+        <a href="/" class="mark">Portvin 2026</a>
+        <div class="user" id="user">
+          <span id="user-in" hidden><span id="user-name"></span> · <button id="logout" type="button" class="user-btn">Log ud</button></span>
+          <a id="user-out" href="/log-ind/" class="user-btn" hidden>Log ind</a>
+        </div>
+      </div>
       <nav aria-label="Hovedmenu">
         <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vine') }}>Vinene</a>
         <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
@@ -38,7 +44,8 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       <slot />
     </main>
     <script>
-      import { getCart, cartCount } from '../lib/cart';
+      import { getCart, cartCount, clearCart } from '../lib/cart';
+      import { supabase, forgetGuestCode } from '../lib/supabase';
       const link = document.getElementById('nav-cart')!;
       const badge = document.getElementById('nav-cart-count')!;
       const sync = () => {
@@ -49,6 +56,32 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       };
       window.addEventListener('cart-change', sync);
       sync();
+
+      // Log ind/ud for gæster (baseret på invitationskoden)
+      const userIn = document.getElementById('user-in')!;
+      const userOut = document.getElementById('user-out')!;
+      let code: string | null = null;
+      try {
+        code = new URLSearchParams(location.search).get('k') || localStorage.getItem('portvin_kode');
+      } catch {}
+      if (!code) {
+        userOut.hidden = false;
+      } else {
+        supabase.rpc('get_invite', { code }).then(({ data }) => {
+          const row = Array.isArray(data) ? data[0] : null;
+          if (row) {
+            document.getElementById('user-name')!.textContent = row.name;
+            userIn.hidden = false;
+          } else {
+            userOut.hidden = false;
+          }
+        });
+      }
+      document.getElementById('logout')!.addEventListener('click', () => {
+        forgetGuestCode();
+        clearCart();
+        location.href = '/';
+      });
     </script>
     <footer class="site-footer wrap">
       <p>{EVENT.dateLong} {EVENT.time}</p>
@@ -60,13 +93,34 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
   .site-header {
     padding-top: 1.25rem;
     padding-bottom: 0.5rem;
+  }
+  .top-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    flex-wrap: wrap;
-    gap: 0.25rem 1rem;
+    gap: 1rem;
   }
-  nav { display: flex; flex-wrap: wrap; gap: 0 1.1rem; }
+  .user { color: var(--muted); font-size: 0.88rem; text-align: right; min-width: 0; }
+  #user-name {
+    display: inline-block;
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #user-in:not([hidden]) { display: inline-flex; align-items: baseline; gap: 0.35rem; }
+  .user-btn {
+    font: inherit;
+    background: none;
+    border: 0;
+    padding: 0.3rem 0;
+    color: var(--amber);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    cursor: pointer;
+  }
+  .user [hidden] { display: none; }
+  nav { display: flex; flex-wrap: wrap; gap: 0 1.1rem; margin-top: 0.35rem; }
   .cart-link { color: var(--amber); }
   .cart-link[hidden] { display: none; }
   .badge {

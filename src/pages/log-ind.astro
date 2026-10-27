@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Log ind">
+  <section class="wrap login-page">
+    <h1 class="title">Log ind</h1>
+    <p class="lead">
+      Indsæt linket fra din invitation, eller kun koden til sidst i linket (efter <code>?k=</code>).
+    </p>
+    <form id="form" class="login-form" novalidate>
+      <label for="code">Invitationslink eller kode</label>
+      <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+      <p id="msg" class="message error" hidden></p>
+      <button class="btn" type="submit">Log ind</button>
+    </form>
+    <p class="hint small">Har du mistet din invitation, så skriv til værten og få et nyt link.</p>
+  </section>
+</Base>
+
+<script>
+  import { supabase, setGuestCode } from '../lib/supabase';
+
+  const form = document.getElementById('form') as HTMLFormElement;
+  const input = document.getElementById('code') as HTMLInputElement;
+  const msg = document.getElementById('msg')!;
+
+  function extractCode(raw: string) {
+    const v = raw.trim();
+    const m = v.match(/[?&]k=([A-Za-z0-9]+)/);
+    return (m ? m[1] : v).trim();
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.hidden = true;
+    const code = extractCode(input.value);
+    if (!code) {
+      msg.textContent = 'Indsæt dit link eller din kode.';
+      msg.hidden = false;
+      return;
+    }
+    const { data } = await supabase.rpc('get_invite', { code });
+    const row = Array.isArray(data) ? data[0] : null;
+    if (!row) {
+      msg.textContent = 'Koden blev ikke fundet. Tjek, at du har kopieret hele linket.';
+      msg.hidden = false;
+      return;
+    }
+    setGuestCode(code);
+    location.href = '/invitation/';
+  });
+</script>
+
+<style>
+  .login-page { padding-top: 2.5rem; }
+  .title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3rem, 16vw, 5rem);
+    line-height: 0.9;
+    margin-bottom: 1.25rem;
+  }
+  .lead { max-width: 32rem; }
+  .login-form { display: grid; gap: 0.6rem; max-width: 26rem; margin-top: 1.25rem; }
+  .login-form .btn { justify-self: start; margin-top: 0.3rem; }
+  .small { margin-top: 1.5rem; font-size: 0.9rem; }
+  code { font-size: 0.9em; color: var(--amber); }
+</style>
