@@ -40,7 +40,7 @@ import Base from '../layouts/Base.astro';
         <p id="p-summary" class="hint"></p>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Navn</th><th>Status</th><th>Kost / besked</th><th>Link</th></tr></thead>
+            <thead><tr><th>Navn</th><th>Status</th><th>Besked</th><th>Link</th></tr></thead>
             <tbody id="participants"></tbody>
           </table>
         </div>
@@ -163,7 +163,7 @@ import Base from '../layouts/Base.astro';
       st.append(sel);
       tr.append(st);
 
-      tr.append(cell([p.diet, p.note].filter(Boolean).join(' · ') || '–', 'small'));
+      tr.append(cell(p.note || '–', 'small'));
 
       const linkTd = document.createElement('td');
       const btn = document.createElement('button');

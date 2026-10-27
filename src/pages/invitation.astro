@@ -36,11 +36,6 @@ import { EVENT } from '../lib/config';
           </label>
         </fieldset>
 
-        <div id="yes-fields" class="field" hidden>
-          <label for="diet">Allergier eller kostbehov</label>
-          <textarea id="diet" name="diet" maxlength="500"></textarea>
-        </div>
-
         <div class="field">
           <label for="note">Besked til værten <span class="hint">(valgfri)</span></label>
           <textarea id="note" name="note" maxlength="1000"></textarea>
@@ -67,7 +62,6 @@ import { EVENT } from '../lib/config';
 
   const code = getGuestCode();
   const form = $<HTMLFormElement>('rsvp-form');
-  const yesFields = $('yes-fields');
   const current = $('current');
   const formError = $('form-error');
   const submit = $<HTMLButtonElement>('submit');
@@ -85,12 +79,6 @@ import { EVENT } from '../lib/config';
       current.hidden = true;
     }
   }
-
-  function syncFields() {
-    const v = (form.elements.namedItem('attending') as RadioNodeList).value;
-    yesFields.hidden = v !== 'yes';
-  }
-  form.addEventListener('change', syncFields);
 
   async function load() {
     if (!code) {
@@ -110,10 +98,8 @@ import { EVENT } from '../lib/config';
     if (row.status === 'yes' || row.status === 'no') {
       (form.querySelector(`input[value="${row.status}"]`) as HTMLInputElement).checked = true;
     }
-    $<HTMLTextAreaElement>('diet').value = row.diet ?? '';
     $<HTMLTextAreaElement>('note').value = row.note ?? '';
     showCurrent(row.status);
-    syncFields();
     $('invite').hidden = false;
   }
 
@@ -132,7 +118,7 @@ import { EVENT } from '../lib/config';
     const { data, error } = await supabase.rpc('respond_invite', {
       code,
       attending,
-      diet: attending ? $<HTMLTextAreaElement>('diet').value : null,
+      diet: null,
       note: $<HTMLTextAreaElement>('note').value,
     });
     submit.disabled = false;
