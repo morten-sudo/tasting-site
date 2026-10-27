@@ -29,11 +29,27 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
         <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vine') }}>Vinene</a>
         <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
         <a href="/invitation/" class:list={{ current: Astro.url.pathname.startsWith('/invitation') }}>Tilmelding</a>
+        <a href="/kurv/" id="nav-cart" class:list={['cart-link', { current: Astro.url.pathname.startsWith('/kurv') }]} hidden={!Astro.url.pathname.startsWith('/kurv')}>
+          Kurv <span id="nav-cart-count" class="badge" hidden></span>
+        </a>
       </nav>
     </header>
     <main>
       <slot />
     </main>
+    <script>
+      import { getCart, cartCount } from '../lib/cart';
+      const link = document.getElementById('nav-cart')!;
+      const badge = document.getElementById('nav-cart-count')!;
+      const sync = () => {
+        const n = cartCount(getCart());
+        badge.textContent = String(n);
+        badge.hidden = n === 0;
+        if (n > 0) link.hidden = false;
+      };
+      window.addEventListener('cart-change', sync);
+      sync();
+    </script>
     <footer class="site-footer wrap">
       <p>{EVENT.dateLong} {EVENT.time}</p>
     </footer>
@@ -47,9 +63,24 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
   }
-  nav { display: flex; gap: 1.1rem; }
+  nav { display: flex; flex-wrap: wrap; gap: 0 1.1rem; }
+  .cart-link { color: var(--amber); }
+  .cart-link[hidden] { display: none; }
+  .badge {
+    display: inline-block;
+    min-width: 1.35rem;
+    padding: 0.05rem 0.4rem;
+    border-radius: 999px;
+    background: var(--amber);
+    color: var(--lodge);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+  }
   nav a {
     color: var(--muted);
     text-decoration: none;

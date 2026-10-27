@@ -1,0 +1,295 @@
+---
+import Base from '../layouts/Base.astro';
+import { EVENT } from '../lib/config';
+---
+<Base title="Kurv">
+  <section class="wrap cart-page">
+    <h1 class="title">Kurv</h1>
+
+    <p id="loading" class="hint">Henter kurven …</p>
+
+    <div id="no-code" class="message" hidden>
+      <p>For at bestille skal du bruge det personlige link fra din invitation. Åbn det, og kom tilbage hertil.</p>
+    </div>
+
+    <p id="closed" class="message" hidden>
+      Bestillingen er ikke åben lige nu. Du kan bestille på selve aftenen og ugen efter.
+    </p>
+
+    <div id="confirm" class="message ok confirm" hidden>
+      <p><strong id="confirm-title"></strong></p>
+      <p id="confirm-pay"></p>
+    </div>
+
+    <div id="cart" hidden>
+      <ul id="lines" class="lines"></ul>
+      <div class="sum">
+        <span>I alt</span>
+        <strong id="total"></strong>
+      </div>
+      <p id="send-error" class="message error" hidden></p>
+      <button id="send" class="btn send" type="button">Send bestilling</button>
+      <p class="hint">Når du sender, er bestillingen bindende. Prisen er den, der står ved vinen nu.</p>
+    </div>
+
+    <div id="empty" hidden>
+      <p>Kurven er tom.</p>
+      <a class="btn" href="/vine/">Se vinene</a>
+    </div>
+
+    <section id="history" class="history" hidden>
+      <h2>Dine bestillinger</h2>
+      <div id="orders"></div>
+    </section>
+  </section>
+</Base>
+
+<script define:vars={{ mobilepay: EVENT.mobilepay }}>
+  window.__MOBILEPAY__ = mobilepay;
+</script>
+
+<script>
+  import { supabase, getGuestCode } from '../lib/supabase';
+  import { getCart, setQty, clearCart, MAX_PER_WINE } from '../lib/cart';
+
+  type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number };
+  type Line = {
+    order_id: number; created_at: string; paid: boolean;
+    wine_id: number; wine_name: string; quantity: number; unit_price: number;
+  };
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
+  const date = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+  const mobilepay: string = (window as any).__MOBILEPAY__ ?? '';
+
+  const code = getGuestCode();
+  let wines = new Map<number, Wine>();
+  let open = false;
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function payText(amount: number) {
+    return mobilepay
+      ? `Betal ${kr.format(amount)} på MobilePay til ${mobilepay}, og skriv dit navn i beskeden.`
+      : `Beløbet på ${kr.format(amount)} betales med MobilePay. Værten fortæller dig hvordan.`;
+  }
+
+  function renderCart() {
+    const cart = getCart();
+    const ids = Object.keys(cart).map(Number).filter((id) => wines.has(id))
+      .sort((a, b) => wines.get(a)!.sort_order - wines.get(b)!.sort_order);
+
+    $('cart').hidden = ids.length === 0;
+    $('empty').hidden = ids.length !== 0 || !$('confirm').hidden;
+
+    const ul = $('lines');
+    ul.replaceChildren();
+    let total = 0;
+    for (const id of ids) {
+      const w = wines.get(id)!;
+      const n = cart[id];
+      const price = w.price_dkk ?? 0;
+      total += n * price;
+
+      const li = el('li', 'line');
+      const info = el('div', 'line-info');
+      info.append(el('p', 'line-name', w.name), el('p', 'line-unit', `${kr.format(price)} pr. flaske`));
+
+      const ctrl = el('div', 'line-ctrl');
+      const minus = el('button', 'step', '−');
+      const count = el('output', 'count', String(n));
+      const plus = el('button', 'step', '+');
+      minus.type = plus.type = 'button';
+      minus.setAttribute('aria-label', `Én flaske færre af ${w.name}`);
+      plus.setAttribute('aria-label', `Én flaske mere af ${w.name}`);
+      plus.disabled = n >= MAX_PER_WINE;
+      minus.addEventListener('click', () => { setQty(id, n - 1); renderCart(); });
+      plus.addEventListener('click', () => { setQty(id, n + 1); renderCart(); });
+      const stepper = el('div', 'stepper');
+      stepper.append(minus, count, plus);
+
+      const remove = el('button', 'remove', 'Fjern');
+      remove.type = 'button';
+      remove.addEventListener('click', () => { setQty(id, 0); renderCart(); });
+
+      ctrl.append(stepper, el('span', 'line-total', kr.format(n * price)), remove);
+      li.append(info, ctrl);
+      ul.append(li);
+    }
+    $('total').textContent = kr.format(total);
+    ($('send') as HTMLButtonElement).disabled = !open;
+  }
+
+  async function renderHistory() {
+    if (!code) return;
+    const { data } = await supabase.rpc('get_my_orders', { code });
+    const lines = (data ?? []) as Line[];
+    $('history').hidden = lines.length === 0;
+    const box = $('orders');
+    box.replaceChildren();
+    const byOrder = new Map<number, Line[]>();
+    for (const l of lines) {
+      if (!byOrder.has(l.order_id)) byOrder.set(l.order_id, []);
+      byOrder.get(l.order_id)!.push(l);
+    }
+    for (const [id, ls] of [...byOrder].reverse()) {
+      const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
+      const card = el('div', 'order' + (ls[0].paid ? ' paid' : ''));
+      const head = el('div', 'order-head');
+      head.append(
+        el('strong', '', `Bestilling ${id}`),
+        el('span', 'status', ls[0].paid ? 'Betalt' : 'Afventer betaling'),
+      );
+      card.append(head, el('p', 'hint', date.format(new Date(ls[0].created_at))));
+      const ul = el('ul');
+      for (const l of ls) ul.append(el('li', '', `${l.quantity} × ${l.wine_name}`));
+      card.append(ul);
+      const foot = el('div', 'order-foot');
+      foot.append(el('span', '', 'I alt'), el('strong', '', kr.format(total)));
+      card.append(foot);
+      box.append(card);
+    }
+  }
+
+  $('send').addEventListener('click', async () => {
+    const cart = getCart();
+    const items = Object.entries(cart)
+      .filter(([id]) => wines.has(Number(id)))
+      .map(([id, qty]) => ({ wine_id: Number(id), qty }));
+    if (!items.length) return;
+
+    const btn = $('send') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Sender …';
+    $('send-error').hidden = true;
+
+    const { data, error } = await supabase.rpc('place_order', { code, items });
+    btn.textContent = 'Send bestilling';
+
+    if (error) {
+      $('send-error').textContent = error.message.includes('lukket')
+        ? 'Bestillingen er lukket, så den kunne ikke sendes.'
+        : error.message.includes('kan ikke bestilles')
+        ? 'En af vinene kan ikke længere bestilles. Fjern den, og prøv igen.'
+        : 'Bestillingen blev ikke sendt. Tjek din forbindelse, og prøv igen.';
+      $('send-error').hidden = false;
+      btn.disabled = false;
+      return;
+    }
+
+    const total = items.reduce((s, i) => s + i.qty * (wines.get(i.wine_id)?.price_dkk ?? 0), 0);
+    clearCart();
+    $('confirm-title').textContent = `Tak! Din bestilling nr. ${data} er modtaget.`;
+    $('confirm-pay').textContent = payText(total);
+    $('confirm').hidden = false;
+    renderCart();
+    await renderHistory();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  async function init() {
+    if (!code) {
+      $('loading').hidden = true;
+      $('no-code').hidden = false;
+      return;
+    }
+    const [w, s] = await Promise.all([
+      supabase.from('wines').select('id, name, price_dkk, orderable, sort_order'),
+      supabase.from('settings').select('key, value'),
+    ]);
+    wines = new Map(((w.data ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
+    const settings = Object.fromEntries((s.data ?? []).map((r) => [r.key, r.value]));
+    open = settings.orders_open === true;
+    $('loading').hidden = true;
+    $('closed').hidden = open;
+    renderCart();
+    renderHistory();
+  }
+
+  init();
+</script>
+
+<style is:global>
+  .cart-page { padding-top: 2.5rem; padding-bottom: 3rem; }
+  .cart-page .title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3rem, 16vw, 5rem);
+    line-height: 0.9;
+    margin-bottom: 1.25rem;
+  }
+  .cart-page .confirm, .cart-page #closed { margin-bottom: 1.5rem; }
+  .cart-page .confirm p:last-child { margin-bottom: 0; }
+
+  .cart-page .lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--lodge-3); }
+  .cart-page .line { padding: 1rem 0; border-bottom: 1px solid var(--lodge-2); }
+  .cart-page .line-name { margin: 0; font-weight: 600; line-height: 1.35; }
+  .cart-page .line-unit { margin: 0.1rem 0 0.6rem; color: var(--muted); font-size: 0.9rem; }
+  .cart-page .line-ctrl { display: flex; align-items: center; gap: 1rem; }
+  .cart-page .line-total { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .cart-page .remove {
+    font: inherit;
+    font-size: 0.88rem;
+    background: none;
+    border: 0;
+    color: var(--muted);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    cursor: pointer;
+    padding: 0.4rem 0;
+  }
+  .cart-page .remove:hover { color: var(--paper); }
+
+  .cart-page .stepper {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--lodge-3);
+    border-radius: 999px;
+    background: var(--lodge-2);
+  }
+  .cart-page .step {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    background: none;
+    color: var(--paper);
+    font-size: 1.35rem;
+    cursor: pointer;
+    border-radius: 999px;
+  }
+  .cart-page .step:disabled { color: var(--lodge-3); cursor: default; }
+  .cart-page .count { min-width: 1.5rem; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .cart-page .sum {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 1.1rem 0;
+    font-size: 1.15rem;
+  }
+  .cart-page .sum strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+  .cart-page .send { width: 100%; margin-bottom: 0.6rem; }
+  .cart-page #send-error { margin-bottom: 1rem; }
+
+  .cart-page .history { margin-top: 3rem; }
+  .cart-page .order {
+    background: var(--lodge-2);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.75rem;
+    border-left: 4px solid var(--amber);
+  }
+  .cart-page .order.paid { border-left-color: var(--ok); }
+  .cart-page .order-head, .cart-page .order-foot { display: flex; justify-content: space-between; gap: 1rem; }
+  .cart-page .order .status { color: var(--amber); font-size: 0.9rem; }
+  .cart-page .order.paid .status { color: var(--ok); }
+  .cart-page .order .hint { margin: 0.1rem 0 0.5rem; font-size: 0.85rem; }
+  .cart-page .order ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.95rem; }
+  .cart-page .order-foot { border-top: 1px solid var(--lodge-3); padding-top: 0.5rem; }
+</style>

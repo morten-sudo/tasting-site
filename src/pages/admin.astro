@@ -108,7 +108,10 @@ import Base from '../layouts/Base.astro';
 
   type P = { id: string; name: string; status: string; diet: string | null; note: string | null; invite_code: string };
   type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
-  type O = { participant_id: string; wine_id: number; quantity: number; paid: boolean };
+  type OLine = { wine_id: number; quantity: number; unit_price: number };
+  type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
+  const ORDER_SELECT = 'id, participant_id, paid, created_at, order_lines(wine_id, quantity, unit_price)';
+  const when = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   let participants: P[] = [];
   let wines: W[] = [];
@@ -271,39 +274,49 @@ import Base from '../layouts/Base.astro';
   });
 
   // ---------- Bestillinger ----------
+  const orderTotal = (o: O) => o.order_lines.reduce((t, l) => t + l.quantity * Number(l.unit_price), 0);
+
   function renderOrders() {
     const byGuest = $('orders-by-guest');
     byGuest.replaceChildren();
     const wineById = new Map(wines.map((w) => [w.id, w]));
-    const guests = participants.filter((p) => orders.some((o) => o.participant_id === p.id));
+    const pById = new Map(participants.map((p) => [p.id, p]));
 
-    if (guests.length === 0) {
+    if (orders.length === 0) {
       const p = document.createElement('p');
       p.className = 'hint';
       p.textContent = 'Ingen bestillinger endnu.';
       byGuest.append(p);
     }
 
-    for (const g of guests) {
-      const mine = orders.filter((o) => o.participant_id === g.id);
-      const total = mine.reduce((s, o) => s + o.quantity * (wineById.get(o.wine_id)?.price_dkk ?? 0), 0);
-      const allPaid = mine.every((o) => o.paid);
+    const sorted = [...orders].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const unpaid = sorted.filter((o) => !o.paid);
+    if (orders.length) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = `${orders.length} bestillinger, ${unpaid.length} afventer betaling (${kr.format(unpaid.reduce((t, o) => t + orderTotal(o), 0))}).`;
+      byGuest.append(p);
+    }
 
+    for (const o of sorted) {
       const box = document.createElement('div');
-      box.className = 'order-card' + (allPaid ? ' paid' : '');
+      box.className = 'order-card' + (o.paid ? ' paid' : '');
       const head = document.createElement('div');
       head.className = 'order-head';
       const h = document.createElement('strong');
-      h.textContent = g.name;
+      h.textContent = `${pById.get(o.participant_id)?.name ?? 'Ukendt gæst'}`;
       const sum = document.createElement('span');
-      sum.textContent = kr.format(total);
+      sum.textContent = kr.format(orderTotal(o));
       head.append(h, sum);
-      box.append(head);
+      const sub = document.createElement('p');
+      sub.className = 'hint order-sub';
+      sub.textContent = `Bestilling ${o.id}, ${when.format(new Date(o.created_at))}`;
+      box.append(head, sub);
 
       const ul = document.createElement('ul');
-      for (const o of mine) {
+      for (const l of o.order_lines) {
         const li = document.createElement('li');
-        li.textContent = `${o.quantity} × ${wineById.get(o.wine_id)?.name ?? 'Ukendt vin'}`;
+        li.textContent = `${l.quantity} × ${wineById.get(l.wine_id)?.name ?? 'Ukendt vin'} à ${kr.format(Number(l.unit_price))}`;
         ul.append(li);
       }
       box.append(ul);
@@ -312,12 +325,12 @@ import Base from '../layouts/Base.astro';
       label.className = 'toggle';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.checked = allPaid;
+      cb.checked = o.paid;
       cb.addEventListener('change', async () => {
-        const { error } = await supabase.from('orders').update({ paid: cb.checked }).eq('participant_id', g.id);
+        const { error } = await supabase.from('orders').update({ paid: cb.checked }).eq('id', o.id);
         if (error) { cb.checked = !cb.checked; alert('Betaling blev ikke gemt.'); return; }
-        mine.forEach((o) => (o.paid = cb.checked));
-        box.classList.toggle('paid', cb.checked);
+        o.paid = cb.checked;
+        renderOrders();
       });
       const span = document.createElement('span');
       span.textContent = 'Betalt (MobilePay modtaget)';
@@ -330,12 +343,15 @@ import Base from '../layouts/Base.astro';
     tbody.replaceChildren();
     let bottles = 0, amount = 0;
     for (const w of [...wines].sort((a, b) => a.sort_order - b.sort_order)) {
-      const n = orders.filter((o) => o.wine_id === w.id).reduce((s, o) => s + o.quantity, 0);
+      let n = 0, sum = 0;
+      for (const o of orders) for (const l of o.order_lines) {
+        if (l.wine_id === w.id) { n += l.quantity; sum += l.quantity * Number(l.unit_price); }
+      }
       if (!n) continue;
       bottles += n;
-      amount += n * (w.price_dkk ?? 0);
+      amount += sum;
       const tr = document.createElement('tr');
-      tr.append(cell(w.name), cell(String(n), 'num'), cell(kr.format(n * (w.price_dkk ?? 0)), 'num'));
+      tr.append(cell(w.name), cell(String(n), 'num'), cell(kr.format(sum), 'num'));
       tbody.append(tr);
     }
     const tr = document.createElement('tr');
@@ -347,17 +363,20 @@ import Base from '../layouts/Base.astro';
   $('csv').addEventListener('click', () => {
     const wineById = new Map(wines.map((w) => [w.id, w]));
     const pById = new Map(participants.map((p) => [p.id, p]));
-    const rows = [['Gæst', 'Vin', 'Antal', 'Pris pr. flaske', 'Beløb', 'Betalt']];
-    for (const o of orders) {
-      const w = wineById.get(o.wine_id);
-      const price = w?.price_dkk ?? 0;
-      rows.push([
-        pById.get(o.participant_id)?.name ?? '', w?.name ?? '', String(o.quantity),
-        String(price).replace('.', ','), String(price * o.quantity).replace('.', ','), o.paid ? 'ja' : 'nej',
-      ]);
+    const rows = [['Bestilling', 'Tidspunkt', 'Gæst', 'Vin', 'Antal', 'Pris pr. flaske', 'Beløb', 'Betalt']];
+    for (const o of [...orders].sort((a, b) => a.id - b.id)) {
+      for (const l of o.order_lines) {
+        const price = Number(l.unit_price);
+        rows.push([
+          String(o.id), new Date(o.created_at).toLocaleString('da-DK'),
+          pById.get(o.participant_id)?.name ?? '', wineById.get(l.wine_id)?.name ?? '',
+          String(l.quantity), String(price).replace('.', ','),
+          String(price * l.quantity).replace('.', ','), o.paid ? 'ja' : 'nej',
+        ]);
+      }
     }
     const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(';')).join('\r\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'portvin-bestillinger.csv';
@@ -369,7 +388,7 @@ import Base from '../layouts/Base.astro';
     const [p, w, o] = await Promise.all([
       supabase.from('participants').select('id, name, status, diet, note, invite_code'),
       supabase.from('wines').select('id, name, price_dkk, sort_order'),
-      supabase.from('orders').select('participant_id, wine_id, quantity, paid'),
+      supabase.from('orders').select(ORDER_SELECT),
     ]);
     participants = (p.data ?? []) as P[];
     wines = (w.data ?? []) as W[];
@@ -393,7 +412,7 @@ import Base from '../layouts/Base.astro';
     await loadAll();
     setInterval(async () => {
       const [o, rows] = await Promise.all([
-        supabase.from('orders').select('participant_id, wine_id, quantity, paid'),
+        supabase.from('orders').select(ORDER_SELECT),
         fetchLeaderboard(),
       ]);
       if (o.data) { orders = o.data as O[]; renderOrders(); }
@@ -506,6 +525,7 @@ import Base from '../layouts/Base.astro';
   }
   .admin-page .order-card.paid { border-left-color: var(--ok); }
   .admin-page .order-head { display: flex; justify-content: space-between; gap: 1rem; }
+  .admin-page .order-sub { margin: 0.1rem 0 0; font-size: 0.85rem; }
   .admin-page .order-card ul { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; }
   .admin-page .order-card .toggle { padding: 0; background: none; font-size: 0.92rem; }
 </style>

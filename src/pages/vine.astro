@@ -16,19 +16,20 @@ import Base from '../layouts/Base.astro';
     <div id="wine-list"></div>
   </section>
 
-  <div id="basket" class="basket" hidden>
+  <a id="basket" class="basket" href="/kurv/" hidden>
     <div class="wrap basket-inner">
       <div>
         <span id="basket-count"></span>
         <strong id="basket-total"></strong>
       </div>
-      <span id="basket-saved" class="hint" aria-live="polite"></span>
+      <span class="basket-go">Gå til kurven</span>
     </div>
-  </div>
+  </a>
 </Base>
 
 <script>
   import { supabase, getGuestCode } from '../lib/supabase';
+  import { getCart, addToCart, cartCount } from '../lib/cart';
 
   type Wine = {
     id: number; sort_order: number; name: string; producer: string | null;
@@ -49,8 +50,6 @@ import Base from '../layouts/Base.astro';
   const $ = (id: string) => document.getElementById(id)!;
 
   const code = getGuestCode();
-  const qty = new Map<number, number>();
-  const paid = new Set<number>();
   let wines: Wine[] = [];
   let ordering = false;
 
@@ -63,58 +62,33 @@ import Base from '../layouts/Base.astro';
 
   function renderBasket() {
     if (!ordering) return;
-    let bottles = 0, total = 0;
-    for (const w of wines) {
-      const n = qty.get(w.id) ?? 0;
-      bottles += n;
-      total += n * (w.price_dkk ?? 0);
-    }
+    const cart = getCart();
+    let total = 0;
+    for (const w of wines) total += (cart[w.id] ?? 0) * (w.price_dkk ?? 0);
+    const bottles = cartCount(cart);
     $('basket').hidden = bottles === 0;
-    $('basket-count').textContent = `${bottles} ${bottles === 1 ? 'flaske' : 'flasker'}, i alt `;
+    $('basket-count').textContent = `${bottles} ${bottles === 1 ? 'flaske' : 'flasker'} i kurven, `;
     $('basket-total').textContent = kr.format(total);
   }
 
-  let saveTimers = new Map<number, number>();
-  function scheduleSave(wineId: number) {
-    clearTimeout(saveTimers.get(wineId));
-    $('basket-saved').textContent = 'Gemmer …';
-    saveTimers.set(wineId, window.setTimeout(async () => {
-      const { error } = await supabase.rpc('set_order', {
-        code, wine: wineId, qty: qty.get(wineId) ?? 0,
-      });
-      $('basket-saved').textContent = error
-        ? 'Kunne ikke gemme. Prøv igen.'
-        : 'Bestilling gemt';
-    }, 500));
-  }
-
-  function stepper(w: Wine) {
-    const box = el('div', 'stepper');
-    const minus = el('button', 'step', '−');
-    const count = el('output', 'count');
-    const plus = el('button', 'step', '+');
-    minus.type = plus.type = 'button';
-    minus.setAttribute('aria-label', `Én flaske færre af ${w.name}`);
-    plus.setAttribute('aria-label', `Én flaske mere af ${w.name}`);
-
+  function addButton(w: Wine) {
+    const btn = el('button', 'add');
+    btn.type = 'button';
     const sync = () => {
-      const n = qty.get(w.id) ?? 0;
-      count.textContent = String(n);
-      minus.disabled = n === 0 || paid.has(w.id);
-      plus.disabled = paid.has(w.id);
-      box.classList.toggle('active', n > 0);
+      const n = getCart()[w.id] ?? 0;
+      btn.textContent = n ? `Læg i kurv (${n} i kurven)` : 'Læg i kurv';
+      btn.classList.toggle('in-cart', n > 0);
     };
-    minus.addEventListener('click', () => {
-      qty.set(w.id, Math.max(0, (qty.get(w.id) ?? 0) - 1));
-      sync(); renderBasket(); scheduleSave(w.id);
+    btn.addEventListener('click', () => {
+      addToCart(w.id);
+      sync();
+      btn.classList.remove('pop');
+      void btn.offsetWidth;
+      btn.classList.add('pop');
     });
-    plus.addEventListener('click', () => {
-      qty.set(w.id, Math.min(48, (qty.get(w.id) ?? 0) + 1));
-      sync(); renderBasket(); scheduleSave(w.id);
-    });
-    box.append(minus, count, plus);
+    window.addEventListener('cart-change', sync);
     sync();
-    return box;
+    return btn;
   }
 
   function render() {
@@ -181,8 +155,7 @@ import Base from '../layouts/Base.astro';
           }
           buy.append(price);
         }
-        if (ordering && w.orderable) buy.append(stepper(w));
-        if (paid.has(w.id)) buy.append(el('p', 'paid', 'Betalt'));
+        if (ordering && w.orderable) buy.append(addButton(w));
         info.append(buy);
 
         li.append(info);
@@ -208,15 +181,9 @@ import Base from '../layouts/Base.astro';
 
     if (settings.orders_open === true) {
       if (code) {
-        const mine = await supabase.rpc('get_my_orders', { code });
-        if (!mine.error && mine.data) {
-          for (const o of mine.data as { wine_id: number; quantity: number; paid: boolean }[]) {
-            qty.set(o.wine_id, o.quantity);
-            if (o.paid) paid.add(o.wine_id);
-          }
-          ordering = true;
-          $('intro').textContent = 'Vælg, hvor mange flasker du vil have af hver. Din bestilling gemmes automatisk.';
-        }
+        ordering = true;
+        $('intro').textContent = 'Læg de vine, du vil have, i kurven. Du sender bestillingen fra kurven.';
+        window.addEventListener('cart-change', renderBasket);
       } else {
         status.textContent = 'Bestillingen er åben. Brug linket fra din invitation for at bestille.';
         status.hidden = false;
@@ -337,33 +304,29 @@ import Base from '../layouts/Base.astro';
   #wine-list .price .normal { color: var(--muted); font-size: 0.85rem; }
   #wine-list .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
 
-  #wine-list .stepper {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--lodge-3);
-    border-radius: 999px;
-    background: var(--lodge-2);
-  }
-  #wine-list .stepper.active { border-color: var(--amber); }
-  #wine-list .step {
-    width: 2.75rem;
-    height: 2.75rem;
+  #wine-list .add {
+    font: 600 0.95rem/1 var(--body);
+    color: var(--lodge);
+    background: var(--amber);
     border: 0;
-    background: none;
-    color: var(--paper);
-    font-size: 1.35rem;
-    cursor: pointer;
     border-radius: 999px;
+    padding: 0.8rem 1.1rem;
+    min-height: 2.75rem;
+    cursor: pointer;
   }
-  #wine-list .step:disabled { color: var(--lodge-3); cursor: default; }
-  #wine-list .count {
-    min-width: 1.5rem;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
+  #wine-list .add:hover { background: var(--paper); }
+  #wine-list .add.in-cart {
+    background: none;
+    color: var(--amber);
+    box-shadow: inset 0 0 0 1px var(--amber);
   }
+  #wine-list .add.pop { animation: pop 0.25s ease-out; }
+  @keyframes pop { 50% { transform: scale(1.06); } }
 
   .basket {
+    display: block;
+    color: var(--paper);
+    text-decoration: none;
     position: fixed;
     left: 0; right: 0; bottom: 0;
     background: var(--lodge-2);
@@ -372,4 +335,6 @@ import Base from '../layouts/Base.astro';
   }
   .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   #basket-total { font-size: 1.15rem; }
+  .basket-go { color: var(--amber); font-weight: 600; white-space: nowrap; }
+  .basket:hover .basket-go { color: var(--paper); }
 </style>

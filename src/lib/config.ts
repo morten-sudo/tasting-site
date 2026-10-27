@@ -11,4 +11,6 @@ export const EVENT = {
   time: 'kl. 17',
   // Udfyldes, når adressen er på plads. Tom tekst = vises ikke.
   place: '',
+  // MobilePay-nummer, der vises efter bestilling. Tom tekst = "værten fortæller hvordan".
+  mobilepay: '',
 };

@@ -50,14 +50,20 @@ create table if not exists wines (
   created_at   timestamptz not null default now()
 );
 
--- Bestillinger: én række pr. gæst pr. vin
+-- Bestillinger: én ordre pr. "Send bestilling", med linjer og pris på bestillingstidspunktet
 create table if not exists orders (
+  id             serial primary key,
   participant_id uuid not null references participants(id) on delete cascade,
-  wine_id        int  not null references wines(id) on delete cascade,
-  quantity       int  not null check (quantity > 0),
   paid           boolean not null default false,
-  updated_at     timestamptz not null default now(),
-  primary key (participant_id, wine_id)
+  created_at     timestamptz not null default now()
+);
+
+create table if not exists order_lines (
+  order_id   int not null references orders(id) on delete cascade,
+  wine_id    int not null references wines(id),
+  quantity   int not null check (quantity between 1 and 48),
+  unit_price numeric(8,2) not null,
+  primary key (order_id, wine_id)
 );
 
 -- Quiz
@@ -124,6 +130,7 @@ alter table admins          enable row level security;
 alter table participants    enable row level security;
 alter table wines           enable row level security;
 alter table orders          enable row level security;
+alter table order_lines     enable row level security;
 alter table quiz_questions  enable row level security;
 alter table quiz_answers    enable row level security;
 alter table settings        enable row level security;
@@ -131,7 +138,7 @@ alter table settings        enable row level security;
 do $$
 declare t text;
 begin
-  foreach t in array array['admins','participants','wines','orders',
+  foreach t in array array['admins','participants','wines','orders','order_lines',
                            'quiz_questions','quiz_answers','settings']
   loop
     execute format('drop policy if exists admin_all on %I', t);
@@ -184,39 +191,52 @@ begin
   return case when attending then 'yes' else 'no' end;
 end $$;
 
--- Egne bestillinger
-create or replace function get_my_orders(code text)
-returns table (wine_id int, quantity int, paid boolean)
-language sql stable security definer set search_path = public as $$
-  select o.wine_id, o.quantity, o.paid
-  from orders o join participants p on p.id = o.participant_id
-  where p.invite_code = code;
-$$;
-
--- Sæt antal af en vin (0 = fjern)
-create or replace function set_order(code text, wine int, qty int)
-returns void
+-- Afgiv en bestilling ud fra kurven: items = [{"wine_id": 1, "qty": 2}, ...]
+create or replace function place_order(code text, items jsonb)
+returns int
 language plpgsql security definer set search_path = public as $$
-declare p participants;
+declare
+  p participants;
+  new_id int;
+  item jsonb;
+  w wines;
+  n int;
 begin
   p := participant_by_code(code);
   if p.id is null then raise exception 'Ukendt invitationskode'; end if;
   if not setting('orders_open') then raise exception 'Bestilling er lukket'; end if;
-  if not exists (select 1 from wines where id = wine and orderable) then
-    raise exception 'Vinen kan ikke bestilles';
+  if items is null or jsonb_typeof(items) <> 'array' or jsonb_array_length(items) = 0 then
+    raise exception 'Kurven er tom';
   end if;
-  if qty is null or qty <= 0 then
-    delete from orders where participant_id = p.id and wine_id = wine and not paid;
-  elsif qty > 48 then
-    raise exception 'For mange flasker';
-  else
-    insert into orders (participant_id, wine_id, quantity)
-    values (p.id, wine, qty)
-    on conflict (participant_id, wine_id)
-    do update set quantity = excluded.quantity, updated_at = now()
-    where not orders.paid;
-  end if;
+
+  insert into orders (participant_id) values (p.id) returning id into new_id;
+
+  for item in select * from jsonb_array_elements(items) loop
+    n := (item ->> 'qty')::int;
+    select * into w from wines where id = (item ->> 'wine_id')::int and orderable;
+    if w.id is null then raise exception 'Vinen kan ikke bestilles'; end if;
+    if n is null or n < 1 or n > 48 then raise exception 'Ugyldigt antal'; end if;
+    insert into order_lines (order_id, wine_id, quantity, unit_price)
+    values (new_id, w.id, n, coalesce(w.price_dkk, 0))
+    on conflict (order_id, wine_id) do update set quantity = least(48, order_lines.quantity + excluded.quantity);
+  end loop;
+
+  return new_id;
 end $$;
+
+-- Gæstens egne bestillinger
+create or replace function get_my_orders(code text)
+returns table (order_id int, created_at timestamptz, paid boolean,
+               wine_id int, wine_name text, quantity int, unit_price numeric)
+language sql stable security definer set search_path = public as $$
+  select o.id, o.created_at, o.paid, l.wine_id, w.name, l.quantity, l.unit_price
+  from orders o
+  join participants p on p.id = o.participant_id
+  join order_lines l on l.order_id = o.id
+  join wines w on w.id = l.wine_id
+  where p.invite_code = code
+  order by o.created_at, w.sort_order;
+$$;
 
 -- Quizspørgsmål uden facit (facit + forklaring først når quizzen er afsluttet)
 create or replace function get_quiz()
@@ -286,7 +306,7 @@ grant execute on function is_admin() to authenticated;
 grant execute on function get_invite(text)                          to anon, authenticated;
 grant execute on function respond_invite(text, boolean, text, text) to anon, authenticated;
 grant execute on function get_my_orders(text)                       to anon, authenticated;
-grant execute on function set_order(text, int, int)                 to anon, authenticated;
+grant execute on function place_order(text, jsonb)                  to anon, authenticated;
 grant execute on function get_quiz()                                to anon, authenticated;
 grant execute on function get_my_answers(text)                      to anon, authenticated;
 grant execute on function submit_answer(text, int, text)            to anon, authenticated;
