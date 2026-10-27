@@ -88,6 +88,11 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
           if (row) {
             document.getElementById('user-name')!.textContent = row.name;
             userIn.hidden = false;
+            // Gæster uden e-mail skal angive den på profilen, før de går videre
+            const free = ['/profil/', '/log-ind/', '/admin/', '/pointtavle/'];
+            if (!row.email && !free.some((p) => location.pathname.startsWith(p))) {
+              location.replace('/profil/');
+            }
           } else {
             userOut.hidden = false;
           }

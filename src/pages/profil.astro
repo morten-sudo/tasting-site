@@ -14,6 +14,16 @@ import { EVENT } from '../lib/config';
       </p>
     </div>
 
+    <!-- Første gang: e-mail skal angives, før man kommer videre -->
+    <form id="email-step" class="email-step" hidden novalidate>
+      <h1 class="greeting">Velkommen, <span id="step-name"></span></h1>
+      <p class="lead">Før du går videre, skal vi have din e-mail. Den bruges til at logge ind med et link på mail – fx hvis du skifter telefon.</p>
+      <label for="step-email">Din e-mail</label>
+      <input id="step-email" type="email" autocomplete="email" inputmode="email" maxlength="200" required />
+      <p id="step-error" class="message error" hidden></p>
+      <button class="btn" type="submit" id="step-btn">Fortsæt</button>
+    </form>
+
     <div id="invite" hidden>
       <h1 class="greeting">Hej <span id="guest-name"></span></h1>
       <p class="lead">
@@ -127,9 +137,52 @@ import { EVENT } from '../lib/config';
     $<HTMLTextAreaElement>('note').value = row.note ?? '';
     $<HTMLInputElement>('email').value = row.email ?? '';
     showCurrent(row.status);
+    if (!row.email) {
+      $('step-name').textContent = row.name;
+      $('email-step').hidden = false;
+      $<HTMLInputElement>('step-email').focus();
+      return;
+    }
+    showProfile();
+  }
+
+  function showProfile() {
+    $('email-step').hidden = true;
     $('invite').hidden = false;
     loadFee();
   }
+
+  const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+  $('email-step').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const err = $('step-error');
+    err.hidden = true;
+    const val = $<HTMLInputElement>('step-email').value.trim();
+    if (!EMAIL_RE.test(val)) {
+      err.textContent = val ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.' : 'Skriv din e-mail for at fortsætte.';
+      err.hidden = false;
+      return;
+    }
+    const btn = $<HTMLButtonElement>('step-btn');
+    btn.disabled = true;
+    btn.textContent = 'Gemmer …';
+    const { error } = await supabase.rpc('set_my_email', { code, e: val });
+    btn.disabled = false;
+    btn.textContent = 'Fortsæt';
+    if (error) {
+      err.textContent = error.message.includes('bruges allerede')
+        ? 'Den e-mail er allerede knyttet til en anden gæst. Brug en anden, eller skriv til værten.'
+        : error.message.includes('Ugyldig')
+        ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.'
+        : 'E-mailen blev ikke gemt. Tjek din forbindelse, og prøv igen.';
+      err.hidden = false;
+      return;
+    }
+    $<HTMLInputElement>('email').value = val.toLowerCase();
+    showProfile();
+    window.scrollTo({ top: 0 });
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -197,6 +250,18 @@ import { EVENT } from '../lib/config';
   }
   .lead { font-size: 1.15rem; margin-bottom: 1.5rem; }
   .form-title { margin-bottom: 0.75rem; }
+  .email-step { display: grid; gap: 0.6rem; max-width: 28rem; }
+  .email-step .lead { margin-bottom: 0.5rem; }
+  .email-step .btn { justify-self: start; margin-top: 0.3rem; }
+  #step-email {
+    width: 100%;
+    font: inherit;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem;
+    padding: 0.7rem 0.8rem;
+  }
   #current { margin-bottom: 1.5rem; }
   .fee {
     background: var(--lodge-2);
