@@ -14,9 +14,17 @@ import Base from '../layouts/Base.astro';
       <button class="btn" type="submit">Log ind</button>
       <p id="login-msg" class="message" hidden></p>
       <p class="hint">
-        Har du ikke sat en adgangskode, eller har du glemt den?
-        <button id="send-link" class="link-btn" type="button">Send mig et login-link i stedet</button>
+        <button id="forgot" class="link-btn" type="button">Glemt adgangskode?</button>
       </p>
+    </form>
+
+    <!-- Ny adgangskode efter "glemt adgangskode"-mail -->
+    <form id="reset" class="login" hidden>
+      <p>Vælg en ny adgangskode.</p>
+      <label for="reset-pw">Ny adgangskode (mindst 8 tegn)</label>
+      <input id="reset-pw" type="password" autocomplete="new-password" minlength="8" required />
+      <button class="btn" type="submit">Gem og log ind</button>
+      <p id="reset-msg" class="message" hidden></p>
     </form>
 
     <p id="not-admin" class="message error" hidden>
@@ -130,16 +138,34 @@ import Base from '../layouts/Base.astro';
     if (error) loginMsg('Forkert e-mail eller adgangskode.', false);
   });
 
-  $('send-link').addEventListener('click', async () => {
+  $('forgot').addEventListener('click', async () => {
     const email = ($('email') as HTMLInputElement).value.trim();
-    if (!email) { loginMsg('Skriv din e-mail først.', false); return; }
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: location.origin + '/admin/', shouldCreateUser: false },
+    if (!email) { loginMsg('Skriv din e-mail i feltet ovenfor, og tryk igen.', false); return; }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: location.origin + '/admin/',
     });
-    if (!error) loginMsg(`Tjek din indbakke (${email}) og klik på linket.`, true);
-    else if (error.status === 429) loginMsg('Der er sendt for mange login-mails. Vent en time, eller log ind med adgangskode.', false);
-    else loginMsg('Linket kunne ikke sendes. Prøv igen om lidt.', false);
+    if (!error) loginMsg(`Hvis ${email} har adgang, er der sendt en mail med et link til at vælge en ny adgangskode.`, true);
+    else if (error.status === 429) loginMsg('Der er sendt for mange mails på kort tid. Vent lidt, og prøv igen.', false);
+    else loginMsg('Mailen kunne ikke sendes. Prøv igen om lidt.', false);
+  });
+
+  // Når man kommer tilbage fra "glemt adgangskode"-mailen
+  let recovering = false;
+  $('reset').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = $('reset-pw') as HTMLInputElement;
+    const msg = $('reset-msg');
+    const { error } = await supabase.auth.updateUser({ password: input.value });
+    if (error) {
+      msg.hidden = false;
+      msg.className = 'message error';
+      msg.textContent = 'Adgangskoden blev ikke gemt. Brug mindst 8 tegn, og prøv igen.';
+      return;
+    }
+    recovering = false;
+    $('reset').hidden = true;
+    history.replaceState(null, '', '/admin/');
+    init();
   });
 
   $('pw-form').addEventListener('submit', async (e) => {
@@ -356,6 +382,7 @@ import Base from '../layouts/Base.astro';
   }
 
   async function init() {
+    if (recovering || location.hash.includes('type=recovery')) return;
     const { data } = await supabase.auth.getSession();
     const session = data.session;
     if (!session) { $('login').hidden = false; return; }
@@ -375,7 +402,14 @@ import Base from '../layouts/Base.astro';
   }
 
   supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_IN' && $('panel').hidden && $('not-admin').hidden) {
+    if (event === 'PASSWORD_RECOVERY') {
+      recovering = true;
+      $('login').hidden = true;
+      $('panel').hidden = true;
+      $('reset').hidden = false;
+      return;
+    }
+    if (event === 'SIGNED_IN' && !recovering && $('panel').hidden && $('not-admin').hidden) {
       $('login').hidden = true;
       init();
     }
