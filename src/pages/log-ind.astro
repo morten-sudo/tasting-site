@@ -57,7 +57,7 @@ import Base from '../layouts/Base.astro';
     const { data: code } = await supabase.rpc('my_invite_code');
     if (code) {
       setGuestCode(code as string);
-      location.replace('/invitation/');
+      location.replace('/profil/');
       return true;
     }
     $('checking').hidden = true;
@@ -127,7 +127,7 @@ import Base from '../layouts/Base.astro';
       return;
     }
     setGuestCode(code);
-    location.href = '/invitation/';
+    location.href = '/profil/';
   });
 
   finishEmailLogin();

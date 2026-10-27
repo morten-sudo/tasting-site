@@ -2,24 +2,22 @@
 import Base from '../layouts/Base.astro';
 import { EVENT } from '../lib/config';
 ---
-<Base title="Din invitation">
+<Base title="Profil">
   <section class="wrap page">
-    <p id="loading" class="hint">Henter din invitation …</p>
+    <p id="loading" class="hint">Henter din profil …</p>
 
     <div id="invalid" class="message error" hidden>
-      <p><strong>Linket virker ikke.</strong></p>
+      <p><strong>Du er ikke logget ind.</strong></p>
       <p>
-        Tjek, at du har brugt hele linket fra din invitation, eller
-        <a href="/log-ind/">log ind med din kode</a>. Virker det stadig ikke,
-        så skriv til værten og få et nyt link.
+        <a href="/log-ind/">Log ind</a> med din e-mail eller med linket fra din
+        invitation. Virker det ikke, så skriv til værten.
       </p>
     </div>
 
     <div id="invite" hidden>
-      <h1 class="greeting">Kære <span id="guest-name"></span></h1>
+      <h1 class="greeting">Hej <span id="guest-name"></span></h1>
       <p class="lead">
-        Du er inviteret til portvinssmagning<br />
-        {EVENT.dateLong} {EVENT.time}{EVENT.place && <>, {EVENT.place}</>}.
+        Portvinssmagning {EVENT.dateLong.toLowerCase()} {EVENT.time}{EVENT.place && <><br />{EVENT.place}</>}
       </p>
 
       <p id="current" class="message ok" hidden></p>
@@ -34,6 +32,7 @@ import { EVENT } from '../lib/config';
       </section>
 
       <form id="rsvp-form" novalidate>
+        <h2 class="form-title">Din tilmelding</h2>
         <fieldset class="choice">
           <legend>Kommer du?</legend>
           <label class="option">
@@ -47,9 +46,9 @@ import { EVENT } from '../lib/config';
         </fieldset>
 
         <div class="field">
-          <label for="email">Din e-mail <span class="hint">(valgfri)</span></label>
-          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="200" />
-          <p class="hint field-hint">Så kan du logge ind med et link på mail, hvis du skifter telefon eller mister invitationen.</p>
+          <label for="email">Din e-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="200" required aria-describedby="email-hint" />
+          <p id="email-hint" class="hint field-hint">Bruges til at logge ind med et link på mail – fx hvis du skifter telefon.</p>
         </div>
 
         <div class="field">
@@ -59,12 +58,11 @@ import { EVENT } from '../lib/config';
 
         <p id="form-error" class="message error" hidden></p>
 
-        <button type="submit" class="btn" id="submit">Send svar</button>
+        <button type="submit" class="btn" id="submit">Gem</button>
       </form>
 
       <p class="hint small">
-        Du kan altid komme tilbage via dit link og ændre dit svar, så længe
-        tilmeldingen er åben.
+        Du kan ændre dit svar her, så længe tilmeldingen er åben.
       </p>
     </div>
   </section>
@@ -142,17 +140,24 @@ import { EVENT } from '../lib/config';
       formError.hidden = false;
       return;
     }
+    const emailVal = $<HTMLInputElement>('email').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailVal)) {
+      formError.textContent = emailVal ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.' : 'Skriv din e-mail.';
+      formError.hidden = false;
+      $<HTMLInputElement>('email').focus();
+      return;
+    }
     submit.disabled = true;
     submit.textContent = 'Sender …';
     const attending = choice === 'yes';
-    const mail = await supabase.rpc('set_my_email', { code, e: $<HTMLInputElement>('email').value });
+    const mail = await supabase.rpc('set_my_email', { code, e: emailVal });
     if (mail.error) {
       submit.disabled = false;
-      submit.textContent = 'Send svar';
+      submit.textContent = 'Gem';
       formError.textContent = mail.error.message.includes('bruges allerede')
         ? 'Den e-mail er allerede knyttet til en anden gæst.'
         : mail.error.message.includes('Ugyldig')
-        ? 'E-mailen ser ikke rigtig ud. Ret den, eller lad feltet stå tomt.'
+        ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.'
         : 'Dit svar blev ikke gemt. Tjek din forbindelse og prøv igen.';
       formError.hidden = false;
       return;
@@ -164,7 +169,7 @@ import { EVENT } from '../lib/config';
       note: $<HTMLTextAreaElement>('note').value,
     });
     submit.disabled = false;
-    submit.textContent = 'Send svar';
+    submit.textContent = 'Gem';
     if (error) {
       formError.textContent = error.message.includes('lukket')
         ? 'Tilmeldingen er lukket. Skriv til værten, hvis du skal ændre noget.'
@@ -191,6 +196,7 @@ import { EVENT } from '../lib/config';
     margin-bottom: 1rem;
   }
   .lead { font-size: 1.15rem; margin-bottom: 1.5rem; }
+  .form-title { margin-bottom: 0.75rem; }
   #current { margin-bottom: 1.5rem; }
   .fee {
     background: var(--lodge-2);

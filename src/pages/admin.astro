@@ -343,7 +343,7 @@ import Base from '../layouts/Base.astro';
       btn.className = 'link-btn';
       btn.textContent = 'Kopiér link';
       btn.addEventListener('click', async () => {
-        const url = `${location.origin}/invitation/?k=${p.invite_code}`;
+        const url = `${location.origin}/profil/?k=${p.invite_code}`;
         try { await navigator.clipboard.writeText(url); btn.textContent = 'Kopieret'; }
         catch { prompt('Kopiér linket:', url); }
         setTimeout(() => (btn.textContent = 'Kopiér link'), 1500);
