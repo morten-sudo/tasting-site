@@ -1,0 +1,430 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Admin">
+  <section class="wrap admin-page">
+    <h1 class="title">Admin</h1>
+
+    <!-- Login -->
+    <form id="login" class="login" hidden>
+      <p>Log ind med din admin-e-mail. Du får et link tilsendt, som logger dig ind.</p>
+      <label for="email">E-mail</label>
+      <input id="email" type="email" autocomplete="email" required />
+      <button class="btn" type="submit">Send login-link</button>
+      <p id="login-msg" class="message" hidden></p>
+    </form>
+
+    <p id="not-admin" class="message error" hidden>
+      Du er logget ind, men e-mailen har ikke admin-adgang.
+      <button id="logout2" class="link-btn" type="button">Log ud</button>
+    </p>
+
+    <div id="panel" hidden>
+      <p class="hint who">Logget ind som <span id="me"></span> · <button id="logout" class="link-btn" type="button">Log ud</button></p>
+
+      <!-- Knapper -->
+      <section class="block">
+        <h2>Styring</h2>
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span>Tilmelding åben</span></label>
+          <label class="toggle"><input type="checkbox" data-key="orders_open" /> <span>Bestilling åben</span></label>
+          <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span>Quiz åben for svar</span></label>
+          <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span>Quiz afsluttet (vis facit)</span></label>
+        </div>
+        <p class="hint">Pointtavle til tv'et: <a href="/pointtavle/" target="_blank">/pointtavle/</a></p>
+      </section>
+
+      <!-- Deltagere -->
+      <section class="block">
+        <h2>Deltagere</h2>
+        <p id="p-summary" class="hint"></p>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Navn</th><th>Status</th><th>Kost / besked</th><th>Link</th></tr></thead>
+            <tbody id="participants"></tbody>
+          </table>
+        </div>
+        <form id="add-p" class="inline-form">
+          <label for="new-name" class="sr">Navn på ny gæst</label>
+          <input id="new-name" type="text" placeholder="Navn på ny gæst" required />
+          <button class="btn small" type="submit">Tilføj gæst</button>
+        </form>
+      </section>
+
+      <!-- Bestillinger -->
+      <section class="block">
+        <h2>Bestillinger</h2>
+        <div id="orders-by-guest"></div>
+        <h3>Samlet indkøb</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Vin</th><th class="num">Flasker</th><th class="num">Beløb</th></tr></thead>
+            <tbody id="orders-by-wine"></tbody>
+          </table>
+        </div>
+        <button id="csv" class="btn small ghost" type="button">Hent bestillinger som CSV</button>
+      </section>
+
+      <!-- Quiz -->
+      <section class="block">
+        <h2>Quiz</h2>
+        <ol id="board" class="board"></ol>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
+  const STATUS: Record<string, string> = { yes: 'Kommer', no: 'Meldt fra', invited: 'Ikke svaret' };
+
+  type P = { id: string; name: string; status: string; diet: string | null; note: string | null; invite_code: string };
+  type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
+  type O = { participant_id: string; wine_id: number; quantity: number; paid: boolean };
+
+  let participants: P[] = [];
+  let wines: W[] = [];
+  let orders: O[] = [];
+
+  function cell(text: string, cls?: string) {
+    const td = document.createElement('td');
+    td.textContent = text;
+    if (cls) td.className = cls;
+    return td;
+  }
+
+  // ---------- Login ----------
+  $('login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = ($('email') as HTMLInputElement).value.trim();
+    const msg = $('login-msg');
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: location.origin + '/admin/', shouldCreateUser: true },
+    });
+    msg.hidden = false;
+    msg.className = 'message ' + (error ? 'error' : 'ok');
+    msg.textContent = error
+      ? 'Linket kunne ikke sendes. Vent et øjeblik, og prøv igen.'
+      : `Tjek din indbakke (${email}) og klik på linket.`;
+  });
+
+  async function logout() {
+    await supabase.auth.signOut();
+    location.reload();
+  }
+  $('logout').addEventListener('click', logout);
+  $('logout2').addEventListener('click', logout);
+
+  // ---------- Styring ----------
+  async function loadSettings() {
+    const { data } = await supabase.from('settings').select('key, value');
+    for (const r of data ?? []) {
+      const box = document.querySelector<HTMLInputElement>(`input[data-key="${r.key}"]`);
+      if (box) box.checked = r.value === true;
+    }
+  }
+  document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
+    box.addEventListener('change', async () => {
+      const { error } = await supabase.from('settings')
+        .update({ value: box.checked }).eq('key', box.dataset.key!);
+      if (error) { box.checked = !box.checked; alert('Ændringen blev ikke gemt.'); }
+    });
+  });
+
+  // ---------- Deltagere ----------
+  function renderParticipants() {
+    const tbody = $('participants');
+    tbody.replaceChildren();
+    const order = { yes: 0, invited: 1, no: 2 } as Record<string, number>;
+    const sorted = [...participants].sort((a, b) =>
+      (order[a.status] - order[b.status]) || a.name.localeCompare(b.name, 'da'));
+    for (const p of sorted) {
+      const tr = document.createElement('tr');
+      tr.append(cell(p.name));
+
+      const st = document.createElement('td');
+      const sel = document.createElement('select');
+      for (const [v, label] of Object.entries(STATUS)) {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = label; o.selected = p.status === v;
+        sel.append(o);
+      }
+      sel.addEventListener('change', async () => {
+        const { error } = await supabase.from('participants').update({ status: sel.value }).eq('id', p.id);
+        if (error) { sel.value = p.status; alert('Status blev ikke gemt.'); return; }
+        p.status = sel.value;
+        renderSummary();
+      });
+      st.append(sel);
+      tr.append(st);
+
+      tr.append(cell([p.diet, p.note].filter(Boolean).join(' · ') || '–', 'small'));
+
+      const linkTd = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'link-btn';
+      btn.textContent = 'Kopiér link';
+      btn.addEventListener('click', async () => {
+        const url = `${location.origin}/invitation/?k=${p.invite_code}`;
+        try { await navigator.clipboard.writeText(url); btn.textContent = 'Kopieret'; }
+        catch { prompt('Kopiér linket:', url); }
+        setTimeout(() => (btn.textContent = 'Kopiér link'), 1500);
+      });
+      linkTd.append(btn);
+      tr.append(linkTd);
+      tbody.append(tr);
+    }
+    renderSummary();
+  }
+
+  function renderSummary() {
+    const c = (s: string) => participants.filter((p) => p.status === s).length;
+    $('p-summary').textContent = `${c('yes')} kommer, ${c('invited')} har ikke svaret, ${c('no')} har meldt fra.`;
+  }
+
+  $('add-p').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = $('new-name') as HTMLInputElement;
+    const name = input.value.trim();
+    if (!name) return;
+    const { data, error } = await supabase.from('participants').insert({ name }).select().single();
+    if (error) { alert('Gæsten blev ikke tilføjet.'); return; }
+    participants.push(data as P);
+    input.value = '';
+    renderParticipants();
+  });
+
+  // ---------- Bestillinger ----------
+  function renderOrders() {
+    const byGuest = $('orders-by-guest');
+    byGuest.replaceChildren();
+    const wineById = new Map(wines.map((w) => [w.id, w]));
+    const guests = participants.filter((p) => orders.some((o) => o.participant_id === p.id));
+
+    if (guests.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = 'Ingen bestillinger endnu.';
+      byGuest.append(p);
+    }
+
+    for (const g of guests) {
+      const mine = orders.filter((o) => o.participant_id === g.id);
+      const total = mine.reduce((s, o) => s + o.quantity * (wineById.get(o.wine_id)?.price_dkk ?? 0), 0);
+      const allPaid = mine.every((o) => o.paid);
+
+      const box = document.createElement('div');
+      box.className = 'order-card' + (allPaid ? ' paid' : '');
+      const head = document.createElement('div');
+      head.className = 'order-head';
+      const h = document.createElement('strong');
+      h.textContent = g.name;
+      const sum = document.createElement('span');
+      sum.textContent = kr.format(total);
+      head.append(h, sum);
+      box.append(head);
+
+      const ul = document.createElement('ul');
+      for (const o of mine) {
+        const li = document.createElement('li');
+        li.textContent = `${o.quantity} × ${wineById.get(o.wine_id)?.name ?? 'Ukendt vin'}`;
+        ul.append(li);
+      }
+      box.append(ul);
+
+      const label = document.createElement('label');
+      label.className = 'toggle';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = allPaid;
+      cb.addEventListener('change', async () => {
+        const { error } = await supabase.from('orders').update({ paid: cb.checked }).eq('participant_id', g.id);
+        if (error) { cb.checked = !cb.checked; alert('Betaling blev ikke gemt.'); return; }
+        mine.forEach((o) => (o.paid = cb.checked));
+        box.classList.toggle('paid', cb.checked);
+      });
+      const span = document.createElement('span');
+      span.textContent = 'Betalt (MobilePay modtaget)';
+      label.append(cb, span);
+      box.append(label);
+      byGuest.append(box);
+    }
+
+    const tbody = $('orders-by-wine');
+    tbody.replaceChildren();
+    let bottles = 0, amount = 0;
+    for (const w of [...wines].sort((a, b) => a.sort_order - b.sort_order)) {
+      const n = orders.filter((o) => o.wine_id === w.id).reduce((s, o) => s + o.quantity, 0);
+      if (!n) continue;
+      bottles += n;
+      amount += n * (w.price_dkk ?? 0);
+      const tr = document.createElement('tr');
+      tr.append(cell(w.name), cell(String(n), 'num'), cell(kr.format(n * (w.price_dkk ?? 0)), 'num'));
+      tbody.append(tr);
+    }
+    const tr = document.createElement('tr');
+    tr.className = 'total';
+    tr.append(cell('I alt'), cell(String(bottles), 'num'), cell(kr.format(amount), 'num'));
+    tbody.append(tr);
+  }
+
+  $('csv').addEventListener('click', () => {
+    const wineById = new Map(wines.map((w) => [w.id, w]));
+    const pById = new Map(participants.map((p) => [p.id, p]));
+    const rows = [['Gæst', 'Vin', 'Antal', 'Pris pr. flaske', 'Beløb', 'Betalt']];
+    for (const o of orders) {
+      const w = wineById.get(o.wine_id);
+      const price = w?.price_dkk ?? 0;
+      rows.push([
+        pById.get(o.participant_id)?.name ?? '', w?.name ?? '', String(o.quantity),
+        String(price).replace('.', ','), String(price * o.quantity).replace('.', ','), o.paid ? 'ja' : 'nej',
+      ]);
+    }
+    const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'portvin-bestillinger.csv';
+    a.click();
+  });
+
+  // ---------- Opstart ----------
+  async function loadAll() {
+    const [p, w, o] = await Promise.all([
+      supabase.from('participants').select('id, name, status, diet, note, invite_code'),
+      supabase.from('wines').select('id, name, price_dkk, sort_order'),
+      supabase.from('orders').select('participant_id, wine_id, quantity, paid'),
+    ]);
+    participants = (p.data ?? []) as P[];
+    wines = (w.data ?? []) as W[];
+    orders = (o.data ?? []) as O[];
+    renderParticipants();
+    renderOrders();
+    await loadSettings();
+    const rows = await fetchLeaderboard();
+    if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, 13);
+  }
+
+  async function init() {
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+    if (!session) { $('login').hidden = false; return; }
+    const { data: ok } = await supabase.rpc('is_admin');
+    if (!ok) { $('not-admin').hidden = false; return; }
+    $('me').textContent = session.user.email ?? '';
+    $('panel').hidden = false;
+    await loadAll();
+    setInterval(async () => {
+      const [o, rows] = await Promise.all([
+        supabase.from('orders').select('participant_id, wine_id, quantity, paid'),
+        fetchLeaderboard(),
+      ]);
+      if (o.data) { orders = o.data as O[]; renderOrders(); }
+      if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, 13);
+    }, 15000);
+  }
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN' && $('panel').hidden && $('not-admin').hidden) {
+      $('login').hidden = true;
+      init();
+    }
+  });
+  init();
+</script>
+
+<style is:global>
+  .admin-page { padding-top: 2.5rem; padding-bottom: 3rem; }
+  .admin-page .title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3rem, 16vw, 5rem);
+    line-height: 0.9;
+    margin-bottom: 1.25rem;
+  }
+  .admin-page .login { display: grid; gap: 0.6rem; max-width: 26rem; }
+  .admin-page input[type='email'] {
+    width: 100%;
+    font: inherit;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem;
+    padding: 0.7rem 0.8rem;
+  }
+  .admin-page .who { margin-bottom: 1rem; }
+  .admin-page .block { margin-top: 2.25rem; }
+  .admin-page h3 { font-size: 1.05rem; margin-top: 1.5rem; }
+
+  .admin-page .toggles { display: grid; gap: 0.5rem; margin-bottom: 0.75rem; }
+  .admin-page .toggle {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    font-weight: 400;
+    margin: 0;
+    padding: 0.7rem 0.9rem;
+    background: var(--lodge-2);
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+  .admin-page .toggle input { width: 1.2rem; height: 1.2rem; accent-color: var(--amber); }
+
+  .admin-page .table-wrap { overflow-x: auto; margin: 0.5rem 0 1rem; }
+  .admin-page .table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  .admin-page .table th, .admin-page .table td {
+    text-align: left;
+    padding: 0.5rem 0.6rem 0.5rem 0;
+    border-bottom: 1px solid var(--lodge-2);
+    vertical-align: top;
+  }
+  .admin-page .table th { color: var(--muted); font-weight: 400; }
+  .admin-page .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .admin-page .table .small { color: var(--muted); font-size: 0.85rem; }
+  .admin-page .table tr.total td { font-weight: 600; border-top: 1px solid var(--lodge-3); }
+  .admin-page select {
+    font: inherit;
+    font-size: 0.88rem;
+    color: var(--paper);
+    background: var(--lodge-2);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.4rem;
+    padding: 0.25rem 0.3rem;
+  }
+
+  .admin-page .inline-form { display: flex; gap: 0.5rem; }
+  .admin-page .inline-form input { flex: 1; }
+  .admin-page .btn.small { padding: 0.6rem 0.9rem; min-height: 0; font-size: 0.95rem; }
+  .admin-page .btn.ghost { background: none; color: var(--amber); border: 1px solid var(--amber); }
+  .admin-page .link-btn {
+    font: inherit;
+    font-size: 0.88rem;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--amber);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .admin-page .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  .admin-page .order-card {
+    background: var(--lodge-2);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.6rem;
+    border-left: 4px solid var(--amber);
+  }
+  .admin-page .order-card.paid { border-left-color: var(--ok); }
+  .admin-page .order-head { display: flex; justify-content: space-between; gap: 1rem; }
+  .admin-page .order-card ul { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; }
+  .admin-page .order-card .toggle { padding: 0; background: none; font-size: 0.92rem; }
+</style>

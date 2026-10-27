@@ -1,0 +1,370 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Quiz">
+  <section class="wrap quiz-page">
+    <h1 class="title">Quiz</h1>
+
+    <p id="loading" class="hint">Henter quizzen …</p>
+
+    <div id="no-code" class="message" hidden>
+      <p>Quizzen kræver dit personlige link fra invitationen. Åbn det, så kan du være med.</p>
+    </div>
+
+    <div id="closed" class="message" hidden>
+      <p>Quizzen åbner under smagningen. Hold siden åben – den starter af sig selv, når værten åbner.</p>
+    </div>
+
+    <!-- Quizzen kører -->
+    <div id="play" hidden>
+      <p class="hint rules">
+        13 spørgsmål om portvin. Svar i dit eget tempo. Et svar kan ikke ændres, når det er låst.
+      </p>
+      <ol id="dots" class="dots" aria-label="Dine svar"></ol>
+
+      <div id="question" class="card">
+        <p id="q-count" class="q-count"></p>
+        <h2 id="q-text" class="q-text"></h2>
+        <div id="q-options" class="options" role="radiogroup"></div>
+        <p id="q-error" class="message error" hidden></p>
+        <button id="q-lock" class="btn" type="button" disabled>Lås svar</button>
+      </div>
+
+      <div id="done" class="message ok" hidden>
+        <p>Alle dine svar er låst. Følg stillingen herunder – facit og forklaringer kommer, når værten lukker quizzen.</p>
+      </div>
+    </div>
+
+    <!-- Quizzen er afsluttet -->
+    <div id="results" hidden>
+      <p class="lead">Quizzen er slut. Her er facit og forklaringerne.</p>
+      <ol id="result-list" class="results"></ol>
+    </div>
+
+    <section id="board-wrap" class="board-wrap" hidden>
+      <h2 id="board-title">Stillingen</h2>
+      <ol id="board" class="board"></ol>
+    </section>
+  </section>
+</Base>
+
+<script>
+  import { supabase, getGuestCode } from '../lib/supabase';
+  import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
+
+  type Option = { key: string; text: string };
+  type Q = {
+    id: number; sort_order: number; question: string; options: Option[];
+    correct_key: string | null; explanation: string | null;
+  };
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const code = getGuestCode();
+
+  let questions: Q[] = [];
+  const answers = new Map<number, string>();
+  let myName = '';
+  let current = 0;
+  let selected: string | null = null;
+  let mode: 'closed' | 'open' | 'finished' | null = null;
+
+  function show(id: string, on: boolean) { $(id).hidden = !on; }
+
+  async function readSettings() {
+    const { data } = await supabase.from('settings').select('key, value');
+    const s = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
+    if (s.quiz_finished === true) return 'finished';
+    if (s.quiz_open === true) return 'open';
+    return 'closed';
+  }
+
+  async function loadQuestions() {
+    const { data } = await supabase.rpc('get_quiz');
+    questions = (data ?? []) as Q[];
+    if (code) {
+      const mine = await supabase.rpc('get_my_answers', { code });
+      for (const a of (mine.data ?? []) as { question_id: number; answer_key: string }[]) {
+        answers.set(a.question_id, a.answer_key);
+      }
+    }
+  }
+
+  // ---------- Spil ----------
+  function firstUnanswered() {
+    const i = questions.findIndex((q) => !answers.has(q.id));
+    return i === -1 ? questions.length : i;
+  }
+
+  function renderDots() {
+    const ol = $('dots');
+    ol.replaceChildren();
+    questions.forEach((q, i) => {
+      const li = document.createElement('li');
+      li.className = 'dot';
+      if (answers.has(q.id)) li.classList.add('answered');
+      if (i === current) li.classList.add('current');
+      li.title = `Spørgsmål ${i + 1}${answers.has(q.id) ? ' (besvaret)' : ''}`;
+      ol.append(li);
+    });
+  }
+
+  function renderQuestion() {
+    renderDots();
+    const all = current >= questions.length;
+    show('question', !all);
+    show('done', all);
+    if (all) return;
+
+    const q = questions[current];
+    selected = null;
+    $('q-count').textContent = `Spørgsmål ${current + 1} af ${questions.length}`;
+    $('q-text').textContent = q.question;
+    $('q-error').hidden = true;
+    const box = $('q-options');
+    box.replaceChildren();
+    for (const o of q.options) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option';
+      b.setAttribute('role', 'radio');
+      b.setAttribute('aria-checked', 'false');
+      const k = document.createElement('span');
+      k.className = 'key';
+      k.textContent = o.key;
+      const t = document.createElement('span');
+      t.textContent = o.text;
+      b.append(k, t);
+      b.addEventListener('click', () => {
+        selected = o.key;
+        box.querySelectorAll('.option').forEach((el) => el.setAttribute('aria-checked', 'false'));
+        b.setAttribute('aria-checked', 'true');
+        ($('q-lock') as HTMLButtonElement).disabled = false;
+      });
+      box.append(b);
+    }
+    ($('q-lock') as HTMLButtonElement).disabled = true;
+  }
+
+  $('q-lock').addEventListener('click', async () => {
+    if (!selected) return;
+    const q = questions[current];
+    const btn = $('q-lock') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Låser …';
+    const { error } = await supabase.rpc('submit_answer', { code, q_id: q.id, a_key: selected });
+    btn.textContent = 'Lås svar';
+    if (error) {
+      $('q-error').textContent = error.message.includes('ikke åben')
+        ? 'Quizzen er lukket for svar.'
+        : 'Svaret blev ikke gemt. Tjek forbindelsen, og prøv igen.';
+      $('q-error').hidden = false;
+      btn.disabled = false;
+      if (error.message.includes('ikke åben')) start();
+      return;
+    }
+    answers.set(q.id, selected);
+    current = firstUnanswered();
+    renderQuestion();
+    refreshBoard();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // ---------- Facit ----------
+  function renderResults() {
+    const ol = $('result-list');
+    ol.replaceChildren();
+    for (const q of questions) {
+      const mine = answers.get(q.id);
+      const li = document.createElement('li');
+      li.className = 'result ' + (!mine ? 'skipped' : mine === q.correct_key ? 'right' : 'wrong');
+
+      const h = document.createElement('h3');
+      h.textContent = q.question;
+      li.append(h);
+
+      const ul = document.createElement('ul');
+      for (const o of q.options) {
+        const item = document.createElement('li');
+        item.textContent = `${o.key}) ${o.text}`;
+        if (o.key === q.correct_key) item.classList.add('correct');
+        if (o.key === mine) item.classList.add('mine');
+        ul.append(item);
+      }
+      li.append(ul);
+
+      const verdict = document.createElement('p');
+      verdict.className = 'verdict';
+      verdict.textContent = !mine ? 'Ikke besvaret' : mine === q.correct_key ? 'Rigtigt' : 'Forkert';
+      li.append(verdict);
+
+      if (q.explanation) {
+        const p = document.createElement('p');
+        p.className = 'explanation';
+        p.textContent = q.explanation;
+        li.append(p);
+      }
+      ol.append(li);
+    }
+  }
+
+  // ---------- Pointtavle ----------
+  async function refreshBoard() {
+    const rows = await fetchLeaderboard();
+    if (!rows) return;
+    renderLeaderboard($('board') as HTMLOListElement, rows, questions.length || 13, myName);
+  }
+
+  // ---------- Start ----------
+  async function start() {
+    const next = await readSettings();
+    if (next === mode) return;
+    mode = next;
+    $('loading').hidden = true;
+
+    show('closed', mode === 'closed');
+    show('play', false);
+    show('results', false);
+    show('board-wrap', mode !== 'closed');
+
+    if (mode === 'closed') return;
+    await loadQuestions();
+
+    if (mode === 'open') {
+      current = firstUnanswered();
+      show('play', true);
+      renderQuestion();
+      $('board-title').textContent = 'Stillingen lige nu';
+    } else {
+      show('results', true);
+      renderResults();
+      $('board-title').textContent = 'Slutstilling';
+      $('results').before($('board-wrap'));
+    }
+    refreshBoard();
+  }
+
+  async function init() {
+    if (!code) {
+      $('loading').hidden = true;
+      $('no-code').hidden = false;
+      return;
+    }
+    const inv = await supabase.rpc('get_invite', { code });
+    const row = Array.isArray(inv.data) ? inv.data[0] : null;
+    if (!row) {
+      $('loading').hidden = true;
+      $('no-code').hidden = false;
+      return;
+    }
+    myName = row.name;
+    await start();
+    // Hold øje med åbning/lukning og stillingen
+    setInterval(start, 10000);
+    setInterval(() => { if (mode !== 'closed') refreshBoard(); }, 5000);
+  }
+
+  init();
+</script>
+
+<style is:global>
+  .quiz-page { padding-top: 2.5rem; padding-bottom: 3rem; }
+  .quiz-page .title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(3rem, 16vw, 5rem);
+    line-height: 0.9;
+    margin-bottom: 1.25rem;
+  }
+  .quiz-page .rules { margin-bottom: 1rem; }
+
+  .quiz-page .dots {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 4px;
+    margin: 0 0 1.25rem;
+    padding: 0;
+  }
+  .quiz-page .dot { height: 6px; border-radius: 3px; background: var(--lodge-3); }
+  .quiz-page .dot.answered { background: var(--tawny); }
+  .quiz-page .dot.current { background: var(--amber); }
+
+  .quiz-page .card {
+    background: var(--lodge-2);
+    border-radius: 0.8rem;
+    padding: 1.25rem 1.1rem 1.4rem;
+  }
+  .quiz-page .q-count { color: var(--muted); font-size: 0.92rem; margin-bottom: 0.4rem; }
+  .quiz-page .q-text {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 1.3rem;
+    line-height: 1.35;
+    letter-spacing: 0;
+    margin-bottom: 1.1rem;
+  }
+  .quiz-page .options { display: grid; gap: 0.6rem; margin-bottom: 1.2rem; }
+  .quiz-page .option {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    font: inherit;
+    color: var(--paper);
+    background: var(--lodge);
+    border: 1px solid var(--lodge-3);
+    border-radius: 0.6rem;
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    min-height: 3.25rem;
+  }
+  .quiz-page .option .key {
+    flex-shrink: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--lodge-3);
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+  .quiz-page .option[aria-checked='true'] {
+    border-color: var(--amber);
+    box-shadow: inset 4px 0 0 var(--amber);
+  }
+  .quiz-page .option[aria-checked='true'] .key {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: var(--lodge);
+  }
+  .quiz-page #q-lock { width: 100%; }
+  .quiz-page #q-error { margin-bottom: 1rem; }
+
+  .quiz-page .board-wrap { margin-top: 2.5rem; }
+  .quiz-page .board-wrap + #results { margin-top: 2.5rem; }
+  .quiz-page .result.skipped .verdict { color: var(--muted); }
+
+  .quiz-page .results { list-style: none; margin: 1.5rem 0 0; padding: 0; }
+  .quiz-page .result {
+    padding: 1.1rem 0 1.25rem;
+    border-bottom: 1px solid var(--lodge-3);
+  }
+  .quiz-page .result h3 {
+    font-family: var(--body);
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 0.6rem;
+  }
+  .quiz-page .result ul { list-style: none; margin: 0 0 0.6rem; padding: 0; }
+  .quiz-page .result ul li { padding: 0.15rem 0; color: var(--muted); }
+  .quiz-page .result ul li.correct { color: var(--ok); font-weight: 600; }
+  .quiz-page .result ul li.mine:not(.correct) { color: var(--error); text-decoration: line-through; }
+  .quiz-page .verdict { font-weight: 600; margin-bottom: 0.4rem; }
+  .quiz-page .result.right .verdict { color: var(--ok); }
+  .quiz-page .result.wrong .verdict { color: var(--error); }
+  .quiz-page .explanation { margin: 0; font-size: 0.95rem; }
+</style>

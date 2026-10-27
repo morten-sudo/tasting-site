@@ -27,6 +27,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       <a href="/" class="mark">Portvin 2026</a>
       <nav aria-label="Hovedmenu">
         <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vine') }}>Vinene</a>
+        <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
         <a href="/invitation/" class:list={{ current: Astro.url.pathname.startsWith('/invitation') }}>Tilmelding</a>
       </nav>
     </header>

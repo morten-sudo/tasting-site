@@ -118,6 +118,33 @@ textarea { min-height: 5rem; resize: vertical; }
 
 [hidden] { display: none !important; }
 
+/* Pointtavle (bruges på quizsiden og storskærmssiden) */
+.board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: none;
+}
+.board li {
+  display: grid;
+  grid-template-columns: 2rem 1fr auto 2.5rem;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--lodge-2);
+}
+.board li.me { color: var(--amber); }
+.board .pos { color: var(--muted); font-variant-numeric: tabular-nums; }
+.board .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board .progress { color: var(--muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.board .pts {
+  text-align: right;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }

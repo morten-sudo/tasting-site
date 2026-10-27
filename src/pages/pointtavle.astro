@@ -1,0 +1,86 @@
+---
+import '../styles/global.css';
+---
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Pointtavle – Portvin 2026</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@600;800&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap"
+    />
+  </head>
+  <body class="tv">
+    <main class="tv-main">
+      <header class="tv-head">
+        <h1>Portvin</h1>
+        <p id="tv-status">Quizzen er ikke startet endnu</p>
+      </header>
+      <div class="spectrum" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <ol id="board" class="board tv-board"></ol>
+    </main>
+
+    <script>
+      import { supabase } from '../lib/supabase';
+      import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
+
+      const TOTAL = 13;
+      const status = document.getElementById('tv-status')!;
+      const board = document.getElementById('board') as HTMLOListElement;
+
+      async function tick() {
+        const { data } = await supabase.from('settings').select('key, value');
+        const s = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
+        const rows = await fetchLeaderboard();
+        if (!rows) return;
+        renderLeaderboard(board, rows, TOTAL);
+        const done = rows.filter((r) => r.answered >= TOTAL).length;
+        if (s.quiz_finished === true) status.textContent = 'Slutstilling';
+        else if (s.quiz_open === true) status.textContent = `${done} af ${rows.length} er færdige`;
+        else status.textContent = 'Quizzen er ikke startet endnu';
+      }
+      tick();
+      setInterval(tick, 4000);
+    </script>
+
+    <style is:global>
+      body.tv { min-height: 100vh; }
+      .tv-main {
+        max-width: 64rem;
+        margin: 0 auto;
+        padding: 4vh 4vw;
+      }
+      .tv-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+      .tv-head h1 {
+        font-family: var(--display);
+        font-weight: 800;
+        font-size: clamp(3rem, 9vw, 8rem);
+        line-height: 0.85;
+        margin: 0;
+      }
+      #tv-status { color: var(--muted); font-size: clamp(1rem, 2.2vw, 1.8rem); margin: 0; }
+      .tv-main .spectrum { margin: 3vh 0 2vh; }
+      .tv-board li {
+        grid-template-columns: 3em 1fr auto 3em;
+        font-size: clamp(1.1rem, 2.6vw, 2.3rem);
+        padding: 1.4vh 0;
+      }
+      .tv-board .pts { font-size: 1.5em; }
+      .tv-board .progress { font-size: 0.7em; }
+    </style>
+  </body>
+</html>
