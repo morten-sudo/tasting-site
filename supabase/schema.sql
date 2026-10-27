@@ -1,6 +1,6 @@
 -- =====================================================================
 -- Portvin 2026 – databaseskema
--- Kør hele filen én gang i Supabase: SQL Editor → New query → Run.
+-- Er allerede kørt mod Supabase-projektet (via Claude). Filen er kilden til skemaet.
 -- Filen kan køres igen uden at slette data (den bruger "if not exists").
 -- =====================================================================
 
@@ -276,6 +276,9 @@ $$;
 
 -- Kun funktionerne må kaldes af gæster
 revoke all on function participant_by_code(text) from public, anon, authenticated;
+revoke all on function setting(text) from public, anon, authenticated;
+revoke all on function is_admin() from public, anon;
+grant execute on function is_admin() to authenticated;
 grant execute on function get_invite(text)                          to anon, authenticated;
 grant execute on function respond_invite(text, boolean, text, text) to anon, authenticated;
 grant execute on function get_my_orders(text)                       to anon, authenticated;
