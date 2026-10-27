@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import { EVENT } from '../lib/config';
 ---
 <Base title="Profil">
   <section class="wrap page">
@@ -25,10 +24,7 @@ import { EVENT } from '../lib/config';
     </form>
 
     <div id="invite" hidden>
-      <h1 class="greeting">Hej <span id="guest-name"></span></h1>
-      <p class="when">
-        {EVENT.dateLong} {EVENT.time}{EVENT.place && <><span aria-hidden="true"> · </span>{EVENT.place}</>}
-      </p>
+      <h1 class="visually-hidden">Din profil</h1>
 
       <p id="current" class="status" role="status" hidden></p>
 
@@ -127,7 +123,6 @@ import { EVENT } from '../lib/config';
       return;
     }
     guestName = row.name;
-    $('guest-name').textContent = row.name;
     if (row.status === 'yes' || row.status === 'no') {
       (form.querySelector(`input[value="${row.status}"]`) as HTMLInputElement).checked = true;
     }
@@ -241,6 +236,14 @@ import { EVENT } from '../lib/config';
 
 <style>
   .page { padding-top: 2rem; padding-bottom: 2rem; max-width: 34rem; }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
   .greeting {
     font-family: var(--display);
     font-weight: 800;
