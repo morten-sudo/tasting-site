@@ -39,12 +39,14 @@ create table if not exists wines (
   style        text,            -- fx Tawny, Vintage, Colheita, Rivesaltes
   vintage      text,            -- tekst, så "10 år" eller "NV" også kan bruges
   abv          numeric(4,1),
-  price_dkk    numeric(8,2),
+  price_dkk    numeric(8,2),                    -- gæsternes pris
+  retail_price_dkk numeric(8,2),                -- normalpris (butikspris)
   description  text,
   orderable    boolean not null default true,
   revealed     boolean not null default true,   -- false = skjult indtil skænket
   image_url    text,                            -- produktbillede (viniportugal.dk)
-  source_url   text,                            -- produktside hos ViniPortugal
+  source_url   text,                            -- produktside hos ViniPortugal (kun til reference)
+  details      text,                            -- "Læs mere": linjer med "Overskrift: tekst"
   created_at   timestamptz not null default now()
 );
 

@@ -34,7 +34,7 @@ import Base from '../layouts/Base.astro';
     id: number; sort_order: number; name: string; producer: string | null;
     style: string | null; vintage: string | null; abv: number | null;
     price_dkk: number | null; description: string | null; orderable: boolean;
-    image_url: string | null; source_url: string | null;
+    image_url: string | null; details: string | null; retail_price_dkk: number | null;
   };
 
   const STYLE_LABELS: Record<string, string> = {
@@ -154,16 +154,33 @@ import Base from '../layouts/Base.astro';
           .filter(Boolean).join(', ');
         if (meta) info.append(el('p', 'meta', meta));
         if (w.description) info.append(el('p', 'desc', w.description));
-        if (w.source_url) {
-          const a = el('a', 'more', 'Læs mere hos ViniPortugal');
-          a.href = w.source_url;
-          a.target = '_blank';
-          a.rel = 'noopener';
-          info.append(a);
+        if (w.details) {
+          const more = el('details', 'more');
+          more.append(el('summary', '', 'Læs mere'));
+          const dl = el('dl');
+          for (const line of w.details.split('\n')) {
+            const i = line.indexOf(':');
+            if (i > 0 && i < 30) {
+              dl.append(el('dt', '', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
+            } else if (line.trim()) {
+              dl.append(el('dd', '', line.trim()));
+            }
+          }
+          more.append(dl);
+          info.append(more);
         }
 
         const buy = el('div', 'buy');
-        if (w.price_dkk != null) buy.append(el('p', 'price', kr.format(w.price_dkk)));
+        if (w.price_dkk != null) {
+          const price = el('p', 'price');
+          price.append(el('span', 'ours', kr.format(w.price_dkk)));
+          if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
+            const normal = el('span', 'normal');
+            normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
+            price.append(normal);
+          }
+          buy.append(price);
+        }
         if (ordering && w.orderable) buy.append(stepper(w));
         if (paid.has(w.id)) buy.append(el('p', 'paid', 'Betalt'));
         info.append(buy);
@@ -266,7 +283,40 @@ import Base from '../layouts/Base.astro';
   }
   #wine-list .meta, #wine-list .desc { margin: 0; color: var(--muted); font-size: 0.92rem; }
   #wine-list .desc { margin-top: 0.4rem; color: var(--paper); line-height: 1.5; }
-  #wine-list .more { display: inline-block; margin-top: 0.35rem; font-size: 0.88rem; }
+  #wine-list .more { margin-top: 0.5rem; }
+  #wine-list .more summary {
+    cursor: pointer;
+    color: var(--amber);
+    font-size: 0.92rem;
+    padding: 0.35rem 0;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  #wine-list .more summary::-webkit-details-marker { display: none; }
+  #wine-list .more summary::after {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.15s;
+  }
+  #wine-list .more[open] summary::after { transform: rotate(-135deg) translateY(-1px); }
+  #wine-list .more[open] summary { color: var(--paper); }
+  #wine-list .more dl {
+    margin: 0.4rem 0 0;
+    padding: 0.8rem 0.9rem;
+    background: var(--lodge-2);
+    border-radius: 0.5rem;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  #wine-list .more dt { color: var(--muted); font-size: 0.85rem; }
+  #wine-list .more dd { margin: 0 0 0.55rem; }
+  #wine-list .more dd:last-child { margin-bottom: 0; }
   #wine-list .buy {
     display: flex;
     flex-wrap: wrap;
@@ -275,7 +325,16 @@ import Base from '../layouts/Base.astro';
     gap: 0.75rem;
     margin-top: 0.75rem;
   }
-  #wine-list .price { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #wine-list .price {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    line-height: 1.3;
+  }
+  #wine-list .price .ours { font-weight: 600; font-size: 1.05rem; }
+  #wine-list .price .normal { color: var(--muted); font-size: 0.85rem; }
   #wine-list .paid { margin: 0; color: var(--ok); font-size: 0.9rem; }
 
   #wine-list .stepper {
