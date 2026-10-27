@@ -270,7 +270,7 @@ import Base from '../layouts/Base.astro';
   .quiz-page { padding-top: 2.5rem; padding-bottom: 3rem; }
   .quiz-page .title {
     font-family: var(--display);
-    font-weight: 800;
+    font-weight: 400;
     font-size: clamp(3rem, 16vw, 5rem);
     line-height: 0.9;
     margin-bottom: 1.25rem;
@@ -290,14 +290,14 @@ import Base from '../layouts/Base.astro';
   .quiz-page .dot.current { background: var(--amber); }
 
   .quiz-page .card {
-    background: var(--lodge-2);
-    border-radius: 0.8rem;
+    border: 1px solid var(--lodge-3);
+    border-radius: var(--radius);
     padding: 1.25rem 1.1rem 1.4rem;
   }
   .quiz-page .q-count { color: var(--muted); font-size: 0.92rem; margin-bottom: 0.4rem; }
   .quiz-page .q-text {
     font-family: var(--body);
-    font-weight: 600;
+    font-weight: 500;
     font-size: 1.3rem;
     line-height: 1.35;
     letter-spacing: 0;
@@ -314,7 +314,7 @@ import Base from '../layouts/Base.astro';
     color: var(--paper);
     background: var(--lodge);
     border: 1px solid var(--lodge-3);
-    border-radius: 0.6rem;
+    border-radius: var(--radius);
     padding: 0.9rem 1rem;
     cursor: pointer;
     min-height: 3.25rem;
@@ -355,15 +355,15 @@ import Base from '../layouts/Base.astro';
   .quiz-page .result h3 {
     font-family: var(--body);
     font-size: 1.05rem;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.4;
     margin-bottom: 0.6rem;
   }
   .quiz-page .result ul { list-style: none; margin: 0 0 0.6rem; padding: 0; }
   .quiz-page .result ul li { padding: 0.15rem 0; color: var(--muted); }
-  .quiz-page .result ul li.correct { color: var(--ok); font-weight: 600; }
+  .quiz-page .result ul li.correct { color: var(--ok); font-weight: 500; }
   .quiz-page .result ul li.mine:not(.correct) { color: var(--error); text-decoration: line-through; }
-  .quiz-page .verdict { font-weight: 600; margin-bottom: 0.4rem; }
+  .quiz-page .verdict { font-weight: 500; margin-bottom: 0.4rem; }
   .quiz-page .result.right .verdict { color: var(--ok); }
   .quiz-page .result.wrong .verdict { color: var(--error); }
   .quiz-page .explanation { margin: 0; font-size: 0.95rem; }

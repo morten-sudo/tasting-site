@@ -541,7 +541,7 @@ import Base from '../layouts/Base.astro';
   .admin-page { padding-top: 2.5rem; padding-bottom: 3rem; }
   .admin-page .title {
     font-family: var(--display);
-    font-weight: 800;
+    font-weight: 400;
     font-size: clamp(3rem, 16vw, 5rem);
     line-height: 0.9;
     margin-bottom: 1.25rem;
@@ -553,7 +553,7 @@ import Base from '../layouts/Base.astro';
     color: var(--paper);
     background: var(--lodge-2);
     border: 1px solid var(--lodge-3);
-    border-radius: 0.5rem;
+    border-radius: var(--radius);
     padding: 0.7rem 0.8rem;
   }
   .admin-page .who { margin-bottom: 1rem; }
@@ -572,7 +572,7 @@ import Base from '../layouts/Base.astro';
     margin: 0;
     padding: 0.7rem 0.9rem;
     background: var(--lodge-2);
-    border-radius: 0.5rem;
+    border-radius: var(--radius);
     cursor: pointer;
   }
   .admin-page .toggle input { width: 1.2rem; height: 1.2rem; accent-color: var(--amber); }
@@ -588,7 +588,7 @@ import Base from '../layouts/Base.astro';
   .admin-page .table th { color: var(--muted); font-weight: 400; }
   .admin-page .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .admin-page .table .small { color: var(--muted); font-size: 0.85rem; }
-  .admin-page .table tr.total td { font-weight: 600; border-top: 1px solid var(--lodge-3); }
+  .admin-page .table tr.total td { font-weight: 500; border-top: 1px solid var(--lodge-3); }
   .admin-page select {
     font: inherit;
     font-size: 0.88rem;
@@ -609,7 +609,7 @@ import Base from '../layouts/Base.astro';
     color: var(--paper);
     background: var(--lodge-2);
     border: 1px solid var(--lodge-3);
-    border-radius: 0.5rem;
+    border-radius: var(--radius);
     padding: 0.6rem 0.8rem;
   }
   .admin-page .fee-summary { margin-top: 0.6rem; }
@@ -646,7 +646,7 @@ import Base from '../layouts/Base.astro';
 
   .admin-page .order-card {
     background: var(--lodge-2);
-    border-radius: 0.6rem;
+    border-radius: var(--radius);
     padding: 0.9rem 1rem;
     margin-bottom: 0.6rem;
     border-left: 4px solid var(--amber);

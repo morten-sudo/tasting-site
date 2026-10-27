@@ -195,7 +195,7 @@ import Base from '../layouts/Base.astro';
       height: calc(100vh - 9rem);
       max-height: none;
       margin: 0 0 0 var(--gutter);
-      border-radius: 1rem;
+      border-radius: var(--radius);
     }
     .vin-page .text { max-width: 40rem; padding-left: clamp(2rem, 5vw, 5rem); }
     .vin-page .style-tag { margin-top: 0.5rem; }
@@ -239,11 +239,11 @@ import Base from '../layouts/Base.astro';
     top: 0.7rem;
     left: 0.95rem;
     font-family: var(--display);
-    font-weight: 800;
-    font-size: 2.6rem;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 1.8rem;
     line-height: 1;
-    color: var(--lodge);
-    opacity: 0.55;
+    color: #8a7f72;
   }
 
   .vin-page .style-tag {
@@ -264,11 +264,11 @@ import Base from '../layouts/Base.astro';
     background: var(--tone);
   }
   .vin-page .name {
-    font-family: var(--body);
-    font-size: 1.6rem;
-    font-weight: 600;
-    line-height: 1.25;
-    margin: 0 0 0.3rem;
+    font-family: var(--display);
+    font-size: clamp(2.2rem, 7vw, 3.2rem);
+    font-weight: 300;
+    line-height: 1.05;
+    margin: 0 0 0.5rem;
   }
   .vin-page .meta { margin: 0; color: var(--muted); }
 
@@ -290,33 +290,42 @@ import Base from '../layouts/Base.astro';
     font-variant-numeric: tabular-nums;
     line-height: 1.3;
   }
-  .vin-page .price .ours { font-weight: 600; font-size: 1.3rem; }
+  .vin-page .price .ours { font-weight: 400; font-size: 1.2rem; letter-spacing: 0.02em; }
   .vin-page .price .normal { color: var(--muted); font-size: 0.88rem; }
   .vin-page .add {
-    font: 600 1rem/1 var(--body);
+    font: 500 0.78rem/1 var(--body);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     color: var(--lodge);
     background: var(--amber);
-    border: 0;
-    border-radius: 999px;
-    padding: 0.85rem 1.25rem;
+    border: 1px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 0 1.75rem;
     min-height: 3rem;
     cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
   }
-  .vin-page .add:hover { background: var(--paper); }
+  .vin-page .add:hover { background: transparent; color: var(--amber); }
   .vin-page .add.in-cart { background: none; color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
   .vin-page .add.pop { animation: pop 0.25s ease-out; }
   @keyframes pop { 50% { transform: scale(1.06); } }
   .vin-page #order-status { margin: 0.6rem 0 0; }
 
-  .vin-page .desc { margin-top: 1.4rem; font-size: 1.05rem; line-height: 1.65; }
+  .vin-page .desc { margin-top: 1.6rem; font-size: 1.02rem; line-height: 1.8; }
   .vin-page .details {
-    margin: 1.25rem 0 0;
-    padding: 1rem 1.1rem;
-    background: var(--lodge-2);
-    border-radius: 0.75rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
     line-height: 1.5;
   }
-  .vin-page .details dt { color: var(--muted); font-size: 0.85rem; }
+  .vin-page .details dt {
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--lodge-3);
+  }
+  .vin-page .details dt:first-child { padding-top: 0; border-top: 0; }
   .vin-page .details dd { margin: 0 0 0.7rem; }
   .vin-page .details dd:last-child { margin-bottom: 0; }
 
@@ -332,15 +341,15 @@ import Base from '../layouts/Base.astro';
     gap: 0.2rem;
     padding: 0.85rem 1rem;
     border: 1px solid var(--lodge-3);
-    border-radius: 0.75rem;
+    border-radius: var(--radius);
     color: var(--paper);
     text-decoration: none;
     min-width: 0;
   }
   .vin-page .pager-link.next { grid-column: 2; text-align: right; }
   .vin-page .pager-link:hover { border-color: var(--amber); }
-  .vin-page .pager-link .dir { color: var(--muted); font-size: 0.82rem; }
-  .vin-page .pager-link .to { font-size: 0.95rem; line-height: 1.3; }
+  .vin-page .pager-link .dir { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; }
+  .vin-page .pager-link .to { font-family: var(--display); font-size: 1.15rem; line-height: 1.25; }
 
   .basket {
     display: block;
@@ -354,6 +363,6 @@ import Base from '../layouts/Base.astro';
   }
   .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   #basket-total { font-size: 1.15rem; }
-  .basket-go { color: var(--amber); font-weight: 600; white-space: nowrap; }
+  .basket-go { color: var(--amber); font-weight: 500; white-space: nowrap; }
   .basket:hover .basket-go { color: var(--paper); }
 </style>

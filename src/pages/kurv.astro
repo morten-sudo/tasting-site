@@ -214,7 +214,7 @@ import Base from '../layouts/Base.astro';
   .cart-page { padding-top: 2.5rem; padding-bottom: 3rem; }
   .cart-page .title {
     font-family: var(--display);
-    font-weight: 800;
+    font-weight: 400;
     font-size: clamp(3rem, 16vw, 5rem);
     line-height: 0.9;
     margin-bottom: 1.25rem;
@@ -224,7 +224,7 @@ import Base from '../layouts/Base.astro';
 
   .cart-page .lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--lodge-3); }
   .cart-page .line { padding: 1rem 0; border-bottom: 1px solid var(--lodge-2); }
-  .cart-page .line-name { margin: 0; font-weight: 600; line-height: 1.35; }
+  .cart-page .line-name { margin: 0; font-weight: 500; line-height: 1.35; }
   .cart-page .line-unit { margin: 0.1rem 0 0.6rem; color: var(--muted); font-size: 0.9rem; }
   .cart-page .line-ctrl { display: flex; align-items: center; gap: 1rem; }
   .cart-page .line-total { margin-left: auto; font-variant-numeric: tabular-nums; }
@@ -245,8 +245,8 @@ import Base from '../layouts/Base.astro';
     display: flex;
     align-items: center;
     border: 1px solid var(--lodge-3);
-    border-radius: 999px;
-    background: var(--lodge-2);
+    border-radius: var(--radius);
+    background: transparent;
   }
   .cart-page .step {
     width: 2.75rem;
@@ -256,10 +256,10 @@ import Base from '../layouts/Base.astro';
     color: var(--paper);
     font-size: 1.35rem;
     cursor: pointer;
-    border-radius: 999px;
+    border-radius: var(--radius);
   }
   .cart-page .step:disabled { color: var(--lodge-3); cursor: default; }
-  .cart-page .count { min-width: 1.5rem; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .cart-page .count { min-width: 1.5rem; text-align: center; font-weight: 500; font-variant-numeric: tabular-nums; }
 
   .cart-page .sum {
     display: flex;
@@ -274,8 +274,8 @@ import Base from '../layouts/Base.astro';
 
   .cart-page .history { margin-top: 3rem; }
   .cart-page .order {
-    background: var(--lodge-2);
-    border-radius: 0.6rem;
+    border: 1px solid var(--lodge-3);
+    border-radius: var(--radius);
     padding: 0.9rem 1rem;
     margin-bottom: 0.75rem;
     border-left: 4px solid var(--amber);

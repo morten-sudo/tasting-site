@@ -1,21 +1,22 @@
 /* Portvin 2026 – farver og typografi
-   Som portvinskælderen: næsten sort bund, varmt lys på fadene,
-   tekst som gammelt etiketpapir og portvinens farveskala som pynt. */
+   Rent og eksklusivt: næsten sort bund, elfenbenstekst, en dæmpet guldtone,
+   en let serif til overskrifter og tynde linjer frem for flader. */
 
 :root {
   --lodge: #0b0908;      /* bund: kældermørke */
-  --lodge-2: #1a1512;    /* flader */
-  --lodge-3: #2e2620;    /* kanter */
-  --paper: #f3e7d2;      /* tekst */
-  --muted: #a8957c;      /* sekundær tekst */
+  --lodge-2: #151210;    /* flader */
+  --lodge-3: #2a241f;    /* tynde linjer */
+  --paper: #ece4d6;      /* tekst */
+  --muted: #9b8f80;      /* sekundær tekst */
   --ruby: #a3213a;
   --tawny: #b8742e;
-  --amber: #e0a95c;      /* lyset på fadene: fokus og links */
-  --ok: #9fbf86;
-  --error: #f08c7a;
+  --amber: #c9a66b;      /* dæmpet guld: fokus og links */
+  --ok: #a9bf98;
+  --error: #e59a8a;
 
-  --display: 'Big Shoulders Stencil Display', 'Arial Narrow', sans-serif;
-  --body: 'Literata', Georgia, serif;
+  --display: 'Cormorant Garamond', 'Times New Roman', serif;
+  --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --radius: 2px;
 
   /* Sidemargen: hele siden bruger skærmens bredde */
   --gutter: clamp(1rem, 4vw, 3rem);
@@ -32,12 +33,26 @@ body {
   background: var(--lodge);
   color: var(--paper);
   font-family: var(--body);
-  font-size: 1.0625rem;
-  line-height: 1.6;
-  font-optical-sizing: auto;
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.7;
+  letter-spacing: 0.005em;
+  -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--amber); text-underline-offset: 0.18em; }
+strong, b { font-weight: 500; }
+
+/* Små etiketter i versaler med luft */
+.eyebrow {
+  font-family: var(--body);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+a { color: var(--amber); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
 a:hover { color: var(--paper); }
 
 :focus-visible {
@@ -46,13 +61,13 @@ a:hover { color: var(--paper); }
   border-radius: 2px;
 }
 
-h1, h2, h3 { line-height: 1.15; margin: 0 0 0.5em; }
+h1, h2, h3 { line-height: 1.1; margin: 0 0 0.5em; font-weight: 400; }
 
 h2 {
   font-family: var(--display);
-  font-weight: 700;
-  font-size: 1.9rem;
-  letter-spacing: 0.01em;
+  font-weight: 400;
+  font-size: 2rem;
+  letter-spacing: 0.005em;
 }
 
 p { margin: 0 0 1em; }
@@ -71,7 +86,7 @@ textarea, input[type='text'], input[type='email'], input[type='password'], selec
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   height: 0.75rem;
-  border-radius: 999px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .spectrum span:nth-child(1) { background: #5a0a1d; }
@@ -83,43 +98,59 @@ textarea, input[type='text'], input[type='email'], input[type='password'], selec
 
 /* Knapper og felter */
 .btn {
-  display: inline-block;
-  font: 600 1.05rem/1 var(--body);
-  padding: 0.95rem 1.4rem;
-  border-radius: 0.6rem;
-  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 500 0.78rem/1 var(--body);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 0 1.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--amber);
   background: var(--amber);
   color: var(--lodge);
   cursor: pointer;
   text-decoration: none;
   min-height: 3rem;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
-.btn:hover { background: var(--paper); color: var(--lodge); }
+.btn:hover { background: transparent; color: var(--amber); }
 .btn:disabled { opacity: 0.6; cursor: progress; }
 
-label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+}
 
-textarea, input[type='text'] {
+textarea, input[type='text'], input[type='email'], input[type='password'] {
   width: 100%;
   font: inherit;
+  font-weight: 300;
   color: var(--paper);
-  background: var(--lodge-2);
+  background: transparent;
   border: 1px solid var(--lodge-3);
-  border-radius: 0.5rem;
-  padding: 0.7rem 0.8rem;
+  border-radius: var(--radius);
+  padding: 0.75rem 0.85rem;
 }
+textarea:focus, input:focus { outline: none; border-color: var(--amber); }
 textarea { min-height: 5rem; resize: vertical; }
 
 .hint { color: var(--muted); font-size: 0.95rem; }
 
 .message {
-  padding: 0.9rem 1rem;
-  border-radius: 0.6rem;
-  background: var(--lodge-2);
-  border-left: 4px solid var(--amber);
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius);
+  background: transparent;
+  border: 1px solid var(--lodge-3);
+  font-size: 0.95rem;
 }
-.message.error { border-left-color: var(--error); }
-.message.ok { border-left-color: var(--ok); }
+.message.error { border-color: var(--error); }
+.message.ok { border-color: var(--ok); }
 
 [hidden] { display: none !important; }
 
@@ -145,7 +176,7 @@ textarea { min-height: 5rem; resize: vertical; }
 .board .pts {
   text-align: right;
   font-family: var(--display);
-  font-weight: 800;
+  font-weight: 400;
   font-size: 1.5rem;
   font-variant-numeric: tabular-nums;
 }
@@ -156,8 +187,8 @@ textarea { min-height: 5rem; resize: vertical; }
 
 /* MobilePay-betalingsboks (kurv og invitation) */
   .pay { margin-top: 0.75rem; }
-  .pay-lead { font-weight: 600; margin-bottom: 0.6rem; }
-  .pay-btn { display: block; text-align: center; margin-bottom: 0.9rem; }
+  .pay-lead { font-weight: 500; margin-bottom: 0.6rem; }
+  .pay-btn { display: flex; width: 100%; margin-bottom: 0.9rem; }
   .pay-facts {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -180,7 +211,7 @@ textarea { min-height: 5rem; resize: vertical; }
     color: var(--amber);
     background: none;
     border: 1px solid var(--lodge-3);
-    border-radius: 999px;
+    border-radius: var(--radius);
     padding: 0.3rem 0.7rem;
     cursor: pointer;
     white-space: nowrap;

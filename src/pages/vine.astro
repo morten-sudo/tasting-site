@@ -217,12 +217,13 @@ import Base from '../layouts/Base.astro';
   .vine-page { padding-top: 2.5rem; padding-bottom: 5rem; }
   .vine-page .title {
     font-family: var(--display);
-    font-weight: 800;
-    font-size: clamp(3rem, 16vw, 5rem);
-    line-height: 0.9;
-    margin-bottom: 1rem;
+    font-weight: 400;
+    font-weight: 300;
+    font-size: clamp(3.25rem, 14vw, 5.5rem);
+    line-height: 0.95;
+    margin-bottom: 0.75rem;
   }
-  .vine-page .lead { font-size: 1.1rem; }
+  .vine-page .lead { font-family: var(--display); font-style: italic; font-size: 1.35rem; color: var(--muted); }
   .vine-page #order-status { margin: 1.25rem 0 0.5rem; }
 
   /* Karrusellen: én vin ad gangen, næste kigger frem i kanten */
@@ -245,11 +246,11 @@ import Base from '../layouts/Base.astro';
   .carousel .track::-webkit-scrollbar { display: none; }
   .carousel .card {
     scroll-snap-align: start;
-    background: var(--lodge-2);
-    border-radius: 1rem;
+    background: none;
+    border-radius: 0;
     overflow: hidden;
-    transition: opacity 0.25s;
-    opacity: 0.55;
+    transition: opacity 0.3s;
+    opacity: 0.45;
   }
   .carousel .card.is-current { opacity: 1; }
   /* Store skærme: flere vine ad gangen, alle i fuld styrke */
@@ -258,8 +259,9 @@ import Base from '../layouts/Base.astro';
   }
   .carousel .pic {
     position: relative;
-    height: 16rem;
+    height: 18rem;
     background: #fff;
+    border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -273,11 +275,11 @@ import Base from '../layouts/Base.astro';
     top: 0.6rem;
     left: 0.85rem;
     font-family: var(--display);
-    font-weight: 800;
-    font-size: 2.2rem;
+    font-weight: 400;
+    font-style: italic;
+    font-size: 1.5rem;
     line-height: 1;
-    color: var(--lodge);
-    opacity: 0.55;
+    color: #8a7f72;
   }
   .carousel .style-tag {
     display: flex;
@@ -326,16 +328,16 @@ import Base from '../layouts/Base.astro';
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .carousel .card-link:focus-visible { outline-offset: -3px; border-radius: 1rem; }
-  .carousel .info { min-width: 0; padding: 1.1rem 1.1rem 1.2rem; }
+  .carousel .card-link:focus-visible { outline-offset: -3px; border-radius: var(--radius); }
+  .carousel .info { min-width: 0; padding: 1.2rem 0.1rem 0.5rem; }
   .carousel .name {
-    font-family: var(--body);
-    font-size: 1.1rem;
-    font-weight: 600;
-    line-height: 1.3;
-    margin: 0 0 0.15rem;
+    font-family: var(--display);
+    font-size: 1.55rem;
+    font-weight: 400;
+    line-height: 1.15;
+    margin: 0 0 0.3rem;
   }
-  .carousel .meta { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .carousel .meta { margin: 0; color: var(--muted); font-size: 0.9rem; }
   .carousel .foot {
     display: flex;
     align-items: flex-end;
@@ -351,11 +353,13 @@ import Base from '../layouts/Base.astro';
     white-space: nowrap;
     line-height: 1.3;
   }
-  .carousel .price .ours { font-weight: 600; font-size: 1.1rem; }
+  .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
   .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
   .carousel .go {
     color: var(--amber);
-    font-size: 0.95rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -383,6 +387,6 @@ import Base from '../layouts/Base.astro';
   }
   .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   #basket-total { font-size: 1.15rem; }
-  .basket-go { color: var(--amber); font-weight: 600; white-space: nowrap; }
+  .basket-go { color: var(--amber); font-weight: 500; white-space: nowrap; }
   .basket:hover .basket-go { color: var(--paper); }
 </style>

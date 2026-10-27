@@ -17,6 +17,7 @@ import { EVENT } from '../lib/config';
       />
     </picture>
     <div class="hero-text wrap">
+      <p class="eyebrow">Smagning · 2026</p>
       <h1>Portvin</h1>
     </div>
   </section>
@@ -96,24 +97,28 @@ import { EVENT } from '../lib/config';
   }
   h1 {
     font-family: var(--display);
-    font-weight: 800;
-    font-size: clamp(5.5rem, 27vw, 10.5rem);
-    line-height: 0.85;
+    font-weight: 400;
+    font-weight: 300;
+    font-size: clamp(4.75rem, 22vw, 10rem);
+    line-height: 0.9;
     letter-spacing: 0.01em;
     margin: 0;
     color: var(--paper);
   }
+  .hero-text .eyebrow { margin: 0 0 0.6rem 0.2rem; color: #d8cdbd; }
   .when-block { padding-top: 1rem; }
   .when {
-    font-size: 1.3rem;
-    line-height: 1.35;
+    font-family: var(--display);
+    font-size: 1.6rem;
+    font-style: italic;
+    line-height: 1.3;
     margin: 0;
   }
   .time {
-    margin: 0.15rem 0 0;
+    margin: 0.3rem 0 0;
     color: var(--muted);
-    font-size: 0.95rem;
-    letter-spacing: 0.12em;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
   }
   .where { color: var(--muted); margin-top: 0.4rem; }
@@ -123,8 +128,12 @@ import { EVENT } from '../lib/config';
     display: inline-flex;
     align-items: center;
     min-height: 3rem;
-    padding: 0 1.25rem;
-    border-radius: 0.6rem;
+    padding: 0 1.75rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: var(--radius);
     border: 1px solid var(--lodge-3);
     color: var(--paper);
     text-decoration: none;

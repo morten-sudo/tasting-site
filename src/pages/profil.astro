@@ -246,7 +246,7 @@ import Base from '../layouts/Base.astro';
   }
   .greeting {
     font-family: var(--display);
-    font-weight: 800;
+    font-weight: 400;
     font-size: clamp(2.2rem, 9vw, 3rem);
     line-height: 1;
     margin: 0 0 0.35rem;
@@ -281,11 +281,11 @@ import Base from '../layouts/Base.astro';
   /* Betaling */
   .fee {
     border: 1px solid var(--lodge-3);
-    border-radius: 0.75rem;
+    border-radius: var(--radius);
     padding: 0.9rem 1rem;
     margin-top: 2rem;
   }
-  .fee h2 { font-family: var(--body); font-size: 1rem; font-weight: 600; margin: 0 0 0.3rem; }
+  .fee h2 { font-family: var(--body); font-size: 1rem; font-weight: 500; margin: 0 0 0.3rem; }
   .fee #fee-paid { margin: 0; padding: 0; background: none; border: 0; color: var(--ok); }
   .fee #fee-due p { font-size: 0.92rem; color: var(--muted); }
 
@@ -300,12 +300,12 @@ import Base from '../layouts/Base.astro';
     justify-content: space-between;
     gap: 1rem;
   }
-  .seg-row legend { float: left; padding: 0; font-weight: 600; }
+  .seg-row legend { float: left; padding: 0; font-weight: 500; }
   .seg {
     display: inline-flex;
     padding: 0.2rem;
     border: 1px solid var(--lodge-3);
-    border-radius: 999px;
+    border-radius: var(--radius);
   }
   .seg label { margin: 0; font-weight: 400; cursor: pointer; }
   .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -316,12 +316,12 @@ import Base from '../layouts/Base.astro';
     min-width: 4rem;
     min-height: 2.5rem;
     padding: 0 1rem;
-    border-radius: 999px;
+    border-radius: var(--radius);
     color: var(--muted);
     transition: background-color 0.15s, color 0.15s;
   }
   .seg label:hover span { color: var(--paper); }
-  .seg input:checked + span { background: var(--amber); color: var(--lodge); font-weight: 600; }
+  .seg input:checked + span { background: var(--amber); color: var(--lodge); font-weight: 500; }
   .seg input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 2px; }
 
   .field label { font-size: 0.85rem; color: var(--muted); font-weight: 400; margin-bottom: 0.15rem; }
@@ -354,7 +354,7 @@ import Base from '../layouts/Base.astro';
   .note textarea { margin-top: 0.4rem; min-height: 4.5rem; }
 
   .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
-  .btn-small { min-height: 2.75rem; padding: 0.75rem 1.4rem; font-size: 1rem; border-radius: 999px; }
+  .btn-small { min-height: 2.75rem; padding: 0.75rem 1.4rem; font-size: 1rem; border-radius: var(--radius); }
   .actions .hint { font-size: 0.85rem; }
   #form-error { margin: 0; }
 </style>
