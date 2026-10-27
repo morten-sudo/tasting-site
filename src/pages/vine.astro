@@ -227,7 +227,13 @@ import Base from '../layouts/Base.astro';
   .vine-page #order-status { margin: 1.25rem 0 0.5rem; }
 
   /* Karrusellen: én vin ad gangen, næste kigger frem i kanten */
-  .carousel { margin: 1.75rem calc(-1 * var(--gutter)) 0; outline-offset: -2px; }
+  /* Hele karrusellen ligger på et hvidt bånd i fuld bredde */
+  .carousel {
+    margin: 1.75rem calc(-1 * var(--gutter)) 0;
+    padding-top: 1.75rem;
+    background: #fff;
+    outline-offset: -2px;
+  }
   .carousel .track {
     list-style: none;
     margin: 0;
@@ -248,6 +254,7 @@ import Base from '../layouts/Base.astro';
     scroll-snap-align: start;
     background: #fff;
     color: #1c1714;
+    border: 1px solid #ece6dc;
     border-radius: var(--radius);
     overflow: hidden;
     transition: opacity 0.3s;
@@ -304,22 +311,24 @@ import Base from '../layouts/Base.astro';
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    margin-top: 0.75rem;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 0.75rem var(--gutter) 1.75rem;
+    background: #fff;
   }
-  .counter { margin: 0; min-width: 5.5rem; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .counter { margin: 0; min-width: 5.5rem; text-align: center; color: #6f655a; font-size: 0.85rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
   .nav-btn {
     width: 3rem;
     height: 3rem;
     border-radius: 50%;
-    border: 1px solid var(--lodge-3);
+    border: 1px solid #ddd5ca;
     background: none;
-    color: var(--paper);
+    color: #1c1714;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
   }
-  .nav-btn:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+  .nav-btn:hover:not(:disabled) { border-color: #876631; color: #876631; }
   .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
   .carousel .card-link {
