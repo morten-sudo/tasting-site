@@ -10,7 +10,7 @@ export const EVENT = {
   dateLong: 'Lørdag den 21. november 2026',
   time: 'kl. 17',
   // Udfyldes, når adressen er på plads. Tom tekst = vises ikke.
-  place: '',
+  place: 'Gl. Holte Gade 31, 2840 Holte',
   // MobilePay-nummer, der vises efter bestilling. Tom tekst = "værten fortæller hvordan".
   mobilepay: '53884312',
 };
