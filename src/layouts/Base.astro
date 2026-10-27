@@ -33,7 +33,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
             <span id="nav-cart-count" class="badge" hidden></span>
           </a>
           <span id="user-in" class="user-in" hidden>
-            <span id="user-name" class="user-name"></span>
+            <a href="/profil/" id="user-name" class:list={['user-name', { current: Astro.url.pathname.startsWith('/profil') }]} title="Din profil"></a>
             <button id="logout" type="button" class="icon-btn" aria-label="Log ud" title="Log ud">
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></svg>
             </button>
@@ -46,7 +46,6 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       <nav aria-label="Hovedmenu">
         <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vin') }}>Vinene</a>
         <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
-        <a href="/profil/" class:list={{ current: Astro.url.pathname.startsWith('/profil') }}>Profil</a>
       </nav>
       </div>
     </header>
@@ -154,12 +153,15 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
   .user-in { display: inline-flex; align-items: center; gap: 0.1rem; min-width: 0; }
   .user-name {
     color: var(--muted);
+    text-decoration: none;
+    padding: 0.4rem 0.2rem;
     font-size: 0.88rem;
     max-width: 9rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .user-name:hover, .user-name.current { color: var(--paper); text-decoration: underline; text-underline-offset: 0.2em; }
   nav { display: flex; flex-wrap: wrap; gap: 0 1.1rem; margin-top: 0.1rem; }
   .badge {
     position: absolute;
