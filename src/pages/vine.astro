@@ -246,8 +246,9 @@ import Base from '../layouts/Base.astro';
   .carousel .track::-webkit-scrollbar { display: none; }
   .carousel .card {
     scroll-snap-align: start;
-    background: none;
-    border-radius: 0;
+    background: #fff;
+    color: #1c1714;
+    border-radius: var(--radius);
     overflow: hidden;
     transition: opacity 0.3s;
     opacity: 0.45;
@@ -261,7 +262,6 @@ import Base from '../layouts/Base.astro';
     position: relative;
     height: 18rem;
     background: #fff;
-    border-radius: var(--radius);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -286,8 +286,8 @@ import Base from '../layouts/Base.astro';
     align-items: center;
     gap: 0.5rem;
     margin: 0 0 0.4rem;
-    color: var(--muted);
-    font-size: 0.8rem;
+    color: #6f655a;
+    font-size: 0.7rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
@@ -329,7 +329,8 @@ import Base from '../layouts/Base.astro';
     -webkit-tap-highlight-color: transparent;
   }
   .carousel .card-link:focus-visible { outline-offset: -3px; border-radius: var(--radius); }
-  .carousel .info { min-width: 0; padding: 1.2rem 0.1rem 0.5rem; }
+  /* Teksten står i samme hvide boks som flasken */
+  .carousel .info { min-width: 0; padding: 0.4rem 1.25rem 1.3rem; }
   .carousel .name {
     font-family: var(--display);
     font-size: 1.55rem;
@@ -337,7 +338,7 @@ import Base from '../layouts/Base.astro';
     line-height: 1.15;
     margin: 0 0 0.3rem;
   }
-  .carousel .meta { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  .carousel .meta { margin: 0; color: #6f655a; font-size: 0.9rem; }
   .carousel .foot {
     display: flex;
     align-items: flex-end;
@@ -354,9 +355,9 @@ import Base from '../layouts/Base.astro';
     line-height: 1.3;
   }
   .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
-  .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
+  .carousel .price .normal { color: #6f655a; font-size: 0.85rem; }
   .carousel .go {
-    color: var(--amber);
+    color: #876631;
     font-size: 0.7rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -373,7 +374,8 @@ import Base from '../layouts/Base.astro';
     border-top: 2px solid currentColor;
     transform: rotate(45deg);
   }
-  .carousel .card-link:hover .go { color: var(--paper); }
+  .carousel .card-link:hover .go { color: #1c1714; }
+  .carousel .card-link:focus-visible { outline-color: var(--amber); outline-offset: 3px; }
 
   .basket {
     display: block;
