@@ -1,7 +1,7 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base from '../../layouts/Base.astro';
 ---
-<Base title="Profil">
+<Base title="Smagningen" tasting>
   <section class="wrap page">
     <p id="loading" class="hint">Henter din profil …</p>
 
@@ -24,7 +24,10 @@ import Base from '../layouts/Base.astro';
     </form>
 
     <div id="invite" hidden>
-      <h1 class="visually-hidden">Din profil</h1>
+      <header class="tasting-head">
+        <h1 id="t-title" class="t-title"></h1>
+        <p id="t-when" class="t-when"></p>
+      </header>
 
       <p id="current" class="status" role="status" hidden></p>
 
@@ -70,13 +73,14 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <script>
-  import { supabase, getGuestCode } from '../lib/supabase';
-  import { EVENT } from '../lib/config';
-  import { payBox, setPayee } from '../lib/pay';
+  import { supabase } from '../../lib/supabase';
+  import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { payBox, setPayee } from '../../lib/pay';
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
-  const code = getGuestCode();
+  const code = await resolveGuestCode();
+  const slug = currentSlug() ?? '';
   const form = $<HTMLFormElement>('rsvp-form');
   const current = $('current');
   const formError = $('form-error');
@@ -103,7 +107,18 @@ import Base from '../layouts/Base.astro';
       supabase.rpc('get_tasting_payment', { code }),
       supabase.rpc('get_tasting', { code }),
     ]);
-    setPayee(((t.data ?? {}) as Record<string, unknown>).mobilepay ?? null);
+    const info = (t.data ?? {}) as Record<string, unknown>;
+    setPayee(info.mobilepay ?? null);
+    $('t-title').textContent = String(info.title ?? '');
+    const parts: string[] = [];
+    if (typeof info.starts_at === 'string') {
+      const d = new Date(info.starts_at);
+      const day = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' }).format(d);
+      const time = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' }).format(d);
+      parts.push(`${day[0].toUpperCase()}${day.slice(1)} kl. ${time}`);
+    }
+    if (typeof info.place === 'string' && info.place) parts.push(info.place);
+    $('t-when').textContent = parts.join(' · ');
     const row = Array.isArray(data) ? data[0] : null;
     const amount = row ? Number(row.amount) : 0;
     $('fee').hidden = !row || amount <= 0;
@@ -240,6 +255,15 @@ import Base from '../layouts/Base.astro';
 
 <style>
   .page { padding-top: 2rem; padding-bottom: 2rem; max-width: 34rem; }
+  .tasting-head { margin-bottom: 1.5rem; }
+  .t-title {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 12vw, 4.5rem);
+    line-height: 0.95;
+    margin: 0 0 0.5rem;
+  }
+  .t-when { color: var(--muted); margin: 0; }
   .visually-hidden {
     position: absolute;
     width: 1px;

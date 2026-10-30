@@ -1,5 +1,5 @@
 ---
-import '../styles/global.css';
+import '../../styles/global.css';
 ---
 <!doctype html>
 <html lang="da">
@@ -7,7 +7,7 @@ import '../styles/global.css';
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>Pointtavle – Portvin 2026</title>
+    <title>Pointtavle – Winetastr</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,7 +19,7 @@ import '../styles/global.css';
   <body class="tv">
     <main class="tv-main">
       <header class="tv-head">
-        <h1>Portvin</h1>
+        <h1 id="tv-title">Pointtavle</h1>
         <p id="tv-status">Quizzen er ikke startet endnu</p>
       </header>
       <div class="spectrum" aria-hidden="true">
@@ -29,16 +29,18 @@ import '../styles/global.css';
     </main>
 
     <script>
-      import { supabase } from '../lib/supabase';
-      import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
+      import { supabase } from '../../lib/supabase';
+      import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
+      import { currentSlug } from '../../lib/guest';
 
-      const slug = new URLSearchParams(location.search).get('t');
+      const slug = currentSlug();
       const status = document.getElementById('tv-status')!;
       const board = document.getElementById('board') as HTMLOListElement;
 
       async function tick() {
         const { data } = await supabase.rpc('get_tasting', { slug });
         const s = (data ?? {}) as Record<string, unknown>;
+        if (typeof s.title === 'string') document.getElementById('tv-title')!.textContent = s.title;
         const TOTAL = Number(s.quiz_count) || 13;
         const rows = await fetchLeaderboard({ slug });
         if (!rows) return;

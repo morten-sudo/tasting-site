@@ -1,10 +1,12 @@
 ---
 import '../styles/global.css';
-import { EVENT } from '../lib/config';
+import { SITE_NAME } from '../lib/config';
 
-interface Props { title?: string; hero?: boolean }
-const { title, hero = false } = Astro.props;
-const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
+// tasting: the page lives under /t/<slug>/ and gets the tasting's menu
+interface Props { title?: string; hero?: boolean; tasting?: boolean }
+const { title, hero = false, tasting = false } = Astro.props;
+const pageTitle = title ? `${title} – ${SITE_NAME}` : SITE_NAME;
+const path = Astro.url.pathname;
 ---
 <!doctype html>
 <html lang="da">
@@ -22,18 +24,22 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap"
     />
   </head>
-  <body class:list={{ 'has-hero': hero }}>
+  <body class:list={{ 'has-hero': hero }} data-tasting={tasting ? '1' : undefined}>
     <header class="site-header">
       <div class="wrap header-inner">
       <div class="top-row">
-        <a href="/" class="mark" id="mark">{EVENT.title}</a>
+        {tasting
+          ? <a href="/tastings/" data-tpath="" class="mark" id="mark">{SITE_NAME}</a>
+          : <a href="/" class="mark" id="mark">{SITE_NAME}</a>}
         <div class="tools">
-          <a href="/cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Indkøbskurv" title="Indkøbskurv" hidden={!Astro.url.pathname.startsWith('/cart')}>
-            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
-            <span id="nav-cart-count" class="badge" hidden></span>
-          </a>
+          {tasting && (
+            <a href="/tastings/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Indkøbskurv" title="Indkøbskurv" hidden={!path.startsWith('/tasting/cart')}>
+              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
+              <span id="nav-cart-count" class="badge" hidden></span>
+            </a>
+          )}
           <span id="user-in" class="user-in" hidden>
-            <a href="/profile/" id="user-name" class:list={['user-name', { current: Astro.url.pathname.startsWith('/profile') }]} title="Din profil"></a>
+            <a href="/tastings/" id="user-name" class:list={['user-name', { current: path.startsWith('/tastings') }]} title="Mine smagninger">Mine smagninger</a>
             <button id="logout" type="button" class="icon-btn" aria-label="Log ud" title="Log ud">
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></svg>
             </button>
@@ -43,25 +49,44 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
           </a>
         </div>
       </div>
-      <nav aria-label="Hovedmenu">
-        <a href="/wines/" class:list={{ current: Astro.url.pathname.startsWith('/wine') }}>Vinene</a>
-        <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
-      </nav>
+      {tasting && (
+        <nav aria-label="Smagningens menu">
+          <a href="/tastings/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }}>Smagningen</a>
+          <a href="/tastings/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }}>Vinene</a>
+          <a href="/tastings/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }}>Quiz</a>
+        </nav>
+      )}
       </div>
     </header>
     <main>
       <slot />
     </main>
     <script>
-      import { getCart, cartCount, clearCart } from '../lib/cart';
-      import { supabase, forgetGuestCode } from '../lib/supabase';
-      const link = document.getElementById('nav-cart')!;
-      const badge = document.getElementById('nav-cart-count')!;
+      import { getCart, cartCount } from '../lib/cart';
+      import { supabase } from '../lib/supabase';
+      import { currentSlug, tastingUrl, resolveGuestCode, getCodes, signOut } from '../lib/guest';
+
+      const inTasting = document.body.dataset.tasting === '1';
+      const slug = currentSlug();
+
+      // Links inside a tasting point to /t/<slug>/...
+      if (slug) {
+        document.querySelectorAll<HTMLAnchorElement>('a[data-tpath]').forEach((a) => {
+          a.href = tastingUrl(slug, a.dataset.tpath ?? '');
+        });
+      } else if (inTasting) {
+        location.replace('/tastings/');
+      }
+
+      // Cart badge (tasting pages only)
+      const cartLink = document.getElementById('nav-cart');
+      const badge = document.getElementById('nav-cart-count');
       const sync = () => {
+        if (!cartLink || !badge) return;
         const n = cartCount(getCart());
         badge.textContent = String(n);
         badge.hidden = n === 0;
-        if (n > 0) link.hidden = false;
+        if (n > 0) cartLink.hidden = false;
       };
       window.addEventListener('cart-change', sync);
       sync();
@@ -72,13 +97,10 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
         onScroll();
       }
 
-      // Guest sign in/out (based on the invite code)
       const userIn = document.getElementById('user-in')!;
       const userOut = document.getElementById('user-out')!;
-      let code: string | null = null;
-      try {
-        code = new URLSearchParams(location.search).get('k') || localStorage.getItem('guest_code');
-      } catch {}
+      const userName = document.getElementById('user-name')!;
+
       // Tasting title in the header, date and time in the footer
       async function showTasting(c: string) {
         const { data } = await supabase.rpc('get_tasting', { code: c });
@@ -86,7 +108,8 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
         if (!t) return;
         if (t.title) document.getElementById('mark')!.textContent = t.title;
         const when = document.getElementById('footer-when')!;
-        if (t.starts_at) {
+        // The tasting home shows date and place itself
+        if (t.starts_at && !document.getElementById('t-when')) {
           const d = new Date(t.starts_at);
           const day = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }).format(d);
           const time = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' }).format(d);
@@ -94,28 +117,33 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
         }
       }
 
-      if (!code) {
-        userOut.hidden = false;
-      } else {
-        supabase.rpc('get_invite', { code }).then(({ data }) => {
+      async function initUser() {
+        if (inTasting && slug) {
+          const code = await resolveGuestCode();
+          if (!code) { userOut.hidden = false; return; }
+          const { data } = await supabase.rpc('get_invite', { code });
           const row = Array.isArray(data) ? data[0] : null;
-          if (row) {
-            document.getElementById('user-name')!.textContent = row.name;
-            userIn.hidden = false;
-            showTasting(code!);
-            // Guests without an email must add one on the profile page before continuing
-            const free = ['/profile/', '/login/', '/admin/', '/leaderboard/', '/become-host/'];
-            if (!row.email && !free.some((p) => location.pathname.startsWith(p))) {
-              location.replace('/profile/');
-            }
-          } else {
-            userOut.hidden = false;
-          }
-        });
+          if (!row) { userOut.hidden = false; return; }
+          userName.textContent = row.name;
+          userIn.hidden = false;
+          showTasting(code);
+          // Guests without an email must add one on the tasting page before continuing
+          const home = tastingUrl(slug);
+          if (!row.email && location.pathname !== home) location.replace(home);
+          return;
+        }
+        // Outside a tasting: signed in if there is an email session or a stored invite code
+        const { data } = await supabase.auth.getSession();
+        if (data.session || Object.keys(getCodes()).length > 0) userIn.hidden = false;
+        else userOut.hidden = false;
       }
+      initUser();
+
       document.getElementById('logout')!.addEventListener('click', () => {
-        forgetGuestCode();
-        clearCart();
+        signOut();
+        try {
+          Object.keys(localStorage).filter((k) => k.startsWith('cart:')).forEach((k) => localStorage.removeItem(k));
+        } catch {}
         location.href = '/';
       });
     </script>

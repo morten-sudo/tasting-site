@@ -1,8 +1,6 @@
-import { EVENT } from './config';
-
 const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
-// Host's MobilePay number. Set from the tasting (setPayee); config is only a fallback.
-let mobilepay = EVENT.mobilepay.replace(/\s/g, '');
+// Host's MobilePay number, set from the tasting (setPayee).
+let mobilepay = '';
 export function setPayee(number: unknown) {
   if (typeof number === 'string') mobilepay = number.replace(/\s/g, '');
   else if (number === null) mobilepay = '';

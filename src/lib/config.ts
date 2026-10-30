@@ -5,12 +5,4 @@
 export const SUPABASE_URL = 'https://ydvdhhdpygzwalosbjcc.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC';
 
-export const EVENT = {
-  title: 'Portvin 2026',
-  dateLong: 'Lørdag den 21. november 2026',
-  time: 'kl. 17',
-  // Empty string = not shown.
-  place: 'Gl. Holte Gade 31, 2840 Holte',
-  // Fallback MobilePay number. Empty string = "the host will tell you how".
-  mobilepay: '53884312',
-};
+export const SITE_NAME = 'Winetastr';

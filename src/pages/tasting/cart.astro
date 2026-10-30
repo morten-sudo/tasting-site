@@ -1,7 +1,7 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base from '../../layouts/Base.astro';
 ---
-<Base title="Kurv">
+<Base title="Kurv" tasting>
   <section class="wrap cart-page">
     <h1 class="title">Kurv</h1>
 
@@ -33,7 +33,7 @@ import Base from '../layouts/Base.astro';
 
     <div id="empty" hidden>
       <p>Kurven er tom.</p>
-      <a class="btn" href="/wines/">Se vinene</a>
+      <a class="btn" href="/tastings/" data-tpath="wines/">Se vinene</a>
     </div>
 
     <section id="history" class="history" hidden>
@@ -44,9 +44,10 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <script>
-  import { supabase, getGuestCode } from '../lib/supabase';
-  import { getCart, setQty, clearCart, MAX_PER_WINE } from '../lib/cart';
-  import { payBox, setPayee } from '../lib/pay';
+  import { supabase } from '../../lib/supabase';
+  import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { getCart, setQty, clearCart, MAX_PER_WINE } from '../../lib/cart';
+  import { payBox, setPayee } from '../../lib/pay';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number };
   type Line = {
@@ -58,7 +59,8 @@ import Base from '../layouts/Base.astro';
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const date = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
-  const code = getGuestCode();
+  const code = await resolveGuestCode();
+  const slug = currentSlug() ?? '';
   let wines = new Map<number, Wine>();
   let open = false;
 

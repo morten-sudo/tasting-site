@@ -1,14 +1,15 @@
-// The cart is stored in the browser until the guest submits the order.
+// The cart is stored in the browser, per tasting, until the guest submits the order.
 // Format: { [wineId]: quantity }
+import { currentSlug } from './guest';
 
-const KEY = 'cart';
+const key = () => `cart:${currentSlug() ?? 'none'}`;
 export const MAX_PER_WINE = 48;
 
 export type Cart = Record<string, number>;
 
 export function getCart(): Cart {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key());
     const parsed = raw ? JSON.parse(raw) : {};
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
@@ -17,7 +18,7 @@ export function getCart(): Cart {
 }
 
 function save(cart: Cart) {
-  try { localStorage.setItem(KEY, JSON.stringify(cart)); } catch {}
+  try { localStorage.setItem(key(), JSON.stringify(cart)); } catch {}
   window.dispatchEvent(new CustomEvent('cart-change', { detail: cart }));
 }
 

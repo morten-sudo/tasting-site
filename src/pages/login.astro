@@ -11,7 +11,7 @@ import Base from '../layouts/Base.astro';
     <div id="choose" class="choose" hidden>
       <p class="lead">Du er både gæst og vært. Hvor vil du hen?</p>
       <div class="choose-btns">
-        <a class="btn" id="go-guest" href="/profile/">Min smagning</a>
+        <a class="btn" id="go-guest" href="/tastings/">Mine smagninger</a>
         <a class="btn ghost" id="go-admin" href="/admin/">Admin</a>
       </div>
     </div>
@@ -76,7 +76,8 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <script>
-  import { supabase, setGuestCode } from '../lib/supabase';
+  import { supabase } from '../lib/supabase';
+  import { fetchMyTastings, setCode, tastingUrl } from '../lib/guest';
 
   const $ = (id: string) => document.getElementById(id)!;
   const params = new URLSearchParams(location.search);
@@ -103,25 +104,27 @@ import Base from '../layouts/Base.astro';
     $('forms').hidden = true;
     $('checking').hidden = false;
 
-    const [codeRes, hostRes, adminRes] = await Promise.all([
-      supabase.rpc('my_invite_code'),
+    const [mine, hostRes, adminRes] = await Promise.all([
+      fetchMyTastings(),
       supabase.rpc('current_host_id'),
       supabase.rpc('is_admin'),
     ]);
-    const code = (codeRes.data as string | null) ?? null;
     const isHost = !!hostRes.data || adminRes.data === true;
     const adminUrl = wantsAdmin ? next : '/admin/';
+    // One tasting → straight to it; several → the overview
+    const guestUrl = next && !wantsAdmin ? next : mine.length === 1 ? tastingUrl(mine[0].slug) : '/tastings/';
 
-    if (code) setGuestCode(code);
-
-    if (isHost && (wantsAdmin || !code)) { location.replace(adminUrl); return true; }
-    if (isHost && code) {
+    if (isHost && (wantsAdmin || mine.length === 0)) { location.replace(adminUrl); return true; }
+    if (isHost) {
       $('checking').hidden = true;
       ($('go-admin') as HTMLAnchorElement).href = adminUrl;
+      const go = $('go-guest') as HTMLAnchorElement;
+      go.href = guestUrl;
+      go.textContent = mine.length === 1 ? mine[0].title : 'Mine smagninger';
       $('choose').hidden = false;
       return true;
     }
-    if (code) { location.replace(next && !wantsAdmin ? next : '/profile/'); return true; }
+    if (mine.length > 0) { location.replace(guestUrl); return true; }
 
     routing = false;
     $('checking').hidden = true;
@@ -252,8 +255,11 @@ import Base from '../layouts/Base.astro';
       msg.hidden = false;
       return;
     }
-    setGuestCode(code);
-    location.href = '/profile/';
+    const { data: t } = await supabase.rpc('get_tasting', { code });
+    const slug = (t as { slug?: string } | null)?.slug;
+    if (!slug) { msg.textContent = 'Koden blev ikke fundet.'; msg.hidden = false; return; }
+    setCode(slug, code);
+    location.href = tastingUrl(slug);
   });
 
   // ---------- Password ----------

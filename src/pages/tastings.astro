@@ -1,0 +1,167 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Mine smagninger">
+  <section class="wrap tastings-page">
+    <h1 class="title">Mine smagninger</h1>
+    <p id="loading" class="hint">Henter dine smagninger …</p>
+
+    <div id="signed-out" hidden>
+      <p>Log ind for at se de smagninger, du er inviteret til.</p>
+      <a class="btn" href="/login/">Log ind</a>
+    </div>
+
+    <div id="none" hidden>
+      <p>Du er ikke inviteret til nogen smagninger med denne e-mail endnu.</p>
+      <p class="hint">Har du fået et link i en invitation, så åbn det – eller log ind med den e-mail, værten har.</p>
+    </div>
+
+    <section id="upcoming-block" hidden>
+      <h2>Kommende</h2>
+      <ul id="upcoming" class="tasting-list"></ul>
+    </section>
+
+    <section id="past-block" hidden>
+      <h2>Tidligere</h2>
+      <ul id="past" class="tasting-list"></ul>
+    </section>
+
+    <section id="host-block" class="host-block" hidden>
+      <h2>Som vært</h2>
+      <p>Opret smagninger, inviter gæster og læg vine ind.</p>
+      <a class="btn-ghost" href="/admin/">Gå til admin</a>
+    </section>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  import { fetchMyTastings, getCodes, tastingUrl, type MyTasting } from '../lib/guest';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const STATUS: Record<string, [string, string]> = {
+    yes: ['Tilmeldt', 'pill-yes'],
+    no: ['Meldt fra', 'pill-no'],
+    invited: ['Ikke svaret', 'pill-invited'],
+  };
+  const dayFmt = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' });
+  const timeFmt = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' });
+
+  function card(t: MyTasting) {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.className = 'tasting-card';
+    a.href = tastingUrl(t.slug);
+
+    const head = document.createElement('div');
+    head.className = 'card-head';
+    const title = document.createElement('span');
+    title.className = 'card-title';
+    title.textContent = t.title;
+    head.append(title);
+    const [label, cls] = STATUS[t.status] ?? STATUS.invited;
+    const pill = document.createElement('span');
+    pill.className = `pill ${cls}`;
+    pill.textContent = label;
+    head.append(pill);
+    a.append(head);
+
+    const parts: string[] = [];
+    if (t.starts_at) {
+      const d = new Date(t.starts_at);
+      const day = dayFmt.format(d);
+      parts.push(`${day[0].toUpperCase()}${day.slice(1)} kl. ${timeFmt.format(d)}`);
+    }
+    if (t.place) parts.push(t.place);
+    if (parts.length) {
+      const meta = document.createElement('span');
+      meta.className = 'card-meta';
+      meta.textContent = parts.join(' · ');
+      a.append(meta);
+    }
+    li.append(a);
+    return li;
+  }
+
+  // Tastings opened with an invite link on this device (no email sign-in needed)
+  async function fromStoredCodes(skip: Set<string>): Promise<MyTasting[]> {
+    const entries = Object.entries(getCodes()).filter(([slug]) => !skip.has(slug));
+    const rows = await Promise.all(entries.map(async ([, code]) => {
+      const [t, inv] = await Promise.all([
+        supabase.rpc('get_tasting', { code }),
+        supabase.rpc('get_invite', { code }),
+      ]);
+      const info = t.data as Record<string, unknown> | null;
+      const row = Array.isArray(inv.data) ? inv.data[0] : null;
+      if (!info?.slug || !row) return null;
+      return {
+        code, slug: String(info.slug), title: String(info.title ?? ''),
+        starts_at: (info.starts_at as string | null) ?? null, place: (info.place as string | null) ?? null,
+        status: row.status as string,
+      } satisfies MyTasting;
+    }));
+    return rows.filter((r): r is MyTasting => r !== null);
+  }
+
+  const { data: s } = await supabase.auth.getSession();
+  const mine = await fetchMyTastings();
+  const all = [...mine, ...(await fromStoredCodes(new Set(mine.map((t) => t.slug))))];
+
+  let isHost = false;
+  if (s.session) {
+    const [h, a] = await Promise.all([supabase.rpc('current_host_id'), supabase.rpc('is_admin')]);
+    isHost = !!h.data || a.data === true;
+  }
+
+  $('loading').hidden = true;
+  if (!s.session && all.length === 0) {
+    $('signed-out').hidden = false;
+  } else {
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    const upcoming = all.filter((t) => !t.starts_at || new Date(t.starts_at).getTime() >= cutoff)
+      .sort((x, y) => (x.starts_at ?? '9999').localeCompare(y.starts_at ?? '9999'));
+    const past = all.filter((t) => t.starts_at && new Date(t.starts_at).getTime() < cutoff)
+      .sort((x, y) => y.starts_at!.localeCompare(x.starts_at!));
+    $('upcoming').replaceChildren(...upcoming.map(card));
+    $('past').replaceChildren(...past.map(card));
+    $('upcoming-block').hidden = upcoming.length === 0;
+    $('past-block').hidden = past.length === 0;
+    $('none').hidden = all.length > 0 || isHost;
+    $('host-block').hidden = !isHost;
+  }
+</script>
+
+<style is:global>
+  .tastings-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 40rem; }
+  .tastings-page .title {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 12vw, 4.5rem);
+    line-height: 0.95;
+    margin-bottom: 1.5rem;
+  }
+  .tastings-page section + section { margin-top: 2.5rem; }
+  .tastings-page h2 { font-size: 1.6rem; }
+  .tastings-page .tasting-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+  .tastings-page .tasting-card {
+    display: grid; gap: 0.3rem; padding: 1rem 1.1rem;
+    color: var(--paper); text-decoration: none;
+    border: 1px solid var(--lodge-3); border-radius: 0.6rem;
+    transition: border-color 0.2s;
+  }
+  .tastings-page .tasting-card:hover { border-color: var(--amber); color: var(--paper); }
+  .tastings-page .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .tastings-page .card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
+  .tastings-page .card-meta { color: var(--muted); font-size: 0.92rem; }
+  .tastings-page .pill { flex-shrink: 0; font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px; }
+  .tastings-page .pill-yes { color: #0f1a0b; background: var(--ok); }
+  .tastings-page .pill-invited { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+  .tastings-page .pill-no { color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); }
+  .tastings-page .host-block { padding-top: 1.5rem; border-top: 1px solid var(--lodge-2); }
+  .tastings-page .btn-ghost {
+    display: inline-flex; align-items: center; min-height: 3rem; padding: 0 1.75rem;
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+    border-radius: var(--radius); border: 1px solid var(--lodge-3); color: var(--paper); text-decoration: none;
+  }
+  .tastings-page .btn-ghost:hover { border-color: var(--amber); color: var(--paper); }
+</style>

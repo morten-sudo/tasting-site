@@ -1,7 +1,7 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base from '../../layouts/Base.astro';
 ---
-<Base title="Vinene">
+<Base title="Vinene" tasting>
   <section class="wrap wines-page">
     <h1 class="title">Vinene</h1>
     <p id="intro" class="lead">Det her skænker vi i aften.</p>
@@ -31,7 +31,7 @@ import Base from '../layouts/Base.astro';
     </div>
   </section>
 
-  <a id="basket" class="basket" href="/cart/" hidden>
+  <a id="basket" class="basket" href="/tastings/" data-tpath="cart/" hidden>
     <div class="wrap basket-inner">
       <div>
         <span id="basket-count"></span>
@@ -43,17 +43,19 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <script>
-  import { supabase, getGuestCode } from '../lib/supabase';
-  import { getCart, cartCount } from '../lib/cart';
+  import { supabase } from '../../lib/supabase';
+  import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { getCart, cartCount } from '../../lib/cart';
 
-  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../lib/wines';
+  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../../lib/wines';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const $ = (id: string) => document.getElementById(id)!;
 
-  const code = getGuestCode();
+  const code = await resolveGuestCode();
+  const slug = currentSlug() ?? '';
   let wines: Wine[] = [];
   let ordering = false;
 
@@ -82,7 +84,7 @@ import Base from '../layouts/Base.astro';
     li.setAttribute('aria-label', `${index + 1} af ${total}`);
 
     const link = el('a', 'card-link');
-    link.href = `/wine/?id=${w.id}`;
+    link.href = tastingUrl(slug, `wines/${w.id}/`);
 
     const pic = el('div', 'pic');
     if (w.image_url) {

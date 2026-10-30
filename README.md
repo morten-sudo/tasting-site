@@ -21,12 +21,17 @@ npm run dev
 | `/` | Front page |
 | `/login/` | Sign in with an email code (guests and hosts) |
 | `/become-host/` | Host sign-up |
-| `/profile/` | Guest RSVP, email and tasting fee |
-| `/wines/`, `/wine/?id=` | Wines of the guest's tasting |
-| `/cart/` | Cart and orders |
-| `/quiz/` | Quiz |
-| `/leaderboard/?t=slug` | Big-screen leaderboard |
-| `/admin/` | Host admin: tastings, wines, guests, orders |
+| `/tastings/` | The guest's tastings (upcoming and past) |
+| `/t/<slug>/` | A tasting: RSVP, email and tasting fee |
+| `/t/<slug>/wines/`, `/t/<slug>/wines/<id>/` | Wines |
+| `/t/<slug>/cart/` | Cart and orders |
+| `/t/<slug>/quiz/` | Quiz |
+| `/t/<slug>/leaderboard/` | Big-screen leaderboard |
+| `/admin/?t=<slug>` | Host admin: tastings, wines, guests, orders |
+
+The tasting pages are built once under `src/pages/tasting/` and served for every
+slug by rewrite rules in `public/_redirects` (Cloudflare Pages). Guest invite codes
+are stored per slug in the browser (`src/lib/guest.ts`).
 
 ## Database
 

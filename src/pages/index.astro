@@ -1,6 +1,5 @@
 ---
 import Base from '../layouts/Base.astro';
-import { EVENT } from '../lib/config';
 ---
 <Base hero>
   <section class="hero">
@@ -12,50 +11,49 @@ import { EVENT } from '../lib/config';
         sizes="100vw"
         width="1200"
         height="800"
-        alt="Portvinsfade i lange rækker i en mørk kælder i Vila Nova de Gaia"
+        alt="Vinfade i lange rækker i en mørk kælder"
         fetchpriority="high"
       />
     </picture>
     <div class="hero-text wrap">
-      <p class="eyebrow">Smagning · 2026</p>
-      <h1>Portvin</h1>
+      <p class="eyebrow">Vinsmagninger</p>
+      <h1>Winetastr</h1>
     </div>
-  </section>
-
-  <section class="wrap when-block">
-    <p class="when">{EVENT.dateLong}</p>
-    <p class="time">{EVENT.time}</p>
-    {EVENT.place && <p class="where">{EVENT.place}</p>}
   </section>
 
   <section class="wrap intro">
-    <p>
-      En aften med portvin fra Douro og et smut forbi Rivesaltes. Vi smager os
-      gennem stilarterne, hører historien bag og slutter af med en quiz, hvor
-      pointtavlen følger med hele vejen.
+    <p class="lead">
+      Inviter dine gæster, vis dem vinene, tag imod bestillinger og slut af med en
+      quiz, hvor pointtavlen følger med hele aftenen.
     </p>
-    <a class="btn-ghost" href="/wines/">Se vinene</a>
   </section>
 
-  <section class="wrap rsvp">
-    <h2>Tilmelding</h2>
-    <div id="rsvp-known" hidden>
-      <p>Du har allerede åbnet din invitation på denne telefon eller computer.</p>
-      <a class="btn" href="/profile/">Gå til din profil</a>
+  <section class="wrap choices">
+    <div class="choice">
+      <h2>Er du inviteret?</h2>
+      <p id="guest-known" hidden>Du er logget ind på denne enhed.</p>
+      <p id="guest-unknown">Log ind med din e-mail eller med linket i din invitation.</p>
+      <a id="guest-btn" class="btn" href="/login/">Log ind</a>
     </div>
-    <p id="rsvp-unknown">
-      Du tilmelder dig via det personlige link i din invitation. Har du ikke fået
-      et, så skriv til værten.
-    </p>
+    <div class="choice">
+      <h2>Vil du holde en smagning?</h2>
+      <p>Det er gratis at komme i gang.</p>
+      <a class="btn-ghost" href="/become-host/">Bliv vært</a>
+    </div>
   </section>
 </Base>
 
 <script>
-  let known = false;
-  try { known = !!localStorage.getItem('guest_code'); } catch {}
-  if (known) {
-    document.getElementById('rsvp-known')!.hidden = false;
-    document.getElementById('rsvp-unknown')!.hidden = true;
+  import { supabase } from '../lib/supabase';
+  import { getCodes } from '../lib/guest';
+
+  const { data } = await supabase.auth.getSession();
+  if (data.session || Object.keys(getCodes()).length > 0) {
+    document.getElementById('guest-known')!.hidden = false;
+    document.getElementById('guest-unknown')!.hidden = true;
+    const btn = document.getElementById('guest-btn') as HTMLAnchorElement;
+    btn.href = '/tastings/';
+    btn.textContent = 'Mine smagninger';
   }
 </script>
 
@@ -139,5 +137,10 @@ import { EVENT } from '../lib/config';
     text-decoration: none;
   }
   .btn-ghost:hover { border-color: var(--amber); color: var(--paper); }
-  .rsvp { margin-top: 2.5rem; }
+  .lead { font-size: 1.1rem; }
+  .choices {
+    display: grid; gap: 2rem; margin: 2.5rem 0 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+  .choice h2 { font-size: 1.7rem; }
 </style>

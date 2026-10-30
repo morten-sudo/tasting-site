@@ -68,6 +68,8 @@ import Base from '../layouts/Base.astro';
             <span id="d-msg" class="hint" aria-live="polite"></span>
           </div>
         </form>
+        <p class="hint">Smagningens side: <a id="tasting-link" href="/" target="_blank"></a><br />
+          Gæsterne får hver deres personlige link under Deltagere.</p>
       </section>
 
       <!-- Controls -->
@@ -79,7 +81,7 @@ import Base from '../layouts/Base.astro';
           <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span>Quiz åben for svar</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span>Quiz afsluttet (vis facit)</span></label>
         </div>
-        <p class="hint">Pointtavle til tv'et: <a id="tv-link" href="/leaderboard/" target="_blank">/leaderboard/</a></p>
+        <p class="hint">Pointtavle til tv'et: <a id="tv-link" href="/" target="_blank"></a></p>
       </section>
 
       <!-- Tasting fee -->
@@ -342,8 +344,11 @@ import Base from '../layouts/Base.astro';
     const { count } = await supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id);
     quizTotal = count || 13;
     const tv = $('tv-link') as HTMLAnchorElement;
-    tv.href = `/leaderboard/?t=${tasting.slug}`;
-    tv.textContent = `/leaderboard/?t=${tasting.slug}`;
+    tv.href = `/t/${tasting.slug}/leaderboard/`;
+    tv.textContent = `${location.host}/t/${tasting.slug}/leaderboard/`;
+    const pub = $('tasting-link') as HTMLAnchorElement;
+    pub.href = `/t/${tasting.slug}/`;
+    pub.textContent = `${location.host}/t/${tasting.slug}/`;
   }
 
   // ---------- Pick, create and edit tastings ----------
@@ -510,7 +515,7 @@ import Base from '../layouts/Base.astro';
     const copy = mk('button', 'text-btn', 'Kopiér link');
     copy.type = 'button';
     copy.addEventListener('click', async () => {
-      const url = `${location.origin}/profile/?k=${p.invite_code}`;
+      const url = `${location.origin}/t/${tasting!.slug}/?k=${p.invite_code}`;
       try { await navigator.clipboard.writeText(url); copy.textContent = 'Link kopieret'; }
       catch { prompt('Kopiér linket:', url); }
       setTimeout(() => (copy.textContent = 'Kopiér link'), 1500);

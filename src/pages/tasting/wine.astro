@@ -1,10 +1,10 @@
 ---
-import Base from '../layouts/Base.astro';
+import Base from '../../layouts/Base.astro';
 ---
-<Base title="Vin">
+<Base title="Vin" tasting>
   <article class="wine-page">
     <div class="wrap top">
-      <a href="/wines/" class="back">Alle vinene</a>
+      <a href="/tastings/" data-tpath="wines/" class="back">Alle vinene</a>
       <div id="need-login" class="message need-login" hidden>
         <p><strong>Log ind for at se vinene.</strong></p>
         <p>Brug linket fra din invitation, eller log ind med din e-mail.</p>
@@ -12,7 +12,7 @@ import Base from '../layouts/Base.astro';
       </div>
       <p id="loading" class="hint">Henter vinen …</p>
       <p id="load-error" class="message error" hidden>
-        Vinen kunne ikke findes. <a href="/wines/">Gå tilbage til vinene</a>.
+        Vinen kunne ikke findes. <a href="/tastings/" data-tpath="wines/">Gå tilbage til vinene</a>.
       </p>
     </div>
 
@@ -41,7 +41,7 @@ import Base from '../layouts/Base.astro';
     </div>
   </article>
 
-  <a id="basket" class="basket" href="/cart/" hidden>
+  <a id="basket" class="basket" href="/tastings/" data-tpath="cart/" hidden>
     <div class="wrap basket-inner">
       <div>
         <span id="basket-count"></span>
@@ -53,9 +53,10 @@ import Base from '../layouts/Base.astro';
 </Base>
 
 <script>
-  import { supabase, getGuestCode } from '../lib/supabase';
-  import { getCart, addToCart, cartCount } from '../lib/cart';
-  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../lib/wines';
+  import { supabase } from '../../lib/supabase';
+  import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { getCart, addToCart, cartCount } from '../../lib/cart';
+  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../../lib/wines';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -65,8 +66,9 @@ import Base from '../layouts/Base.astro';
     return e;
   };
 
-  const id = Number(new URLSearchParams(location.search).get('id'));
-  const code = getGuestCode();
+  const id = Number(location.pathname.match(/\/wines\/(\d+)/)?.[1] ?? new URLSearchParams(location.search).get('id'));
+  const code = await resolveGuestCode();
+  const slug = currentSlug() ?? '';
   let wines: Wine[] = [];
 
   function renderBasket() {
@@ -81,7 +83,7 @@ import Base from '../layouts/Base.astro';
 
   function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {
     if (!w) return;
-    a.href = `/wine/?id=${w.id}`;
+    a.href = tastingUrl(slug, `wines/${w.id}/`);
     a.append(el('span', 'dir', label), el('span', 'to', w.name));
     a.hidden = false;
   }
