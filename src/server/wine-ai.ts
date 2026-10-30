@@ -14,7 +14,7 @@ export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet
 
 export const FIELDS_SPEC = `"name": the wine's name (without the producer, unless it is the only name; drop shop marketing such as "95 points" or "top buy"),
 "producer": the producer, winery, house or château,
-"vintage": the year as 4 digits, or an age statement such as "10 years", or null,
+"vintage": the year as 4 digits, "NV" for a non-vintage wine (e.g. most champagne, tawny or ruby port without a year), an age statement such as "10 years", or null when unknown,
 "style": one of ${JSON.stringify(STYLES)} – use "Vintage", "Tawny", "White" (white port), "Rivesaltes" or "Aguardente" only for those fortified styles; otherwise "Red", "WhiteWine", "Rose", "Orange", "Sparkling", "Sweet" or "Fortified",
 "abv": alcohol percentage as a number, or null,
 "region": region or appellation, or null,
@@ -75,10 +75,12 @@ export function toFields(answer: Record<string, unknown>, hints: string[] = []):
   const abv = Number(String(answer.abv ?? '').replace(',', '.').replace('%', ''));
   const style = str(answer.style);
   const name = text(answer.name);
+  const v = text(answer.vintage);
+  const vintage = v && /^(n\.?\s?v\.?|non[- ]?vintage|sans ann[ée]e|sin añada|uden årgang)$/i.test(v) ? 'NV' : v;
   return {
     name,
     producer: text(answer.producer),
-    vintage: text(answer.vintage) ?? yearIn(name, ...hints),
+    vintage: vintage ?? yearIn(name, ...hints),
     style: style && STYLES.includes(style) ? style : null,
     abv: Number.isFinite(abv) && abv > 0 && abv < 80 ? abv : null,
     region: str(answer.region),

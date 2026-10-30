@@ -296,6 +296,7 @@ export function initWineAdmin(hostId: string) {
   });
 
   $('wf-read-label').addEventListener('click', readLabel);
+  $('wf-nv').addEventListener('click', () => { field<HTMLInputElement>('wf-vintage').value = 'NV'; });
   $('wf-read-link').addEventListener('click', readLink);
   field<HTMLInputElement>('wf-link').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); readLink(); }

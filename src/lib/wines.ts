@@ -37,6 +37,7 @@ export const styleTone = (w: Wine) => STYLE_TONES[w.style ?? ''] ?? 'var(--amber
 /** "2024" → "Årgang 2024", "10 år" → "10 år", empty → null */
 export function vintageLabel(w: Wine): string | null {
   if (!w.vintage) return null;
+  if (/^n\.?\s?v\.?$/i.test(w.vintage.trim())) return t('wine.nv');
   return /^\d{4}$/.test(w.vintage) ? t('wine.vintage', { year: w.vintage }) : w.vintage;
 }
 

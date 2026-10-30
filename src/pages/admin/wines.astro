@@ -42,7 +42,10 @@ import '../../styles/admin.css';
             </div>
             <div>
               <label for="wf-vintage" data-i18n="admin.vintage">Vintage</label>
-              <input id="wf-vintage" type="text" placeholder="E.g. 2019 or 10 years" data-i18n-attr="placeholder=admin.vintagePlaceholder" />
+              <div class="inline-form">
+                <input id="wf-vintage" type="text" placeholder="E.g. 2019 or 10 years" data-i18n-attr="placeholder=admin.vintagePlaceholder" />
+                <button id="wf-nv" class="btn small ghost" type="button" title="Non Vintage" data-i18n-attr="title=wine.nv">NV</button>
+              </div>
             </div>
           </div>
           <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
