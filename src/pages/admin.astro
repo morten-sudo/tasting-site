@@ -212,8 +212,36 @@ import Base from '../layouts/Base.astro';
       </section>
 
       <!-- Quiz -->
-      <section class="block">
-        <h2 data-i18n="page.quiz">Quiz</h2>
+      <section class="block quiz-admin">
+        <div class="guests-head">
+          <h2 data-i18n="page.quiz">Quiz</h2>
+          <button id="q-add-toggle" class="btn small ghost" type="button" data-i18n="aq.add">Add question</button>
+        </div>
+        <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
+
+        <form id="q-form" class="add-form quiz-form" novalidate hidden>
+          <h3 id="qf-title" data-i18n="aq.newQuestion">New question</h3>
+          <label for="qf-question" data-i18n="aq.question">Question</label>
+          <textarea id="qf-question" rows="2" maxlength="500"></textarea>
+          <fieldset class="qf-fieldset">
+            <legend data-i18n="aq.answersLegend">Answers – mark the right one</legend>
+            <div id="qf-options" class="qf-options"></div>
+            <button id="qf-add-option" class="text-btn" type="button" data-i18n="aq.addAnswer">+ Add answer</button>
+          </fieldset>
+          <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="hint" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
+          <textarea id="qf-explanation" rows="2" maxlength="1000"></textarea>
+          <p id="qf-msg" class="message error" hidden></p>
+          <div class="row-actions">
+            <button id="qf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="qf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            <button id="qf-delete" class="text-btn danger" type="button" hidden data-i18n="aq.deleteQuestion">Delete question</button>
+          </div>
+        </form>
+
+        <ol id="q-admin-list" class="q-admin-list"></ol>
+        <p id="q-empty" class="hint" hidden data-i18n="aq.empty">No questions yet. Add the first one.</p>
+
+        <h3 data-i18n="quiz.standings">Standings</h3>
         <ol id="board" class="board"></ol>
       </section>
       </div>
@@ -237,6 +265,7 @@ import Base from '../layouts/Base.astro';
   import { currentSlug } from '../lib/guest';
   import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
   import { initWineAdmin } from '../lib/admin-wines';
+  import { initQuizAdmin } from '../lib/admin-quiz';
   import { i18nReady, t, lang, locale, money, type Key } from '../i18n';
 
   await i18nReady;
@@ -789,6 +818,8 @@ import Base from '../layouts/Base.astro';
     participants = (p.data ?? []) as P[];
     orders = (o.data ?? []) as O[];
     await initWineAdmin(tasting.id, (list) => { wines = list; renderOrders(); }).load();
+    $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
+    await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; }).load();
     renderParticipants();
     renderOrders();
     loadSettings();
@@ -1100,5 +1131,32 @@ import Base from '../layouts/Base.astro';
     .admin-page .wine-row { grid-template-columns: 3rem 1fr; }
     .admin-page .wine-actions { grid-column: 2; }
     .admin-page .wf-pair { grid-template-columns: 1fr; gap: 0; }
+  }
+
+  /* Quiz */
+  .admin-page .quiz-admin { max-width: 52rem; }
+  .admin-page .quiz-form { max-width: 34rem; }
+  .admin-page .quiz-form h3 { margin: 0 0 0.25rem; }
+  .admin-page .qf-fieldset { border: 0; padding: 0; margin: 0.5rem 0 0; display: grid; gap: 0.45rem; }
+  .admin-page .qf-fieldset legend {
+    font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; padding: 0;
+  }
+  .admin-page .qf-options { display: grid; gap: 0.45rem; }
+  .admin-page .qf-option { display: grid; grid-template-columns: auto 1fr auto; gap: 0.6rem; align-items: center; }
+  .admin-page .qf-option input[type='radio'] { width: 1.25rem; height: 1.25rem; accent-color: var(--ok); margin: 0; padding: 0; }
+  .admin-page .qf-fieldset .text-btn { justify-self: start; }
+  .admin-page .q-admin-list { list-style: none; margin: 0.75rem 0 1.5rem; padding: 0; border-top: 1px solid var(--lodge-2); counter-reset: q; }
+  .admin-page .q-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 0.9rem; align-items: start;
+    padding: 0.8rem 0; border-bottom: 1px solid var(--lodge-2); counter-increment: q;
+  }
+  .admin-page .q-question { margin: 0; font-weight: 500; }
+  .admin-page .q-question::before { content: counter(q) '. '; color: var(--muted); }
+  .admin-page .q-options { margin: 0.3rem 0 0; padding-left: 1.2rem; color: var(--muted); font-size: 0.9rem; }
+  .admin-page .q-options li.correct { color: var(--ok); }
+  .admin-page .q-options li.correct::after { content: ' ✓'; }
+  .admin-page .q-warn { margin: 0.3rem 0 0; color: var(--error); font-size: 0.85rem; }
+  @media (max-width: 30rem) {
+    .admin-page .q-row { grid-template-columns: 1fr; }
   }
 </style>
