@@ -55,7 +55,7 @@ import Base from '../layouts/Base.astro';
           <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span>Quiz åben for svar</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span>Quiz afsluttet (vis facit)</span></label>
         </div>
-        <p class="hint">Pointtavle til tv'et: <a href="/pointtavle/" target="_blank">/pointtavle/</a></p>
+        <p class="hint">Pointtavle til tv'et: <a id="tv-link" href="/pointtavle/" target="_blank">/pointtavle/</a></p>
       </section>
 
       <!-- Betaling for smagningen -->
@@ -226,24 +226,44 @@ import Base from '../layouts/Base.astro';
   $('logout').addEventListener('click', logout);
   $('logout2').addEventListener('click', logout);
 
-  // ---------- Styring ----------
+  // ---------- Styring (gemmes på smagningen) ----------
+  type T = { id: string; slug: string; title: string; quiz_count?: number } & Record<string, unknown>;
+  let tasting: T | null = null;
+  let quizTotal = 13;
   let feeTotal = 0;
   let feeAmount = 0;
 
-  async function loadSettings() {
-    const { data } = await supabase.from('settings').select('key, value');
-    for (const r of data ?? []) {
-      if (r.key === 'tasting_total') { feeTotal = Number(r.value) || 0; ($('fee-total') as HTMLInputElement).value = feeTotal ? String(feeTotal) : ''; }
-      if (r.key === 'tasting_fee') { feeAmount = Number(r.value) || 0; ($('fee-amount') as HTMLInputElement).value = feeAmount ? String(feeAmount) : ''; }
-      const box = document.querySelector<HTMLInputElement>(`input[data-key="${r.key}"]`);
-      if (box) box.checked = r.value === true;
-    }
+  async function loadTasting() {
+    const wanted = new URLSearchParams(location.search).get('t');
+    let q = supabase.from('tastings').select('*').order('created_at');
+    if (wanted) q = q.eq('slug', wanted);
+    const { data } = await q.limit(1);
+    tasting = ((data ?? [])[0] ?? null) as T | null;
+    if (!tasting) return;
+    const { count } = await supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id);
+    quizTotal = count || 13;
+    const tv = $('tv-link') as HTMLAnchorElement;
+    tv.href = `/pointtavle/?t=${tasting.slug}`;
+    tv.textContent = `/pointtavle/?t=${tasting.slug}`;
+  }
+
+  function loadSettings() {
+    if (!tasting) return;
+    feeTotal = Number(tasting.tasting_total) || 0;
+    feeAmount = Number(tasting.tasting_fee) || 0;
+    ($('fee-total') as HTMLInputElement).value = feeTotal ? String(feeTotal) : '';
+    ($('fee-amount') as HTMLInputElement).value = feeAmount ? String(feeAmount) : '';
+    document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
+      box.checked = tasting![box.dataset.key!] === true;
+    });
   }
   document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
     box.addEventListener('change', async () => {
-      const { error } = await supabase.from('settings')
-        .update({ value: box.checked }).eq('key', box.dataset.key!);
-      if (error) { box.checked = !box.checked; alert('Ændringen blev ikke gemt.'); }
+      if (!tasting) return;
+      const { error } = await supabase.from('tastings')
+        .update({ [box.dataset.key!]: box.checked }).eq('id', tasting.id);
+      if (error) { box.checked = !box.checked; alert('Ændringen blev ikke gemt.'); return; }
+      tasting[box.dataset.key!] = box.checked;
     });
   });
 
@@ -270,11 +290,10 @@ import Base from '../layouts/Base.astro';
       amount = Math.ceil(total / coming);
       ($('fee-amount') as HTMLInputElement).value = String(amount);
     }
-    const [a, b] = await Promise.all([
-      supabase.from('settings').update({ value: total }).eq('key', 'tasting_total'),
-      supabase.from('settings').update({ value: amount }).eq('key', 'tasting_fee'),
-    ]);
-    if (a.error || b.error) { $('fee-msg').textContent = 'Kunne ikke gemme. Prøv igen.'; return; }
+    if (!tasting) return;
+    const { error } = await supabase.from('tastings')
+      .update({ tasting_total: total, tasting_fee: amount }).eq('id', tasting.id);
+    if (error) { $('fee-msg').textContent = 'Kunne ikke gemme. Prøv igen.'; return; }
     feeTotal = total;
     feeAmount = amount;
     $('fee-msg').textContent = `Gemt: ${kr.format(amount)} pr. person.`;
@@ -452,7 +471,7 @@ import Base from '../layouts/Base.astro';
     const name = nameEl.value.trim();
     const email = emailEl.value.trim().toLowerCase() || null;
     if (!name) { nameEl.focus(); return; }
-    const { data, error } = await supabase.from('participants').insert({ name, email }).select().single();
+    const { data, error } = await supabase.from('participants').insert({ name, email, tasting_id: tasting!.id }).select().single();
     if (error) { alert(error.code === '23505' ? 'Den e-mail bruges allerede.' : 'Gæsten blev ikke tilføjet.'); return; }
     participants.push(data as P);
     nameEl.value = '';
@@ -574,20 +593,22 @@ import Base from '../layouts/Base.astro';
 
   // ---------- Opstart ----------
   async function loadAll() {
+    await loadTasting();
+    if (!tasting) { $('panel').hidden = true; $('not-admin').hidden = false; return; }
     const [p, w, o] = await Promise.all([
-      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid'),
-      supabase.from('wines').select('id, name, price_dkk, sort_order'),
-      supabase.from('orders').select(ORDER_SELECT),
+      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid').eq('tasting_id', tasting.id),
+      supabase.from('wines').select('id, name, price_dkk, sort_order').eq('tasting_id', tasting.id),
+      supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting.id),
     ]);
     participants = (p.data ?? []) as P[];
     wines = (w.data ?? []) as W[];
     orders = (o.data ?? []) as O[];
     renderParticipants();
     renderOrders();
-    await loadSettings();
+    loadSettings();
     renderParticipants();
-    const rows = await fetchLeaderboard();
-    if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, 13);
+    const rows = await fetchLeaderboard({ slug: tasting.slug });
+    if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
   }
 
   async function init() {
@@ -595,18 +616,20 @@ import Base from '../layouts/Base.astro';
     const { data } = await supabase.auth.getSession();
     const session = data.session;
     if (!session) { $('login').hidden = false; return; }
+    const { data: hostId } = await supabase.rpc('current_host_id');
     const { data: ok } = await supabase.rpc('is_admin');
-    if (!ok) { $('not-admin').hidden = false; return; }
+    if (!ok && !hostId) { $('not-admin').hidden = false; return; }
     $('me').textContent = session.user.email ?? '';
     $('panel').hidden = false;
     await loadAll();
     setInterval(async () => {
+      if (!tasting) return;
       const [o, rows] = await Promise.all([
-        supabase.from('orders').select(ORDER_SELECT),
-        fetchLeaderboard(),
+        supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting!.id),
+        fetchLeaderboard({ slug: tasting!.slug }),
       ]);
       if (o.data) { orders = o.data as O[]; renderOrders(); }
-      if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, 13);
+      if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
     }, 15000);
   }
 

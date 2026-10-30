@@ -2,8 +2,11 @@ import { supabase } from './supabase';
 
 export type Row = { name: string; points: number; answered: number };
 
-export async function fetchLeaderboard(): Promise<Row[] | null> {
-  const { data, error } = await supabase.rpc('get_leaderboard');
+export async function fetchLeaderboard(opts: { code?: string | null; slug?: string | null } = {}): Promise<Row[] | null> {
+  const { data, error } = await supabase.rpc('tasting_leaderboard', {
+    code: opts.code ?? null,
+    slug: opts.slug ?? null,
+  });
   if (error) return null;
   return data as Row[];
 }

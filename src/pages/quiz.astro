@@ -70,16 +70,19 @@ import Base from '../layouts/Base.astro';
 
   function show(id: string, on: boolean) { $(id).hidden = !on; }
 
+  let quizTotal = 13;
+
   async function readSettings() {
-    const { data } = await supabase.from('settings').select('key, value');
-    const s = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
+    const { data } = await supabase.rpc('get_tasting', { code });
+    const s = (data ?? {}) as Record<string, unknown>;
+    quizTotal = Number(s.quiz_count) || questions.length || 13;
     if (s.quiz_finished === true) return 'finished';
     if (s.quiz_open === true) return 'open';
     return 'closed';
   }
 
   async function loadQuestions() {
-    const { data } = await supabase.rpc('get_quiz');
+    const { data } = await supabase.rpc('get_quiz', { code });
     questions = (data ?? []) as Q[];
     if (code) {
       const mine = await supabase.rpc('get_my_answers', { code });
@@ -209,9 +212,9 @@ import Base from '../layouts/Base.astro';
 
   // ---------- Pointtavle ----------
   async function refreshBoard() {
-    const rows = await fetchLeaderboard();
+    const rows = await fetchLeaderboard({ code });
     if (!rows) return;
-    renderLeaderboard($('board') as HTMLOListElement, rows, questions.length || 13, myName);
+    renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal, myName);
   }
 
   // ---------- Start ----------

@@ -196,10 +196,10 @@ import Base from '../layouts/Base.astro';
     }
     const [w, s] = await Promise.all([
       supabase.rpc('get_wines', { code }),
-      supabase.from('settings').select('key, value'),
+      supabase.rpc('get_tasting', { code }),
     ]);
     wines = new Map(((w.data ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
-    const settings = Object.fromEntries((s.data ?? []).map((r) => [r.key, r.value]));
+    const settings = ((s.data ?? {}) as Record<string, unknown>);
     open = settings.orders_open === true;
     $('loading').hidden = true;
     $('closed').hidden = open;

@@ -32,14 +32,15 @@ import '../styles/global.css';
       import { supabase } from '../lib/supabase';
       import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
 
-      const TOTAL = 13;
+      const slug = new URLSearchParams(location.search).get('t');
       const status = document.getElementById('tv-status')!;
       const board = document.getElementById('board') as HTMLOListElement;
 
       async function tick() {
-        const { data } = await supabase.from('settings').select('key, value');
-        const s = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
-        const rows = await fetchLeaderboard();
+        const { data } = await supabase.rpc('get_tasting', { slug });
+        const s = (data ?? {}) as Record<string, unknown>;
+        const TOTAL = Number(s.quiz_count) || 13;
+        const rows = await fetchLeaderboard({ slug });
         if (!rows) return;
         renderLeaderboard(board, rows, TOTAL);
         const done = rows.filter((r) => r.answered >= TOTAL).length;

@@ -2,6 +2,7 @@
 -- Portvin 2026 – databaseskema
 -- Er allerede kørt mod Supabase-projektet (via Claude). Filen er kilden til skemaet.
 -- Filen kan køres igen uden at slette data (den bruger "if not exists").
+-- Winetastr (flere værter og smagninger) bygger ovenpå: se supabase/migrations/.
 -- =====================================================================
 
 create extension if not exists pgcrypto;

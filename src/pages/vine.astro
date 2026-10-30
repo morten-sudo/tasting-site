@@ -197,14 +197,14 @@ import Base from '../layouts/Base.astro';
     }
     const [winesRes, settingsRes] = await Promise.all([
       supabase.rpc('get_wines', { code }),
-      supabase.from('settings').select('key, value'),
+      supabase.rpc('get_tasting', { code }),
     ]);
     $('loading').hidden = true;
     if (winesRes.error) { $('load-error').hidden = false; return; }
     if (!winesRes.data?.length) { $('need-login').hidden = false; return; }
     wines = winesRes.data as Wine[];
 
-    const settings = Object.fromEntries((settingsRes.data ?? []).map((s) => [s.key, s.value]));
+    const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
     const status = $('order-status');
 
     if (settings.orders_open === true) {
