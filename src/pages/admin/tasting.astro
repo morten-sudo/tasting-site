@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
+import AddressFields from '../../components/AddressFields.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.admin">
@@ -20,8 +21,7 @@ import '../../styles/admin.css';
           <input id="d-title" type="text" required />
           <label for="d-when" data-i18n="admin.when">Date and time</label>
           <input id="d-when" type="datetime-local" />
-          <label for="d-place" data-i18n="admin.place">Place</label>
-          <input id="d-place" type="text" autocomplete="street-address" />
+          <AddressFields prefix="d" />
           <label for="d-language" data-i18n="admin.guestLanguage">Language for guests</label>
           <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
           <div class="row-actions">
@@ -184,6 +184,7 @@ import '../../styles/admin.css';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   import { requireHost, mk as mkEl, type Host } from '../../lib/admin-common';
   import { initQuizAdmin } from '../../lib/admin-quiz';
+  import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
 
   await i18nReady;
@@ -239,7 +240,7 @@ import '../../styles/admin.css';
 
     ($('d-title') as HTMLInputElement).value = tasting.title;
     ($('d-when') as HTMLInputElement).value = toLocalInput(tasting.starts_at);
-    ($('d-place') as HTMLInputElement).value = (tasting.place as string) ?? '';
+    writeAddress('d', tasting as Record<string, string | null>);
     ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
 
     const tv = $('tv-link') as HTMLAnchorElement;
@@ -250,6 +251,7 @@ import '../../styles/admin.css';
     pub.textContent = `${location.host}/t/${tasting.slug}/`;
   }
 
+  initAddress('d');
   $('details').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!tasting) return;
@@ -259,7 +261,7 @@ import '../../styles/admin.css';
     const patch = {
       title,
       starts_at: fromLocalInput(($('d-when') as HTMLInputElement).value),
-      place: ($('d-place') as HTMLInputElement).value.trim() || null,
+      ...readAddress('d'),
       language: ($('d-language') as HTMLSelectElement).value,
     };
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);

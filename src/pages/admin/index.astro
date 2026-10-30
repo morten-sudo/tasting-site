@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
+import AddressFields from '../../components/AddressFields.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.admin">
@@ -21,8 +22,7 @@ import '../../styles/admin.css';
         <input id="nt-title" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required />
         <label for="nt-when" data-i18n="admin.when">Date and time</label>
         <input id="nt-when" type="datetime-local" />
-        <label for="nt-place" data-i18n="admin.place">Place</label>
-        <input id="nt-place" type="text" autocomplete="street-address" />
+        <AddressFields prefix="nt" />
         <label for="nt-language" data-i18n="admin.guestLanguage">Language for guests</label>
         <select id="nt-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
         <p id="nt-msg" class="message error" hidden></p>
@@ -57,6 +57,7 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, lang, formatWhen } from '../../i18n';
+  import { initAddress, readAddress } from '../../lib/address';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
     participants: { status: string }[]; tasting_wines: { count: number }[] };
@@ -109,6 +110,7 @@ import '../../styles/admin.css';
     $('new-toggle').hidden = true;
     $<HTMLInputElement>('nt-title').focus();
   }
+  initAddress('nt');
   $('new-toggle').addEventListener('click', openNew);
   $('nt-cancel').addEventListener('click', () => { $('new-tasting').hidden = true; $('new-toggle').hidden = false; });
 
@@ -123,9 +125,10 @@ import '../../styles/admin.css';
     const { data, error } = await supabase.rpc('create_tasting', {
       title,
       starts_at: when ? new Date(when).toISOString() : null,
-      place: $<HTMLInputElement>('nt-place').value,
+      place: null,
       mobilepay: null,
       language: $<HTMLSelectElement>('nt-language').value,
+      ...readAddress('nt'),
     });
     btn.disabled = false;
     if (error || !data) { msg.textContent = t('admin.createFailed'); msg.hidden = false; return; }

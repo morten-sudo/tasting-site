@@ -435,4 +435,8 @@ export const en = {
   "profile.emailConfirm": "We have sent a confirmation to {email}. Your email changes when you open the link – check your current inbox too.",
   "profile.emailNotChanged": "The email could not be changed. It may already be in use.",
   "profile.myOrders": "My orders",
+  "address.street": "Street",
+  "address.number": "No.",
+  "address.postalCode": "Postal code",
+  "address.city": "City",
 } as const;

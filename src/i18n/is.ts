@@ -436,4 +436,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "profile.emailConfirm": "Við höfum sent staðfestingu á {email}. Netfangið breytist þegar þú opnar hlekkinn – athugaðu líka núverandi innhólf.",
   "profile.emailNotChanged": "Ekki tókst að breyta netfanginu. Það gæti þegar verið í notkun.",
   "profile.myOrders": "Pantanirnar mínar",
+  "address.street": "Gata",
+  "address.number": "Nr.",
+  "address.postalCode": "Póstnúmer",
+  "address.city": "Bær",
 };

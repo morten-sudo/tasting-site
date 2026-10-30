@@ -436,4 +436,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "profile.emailConfirm": "Vi har sendt en bekræftelse til {email}. Din e-mail skifter, når du åbner linket – tjek også din nuværende indbakke.",
   "profile.emailNotChanged": "E-mailen kunne ikke ændres. Den er måske allerede i brug.",
   "profile.myOrders": "Mine bestillinger",
+  "address.street": "Gade",
+  "address.number": "Nr.",
+  "address.postalCode": "Postnummer",
+  "address.city": "By",
 };
