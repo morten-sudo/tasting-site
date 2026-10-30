@@ -152,11 +152,13 @@ begin
   end loop;
 end $$;
 
--- Alle må læse synlige vine og indstillinger
+-- Vinene kan kun hentes af indloggede gæster via get_wines(code) – se nedenfor.
+-- Den gamle offentlige læseregel er slået fra (using false).
 drop policy if exists public_read_wines on wines;
 create policy public_read_wines on wines
-  for select to anon, authenticated using (revealed);
+  for select to anon, authenticated using (false);
 
+-- Alle må læse indstillinger
 drop policy if exists public_read_settings on settings;
 create policy public_read_settings on settings
   for select to anon, authenticated using (true);
@@ -164,6 +166,16 @@ create policy public_read_settings on settings
 -- ---------------------------------------------------------------------
 -- Funktioner til gæster (kaldes fra hjemmesiden med invitationskoden)
 -- ---------------------------------------------------------------------
+
+-- Vinene: kun for gæster med gyldig kode (eller admin)
+create or replace function get_wines(code text)
+returns setof wines
+language sql stable security definer set search_path = public as $$
+  select w.* from wines w
+  where w.revealed
+    and (exists (select 1 from participants p where p.invite_code = code) or is_admin())
+  order by w.sort_order;
+$$;
 
 -- Hent egen invitation
 create or replace function get_invite(code text)
@@ -318,6 +330,7 @@ revoke all on function participant_by_code(text) from public, anon, authenticate
 revoke all on function setting(text) from public, anon, authenticated;
 revoke all on function is_admin() from public, anon;
 grant execute on function is_admin() to authenticated;
+grant execute on function get_wines(text)                           to anon, authenticated;
 grant execute on function get_invite(text)                          to anon, authenticated;
 grant execute on function respond_invite(text, boolean, text, text) to anon, authenticated;
 grant execute on function get_my_orders(text)                       to anon, authenticated;
