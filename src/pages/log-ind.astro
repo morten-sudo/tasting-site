@@ -7,24 +7,61 @@ import Base from '../layouts/Base.astro';
 
     <p id="checking" class="hint" hidden>Logger dig ind …</p>
 
+    <!-- Både gæst og vært: vælg hvor du vil hen -->
+    <div id="choose" class="choose" hidden>
+      <p class="lead">Du er både gæst og vært. Hvor vil du hen?</p>
+      <div class="choose-btns">
+        <a class="btn" id="go-guest" href="/profil/">Min smagning</a>
+        <a class="btn ghost" id="go-admin" href="/admin/">Admin</a>
+      </div>
+    </div>
+
     <div id="forms">
-      <!-- 1: E-mail med engangslink -->
+      <!-- 1: E-mail -->
       <form id="mail-form" class="login-form" novalidate>
-        <p class="lead">Skriv din e-mail, så sender vi dig et link, der logger dig ind.</p>
+        <p class="lead">Skriv din e-mail, så sender vi dig en kode.</p>
         <label for="email">E-mail</label>
         <input id="email" type="email" autocomplete="email" inputmode="email" required />
         <p id="mail-msg" class="message" hidden></p>
-        <button class="btn" type="submit" id="mail-btn">Send login-link</button>
+        <button class="btn" type="submit" id="mail-btn">Send kode</button>
       </form>
 
-      <!-- 2: Invitationslink eller kode -->
-      <details class="alt">
+      <!-- 2: Koden fra mailen -->
+      <form id="otp-form" class="login-form" novalidate hidden>
+        <p class="lead">Vi har sendt en kode til <strong id="sent-to"></strong>. Skriv den her.</p>
+        <label for="otp">Kode fra mailen</label>
+        <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
+               pattern="[0-9]*" maxlength="10" required />
+        <p id="otp-msg" class="message" hidden></p>
+        <button class="btn" type="submit" id="otp-btn">Log ind</button>
+        <p class="hint small-links">
+          <button id="resend" class="link-btn" type="button">Send en ny kode</button> ·
+          <button id="other-mail" class="link-btn" type="button">Brug en anden e-mail</button>
+        </p>
+        <p class="hint">Kan du ikke finde mailen, så kig i spam. Du kan også trykke på linket i mailen.</p>
+      </form>
+
+      <!-- Invitationslink eller kode -->
+      <details class="alt" id="alt-invite">
         <summary>Har du dit invitationslink i stedet?</summary>
         <form id="code-form" class="login-form" novalidate>
           <p>Indsæt linket fra din invitation, eller kun koden til sidst i linket (efter <code>?k=</code>).</p>
           <label for="code">Invitationslink eller kode</label>
           <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
           <p id="code-msg" class="message error" hidden></p>
+          <button class="btn" type="submit">Log ind</button>
+        </form>
+      </details>
+
+      <!-- Adgangskode (værter, der har sat en) -->
+      <details class="alt" id="alt-pw">
+        <summary>Log ind med adgangskode</summary>
+        <form id="pw-form" class="login-form" novalidate>
+          <label for="pw-email">E-mail</label>
+          <input id="pw-email" type="email" autocomplete="username" required />
+          <label for="pw">Adgangskode</label>
+          <input id="pw" type="password" autocomplete="current-password" required />
+          <p id="pw-msg" class="message error" hidden></p>
           <button class="btn" type="submit">Log ind</button>
         </form>
       </details>
@@ -41,6 +78,13 @@ import Base from '../layouts/Base.astro';
   import { supabase, setGuestCode } from '../lib/supabase';
 
   const $ = (id: string) => document.getElementById(id)!;
+  const params = new URLSearchParams(location.search);
+  // Kun interne stier som mål efter login
+  const rawNext = params.get('til') ?? '';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
+  const wantsAdmin = next.startsWith('/admin');
+
+  let email = '';
 
   function show(el: HTMLElement, text: string, ok: boolean) {
     el.textContent = text;
@@ -48,62 +92,143 @@ import Base from '../layouts/Base.astro';
     el.hidden = false;
   }
 
-  // ---------- Kommer tilbage fra login-mailen ----------
-  async function finishEmailLogin() {
+  // ---------- Efter login: send personen det rigtige sted hen ----------
+  let routing = false;
+  async function route() {
+    if (routing) return true;
     const { data } = await supabase.auth.getSession();
     if (!data.session) return false;
+    routing = true;
     $('forms').hidden = true;
     $('checking').hidden = false;
-    const { data: code } = await supabase.rpc('my_invite_code');
-    if (code) {
-      setGuestCode(code as string);
-      location.replace('/profil/');
+
+    const [codeRes, hostRes, adminRes] = await Promise.all([
+      supabase.rpc('my_invite_code'),
+      supabase.rpc('current_host_id'),
+      supabase.rpc('is_admin'),
+    ]);
+    const code = (codeRes.data as string | null) ?? null;
+    const isHost = !!hostRes.data || adminRes.data === true;
+    const adminUrl = wantsAdmin ? next : '/admin/';
+
+    if (code) setGuestCode(code);
+
+    if (isHost && (wantsAdmin || !code)) { location.replace(adminUrl); return true; }
+    if (isHost && code) {
+      $('checking').hidden = true;
+      ($('go-admin') as HTMLAnchorElement).href = adminUrl;
+      $('choose').hidden = false;
       return true;
     }
+    if (code) { location.replace(next && !wantsAdmin ? next : '/profil/'); return true; }
+
+    routing = false;
     $('checking').hidden = true;
     $('forms').hidden = false;
-    show($('mail-msg'), 'Du er logget ind, men e-mailen er ikke på gæstelisten. Brug dit invitationslink, eller skriv til værten.', false);
+    showMailStep();
+    show($('mail-msg'), 'Du er logget ind, men e-mailen er ikke på nogen gæsteliste. Brug dit invitationslink, eller skriv til værten.', false);
+    await supabase.auth.signOut({ scope: 'local' });
     return true;
   }
 
   supabase.auth.onAuthStateChange((event) => {
-    if (event === 'SIGNED_IN') finishEmailLogin();
+    if (event === 'SIGNED_IN') route();
   });
-  if (location.hash.includes('access_token') || location.search.includes('code=')) {
+  if (location.hash.includes('access_token') || params.has('code')) {
     $('forms').hidden = true;
     $('checking').hidden = false;
   }
 
-  // ---------- Send login-link ----------
+  // ---------- Trin 1: send kode ----------
+  function showMailStep() {
+    $('otp-form').hidden = true;
+    $('mail-form').hidden = false;
+    ($('email') as HTMLInputElement).focus();
+  }
+
+  async function sendCode(): Promise<boolean> {
+    const msg = $('mail-msg');
+    const { data: known } = await supabase.rpc('login_email_known', { e: email });
+    if (!known) {
+      show(msg, `Vi kender ikke ${email}. Tjek stavningen, brug dit invitationslink, eller skriv til værten.`, false);
+      return false;
+    }
+    const redirect = location.origin + '/log-ind/' + (next ? '?til=' + encodeURIComponent(next) : '');
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirect, shouldCreateUser: true },
+    });
+    if (error?.status === 429) {
+      show(msg, 'Der er sendt for mange mails på kort tid. Vent et minut, og prøv igen.', false);
+      return false;
+    }
+    if (error) {
+      show(msg, 'Mailen kunne ikke sendes. Prøv igen om lidt, eller brug dit invitationslink.', false);
+      return false;
+    }
+    return true;
+  }
+
   $('mail-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = $('mail-msg');
-    const email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
-    if (!email.includes('@')) { show(msg, 'Skriv en gyldig e-mail.', false); return; }
+    $('mail-msg').hidden = true;
+    email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('mail-msg'), 'Skriv en gyldig e-mail.', false); return; }
 
     const btn = $('mail-btn') as HTMLButtonElement;
     btn.disabled = true;
     btn.textContent = 'Sender …';
-
-    const { data: known } = await supabase.rpc('guest_email_exists', { e: email });
-    let error = null as null | { status?: number };
-    if (known) {
-      const res = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: location.origin + '/log-ind/', shouldCreateUser: true },
-      });
-      error = res.error;
-    }
-
+    const ok = await sendCode();
     btn.disabled = false;
-    btn.textContent = 'Send login-link';
-    if (error?.status === 429) {
-      show(msg, 'Der er sendt for mange login-mails på kort tid. Vent lidt, eller brug dit invitationslink.', false);
-    } else if (error) {
-      show(msg, 'Mailen kunne ikke sendes. Prøv igen om lidt, eller brug dit invitationslink.', false);
-    } else {
-      show(msg, `Hvis ${email} står på gæstelisten, er der nu sendt et login-link. Tjek din indbakke (og evt. spam).`, true);
+    btn.textContent = 'Send kode';
+    if (!ok) return;
+
+    $('sent-to').textContent = email;
+    $('mail-form').hidden = true;
+    $('otp-form').hidden = false;
+    $('otp-msg').hidden = true;
+    ($('otp') as HTMLInputElement).value = '';
+    ($('otp') as HTMLInputElement).focus();
+  });
+
+  // ---------- Trin 2: tjek koden ----------
+  $('otp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('otp-msg');
+    const token = ($('otp') as HTMLInputElement).value.replace(/\D/g, '');
+    if (token.length < 6) { show(msg, 'Skriv hele koden fra mailen.', false); return; }
+
+    const btn = $('otp-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Tjekker …';
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    btn.disabled = false;
+    btn.textContent = 'Log ind';
+    if (error) {
+      show(msg, error.status === 429
+        ? 'For mange forsøg. Vent et minut, og prøv igen.'
+        : 'Koden passer ikke eller er udløbet. Tjek den, eller få en ny.', false);
+      return;
     }
+    route();
+  });
+
+  $('resend').addEventListener('click', async () => {
+    const msg = $('otp-msg');
+    const ok = await sendCode();
+    if (ok) show(msg, 'Der er sendt en ny kode. Brug den nyeste.', true);
+    else { $('otp-form').hidden = true; $('mail-form').hidden = false; }
+  });
+
+  $('other-mail').addEventListener('click', () => {
+    $('mail-msg').hidden = true;
+    showMailStep();
+  });
+
+  // Kun cifre i kodefeltet (også når koden indsættes med mellemrum)
+  ($('otp') as HTMLInputElement).addEventListener('input', (e) => {
+    const v = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+    (e.target as HTMLInputElement).value = v;
   });
 
   // ---------- Invitationslink eller kode ----------
@@ -130,7 +255,25 @@ import Base from '../layouts/Base.astro';
     location.href = '/profil/';
   });
 
-  finishEmailLogin();
+  // ---------- Adgangskode ----------
+  $('pw-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('pw-msg');
+    msg.hidden = true;
+    const em = ($('pw-email') as HTMLInputElement).value.trim();
+    const password = ($('pw') as HTMLInputElement).value;
+    const { error } = await supabase.auth.signInWithPassword({ email: em, password });
+    if (error) { msg.textContent = 'Forkert e-mail eller adgangskode.'; msg.hidden = false; return; }
+    route();
+  });
+
+  if (wantsAdmin) {
+    (document.querySelector('#mail-form .lead') as HTMLElement).textContent =
+      'Skriv din e-mail som vært, så sender vi dig en kode.';
+    $('alt-invite').hidden = true;
+  }
+
+  route();
 </script>
 
 <style>
@@ -145,7 +288,7 @@ import Base from '../layouts/Base.astro';
   .lead { max-width: 32rem; margin-bottom: 0.4rem; }
   .login-form { display: grid; gap: 0.6rem; max-width: 26rem; }
   .login-form .btn { justify-self: start; margin-top: 0.3rem; }
-  .login-form input[type='email'] {
+  .login-form input[type='email'], .login-form input[type='password'] {
     width: 100%;
     font: inherit;
     color: var(--paper);
@@ -154,9 +297,33 @@ import Base from '../layouts/Base.astro';
     border-radius: var(--radius);
     padding: 0.7rem 0.8rem;
   }
+  .login-form input.otp {
+    font-family: var(--display);
+    font-size: 2rem;
+    letter-spacing: 0.35em;
+    padding: 0.4rem 0.8rem;
+    max-width: 16rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .small-links { margin: 0.2rem 0 0; }
+  .link-btn {
+    font: inherit;
+    color: var(--amber);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
+    text-decoration-thickness: 1px;
+  }
   .alt { margin-top: 2rem; max-width: 26rem; }
+  .alt + .alt { margin-top: 0.75rem; }
   .alt summary { cursor: pointer; color: var(--amber); padding: 0.3rem 0; }
   .alt .login-form { margin-top: 0.8rem; }
   .small { margin-top: 1.75rem; font-size: 0.9rem; max-width: 32rem; }
   code { font-size: 0.9em; color: var(--amber); }
+  .choose-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
+  .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
 </style>
