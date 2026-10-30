@@ -1,7 +1,7 @@
 // Admin: the host adds, edits, reorders and deletes wines one at a time, with an optional photo.
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
-import { t } from '../i18n';
+import { t, locale } from '../i18n';
 
 export type AdminWine = {
   id: number; tasting_id: string; sort_order: number; name: string; producer: string | null;
@@ -43,6 +43,7 @@ const toText = (v: string) => v.trim() || null;
 
 export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) => void) {
   let wines: AdminWine[] = [];
+  let ratings = new Map<number, { average: number; votes: number }>();
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
   let removeImage = false;
@@ -125,6 +126,11 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       prices.textContent = w.price_dkk != null ? kr.format(w.price_dkk) : t('admin.noPrice');
       if (w.retail_price_dkk != null) prices.textContent += ' ' + t('admin.normally', { price: kr.format(w.retail_price_dkk) });
       body.append(prices);
+      const rating = ratings.get(w.id);
+      if (rating) {
+        const avg = rating.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        body.append(mk('p', 'wine-meta wine-rating', t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
+      }
       const flags = mk('div', 'wine-flags');
       if (!w.revealed) flags.append(mk('span', 'pill pill-no', t('admin.hidden')));
       if (!w.orderable) flags.append(mk('span', 'pill pill-no', t('admin.notOrderable')));
@@ -153,8 +159,13 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
   }
 
   async function load() {
-    const { data } = await supabase.from('wines').select(COLUMNS).eq('tasting_id', tastingId).order('sort_order').order('id');
+    const [{ data }, r] = await Promise.all([
+      supabase.from('wines').select(COLUMNS).eq('tasting_id', tastingId).order('sort_order').order('id'),
+      supabase.rpc('tasting_wine_ratings', { t_id: tastingId }),
+    ]);
     wines = (data ?? []) as AdminWine[];
+    ratings = new Map(((r.data ?? []) as { wine_id: number; average: number; votes: number }[])
+      .map((x) => [x.wine_id, { average: Number(x.average), votes: x.votes }]));
     render();
   }
 

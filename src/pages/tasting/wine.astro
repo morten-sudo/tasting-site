@@ -33,6 +33,8 @@ import Base from '../../layouts/Base.astro';
       <p id="desc" class="desc"></p>
       <dl id="details" class="details" hidden></dl>
 
+      <div id="my-rating"></div>
+
       <nav class="pager" aria-label="Other wines" data-i18n-attr="aria-label=wine.others">
         <a id="prev" class="pager-link prev" hidden></a>
         <a id="next" class="pager-link next" hidden></a>
@@ -56,6 +58,7 @@ import Base from '../../layouts/Base.astro';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t, plural } from '../../i18n';
+  import { fetchMyRatings, ratingBox } from '../../lib/rating';
 
   await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
@@ -187,6 +190,11 @@ import Base from '../../layouts/Base.astro';
 
     pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], t('wine.prev'));
     pagerLink($('next') as HTMLAnchorElement, wines[index + 1], t('wine.next'));
+
+    if (code) {
+      const mine = await fetchMyRatings(code);
+      $('my-rating').replaceChildren(ratingBox(code, w.id, mine.get(w.id)));
+    }
 
     $('wine').hidden = false;
   }
@@ -328,6 +336,23 @@ import Base from '../../layouts/Base.astro';
   .wine-page #order-status { margin: 0.6rem 0 0; }
 
   .wine-page .desc { margin-top: 1.6rem; font-size: 1.02rem; line-height: 1.8; }
+  .wine-page .my-rating { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--lodge-3); }
+  .wine-page .rating-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .wine-page .rating-head h2 { font-size: 1.5rem; margin: 0; }
+  .wine-page .rating-status { color: var(--muted); font-size: 0.85rem; }
+  .wine-page .stars { display: flex; gap: 0.25rem; margin: 0.6rem 0 1.1rem; }
+  .wine-page .star {
+    font-size: 2rem; line-height: 1; padding: 0.2rem; background: none; border: 0; cursor: pointer;
+    color: var(--lodge-3); transition: color 0.15s, transform 0.15s;
+  }
+  .wine-page .star.on { color: var(--amber); }
+  .wine-page .star:active { transform: scale(0.9); }
+  .wine-page .rating-note {
+    width: 100%; font: inherit; color: var(--paper); background: transparent;
+    border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 0.7rem 0.8rem; resize: vertical;
+  }
+  .wine-page .rating-note:focus { outline: none; border-color: var(--amber); }
+  .wine-page .rating-hint { font-size: 0.85rem; margin-top: 0.4rem; }
   .wine-page .details {
     margin: 1.5rem 0 0;
     padding: 0;

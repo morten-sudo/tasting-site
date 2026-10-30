@@ -46,6 +46,9 @@ import Base from '../../layouts/Base.astro';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t, plural } from '../../i18n';
+  import { fetchMyRatings, starsText, type MyRating } from '../../lib/rating';
+
+  let myRatings = new Map<number, MyRating>();
 
   await i18nReady;
   import { getCart, cartCount } from '../../lib/cart';
@@ -125,6 +128,12 @@ import Base from '../../layouts/Base.astro';
       }
       foot.append(price);
     }
+    const mine = myRatings.get(w.id)?.rating;
+    if (mine) {
+      const my = el('span', 'my-stars', starsText(mine));
+      my.setAttribute('aria-label', t('rating.yours', { n: mine }));
+      foot.append(my);
+    }
     const go = el('span', 'go', t('wines.readMore'));
     go.setAttribute('aria-hidden', 'true');
     foot.append(go);
@@ -199,10 +208,12 @@ import Base from '../../layouts/Base.astro';
       $('need-login').hidden = false;
       return;
     }
-    const [winesRes, settingsRes] = await Promise.all([
+    const [winesRes, settingsRes, ratings] = await Promise.all([
       supabase.rpc('get_wines', { code }),
       supabase.rpc('get_tasting', { code }),
+      fetchMyRatings(code),
     ]);
+    myRatings = ratings;
     $('loading').hidden = true;
     if (winesRes.error) { $('load-error').hidden = false; return; }
     if (!winesRes.data?.length) { $('need-login').hidden = false; return; }
@@ -380,6 +391,7 @@ import Base from '../../layouts/Base.astro';
   }
   .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
   .carousel .price .normal { color: #6f655a; font-size: 0.85rem; }
+  .carousel .my-stars { color: #a07a3c; letter-spacing: 0.05em; font-size: 0.95rem; }
   .carousel .go {
     color: #876631;
     font-size: 0.7rem;
