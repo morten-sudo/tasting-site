@@ -1,0 +1,124 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="page.profile">
+  <section class="wrap profile-page">
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+
+    <div id="signed-out" hidden>
+      <h1 class="title" data-i18n="page.profile">Profile</h1>
+      <p data-i18n="profile.signedOut">You are not signed in.</p>
+      <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
+    </div>
+
+    <div id="me" hidden>
+      <h1 class="title" id="me-name"></h1>
+      <p id="me-email" class="hint"></p>
+
+      <nav class="profile-links">
+        <a class="btn" href="/tastings/" data-i18n="nav.myTastings">My tastings</a>
+        <a id="to-admin" class="btn ghost" href="/admin/" hidden data-i18n="tastings.toAdmin">Go to admin</a>
+      </nav>
+
+      <!-- Name (only with an email sign-in; it belongs to the account) -->
+      <form id="name-form" class="profile-form" novalidate hidden>
+        <label for="name" data-i18n="profile.name">Your name</label>
+        <div class="inline">
+          <input id="name" type="text" autocomplete="name" maxlength="80" />
+          <button class="btn small" type="submit" data-i18n="common.save">Save</button>
+        </div>
+        <p class="hint" data-i18n="profile.nameHint">Shown at the top of the site. Hosts may list you under the name they invited you by.</p>
+        <p id="name-msg" class="hint" aria-live="polite"></p>
+      </form>
+
+      <!-- Only an invite link on this device -->
+      <div id="link-only" class="message" hidden>
+        <p data-i18n="profile.linkOnly">You are signed in with an invitation link on this device. Sign in with your email to see all your tastings on any device.</p>
+        <a class="btn small" href="/login/" data-i18n="login.submit">Sign in</a>
+      </div>
+
+      <section class="profile-lang">
+        <h2 data-i18n="profile.language">Language</h2>
+        <div id="lang-buttons" class="lang-buttons"></div>
+      </section>
+
+      <button id="sign-out" class="btn ghost" type="button" data-i18n="nav.signOut">Sign out</button>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  import { loadMe, signOut } from '../lib/guest';
+  import { i18nReady, t, LANGS, lang, setLang } from '../i18n';
+
+  await i18nReady;
+  const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
+
+  const me = await loadMe();
+  $('loading').hidden = true;
+  if (!me) {
+    $('signed-out').hidden = false;
+  } else {
+    $('me').hidden = false;
+    $('me-name').textContent = me.name ?? t('nav.profile');
+    $('me-email').textContent = me.email ?? '';
+    $('to-admin').hidden = !me.isHost;
+    $('name-form').hidden = !me.signedIn;
+    $('link-only').hidden = me.signedIn;
+    $<HTMLInputElement>('name').value = me.name ?? '';
+  }
+
+  for (const l of LANGS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn small' + (l.code === lang() ? '' : ' ghost');
+    b.textContent = l.name;
+    b.lang = l.code;
+    b.setAttribute('aria-pressed', String(l.code === lang()));
+    b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); });
+    $('lang-buttons').append(b);
+  }
+
+  $('name-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $<HTMLInputElement>('name').value.trim();
+    const msg = $('name-msg');
+    if (!name) { msg.textContent = t('host.nameMissing'); return; }
+    const { error } = await supabase.auth.updateUser({ data: { name } });
+    if (!error && me?.isHost) {
+      const { data: hostId } = await supabase.rpc('current_host_id');
+      if (hostId) await supabase.from('hosts').update({ name }).eq('id', hostId);
+    }
+    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
+    if (!error) {
+      $('me-name').textContent = name;
+      $('user-name').textContent = name;
+      try { localStorage.setItem('display_name', name); } catch {}
+    }
+  });
+
+  $('sign-out').addEventListener('click', () => {
+    signOut();
+    location.href = '/';
+  });
+</script>
+
+<style is:global>
+  .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 34rem; }
+  .profile-page .title {
+    font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4.5rem);
+    line-height: 0.95; margin-bottom: 0.4rem; overflow-wrap: anywhere;
+  }
+  .profile-page .profile-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.5rem 0 2rem; }
+  .profile-page .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
+  .profile-page .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
+  .profile-page .btn.small { min-height: 2.5rem; padding: 0 1rem; }
+  .profile-page .profile-form { display: grid; gap: 0.4rem; margin-bottom: 2rem; }
+  .profile-page .profile-form .inline { display: flex; gap: 0.5rem; }
+  .profile-page .profile-form input { flex: 1; min-width: 0; }
+  .profile-page .profile-form .hint { margin: 0; font-size: 0.88rem; }
+  .profile-page #link-only { margin-bottom: 2rem; }
+  .profile-page .profile-lang h2 { font-size: 1.5rem; }
+  .profile-page .lang-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2.5rem; }
+</style>

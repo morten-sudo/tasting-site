@@ -65,3 +65,25 @@ begin
   end loop;
   return new_id;
 end $$;
+
+-- The signed-in person's display name and role, for the header and the profile page.
+-- Name: their own choice (account metadata) → host name → the name a host invited them by.
+create or replace function my_profile()
+returns jsonb
+language sql stable security definer set search_path = public as $$
+  with me as (
+    select lower(coalesce(auth.jwt() ->> 'email', '')) as email,
+           nullif(trim(auth.jwt() -> 'user_metadata' ->> 'name'), '') as own_name
+  )
+  select jsonb_build_object(
+    'email', me.email,
+    'name', coalesce(
+      me.own_name,
+      (select h.name from hosts h where h.id = current_host_id()),
+      (select p.name from participants p where lower(p.email) = me.email order by p.created_at desc limit 1)),
+    'is_host', current_host_id() is not null,
+    'tastings', (select count(*) from participants p where lower(p.email) = me.email))
+  from me where me.email <> '';
+$$;
+revoke all on function my_profile() from public, anon;
+grant execute on function my_profile() to authenticated;

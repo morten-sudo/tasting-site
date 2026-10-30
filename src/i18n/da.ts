@@ -424,4 +424,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.removeGuest": "Fjern fra smagningen",
   "adminTasting.confirmRemoveGuest": "Tryk igen – gæstens svar og vurderinger slettes også",
   "adminTasting.guestHasOrders": "Gæsten har bestillinger i smagningen og kan ikke fjernes.",
+  "nav.profile": "Min profil",
+  "page.profile": "Profil",
+  "profile.signedOut": "Du er ikke logget ind.",
+  "profile.name": "Dit navn",
+  "profile.nameHint": "Vises øverst på siden. Værter kan have dig stående under det navn, de inviterede dig med.",
+  "profile.linkOnly": "Du er logget ind med et invitationslink på denne enhed. Log ind med din e-mail for at se alle dine smagninger på alle dine enheder.",
+  "profile.language": "Sprog",
 };

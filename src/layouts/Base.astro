@@ -48,7 +48,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             </a>
           )}
           <span id="user-in" class="user-in" hidden>
-            <a href="/tastings/" id="user-name" class:list={['user-name', { current: path.startsWith('/tastings') }]} title="My tastings" data-i18n-attr="title=nav.myTastings" data-i18n="nav.myTastings">My tastings</a>
+            <a href="/profile/" id="user-name" class:list={['user-name', { current: path.startsWith('/profile') }]} title="My profile" data-i18n-attr="title=nav.profile"></a>
             <button id="logout" type="button" class="icon-btn" aria-label="Sign out" title="Sign out" data-i18n-attr="aria-label=nav.signOut;title=nav.signOut">
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></svg>
             </button>
@@ -73,7 +73,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     <script>
       import { getCart, cartCount } from '../lib/cart';
       import { supabase } from '../lib/supabase';
-      import { currentSlug, tastingUrl, resolveGuestCode, getCodes, signOut } from '../lib/guest';
+      import { currentSlug, tastingUrl, resolveGuestCode, signOut, loadMe, cachedName } from '../lib/guest';
       import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
 
       await i18nReady;
@@ -140,15 +140,25 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         }
       }
 
+      // The person's name is always shown top right and leads to the profile page
+      function showName(name: string | null) {
+        userName.textContent = name || t('nav.profile');
+        userIn.hidden = false;
+        userOut.hidden = true;
+      }
+      const early = cachedName();
+      if (early) showName(early);
+
       async function initUser() {
+        const me = loadMe();
         if (inTasting && slug) {
           const code = await resolveGuestCode();
-          if (!code) { userOut.hidden = false; return; }
+          if (!code) { userIn.hidden = true; userOut.hidden = false; return; }
           const { data } = await supabase.rpc('get_invite', { code });
           const row = Array.isArray(data) ? data[0] : null;
-          if (!row) { userOut.hidden = false; return; }
-          userName.textContent = row.name;
-          userIn.hidden = false;
+          if (!row) { userIn.hidden = true; userOut.hidden = false; return; }
+          const who = await me;
+          showName(who?.signedIn && who.name ? who.name : row.name);
           showTasting(code);
           // Guests without an email must add one on the tasting page before continuing
           const home = tastingUrl(slug);
@@ -156,9 +166,9 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           return;
         }
         // Outside a tasting: signed in if there is an email session or a stored invite code
-        const { data } = await supabase.auth.getSession();
-        if (data.session || Object.keys(getCodes()).length > 0) userIn.hidden = false;
-        else userOut.hidden = false;
+        const who = await me;
+        if (who) showName(who.name);
+        else { userIn.hidden = true; userOut.hidden = false; }
       }
       initUser();
 

@@ -424,4 +424,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.removeGuest": "Fjarlægja úr smökkun",
   "adminTasting.confirmRemoveGuest": "Smelltu aftur – svör og einkunnir gestsins eyðast líka",
   "adminTasting.guestHasOrders": "Gesturinn er með pantanir í smökkuninni og er ekki hægt að fjarlægja.",
+  "nav.profile": "Prófíllinn minn",
+  "page.profile": "Prófíll",
+  "profile.signedOut": "Þú ert ekki skráð(ur) inn.",
+  "profile.name": "Nafnið þitt",
+  "profile.nameHint": "Birtist efst á síðunni. Gestgjafar geta skráð þig undir nafninu sem þeir buðu þér með.",
+  "profile.linkOnly": "Þú ert skráð(ur) inn með boðshlekk á þessu tæki. Skráðu þig inn með netfangi til að sjá allar smakkanirnar þínar á öllum tækjum.",
+  "profile.language": "Tungumál",
 };

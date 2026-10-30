@@ -423,4 +423,11 @@ export const en = {
   "adminTasting.removeGuest": "Remove from tasting",
   "adminTasting.confirmRemoveGuest": "Tap again – their answers and ratings are deleted too",
   "adminTasting.guestHasOrders": "This guest has orders in the tasting and cannot be removed.",
+  "nav.profile": "My profile",
+  "page.profile": "Profile",
+  "profile.signedOut": "You are not signed in.",
+  "profile.name": "Your name",
+  "profile.nameHint": "Shown at the top of the site. Hosts may list you under the name they invited you by.",
+  "profile.linkOnly": "You are signed in with an invitation link on this device. Sign in with your email to see all your tastings on any device.",
+  "profile.language": "Language",
 } as const;

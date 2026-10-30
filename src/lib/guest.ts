@@ -82,10 +82,47 @@ export async function resolveGuestCode(): Promise<string | null> {
 
 /** Sign out: forget all codes and end any email session on this device. */
 export function signOut() {
-  try { localStorage.removeItem(CODES_KEY); } catch {}
+  try { localStorage.removeItem(CODES_KEY); localStorage.removeItem('display_name'); } catch {}
   try {
     const ref = new URL(SUPABASE_URL).hostname.split('.')[0];
     localStorage.removeItem(`sb-${ref}-auth-token`);
   } catch {}
   supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+}
+
+// ---------- The person's own name (header and profile page) ----------
+const NAME_KEY = 'display_name';
+
+export type Me = { name: string | null; email: string | null; isHost: boolean; signedIn: boolean };
+
+/** Last known name, for showing the header straight away. */
+export function cachedName(): string | null {
+  try { return localStorage.getItem(NAME_KEY); } catch { return null; }
+}
+function cacheName(name: string | null) {
+  try { name ? localStorage.setItem(NAME_KEY, name) : localStorage.removeItem(NAME_KEY); } catch {}
+}
+
+/**
+ * Who is using the site: with an email sign-in the account's profile (own name → host name →
+ * the name a host invited them by); with only an invite link the name on the invitation.
+ */
+export async function loadMe(): Promise<Me | null> {
+  const { data } = await supabase.auth.getSession();
+  if (data.session) {
+    const { data: p } = await supabase.rpc('my_profile');
+    const prof = (p ?? {}) as { name?: string | null; email?: string; is_host?: boolean };
+    const email = data.session.user.email ?? prof.email ?? null;
+    const own = (data.session.user.user_metadata?.name as string | undefined)?.trim();
+    const name = own || prof.name || (email ? email.split('@')[0] : null);
+    cacheName(name);
+    return { name, email, isHost: !!prof.is_host, signedIn: true };
+  }
+  const code = Object.values(getCodes())[0];
+  if (!code) { cacheName(null); return null; }
+  const { data: inv } = await supabase.rpc('get_invite', { code });
+  const row = Array.isArray(inv) ? inv[0] : null;
+  if (!row) return null;
+  cacheName(row.name);
+  return { name: row.name, email: row.email ?? null, isHost: false, signedIn: false };
 }
