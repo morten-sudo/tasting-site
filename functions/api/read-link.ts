@@ -172,7 +172,7 @@ ${text}`;
     price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price);
 
   return json({
-    ...toFields(answer),
+    ...toFields(answer, [title, meta['og:title'], str(product.name), shop?.title].filter(Boolean) as string[]),
     description: str(answer.description),
     image,
     price: shopPrice,

@@ -55,13 +55,30 @@ export function parseAnswer(raw: string | object | undefined) {
 export const str = (v: unknown) =>
   (typeof v === 'string' && v.trim() && v.trim().toLowerCase() !== 'null' ? v.trim() : null);
 
-export function toFields(answer: Record<string, unknown>): WineFields {
+/** Text or number → trimmed text (models sometimes answer 2017 instead of "2017"). */
+const text = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? String(v) : str(v));
+
+/** A plausible vintage year (1900 – next year) in a piece of text, e.g. "Vintage Port 2017". */
+export function yearIn(...texts: (string | null | undefined)[]) {
+  const max = new Date().getFullYear() + 1;
+  for (const t of texts) {
+    for (const m of (t ?? '').matchAll(/\b(19\d{2}|20\d{2})\b/g)) {
+      const y = Number(m[1]);
+      if (y >= 1900 && y <= max) return m[1];
+    }
+  }
+  return null;
+}
+
+/** The model's answer → wine fields. `hints` (e.g. the page title) are searched for a year if the model gave none. */
+export function toFields(answer: Record<string, unknown>, hints: string[] = []): WineFields {
   const abv = Number(String(answer.abv ?? '').replace(',', '.').replace('%', ''));
   const style = str(answer.style);
+  const name = text(answer.name);
   return {
-    name: str(answer.name),
-    producer: str(answer.producer),
-    vintage: str(answer.vintage),
+    name,
+    producer: text(answer.producer),
+    vintage: text(answer.vintage) ?? yearIn(name, ...hints),
     style: style && STYLES.includes(style) ? style : null,
     abv: Number.isFinite(abv) && abv > 0 && abv < 80 ? abv : null,
     region: str(answer.region),
