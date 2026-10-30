@@ -1,48 +1,51 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Bliv vært">
+<Base title="page.becomeHost">
   <section class="wrap host-page">
-    <p class="eyebrow">Gratis</p>
-    <h1 class="title">Hold din egen smagning</h1>
-    <p class="lead">
-      Inviter dine gæster, vis dem vinene, tag imod bestillinger og afslut med en quiz.
-      Opret dig med din e-mail, så er du i gang på et par minutter.
+    <p class="eyebrow" data-i18n="host.eyebrow">Free</p>
+    <h1 class="title" data-i18n="host.title">Host your own tasting</h1>
+    <p class="lead" data-i18n="host.lead">
+      Invite your guests, show them the wines, take orders and finish with a quiz.
+      Sign up with your email and you are ready in a few minutes.
     </p>
 
-    <p id="checking" class="hint" hidden>Opretter dig som vært …</p>
+    <p id="checking" class="hint" hidden data-i18n="host.creating">Setting you up as a host …</p>
 
     <!-- Step 1: name and email -->
     <form id="start-form" class="login-form" novalidate>
-      <label for="name">Dit navn</label>
+      <label for="name" data-i18n="host.name">Your name</label>
       <input id="name" type="text" autocomplete="name" required />
       <div id="email-wrap">
-        <label for="email">E-mail</label>
+        <label for="email" data-i18n="common.email">Email</label>
         <input id="email" type="email" autocomplete="email" inputmode="email" required />
       </div>
       <p id="start-msg" class="message" hidden></p>
-      <button class="btn" type="submit" id="start-btn">Send kode</button>
+      <button class="btn" type="submit" id="start-btn" data-i18n="login.sendCode">Send code</button>
     </form>
 
     <!-- Step 2: code from the email -->
     <form id="otp-form" class="login-form" novalidate hidden>
-      <p>Vi har sendt en kode til <strong id="sent-to"></strong>. Skriv den her.</p>
-      <label for="otp">Kode fra mailen</label>
+      <p><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
+      <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
       <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
              pattern="[0-9]*" maxlength="10" required />
       <p id="otp-msg" class="message" hidden></p>
-      <button class="btn" type="submit" id="otp-btn">Opret mig som vært</button>
+      <button class="btn" type="submit" id="otp-btn" data-i18n="host.create">Make me a host</button>
       <p class="hint">
-        <button id="back" class="link-btn" type="button">Ret navn eller e-mail</button>
+        <button id="back" class="link-btn" type="button" data-i18n="host.back">Change name or email</button>
       </p>
     </form>
 
-    <p class="hint small">Er du allerede vært? <a href="/login/?next=%2Fadmin%2F">Log ind her</a>.</p>
+    <p class="hint small" data-i18n-html="host.already">Already a host? <a href="/login/?next=%2Fadmin%2F">Sign in here</a>.</p>
   </section>
 </Base>
 
 <script>
   import { supabase } from '../lib/supabase';
+  import { i18nReady, lang, t } from '../i18n';
+
+  await i18nReady;
 
   const $ = (id: string) => document.getElementById(id)!;
   const NAME_KEY = 'wt_host_name';
@@ -70,7 +73,7 @@ import Base from '../layouts/Base.astro';
       busy = false;
       $('checking').hidden = true;
       $('start-form').hidden = false;
-      show($('start-msg'), 'Det lykkedes ikke at oprette dig. Prøv igen om lidt.', false);
+      show($('start-msg'), t('host.failed'), false);
       return;
     }
     try { localStorage.removeItem(NAME_KEY); } catch {}
@@ -90,7 +93,7 @@ import Base from '../layouts/Base.astro';
     if (pending) { finish(pending); return; }
     // Signed in (e.g. as a guest) but no name yet: only ask for the name
     $('email-wrap').hidden = true;
-    ($('start-btn') as HTMLButtonElement).textContent = 'Opret mig som vært';
+    ($('start-btn') as HTMLButtonElement).textContent = t('host.create');
     ($('start-form') as HTMLFormElement).dataset.signedIn = '1';
   }
 
@@ -101,10 +104,10 @@ import Base from '../layouts/Base.astro';
   async function sendCode() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: location.origin + '/become-host/', shouldCreateUser: true },
+      options: { emailRedirectTo: location.origin + '/become-host/', shouldCreateUser: true, data: { lang: lang() } },
     });
-    if (error?.status === 429) { show($('start-msg'), 'Der er sendt for mange mails på kort tid. Vent et minut, og prøv igen.', false); return false; }
-    if (error) { show($('start-msg'), 'Mailen kunne ikke sendes. Prøv igen om lidt.', false); return false; }
+    if (error?.status === 429) { show($('start-msg'), t('login.tooManyMails'), false); return false; }
+    if (error) { show($('start-msg'), t('login.sendFailed'), false); return false; }
     return true;
   }
 
@@ -112,19 +115,19 @@ import Base from '../layouts/Base.astro';
     e.preventDefault();
     $('start-msg').hidden = true;
     const name = ($('name') as HTMLInputElement).value.trim();
-    if (!name) { show($('start-msg'), 'Skriv dit navn.', false); return; }
+    if (!name) { show($('start-msg'), t('host.nameMissing'), false); return; }
     remember(name);
     if (($('start-form') as HTMLFormElement).dataset.signedIn) { finish(name); return; }
 
     email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('start-msg'), 'Skriv en gyldig e-mail.', false); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('start-msg'), t('common.invalidEmail'), false); return; }
 
     const btn = $('start-btn') as HTMLButtonElement;
     btn.disabled = true;
-    btn.textContent = 'Sender …';
+    btn.textContent = t('common.sending');
     const ok = await sendCode();
     btn.disabled = false;
-    btn.textContent = 'Send kode';
+    btn.textContent = t('login.sendCode');
     if (!ok) return;
 
     $('sent-to').textContent = email;
@@ -142,13 +145,13 @@ import Base from '../layouts/Base.astro';
     e.preventDefault();
     const msg = $('otp-msg');
     const token = ($('otp') as HTMLInputElement).value.replace(/\D/g, '');
-    if (token.length < 6) { show(msg, 'Skriv hele koden fra mailen.', false); return; }
+    if (token.length < 6) { show(msg, t('login.wholeCode'), false); return; }
     const btn = $('otp-btn') as HTMLButtonElement;
     btn.disabled = true;
     const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
     btn.disabled = false;
     if (error) {
-      show(msg, error.status === 429 ? 'For mange forsøg. Vent et minut, og prøv igen.' : 'Koden passer ikke eller er udløbet.', false);
+      show(msg, error.status === 429 ? t('login.tooManyTries') : t('login.wrongCode'), false);
       return;
     }
     // onAuthStateChange handles the rest

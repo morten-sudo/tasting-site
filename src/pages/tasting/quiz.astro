@@ -1,48 +1,48 @@
 ---
 import Base from '../../layouts/Base.astro';
 ---
-<Base title="Quiz" tasting>
+<Base title="page.quiz" tasting>
   <section class="wrap quiz-page">
-    <h1 class="title">Quiz</h1>
+    <h1 class="title" data-i18n="page.quiz">Quiz</h1>
 
-    <p id="loading" class="hint">Henter quizzen …</p>
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
 
     <div id="no-code" class="message" hidden>
-      <p>Quizzen kræver dit personlige link fra invitationen. Åbn det, så kan du være med.</p>
+      <p data-i18n="quiz.noCode">Sign in with your email or open the link from your invitation to join the quiz.</p>
     </div>
 
     <div id="closed" class="message" hidden>
-      <p>Quizzen åbner under smagningen. Hold siden åben – den starter af sig selv, når værten åbner.</p>
+      <p data-i18n="quiz.closed">The quiz opens during the tasting. Keep this page open – it starts by itself when the host opens it.</p>
     </div>
 
     <!-- Quiz in progress -->
     <div id="play" hidden>
-      <p class="hint rules">
-        13 spørgsmål om portvin. Svar i dit eget tempo. Et svar kan ikke ændres, når det er låst.
+      <p class="hint rules" id="rules">
+        Answer at your own pace. An answer cannot be changed once it is locked.
       </p>
-      <ol id="dots" class="dots" aria-label="Dine svar"></ol>
+      <ol id="dots" class="dots" aria-label="Your answers" data-i18n-attr="aria-label=quiz.yourAnswers"></ol>
 
       <div id="question" class="card">
         <p id="q-count" class="q-count"></p>
         <h2 id="q-text" class="q-text"></h2>
         <div id="q-options" class="options" role="radiogroup"></div>
         <p id="q-error" class="message error" hidden></p>
-        <button id="q-lock" class="btn" type="button" disabled>Lås svar</button>
+        <button id="q-lock" class="btn" type="button" disabled data-i18n="quiz.lock">Lock answer</button>
       </div>
 
       <div id="done" class="message ok" hidden>
-        <p>Alle dine svar er låst. Følg stillingen herunder – facit og forklaringer kommer, når værten lukker quizzen.</p>
+        <p data-i18n="quiz.done">All your answers are locked. Follow the standings below – answers and explanations come when the host closes the quiz.</p>
       </div>
     </div>
 
     <!-- Quiz finished -->
     <div id="results" hidden>
-      <p class="lead">Quizzen er slut. Her er facit og forklaringerne.</p>
+      <p class="lead" data-i18n="quiz.over">The quiz is over. Here are the answers and explanations.</p>
       <ol id="result-list" class="results"></ol>
     </div>
 
     <section id="board-wrap" class="board-wrap" hidden>
-      <h2 id="board-title">Stillingen</h2>
+      <h2 id="board-title" data-i18n="quiz.standings">Standings</h2>
       <ol id="board" class="board"></ol>
     </section>
   </section>
@@ -51,6 +51,9 @@ import Base from '../../layouts/Base.astro';
 <script>
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { i18nReady, t as tr } from '../../i18n';
+
+  await i18nReady;
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
 
   type Option = { key: string; text: string };
@@ -108,7 +111,7 @@ import Base from '../../layouts/Base.astro';
       li.className = 'dot';
       if (answers.has(q.id)) li.classList.add('answered');
       if (i === current) li.classList.add('current');
-      li.title = `Spørgsmål ${i + 1}${answers.has(q.id) ? ' (besvaret)' : ''}`;
+      li.title = tr(answers.has(q.id) ? 'quiz.dotAnswered' : 'quiz.dot', { n: i + 1 });
       ol.append(li);
     });
   }
@@ -122,7 +125,8 @@ import Base from '../../layouts/Base.astro';
 
     const q = questions[current];
     selected = null;
-    $('q-count').textContent = `Spørgsmål ${current + 1} af ${questions.length}`;
+    $('q-count').textContent = tr('quiz.count', { n: current + 1, total: questions.length });
+    $('rules').textContent = tr('quiz.rules', { total: questions.length });
     $('q-text').textContent = q.question;
     $('q-error').hidden = true;
     const box = $('q-options');
@@ -155,13 +159,13 @@ import Base from '../../layouts/Base.astro';
     const q = questions[current];
     const btn = $('q-lock') as HTMLButtonElement;
     btn.disabled = true;
-    btn.textContent = 'Låser …';
+    btn.textContent = tr('quiz.locking');
     const { error } = await supabase.rpc('submit_answer', { code, q_id: q.id, a_key: selected });
-    btn.textContent = 'Lås svar';
+    btn.textContent = tr('quiz.lock');
     if (error) {
       $('q-error').textContent = error.message.includes('ikke åben')
-        ? 'Quizzen er lukket for svar.'
-        : 'Svaret blev ikke gemt. Tjek forbindelsen, og prøv igen.';
+        ? tr('quiz.closedForAnswers')
+        : tr('quiz.notSaved');
       $('q-error').hidden = false;
       btn.disabled = false;
       if (error.message.includes('ikke åben')) start();
@@ -199,7 +203,7 @@ import Base from '../../layouts/Base.astro';
 
       const verdict = document.createElement('p');
       verdict.className = 'verdict';
-      verdict.textContent = !mine ? 'Ikke besvaret' : mine === q.correct_key ? 'Rigtigt' : 'Forkert';
+      verdict.textContent = !mine ? tr('quiz.unanswered') : mine === q.correct_key ? tr('quiz.right') : tr('quiz.wrong');
       li.append(verdict);
 
       if (q.explanation) {
@@ -238,11 +242,11 @@ import Base from '../../layouts/Base.astro';
       current = firstUnanswered();
       show('play', true);
       renderQuestion();
-      $('board-title').textContent = 'Stillingen lige nu';
+      $('board-title').textContent = tr('quiz.standingsNow');
     } else {
       show('results', true);
       renderResults();
-      $('board-title').textContent = 'Slutstilling';
+      $('board-title').textContent = tr('quiz.final');
       $('results').before($('board-wrap'));
     }
     refreshBoard();

@@ -2,12 +2,14 @@
 import '../../styles/global.css';
 ---
 <!doctype html>
-<html lang="da">
+<html lang="en" class="i18n-pending">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>Pointtavle – Winetastr</title>
+    <title>Leaderboard – Winetastr</title>
+    <style is:inline>html.i18n-pending body { visibility: hidden; }</style>
+    <script is:inline>setTimeout(function () { document.documentElement.classList.remove('i18n-pending'); }, 2000);</script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,8 +21,8 @@ import '../../styles/global.css';
   <body class="tv">
     <main class="tv-main">
       <header class="tv-head">
-        <h1 id="tv-title">Pointtavle</h1>
-        <p id="tv-status">Quizzen er ikke startet endnu</p>
+        <h1 id="tv-title" data-i18n="page.leaderboard">Leaderboard</h1>
+        <p id="tv-status" data-i18n="board.notStarted">The quiz has not started yet</p>
       </header>
       <div class="spectrum" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span>
@@ -32,6 +34,10 @@ import '../../styles/global.css';
       import { supabase } from '../../lib/supabase';
       import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
       import { currentSlug } from '../../lib/guest';
+      import { i18nReady, t } from '../../i18n';
+
+      await i18nReady;
+      document.title = `${t('page.leaderboard')} – Winetastr`;
 
       const slug = currentSlug();
       const status = document.getElementById('tv-status')!;
@@ -46,9 +52,9 @@ import '../../styles/global.css';
         if (!rows) return;
         renderLeaderboard(board, rows, TOTAL);
         const done = rows.filter((r) => r.answered >= TOTAL).length;
-        if (s.quiz_finished === true) status.textContent = 'Slutstilling';
-        else if (s.quiz_open === true) status.textContent = `${done} af ${rows.length} er færdige`;
-        else status.textContent = 'Quizzen er ikke startet endnu';
+        if (s.quiz_finished === true) status.textContent = t('quiz.final');
+        else if (s.quiz_open === true) status.textContent = t('board.doneCount', { done, total: rows.length });
+        else status.textContent = t('board.notStarted');
       }
       tick();
       setInterval(tick, 4000);

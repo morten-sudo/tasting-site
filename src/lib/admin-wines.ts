@@ -1,6 +1,7 @@
 // Admin: the host adds, edits, reorders and deletes wines one at a time, with an optional photo.
 import { supabase } from './supabase';
-import { STYLE_LABELS, kr } from './wines';
+import { STYLES, styleName, kr } from './wines';
+import { t } from '../i18n';
 
 export type AdminWine = {
   id: number; tasting_id: string; sort_order: number; name: string; producer: string | null;
@@ -52,8 +53,8 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
 
   // Style options
   const styleSelect = field<HTMLSelectElement>('wf-style');
-  styleSelect.replaceChildren(new Option('Vælg …', ''));
-  for (const [key, label] of Object.entries(STYLE_LABELS)) styleSelect.append(new Option(label, key));
+  styleSelect.replaceChildren(new Option(t('admin.choose'), ''));
+  for (const key of STYLES) styleSelect.append(new Option(styleName(key), key));
 
   function showMsg(text: string, ok = false) {
     const m = $('wf-msg');
@@ -75,13 +76,13 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     removeImage = false;
     form.reset();
     showMsg('');
-    $('wf-title').textContent = w ? 'Ret vin' : 'Ny vin';
+    $('wf-title').textContent = w ? t('admin.editWine') : t('admin.newWine');
     $('wf-delete').hidden = !w;
-    $('wf-delete').textContent = 'Slet vin';
+    $('wf-delete').textContent = t('admin.deleteWine');
     delete $('wf-delete').dataset.armed;
     field<HTMLInputElement>('wf-name').value = w?.name ?? '';
     field<HTMLInputElement>('wf-producer').value = w?.producer ?? '';
-    styleSelect.value = w?.style && STYLE_LABELS[w.style] ? w.style : '';
+    styleSelect.value = w?.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
     field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
     field<HTMLInputElement>('wf-abv').value = w?.abv != null ? String(w.abv).replace('.', ',') : '';
     field<HTMLInputElement>('wf-price').value = w?.price_dkk != null ? String(w.price_dkk) : '';
@@ -118,29 +119,29 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       }
       const body = mk('div', 'wine-body');
       body.append(mk('p', 'wine-name', w.name));
-      const meta = [STYLE_LABELS[w.style ?? ''] ?? w.style, w.vintage, w.producer].filter(Boolean).join(' · ');
+      const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
       const prices = mk('p', 'wine-meta');
-      prices.textContent = w.price_dkk != null ? kr.format(w.price_dkk) : 'Ingen pris';
-      if (w.retail_price_dkk != null) prices.textContent += ` (normalt ${kr.format(w.retail_price_dkk)})`;
+      prices.textContent = w.price_dkk != null ? kr.format(w.price_dkk) : t('admin.noPrice');
+      if (w.retail_price_dkk != null) prices.textContent += ' ' + t('admin.normally', { price: kr.format(w.retail_price_dkk) });
       body.append(prices);
       const flags = mk('div', 'wine-flags');
-      if (!w.revealed) flags.append(mk('span', 'pill pill-no', 'Skjult for gæster'));
-      if (!w.orderable) flags.append(mk('span', 'pill pill-no', 'Kan ikke bestilles'));
+      if (!w.revealed) flags.append(mk('span', 'pill pill-no', t('admin.hidden')));
+      if (!w.orderable) flags.append(mk('span', 'pill pill-no', t('admin.notOrderable')));
       if (flags.childElementCount) body.append(flags);
 
       const actions = mk('div', 'wine-actions');
       const up = mk('button', 'icon-only', '↑');
       up.type = 'button';
-      up.setAttribute('aria-label', `Flyt ${w.name} op`);
+      up.setAttribute('aria-label', t('admin.moveUp', { name: w.name }));
       up.disabled = i === 0;
       up.addEventListener('click', () => move(i, -1));
       const down = mk('button', 'icon-only', '↓');
       down.type = 'button';
-      down.setAttribute('aria-label', `Flyt ${w.name} ned`);
+      down.setAttribute('aria-label', t('admin.moveDown', { name: w.name }));
       down.disabled = i === wines.length - 1;
       down.addEventListener('click', () => move(i, 1));
-      const edit = mk('button', 'text-btn', 'Ret');
+      const edit = mk('button', 'text-btn', t('admin.edit'));
       edit.type = 'button';
       edit.addEventListener('click', () => openForm(w));
       actions.append(up, down, edit);
@@ -197,11 +198,11 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = field<HTMLInputElement>('wf-name').value.trim();
-    if (!name) { showMsg('Giv vinen et navn.'); return; }
+    if (!name) { showMsg(t('admin.wineNameMissing')); return; }
 
     const save = $<HTMLButtonElement>('wf-save');
     save.disabled = true;
-    save.textContent = 'Gemmer …';
+    save.textContent = t('common.saving');
 
     let image_url = editing?.image_url ?? null;
     if (removeImage) image_url = null;
@@ -209,8 +210,8 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       const url = await uploadImage(pendingImage);
       if (!url) {
         save.disabled = false;
-        save.textContent = 'Gem';
-        showMsg('Billedet kunne ikke lægges op. Prøv et andet billede, eller gem uden.');
+        save.textContent = t('common.save');
+        showMsg(t('admin.imageFailed'));
         return;
       }
       image_url = url;
@@ -240,8 +241,8 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
         });
 
     save.disabled = false;
-    save.textContent = 'Gem';
-    if (error) { showMsg('Vinen blev ikke gemt. Prøv igen.'); return; }
+    save.textContent = t('common.save');
+    if (error) { showMsg(t('admin.wineNotSaved')); return; }
     closeForm();
     await load();
   });
@@ -252,14 +253,14 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     if (!editing) return;
     if (!btn.dataset.armed) {
       btn.dataset.armed = '1';
-      btn.textContent = 'Tryk igen for at slette';
+      btn.textContent = t('admin.confirmDelete');
       return;
     }
     const { error } = await supabase.from('wines').delete().eq('id', editing.id);
     if (error) {
-      showMsg('Vinen er bestilt af en gæst og kan ikke slettes. Fjern fluebenet ved "Kan bestilles" eller "Vis for gæster" i stedet.');
+      showMsg(t('admin.wineOrdered'));
       delete btn.dataset.armed;
-      btn.textContent = 'Slet vin';
+      btn.textContent = t('admin.deleteWine');
       return;
     }
     closeForm();

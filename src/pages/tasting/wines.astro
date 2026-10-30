@@ -1,31 +1,31 @@
 ---
 import Base from '../../layouts/Base.astro';
 ---
-<Base title="Vinene" tasting>
+<Base title="page.wines" tasting>
   <section class="wrap wines-page">
-    <h1 class="title">Vinene</h1>
-    <p id="intro" class="lead">Det her skænker vi i aften.</p>
+    <h1 class="title" data-i18n="page.wines">Wines</h1>
+    <p id="intro" class="lead" data-i18n="wines.intro">This is what we are pouring tonight.</p>
 
     <p id="order-status" class="message" hidden></p>
 
     <div id="need-login" class="message need-login" hidden>
-      <p><strong>Log ind for at se vinene.</strong></p>
-      <p>Brug linket fra din invitation, eller log ind med din e-mail.</p>
-      <a class="btn" href="/login/">Log ind</a>
+      <p><strong data-i18n="wines.signInTitle">Sign in to see the wines.</strong></p>
+      <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
+      <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
     </div>
-    <p id="loading" class="hint">Henter vinene …</p>
-    <p id="load-error" class="message error" hidden>
-      Vinene kunne ikke hentes. Tjek din forbindelse, og genindlæs siden.
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+    <p id="load-error" class="message error" hidden data-i18n="wines.loadError">
+      The wines could not be loaded. Check your connection and reload the page.
     </p>
 
-    <div id="wine-list" class="carousel" role="region" aria-roledescription="karrusel" aria-label="Vinene" tabindex="0"></div>
+    <div id="wine-list" class="carousel" role="region" aria-roledescription="carousel" aria-label="Wines" data-i18n-attr="aria-roledescription=wines.carousel;aria-label=page.wines" tabindex="0"></div>
 
     <div id="carousel-nav" class="carousel-nav" hidden>
-      <button type="button" id="prev" class="nav-btn" aria-label="Forrige vin">
+      <button type="button" id="prev" class="nav-btn" aria-label="Previous wine" data-i18n-attr="aria-label=wines.prevWine">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
       <p id="counter" class="counter" aria-live="polite"></p>
-      <button type="button" id="next" class="nav-btn" aria-label="Næste vin">
+      <button type="button" id="next" class="nav-btn" aria-label="Next wine" data-i18n-attr="aria-label=wines.nextWine">
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     </div>
@@ -37,7 +37,7 @@ import Base from '../../layouts/Base.astro';
         <span id="basket-count"></span>
         <strong id="basket-total"></strong>
       </div>
-      <span class="basket-go">Gå til kurven</span>
+      <span class="basket-go" data-i18n="wines.toCart">Go to cart</span>
     </div>
   </a>
 </Base>
@@ -45,13 +45,15 @@ import Base from '../../layouts/Base.astro';
 <script>
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { i18nReady, t, plural } from '../../i18n';
+
+  await i18nReady;
   import { getCart, cartCount } from '../../lib/cart';
 
   import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../../lib/wines';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
   const $ = (id: string) => document.getElementById(id)!;
 
   const code = await resolveGuestCode();
@@ -73,15 +75,15 @@ import Base from '../../layouts/Base.astro';
     for (const w of wines) total += (cart[w.id] ?? 0) * (w.price_dkk ?? 0);
     const bottles = cartCount(cart);
     $('basket').hidden = bottles === 0;
-    $('basket-count').textContent = `${bottles} ${bottles === 1 ? 'flaske' : 'flasker'} i kurven, `;
+    $('basket-count').textContent = plural(bottles, 'wines.bottlesOne', 'wines.bottlesMany') + ', ';
     $('basket-total').textContent = kr.format(total);
   }
 
   function wineCard(w: Wine, index: number, total: number) {
     const li = el('li', 'card');
-    li.dataset.style = w.style ?? 'Øvrige';
+    li.dataset.style = w.style ?? 'Other';
     li.setAttribute('aria-roledescription', 'vin');
-    li.setAttribute('aria-label', `${index + 1} af ${total}`);
+    li.setAttribute('aria-label', t('wines.position', { n: index + 1, total }));
 
     const link = el('a', 'card-link');
     link.href = tastingUrl(slug, `wines/${w.id}/`);
@@ -118,12 +120,12 @@ import Base from '../../layouts/Base.astro';
       price.append(el('span', 'ours', kr.format(w.price_dkk)));
       if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
         const normal = el('span', 'normal');
-        normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
+        normal.append(t('wines.normalPrice') + ' ', el('s', '', kr.format(w.retail_price_dkk)));
         price.append(normal);
       }
       foot.append(price);
     }
-    const go = el('span', 'go', 'Læs mere');
+    const go = el('span', 'go', t('wines.readMore'));
     go.setAttribute('aria-hidden', 'true');
     foot.append(go);
     info.append(foot);
@@ -212,10 +214,10 @@ import Base from '../../layouts/Base.astro';
     if (settings.orders_open === true) {
       if (code) {
         ordering = true;
-        $('intro').textContent = 'Tryk på en vin for at læse mere og lægge den i kurven. Du sender bestillingen fra kurven.';
+        $('intro').textContent = t('wines.introOrder');
         window.addEventListener('cart-change', renderBasket);
       } else {
-        status.textContent = 'Bestillingen er åben. Brug linket fra din invitation for at bestille.';
+        status.textContent = t('wines.orderNeedsLogin');
         status.hidden = false;
       }
     }

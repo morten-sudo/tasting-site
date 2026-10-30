@@ -1,35 +1,35 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Mine smagninger">
+<Base title="page.myTastings">
   <section class="wrap tastings-page">
-    <h1 class="title">Mine smagninger</h1>
-    <p id="loading" class="hint">Henter dine smagninger …</p>
+    <h1 class="title" data-i18n="nav.myTastings">My tastings</h1>
+    <p id="loading" class="hint" data-i18n="tastings.loading">Loading your tastings …</p>
 
     <div id="signed-out" hidden>
-      <p>Log ind for at se de smagninger, du er inviteret til.</p>
-      <a class="btn" href="/login/">Log ind</a>
+      <p data-i18n="tastings.signInFirst">Sign in to see the tastings you are invited to.</p>
+      <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
     </div>
 
     <div id="none" hidden>
-      <p>Du er ikke inviteret til nogen smagninger med denne e-mail endnu.</p>
-      <p class="hint">Har du fået et link i en invitation, så åbn det – eller log ind med den e-mail, værten har.</p>
+      <p data-i18n="tastings.none">You are not invited to any tastings with this email yet.</p>
+      <p class="hint" data-i18n="tastings.noneHint">If you got a link in an invitation, open it – or sign in with the email the host has.</p>
     </div>
 
     <section id="upcoming-block" hidden>
-      <h2>Kommende</h2>
+      <h2 data-i18n="tastings.upcoming">Upcoming</h2>
       <ul id="upcoming" class="tasting-list"></ul>
     </section>
 
     <section id="past-block" hidden>
-      <h2>Tidligere</h2>
+      <h2 data-i18n="tastings.past">Past</h2>
       <ul id="past" class="tasting-list"></ul>
     </section>
 
     <section id="host-block" class="host-block" hidden>
-      <h2>Som vært</h2>
-      <p>Opret smagninger, inviter gæster og læg vine ind.</p>
-      <a class="btn-ghost" href="/admin/">Gå til admin</a>
+      <h2 data-i18n="tastings.asHost">As a host</h2>
+      <p data-i18n="tastings.hostText">Create tastings, invite guests and add wines.</p>
+      <a class="btn-ghost" href="/admin/" data-i18n="tastings.toAdmin">Go to admin</a>
     </section>
   </section>
 </Base>
@@ -37,15 +37,16 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { fetchMyTastings, getCodes, tastingUrl, type MyTasting } from '../lib/guest';
+  import { i18nReady, t as tr, formatWhen, type Key } from '../i18n';
+
+  await i18nReady;
 
   const $ = (id: string) => document.getElementById(id)!;
-  const STATUS: Record<string, [string, string]> = {
-    yes: ['Tilmeldt', 'pill-yes'],
-    no: ['Meldt fra', 'pill-no'],
-    invited: ['Ikke svaret', 'pill-invited'],
+  const STATUS: Record<string, [Key, string]> = {
+    yes: ['status.yes', 'pill-yes'],
+    no: ['status.no', 'pill-no'],
+    invited: ['status.invited', 'pill-invited'],
   };
-  const dayFmt = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' });
-  const timeFmt = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' });
 
   function card(t: MyTasting) {
     const li = document.createElement('li');
@@ -62,15 +63,13 @@ import Base from '../layouts/Base.astro';
     const [label, cls] = STATUS[t.status] ?? STATUS.invited;
     const pill = document.createElement('span');
     pill.className = `pill ${cls}`;
-    pill.textContent = label;
+    pill.textContent = tr(label);
     head.append(pill);
     a.append(head);
 
     const parts: string[] = [];
     if (t.starts_at) {
-      const d = new Date(t.starts_at);
-      const day = dayFmt.format(d);
-      parts.push(`${day[0].toUpperCase()}${day.slice(1)} kl. ${timeFmt.format(d)}`);
+      parts.push(formatWhen(t.starts_at, { year: true }));
     }
     if (t.place) parts.push(t.place);
     if (parts.length) {

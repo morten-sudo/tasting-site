@@ -1,26 +1,26 @@
 ---
 import Base from '../../layouts/Base.astro';
 ---
-<Base title="Smagningen" tasting>
+<Base title="page.tasting" tasting>
   <section class="wrap page">
-    <p id="loading" class="hint">Henter din profil …</p>
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
 
     <div id="invalid" class="message error" hidden>
-      <p><strong>Du er ikke logget ind.</strong></p>
-      <p>
-        <a href="/login/">Log ind</a> med din e-mail eller med linket fra din
-        invitation. Virker det ikke, så skriv til værten.
+      <p><strong data-i18n="guest.notSignedIn">You are not signed in.</strong></p>
+      <p data-i18n-html="guest.notSignedInHelp">
+        <a href="/login/">Sign in</a> with your email or with the link from your
+        invitation. If that doesn't work, contact the host.
       </p>
     </div>
 
     <!-- First visit: email required before continuing -->
     <form id="email-step" class="email-step" hidden novalidate>
-      <h1 class="greeting">Velkommen, <span id="step-name"></span></h1>
-      <p class="lead">Før du går videre, skal vi have din e-mail. Den bruges til at logge ind med et link på mail – fx hvis du skifter telefon.</p>
-      <label for="step-email">Din e-mail</label>
+      <h1 class="greeting"><span data-i18n="guest.welcome">Welcome,</span> <span id="step-name"></span></h1>
+      <p class="lead" data-i18n="guest.emailLead">Before you continue, we need your email. You use it to sign in with a code – for example if you switch phones.</p>
+      <label for="step-email" data-i18n="guest.yourEmail">Your email</label>
       <input id="step-email" type="email" autocomplete="email" inputmode="email" maxlength="200" required />
       <p id="step-error" class="message error" hidden></p>
-      <button class="btn" type="submit" id="step-btn">Fortsæt</button>
+      <button class="btn" type="submit" id="step-btn" data-i18n="common.continue">Continue</button>
     </form>
 
     <div id="invite" hidden>
@@ -34,37 +34,37 @@ import Base from '../../layouts/Base.astro';
 
       <form id="rsvp-form" class="rsvp" novalidate>
         <fieldset class="seg-row">
-          <legend>Kommer du?</legend>
+          <legend data-i18n="guest.coming">Are you coming?</legend>
           <div class="seg">
-            <label><input type="radio" name="attending" value="yes" required /><span>Ja</span></label>
-            <label><input type="radio" name="attending" value="no" /><span>Nej</span></label>
+            <label><input type="radio" name="attending" value="yes" required /><span data-i18n="common.yes">Yes</span></label>
+            <label><input type="radio" name="attending" value="no" /><span data-i18n="common.no">No</span></label>
           </div>
         </fieldset>
 
         <div class="field">
-          <label for="email">E-mail</label>
+          <label for="email" data-i18n="common.email">Email</label>
           <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="200" required aria-describedby="email-hint" />
-          <p id="email-hint" class="field-hint">Til login med link på mail.</p>
+          <p id="email-hint" class="field-hint" data-i18n="guest.emailHint">For signing in with a code by email.</p>
         </div>
 
         <details id="note-box" class="note">
-          <summary>Besked til værten</summary>
-          <textarea id="note" name="note" maxlength="1000" aria-label="Besked til værten"></textarea>
+          <summary data-i18n="guest.note">Message to the host</summary>
+          <textarea id="note" name="note" maxlength="1000" aria-label="Message to the host" data-i18n-attr="aria-label=guest.note"></textarea>
         </details>
 
         <p id="form-error" class="message error" hidden></p>
 
         <div class="actions">
-          <button type="submit" class="btn btn-small" id="submit">Gem</button>
-          <span class="hint">Du kan ændre dit svar, så længe tilmeldingen er åben.</span>
+          <button type="submit" class="btn btn-small" id="submit" data-i18n="common.save">Save</button>
+          <span class="hint" data-i18n="guest.canChange">You can change your answer while sign-up is open.</span>
         </div>
       </form>
 
       <section id="fee" class="fee" hidden>
-        <h2>Betaling for smagningen</h2>
-        <p id="fee-paid" class="message ok" hidden>Tak, din betaling for smagningen er modtaget.</p>
+        <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
+        <p id="fee-paid" class="message ok" hidden data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p>
         <div id="fee-due" hidden>
-          <p>Prisen for aftenen er fundet ud fra indkøb og antal gæster.</p>
+          <p data-i18n="guest.feeText">The price for the evening is based on purchases and the number of guests.</p>
           <div id="fee-pay"></div>
         </div>
       </section>
@@ -76,6 +76,9 @@ import Base from '../../layouts/Base.astro';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { payBox, setPayee } from '../../lib/pay';
+  import { i18nReady, t, formatWhen } from '../../i18n';
+
+  await i18nReady;
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -90,11 +93,11 @@ import Base from '../../layouts/Base.astro';
 
   function showCurrent(status: string) {
     if (status === 'yes') {
-      current.textContent = 'Du er tilmeldt. Vi ses!';
+      current.textContent = t('guest.statusYes');
       current.dataset.state = 'yes';
       current.hidden = false;
     } else if (status === 'no') {
-      current.textContent = 'Du har meldt fra.';
+      current.textContent = t('guest.statusNo');
       current.dataset.state = 'no';
       current.hidden = false;
     } else {
@@ -103,19 +106,16 @@ import Base from '../../layouts/Base.astro';
   }
 
   async function loadFee() {
-    const [{ data }, t] = await Promise.all([
+    const [{ data }, tastingRes] = await Promise.all([
       supabase.rpc('get_tasting_payment', { code }),
       supabase.rpc('get_tasting', { code }),
     ]);
-    const info = (t.data ?? {}) as Record<string, unknown>;
+    const info = (tastingRes.data ?? {}) as Record<string, unknown>;
     setPayee(info.mobilepay ?? null);
     $('t-title').textContent = String(info.title ?? '');
     const parts: string[] = [];
     if (typeof info.starts_at === 'string') {
-      const d = new Date(info.starts_at);
-      const day = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' }).format(d);
-      const time = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' }).format(d);
-      parts.push(`${day[0].toUpperCase()}${day.slice(1)} kl. ${time}`);
+      parts.push(formatWhen(info.starts_at));
     }
     if (typeof info.place === 'string' && info.place) parts.push(info.place);
     $('t-when').textContent = parts.join(' · ');
@@ -125,7 +125,7 @@ import Base from '../../layouts/Base.astro';
     if (!row || amount <= 0) return;
     $('fee-paid').hidden = !row.paid;
     $('fee-due').hidden = row.paid;
-    if (!row.paid) $('fee-pay').replaceChildren(payBox(amount, `Smagning ${guestName}`));
+    if (!row.paid) $('fee-pay').replaceChildren(payBox(amount, t('pay.feeComment', { name: guestName })));
   }
 
   async function load() {
@@ -172,22 +172,22 @@ import Base from '../../layouts/Base.astro';
     err.hidden = true;
     const val = $<HTMLInputElement>('step-email').value.trim();
     if (!EMAIL_RE.test(val)) {
-      err.textContent = val ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.' : 'Skriv din e-mail for at fortsætte.';
+      err.textContent = val ? t('guest.emailBad') : t('guest.emailMissing');
       err.hidden = false;
       return;
     }
     const btn = $<HTMLButtonElement>('step-btn');
     btn.disabled = true;
-    btn.textContent = 'Gemmer …';
+    btn.textContent = t('common.saving');
     const { error } = await supabase.rpc('set_my_email', { code, e: val });
     btn.disabled = false;
-    btn.textContent = 'Fortsæt';
+    btn.textContent = t('common.continue');
     if (error) {
       err.textContent = error.message.includes('bruges allerede')
-        ? 'Den e-mail er allerede knyttet til en anden gæst. Brug en anden, eller skriv til værten.'
+        ? t('guest.emailTakenLong')
         : error.message.includes('Ugyldig')
-        ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.'
-        : 'E-mailen blev ikke gemt. Tjek din forbindelse, og prøv igen.';
+        ? t('guest.emailBad')
+        : t('guest.emailNotSaved');
       err.hidden = false;
       return;
     }
@@ -201,29 +201,29 @@ import Base from '../../layouts/Base.astro';
     formError.hidden = true;
     const choice = (form.elements.namedItem('attending') as RadioNodeList).value;
     if (!choice) {
-      formError.textContent = 'Vælg, om du kommer eller ej.';
+      formError.textContent = t('guest.chooseYesNo');
       formError.hidden = false;
       return;
     }
     const emailVal = $<HTMLInputElement>('email').value.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailVal)) {
-      formError.textContent = emailVal ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.' : 'Skriv din e-mail.';
+      formError.textContent = emailVal ? t('guest.emailBad') : t('guest.emailMissing');
       formError.hidden = false;
       $<HTMLInputElement>('email').focus();
       return;
     }
     submit.disabled = true;
-    submit.textContent = 'Sender …';
+    submit.textContent = t('common.sending');
     const attending = choice === 'yes';
     const mail = await supabase.rpc('set_my_email', { code, e: emailVal });
     if (mail.error) {
       submit.disabled = false;
-      submit.textContent = 'Gem';
+      submit.textContent = t('common.save');
       formError.textContent = mail.error.message.includes('bruges allerede')
-        ? 'Den e-mail er allerede knyttet til en anden gæst.'
+        ? t('guest.emailTaken')
         : mail.error.message.includes('Ugyldig')
-        ? 'E-mailen ser ikke rigtig ud. Ret den, og prøv igen.'
-        : 'Dit svar blev ikke gemt. Tjek din forbindelse og prøv igen.';
+        ? t('guest.emailBad')
+        : t('guest.answerNotSaved');
       formError.hidden = false;
       return;
     }
@@ -234,16 +234,16 @@ import Base from '../../layouts/Base.astro';
       note: $<HTMLTextAreaElement>('note').value,
     });
     submit.disabled = false;
-    submit.textContent = 'Gem';
+    submit.textContent = t('common.save');
     if (error) {
       formError.textContent = error.message.includes('lukket')
-        ? 'Tilmeldingen er lukket. Skriv til værten, hvis du skal ændre noget.'
-        : 'Dit svar blev ikke gemt. Tjek din forbindelse og prøv igen.';
+        ? t('guest.signupClosed')
+        : t('guest.answerNotSaved');
       formError.hidden = false;
       return;
     }
     showCurrent(data as string);
-    current.textContent = 'Gemt. ' + current.textContent;
+    current.textContent = t('common.saved') + ' ' + current.textContent;
     current.classList.remove('flash');
     void current.offsetWidth;
     current.classList.add('flash');

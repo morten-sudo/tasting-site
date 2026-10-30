@@ -1,226 +1,230 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="Admin">
+<Base title="page.admin">
   <section class="wrap admin-page">
-    <h1 class="title">Admin</h1>
+    <h1 class="title" data-i18n="page.admin">Admin</h1>
 
     <!-- New password after a password-reset email -->
     <form id="reset" class="login" hidden>
-      <p>Vælg en ny adgangskode.</p>
-      <label for="reset-pw">Ny adgangskode (mindst 8 tegn)</label>
+      <p data-i18n="admin.pickPassword">Choose a new password.</p>
+      <label for="reset-pw" data-i18n="admin.newPassword">New password (at least 8 characters)</label>
       <input id="reset-pw" type="password" autocomplete="new-password" minlength="8" required />
-      <button class="btn" type="submit">Gem og log ind</button>
+      <button class="btn" type="submit" data-i18n="admin.saveAndSignIn">Save and sign in</button>
       <p id="reset-msg" class="message" hidden></p>
     </form>
 
     <p id="not-admin" class="message error" hidden>
-      Du er logget ind, men er ikke oprettet som vært. <a href="/become-host/">Bliv vært</a> ·
-      <button id="logout2" class="link-btn" type="button">Log ud</button>
+      <span data-i18n-html="admin.notHost">You are signed in but not registered as a host. <a href="/become-host/">Become a host</a></span> ·
+      <button id="logout2" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
     </p>
 
     <div id="panel" hidden>
-      <p class="hint who">Logget ind som <span id="me"></span> · <button id="logout" class="link-btn" type="button">Log ud</button></p>
+      <p class="hint who"><span data-i18n="admin.signedInAs">Signed in as</span> <span id="me"></span> · <button id="logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button></p>
 
       <!-- Tasting picker -->
       <section id="tasting-bar" class="block tasting-bar" hidden>
-        <label for="tasting-select">Smagning</label>
+        <label for="tasting-select" data-i18n="admin.tasting">Tasting</label>
         <div class="inline-form">
           <select id="tasting-select"></select>
-          <button id="new-tasting-toggle" class="btn small ghost" type="button">Ny smagning</button>
+          <button id="new-tasting-toggle" class="btn small ghost" type="button" data-i18n="admin.newTasting">New tasting</button>
         </div>
       </section>
 
       <!-- New tasting -->
       <form id="new-tasting" class="add-form tasting-form" novalidate hidden>
-        <h2 id="nt-heading">Ny smagning</h2>
-        <p id="nt-intro" class="hint" hidden>Velkommen som vært. Start med at oprette din første smagning – du kan rette det hele bagefter.</p>
-        <label for="nt-title">Titel</label>
-        <input id="nt-title" type="text" placeholder="Fx Portvin 2026" required />
-        <label for="nt-when">Dato og tid</label>
+        <h2 id="nt-heading" data-i18n="admin.newTasting">New tasting</h2>
+        <p id="nt-intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
+        <label for="nt-title" data-i18n="admin.title">Title</label>
+        <input id="nt-title" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required />
+        <label for="nt-when" data-i18n="admin.when">Date and time</label>
         <input id="nt-when" type="datetime-local" />
-        <label for="nt-place">Sted</label>
+        <label for="nt-place" data-i18n="admin.place">Place</label>
         <input id="nt-place" type="text" autocomplete="street-address" />
-        <label for="nt-mobilepay">MobilePay-nummer <span class="hint">(valgfrit)</span></label>
+        <label for="nt-mobilepay"><span data-i18n="admin.mobilepay">MobilePay number</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
         <input id="nt-mobilepay" type="tel" inputmode="numeric" />
+        <label for="nt-language" data-i18n="admin.guestLanguage">Language for guests</label>
+        <select id="nt-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
         <p id="nt-msg" class="message error" hidden></p>
         <div class="row-actions">
-          <button id="nt-save" class="btn small" type="submit">Opret smagning</button>
-          <button id="nt-cancel" class="text-btn" type="button">Annullér</button>
+          <button id="nt-save" class="btn small" type="submit" data-i18n="admin.createTasting">Create tasting</button>
+          <button id="nt-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
         </div>
       </form>
 
       <div id="tasting-panel" hidden>
       <!-- Tasting details -->
       <section class="block">
-        <h2>Smagningen</h2>
+        <h2 data-i18n="page.tasting">Tasting</h2>
         <form id="details" class="add-form tasting-form" novalidate>
-          <label for="d-title">Titel</label>
+          <label for="d-title" data-i18n="admin.title">Title</label>
           <input id="d-title" type="text" required />
-          <label for="d-when">Dato og tid</label>
+          <label for="d-when" data-i18n="admin.when">Date and time</label>
           <input id="d-when" type="datetime-local" />
-          <label for="d-place">Sted</label>
+          <label for="d-place" data-i18n="admin.place">Place</label>
           <input id="d-place" type="text" autocomplete="street-address" />
-          <label for="d-mobilepay">MobilePay-nummer <span class="hint">(valgfrit)</span></label>
+          <label for="d-mobilepay"><span data-i18n="admin.mobilepay">MobilePay number</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
           <input id="d-mobilepay" type="tel" inputmode="numeric" />
+          <label for="d-language" data-i18n="admin.guestLanguage">Language for guests</label>
+          <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
           <div class="row-actions">
-            <button id="d-save" class="btn small" type="submit">Gem</button>
+            <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <span id="d-msg" class="hint" aria-live="polite"></span>
           </div>
         </form>
-        <p class="hint">Smagningens side: <a id="tasting-link" href="/" target="_blank"></a><br />
-          Gæsterne får hver deres personlige link under Deltagere.</p>
+        <p class="hint"><span data-i18n="admin.tastingPage">Tasting page:</span> <a id="tasting-link" href="/" target="_blank"></a><br />
+          <span data-i18n="admin.personalLinks">Each guest gets a personal link under Guests.</span></p>
       </section>
 
       <!-- Controls -->
       <section class="block">
-        <h2>Styring</h2>
+        <h2 data-i18n="admin.controls">Controls</h2>
         <div class="toggles">
-          <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span>Tilmelding åben</span></label>
-          <label class="toggle"><input type="checkbox" data-key="orders_open" /> <span>Bestilling åben</span></label>
-          <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span>Quiz åben for svar</span></label>
-          <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span>Quiz afsluttet (vis facit)</span></label>
+          <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
+          <label class="toggle"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
+          <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
+          <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
         </div>
-        <p class="hint">Pointtavle til tv'et: <a id="tv-link" href="/" target="_blank"></a></p>
+        <p class="hint"><span data-i18n="admin.tvLink">Leaderboard for the TV:</span> <a id="tv-link" href="/" target="_blank"></a></p>
       </section>
 
       <!-- Tasting fee -->
       <section class="block">
-        <h2>Betaling for smagningen</h2>
+        <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
         <div class="fee-grid">
-          <label for="fee-total">Samlet udgift (kr.)</label>
+          <label for="fee-total" data-i18n="admin.feeTotal">Total cost (DKK)</label>
           <input id="fee-total" type="number" min="0" step="1" inputmode="decimal" />
           <p id="fee-suggest" class="hint"></p>
-          <label for="fee-amount">Pris pr. person (kr.)</label>
+          <label for="fee-amount" data-i18n="admin.feePer">Price per person (DKK)</label>
           <div class="inline-form">
             <input id="fee-amount" type="number" min="0" step="1" inputmode="decimal" />
-            <button id="fee-save" class="btn small" type="button">Gem</button>
+            <button id="fee-save" class="btn small" type="button" data-i18n="common.save">Save</button>
           </div>
           <p id="fee-msg" class="hint" aria-live="polite"></p>
         </div>
-        <label class="toggle"><input type="checkbox" data-key="tasting_fee_open" /> <span>Vis betaling for gæster, der kommer</span></label>
+        <label class="toggle"><input type="checkbox" data-key="tasting_fee_open" /> <span data-i18n="admin.feeShow">Show the fee to attending guests</span></label>
         <p id="fee-summary" class="hint fee-summary"></p>
       </section>
 
       <!-- Wines -->
       <section class="block wines-admin">
         <div class="guests-head">
-          <h2>Vine</h2>
-          <button id="wine-add-toggle" class="btn small ghost" type="button">Tilføj vin</button>
+          <h2 data-i18n="page.wines">Wines</h2>
+          <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button>
         </div>
 
         <form id="wine-form" class="add-form wine-form" novalidate hidden>
-          <h3 id="wf-title">Ny vin</h3>
-          <label for="wf-name">Navn</label>
+          <h3 id="wf-title" data-i18n="admin.newWine">New wine</h3>
+          <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
-          <label for="wf-image">Billede <span class="hint">(fx et foto af flasken)</span></label>
+          <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(e.g. a photo of the bottle)</span></label>
           <div class="wf-image">
             <img id="wf-preview" alt="" hidden />
             <input id="wf-image" type="file" accept="image/*" />
-            <button id="wf-image-remove" class="text-btn" type="button" hidden>Fjern billede</button>
+            <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>
           </div>
-          <label for="wf-producer">Producent</label>
+          <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input id="wf-producer" type="text" />
           <div class="wf-pair">
             <div>
-              <label for="wf-style">Type</label>
+              <label for="wf-style" data-i18n="admin.style">Type</label>
               <select id="wf-style"></select>
             </div>
             <div>
-              <label for="wf-vintage">Årgang</label>
-              <input id="wf-vintage" type="text" placeholder="Fx 2019 eller 10 år" />
+              <label for="wf-vintage" data-i18n="admin.vintage">Vintage</label>
+              <input id="wf-vintage" type="text" placeholder="E.g. 2019 or 10 years" data-i18n-attr="placeholder=admin.vintagePlaceholder" />
             </div>
           </div>
           <div class="wf-pair">
             <div>
-              <label for="wf-price">Pris for gæster (kr.)</label>
+              <label for="wf-price" data-i18n="admin.price">Guest price (DKK)</label>
               <input id="wf-price" type="text" inputmode="decimal" />
             </div>
             <div>
-              <label for="wf-retail">Normalpris (kr.)</label>
+              <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
               <input id="wf-retail" type="text" inputmode="decimal" />
             </div>
           </div>
-          <label for="wf-abv">Alkohol (%)</label>
+          <label for="wf-abv" data-i18n="admin.abv">Alcohol (%)</label>
           <input id="wf-abv" type="text" inputmode="decimal" class="short" />
-          <label for="wf-description">Beskrivelse</label>
+          <label for="wf-description" data-i18n="admin.description">Description</label>
           <textarea id="wf-description" rows="3"></textarea>
-          <label for="wf-details">Mere om vinen <span class="hint">(én linje pr. punkt, fx "Druer: Touriga Nacional")</span></label>
+          <label for="wf-details"><span data-i18n="admin.details">More about the wine</span> <span class="hint" data-i18n="admin.detailsHint">(one line per item, e.g. "Grapes: Touriga Nacional")</span></label>
           <textarea id="wf-details" rows="3"></textarea>
-          <label class="toggle"><input id="wf-orderable" type="checkbox" checked /> <span>Kan bestilles</span></label>
-          <label class="toggle"><input id="wf-revealed" type="checkbox" checked /> <span>Vis for gæster</span></label>
+          <label class="toggle"><input id="wf-orderable" type="checkbox" checked /> <span data-i18n="admin.orderable">Can be ordered</span></label>
+          <label class="toggle"><input id="wf-revealed" type="checkbox" checked /> <span data-i18n="admin.revealed">Show to guests</span></label>
           <p id="wf-msg" class="message error" hidden></p>
           <div class="row-actions">
-            <button id="wf-save" class="btn small" type="submit">Gem</button>
-            <button id="wf-cancel" class="text-btn" type="button">Annullér</button>
-            <button id="wf-delete" class="text-btn danger" type="button" hidden>Slet vin</button>
+            <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            <button id="wf-delete" class="text-btn danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
           </div>
         </form>
 
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
-        <p id="wine-empty" class="hint" hidden>Ingen vine endnu. Tilføj den første.</p>
+        <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
       </section>
 
       <!-- Guests -->
       <section class="block guests">
         <div class="guests-head">
-          <h2>Deltagere</h2>
-          <button id="add-toggle" class="btn small ghost" type="button">Tilføj gæst</button>
+          <h2 data-i18n="admin.guests">Guests</h2>
+          <button id="add-toggle" class="btn small ghost" type="button" data-i18n="admin.addGuest">Add guest</button>
         </div>
 
         <form id="add-p" class="add-form" hidden>
-          <label for="new-name">Navn</label>
+          <label for="new-name" data-i18n="admin.name">Name</label>
           <input id="new-name" type="text" autocomplete="off" required />
-          <label for="new-email">E-mail <span class="hint">(valgfri)</span></label>
+          <label for="new-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
           <input id="new-email" type="email" autocomplete="off" />
           <div class="row-actions">
-            <button class="btn small" type="submit">Tilføj</button>
-            <button id="add-cancel" class="text-btn" type="button">Annullér</button>
+            <button class="btn small" type="submit" data-i18n="admin.add">Add</button>
+            <button id="add-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
           </div>
         </form>
 
         <div class="filters" role="tablist" aria-label="Vis deltagere">
-          <button type="button" role="tab" data-filter="all" aria-selected="true">Alle <span></span></button>
-          <button type="button" role="tab" data-filter="yes">Kommer <span></span></button>
-          <button type="button" role="tab" data-filter="invited">Ikke svaret <span></span></button>
-          <button type="button" role="tab" data-filter="no">Meldt fra <span></span></button>
-          <button type="button" role="tab" data-filter="noemail">Mangler e-mail <span></span></button>
+          <button type="button" role="tab" data-filter="all" aria-selected="true"><b data-i18n="admin.fAll">All</b> <span></span></button>
+          <button type="button" role="tab" data-filter="yes"><b data-i18n="admin.fYes">Coming</b> <span></span></button>
+          <button type="button" role="tab" data-filter="invited"><b data-i18n="status.invited">No reply yet</b> <span></span></button>
+          <button type="button" role="tab" data-filter="no"><b data-i18n="status.no">Not attending</b> <span></span></button>
+          <button type="button" role="tab" data-filter="noemail"><b data-i18n="admin.fNoEmail">Missing email</b> <span></span></button>
         </div>
-        <label for="guest-search" class="sr">Søg efter gæst</label>
-        <input id="guest-search" class="search" type="search" placeholder="Søg efter navn" autocomplete="off" />
+        <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
+        <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
 
         <ul id="guest-list" class="guest-list"></ul>
-        <p id="guest-empty" class="hint" hidden>Ingen gæster matcher.</p>
+        <p id="guest-empty" class="hint" hidden data-i18n="admin.noMatch">No guests match.</p>
       </section>
 
       <!-- Orders -->
       <section class="block">
-        <h2>Bestillinger</h2>
+        <h2 data-i18n="admin.orders">Orders</h2>
         <div id="orders-by-guest"></div>
-        <h3>Samlet indkøb</h3>
+        <h3 data-i18n="admin.totalPurchase">Total purchase</h3>
         <div class="table-wrap">
           <table class="table">
-            <thead><tr><th>Vin</th><th class="num">Flasker</th><th class="num">Beløb</th></tr></thead>
+            <thead><tr><th data-i18n="page.wine">Wine</th><th class="num" data-i18n="admin.bottles">Bottles</th><th class="num" data-i18n="pay.amount">Amount</th></tr></thead>
             <tbody id="orders-by-wine"></tbody>
           </table>
         </div>
-        <button id="csv" class="btn small ghost" type="button">Hent bestillinger som CSV</button>
+        <button id="csv" class="btn small ghost" type="button" data-i18n="admin.csv">Download orders as CSV</button>
       </section>
 
       <!-- Quiz -->
       <section class="block">
-        <h2>Quiz</h2>
+        <h2 data-i18n="page.quiz">Quiz</h2>
         <ol id="board" class="board"></ol>
       </section>
       </div>
 
       <!-- Password -->
       <details class="block pw-box">
-        <summary>Sæt eller skift adgangskode</summary>
+        <summary data-i18n="admin.setPassword">Set or change password</summary>
         <form id="pw-form" class="login">
-          <label for="new-pw">Ny adgangskode (mindst 8 tegn)</label>
+          <label for="new-pw" data-i18n="admin.newPassword">New password (at least 8 characters)</label>
           <input id="new-pw" type="password" autocomplete="new-password" minlength="8" required />
-          <button class="btn small" type="submit">Gem adgangskode</button>
+          <button class="btn small" type="submit" data-i18n="admin.savePassword">Save password</button>
           <p id="pw-msg" class="message" hidden></p>
         </form>
       </details>
@@ -232,17 +236,20 @@ import Base from '../layouts/Base.astro';
   import { supabase } from '../lib/supabase';
   import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
   import { initWineAdmin } from '../lib/admin-wines';
+  import { i18nReady, t, lang, locale, money, type Key } from '../i18n';
+
+  await i18nReady;
 
   const $ = (id: string) => document.getElementById(id)!;
-  const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
-  const STATUS: Record<string, string> = { yes: 'Kommer', no: 'Meldt fra', invited: 'Ikke svaret' };
+  const kr = { format: money };
+  const STATUS: Record<string, string> = { yes: t('admin.fYes'), no: t('status.no'), invited: t('status.invited') };
 
   type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean };
   type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
   type OLine = { wine_id: number; quantity: number; unit_price: number };
   type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
   const ORDER_SELECT = 'id, participant_id, paid, created_at, order_lines(wine_id, quantity, unit_price)';
-  const when = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const when = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   let participants: P[] = [];
   let wines: W[] = [];
@@ -266,7 +273,7 @@ import Base from '../layouts/Base.astro';
     if (error) {
       msg.hidden = false;
       msg.className = 'message error';
-      msg.textContent = 'Adgangskoden blev ikke gemt. Brug mindst 8 tegn, og prøv igen.';
+      msg.textContent = t('admin.pwNotSavedMin');
       return;
     }
     recovering = false;
@@ -284,9 +291,9 @@ import Base from '../layouts/Base.astro';
     msg.className = 'message ' + (error ? 'error' : 'ok');
     msg.textContent = error
       ? (error.message.toLowerCase().includes('weak') || error.message.includes('characters')
-          ? 'Adgangskoden er for svag. Brug mindst 8 tegn.'
-          : 'Adgangskoden blev ikke gemt. Prøv igen.')
-      : 'Adgangskoden er gemt. Du kan nu også logge ind med e-mail og adgangskode.';
+          ? t('admin.pwWeak')
+          : t('admin.pwNotSaved'))
+      : t('admin.pwSaved');
     if (!error) input.value = '';
   });
 
@@ -316,7 +323,7 @@ import Base from '../layouts/Base.astro';
   }
   const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : null);
   const cleanPhone = (v: string) => v.replace(/\s/g, '') || null;
-  const dateLabel = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+  const dateLabel = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
   async function loadTasting() {
     const { data } = await supabase.from('tastings').select('*')
@@ -340,6 +347,7 @@ import Base from '../layouts/Base.astro';
     ($('d-when') as HTMLInputElement).value = toLocalInput(tasting.starts_at);
     ($('d-place') as HTMLInputElement).value = (tasting.place as string) ?? '';
     ($('d-mobilepay') as HTMLInputElement).value = (tasting.mobilepay as string) ?? '';
+    ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
 
     const { count } = await supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id);
     quizTotal = count || 13;
@@ -360,7 +368,8 @@ import Base from '../layouts/Base.astro';
     const form = $('new-tasting') as HTMLFormElement;
     form.reset();
     $('nt-msg').hidden = true;
-    $('nt-heading').textContent = first ? 'Opret din første smagning' : 'Ny smagning';
+    $('nt-heading').textContent = first ? t('admin.firstTasting') : t('admin.newTasting');
+    ($('nt-language') as HTMLSelectElement).value = lang();
     $('nt-intro').hidden = !first;
     $('nt-cancel').hidden = first;
     form.hidden = false;
@@ -373,7 +382,7 @@ import Base from '../layouts/Base.astro';
     e.preventDefault();
     const msg = $('nt-msg');
     const title = ($('nt-title') as HTMLInputElement).value.trim();
-    if (!title) { msg.textContent = 'Giv smagningen en titel.'; msg.hidden = false; return; }
+    if (!title) { msg.textContent = t('admin.titleMissing'); msg.hidden = false; return; }
     const btn = $('nt-save') as HTMLButtonElement;
     btn.disabled = true;
     const { data, error } = await supabase.rpc('create_tasting', {
@@ -381,9 +390,10 @@ import Base from '../layouts/Base.astro';
       starts_at: fromLocalInput(($('nt-when') as HTMLInputElement).value),
       place: ($('nt-place') as HTMLInputElement).value,
       mobilepay: ($('nt-mobilepay') as HTMLInputElement).value,
+      language: ($('nt-language') as HTMLSelectElement).value,
     });
     btn.disabled = false;
-    if (error || !data) { msg.textContent = 'Smagningen blev ikke oprettet. Prøv igen.'; msg.hidden = false; return; }
+    if (error || !data) { msg.textContent = t('admin.createFailed'); msg.hidden = false; return; }
     location.search = '?t=' + encodeURIComponent((data as T).slug);
   });
 
@@ -392,15 +402,16 @@ import Base from '../layouts/Base.astro';
     if (!tasting) return;
     const msg = $('d-msg');
     const title = ($('d-title') as HTMLInputElement).value.trim();
-    if (!title) { msg.textContent = 'Titlen må ikke være tom.'; return; }
+    if (!title) { msg.textContent = t('admin.titleEmpty'); return; }
     const patch = {
       title,
       starts_at: fromLocalInput(($('d-when') as HTMLInputElement).value),
       place: ($('d-place') as HTMLInputElement).value.trim() || null,
       mobilepay: cleanPhone(($('d-mobilepay') as HTMLInputElement).value),
+      language: ($('d-language') as HTMLSelectElement).value,
     };
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
-    msg.textContent = error ? 'Ændringerne blev ikke gemt.' : 'Gemt';
+    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
     if (!error) {
       Object.assign(tasting, patch);
       const opt = ($('tasting-select') as HTMLSelectElement).selectedOptions[0];
@@ -424,7 +435,7 @@ import Base from '../layouts/Base.astro';
       if (!tasting) return;
       const { error } = await supabase.from('tastings')
         .update({ [box.dataset.key!]: box.checked }).eq('id', tasting.id);
-      if (error) { box.checked = !box.checked; alert('Ændringen blev ikke gemt.'); return; }
+      if (error) { box.checked = !box.checked; alert(t('admin.changeNotSaved')); return; }
       tasting[box.dataset.key!] = box.checked;
     });
   });
@@ -434,12 +445,12 @@ import Base from '../layouts/Base.astro';
     const coming = participants.filter((p) => p.status === 'yes');
     const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
     $('fee-suggest').textContent = total && coming.length
-      ? `${coming.length} kommer, så det giver ${kr.format(Math.ceil(total / coming.length))} pr. person (rundet op).`
-      : `${coming.length} kommer.`;
+      ? t('admin.feeSuggest', { n: coming.length, price: kr.format(Math.ceil(total / coming.length)) })
+      : t('admin.feeComing', { n: coming.length });
     const paid = coming.filter((p) => p.tasting_paid);
     $('fee-summary').textContent = feeAmount
-      ? `${paid.length} af ${coming.length} har betalt (${kr.format(paid.length * feeAmount)} af ${kr.format(coming.length * feeAmount)}).`
-      : 'Ingen pris sat endnu.';
+      ? t('admin.feePaidSummary', { paid: paid.length, n: coming.length, got: kr.format(paid.length * feeAmount), all: kr.format(coming.length * feeAmount) })
+      : t('admin.noFee');
   }
 
   $('fee-total').addEventListener('input', renderFee);
@@ -455,7 +466,7 @@ import Base from '../layouts/Base.astro';
     if (!tasting) return;
     const { error } = await supabase.from('tastings')
       .update({ tasting_total: total, tasting_fee: amount }).eq('id', tasting.id);
-    if (error) { $('fee-msg').textContent = 'Kunne ikke gemme. Prøv igen.'; return; }
+    if (error) { $('fee-msg').textContent = t('admin.couldNotSave'); return; }
     feeTotal = total;
     feeAmount = amount;
     $('fee-msg').textContent = `Gemt: ${kr.format(amount)} pr. person.`;
@@ -485,7 +496,7 @@ import Base from '../layouts/Base.astro';
   async function saveGuest(p: P, patch: Partial<P>) {
     const { error } = await supabase.from('participants').update(patch).eq('id', p.id);
     if (error) {
-      alert(error.code === '23505' ? 'Den e-mail bruges allerede af en anden gæst.' : 'Ændringen blev ikke gemt. Prøv igen.');
+      alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.changeNotSaved'));
       return false;
     }
     Object.assign(p, patch);
@@ -499,12 +510,12 @@ import Base from '../layouts/Base.astro';
     top.append(mk('span', 'guest-name', p.name), mk('span', 'pill pill-' + p.status, STATUS[p.status] ?? p.status));
     li.append(top);
 
-    li.append(p.email ? mk('p', 'guest-email', p.email) : mk('p', 'guest-email missing', 'Ingen e-mail'));
+    li.append(p.email ? mk('p', 'guest-email', p.email) : mk('p', 'guest-email missing', t('admin.noEmail')));
     if (p.note) li.append(mk('p', 'guest-note', p.note));
 
     const actions = mk('div', 'guest-actions');
     if (p.status === 'yes' && feeAmount > 0) {
-      const paid = mk('button', 'paid-toggle' + (p.tasting_paid ? ' on' : ''), p.tasting_paid ? 'Smagning betalt' : 'Smagning ikke betalt');
+      const paid = mk('button', 'paid-toggle' + (p.tasting_paid ? ' on' : ''), p.tasting_paid ? t('admin.feePaid') : t('admin.feeUnpaid'));
       paid.type = 'button';
       paid.setAttribute('aria-pressed', String(p.tasting_paid));
       paid.addEventListener('click', async () => {
@@ -512,15 +523,15 @@ import Base from '../layouts/Base.astro';
       });
       actions.append(paid);
     }
-    const copy = mk('button', 'text-btn', 'Kopiér link');
+    const copy = mk('button', 'text-btn', t('admin.copyLink'));
     copy.type = 'button';
     copy.addEventListener('click', async () => {
       const url = `${location.origin}/t/${tasting!.slug}/?k=${p.invite_code}`;
-      try { await navigator.clipboard.writeText(url); copy.textContent = 'Link kopieret'; }
-      catch { prompt('Kopiér linket:', url); }
-      setTimeout(() => (copy.textContent = 'Kopiér link'), 1500);
+      try { await navigator.clipboard.writeText(url); copy.textContent = t('admin.linkCopied'); }
+      catch { prompt(t('admin.copyLinkPrompt'), url); }
+      setTimeout(() => (copy.textContent = t('admin.copyLink')), 1500);
     });
-    const edit = mk('button', 'text-btn', editingId === p.id ? 'Luk' : 'Rediger');
+    const edit = mk('button', 'text-btn', editingId === p.id ? t('admin.close') : t('admin.edit'));
     edit.type = 'button';
     edit.setAttribute('aria-expanded', String(editingId === p.id));
     edit.addEventListener('click', () => {
@@ -538,7 +549,7 @@ import Base from '../layouts/Base.astro';
     const form = mk('form', 'edit-panel');
     let status = p.status;
 
-    form.append(mk('p', 'edit-label', 'Status'));
+    form.append(mk('p', 'edit-label', t('admin.status')));
     const seg = mk('div', 'segmented');
     for (const [v, label] of Object.entries(STATUS)) {
       const b = mk('button', '', label);
@@ -552,7 +563,7 @@ import Base from '../layouts/Base.astro';
     }
     form.append(seg);
 
-    const lab = mk('label', 'edit-label', 'E-mail');
+    const lab = mk('label', 'edit-label', t('common.email'));
     const id = 'em-' + p.id;
     lab.htmlFor = id;
     const em = mk('input');
@@ -563,9 +574,9 @@ import Base from '../layouts/Base.astro';
     form.append(lab, em);
 
     const row = mk('div', 'row-actions');
-    const save = mk('button', 'btn small', 'Gem');
+    const save = mk('button', 'btn small', t('common.save'));
     save.type = 'submit';
-    const cancel = mk('button', 'text-btn', 'Annullér');
+    const cancel = mk('button', 'text-btn', t('common.cancel'));
     cancel.type = 'button';
     cancel.addEventListener('click', () => { editingId = null; renderParticipants(); });
     row.append(save, cancel);
@@ -574,7 +585,7 @@ import Base from '../layouts/Base.astro';
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = em.value.trim().toLowerCase() || null;
-      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert('E-mailen ser ikke rigtig ud.'); return; }
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert(t('guest.emailBad')); return; }
       save.disabled = true;
       if (await saveGuest(p, { status, email })) { editingId = null; renderParticipants(); }
       save.disabled = false;
@@ -634,7 +645,7 @@ import Base from '../layouts/Base.astro';
     const email = emailEl.value.trim().toLowerCase() || null;
     if (!name) { nameEl.focus(); return; }
     const { data, error } = await supabase.from('participants').insert({ name, email, tasting_id: tasting!.id }).select().single();
-    if (error) { alert(error.code === '23505' ? 'Den e-mail bruges allerede.' : 'Gæsten blev ikke tilføjet.'); return; }
+    if (error) { alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
     participants.push(data as P);
     nameEl.value = '';
     emailEl.value = '';
@@ -655,7 +666,7 @@ import Base from '../layouts/Base.astro';
     if (orders.length === 0) {
       const p = document.createElement('p');
       p.className = 'hint';
-      p.textContent = 'Ingen bestillinger endnu.';
+      p.textContent = t('admin.noOrders');
       byGuest.append(p);
     }
 
@@ -664,7 +675,7 @@ import Base from '../layouts/Base.astro';
     if (orders.length) {
       const p = document.createElement('p');
       p.className = 'hint';
-      p.textContent = `${orders.length} bestillinger, ${unpaid.length} afventer betaling (${kr.format(unpaid.reduce((t, o) => t + orderTotal(o), 0))}).`;
+      p.textContent = t('admin.ordersSummary', { n: orders.length, unpaid: unpaid.length, amount: kr.format(unpaid.reduce((sum, o) => sum + orderTotal(o), 0)) });
       byGuest.append(p);
     }
 
@@ -674,19 +685,19 @@ import Base from '../layouts/Base.astro';
       const head = document.createElement('div');
       head.className = 'order-head';
       const h = document.createElement('strong');
-      h.textContent = `${pById.get(o.participant_id)?.name ?? 'Ukendt gæst'}`;
+      h.textContent = `${pById.get(o.participant_id)?.name ?? t('admin.unknownGuest')}`;
       const sum = document.createElement('span');
       sum.textContent = kr.format(orderTotal(o));
       head.append(h, sum);
       const sub = document.createElement('p');
       sub.className = 'hint order-sub';
-      sub.textContent = `Bestilling ${o.id}, ${when.format(new Date(o.created_at))}`;
+      sub.textContent = `${t('pay.orderComment', { id: o.id })}, ${when.format(new Date(o.created_at))}`;
       box.append(head, sub);
 
       const ul = document.createElement('ul');
       for (const l of o.order_lines) {
         const li = document.createElement('li');
-        li.textContent = `${l.quantity} × ${wineById.get(l.wine_id)?.name ?? 'Ukendt vin'} à ${kr.format(Number(l.unit_price))}`;
+        li.textContent = t('admin.orderLine', { qty: l.quantity, wine: wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'), price: kr.format(Number(l.unit_price)) });
         ul.append(li);
       }
       box.append(ul);
@@ -698,12 +709,12 @@ import Base from '../layouts/Base.astro';
       cb.checked = o.paid;
       cb.addEventListener('change', async () => {
         const { error } = await supabase.from('orders').update({ paid: cb.checked }).eq('id', o.id);
-        if (error) { cb.checked = !cb.checked; alert('Betaling blev ikke gemt.'); return; }
+        if (error) { cb.checked = !cb.checked; alert(t('admin.paymentNotSaved')); return; }
         o.paid = cb.checked;
         renderOrders();
       });
       const span = document.createElement('span');
-      span.textContent = 'Betalt (MobilePay modtaget)';
+      span.textContent = t('admin.paidMobilepay');
       label.append(cb, span);
       box.append(label);
       byGuest.append(box);
@@ -726,22 +737,22 @@ import Base from '../layouts/Base.astro';
     }
     const tr = document.createElement('tr');
     tr.className = 'total';
-    tr.append(cell('I alt'), cell(String(bottles), 'num'), cell(kr.format(amount), 'num'));
+    tr.append(cell(t('cart.total')), cell(String(bottles), 'num'), cell(kr.format(amount), 'num'));
     tbody.append(tr);
   }
 
   $('csv').addEventListener('click', () => {
     const wineById = new Map(wines.map((w) => [w.id, w]));
     const pById = new Map(participants.map((p) => [p.id, p]));
-    const rows = [['Bestilling', 'Tidspunkt', 'Gæst', 'Vin', 'Antal', 'Pris pr. flaske', 'Beløb', 'Betalt']];
+    const rows = [(['csv.order', 'csv.time', 'csv.guest', 'csv.wine', 'csv.qty', 'csv.unit', 'csv.amount', 'csv.paid'] as Key[]).map((k) => t(k))];
     for (const o of [...orders].sort((a, b) => a.id - b.id)) {
       for (const l of o.order_lines) {
         const price = Number(l.unit_price);
         rows.push([
-          String(o.id), new Date(o.created_at).toLocaleString('da-DK'),
+          String(o.id), new Date(o.created_at).toLocaleString(locale()),
           pById.get(o.participant_id)?.name ?? '', wineById.get(l.wine_id)?.name ?? '',
           String(l.quantity), String(price).replace('.', ','),
-          String(price * l.quantity).replace('.', ','), o.paid ? 'ja' : 'nej',
+          String(price * l.quantity).replace('.', ','), o.paid ? t('common.yes') : t('common.no'),
         ]);
       }
     }
@@ -958,6 +969,7 @@ import Base from '../layouts/Base.astro';
     border: 1px solid var(--lodge-3); border-radius: 999px; padding: 0.4rem 0.8rem;
     cursor: pointer;
   }
+  .admin-page .filters button b { font-weight: inherit; }
   .admin-page .filters button span { font-variant-numeric: tabular-nums; opacity: 0.75; margin-left: 0.15rem; }
   .admin-page .filters button[aria-selected='true'] { color: var(--lodge); background: var(--paper); border-color: var(--paper); }
 

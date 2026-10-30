@@ -7,20 +7,13 @@ export type Wine = {
   image_url: string | null; details: string | null; retail_price_dkk: number | null;
 };
 
-export const STYLE_LABELS: Record<string, string> = {
-  Vintage: 'Vintage',
-  Tawny: 'Tawny',
-  Rivesaltes: 'Rivesaltes Ambré',
-  White: 'Hvid portvin',
-  Aguardente: 'Druebrændevin',
-  Red: 'Rødvin',
-  WhiteWine: 'Hvidvin',
-  Rose: 'Rosé',
-  Orange: 'Orangevin',
-  Sparkling: 'Mousserende',
-  Sweet: 'Dessertvin',
-  Fortified: 'Hedvin',
-};
+import { t, money, type Key } from '../i18n';
+
+// Wine styles; the label comes from the dictionaries (style.<key>)
+export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified',
+  'Vintage', 'Tawny', 'White', 'Rivesaltes', 'Aguardente'] as const;
+export const styleName = (key: string) =>
+  (STYLES as readonly string[]).includes(key) ? t(`style.${key}` as Key) : key;
 
 // Style badge colour
 export const STYLE_TONES: Record<string, string> = {
@@ -38,13 +31,13 @@ export const STYLE_TONES: Record<string, string> = {
   Fortified: '#9c4a2c',
 };
 
-export const styleLabel = (w: Wine) => STYLE_LABELS[w.style ?? ''] ?? w.style ?? '';
+export const styleLabel = (w: Wine) => (w.style ? styleName(w.style) : '');
 export const styleTone = (w: Wine) => STYLE_TONES[w.style ?? ''] ?? 'var(--amber)';
 
 /** "2024" → "Årgang 2024", "10 år" → "10 år", empty → null */
 export function vintageLabel(w: Wine): string | null {
   if (!w.vintage) return null;
-  return /^\d{4}$/.test(w.vintage) ? `Årgang ${w.vintage}` : w.vintage;
+  return /^\d{4}$/.test(w.vintage) ? t('wine.vintage', { year: w.vintage }) : w.vintage;
 }
 
-export const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
+export const kr = { format: (n: number) => money(n) };

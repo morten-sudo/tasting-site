@@ -1,21 +1,26 @@
 ---
 import '../styles/global.css';
 import { SITE_NAME } from '../lib/config';
+import { en } from '../i18n/en';
 
+// title: a translation key for the page title
 // tasting: the page lives under /t/<slug>/ and gets the tasting's menu
-interface Props { title?: string; hero?: boolean; tasting?: boolean }
+interface Props { title?: keyof typeof en; hero?: boolean; tasting?: boolean }
 const { title, hero = false, tasting = false } = Astro.props;
-const pageTitle = title ? `${title} – ${SITE_NAME}` : SITE_NAME;
+const pageTitle = title ? `${en[title]} – ${SITE_NAME}` : SITE_NAME;
 const path = Astro.url.pathname;
 ---
 <!doctype html>
-<html lang="da">
+<html lang="en" class="i18n-pending">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#0b0908" />
     <title>{pageTitle}</title>
+    <!-- Hidden until the translations are applied; shown anyway after 2 s -->
+    <style is:inline>html.i18n-pending body { visibility: hidden; }</style>
+    <script is:inline>setTimeout(function () { document.documentElement.classList.remove('i18n-pending'); }, 2000);</script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,7 +29,7 @@ const path = Astro.url.pathname;
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap"
     />
   </head>
-  <body class:list={{ 'has-hero': hero }} data-tasting={tasting ? '1' : undefined}>
+  <body class:list={{ 'has-hero': hero }} data-tasting={tasting ? '1' : undefined} data-title={title}>
     <header class="site-header">
       <div class="wrap header-inner">
       <div class="top-row">
@@ -33,27 +38,27 @@ const path = Astro.url.pathname;
           : <a href="/" class="mark" id="mark">{SITE_NAME}</a>}
         <div class="tools">
           {tasting && (
-            <a href="/tastings/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Indkøbskurv" title="Indkøbskurv" hidden={!path.startsWith('/tasting/cart')}>
+            <a href="/tastings/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Cart" title="Cart" data-i18n-attr="aria-label=nav.cart;title=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
               <span id="nav-cart-count" class="badge" hidden></span>
             </a>
           )}
           <span id="user-in" class="user-in" hidden>
-            <a href="/tastings/" id="user-name" class:list={['user-name', { current: path.startsWith('/tastings') }]} title="Mine smagninger">Mine smagninger</a>
-            <button id="logout" type="button" class="icon-btn" aria-label="Log ud" title="Log ud">
+            <a href="/tastings/" id="user-name" class:list={['user-name', { current: path.startsWith('/tastings') }]} title="My tastings" data-i18n-attr="title=nav.myTastings" data-i18n="nav.myTastings">My tastings</a>
+            <button id="logout" type="button" class="icon-btn" aria-label="Sign out" title="Sign out" data-i18n-attr="aria-label=nav.signOut;title=nav.signOut">
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></svg>
             </button>
           </span>
-          <a id="user-out" href="/login/" class="icon-btn" aria-label="Log ind" title="Log ind" hidden>
+          <a id="user-out" href="/login/" class="icon-btn" aria-label="Sign in" title="Sign in" data-i18n-attr="aria-label=nav.signIn;title=nav.signIn" hidden>
             <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
           </a>
         </div>
       </div>
       {tasting && (
-        <nav aria-label="Smagningens menu">
-          <a href="/tastings/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }}>Smagningen</a>
-          <a href="/tastings/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }}>Vinene</a>
-          <a href="/tastings/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }}>Quiz</a>
+        <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
+          <a href="/tastings/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
+          <a href="/tastings/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
+          <a href="/tastings/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
         </nav>
       )}
       </div>
@@ -65,6 +70,23 @@ const path = Astro.url.pathname;
       import { getCart, cartCount } from '../lib/cart';
       import { supabase } from '../lib/supabase';
       import { currentSlug, tastingUrl, resolveGuestCode, getCodes, signOut } from '../lib/guest';
+      import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
+
+      await i18nReady;
+      const titleKey = document.body.dataset.title as Key | undefined;
+      if (titleKey) document.title = `${t(titleKey)} – Winetastr`;
+
+      // Language switcher in the footer
+      const langs = document.getElementById('langs')!;
+      for (const l of LANGS) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = l.name;
+        b.lang = l.code;
+        if (l.code === lang()) b.setAttribute('aria-current', 'true');
+        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); });
+        langs.append(b);
+      }
 
       const inTasting = document.body.dataset.tasting === '1';
       const slug = currentSlug();
@@ -104,16 +126,13 @@ const path = Astro.url.pathname;
       // Tasting title in the header, date and time in the footer
       async function showTasting(c: string) {
         const { data } = await supabase.rpc('get_tasting', { code: c });
-        const t = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null } | null;
-        if (!t) return;
-        if (t.title) document.getElementById('mark')!.textContent = t.title;
+        const info = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null } | null;
+        if (!info) return;
+        if (info.title) document.getElementById('mark')!.textContent = info.title;
         const when = document.getElementById('footer-when')!;
         // The tasting home shows date and place itself
-        if (t.starts_at && !document.getElementById('t-when')) {
-          const d = new Date(t.starts_at);
-          const day = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }).format(d);
-          const time = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' }).format(d);
-          when.textContent = `${day[0].toUpperCase()}${day.slice(1)} kl. ${time}` + (t.place ? ` · ${t.place}` : '');
+        if (info.starts_at && !document.getElementById('t-when')) {
+          when.textContent = formatWhen(info.starts_at, { year: true }) + (info.place ? ` · ${info.place}` : '');
         }
       }
 
@@ -149,6 +168,7 @@ const path = Astro.url.pathname;
     </script>
     <footer class="site-footer wrap">
       <p id="footer-when"></p>
+      <div id="langs" class="langs" role="group" aria-label="Language"></div>
     </footer>
   </body>
 </html>
@@ -265,4 +285,11 @@ const path = Astro.url.pathname;
     padding-bottom: 2rem;
     border-top: 1px solid var(--lodge-3);
   }
+  .langs { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .langs :global(button) {
+    font: inherit; font-size: 0.85rem; color: var(--muted); background: none; border: 0; padding: 0.2rem 0;
+    cursor: pointer; text-underline-offset: 0.25em;
+  }
+  .langs :global(button:hover) { color: var(--paper); }
+  .langs :global(button[aria-current='true']) { color: var(--paper); text-decoration: underline; }
 </style>

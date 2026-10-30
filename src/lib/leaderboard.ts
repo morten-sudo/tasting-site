@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { t } from '../i18n';
 
 export type Row = { name: string; points: number; answered: number };
 
@@ -31,7 +32,7 @@ export function renderLeaderboard(list: HTMLOListElement, rows: Row[], total: nu
 
     const progress = document.createElement('span');
     progress.className = 'progress';
-    progress.textContent = r.answered >= total ? 'færdig' : `${r.answered}/${total}`;
+    progress.textContent = r.answered >= total ? t('board.done') : `${r.answered}/${total}`;
 
     const pts = document.createElement('span');
     pts.className = 'pts';

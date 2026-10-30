@@ -1,18 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro';
 ---
-<Base title="Vin" tasting>
+<Base title="page.wine" tasting>
   <article class="wine-page">
     <div class="wrap top">
-      <a href="/tastings/" data-tpath="wines/" class="back">Alle vinene</a>
+      <a href="/tastings/" data-tpath="wines/" class="back" data-i18n="wine.all">All wines</a>
       <div id="need-login" class="message need-login" hidden>
-        <p><strong>Log ind for at se vinene.</strong></p>
-        <p>Brug linket fra din invitation, eller log ind med din e-mail.</p>
-        <a class="btn" href="/login/">Log ind</a>
+        <p><strong data-i18n="wines.signInTitle">Sign in to see the wines.</strong></p>
+        <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
+        <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
       </div>
-      <p id="loading" class="hint">Henter vinen …</p>
+      <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
       <p id="load-error" class="message error" hidden>
-        Vinen kunne ikke findes. <a href="/tastings/" data-tpath="wines/">Gå tilbage til vinene</a>.
+        <span data-i18n="wine.notFound">The wine could not be found.</span> <a href="/tastings/" data-tpath="wines/" data-i18n="wine.back">Back to the wines</a>.
       </p>
     </div>
 
@@ -26,14 +26,14 @@ import Base from '../../layouts/Base.astro';
 
       <div class="buy">
         <p id="price" class="price"></p>
-        <button id="add" type="button" class="add" hidden>Læg i kurv</button>
+        <button id="add" type="button" class="add" hidden data-i18n="wine.add">Add to cart</button>
       </div>
       <p id="order-status" class="hint" hidden></p>
 
       <p id="desc" class="desc"></p>
       <dl id="details" class="details" hidden></dl>
 
-      <nav class="pager" aria-label="Andre vine">
+      <nav class="pager" aria-label="Other wines" data-i18n-attr="aria-label=wine.others">
         <a id="prev" class="pager-link prev" hidden></a>
         <a id="next" class="pager-link next" hidden></a>
       </nav>
@@ -47,7 +47,7 @@ import Base from '../../layouts/Base.astro';
         <span id="basket-count"></span>
         <strong id="basket-total"></strong>
       </div>
-      <span class="basket-go">Gå til kurven</span>
+      <span class="basket-go" data-i18n="wines.toCart">Go to cart</span>
     </div>
   </a>
 </Base>
@@ -55,6 +55,9 @@ import Base from '../../layouts/Base.astro';
 <script>
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
+  import { i18nReady, t, plural } from '../../i18n';
+
+  await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
   import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../../lib/wines';
 
@@ -77,7 +80,7 @@ import Base from '../../layouts/Base.astro';
     for (const w of wines) total += (cart[w.id] ?? 0) * (w.price_dkk ?? 0);
     const bottles = cartCount(cart);
     $('basket').hidden = bottles === 0;
-    $('basket-count').textContent = `${bottles} ${bottles === 1 ? 'flaske' : 'flasker'} i kurven, `;
+    $('basket-count').textContent = plural(bottles, 'wines.bottlesOne', 'wines.bottlesMany') + ', ';
     $('basket-total').textContent = kr.format(total);
   }
 
@@ -135,7 +138,7 @@ import Base from '../../layouts/Base.astro';
       price.append(el('span', 'ours', kr.format(w.price_dkk)));
       if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
         const normal = el('span', 'normal');
-        normal.append('Normalpris ', el('s', '', kr.format(w.retail_price_dkk)));
+        normal.append(t('wines.normalPrice') + ' ', el('s', '', kr.format(w.retail_price_dkk)));
         price.append(normal);
       }
     }
@@ -163,7 +166,7 @@ import Base from '../../layouts/Base.astro';
       const btn = $('add') as HTMLButtonElement;
       const sync = () => {
         const n = getCart()[w.id] ?? 0;
-        btn.textContent = n ? `Læg i kurv (${n} i kurven)` : 'Læg i kurv';
+        btn.textContent = n ? t('wine.addMore', { n }) : t('wine.add');
         btn.classList.toggle('in-cart', n > 0);
       };
       btn.addEventListener('click', () => {
@@ -178,12 +181,12 @@ import Base from '../../layouts/Base.astro';
       btn.hidden = false;
       renderBasket();
     } else if (settings.orders_open === true) {
-      status.textContent = 'Brug linket fra din invitation for at bestille.';
+      status.textContent = t('wine.orderNeedsLogin');
       status.hidden = false;
     }
 
-    pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], 'Forrige');
-    pagerLink($('next') as HTMLAnchorElement, wines[index + 1], 'Næste');
+    pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], t('wine.prev'));
+    pagerLink($('next') as HTMLAnchorElement, wines[index + 1], t('wine.next'));
 
     $('wine').hidden = false;
   }

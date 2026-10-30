@@ -42,3 +42,10 @@ Guests have no direct table access. They call security-definer functions
 (`get_invite`, `respond_invite`, `place_order`, `submit_answer`, …) with the
 invite code from their personal link (`?k=CODE`) or sign in with an email code.
 Hosts only see and edit their own tastings (`is_tasting_host`).
+
+## Languages
+
+The UI is available in English, Danish and Icelandic (`src/i18n/`). Markup carries
+English text with `data-i18n` keys; `t('key')` translates in scripts. The language is
+the visitor's own choice (footer), else the tasting's language, else the browser's.
+Wine names and descriptions are shown as the host wrote them.
