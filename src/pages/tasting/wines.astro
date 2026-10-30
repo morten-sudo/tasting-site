@@ -241,7 +241,7 @@ import Base from '../../layouts/Base.astro';
 </script>
 
 <style is:global>
-  .bulk { display: block; color: #a07a3c; font-size: 0.9rem; margin-top: 0.15rem; }
+  .bulk { display: block; color: var(--amber); font-size: 0.9rem; margin-top: 0.15rem; }
   /* The wines page uses the full screen width */
   .wines-page { padding-top: 2.5rem; padding-bottom: 5rem; }
   .wines-page .title {
@@ -259,8 +259,7 @@ import Base from '../../layouts/Base.astro';
   /* The carousel sits on a full-width white band */
   .carousel {
     margin: 1.75rem calc(-1 * var(--gutter)) 0;
-    padding-top: 1.75rem;
-    background: #fff;
+    padding-top: 0.25rem;
     outline-offset: -2px;
   }
   .carousel .track {
@@ -282,12 +281,12 @@ import Base from '../../layouts/Base.astro';
   .carousel .card {
     scroll-snap-align: start;
     background: #fff;
-    color: #1c1714;
-    border: 1px solid #ece6dc;
-    border-radius: var(--radius);
+    color: var(--paper);
+    border: 1px solid var(--lodge-3);
+    border-radius: 10px;
     overflow: hidden;
     transition: opacity 0.3s;
-    opacity: 0.45;
+    opacity: 0.6;
   }
   .carousel .card.is-current { opacity: 1; }
   /* Large screens: several wines at a time, all at full opacity */
@@ -322,7 +321,7 @@ import Base from '../../layouts/Base.astro';
     align-items: center;
     gap: 0.5rem;
     margin: 0 0 0.4rem;
-    color: #6f655a;
+    color: var(--muted);
     font-size: 0.7rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -341,23 +340,22 @@ import Base from '../../layouts/Base.astro';
     justify-content: center;
     gap: 1rem;
     margin: 0 calc(-1 * var(--gutter));
-    padding: 0.75rem var(--gutter) 1.75rem;
-    background: #fff;
+    padding: 0.75rem var(--gutter) 1.25rem;
   }
-  .counter { margin: 0; min-width: 5.5rem; text-align: center; color: #6f655a; font-size: 0.85rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
+  .counter { margin: 0; min-width: 5.5rem; text-align: center; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
   .nav-btn {
     width: 3rem;
     height: 3rem;
     border-radius: 50%;
-    border: 1px solid #ddd5ca;
-    background: none;
-    color: #1c1714;
+    border: 1px solid var(--lodge-3);
+    background: #fff;
+    color: var(--paper);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
   }
-  .nav-btn:hover:not(:disabled) { border-color: #876631; color: #876631; }
+  .nav-btn:hover:not(:disabled) { border-color: var(--amber); background: var(--amber); color: #fff; }
   .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
   .carousel .card-link {
@@ -376,7 +374,7 @@ import Base from '../../layouts/Base.astro';
     line-height: 1.15;
     margin: 0 0 0.3rem;
   }
-  .carousel .meta { margin: 0; color: #6f655a; font-size: 0.9rem; }
+  .carousel .meta { margin: 0; color: var(--muted); font-size: 0.9rem; }
   .carousel .foot {
     display: flex;
     align-items: flex-end;
@@ -393,10 +391,10 @@ import Base from '../../layouts/Base.astro';
     line-height: 1.3;
   }
   .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
-  .carousel .price .normal { color: #6f655a; font-size: 0.85rem; }
-  .carousel .my-stars { color: #a07a3c; letter-spacing: 0.05em; font-size: 0.95rem; }
+  .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
+  .carousel .my-stars { color: var(--amber); letter-spacing: 0.05em; font-size: 0.95rem; }
   .carousel .go {
-    color: #876631;
+    color: var(--amber);
     font-size: 0.7rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -413,7 +411,7 @@ import Base from '../../layouts/Base.astro';
     border-top: 2px solid currentColor;
     transform: rotate(45deg);
   }
-  .carousel .card-link:hover .go { color: #1c1714; }
+  .carousel .card-link:hover .go { color: var(--paper); }
   .carousel .card-link:focus-visible { outline-color: var(--amber); outline-offset: 3px; }
 
   .basket {

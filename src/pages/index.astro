@@ -62,8 +62,8 @@ import Base from '../layouts/Base.astro';
 <style>
   .hero {
     position: relative;
-    height: min(64vh, 34rem);
-    min-height: 24rem;
+    height: min(52vh, 30rem);
+    min-height: 18rem;
     overflow: hidden;
     background: var(--lodge);
   }
@@ -75,37 +75,32 @@ import Base from '../layouts/Base.astro';
     object-fit: cover;
     object-position: 52% 50%;
   }
-  /* Dark at the top behind the header, fading into the page at the bottom */
+  /* Dark at the bottom so the white title reads on the photo */
   .hero::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      to bottom,
-      rgba(11, 9, 8, 0.85) 0%,
-      rgba(11, 9, 8, 0) 22%,
-      rgba(11, 9, 8, 0) 55%,
-      var(--lodge) 100%
-    );
+    background: linear-gradient(to top, rgba(36, 10, 16, 0.78) 0%, rgba(36, 10, 16, 0) 60%);
   }
   .hero-text {
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0.4rem;
+    bottom: 1.25rem;
     z-index: 1;
   }
   h1 {
     font-family: var(--display);
     font-weight: 400;
     font-weight: 300;
-    font-size: clamp(4.75rem, 22vw, 10rem);
-    line-height: 0.9;
+    font-weight: 500;
+    font-size: clamp(3.5rem, 16vw, 8rem);
+    line-height: 0.95;
     letter-spacing: 0.01em;
     margin: 0;
-    color: var(--paper);
+    color: #ffffff;
   }
-  .hero-text .eyebrow { margin: 0 0 0.6rem 0.2rem; color: #d8cdbd; }
+  .hero-text .eyebrow { margin: 0 0 0.4rem 0.15rem; color: #ffffff; opacity: 0.9; }
   .when-block { padding-top: 1rem; }
   .when {
     font-family: var(--display);
@@ -129,13 +124,12 @@ import Base from '../layouts/Base.astro';
     align-items: center;
     min-height: 3rem;
     padding: 0 1.75rem;
-    font-size: 0.78rem;
+    font-size: 0.95rem;
     font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
     border-radius: var(--radius);
-    border: 1px solid var(--lodge-3);
-    color: var(--paper);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    background: #ffffff;
     text-decoration: none;
   }
   .btn-ghost:hover { border-color: var(--amber); color: var(--paper); }

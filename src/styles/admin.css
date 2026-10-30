@@ -157,7 +157,7 @@
 .admin-page .pill {
   flex-shrink: 0; font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px;
 }
-.admin-page .pill-yes { color: #0f1a0b; background: var(--ok); }
+.admin-page .pill-yes { color: #ffffff; background: var(--ok); }
 .admin-page .pill-invited { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
 .admin-page .pill-no { color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); }
 .admin-page .guest.status-no .guest-name { color: var(--muted); }
