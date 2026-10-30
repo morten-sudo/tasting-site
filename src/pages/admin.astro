@@ -115,6 +115,11 @@ import Base from '../layouts/Base.astro';
 
         <form id="wine-form" class="add-form wine-form" novalidate hidden>
           <h3 id="wf-title" data-i18n="admin.newWine">New wine</h3>
+          <label for="wf-link"><span data-i18n="link.label">Link to the wine</span> <span class="hint" data-i18n="link.hint">(e.g. from a web shop – fills in the form)</span></label>
+          <div class="inline-form link-row">
+            <input id="wf-link" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
+            <button id="wf-read-link" class="btn small ghost" type="button" data-i18n="link.fetch">Fetch</button>
+          </div>
           <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
           <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>
@@ -1162,6 +1167,7 @@ import Base from '../layouts/Base.astro';
     .admin-page .q-row { grid-template-columns: 1fr; }
   }
 
+  .admin-page .link-row input { min-width: 0; }
   /* Reading the label */
   .admin-page .label-status { margin: 0; font-size: 0.9rem; color: var(--muted); }
   .admin-page .label-status.busy::before { content: '◌ '; display: inline-block; animation: spin 1s linear infinite; }

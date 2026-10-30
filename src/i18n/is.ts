@@ -364,4 +364,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "label.failed": "Ekki tókst að lesa miðann. Fylltu út reitina sjálf(ur) eða prófaðu skarpari mynd.",
   "label.grapes": "Þrúgur",
   "label.region": "Svæði",
+  "link.label": "Hlekkur á vínið",
+  "link.hint": "(t.d. úr vefverslun – fyllir út formið)",
+  "link.fetch": "Sækja",
+  "link.reading": "Sæki síðuna …",
+  "link.filled": "Fyllti út {n} reiti eftir hlekknum – athugaðu þá áður en þú vistar.",
+  "link.failed": "Ekki tókst að lesa síðuna. Sumar verslanir loka á þetta – fylltu út reitina sjálf(ur) eða prófaðu mynd af miðanum.",
+  "link.invalid": "Límdu inn heilan hlekk sem byrjar á https://",
 };

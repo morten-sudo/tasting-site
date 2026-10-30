@@ -363,4 +363,11 @@ export const en = {
   "label.failed": "The label could not be read. Fill in the fields yourself, or try a sharper photo.",
   "label.grapes": "Grapes",
   "label.region": "Region",
+  "link.label": "Link to the wine",
+  "link.hint": "(e.g. from a web shop – fills in the form)",
+  "link.fetch": "Fetch",
+  "link.reading": "Fetching the page …",
+  "link.filled": "Filled in {n} fields from the link – check them before saving.",
+  "link.failed": "The page could not be read. Some shops block this – fill in the fields yourself or try a photo of the label.",
+  "link.invalid": "Paste a full link starting with https://",
 } as const;

@@ -1,16 +1,16 @@
 // Admin: the host adds, edits, reorders and deletes wines one at a time, with an optional photo.
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
-import { t, locale } from '../i18n';
+import { t, lang, locale } from '../i18n';
 
 export type AdminWine = {
   id: number; tasting_id: string; sort_order: number; name: string; producer: string | null;
   style: string | null; vintage: string | null; abv: number | null; price_dkk: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
-  image_url: string | null; orderable: boolean; revealed: boolean;
+  image_url: string | null; source_url: string | null; orderable: boolean; revealed: boolean;
 };
 
-const COLUMNS = 'id, tasting_id, sort_order, name, producer, style, vintage, abv, price_dkk, retail_price_dkk, description, details, image_url, orderable, revealed';
+const COLUMNS = 'id, tasting_id, sort_order, name, producer, style, vintage, abv, price_dkk, retail_price_dkk, description, details, image_url, source_url, orderable, revealed';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -51,6 +51,9 @@ type LabelResult = {
   name: string | null; producer: string | null; vintage: string | null; style: string | null;
   abv: number | null; region: string | null; country: string | null; grapes: string | null;
 };
+type LinkResult = LabelResult & {
+  description: string | null; image: string | null; price: number | null; source_url: string;
+};
 
 const toNumber = (v: string) => {
   const n = Number(v.replace(',', '.').trim());
@@ -63,6 +66,8 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
   let ratings = new Map<number, { average: number; votes: number }>();
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
+  let linkImage: string | null = null; // product image found via a shop link
+  let sourceUrl: string | null = null;
   let removeImage = false;
 
   const form = $<HTMLFormElement>('wine-form');
@@ -136,6 +141,48 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     return n;
   }
 
+  // ---------- Fetch from a shop link (/api/read-link) ----------
+  async function readLink() {
+    const input = field<HTMLInputElement>('wf-link');
+    const url = input.value.trim();
+    if (!/^https?:\/\//i.test(url)) { labelStatus(t('link.invalid'), 'error'); return; }
+    const btn = $<HTMLButtonElement>('wf-read-link');
+    btn.disabled = true;
+    labelStatus(t('link.reading'), 'busy');
+    try {
+      const { data } = await supabase.auth.getSession();
+      const res = await fetch('/api/read-link', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ url, lang: lang() }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const r = (await res.json()) as LinkResult;
+      let n = fillFromLabel(r);
+      const put = (id: string, value: string | null) => {
+        const el = field<HTMLInputElement | HTMLTextAreaElement>(id);
+        if (!value || el.value.trim()) return;
+        el.value = value;
+        el.classList.add('from-label');
+        n++;
+      };
+      put('wf-description', r.description);
+      put('wf-retail', r.price != null ? String(r.price) : null);
+      if (r.image && !pendingImage && $<HTMLImageElement>('wf-preview').hidden) {
+        linkImage = r.image;
+        removeImage = false;
+        setPreview(r.image);
+        n++;
+      }
+      sourceUrl = r.source_url;
+      labelStatus(n ? t('link.filled', { n }) : t('label.nothing'), n ? 'ok' : 'error');
+    } catch {
+      labelStatus(t('link.failed'), 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
   function setPreview(url: string | null) {
     const img = $<HTMLImageElement>('wf-preview');
     img.hidden = !url;
@@ -148,6 +195,8 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     editing = w;
     pendingImage = null;
     removeImage = false;
+    linkImage = null;
+    sourceUrl = w?.source_url ?? null;
     form.reset();
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
@@ -277,9 +326,14 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
   });
 
   $('wf-read-label').addEventListener('click', readLabel);
+  $('wf-read-link').addEventListener('click', readLink);
+  field<HTMLInputElement>('wf-link').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); readLink(); }
+  });
 
   $('wf-image-remove').addEventListener('click', () => {
     pendingImage = null;
+    linkImage = null;
     removeImage = true;
     field<HTMLInputElement>('wf-image').value = '';
     setPreview(null);
@@ -296,6 +350,7 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     save.textContent = t('common.saving');
 
     let image_url = editing?.image_url ?? null;
+    if (linkImage) image_url = linkImage;
     if (removeImage) image_url = null;
     if (pendingImage) {
       const url = await uploadImage(pendingImage);
@@ -321,6 +376,7 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       orderable: field<HTMLInputElement>('wf-orderable').checked,
       revealed: field<HTMLInputElement>('wf-revealed').checked,
       image_url,
+      source_url: sourceUrl,
     };
 
     const { error } = editing

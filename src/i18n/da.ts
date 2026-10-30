@@ -364,4 +364,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "label.failed": "Etiketten kunne ikke læses. Udfyld felterne selv, eller prøv et skarpere billede.",
   "label.grapes": "Druer",
   "label.region": "Område",
+  "link.label": "Link til vinen",
+  "link.hint": "(fx fra en webshop – udfylder formularen)",
+  "link.fetch": "Hent",
+  "link.reading": "Henter siden …",
+  "link.filled": "Udfyldte {n} felter fra linket – tjek dem, før du gemmer.",
+  "link.failed": "Siden kunne ikke læses. Nogle butikker blokerer for det – udfyld felterne selv, eller prøv et foto af etiketten.",
+  "link.invalid": "Indsæt et helt link, der starter med https://",
 };
