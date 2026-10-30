@@ -5,7 +5,7 @@ Started as the site for the port wine tasting on 21 November 2026.
 
 - **Frontend:** Astro (static site), hosted on Cloudflare Pages
 - **Data:** Supabase (`supabase/schema.sql` plus `supabase/migrations/`)
-- **Address:** portvin.krusesoendergaard.dk
+- **Address:** winetastr.krusesoendergaard.dk
 
 ## Run locally
 
