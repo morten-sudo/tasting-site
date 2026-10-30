@@ -393,3 +393,18 @@ a.chip:hover { color: var(--paper); }
 .admin-page .offer-row input { flex: 0 1 7rem !important; }
 .admin-page .offer-row input#wf-offer-qty { flex-basis: 3.5rem !important; }
 .admin-page .offer-row span { color: var(--muted); font-size: 0.9rem; }
+
+/* Large image on click */
+.admin-page .wine-thumb img, .admin-page #wf-preview { cursor: zoom-in; }
+dialog.zoom {
+  border: 0; padding: 0; background: transparent; max-width: 94vw; max-height: 92vh; overflow: visible;
+}
+dialog.zoom::backdrop { background: rgba(11, 9, 8, 0.88); }
+dialog.zoom img {
+  display: block; max-width: 94vw; max-height: 88vh; width: auto; height: auto;
+  object-fit: contain; background: #fff; border-radius: 0.5rem; cursor: zoom-out;
+}
+dialog.zoom .zoom-close {
+  position: absolute; top: -0.9rem; right: -0.9rem; width: 2.4rem; height: 2.4rem; border-radius: 50%;
+  border: 1px solid var(--lodge-3); background: var(--lodge-2); color: var(--paper); font-size: 1.4rem; line-height: 1; cursor: pointer;
+}

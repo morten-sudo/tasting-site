@@ -1,6 +1,6 @@
 // Shared by the host's admin pages: sign-in check, host record and small DOM helpers.
 import { supabase } from './supabase';
-import { i18nReady } from '../i18n';
+import { i18nReady, t } from '../i18n';
 
 export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null };
 
@@ -39,6 +39,7 @@ export async function requireHost(): Promise<Host | null> {
 
   $('me').textContent = data.session.user.email ?? '';
   $('admin-top').hidden = false;
+  enableImageZoom(t('admin.close'));
   return host as Host;
 }
 
@@ -46,3 +47,35 @@ export const toNumber = (v: string) => {
   const n = Number(v.replace(',', '.').trim());
   return v.trim() === '' || Number.isNaN(n) ? null : n;
 };
+
+/**
+ * Click a wine thumbnail (or the photo preview) to see it large. One shared <dialog>;
+ * closes on click, the close button or Escape.
+ */
+export function enableImageZoom(closeLabel: string) {
+  let dialog = document.getElementById('zoom') as HTMLDialogElement | null;
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'zoom';
+    dialog.className = 'zoom';
+    const img = document.createElement('img');
+    img.alt = '';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'zoom-close';
+    close.textContent = '×';
+    close.setAttribute('aria-label', closeLabel);
+    dialog.append(img, close);
+    document.body.append(dialog);
+    dialog.addEventListener('click', () => dialog!.close());
+  }
+  document.addEventListener('click', (e) => {
+    const img = (e.target as HTMLElement).closest('.wine-thumb img, #wf-preview') as HTMLImageElement | null;
+    if (!img || !img.src || img.hidden) return;
+    e.preventDefault();
+    const big = dialog!.querySelector('img')!;
+    big.src = img.src;
+    big.alt = img.alt;
+    dialog!.showModal();
+  });
+}
