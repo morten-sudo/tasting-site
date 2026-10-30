@@ -416,3 +416,6 @@ dialog.zoom .zoom-close {
   position: absolute; top: -0.9rem; right: -0.9rem; width: 2.4rem; height: 2.4rem; border-radius: 50%;
   border: 1px solid var(--lodge-3); background: var(--lodge-2); color: var(--paper); font-size: 1.4rem; line-height: 1; cursor: pointer;
 }
+
+/* Forms inside a side panel / bottom sheet: the panel is the surface */
+.admin-page dialog.sheet .add-form { margin: 0; padding: 0; background: none; max-width: none; }

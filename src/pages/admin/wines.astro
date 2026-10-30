@@ -16,8 +16,13 @@ import '../../styles/admin.css';
           <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button>
         </div>
 
-        <form id="wine-form" class="add-form wine-form" novalidate hidden>
-          <h3 id="wf-title" data-i18n="admin.newWine">New wine</h3>
+        <!-- New / edit wine: side panel on larger screens, bottom sheet on phones -->
+        <dialog id="wine-panel" class="sheet wide" aria-labelledby="wf-title">
+        <div class="sheet-head">
+          <h2 id="wf-title" data-i18n="admin.newWine">New wine</h2>
+          <button id="wf-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+        </div>
+        <form id="wine-form" class="add-form wine-form" novalidate>
           <label for="wf-link"><span data-i18n="link.label">Link to the wine</span> <span class="hint" data-i18n="link.hint">(e.g. from a web shop – fills in the form)</span></label>
           <div class="inline-form link-row">
             <input id="wf-link" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
@@ -71,6 +76,7 @@ import '../../styles/admin.css';
             <button id="wf-delete" class="text-btn danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
           </div>
         </form>
+        </dialog>
 
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
         <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>

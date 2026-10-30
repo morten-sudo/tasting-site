@@ -74,6 +74,9 @@ export function initWineAdmin(hostId: string) {
   let removeImage = false;
 
   const form = $<HTMLFormElement>('wine-form');
+  const panel = $<HTMLDialogElement>('wine-panel');
+  $('wf-close').addEventListener('click', () => closeForm());
+  panel.addEventListener('close', () => { editing = null; });
   const list = $<HTMLUListElement>('wine-admin-list');
   const field = <E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id: string) => $<E>(id);
 
@@ -241,16 +244,16 @@ export function initWineAdmin(hostId: string) {
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
     setPreview(w?.image_url ?? null);
-    form.hidden = false;
-    $('wine-add-toggle').hidden = true;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
+    panel.showModal();
+    panel.scrollTop = 0;
+    // On phones the keyboard would cover the sheet, so only focus a field on larger screens
+    if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>(w ? 'wf-name' : 'wf-link').focus({ preventScroll: true });
+    else (document.activeElement as HTMLElement | null)?.blur();
   }
 
   function closeForm() {
     editing = null;
-    form.hidden = true;
-    $('wine-add-toggle').hidden = false;
+    if (panel.open) panel.close();
   }
 
   function render() {
