@@ -84,8 +84,9 @@ export function applyI18n(root: ParentNode = document) {
 async function resolveLang(): Promise<Lang> {
   const chosen = chosenLang();
   if (chosen) return chosen;
+  // Guest pages follow the tasting's language; the host's admin does not
   const m = location.pathname.match(/^\/t\/([a-z0-9-]+)(\/|$)/);
-  if (m) {
+  if (m && !location.pathname.includes('/admin/')) {
     try {
       const { supabase } = await import('../lib/supabase');
       const { data } = await supabase.rpc('get_tasting', { slug: m[1] });

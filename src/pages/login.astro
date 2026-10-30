@@ -86,7 +86,7 @@ import Base from '../layouts/Base.astro';
   // Only internal paths are allowed as the post-login target
   const rawNext = params.get('next') ?? '';
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
-  const wantsAdmin = next.startsWith('/admin');
+  const wantsAdmin = /^\/(t\/[a-z0-9-]+\/)?admin\//.test(next);
 
   let email = '';
 

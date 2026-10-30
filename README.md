@@ -27,7 +27,7 @@ npm run dev
 | `/t/<slug>/cart/` | Cart and orders |
 | `/t/<slug>/quiz/` | Quiz |
 | `/t/<slug>/leaderboard/` | Big-screen leaderboard |
-| `/admin/?t=<slug>` | Host admin: tastings, wines, guests, orders |
+| `/t/<slug>/admin/` | Host admin for a tasting (`/admin/` opens the last one used) |
 
 The tasting pages are built once under `src/pages/tasting/` and served for every
 slug by rewrite rules in `public/_redirects` (Cloudflare Pages). Guest invite codes

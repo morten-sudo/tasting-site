@@ -234,6 +234,7 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { supabase } from '../lib/supabase';
+  import { currentSlug } from '../lib/guest';
   import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
   import { initWineAdmin } from '../lib/admin-wines';
   import { i18nReady, t, lang, locale, money, type Key } from '../i18n';
@@ -325,17 +326,27 @@ import Base from '../layouts/Base.astro';
   const cleanPhone = (v: string) => v.replace(/\s/g, '') || null;
   const dateLabel = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
 
+  const adminUrl = (slug: string) => `/t/${slug}/admin/`;
+  let redirecting = false;
+
   async function loadTasting() {
     const { data } = await supabase.from('tastings').select('*')
       .order('starts_at', { ascending: false, nullsFirst: true });
     tastings = (data ?? []) as T[];
     let last: string | null = null;
     try { last = localStorage.getItem(LAST_TASTING_KEY); } catch {}
-    const wanted = new URLSearchParams(location.search).get('t') ?? last;
+    // The tasting comes from the address /t/<slug>/admin/ (or the last one used)
+    const wanted = currentSlug() ?? last;
     tasting = tastings.find((t) => t.slug === wanted) ?? tastings[0] ?? null;
     if (!tasting) return;
     $('mark').textContent = tasting.title;
     try { localStorage.setItem(LAST_TASTING_KEY, tasting.slug); } catch {}
+    // Plain /admin/ → the tasting's own admin address
+    if (location.pathname !== adminUrl(tasting.slug)) {
+      redirecting = true;
+      location.replace(adminUrl(tasting.slug));
+      return;
+    }
 
     const select = $('tasting-select') as HTMLSelectElement;
     select.replaceChildren(...tastings.map((t) => {
@@ -361,7 +372,7 @@ import Base from '../layouts/Base.astro';
 
   // ---------- Pick, create and edit tastings ----------
   ($('tasting-select') as HTMLSelectElement).addEventListener('change', (e) => {
-    location.search = '?t=' + encodeURIComponent((e.target as HTMLSelectElement).value);
+    location.href = adminUrl((e.target as HTMLSelectElement).value);
   });
 
   function showNewTasting(first: boolean) {
@@ -394,7 +405,7 @@ import Base from '../layouts/Base.astro';
     });
     btn.disabled = false;
     if (error || !data) { msg.textContent = t('admin.createFailed'); msg.hidden = false; return; }
-    location.search = '?t=' + encodeURIComponent((data as T).slug);
+    location.href = adminUrl((data as T).slug);
   });
 
   $('details').addEventListener('submit', async (e) => {
@@ -767,6 +778,7 @@ import Base from '../layouts/Base.astro';
   // ---------- Startup ----------
   async function loadAll() {
     await loadTasting();
+    if (redirecting) return;
     if (!tasting) { showNewTasting(true); return; }
     $('tasting-bar').hidden = false;
     $('tasting-panel').hidden = false;
