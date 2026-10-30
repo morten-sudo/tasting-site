@@ -27,7 +27,11 @@ npm run dev
 | `/t/<slug>/cart/` | Cart and orders |
 | `/t/<slug>/quiz/` | Quiz |
 | `/t/<slug>/leaderboard/` | Big-screen leaderboard |
-| `/t/<slug>/admin/` | Host admin for a tasting (`/admin/` opens the last one used) |
+| `/admin/` | Host admin: the host's tastings |
+| `/t/<slug>/admin/` | Host admin for one tasting: details, wines, guests, quiz, orders |
+| `/admin/wines/` | The host's wine library (label photo / shop link) |
+| `/admin/guests/` | The host's guest library |
+| `/admin/payments/` | Payment methods (MobilePay) |
 
 The tasting pages are built once under `src/pages/tasting/` and served for every
 slug by rewrite rules in `public/_redirects` (Cloudflare Pages). Guest invite codes
@@ -41,7 +45,12 @@ are applied on top, in order.
 Guests have no direct table access. They call security-definer functions
 (`get_invite`, `respond_invite`, `place_order`, `submit_answer`, …) with the
 invite code from their personal link (`?k=CODE`) or sign in with an email code.
-Hosts only see and edit their own tastings (`is_tasting_host`).
+Hosts only see and edit their own tastings (`is_tasting_host`). Wines and guests are
+libraries per host (`wines.host_id`, `guests`); `tasting_wines` and `participants` put them
+into a tasting with a guest price and an RSVP.
+
+Cloudflare Pages Functions in `functions/api/` read wine labels and shop links with
+Workers AI (binding `AI` in `wrangler.toml`).
 
 ## Languages
 

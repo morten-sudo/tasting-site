@@ -1,0 +1,146 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav active="guests" />
+    <div id="admin-main" hidden>
+      <h1 class="title" data-i18n="adminNav.guests">Guests</h1>
+      <p class="hint" data-i18n="guestLib.intro">Everyone you invite. Add them here once, then invite them to each tasting.</p>
+
+      <section class="block guests">
+        <div class="guests-head">
+          <input id="guest-search" class="search" type="search" autocomplete="off" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" style="max-width:20rem;margin:0" />
+          <button id="add-toggle" class="btn small ghost" type="button" data-i18n="admin.addGuest">Add guest</button>
+        </div>
+
+        <form id="guest-form" class="add-form" novalidate hidden>
+          <h3 id="gf-title" data-i18n="guestLib.newGuest">New guest</h3>
+          <label for="gf-name" data-i18n="admin.name">Name</label>
+          <input id="gf-name" type="text" autocomplete="off" required />
+          <label for="gf-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
+          <input id="gf-email" type="email" autocomplete="off" />
+          <p id="gf-msg" class="message error" hidden></p>
+          <div class="row-actions">
+            <button id="gf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="gf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            <button id="gf-delete" class="text-btn danger" type="button" hidden data-i18n="guestLib.delete">Delete guest</button>
+          </div>
+        </form>
+
+        <ul id="guest-list" class="lib-list"></ul>
+        <p id="guest-empty" class="hint" hidden data-i18n="guestLib.empty">No guests yet. Add the first one.</p>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { requireHost, $, mk } from '../../lib/admin-common';
+  import { t, type Key } from '../../i18n';
+
+  type Invite = { status: string; tastings: { slug: string; title: string } | null };
+  type G = { id: string; name: string; email: string | null; participants: Invite[] };
+
+  const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const STATUS: Record<string, Key> = { yes: 'status.yes', no: 'status.no', invited: 'status.invited' };
+  let guests: G[] = [];
+  let editing: G | null = null;
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    await load();
+  }
+
+  async function load() {
+    const { data } = await supabase.from('guests')
+      .select('id, name, email, participants(status, tastings(slug, title))')
+      .eq('host_id', host!.id).order('name');
+    guests = (data ?? []) as unknown as G[];
+    render();
+  }
+
+  function render() {
+    const q = $<HTMLInputElement>('guest-search').value.trim().toLowerCase();
+    const shown = guests.filter((g) => !q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q));
+    $('guest-empty').hidden = guests.length > 0;
+    $('guest-list').replaceChildren(...shown.map((g) => {
+      const li = mk('li', 'lib-row');
+      const body = mk('div');
+      body.append(mk('p', 'lib-name', g.name));
+      body.append(mk('p', g.email ? 'lib-meta' : 'lib-meta guest-email missing', g.email ?? t('admin.noEmail')));
+      const chips = mk('div', 'chips');
+      for (const p of g.participants) {
+        if (!p.tastings) continue;
+        const a = mk('a', 'chip', `${p.tastings.title} · ${t(STATUS[p.status] ?? 'status.invited')}`);
+        a.href = `/t/${p.tastings.slug}/admin/`;
+        chips.append(a);
+      }
+      if (!g.participants.length) chips.append(mk('span', 'chip', t('guestLib.notInvited')));
+      body.append(chips);
+      const edit = mk('button', 'text-btn', t('admin.edit'));
+      edit.type = 'button';
+      edit.addEventListener('click', () => openForm(g));
+      li.append(body, edit);
+      return li;
+    }));
+  }
+
+  function openForm(g: G | null) {
+    editing = g;
+    const form = $<HTMLFormElement>('guest-form');
+    form.reset();
+    $('gf-msg').hidden = true;
+    $('gf-title').textContent = g ? t('guestLib.editGuest') : t('guestLib.newGuest');
+    $<HTMLInputElement>('gf-name').value = g?.name ?? '';
+    $<HTMLInputElement>('gf-email').value = g?.email ?? '';
+    const del = $('gf-delete');
+    del.hidden = !g;
+    del.textContent = t('guestLib.delete');
+    delete del.dataset.armed;
+    form.hidden = false;
+    $('add-toggle').hidden = true;
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $<HTMLInputElement>('gf-name').focus({ preventScroll: true });
+  }
+  function closeForm() {
+    editing = null;
+    $('guest-form').hidden = true;
+    $('add-toggle').hidden = false;
+  }
+  const showMsg = (text: string) => { $('gf-msg').textContent = text; $('gf-msg').hidden = false; };
+
+  $('add-toggle').addEventListener('click', () => openForm(null));
+  $('gf-cancel').addEventListener('click', closeForm);
+  $('guest-search').addEventListener('input', render);
+
+  $('guest-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = $<HTMLInputElement>('gf-name').value.trim();
+    const email = $<HTMLInputElement>('gf-email').value.trim().toLowerCase() || null;
+    if (!name) { showMsg(t('host.nameMissing')); return; }
+    if (email && !EMAIL_RE.test(email)) { showMsg(t('guest.emailBad')); return; }
+    const { error } = editing
+      ? await supabase.from('guests').update({ name, email }).eq('id', editing.id)
+      : await supabase.from('guests').insert({ host_id: host!.id, name, email });
+    if (error) { showMsg(error.code === '23505' ? t('guestLib.emailTaken') : t('admin.changeNotSaved')); return; }
+    closeForm();
+    await load();
+  });
+
+  // Delete in two steps; only guests who are not invited to any tasting
+  $('gf-delete').addEventListener('click', async () => {
+    const btn = $<HTMLButtonElement>('gf-delete');
+    if (!editing) return;
+    if (editing.participants.length) { showMsg(t('guestLib.stillInvited')); return; }
+    if (!btn.dataset.armed) { btn.dataset.armed = '1'; btn.textContent = t('admin.confirmDelete'); return; }
+    const { error } = await supabase.from('guests').delete().eq('id', editing.id);
+    if (error) { showMsg(t('admin.changeNotSaved')); return; }
+    closeForm();
+    await load();
+  });
+</script>

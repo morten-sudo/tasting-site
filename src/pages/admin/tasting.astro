@@ -1,0 +1,712 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav active="tastings" />
+    <p id="not-found" class="message error" hidden><span data-i18n="adminTasting.notFound">This tasting was not found.</span> <a href="/admin/" data-i18n="adminTasting.back">All tastings</a></p>
+
+    <div id="admin-main" hidden>
+      <a class="back" href="/admin/" data-i18n="adminTasting.back">All tastings</a>
+      <h1 class="title" id="t-heading"></h1>
+      <div id="tasting-panel">
+      <!-- Tasting details -->
+      <section class="block">
+        <h2 data-i18n="page.tasting">Tasting</h2>
+        <form id="details" class="add-form tasting-form" novalidate>
+          <label for="d-title" data-i18n="admin.title">Title</label>
+          <input id="d-title" type="text" required />
+          <label for="d-when" data-i18n="admin.when">Date and time</label>
+          <input id="d-when" type="datetime-local" />
+          <label for="d-place" data-i18n="admin.place">Place</label>
+          <input id="d-place" type="text" autocomplete="street-address" />
+          <label for="d-language" data-i18n="admin.guestLanguage">Language for guests</label>
+          <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
+          <div class="row-actions">
+            <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <span id="d-msg" class="hint" aria-live="polite"></span>
+          </div>
+        </form>
+        <p class="hint"><span data-i18n="admin.tastingPage">Tasting page:</span> <a id="tasting-link" href="/" target="_blank"></a><br />
+          <span data-i18n="admin.personalLinks">Each guest gets a personal link under Guests.</span></p>
+      </section>
+
+      <!-- Controls -->
+      <section class="block">
+        <h2 data-i18n="admin.controls">Controls</h2>
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
+          <label class="toggle"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
+          <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
+          <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
+        </div>
+        <p class="hint"><span data-i18n="admin.tvLink">Leaderboard for the TV:</span> <a id="tv-link" href="/" target="_blank"></a></p>
+      </section>
+
+      <!-- Tasting fee -->
+      <section class="block">
+        <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
+        <div class="fee-grid">
+          <label for="fee-total" data-i18n="admin.feeTotal">Total cost (DKK)</label>
+          <input id="fee-total" type="number" min="0" step="1" inputmode="decimal" />
+          <p id="fee-suggest" class="hint"></p>
+          <label for="fee-amount" data-i18n="admin.feePer">Price per person (DKK)</label>
+          <div class="inline-form">
+            <input id="fee-amount" type="number" min="0" step="1" inputmode="decimal" />
+            <button id="fee-save" class="btn small" type="button" data-i18n="common.save">Save</button>
+          </div>
+          <p id="fee-msg" class="hint" aria-live="polite"></p>
+        </div>
+        <label class="toggle"><input type="checkbox" data-key="tasting_fee_open" /> <span data-i18n="admin.feeShow">Show the fee to attending guests</span></label>
+        <p id="fee-summary" class="hint fee-summary"></p>
+      </section>
+
+      <!-- Wines in this tasting (from the wine library) -->
+      <section class="block wines-admin">
+        <div class="guests-head">
+          <h2 data-i18n="page.wines">Wines</h2>
+          <button id="tw-add-toggle" class="btn small ghost" type="button" data-i18n="adminTasting.addWines">Add wines</button>
+        </div>
+        <div id="tw-picker" class="picker" hidden>
+          <label for="tw-search" data-i18n="adminTasting.pickWines">Choose from your wines</label>
+          <input id="tw-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+          <ul id="tw-picker-list" class="picker-list"></ul>
+          <p id="tw-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreWines">No other wines in your library.</p>
+          <p class="hint" data-i18n-html="adminTasting.newWineHint">A new wine? Create it under <a href="/admin/wines/">Wines</a> first.</p>
+          <button id="tw-picker-close" class="text-btn" type="button" data-i18n="admin.close">Close</button>
+        </div>
+        <ul id="tw-list" class="lib-list"></ul>
+        <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
+      </section>
+
+      <!-- Guests -->
+      <section class="block guests">
+        <div class="guests-head">
+          <h2 data-i18n="admin.guests">Guests</h2>
+          <div class="row-actions" style="margin:0">
+            <button id="g-invite-toggle" class="btn small ghost" type="button" data-i18n="adminTasting.invite">Invite</button>
+            <button id="add-toggle" class="btn small ghost" type="button" data-i18n="admin.addGuest">Add guest</button>
+          </div>
+        </div>
+
+        <div id="g-picker" class="picker" hidden>
+          <label for="g-search" data-i18n="adminTasting.pickGuests">Invite from your guests</label>
+          <input id="g-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+          <ul id="g-picker-list" class="picker-list"></ul>
+          <p id="g-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreGuests">Everyone in your guest list is invited.</p>
+          <button id="g-picker-close" class="text-btn" type="button" data-i18n="admin.close">Close</button>
+        </div>
+
+        <form id="add-p" class="add-form" hidden>
+          <label for="new-name" data-i18n="admin.name">Name</label>
+          <input id="new-name" type="text" autocomplete="off" required />
+          <label for="new-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
+          <input id="new-email" type="email" autocomplete="off" />
+          <div class="row-actions">
+            <button class="btn small" type="submit" data-i18n="admin.add">Add</button>
+            <button id="add-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+          </div>
+        </form>
+
+        <div class="filters" role="tablist" aria-label="Vis deltagere">
+          <button type="button" role="tab" data-filter="all" aria-selected="true"><b data-i18n="admin.fAll">All</b> <span></span></button>
+          <button type="button" role="tab" data-filter="yes"><b data-i18n="admin.fYes">Coming</b> <span></span></button>
+          <button type="button" role="tab" data-filter="invited"><b data-i18n="status.invited">No reply yet</b> <span></span></button>
+          <button type="button" role="tab" data-filter="no"><b data-i18n="status.no">Not attending</b> <span></span></button>
+          <button type="button" role="tab" data-filter="noemail"><b data-i18n="admin.fNoEmail">Missing email</b> <span></span></button>
+        </div>
+        <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
+        <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
+
+        <ul id="guest-list" class="guest-list"></ul>
+        <p id="guest-empty" class="hint" hidden data-i18n="admin.noMatch">No guests match.</p>
+      </section>
+
+      <!-- Orders -->
+      <section class="block">
+        <h2 data-i18n="admin.orders">Orders</h2>
+        <div id="orders-by-guest"></div>
+        <h3 data-i18n="admin.totalPurchase">Total purchase</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th data-i18n="page.wine">Wine</th><th class="num" data-i18n="admin.bottles">Bottles</th><th class="num" data-i18n="pay.amount">Amount</th></tr></thead>
+            <tbody id="orders-by-wine"></tbody>
+          </table>
+        </div>
+        <button id="csv" class="btn small ghost" type="button" data-i18n="admin.csv">Download orders as CSV</button>
+      </section>
+
+      <!-- Quiz -->
+      <section class="block quiz-admin">
+        <div class="guests-head">
+          <h2 data-i18n="page.quiz">Quiz</h2>
+          <button id="q-add-toggle" class="btn small ghost" type="button" data-i18n="aq.add">Add question</button>
+        </div>
+        <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
+
+        <form id="q-form" class="add-form quiz-form" novalidate hidden>
+          <h3 id="qf-title" data-i18n="aq.newQuestion">New question</h3>
+          <label for="qf-question" data-i18n="aq.question">Question</label>
+          <textarea id="qf-question" rows="2" maxlength="500"></textarea>
+          <fieldset class="qf-fieldset">
+            <legend data-i18n="aq.answersLegend">Answers – mark the right one</legend>
+            <div id="qf-options" class="qf-options"></div>
+            <button id="qf-add-option" class="text-btn" type="button" data-i18n="aq.addAnswer">+ Add answer</button>
+          </fieldset>
+          <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="hint" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
+          <textarea id="qf-explanation" rows="2" maxlength="1000"></textarea>
+          <p id="qf-msg" class="message error" hidden></p>
+          <div class="row-actions">
+            <button id="qf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="qf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            <button id="qf-delete" class="text-btn danger" type="button" hidden data-i18n="aq.deleteQuestion">Delete question</button>
+          </div>
+        </form>
+
+        <ol id="q-admin-list" class="q-admin-list"></ol>
+        <p id="q-empty" class="hint" hidden data-i18n="aq.empty">No questions yet. Add the first one.</p>
+
+        <h3 data-i18n="quiz.standings">Standings</h3>
+        <ol id="board" class="board"></ol>
+      </section>
+      </div>
+
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { currentSlug } from '../../lib/guest';
+  import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
+  import { initTastingWines } from '../../lib/admin-tasting-wines';
+  import { requireHost, mk as mkEl, type Host } from '../../lib/admin-common';
+  import { initQuizAdmin } from '../../lib/admin-quiz';
+  import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
+
+  await i18nReady;
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const kr = { format: money };
+  const STATUS: Record<string, string> = { yes: t('admin.fYes'), no: t('status.no'), invited: t('status.invited') };
+
+  type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean };
+  type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
+  type OLine = { wine_id: number; quantity: number; unit_price: number };
+  type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
+  const ORDER_SELECT = 'id, participant_id, paid, created_at, order_lines(wine_id, quantity, unit_price)';
+  const when = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  let participants: P[] = [];
+  let wines: W[] = [];
+  let orders: O[] = [];
+
+  function cell(text: string, cls?: string) {
+    const td = document.createElement('td');
+    td.textContent = text;
+    if (cls) td.className = cls;
+    return td;
+  }
+
+  // ---------- Controls (stored on the tasting) ----------
+  type T = { id: string; slug: string; title: string; quiz_count?: number } & Record<string, unknown>;
+  let tasting: T | null = null;
+  let quizTotal = 13;
+  let feeTotal = 0;
+  let feeAmount = 0;
+
+  // datetime-local works in the browser's local time
+  function toLocalInput(iso: unknown) {
+    if (typeof iso !== 'string' || !iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : null);
+
+  // The tasting comes from the address /t/<slug>/admin/
+  async function loadTasting(host: Host) {
+    const slug = currentSlug();
+    if (!slug) return;
+    const { data } = await supabase.from('tastings').select('*').eq('slug', slug).eq('host_id', host.id).maybeSingle();
+    tasting = (data ?? null) as T | null;
+    if (!tasting) return;
+    $('mark').textContent = tasting.title;
+    $('t-heading').textContent = tasting.title;
+    document.title = `${tasting.title} – Winetastr`;
+
+    ($('d-title') as HTMLInputElement).value = tasting.title;
+    ($('d-when') as HTMLInputElement).value = toLocalInput(tasting.starts_at);
+    ($('d-place') as HTMLInputElement).value = (tasting.place as string) ?? '';
+    ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
+
+    const tv = $('tv-link') as HTMLAnchorElement;
+    tv.href = `/t/${tasting.slug}/leaderboard/`;
+    tv.textContent = `${location.host}/t/${tasting.slug}/leaderboard/`;
+    const pub = $('tasting-link') as HTMLAnchorElement;
+    pub.href = `/t/${tasting.slug}/`;
+    pub.textContent = `${location.host}/t/${tasting.slug}/`;
+  }
+
+  $('details').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!tasting) return;
+    const msg = $('d-msg');
+    const title = ($('d-title') as HTMLInputElement).value.trim();
+    if (!title) { msg.textContent = t('admin.titleEmpty'); return; }
+    const patch = {
+      title,
+      starts_at: fromLocalInput(($('d-when') as HTMLInputElement).value),
+      place: ($('d-place') as HTMLInputElement).value.trim() || null,
+      language: ($('d-language') as HTMLSelectElement).value,
+    };
+    const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
+    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
+    if (!error) {
+      Object.assign(tasting, patch);
+      $('t-heading').textContent = title;
+      $('mark').textContent = title;
+      setTimeout(() => (msg.textContent = ''), 2000);
+    }
+  });
+
+  function loadSettings() {
+    if (!tasting) return;
+    feeTotal = Number(tasting.tasting_total) || 0;
+    feeAmount = Number(tasting.tasting_fee) || 0;
+    ($('fee-total') as HTMLInputElement).value = feeTotal ? String(feeTotal) : '';
+    ($('fee-amount') as HTMLInputElement).value = feeAmount ? String(feeAmount) : '';
+    document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
+      box.checked = tasting![box.dataset.key!] === true;
+    });
+  }
+  document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
+    box.addEventListener('change', async () => {
+      if (!tasting) return;
+      const { error } = await supabase.from('tastings')
+        .update({ [box.dataset.key!]: box.checked }).eq('id', tasting.id);
+      if (error) { box.checked = !box.checked; alert(t('admin.changeNotSaved')); return; }
+      tasting[box.dataset.key!] = box.checked;
+    });
+  });
+
+  // ---------- Tasting fee ----------
+  function renderFee() {
+    const coming = participants.filter((p) => p.status === 'yes');
+    const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
+    $('fee-suggest').textContent = total && coming.length
+      ? t('admin.feeSuggest', { n: coming.length, price: kr.format(Math.ceil(total / coming.length)) })
+      : t('admin.feeComing', { n: coming.length });
+    const paid = coming.filter((p) => p.tasting_paid);
+    $('fee-summary').textContent = feeAmount
+      ? t('admin.feePaidSummary', { paid: paid.length, n: coming.length, got: kr.format(paid.length * feeAmount), all: kr.format(coming.length * feeAmount) })
+      : t('admin.noFee');
+  }
+
+  $('fee-total').addEventListener('input', renderFee);
+
+  $('fee-save').addEventListener('click', async () => {
+    const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
+    let amount = Number(($('fee-amount') as HTMLInputElement).value) || 0;
+    const coming = participants.filter((p) => p.status === 'yes').length;
+    if (!amount && total && coming) {
+      amount = Math.ceil(total / coming);
+      ($('fee-amount') as HTMLInputElement).value = String(amount);
+    }
+    if (!tasting) return;
+    const { error } = await supabase.from('tastings')
+      .update({ tasting_total: total, tasting_fee: amount }).eq('id', tasting.id);
+    if (error) { $('fee-msg').textContent = t('admin.couldNotSave'); return; }
+    feeTotal = total;
+    feeAmount = amount;
+    $('fee-msg').textContent = `Gemt: ${kr.format(amount)} pr. person.`;
+    renderParticipants();
+  });
+
+  // ---------- Guests ----------
+  const STATUS_ORDER: Record<string, number> = { yes: 0, invited: 1, no: 2 };
+  let guestFilter = 'all';
+  let guestQuery = '';
+  let editingId: string | null = null;
+
+  function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function matches(p: P) {
+    if (guestQuery && !p.name.toLowerCase().includes(guestQuery)) return false;
+    if (guestFilter === 'all') return true;
+    if (guestFilter === 'noemail') return !p.email;
+    return p.status === guestFilter;
+  }
+
+  async function saveGuest(p: P, patch: Partial<P>) {
+    const { error } = await supabase.from('participants').update(patch).eq('id', p.id);
+    if (error) {
+      alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.changeNotSaved'));
+      return false;
+    }
+    Object.assign(p, patch);
+    return true;
+  }
+
+  function guestCard(p: P) {
+    const li = mk('li', 'guest status-' + p.status);
+
+    const top = mk('div', 'guest-top');
+    top.append(mk('span', 'guest-name', p.name), mk('span', 'pill pill-' + p.status, STATUS[p.status] ?? p.status));
+    li.append(top);
+
+    li.append(p.email ? mk('p', 'guest-email', p.email) : mk('p', 'guest-email missing', t('admin.noEmail')));
+    if (p.note) li.append(mk('p', 'guest-note', p.note));
+
+    const actions = mk('div', 'guest-actions');
+    if (p.status === 'yes' && feeAmount > 0) {
+      const paid = mk('button', 'paid-toggle' + (p.tasting_paid ? ' on' : ''), p.tasting_paid ? t('admin.feePaid') : t('admin.feeUnpaid'));
+      paid.type = 'button';
+      paid.setAttribute('aria-pressed', String(p.tasting_paid));
+      paid.addEventListener('click', async () => {
+        if (await saveGuest(p, { tasting_paid: !p.tasting_paid })) { renderParticipants(); renderFee(); }
+      });
+      actions.append(paid);
+    }
+    const copy = mk('button', 'text-btn', t('admin.copyLink'));
+    copy.type = 'button';
+    copy.addEventListener('click', async () => {
+      const url = `${location.origin}/t/${tasting!.slug}/?k=${p.invite_code}`;
+      try { await navigator.clipboard.writeText(url); copy.textContent = t('admin.linkCopied'); }
+      catch { prompt(t('admin.copyLinkPrompt'), url); }
+      setTimeout(() => (copy.textContent = t('admin.copyLink')), 1500);
+    });
+    const edit = mk('button', 'text-btn', editingId === p.id ? t('admin.close') : t('admin.edit'));
+    edit.type = 'button';
+    edit.setAttribute('aria-expanded', String(editingId === p.id));
+    edit.addEventListener('click', () => {
+      editingId = editingId === p.id ? null : p.id;
+      renderParticipants();
+    });
+    actions.append(copy, edit);
+    li.append(actions);
+
+    if (editingId === p.id) li.append(editPanel(p));
+    return li;
+  }
+
+  function editPanel(p: P) {
+    const form = mk('form', 'edit-panel');
+    let status = p.status;
+
+    form.append(mk('p', 'edit-label', t('admin.status')));
+    const seg = mk('div', 'segmented');
+    for (const [v, label] of Object.entries(STATUS)) {
+      const b = mk('button', '', label);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(v === status));
+      b.addEventListener('click', () => {
+        status = v;
+        seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      });
+      seg.append(b);
+    }
+    form.append(seg);
+
+    const lab = mk('label', 'edit-label', t('common.email'));
+    const id = 'em-' + p.id;
+    lab.htmlFor = id;
+    const em = mk('input');
+    em.type = 'email';
+    em.id = id;
+    em.value = p.email ?? '';
+    em.autocomplete = 'off';
+    form.append(lab, em);
+
+    const row = mk('div', 'row-actions');
+    const save = mk('button', 'btn small', t('common.save'));
+    save.type = 'submit';
+    const cancel = mk('button', 'text-btn', t('common.cancel'));
+    cancel.type = 'button';
+    cancel.addEventListener('click', () => { editingId = null; renderParticipants(); });
+    row.append(save, cancel);
+    form.append(row);
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = em.value.trim().toLowerCase() || null;
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert(t('guest.emailBad')); return; }
+      save.disabled = true;
+      if (await saveGuest(p, { status, email })) { editingId = null; renderParticipants(); }
+      save.disabled = false;
+    });
+    setTimeout(() => em.focus(), 0);
+    return form;
+  }
+
+  function renderParticipants() {
+    const list = $('guest-list');
+    list.replaceChildren();
+    const sorted = [...participants]
+      .sort((a, b) => (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) || a.name.localeCompare(b.name, 'da'))
+      .filter(matches);
+    for (const p of sorted) list.append(guestCard(p));
+    $('guest-empty').hidden = sorted.length > 0;
+    renderSummary();
+  }
+
+  function renderSummary() {
+    const count: Record<string, number> = {
+      all: participants.length,
+      yes: participants.filter((p) => p.status === 'yes').length,
+      invited: participants.filter((p) => p.status === 'invited').length,
+      no: participants.filter((p) => p.status === 'no').length,
+      noemail: participants.filter((p) => !p.email).length,
+    };
+    document.querySelectorAll<HTMLButtonElement>('.filters button').forEach((b) => {
+      b.querySelector('span')!.textContent = String(count[b.dataset.filter!]);
+      b.setAttribute('aria-selected', String(b.dataset.filter === guestFilter));
+    });
+    renderFee();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.filters button').forEach((b) => {
+    b.addEventListener('click', () => { guestFilter = b.dataset.filter!; renderParticipants(); });
+  });
+  $('guest-search').addEventListener('input', (e) => {
+    guestQuery = (e.target as HTMLInputElement).value.trim().toLowerCase();
+    renderParticipants();
+  });
+
+  $('add-toggle').addEventListener('click', () => {
+    $('add-p').hidden = false;
+    $('add-toggle').hidden = true;
+    ($('new-name') as HTMLInputElement).focus();
+  });
+  $('add-cancel').addEventListener('click', () => {
+    $('add-p').hidden = true;
+    $('add-toggle').hidden = false;
+  });
+  $('add-p').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nameEl = $('new-name') as HTMLInputElement;
+    const emailEl = $('new-email') as HTMLInputElement;
+    const name = nameEl.value.trim();
+    const email = emailEl.value.trim().toLowerCase() || null;
+    if (!name) { nameEl.focus(); return; }
+    // The new guest goes into the guest library too (or reuses the one with the same email)
+    let guestId: string | null = null;
+    if (email) {
+      const { data: found } = await supabase.from('guests').select('id').eq('host_id', host!.id).ilike('email', email).maybeSingle();
+      guestId = found?.id ?? null;
+    }
+    if (!guestId) {
+      const { data: g, error: ge } = await supabase.from('guests').insert({ host_id: host!.id, name, email }).select('id').single();
+      if (ge || !g) { alert(t('admin.guestNotAdded')); return; }
+      guestId = g.id;
+    }
+    const { data, error } = await supabase.from('participants')
+      .insert({ name, email, tasting_id: tasting!.id, guest_id: guestId }).select().single();
+    if (error) { alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
+    participants.push(data as P);
+    library = library.filter((g) => g.id !== guestId);
+    nameEl.value = '';
+    emailEl.value = '';
+    $('add-p').hidden = true;
+    $('add-toggle').hidden = false;
+    renderParticipants();
+  });
+
+  // ---------- Orders ----------
+  const orderTotal = (o: O) => o.order_lines.reduce((t, l) => t + l.quantity * Number(l.unit_price), 0);
+
+  function renderOrders() {
+    const byGuest = $('orders-by-guest');
+    byGuest.replaceChildren();
+    const wineById = new Map(wines.map((w) => [w.id, w]));
+    const pById = new Map(participants.map((p) => [p.id, p]));
+
+    if (orders.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = t('admin.noOrders');
+      byGuest.append(p);
+    }
+
+    const sorted = [...orders].sort((a, b) => b.created_at.localeCompare(a.created_at));
+    const unpaid = sorted.filter((o) => !o.paid);
+    if (orders.length) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = t('admin.ordersSummary', { n: orders.length, unpaid: unpaid.length, amount: kr.format(unpaid.reduce((sum, o) => sum + orderTotal(o), 0)) });
+      byGuest.append(p);
+    }
+
+    for (const o of sorted) {
+      const box = document.createElement('div');
+      box.className = 'order-card' + (o.paid ? ' paid' : '');
+      const head = document.createElement('div');
+      head.className = 'order-head';
+      const h = document.createElement('strong');
+      h.textContent = `${pById.get(o.participant_id)?.name ?? t('admin.unknownGuest')}`;
+      const sum = document.createElement('span');
+      sum.textContent = kr.format(orderTotal(o));
+      head.append(h, sum);
+      const sub = document.createElement('p');
+      sub.className = 'hint order-sub';
+      sub.textContent = `${t('pay.orderComment', { id: o.id })}, ${when.format(new Date(o.created_at))}`;
+      box.append(head, sub);
+
+      const ul = document.createElement('ul');
+      for (const l of o.order_lines) {
+        const li = document.createElement('li');
+        li.textContent = t('admin.orderLine', { qty: l.quantity, wine: wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'), price: kr.format(Number(l.unit_price)) });
+        ul.append(li);
+      }
+      box.append(ul);
+
+      const label = document.createElement('label');
+      label.className = 'toggle';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = o.paid;
+      cb.addEventListener('change', async () => {
+        const { error } = await supabase.from('orders').update({ paid: cb.checked }).eq('id', o.id);
+        if (error) { cb.checked = !cb.checked; alert(t('admin.paymentNotSaved')); return; }
+        o.paid = cb.checked;
+        renderOrders();
+      });
+      const span = document.createElement('span');
+      span.textContent = t('admin.paidMobilepay');
+      label.append(cb, span);
+      box.append(label);
+      byGuest.append(box);
+    }
+
+    const tbody = $('orders-by-wine');
+    tbody.replaceChildren();
+    let bottles = 0, amount = 0;
+    for (const w of [...wines].sort((a, b) => a.sort_order - b.sort_order)) {
+      let n = 0, sum = 0;
+      for (const o of orders) for (const l of o.order_lines) {
+        if (l.wine_id === w.id) { n += l.quantity; sum += l.quantity * Number(l.unit_price); }
+      }
+      if (!n) continue;
+      bottles += n;
+      amount += sum;
+      const tr = document.createElement('tr');
+      tr.append(cell(w.name), cell(String(n), 'num'), cell(kr.format(sum), 'num'));
+      tbody.append(tr);
+    }
+    const tr = document.createElement('tr');
+    tr.className = 'total';
+    tr.append(cell(t('cart.total')), cell(String(bottles), 'num'), cell(kr.format(amount), 'num'));
+    tbody.append(tr);
+  }
+
+  $('csv').addEventListener('click', () => {
+    const wineById = new Map(wines.map((w) => [w.id, w]));
+    const pById = new Map(participants.map((p) => [p.id, p]));
+    const rows = [(['csv.order', 'csv.time', 'csv.guest', 'csv.wine', 'csv.qty', 'csv.unit', 'csv.amount', 'csv.paid'] as Key[]).map((k) => t(k))];
+    for (const o of [...orders].sort((a, b) => a.id - b.id)) {
+      for (const l of o.order_lines) {
+        const price = Number(l.unit_price);
+        rows.push([
+          String(o.id), new Date(o.created_at).toLocaleString(locale()),
+          pById.get(o.participant_id)?.name ?? '', wineById.get(l.wine_id)?.name ?? '',
+          String(l.quantity), String(price).replace('.', ','),
+          String(price * l.quantity).replace('.', ','), o.paid ? t('common.yes') : t('common.no'),
+        ]);
+      }
+    }
+    const csv = rows.map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(';')).join('\r\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'portvin-bestillinger.csv';
+    a.click();
+  });
+
+  // ---------- Startup ----------
+  // ---------- Invite from the guest library ----------
+  type G = { id: string; name: string; email: string | null };
+  let library: G[] = [];
+
+  function renderGuestPicker() {
+    const invited = new Set(participants.map((p) => (p as P & { guest_id?: string }).guest_id));
+    const q = ($('g-search') as HTMLInputElement).value.trim().toLowerCase();
+    const candidates = library.filter((g) => !invited.has(g.id))
+      .filter((g) => !q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q));
+    $('g-picker-list').replaceChildren(...candidates.map((g) => {
+      const li = mkEl('li');
+      const text = mkEl('div');
+      text.append(mkEl('p', 'lib-name', g.name));
+      if (g.email) text.append(mkEl('p', 'lib-meta', g.email));
+      const add = mkEl('button', 'btn small ghost', t('adminTasting.invite'));
+      add.type = 'button';
+      add.addEventListener('click', async () => {
+        add.disabled = true;
+        const { data, error } = await supabase.from('participants')
+          .insert({ name: g.name, email: g.email, tasting_id: tasting!.id, guest_id: g.id }).select().single();
+        if (error) { add.disabled = false; alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
+        participants.push(data as P);
+        renderParticipants();
+        renderGuestPicker();
+      });
+      li.append(text, add);
+      return li;
+    }));
+    $('g-picker-empty').hidden = candidates.length > 0;
+  }
+  $('g-invite-toggle').addEventListener('click', () => {
+    $('g-picker').hidden = false;
+    $('g-invite-toggle').hidden = true;
+    renderGuestPicker();
+    ($('g-search') as HTMLInputElement).focus();
+  });
+  $('g-picker-close').addEventListener('click', () => { $('g-picker').hidden = true; $('g-invite-toggle').hidden = false; });
+  $('g-search').addEventListener('input', renderGuestPicker);
+
+  // ---------- Startup ----------
+  let host: Host | null = null;
+
+  async function loadAll() {
+    await loadTasting(host!);
+    if (!tasting) { $('not-found').hidden = false; return; }
+    $('admin-main').hidden = false;
+    const [p, o, g, q] = await Promise.all([
+      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id').eq('tasting_id', tasting.id),
+      supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting.id),
+      supabase.from('guests').select('id, name, email').eq('host_id', host!.id).order('name'),
+      supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id),
+    ]);
+    participants = (p.data ?? []) as P[];
+    orders = (o.data ?? []) as O[];
+    library = (g.data ?? []) as G[];
+    quizTotal = q.count || 1;
+    await initTastingWines(tasting.id, host!.id, (list) => { wines = list; renderOrders(); }).load();
+    $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
+    await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; }).load();
+    renderParticipants();
+    renderOrders();
+    loadSettings();
+    const rows = await fetchLeaderboard({ slug: tasting.slug });
+    if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
+  }
+
+  host = await requireHost();
+  if (host) {
+    await loadAll();
+    setInterval(async () => {
+      if (!tasting) return;
+      const [o, rows] = await Promise.all([
+        supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting!.id),
+        fetchLeaderboard({ slug: tasting!.slug }),
+      ]);
+      if (o.data) { orders = o.data as O[]; renderOrders(); }
+      if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
+    }, 15000);
+  }
+</script>

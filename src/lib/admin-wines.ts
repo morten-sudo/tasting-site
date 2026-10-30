@@ -1,16 +1,18 @@
-// Admin: the host adds, edits, reorders and deletes wines one at a time, with an optional photo.
+// Admin, wine library: the host's wines across all tastings – add, edit and delete one at a time,
+// filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
 
 export type AdminWine = {
-  id: number; tasting_id: string; sort_order: number; name: string; producer: string | null;
-  style: string | null; vintage: string | null; abv: number | null; price_dkk: number | null;
+  id: number; host_id: string; name: string; producer: string | null;
+  style: string | null; vintage: string | null; abv: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
-  image_url: string | null; source_url: string | null; orderable: boolean; revealed: boolean;
+  image_url: string | null; source_url: string | null;
+  tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, tasting_id, sort_order, name, producer, style, vintage, abv, price_dkk, retail_price_dkk, description, details, image_url, source_url, orderable, revealed';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, retail_price_dkk, description, details, image_url, source_url, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -61,9 +63,8 @@ const toNumber = (v: string) => {
 };
 const toText = (v: string) => v.trim() || null;
 
-export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) => void) {
+export function initWineAdmin(hostId: string) {
   let wines: AdminWine[] = [];
-  let ratings = new Map<number, { average: number; votes: number }>();
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
   let linkImage: string | null = null; // product image found via a shop link
@@ -210,12 +211,9 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     styleSelect.value = w?.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
     field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
     field<HTMLInputElement>('wf-abv').value = w?.abv != null ? String(w.abv).replace('.', ',') : '';
-    field<HTMLInputElement>('wf-price').value = w?.price_dkk != null ? String(w.price_dkk) : '';
     field<HTMLInputElement>('wf-retail').value = w?.retail_price_dkk != null ? String(w.retail_price_dkk) : '';
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
-    field<HTMLInputElement>('wf-orderable').checked = w ? w.orderable : true;
-    field<HTMLInputElement>('wf-revealed').checked = w ? w.revealed : true;
     setPreview(w?.image_url ?? null);
     form.hidden = false;
     $('wine-add-toggle').hidden = true;
@@ -246,66 +244,38 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       body.append(mk('p', 'wine-name', w.name));
       const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
-      const prices = mk('p', 'wine-meta');
-      prices.textContent = w.price_dkk != null ? kr.format(w.price_dkk) : t('admin.noPrice');
-      if (w.retail_price_dkk != null) prices.textContent += ' ' + t('admin.normally', { price: kr.format(w.retail_price_dkk) });
-      body.append(prices);
-      const rating = ratings.get(w.id);
-      if (rating) {
-        const avg = rating.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        body.append(mk('p', 'wine-meta wine-rating', t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
+      if (w.retail_price_dkk != null) body.append(mk('p', 'wine-meta', t('admin.normally', { price: kr.format(w.retail_price_dkk) })));
+      // Which tastings the wine is in
+      const ts = (w.tasting_wines ?? []).map((x) => x.tastings).filter(Boolean) as { slug: string; title: string }[];
+      const chips = mk('div', 'chips');
+      for (const tt of ts) {
+        const a = mk('a', 'chip', tt.title);
+        a.href = `/t/${tt.slug}/admin/`;
+        chips.append(a);
       }
-      const flags = mk('div', 'wine-flags');
-      if (!w.revealed) flags.append(mk('span', 'pill pill-no', t('admin.hidden')));
-      if (!w.orderable) flags.append(mk('span', 'pill pill-no', t('admin.notOrderable')));
-      if (flags.childElementCount) body.append(flags);
+      if (!ts.length) chips.append(mk('span', 'chip', t('wineLib.unused')));
+      body.append(chips);
 
       const actions = mk('div', 'wine-actions');
-      const up = mk('button', 'icon-only', '↑');
-      up.type = 'button';
-      up.setAttribute('aria-label', t('admin.moveUp', { name: w.name }));
-      up.disabled = i === 0;
-      up.addEventListener('click', () => move(i, -1));
-      const down = mk('button', 'icon-only', '↓');
-      down.type = 'button';
-      down.setAttribute('aria-label', t('admin.moveDown', { name: w.name }));
-      down.disabled = i === wines.length - 1;
-      down.addEventListener('click', () => move(i, 1));
       const edit = mk('button', 'text-btn', t('admin.edit'));
       edit.type = 'button';
       edit.addEventListener('click', () => openForm(w));
-      actions.append(up, down, edit);
+      actions.append(edit);
 
       li.append(thumb, body, actions);
       list.append(li);
     });
-    onChange(wines);
   }
 
   async function load() {
-    const [{ data }, r] = await Promise.all([
-      supabase.from('wines').select(COLUMNS).eq('tasting_id', tastingId).order('sort_order').order('id'),
-      supabase.rpc('tasting_wine_ratings', { t_id: tastingId }),
-    ]);
+    const { data } = await supabase.from('wines').select(COLUMNS).eq('host_id', hostId).order('name');
     wines = (data ?? []) as AdminWine[];
-    ratings = new Map(((r.data ?? []) as { wine_id: number; average: number; votes: number }[])
-      .map((x) => [x.wine_id, { average: Number(x.average), votes: x.votes }]));
     render();
   }
 
-  async function move(index: number, dir: -1 | 1) {
-    const other = index + dir;
-    if (other < 0 || other >= wines.length) return;
-    [wines[index], wines[other]] = [wines[other], wines[index]];
-    wines.forEach((w, i) => (w.sort_order = i + 1));
-    render();
-    await Promise.all(
-      [wines[index], wines[other]].map((w) => supabase.from('wines').update({ sort_order: w.sort_order }).eq('id', w.id)),
-    );
-  }
 
   async function uploadImage(blob: Blob): Promise<string | null> {
-    const path = `${tastingId}/${crypto.randomUUID()}.jpg`;
+    const path = `${hostId}/${crypto.randomUUID()}.jpg`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, blob, { contentType: 'image/jpeg', upsert: false });
     if (error) return null;
     return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
@@ -369,12 +339,9 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       style: styleSelect.value || null,
       vintage: toText(field<HTMLInputElement>('wf-vintage').value),
       abv: toNumber(field<HTMLInputElement>('wf-abv').value),
-      price_dkk: toNumber(field<HTMLInputElement>('wf-price').value),
       retail_price_dkk: toNumber(field<HTMLInputElement>('wf-retail').value),
       description: toText(field<HTMLTextAreaElement>('wf-description').value),
       details: toText(field<HTMLTextAreaElement>('wf-details').value),
-      orderable: field<HTMLInputElement>('wf-orderable').checked,
-      revealed: field<HTMLInputElement>('wf-revealed').checked,
       image_url,
       source_url: sourceUrl,
     };
@@ -383,8 +350,7 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
       ? await supabase.from('wines').update(row).eq('id', editing.id)
       : await supabase.from('wines').insert({
           ...row,
-          tasting_id: tastingId,
-          sort_order: wines.reduce((m, w) => Math.max(m, w.sort_order), 0) + 1,
+          host_id: hostId,
         });
 
     save.disabled = false;

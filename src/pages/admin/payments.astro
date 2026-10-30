@@ -1,0 +1,54 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav active="payments" />
+    <div id="admin-main" hidden>
+      <h1 class="title" data-i18n="adminNav.payments">Payments</h1>
+      <p class="hint" data-i18n="payments.intro">How your guests pay for orders and the tasting fee. It applies to all your tastings.</p>
+
+      <section class="block">
+        <h2>MobilePay</h2>
+        <form id="mp-form" class="add-form tasting-form" novalidate>
+          <label for="mp-number" data-i18n="admin.mobilepay">MobilePay number</label>
+          <input id="mp-number" type="tel" inputmode="numeric" autocomplete="tel" placeholder="12 34 56 78" />
+          <p class="hint" data-i18n="payments.mpHint">Guests get a button that opens MobilePay with the amount and a message filled in. Leave it empty to hide MobilePay.</p>
+          <div class="row-actions">
+            <button id="mp-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <span id="mp-msg" class="hint" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="block">
+        <h2 data-i18n="payments.moreTitle">More payment methods</h2>
+        <p class="hint" data-i18n="payments.moreText">More ways to pay can be added here later.</p>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { requireHost, $ } from '../../lib/admin-common';
+  import { t } from '../../i18n';
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    $<HTMLInputElement>('mp-number').value = (host.mobilepay ?? '').replace(/(\d{2})(?=\d)/g, '$1 ');
+  }
+
+  $('mp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const raw = $<HTMLInputElement>('mp-number').value.replace(/\s/g, '');
+    const msg = $('mp-msg');
+    if (raw && !/^\+?\d{4,15}$/.test(raw)) { msg.textContent = t('payments.badNumber'); return; }
+    const { error } = await supabase.from('hosts').update({ mobilepay: raw || null }).eq('id', host!.id);
+    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
+    if (!error) setTimeout(() => (msg.textContent = ''), 2000);
+  });
+</script>

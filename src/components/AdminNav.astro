@@ -1,0 +1,25 @@
+---
+// Admin menu shared by all host pages, plus the signed-in line and the "not a host" notice.
+interface Props { active: 'tastings' | 'wines' | 'guests' | 'payments' }
+const { active } = Astro.props;
+const items = [
+  { key: 'tastings', href: '/admin/', label: 'Tastings' },
+  { key: 'wines', href: '/admin/wines/', label: 'Wines' },
+  { key: 'guests', href: '/admin/guests/', label: 'Guests' },
+  { key: 'payments', href: '/admin/payments/', label: 'Payments' },
+] as const;
+---
+<p id="not-host" class="message error" hidden>
+  <span data-i18n-html="admin.notHost">You are signed in but not registered as a host. <a href="/become-host/">Become a host</a></span> ·
+  <button id="logout2" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
+</p>
+
+<div id="admin-top" hidden>
+  <nav class="admin-nav" aria-label="Admin">
+    {items.map((i) => (
+      <a href={i.href} aria-current={active === i.key ? 'page' : undefined} data-i18n={`adminNav.${i.key}`}>{i.label}</a>
+    ))}
+  </nav>
+  <p class="hint who"><span data-i18n="admin.signedInAs">Signed in as</span> <span id="me"></span> ·
+    <button id="logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button></p>
+</div>

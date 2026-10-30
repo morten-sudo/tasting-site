@@ -13,4 +13,4 @@
 /t/:slug/leaderboard      /t/:slug/leaderboard/     301
 /t/:slug/leaderboard/     /tasting/leaderboard/     200
 /t/:slug/admin            /t/:slug/admin/           301
-/t/:slug/admin/           /admin/                   200
+/t/:slug/admin/           /admin/tasting/           200

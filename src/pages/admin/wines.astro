@@ -1,0 +1,87 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav active="wines" />
+    <div id="admin-main" hidden>
+      <h1 class="title" data-i18n="adminNav.wines">Wines</h1>
+      <p class="hint" data-i18n="wineLib.intro">All your wines. Add them here, then choose them for each tasting – where you also set the guest price.</p>
+
+      <section class="block wines-admin">
+        <div class="guests-head">
+          <input id="wine-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" style="max-width:20rem;margin:0" />
+          <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button>
+        </div>
+
+        <form id="wine-form" class="add-form wine-form" novalidate hidden>
+          <h3 id="wf-title" data-i18n="admin.newWine">New wine</h3>
+          <label for="wf-link"><span data-i18n="link.label">Link to the wine</span> <span class="hint" data-i18n="link.hint">(e.g. from a web shop – fills in the form)</span></label>
+          <div class="inline-form link-row">
+            <input id="wf-link" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
+            <button id="wf-read-link" class="btn small ghost" type="button" data-i18n="link.fetch">Fetch</button>
+          </div>
+          <label for="wf-name" data-i18n="admin.name">Name</label>
+          <input id="wf-name" type="text" required />
+          <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>
+          <div class="wf-image">
+            <img id="wf-preview" alt="" hidden />
+            <input id="wf-image" type="file" accept="image/*" />
+            <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>
+            <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
+            <p id="wf-label-status" class="label-status" hidden aria-live="polite"></p>
+          </div>
+          <label for="wf-producer" data-i18n="admin.producer">Producer</label>
+          <input id="wf-producer" type="text" />
+          <div class="wf-pair">
+            <div>
+              <label for="wf-style" data-i18n="admin.style">Type</label>
+              <select id="wf-style"></select>
+            </div>
+            <div>
+              <label for="wf-vintage" data-i18n="admin.vintage">Vintage</label>
+              <input id="wf-vintage" type="text" placeholder="E.g. 2019 or 10 years" data-i18n-attr="placeholder=admin.vintagePlaceholder" />
+            </div>
+          </div>
+          <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
+          <input id="wf-retail" type="text" inputmode="decimal" />
+          <label for="wf-abv" data-i18n="admin.abv">Alcohol (%)</label>
+          <input id="wf-abv" type="text" inputmode="decimal" class="short" />
+          <label for="wf-description" data-i18n="admin.description">Description</label>
+          <textarea id="wf-description" rows="3"></textarea>
+          <label for="wf-details"><span data-i18n="admin.details">More about the wine</span> <span class="hint" data-i18n="admin.detailsHint">(one line per item, e.g. "Grapes: Touriga Nacional")</span></label>
+          <textarea id="wf-details" rows="3"></textarea>
+          <p id="wf-msg" class="message error" hidden></p>
+          <div class="row-actions">
+            <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            <button id="wf-delete" class="text-btn danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
+          </div>
+        </form>
+
+        <ul id="wine-admin-list" class="wine-admin-list"></ul>
+        <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { requireHost, $ } from '../../lib/admin-common';
+  import { initWineAdmin } from '../../lib/admin-wines';
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    await initWineAdmin(host.id).load();
+    // Search the list
+    $('wine-search').addEventListener('input', (e) => {
+      const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
+      document.querySelectorAll<HTMLElement>('#wine-admin-list > li').forEach((li) => {
+        li.hidden = !!q && !li.textContent!.toLowerCase().includes(q);
+      });
+    });
+  }
+</script>
