@@ -86,7 +86,7 @@ const price = (v: unknown) => {
 };
 
 type Shopify = { title?: string; vendor?: string; body_html?: string; product_type?: string;
-  images?: { src: string }[]; variants?: { price: string }[] };
+  images?: { src: string }[]; variants?: { title?: string; price: string; compare_at_price?: string | null }[] };
 
 async function fetchText(url: string, accept: string) {
   const res = await fetch(url, {
@@ -137,6 +137,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
     shop?.title && `Product name: ${shop.title}`,
     shop?.vendor && `Vendor: ${shop.vendor}`,
     shop?.product_type && `Product type: ${shop.product_type}`,
+    shop?.variants?.length && `Variants (title: price DKK, before: regular price):\n` + shop.variants
+      .map((v) => `- ${v.title ?? ''}: ${v.price}${v.compare_at_price ? `, before ${v.compare_at_price}` : ''}`).join('\n'),
     str(first(product.brand) && (first(product.brand) as Record<string, unknown>).name) &&
       `Brand: ${(first(product.brand) as Record<string, unknown>).name}`,
     (meta['og:description'] || meta['description']) && `Summary: ${meta['og:description'] || meta['description']}`,
@@ -148,6 +150,9 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
 
   const prompt = `Below is text from a web shop's product page for a wine. Return ONLY a JSON object with these keys:
 ${FIELDS_SPEC},
+"regular_price": the normal, non-discounted price for ONE bottle in DKK as a number (often shown crossed out or as "normal price"/"vejl. pris"), or null,
+"offer_price": a discounted price per bottle in DKK as a number, or null,
+"offer_quantity": how many bottles must be bought to get offer_price (1 if it applies to a single bottle), or null,
 "description": two or three sentences in ${LANG_NAMES[lang]} about the wine's style and taste, written in your own words – do not copy sentences from the page, and leave out prices, discounts, points and marketing.
 Use only what the page states. Use null when unsure. No other text.
 
@@ -168,14 +173,27 @@ ${text}`;
 
   const image = absolute(shop?.images?.[0]?.src, url) ?? absolute(first(product.image), url) ??
     absolute(meta['og:image:secure_url'] ?? meta['og:image'], url);
-  const shopPrice = price(offers?.price) ?? price(offers?.lowPrice) ??
+  // Regular price per bottle: what the page calls the normal price, else the structured price
+  const v0 = shop?.variants?.[0];
+  const regular = price(answer.regular_price) ??
+    (v0?.compare_at_price && price(v0.compare_at_price)! > price(v0.price)! && /^(1|default|1 ?stk\.?|1 ?fl\.?)?$/i.test((v0.title ?? '').trim().replace(/^default title$/i, ''))
+      ? price(v0.compare_at_price) : null);
+  const offerPrice = price(answer.offer_price);
+  const offerQty = Number(answer.offer_quantity);
+  const offer = offerPrice && (!regular || offerPrice < regular)
+    ? { price: offerPrice, quantity: Number.isInteger(offerQty) && offerQty > 0 && offerQty < 100 ? offerQty : 1 }
+    : null;
+  const structured = price(offers?.price) ?? price(offers?.lowPrice) ??
     price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price);
+  // Never use the offer price as the regular price
+  const shopPrice = regular ?? (offer && structured === offer.price ? null : structured);
 
   return json({
     ...toFields(answer, [title, meta['og:title'], str(product.name), shop?.title].filter(Boolean) as string[]),
     description: str(answer.description),
     image,
     price: shopPrice,
+    offer,
     source_url: url.href,
   });
 };

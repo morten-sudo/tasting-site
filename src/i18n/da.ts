@@ -372,6 +372,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "link.filled": "Udfyldte {n} felter fra linket – tjek dem, før du gemmer.",
   "link.failed": "Siden kunne ikke læses. Nogle butikker blokerer for det – udfyld felterne selv, eller prøv et foto af etiketten.",
   "link.invalid": "Indsæt et helt link, der starter med https://",
+  "link.offerOne": "Butikken har et tilbud: {price} pr. flaske.",
+  "link.offerMany": "Butikken har et tilbud: {price} pr. flaske ved køb af {n} stk.",
   "adminNav.tastings": "Smagninger",
   "adminNav.wines": "Vine",
   "adminNav.guests": "Deltagere",

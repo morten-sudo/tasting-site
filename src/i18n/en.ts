@@ -371,6 +371,8 @@ export const en = {
   "link.filled": "Filled in {n} fields from the link – check them before saving.",
   "link.failed": "The page could not be read. Some shops block this – fill in the fields yourself or try a photo of the label.",
   "link.invalid": "Paste a full link starting with https://",
+  "link.offerOne": "The shop has an offer: {price} per bottle.",
+  "link.offerMany": "The shop has an offer: {price} per bottle when buying {n}.",
   "adminNav.tastings": "Tastings",
   "adminNav.wines": "Wines",
   "adminNav.guests": "Guests",

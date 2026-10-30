@@ -372,6 +372,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "link.filled": "Fyllti út {n} reiti eftir hlekknum – athugaðu þá áður en þú vistar.",
   "link.failed": "Ekki tókst að lesa síðuna. Sumar verslanir loka á þetta – fylltu út reitina sjálf(ur) eða prófaðu mynd af miðanum.",
   "link.invalid": "Límdu inn heilan hlekk sem byrjar á https://",
+  "link.offerOne": "Verslunin er með tilboð: {price} á flösku.",
+  "link.offerMany": "Verslunin er með tilboð: {price} á flösku ef keyptar eru {n}.",
   "adminNav.tastings": "Smakkanir",
   "adminNav.wines": "Vín",
   "adminNav.guests": "Gestir",
