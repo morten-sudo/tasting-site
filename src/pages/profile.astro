@@ -14,16 +14,22 @@ import Base from '../layouts/Base.astro';
     <div id="me" hidden>
       <!-- Name and email; edited only after tapping the pencil -->
       <header class="me-head">
-        <div>
+        <div class="name-row">
           <h1 class="title" id="me-name"></h1>
-          <p id="me-email" class="hint"></p>
+          <button id="edit-toggle" class="icon-edit" type="button" aria-label="Edit name and email" title="Edit name and email" data-i18n-attr="aria-label=profile.edit;title=profile.edit">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></svg>
+          </button>
         </div>
-        <button id="edit-toggle" class="icon-edit" type="button" aria-label="Edit name and email" title="Edit name and email" data-i18n-attr="aria-label=profile.edit;title=profile.edit">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></svg>
-        </button>
+        <p id="me-email" class="hint"></p>
       </header>
 
-      <form id="edit-form" class="profile-form" novalidate hidden>
+      <!-- Edit panel: from the right on larger screens, a sheet from the bottom on phones -->
+      <dialog id="edit-panel" class="sheet" aria-labelledby="edit-title">
+        <div class="sheet-head">
+          <h2 id="edit-title" data-i18n="profile.edit">Edit name and email</h2>
+          <button id="edit-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+        </div>
+      <form id="edit-form" class="profile-form" novalidate>
         <div id="name-field">
           <label for="name" data-i18n="profile.name">Your name</label>
           <input id="name" type="text" autocomplete="name" maxlength="80" />
@@ -37,6 +43,7 @@ import Base from '../layouts/Base.astro';
           <button id="edit-cancel" class="btn small ghost" type="button" data-i18n="common.cancel">Cancel</button>
         </div>
       </form>
+      </dialog>
 
       <!-- Only an invite link on this device -->
       <div id="link-only" class="message" hidden>
@@ -98,13 +105,11 @@ import Base from '../layouts/Base.astro';
     $<HTMLInputElement>('email').value = me?.email ?? '';
     $('name-field').hidden = !me?.signedIn; // with only an invite link the host decides the name
     $('edit-msg').hidden = true;
-    $('edit-form').hidden = false;
-    $('edit-toggle').hidden = true;
+    $<HTMLDialogElement>('edit-panel').showModal();
     $<HTMLInputElement>(me?.signedIn ? 'name' : 'email').focus();
   }
   function closeEdit() {
-    $('edit-form').hidden = true;
-    $('edit-toggle').hidden = false;
+    $<HTMLDialogElement>('edit-panel').close();
   }
   function editMsg(text: string, ok: boolean) {
     const m = $('edit-msg');
@@ -115,6 +120,9 @@ import Base from '../layouts/Base.astro';
 
   $('edit-toggle').addEventListener('click', openEdit);
   $('edit-cancel').addEventListener('click', closeEdit);
+  $('edit-close').addEventListener('click', closeEdit);
+  // Tap outside the panel (on the backdrop) to close
+  $('edit-panel').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeEdit(); });
 
   $('edit-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -259,15 +267,20 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style is:global>
-  .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 40rem; }
+  .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 48rem; }
   .profile-page .title {
     font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4.5rem);
     line-height: 0.95; margin-bottom: 0.4rem; overflow-wrap: anywhere;
   }
-  .profile-page .me-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
-  .profile-page .me-head .hint { margin: 0; }
+  .profile-page .name-row { display: flex; align-items: center; gap: 0.75rem; }
+  /* The name stays on one line (shortened with … if it is very long) */
+  .profile-page .name-row .title {
+    margin: 0; min-width: 0; font-size: clamp(1.5rem, 6.5vw, 3rem); line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal;
+  }
+  .profile-page .me-head .hint { margin: 0.4rem 0 0; }
   .profile-page .icon-edit {
-    flex: none; width: 2.6rem; height: 2.6rem; margin-top: 0.4rem; display: inline-flex; align-items: center; justify-content: center;
+    flex: none; width: 2.6rem; height: 2.6rem; display: inline-flex; align-items: center; justify-content: center;
     border-radius: 50%; border: 1px solid var(--lodge-3); background: transparent; color: var(--paper); cursor: pointer;
   }
   .profile-page .icon-edit:hover { border-color: var(--amber); color: var(--amber); }
@@ -275,7 +288,32 @@ import Base from '../layouts/Base.astro';
   .profile-page .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
   .profile-page .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
   .profile-page .btn.small { min-height: 2.5rem; padding: 0 1rem; }
-  .profile-page .profile-form { display: grid; gap: 0.4rem; margin: 1.25rem 0 0; max-width: 28rem; }
+  .profile-page .profile-form { display: grid; gap: 0.4rem; }
+
+  /* Edit panel: bottom sheet on phones, side panel from the right on larger screens */
+  dialog.sheet {
+    position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 90vh;
+    padding: 1.25rem var(--gutter) calc(1.5rem + env(safe-area-inset-bottom)); overflow-y: auto;
+    border: 0; border-radius: 1rem 1rem 0 0; background: var(--lodge); color: var(--paper);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18);
+  }
+  dialog.sheet[open] { animation: sheet-up 0.22s ease-out; }
+  dialog.sheet::backdrop { background: rgba(20, 12, 12, 0.45); }
+  .sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .sheet-head h2 { margin: 0; font-size: 1.5rem; }
+  .sheet-close {
+    width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid var(--lodge-3);
+    background: transparent; color: var(--paper); font-size: 1.4rem; line-height: 1; cursor: pointer;
+  }
+  @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes sheet-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @media (min-width: 48rem) {
+    dialog.sheet {
+      inset: 0 0 0 auto; width: 26rem; height: 100vh; max-height: 100vh;
+      border-radius: 0; padding: 1.75rem 1.75rem 2rem; box-shadow: -10px 0 40px rgba(0, 0, 0, 0.18);
+    }
+    dialog.sheet[open] { animation: sheet-in 0.22s ease-out; }
+  }
   .profile-page .profile-form #name-field { display: grid; gap: 0.4rem; margin-bottom: 0.4rem; }
   .profile-page .profile-form .hint { margin: 0; font-size: 0.88rem; }
   .profile-page .profile-form .row { display: flex; gap: 0.6rem; margin-top: 0.4rem; }
