@@ -1,8 +1,12 @@
 import { EVENT } from './config';
 
 const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
-const mobilepay = EVENT.mobilepay.replace(/\s/g, '');
-const pretty = mobilepay.replace(/(\d{2})(?=\d)/g, '$1 ');
+// Host's MobilePay number. Set from the tasting (setPayee); config is only a fallback.
+let mobilepay = EVENT.mobilepay.replace(/\s/g, '');
+export function setPayee(number: unknown) {
+  if (typeof number === 'string') mobilepay = number.replace(/\s/g, '');
+  else if (number === null) mobilepay = '';
+}
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
   const e = document.createElement(tag);
@@ -11,8 +15,9 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 }
 
-// Betalingsboks: knap til MobilePay-appen + nummer, beløb og besked med kopier-knapper.
+// Payment box: button to the MobilePay app plus number, amount and message with copy buttons.
 export function payBox(amount: number, comment: string) {
+  const pretty = mobilepay.replace(/(\d{2})(?=\d)/g, '$1 ');
   const box = el('div', 'pay');
   const amountStr = amount.toFixed(2);
 

@@ -1,23 +1,39 @@
-# Portvin 2026
+# Winetastr
 
-Website til portvinssmagningen lørdag 21. november 2026 kl. 17:
-tilmelding, vine, bestilling og quiz.
+Wine tastings for hosts and their guests: invitations, wines, orders and a quiz.
+Started as the site for the port wine tasting on 21 November 2026.
 
-- **Frontend:** Astro (statisk site), hostet på Cloudflare Pages
-- **Data:** Supabase (`supabase/schema.sql`)
-- **Adresse:** portvin.krusesoendergaard.dk
+- **Frontend:** Astro (static site), hosted on Cloudflare Pages
+- **Data:** Supabase (`supabase/schema.sql` plus `supabase/migrations/`)
+- **Address:** portvin.krusesoendergaard.dk
 
-## Kom i gang lokalt
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
+## Pages
+
+| Path | Purpose |
+| --- | --- |
+| `/` | Front page |
+| `/login/` | Sign in with an email code (guests and hosts) |
+| `/become-host/` | Host sign-up |
+| `/profile/` | Guest RSVP, email and tasting fee |
+| `/wines/`, `/wine/?id=` | Wines of the guest's tasting |
+| `/cart/` | Cart and orders |
+| `/quiz/` | Quiz |
+| `/leaderboard/?t=slug` | Big-screen leaderboard |
+| `/admin/` | Host admin: tastings, wines, guests, orders |
+
 ## Database
 
-Kør `supabase/schema.sql` i Supabase → SQL Editor. Filen kan køres igen uden datatab.
+`supabase/schema.sql` is the base schema; the files in `supabase/migrations/`
+are applied on top, in order.
 
-Gæster har ingen direkte adgang til tabellerne. De kalder funktioner
-(`get_invite`, `respond_invite`, `set_order`, `submit_answer` …) med
-deres personlige invitationskode fra linket `/invitation/?k=KODE`.
+Guests have no direct table access. They call security-definer functions
+(`get_invite`, `respond_invite`, `place_order`, `submit_answer`, …) with the
+invite code from their personal link (`?k=CODE`) or sign in with an email code.
+Hosts only see and edit their own tastings (`is_tasting_host`).

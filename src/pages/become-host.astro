@@ -1,0 +1,198 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Bliv vært">
+  <section class="wrap host-page">
+    <p class="eyebrow">Gratis</p>
+    <h1 class="title">Hold din egen smagning</h1>
+    <p class="lead">
+      Inviter dine gæster, vis dem vinene, tag imod bestillinger og afslut med en quiz.
+      Opret dig med din e-mail, så er du i gang på et par minutter.
+    </p>
+
+    <p id="checking" class="hint" hidden>Opretter dig som vært …</p>
+
+    <!-- Step 1: name and email -->
+    <form id="start-form" class="login-form" novalidate>
+      <label for="name">Dit navn</label>
+      <input id="name" type="text" autocomplete="name" required />
+      <div id="email-wrap">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" inputmode="email" required />
+      </div>
+      <p id="start-msg" class="message" hidden></p>
+      <button class="btn" type="submit" id="start-btn">Send kode</button>
+    </form>
+
+    <!-- Step 2: code from the email -->
+    <form id="otp-form" class="login-form" novalidate hidden>
+      <p>Vi har sendt en kode til <strong id="sent-to"></strong>. Skriv den her.</p>
+      <label for="otp">Kode fra mailen</label>
+      <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
+             pattern="[0-9]*" maxlength="10" required />
+      <p id="otp-msg" class="message" hidden></p>
+      <button class="btn" type="submit" id="otp-btn">Opret mig som vært</button>
+      <p class="hint">
+        <button id="back" class="link-btn" type="button">Ret navn eller e-mail</button>
+      </p>
+    </form>
+
+    <p class="hint small">Er du allerede vært? <a href="/login/?next=%2Fadmin%2F">Log ind her</a>.</p>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const NAME_KEY = 'wt_host_name';
+  let email = '';
+
+  function show(el: HTMLElement, text: string, ok: boolean) {
+    el.textContent = text;
+    el.className = 'message ' + (ok ? 'ok' : 'error');
+    el.hidden = false;
+  }
+
+  function remember(name: string) { try { localStorage.setItem(NAME_KEY, name); } catch {} }
+  function remembered() { try { return localStorage.getItem(NAME_KEY) ?? ''; } catch { return ''; } }
+
+  // Signed in: make the user a host and go to admin
+  let busy = false;
+  async function finish(name: string) {
+    if (busy) return;
+    busy = true;
+    $('start-form').hidden = true;
+    $('otp-form').hidden = true;
+    $('checking').hidden = false;
+    const { error } = await supabase.rpc('become_host', { host_name: name });
+    if (error) {
+      busy = false;
+      $('checking').hidden = true;
+      $('start-form').hidden = false;
+      show($('start-msg'), 'Det lykkedes ikke at oprette dig. Prøv igen om lidt.', false);
+      return;
+    }
+    try { localStorage.removeItem(NAME_KEY); } catch {}
+    location.replace('/admin/');
+  }
+
+  async function start() {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      ($('name') as HTMLInputElement).value = remembered();
+      return;
+    }
+    // Already a host? Go straight to admin.
+    const { data: hostId } = await supabase.rpc('current_host_id');
+    if (hostId) { location.replace('/admin/'); return; }
+    const pending = remembered();
+    if (pending) { finish(pending); return; }
+    // Signed in (e.g. as a guest) but no name yet: only ask for the name
+    $('email-wrap').hidden = true;
+    ($('start-btn') as HTMLButtonElement).textContent = 'Opret mig som vært';
+    ($('start-form') as HTMLFormElement).dataset.signedIn = '1';
+  }
+
+  supabase.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_IN' && remembered()) finish(remembered());
+  });
+
+  async function sendCode() {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: location.origin + '/become-host/', shouldCreateUser: true },
+    });
+    if (error?.status === 429) { show($('start-msg'), 'Der er sendt for mange mails på kort tid. Vent et minut, og prøv igen.', false); return false; }
+    if (error) { show($('start-msg'), 'Mailen kunne ikke sendes. Prøv igen om lidt.', false); return false; }
+    return true;
+  }
+
+  $('start-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $('start-msg').hidden = true;
+    const name = ($('name') as HTMLInputElement).value.trim();
+    if (!name) { show($('start-msg'), 'Skriv dit navn.', false); return; }
+    remember(name);
+    if (($('start-form') as HTMLFormElement).dataset.signedIn) { finish(name); return; }
+
+    email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('start-msg'), 'Skriv en gyldig e-mail.', false); return; }
+
+    const btn = $('start-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.textContent = 'Sender …';
+    const ok = await sendCode();
+    btn.disabled = false;
+    btn.textContent = 'Send kode';
+    if (!ok) return;
+
+    $('sent-to').textContent = email;
+    $('start-form').hidden = true;
+    $('otp-form').hidden = false;
+    ($('otp') as HTMLInputElement).focus();
+  });
+
+  ($('otp') as HTMLInputElement).addEventListener('input', (e) => {
+    const t = e.target as HTMLInputElement;
+    t.value = t.value.replace(/\D/g, '');
+  });
+
+  $('otp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('otp-msg');
+    const token = ($('otp') as HTMLInputElement).value.replace(/\D/g, '');
+    if (token.length < 6) { show(msg, 'Skriv hele koden fra mailen.', false); return; }
+    const btn = $('otp-btn') as HTMLButtonElement;
+    btn.disabled = true;
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    btn.disabled = false;
+    if (error) {
+      show(msg, error.status === 429 ? 'For mange forsøg. Vent et minut, og prøv igen.' : 'Koden passer ikke eller er udløbet.', false);
+      return;
+    }
+    // onAuthStateChange handles the rest
+    finish(remembered());
+  });
+
+  $('back').addEventListener('click', () => {
+    $('otp-form').hidden = true;
+    $('start-form').hidden = false;
+  });
+
+  start();
+</script>
+
+<style>
+  .host-page { padding-top: 2.5rem; padding-bottom: 3rem; }
+  .title {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(2.6rem, 11vw, 4.5rem);
+    line-height: 0.95;
+    margin: 0.4rem 0 1rem;
+    max-width: 14ch;
+  }
+  .lead { max-width: 32rem; margin-bottom: 1.75rem; }
+  .login-form { display: grid; gap: 0.6rem; max-width: 26rem; }
+  .login-form .btn { justify-self: start; margin-top: 0.3rem; }
+  #email-wrap { display: grid; gap: 0.6rem; }
+  #email-wrap label { margin: 0; }
+  .login-form input.otp {
+    font-family: var(--display);
+    font-size: 2rem;
+    letter-spacing: 0.35em;
+    padding: 0.4rem 0.8rem;
+    max-width: 16rem;
+    width: 100%;
+    color: var(--paper);
+    background: transparent;
+    border: 1px solid var(--lodge-3);
+    border-radius: var(--radius);
+  }
+  .link-btn {
+    font: inherit; color: var(--amber); background: none; border: 0; padding: 0; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px;
+  }
+  .small { margin-top: 2rem; font-size: 0.9rem; }
+</style>

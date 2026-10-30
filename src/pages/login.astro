@@ -7,17 +7,17 @@ import Base from '../layouts/Base.astro';
 
     <p id="checking" class="hint" hidden>Logger dig ind …</p>
 
-    <!-- Både gæst og vært: vælg hvor du vil hen -->
+    <!-- Both guest and host: choose where to go -->
     <div id="choose" class="choose" hidden>
       <p class="lead">Du er både gæst og vært. Hvor vil du hen?</p>
       <div class="choose-btns">
-        <a class="btn" id="go-guest" href="/profil/">Min smagning</a>
+        <a class="btn" id="go-guest" href="/profile/">Min smagning</a>
         <a class="btn ghost" id="go-admin" href="/admin/">Admin</a>
       </div>
     </div>
 
     <div id="forms">
-      <!-- 1: E-mail -->
+      <!-- Step 1: email -->
       <form id="mail-form" class="login-form" novalidate>
         <p class="lead">Skriv din e-mail, så sender vi dig en kode.</p>
         <label for="email">E-mail</label>
@@ -26,7 +26,7 @@ import Base from '../layouts/Base.astro';
         <button class="btn" type="submit" id="mail-btn">Send kode</button>
       </form>
 
-      <!-- 2: Koden fra mailen -->
+      <!-- Step 2: code from the email -->
       <form id="otp-form" class="login-form" novalidate hidden>
         <p class="lead">Vi har sendt en kode til <strong id="sent-to"></strong>. Skriv den her.</p>
         <label for="otp">Kode fra mailen</label>
@@ -41,7 +41,7 @@ import Base from '../layouts/Base.astro';
         <p class="hint">Kan du ikke finde mailen, så kig i spam. Du kan også trykke på linket i mailen.</p>
       </form>
 
-      <!-- Invitationslink eller kode -->
+      <!-- Invite link or code -->
       <details class="alt" id="alt-invite">
         <summary>Har du dit invitationslink i stedet?</summary>
         <form id="code-form" class="login-form" novalidate>
@@ -53,7 +53,7 @@ import Base from '../layouts/Base.astro';
         </form>
       </details>
 
-      <!-- Adgangskode (værter, der har sat en) -->
+      <!-- Password (hosts who have set one) -->
       <details class="alt" id="alt-pw">
         <summary>Log ind med adgangskode</summary>
         <form id="pw-form" class="login-form" novalidate>
@@ -70,6 +70,7 @@ import Base from '../layouts/Base.astro';
         Kender vi ikke din e-mail, så log ind med dit invitationslink og tilføj den på din side.
         Har du mistet begge dele, så skriv til værten.
       </p>
+      <p class="hint small">Vil du holde din egen smagning? <a href="/become-host/">Bliv vært</a>.</p>
     </div>
   </section>
 </Base>
@@ -79,8 +80,8 @@ import Base from '../layouts/Base.astro';
 
   const $ = (id: string) => document.getElementById(id)!;
   const params = new URLSearchParams(location.search);
-  // Kun interne stier som mål efter login
-  const rawNext = params.get('til') ?? '';
+  // Only internal paths are allowed as the post-login target
+  const rawNext = params.get('next') ?? '';
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
   const wantsAdmin = next.startsWith('/admin');
 
@@ -92,7 +93,7 @@ import Base from '../layouts/Base.astro';
     el.hidden = false;
   }
 
-  // ---------- Efter login: send personen det rigtige sted hen ----------
+  // ---------- After sign-in: send the user to the right place ----------
   let routing = false;
   async function route() {
     if (routing) return true;
@@ -120,7 +121,7 @@ import Base from '../layouts/Base.astro';
       $('choose').hidden = false;
       return true;
     }
-    if (code) { location.replace(next && !wantsAdmin ? next : '/profil/'); return true; }
+    if (code) { location.replace(next && !wantsAdmin ? next : '/profile/'); return true; }
 
     routing = false;
     $('checking').hidden = true;
@@ -139,7 +140,7 @@ import Base from '../layouts/Base.astro';
     $('checking').hidden = false;
   }
 
-  // ---------- Trin 1: send kode ----------
+  // ---------- Step 1: send code ----------
   function showMailStep() {
     $('otp-form').hidden = true;
     $('mail-form').hidden = false;
@@ -150,10 +151,10 @@ import Base from '../layouts/Base.astro';
     const msg = $('mail-msg');
     const { data: known } = await supabase.rpc('login_email_known', { e: email });
     if (!known) {
-      show(msg, `Vi kender ikke ${email}. Tjek stavningen, brug dit invitationslink, eller skriv til værten.`, false);
+      show(msg, wantsAdmin ? `${email} er ikke oprettet som vært. Opret dig under "Bliv vært" nedenfor.` : `Vi kender ikke ${email}. Tjek stavningen, brug dit invitationslink, eller skriv til værten.`, false);
       return false;
     }
-    const redirect = location.origin + '/log-ind/' + (next ? '?til=' + encodeURIComponent(next) : '');
+    const redirect = location.origin + '/login/' + (next ? '?next=' + encodeURIComponent(next) : '');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirect, shouldCreateUser: true },
@@ -191,7 +192,7 @@ import Base from '../layouts/Base.astro';
     ($('otp') as HTMLInputElement).focus();
   });
 
-  // ---------- Trin 2: tjek koden ----------
+  // ---------- Step 2: verify the code ----------
   $('otp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('otp-msg');
@@ -225,13 +226,13 @@ import Base from '../layouts/Base.astro';
     showMailStep();
   });
 
-  // Kun cifre i kodefeltet (også når koden indsættes med mellemrum)
+  // Digits only in the code field (also when pasted with spaces)
   ($('otp') as HTMLInputElement).addEventListener('input', (e) => {
     const v = (e.target as HTMLInputElement).value.replace(/\D/g, '');
     (e.target as HTMLInputElement).value = v;
   });
 
-  // ---------- Invitationslink eller kode ----------
+  // ---------- Invite link or code ----------
   function extractCode(raw: string) {
     const v = raw.trim();
     const m = v.match(/[?&]k=([A-Za-z0-9]+)/);
@@ -252,10 +253,10 @@ import Base from '../layouts/Base.astro';
       return;
     }
     setGuestCode(code);
-    location.href = '/profil/';
+    location.href = '/profile/';
   });
 
-  // ---------- Adgangskode ----------
+  // ---------- Password ----------
   $('pw-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = $('pw-msg');

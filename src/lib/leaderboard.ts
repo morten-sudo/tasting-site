@@ -11,7 +11,7 @@ export async function fetchLeaderboard(opts: { code?: string | null; slug?: stri
   return data as Row[];
 }
 
-// Tegner pointtavlen i et <ol>. Delte placeringer får samme nummer.
+// Renders the leaderboard into an <ol>. Tied places share the same rank.
 export function renderLeaderboard(list: HTMLOListElement, rows: Row[], total: number, me?: string) {
   list.replaceChildren();
   let rank = 0;

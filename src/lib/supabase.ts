@@ -3,9 +3,9 @@ import { SUPABASE_URL, SUPABASE_KEY } from './config';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const STORAGE_KEY = 'portvin_kode';
+const STORAGE_KEY = 'guest_code';
 
-// Gæstens invitationskode: fra linket (?k=...) eller husket fra sidst.
+// The guest's invite code: from the link (?k=...) or remembered from last time.
 export function getGuestCode(): string | null {
   const fromUrl = new URLSearchParams(location.search).get('k')?.trim();
   if (fromUrl) {
@@ -19,7 +19,7 @@ export function setGuestCode(code: string) {
   try { localStorage.setItem(STORAGE_KEY, code); } catch {}
 }
 
-// Log ud: glem koden og afslut en evt. e-mail-session på denne enhed
+// Sign out: forget the code and end any email session on this device
 export function forgetGuestCode() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
   try {

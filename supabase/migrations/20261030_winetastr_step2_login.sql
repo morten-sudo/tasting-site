@@ -1,6 +1,6 @@
--- Winetastr trin 2: login med engangskode for værter og gæster (anvendt 30-10-2026)
+-- Winetastr step 2: one-time code sign-in for hosts and guests (applied 2026-10-30)
 
--- E-mail er unik pr. smagning (samme gæst kan deltage i flere smagninger)
+-- Email is unique per tasting (the same guest can join several tastings)
 create unique index if not exists participants_tasting_email_unique
   on participants (tasting_id, lower(email)) where email is not null;
 drop index if exists participants_email_unique;
@@ -24,7 +24,7 @@ begin
   update participants set email = clean where id = p.id;
 end $$;
 
--- Kender vi e-mailen (gæst, vært eller superadmin)? Bruges før der sendes en kode.
+-- Is the email known (guest, host or superadmin)? Checked before sending a code.
 create or replace function login_email_known(e text)
 returns boolean
 language sql stable security definer set search_path = public as $$
@@ -34,7 +34,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function login_email_known(text) to anon, authenticated;
 
--- Den indloggede gæsts smagninger: kommende først (nærmeste øverst), derefter tidligere
+-- The signed-in guest's tastings: upcoming first (soonest on top), then past ones
 create or replace function my_tastings()
 returns table (code text, slug text, title text, starts_at timestamptz)
 language sql stable security definer set search_path = public as $$

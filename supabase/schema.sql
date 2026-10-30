@@ -1,22 +1,22 @@
 -- =====================================================================
--- Portvin 2026 – databaseskema
--- Er allerede kørt mod Supabase-projektet (via Claude). Filen er kilden til skemaet.
--- Filen kan køres igen uden at slette data (den bruger "if not exists").
--- Winetastr (flere værter og smagninger) bygger ovenpå: se supabase/migrations/.
+-- Base database schema (the original single-tasting site)
+-- Already applied to the Supabase project. This file is the source of truth for the base schema.
+-- Safe to re-run without losing data (uses "if not exists").
+-- Winetastr (multiple hosts and tastings) builds on top: see supabase/migrations/.
 -- =====================================================================
 
 create extension if not exists pgcrypto;
 
 -- ---------------------------------------------------------------------
--- Tabeller
+-- Tables
 -- ---------------------------------------------------------------------
 
--- Admins: e-mails der må se og rette alt via admin-siden (Supabase Auth)
+-- Admins: emails allowed to see and edit everything (Supabase Auth)
 create table if not exists admins (
   email text primary key
 );
 
--- Deltagere. invite_code er den unikke kode i hver gæsts personlige link.
+-- Participants. invite_code is the unique code in each guest's personal link.
 create table if not exists participants (
   id            uuid primary key default gen_random_uuid(),
   name          text not null,
@@ -28,31 +28,31 @@ create table if not exists participants (
   diet          text,
   note          text,
   responded_at  timestamptz,
-  tasting_paid  boolean not null default false,   -- betalt for selve smagningen
+  tasting_paid  boolean not null default false,   -- paid the tasting fee
   created_at    timestamptz not null default now()
 );
 
--- Vine
+-- Wines
 create table if not exists wines (
   id           serial primary key,
   sort_order   int not null default 0,
   name         text not null,
   producer     text,
-  style        text,            -- fx Tawny, Vintage, Colheita, Rivesaltes
-  vintage      text,            -- tekst, så "10 år" eller "NV" også kan bruges
+  style        text,            -- e.g. Tawny, Vintage, Red, Sparkling
+  vintage      text,            -- text, so "10 år" or "NV" also work
   abv          numeric(4,1),
-  price_dkk    numeric(8,2),                    -- gæsternes pris
-  retail_price_dkk numeric(8,2),                -- normalpris (butikspris)
+  price_dkk    numeric(8,2),                    -- guest price
+  retail_price_dkk numeric(8,2),                -- regular retail price
   description  text,
   orderable    boolean not null default true,
-  revealed     boolean not null default true,   -- false = skjult indtil skænket
-  image_url    text,                            -- produktbillede (viniportugal.dk)
-  source_url   text,                            -- produktside hos ViniPortugal (kun til reference)
-  details      text,                            -- "Læs mere": linjer med "Overskrift: tekst"
+  revealed     boolean not null default true,   -- false = hidden until poured
+  image_url    text,                            -- product image
+  source_url   text,                            -- source product page (reference only)
+  details      text,                            -- "Read more": lines of "Heading: text"
   created_at   timestamptz not null default now()
 );
 
--- Bestillinger: én ordre pr. "Send bestilling", med linjer og pris på bestillingstidspunktet
+-- Orders: one order per submit, with lines and the price at order time
 create table if not exists orders (
   id             serial primary key,
   participant_id uuid not null references participants(id) on delete cascade,
@@ -86,7 +86,7 @@ create table if not exists quiz_answers (
   primary key (participant_id, question_id)
 );
 
--- Indstillinger (åbn/luk bestilling og quiz fra admin-siden)
+-- Legacy settings (replaced by columns on tastings; mirrored by a trigger)
 create table if not exists settings (
   key   text primary key,
   value jsonb not null
@@ -97,13 +97,13 @@ insert into settings (key, value) values
   ('orders_open',   'false'),
   ('quiz_open',     'false'),
   ('quiz_finished', 'false'),
-  ('tasting_fee_open', 'false'),   -- vis betaling for smagningen
-  ('tasting_fee',      '0'),       -- pris pr. person
-  ('tasting_total',    '0')        -- samlet udgift (kun til udregning i admin)
+  ('tasting_fee_open', 'false'),   -- show the tasting fee
+  ('tasting_fee',      '0'),       -- price per person
+  ('tasting_total',    '0')        -- total cost (only for the admin calculation)
 on conflict (key) do nothing;
 
 -- ---------------------------------------------------------------------
--- Hjælpefunktioner
+-- Helper functions
 -- ---------------------------------------------------------------------
 
 create or replace function is_admin() returns boolean
@@ -125,10 +125,10 @@ language sql stable security definer set search_path = public as $$
 $$;
 
 -- ---------------------------------------------------------------------
--- Adgangsregler (RLS)
--- Gæster har ingen direkte adgang til tabellerne – kun via funktionerne
--- nedenfor, som kræver en gyldig invitationskode.
--- Admins (e-mail i tabellen admins) har fuld adgang.
+-- Row level security
+-- Guests have no direct table access, only through the functions
+-- below, which require a valid invite code.
+-- Admins (email in the admins table) have full access.
 -- ---------------------------------------------------------------------
 
 alter table admins          enable row level security;
@@ -153,22 +153,22 @@ begin
   end loop;
 end $$;
 
--- Vinene kan kun hentes af indloggede gæster via get_wines(code) – se nedenfor.
--- Den gamle offentlige læseregel er slået fra (using false).
+-- Wines can only be read by signed-in guests via get_wines(code), see below.
+-- The old public read policy is disabled (using false).
 drop policy if exists public_read_wines on wines;
 create policy public_read_wines on wines
   for select to anon, authenticated using (false);
 
--- Alle må læse indstillinger
+-- Everyone may read settings
 drop policy if exists public_read_settings on settings;
 create policy public_read_settings on settings
   for select to anon, authenticated using (true);
 
 -- ---------------------------------------------------------------------
--- Funktioner til gæster (kaldes fra hjemmesiden med invitationskoden)
+-- Guest functions (called from the site with the invite code)
 -- ---------------------------------------------------------------------
 
--- Vinene: kun for gæster med gyldig kode (eller admin)
+-- Wines: only for guests with a valid code (or admin)
 create or replace function get_wines(code text)
 returns setof wines
 language sql stable security definer set search_path = public as $$
@@ -178,7 +178,7 @@ language sql stable security definer set search_path = public as $$
   order by w.sort_order;
 $$;
 
--- Hent egen invitation
+-- Get own invitation
 create or replace function get_invite(code text)
 returns table (name text, status text, diet text, note text)
 language sql stable security definer set search_path = public as $$
@@ -186,7 +186,7 @@ language sql stable security definer set search_path = public as $$
   from participants p where p.invite_code = code;
 $$;
 
--- Svar på invitationen
+-- Respond to the invitation
 create or replace function respond_invite(code text, attending boolean,
                                           diet text default null,
                                           note text default null)
@@ -208,7 +208,7 @@ begin
   return case when attending then 'yes' else 'no' end;
 end $$;
 
--- Afgiv en bestilling ud fra kurven: items = [{"wine_id": 1, "qty": 2}, ...]
+-- Place an order from the cart: items = [{"wine_id": 1, "qty": 2}, ...]
 create or replace function place_order(code text, items jsonb)
 returns int
 language plpgsql security definer set search_path = public as $$
@@ -241,7 +241,7 @@ begin
   return new_id;
 end $$;
 
--- Gæstens egne bestillinger
+-- The guest's own orders
 create or replace function get_my_orders(code text)
 returns table (order_id int, created_at timestamptz, paid boolean,
                wine_id int, wine_name text, quantity int, unit_price numeric)
@@ -255,7 +255,7 @@ language sql stable security definer set search_path = public as $$
   order by o.created_at, w.sort_order;
 $$;
 
--- Gæstens betaling for smagningen (kun når værten har slået den til, og kun for dem der kommer)
+-- The guest's tasting fee (only when enabled by the host, and only for attending guests)
 create or replace function get_tasting_payment(code text)
 returns table (amount numeric, paid boolean)
 language sql stable security definer set search_path = public as $$
@@ -266,7 +266,7 @@ language sql stable security definer set search_path = public as $$
     and setting('tasting_fee_open');
 $$;
 
--- Quizspørgsmål uden facit (facit + forklaring først når quizzen er afsluttet)
+-- Quiz questions without answers (answers and explanations only once the quiz is finished)
 create or replace function get_quiz()
 returns table (id int, sort_order int, question text, options jsonb,
                correct_key text, explanation text)
@@ -279,7 +279,7 @@ language sql stable security definer set search_path = public as $$
   order by q.sort_order;
 $$;
 
--- Egne svar
+-- Own answers
 create or replace function get_my_answers(code text)
 returns table (question_id int, answer_key text)
 language sql stable security definer set search_path = public as $$
@@ -288,8 +288,8 @@ language sql stable security definer set search_path = public as $$
   where p.invite_code = code;
 $$;
 
--- Afgiv svar. Et svar kan ikke ændres bagefter (ellers kunne man
--- bruge den live pointtavle til at regne facit ud).
+-- Submit an answer. Answers cannot be changed afterwards (otherwise
+-- the live leaderboard could be used to work out the answers).
 create or replace function submit_answer(code text, q_id int, a_key text)
 returns void
 language plpgsql security definer set search_path = public as $$
@@ -311,7 +311,7 @@ begin
   on conflict do nothing;
 end $$;
 
--- Fælles pointtavle
+-- Shared leaderboard
 create or replace function get_leaderboard()
 returns table (name text, points int, answered int)
 language sql stable security definer set search_path = public as $$
@@ -326,7 +326,7 @@ language sql stable security definer set search_path = public as $$
   order by points desc, answered desc, p.name;
 $$;
 
--- Kun funktionerne må kaldes af gæster
+-- Guests may only call the functions
 revoke all on function participant_by_code(text) from public, anon, authenticated;
 revoke all on function setting(text) from public, anon, authenticated;
 revoke all on function is_admin() from public, anon;
@@ -342,7 +342,7 @@ grant execute on function submit_answer(text, int, text)            to anon, aut
 grant execute on function get_tasting_payment(text)                 to anon, authenticated;
 grant execute on function get_leaderboard()                         to anon, authenticated;
 
--- Live-opdatering af pointtavle og indstillinger
+-- Realtime updates for the leaderboard and settings
 do $$
 begin
   begin alter publication supabase_realtime add table quiz_answers; exception when others then null; end;
@@ -350,7 +350,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
--- Quizspørgsmål (13 stk.)
+-- Quiz questions (13)
 -- ---------------------------------------------------------------------
 
 insert into quiz_questions (id, sort_order, question, options, correct_key, explanation) values

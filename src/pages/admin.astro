@@ -5,7 +5,7 @@ import Base from '../layouts/Base.astro';
   <section class="wrap admin-page">
     <h1 class="title">Admin</h1>
 
-    <!-- Ny adgangskode efter "glemt adgangskode"-mail -->
+    <!-- New password after a password-reset email -->
     <form id="reset" class="login" hidden>
       <p>Vælg en ny adgangskode.</p>
       <label for="reset-pw">Ny adgangskode (mindst 8 tegn)</label>
@@ -15,25 +15,62 @@ import Base from '../layouts/Base.astro';
     </form>
 
     <p id="not-admin" class="message error" hidden>
-      Du er logget ind, men e-mailen har ikke admin-adgang.
+      Du er logget ind, men er ikke oprettet som vært. <a href="/become-host/">Bliv vært</a> ·
       <button id="logout2" class="link-btn" type="button">Log ud</button>
     </p>
 
     <div id="panel" hidden>
       <p class="hint who">Logget ind som <span id="me"></span> · <button id="logout" class="link-btn" type="button">Log ud</button></p>
 
-      <!-- Adgangskode -->
-      <details class="block pw-box">
-        <summary>Sæt eller skift adgangskode</summary>
-        <form id="pw-form" class="login">
-          <label for="new-pw">Ny adgangskode (mindst 8 tegn)</label>
-          <input id="new-pw" type="password" autocomplete="new-password" minlength="8" required />
-          <button class="btn small" type="submit">Gem adgangskode</button>
-          <p id="pw-msg" class="message" hidden></p>
-        </form>
-      </details>
+      <!-- Tasting picker -->
+      <section id="tasting-bar" class="block tasting-bar" hidden>
+        <label for="tasting-select">Smagning</label>
+        <div class="inline-form">
+          <select id="tasting-select"></select>
+          <button id="new-tasting-toggle" class="btn small ghost" type="button">Ny smagning</button>
+        </div>
+      </section>
 
-      <!-- Knapper -->
+      <!-- New tasting -->
+      <form id="new-tasting" class="add-form tasting-form" novalidate hidden>
+        <h2 id="nt-heading">Ny smagning</h2>
+        <p id="nt-intro" class="hint" hidden>Velkommen som vært. Start med at oprette din første smagning – du kan rette det hele bagefter.</p>
+        <label for="nt-title">Titel</label>
+        <input id="nt-title" type="text" placeholder="Fx Portvin 2026" required />
+        <label for="nt-when">Dato og tid</label>
+        <input id="nt-when" type="datetime-local" />
+        <label for="nt-place">Sted</label>
+        <input id="nt-place" type="text" autocomplete="street-address" />
+        <label for="nt-mobilepay">MobilePay-nummer <span class="hint">(valgfrit)</span></label>
+        <input id="nt-mobilepay" type="tel" inputmode="numeric" />
+        <p id="nt-msg" class="message error" hidden></p>
+        <div class="row-actions">
+          <button id="nt-save" class="btn small" type="submit">Opret smagning</button>
+          <button id="nt-cancel" class="text-btn" type="button">Annullér</button>
+        </div>
+      </form>
+
+      <div id="tasting-panel" hidden>
+      <!-- Tasting details -->
+      <section class="block">
+        <h2>Smagningen</h2>
+        <form id="details" class="add-form tasting-form" novalidate>
+          <label for="d-title">Titel</label>
+          <input id="d-title" type="text" required />
+          <label for="d-when">Dato og tid</label>
+          <input id="d-when" type="datetime-local" />
+          <label for="d-place">Sted</label>
+          <input id="d-place" type="text" autocomplete="street-address" />
+          <label for="d-mobilepay">MobilePay-nummer <span class="hint">(valgfrit)</span></label>
+          <input id="d-mobilepay" type="tel" inputmode="numeric" />
+          <div class="row-actions">
+            <button id="d-save" class="btn small" type="submit">Gem</button>
+            <span id="d-msg" class="hint" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Controls -->
       <section class="block">
         <h2>Styring</h2>
         <div class="toggles">
@@ -42,10 +79,10 @@ import Base from '../layouts/Base.astro';
           <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span>Quiz åben for svar</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span>Quiz afsluttet (vis facit)</span></label>
         </div>
-        <p class="hint">Pointtavle til tv'et: <a id="tv-link" href="/pointtavle/" target="_blank">/pointtavle/</a></p>
+        <p class="hint">Pointtavle til tv'et: <a id="tv-link" href="/leaderboard/" target="_blank">/leaderboard/</a></p>
       </section>
 
-      <!-- Betaling for smagningen -->
+      <!-- Tasting fee -->
       <section class="block">
         <h2>Betaling for smagningen</h2>
         <div class="fee-grid">
@@ -63,7 +100,66 @@ import Base from '../layouts/Base.astro';
         <p id="fee-summary" class="hint fee-summary"></p>
       </section>
 
-      <!-- Deltagere -->
+      <!-- Wines -->
+      <section class="block wines-admin">
+        <div class="guests-head">
+          <h2>Vine</h2>
+          <button id="wine-add-toggle" class="btn small ghost" type="button">Tilføj vin</button>
+        </div>
+
+        <form id="wine-form" class="add-form wine-form" novalidate hidden>
+          <h3 id="wf-title">Ny vin</h3>
+          <label for="wf-name">Navn</label>
+          <input id="wf-name" type="text" required />
+          <label for="wf-image">Billede <span class="hint">(fx et foto af flasken)</span></label>
+          <div class="wf-image">
+            <img id="wf-preview" alt="" hidden />
+            <input id="wf-image" type="file" accept="image/*" />
+            <button id="wf-image-remove" class="text-btn" type="button" hidden>Fjern billede</button>
+          </div>
+          <label for="wf-producer">Producent</label>
+          <input id="wf-producer" type="text" />
+          <div class="wf-pair">
+            <div>
+              <label for="wf-style">Type</label>
+              <select id="wf-style"></select>
+            </div>
+            <div>
+              <label for="wf-vintage">Årgang</label>
+              <input id="wf-vintage" type="text" placeholder="Fx 2019 eller 10 år" />
+            </div>
+          </div>
+          <div class="wf-pair">
+            <div>
+              <label for="wf-price">Pris for gæster (kr.)</label>
+              <input id="wf-price" type="text" inputmode="decimal" />
+            </div>
+            <div>
+              <label for="wf-retail">Normalpris (kr.)</label>
+              <input id="wf-retail" type="text" inputmode="decimal" />
+            </div>
+          </div>
+          <label for="wf-abv">Alkohol (%)</label>
+          <input id="wf-abv" type="text" inputmode="decimal" class="short" />
+          <label for="wf-description">Beskrivelse</label>
+          <textarea id="wf-description" rows="3"></textarea>
+          <label for="wf-details">Mere om vinen <span class="hint">(én linje pr. punkt, fx "Druer: Touriga Nacional")</span></label>
+          <textarea id="wf-details" rows="3"></textarea>
+          <label class="toggle"><input id="wf-orderable" type="checkbox" checked /> <span>Kan bestilles</span></label>
+          <label class="toggle"><input id="wf-revealed" type="checkbox" checked /> <span>Vis for gæster</span></label>
+          <p id="wf-msg" class="message error" hidden></p>
+          <div class="row-actions">
+            <button id="wf-save" class="btn small" type="submit">Gem</button>
+            <button id="wf-cancel" class="text-btn" type="button">Annullér</button>
+            <button id="wf-delete" class="text-btn danger" type="button" hidden>Slet vin</button>
+          </div>
+        </form>
+
+        <ul id="wine-admin-list" class="wine-admin-list"></ul>
+        <p id="wine-empty" class="hint" hidden>Ingen vine endnu. Tilføj den første.</p>
+      </section>
+
+      <!-- Guests -->
       <section class="block guests">
         <div class="guests-head">
           <h2>Deltagere</h2>
@@ -95,7 +191,7 @@ import Base from '../layouts/Base.astro';
         <p id="guest-empty" class="hint" hidden>Ingen gæster matcher.</p>
       </section>
 
-      <!-- Bestillinger -->
+      <!-- Orders -->
       <section class="block">
         <h2>Bestillinger</h2>
         <div id="orders-by-guest"></div>
@@ -114,6 +210,18 @@ import Base from '../layouts/Base.astro';
         <h2>Quiz</h2>
         <ol id="board" class="board"></ol>
       </section>
+      </div>
+
+      <!-- Password -->
+      <details class="block pw-box">
+        <summary>Sæt eller skift adgangskode</summary>
+        <form id="pw-form" class="login">
+          <label for="new-pw">Ny adgangskode (mindst 8 tegn)</label>
+          <input id="new-pw" type="password" autocomplete="new-password" minlength="8" required />
+          <button class="btn small" type="submit">Gem adgangskode</button>
+          <p id="pw-msg" class="message" hidden></p>
+        </form>
+      </details>
     </div>
   </section>
 </Base>
@@ -121,6 +229,7 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { fetchLeaderboard, renderLeaderboard } from '../lib/leaderboard';
+  import { initWineAdmin } from '../lib/admin-wines';
 
   const $ = (id: string) => document.getElementById(id)!;
   const kr = new Intl.NumberFormat('da-DK', { style: 'currency', currency: 'DKK' });
@@ -144,8 +253,8 @@ import Base from '../layouts/Base.astro';
     return td;
   }
 
-  // ---------- Login sker på /log-ind/ med engangskode ----------
-  // Når man kommer tilbage fra "glemt adgangskode"-mailen
+  // ---------- Sign-in happens on /login/ with a one-time code ----------
+  // Returning from a password-reset email
   let recovering = false;
   $('reset').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -186,26 +295,114 @@ import Base from '../layouts/Base.astro';
   $('logout').addEventListener('click', logout);
   $('logout2').addEventListener('click', logout);
 
-  // ---------- Styring (gemmes på smagningen) ----------
+  // ---------- Controls (stored on the tasting) ----------
   type T = { id: string; slug: string; title: string; quiz_count?: number } & Record<string, unknown>;
   let tasting: T | null = null;
   let quizTotal = 13;
   let feeTotal = 0;
   let feeAmount = 0;
 
+  let tastings: T[] = [];
+  const LAST_TASTING_KEY = 'admin_last_tasting';
+
+  // datetime-local works in the browser's local time
+  function toLocalInput(iso: unknown) {
+    if (typeof iso !== 'string' || !iso) return '';
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : null);
+  const cleanPhone = (v: string) => v.replace(/\s/g, '') || null;
+  const dateLabel = new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+
   async function loadTasting() {
-    const wanted = new URLSearchParams(location.search).get('t');
-    let q = supabase.from('tastings').select('*').order('created_at');
-    if (wanted) q = q.eq('slug', wanted);
-    const { data } = await q.limit(1);
-    tasting = ((data ?? [])[0] ?? null) as T | null;
+    const { data } = await supabase.from('tastings').select('*')
+      .order('starts_at', { ascending: false, nullsFirst: true });
+    tastings = (data ?? []) as T[];
+    let last: string | null = null;
+    try { last = localStorage.getItem(LAST_TASTING_KEY); } catch {}
+    const wanted = new URLSearchParams(location.search).get('t') ?? last;
+    tasting = tastings.find((t) => t.slug === wanted) ?? tastings[0] ?? null;
     if (!tasting) return;
+    $('mark').textContent = tasting.title;
+    try { localStorage.setItem(LAST_TASTING_KEY, tasting.slug); } catch {}
+
+    const select = $('tasting-select') as HTMLSelectElement;
+    select.replaceChildren(...tastings.map((t) => {
+      const when = typeof t.starts_at === 'string' ? ` · ${dateLabel.format(new Date(t.starts_at))}` : '';
+      return new Option(t.title + when, t.slug, false, t.slug === tasting!.slug);
+    }));
+
+    ($('d-title') as HTMLInputElement).value = tasting.title;
+    ($('d-when') as HTMLInputElement).value = toLocalInput(tasting.starts_at);
+    ($('d-place') as HTMLInputElement).value = (tasting.place as string) ?? '';
+    ($('d-mobilepay') as HTMLInputElement).value = (tasting.mobilepay as string) ?? '';
+
     const { count } = await supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id);
     quizTotal = count || 13;
     const tv = $('tv-link') as HTMLAnchorElement;
-    tv.href = `/pointtavle/?t=${tasting.slug}`;
-    tv.textContent = `/pointtavle/?t=${tasting.slug}`;
+    tv.href = `/leaderboard/?t=${tasting.slug}`;
+    tv.textContent = `/leaderboard/?t=${tasting.slug}`;
   }
+
+  // ---------- Pick, create and edit tastings ----------
+  ($('tasting-select') as HTMLSelectElement).addEventListener('change', (e) => {
+    location.search = '?t=' + encodeURIComponent((e.target as HTMLSelectElement).value);
+  });
+
+  function showNewTasting(first: boolean) {
+    const form = $('new-tasting') as HTMLFormElement;
+    form.reset();
+    $('nt-msg').hidden = true;
+    $('nt-heading').textContent = first ? 'Opret din første smagning' : 'Ny smagning';
+    $('nt-intro').hidden = !first;
+    $('nt-cancel').hidden = first;
+    form.hidden = false;
+    ($('nt-title') as HTMLInputElement).focus();
+  }
+  $('new-tasting-toggle').addEventListener('click', () => showNewTasting(false));
+  $('nt-cancel').addEventListener('click', () => { ($('new-tasting') as HTMLFormElement).hidden = true; });
+
+  $('new-tasting').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const msg = $('nt-msg');
+    const title = ($('nt-title') as HTMLInputElement).value.trim();
+    if (!title) { msg.textContent = 'Giv smagningen en titel.'; msg.hidden = false; return; }
+    const btn = $('nt-save') as HTMLButtonElement;
+    btn.disabled = true;
+    const { data, error } = await supabase.rpc('create_tasting', {
+      title,
+      starts_at: fromLocalInput(($('nt-when') as HTMLInputElement).value),
+      place: ($('nt-place') as HTMLInputElement).value,
+      mobilepay: ($('nt-mobilepay') as HTMLInputElement).value,
+    });
+    btn.disabled = false;
+    if (error || !data) { msg.textContent = 'Smagningen blev ikke oprettet. Prøv igen.'; msg.hidden = false; return; }
+    location.search = '?t=' + encodeURIComponent((data as T).slug);
+  });
+
+  $('details').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!tasting) return;
+    const msg = $('d-msg');
+    const title = ($('d-title') as HTMLInputElement).value.trim();
+    if (!title) { msg.textContent = 'Titlen må ikke være tom.'; return; }
+    const patch = {
+      title,
+      starts_at: fromLocalInput(($('d-when') as HTMLInputElement).value),
+      place: ($('d-place') as HTMLInputElement).value.trim() || null,
+      mobilepay: cleanPhone(($('d-mobilepay') as HTMLInputElement).value),
+    };
+    const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
+    msg.textContent = error ? 'Ændringerne blev ikke gemt.' : 'Gemt';
+    if (!error) {
+      Object.assign(tasting, patch);
+      const opt = ($('tasting-select') as HTMLSelectElement).selectedOptions[0];
+      if (opt) opt.textContent = title + (patch.starts_at ? ` · ${dateLabel.format(new Date(patch.starts_at))}` : '');
+      setTimeout(() => (msg.textContent = ''), 2000);
+    }
+  });
 
   function loadSettings() {
     if (!tasting) return;
@@ -227,7 +424,7 @@ import Base from '../layouts/Base.astro';
     });
   });
 
-  // ---------- Betaling for smagningen ----------
+  // ---------- Tasting fee ----------
   function renderFee() {
     const coming = participants.filter((p) => p.status === 'yes');
     const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
@@ -260,7 +457,7 @@ import Base from '../layouts/Base.astro';
     renderParticipants();
   });
 
-  // ---------- Deltagere ----------
+  // ---------- Guests ----------
   const STATUS_ORDER: Record<string, number> = { yes: 0, invited: 1, no: 2 };
   let guestFilter = 'all';
   let guestQuery = '';
@@ -313,7 +510,7 @@ import Base from '../layouts/Base.astro';
     const copy = mk('button', 'text-btn', 'Kopiér link');
     copy.type = 'button';
     copy.addEventListener('click', async () => {
-      const url = `${location.origin}/profil/?k=${p.invite_code}`;
+      const url = `${location.origin}/profile/?k=${p.invite_code}`;
       try { await navigator.clipboard.writeText(url); copy.textContent = 'Link kopieret'; }
       catch { prompt('Kopiér linket:', url); }
       setTimeout(() => (copy.textContent = 'Kopiér link'), 1500);
@@ -441,7 +638,7 @@ import Base from '../layouts/Base.astro';
     renderParticipants();
   });
 
-  // ---------- Bestillinger ----------
+  // ---------- Orders ----------
   const orderTotal = (o: O) => o.order_lines.reduce((t, l) => t + l.quantity * Number(l.unit_price), 0);
 
   function renderOrders() {
@@ -551,18 +748,19 @@ import Base from '../layouts/Base.astro';
     a.click();
   });
 
-  // ---------- Opstart ----------
+  // ---------- Startup ----------
   async function loadAll() {
     await loadTasting();
-    if (!tasting) { $('panel').hidden = true; $('not-admin').hidden = false; return; }
-    const [p, w, o] = await Promise.all([
+    if (!tasting) { showNewTasting(true); return; }
+    $('tasting-bar').hidden = false;
+    $('tasting-panel').hidden = false;
+    const [p, o] = await Promise.all([
       supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid').eq('tasting_id', tasting.id),
-      supabase.from('wines').select('id, name, price_dkk, sort_order').eq('tasting_id', tasting.id),
       supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting.id),
     ]);
     participants = (p.data ?? []) as P[];
-    wines = (w.data ?? []) as W[];
     orders = (o.data ?? []) as O[];
+    await initWineAdmin(tasting.id, (list) => { wines = list; renderOrders(); }).load();
     renderParticipants();
     renderOrders();
     loadSettings();
@@ -575,7 +773,7 @@ import Base from '../layouts/Base.astro';
     if (recovering || location.hash.includes('type=recovery')) return;
     const { data } = await supabase.auth.getSession();
     const session = data.session;
-    if (!session) { location.replace('/log-ind/?til=' + encodeURIComponent(location.pathname + location.search)); return; }
+    if (!session) { location.replace('/login/?next=' + encodeURIComponent(location.pathname + location.search)); return; }
     const { data: hostId } = await supabase.rpc('current_host_id');
     const { data: ok } = await supabase.rpc('is_admin');
     if (!ok && !hostId) { $('not-admin').hidden = false; return; }
@@ -727,7 +925,7 @@ import Base from '../layouts/Base.astro';
   .admin-page .order-card ul { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; }
   .admin-page .order-card .toggle { padding: 0; background: none; font-size: 0.92rem; }
 
-  /* Deltagerliste */
+  /* Guest list */
   .admin-page .guests { max-width: 52rem; }
   .admin-page .guests-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
   .admin-page .guests-head h2 { margin: 0; }
@@ -813,5 +1011,64 @@ import Base from '../layouts/Base.astro';
     .admin-page .guest-email, .admin-page .guest-note { grid-column: 1; }
     .admin-page .guest-actions { grid-column: 3; grid-row: 1 / span 3; margin-top: 0; justify-content: flex-end; flex-wrap: nowrap; white-space: nowrap; }
     .admin-page .edit-panel { grid-column: 1 / -1; }
+  }
+
+  /* Tasting picker and forms */
+  .admin-page .tasting-bar { margin-top: 1.5rem; max-width: 36rem; }
+  .admin-page .tasting-bar select { flex: 1; min-width: 0; font-size: 1rem; padding: 0.55rem 0.6rem; border-radius: 0.5rem; }
+  .admin-page .tasting-form { max-width: 30rem; }
+  .admin-page .tasting-form h2 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+  .admin-page .add-form input[type='datetime-local'],
+  .admin-page .add-form input[type='tel'],
+  .admin-page .add-form textarea,
+  .admin-page .add-form select {
+    width: 100%; font: inherit; color: var(--paper);
+    background: var(--lodge); border: 1px solid var(--lodge-3);
+    border-radius: 0.5rem; padding: 0.6rem 0.75rem; color-scheme: dark;
+  }
+  .admin-page .add-form input:focus, .admin-page .add-form textarea:focus, .admin-page .add-form select:focus {
+    outline: none; border-color: var(--amber);
+  }
+  .admin-page .add-form .toggle {
+    display: flex; align-items: center; gap: 0.6rem; margin-top: 0.4rem;
+    text-transform: none; letter-spacing: 0; font-size: 0.95rem; color: var(--paper);
+  }
+  .admin-page .add-form .toggle input { width: 1.2rem; height: 1.2rem; flex: none; padding: 0; }
+  .admin-page .add-form label .hint { text-transform: none; letter-spacing: 0; font-size: 0.85rem; }
+  .admin-page .text-btn.danger { color: var(--error); margin-left: auto; }
+
+  /* Wines */
+  .admin-page .wines-admin { max-width: 52rem; }
+  .admin-page .wine-form { max-width: 34rem; }
+  .admin-page .wine-form h3 { margin: 0 0 0.25rem; }
+  .admin-page .wf-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .admin-page .wf-pair > div { display: grid; gap: 0.4rem; align-content: start; }
+  .admin-page .wf-pair label { margin: 0.3rem 0 0; }
+  .admin-page .add-form input.short { max-width: 8rem; }
+  .admin-page .wf-image { display: grid; gap: 0.5rem; justify-items: start; }
+  .admin-page .wf-image img { width: 7rem; height: 9rem; object-fit: contain; background: #fff; border-radius: 0.4rem; }
+  .admin-page .wf-image input[type='file'] { font-size: 0.9rem; color: var(--muted); max-width: 100%; }
+  .admin-page .wine-admin-list { list-style: none; margin: 0.75rem 0 0; padding: 0; border-top: 1px solid var(--lodge-2); }
+  .admin-page .wine-row {
+    display: grid; grid-template-columns: 3rem 1fr auto; gap: 0.9rem; align-items: center;
+    padding: 0.8rem 0; border-bottom: 1px solid var(--lodge-2);
+  }
+  .admin-page .wine-thumb { width: 3rem; height: 4rem; border-radius: 0.3rem; background: var(--lodge-2); overflow: hidden; }
+  .admin-page .wine-thumb img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+  .admin-page .wine-body { min-width: 0; }
+  .admin-page .wine-name { margin: 0; font-weight: 500; }
+  .admin-page .wine-meta { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.88rem; }
+  .admin-page .wine-flags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
+  .admin-page .wine-actions { display: flex; align-items: center; gap: 0.35rem; }
+  .admin-page .icon-only {
+    width: 2.2rem; height: 2.2rem; font: inherit; color: var(--paper); background: none;
+    border: 1px solid var(--lodge-3); border-radius: 0.4rem; cursor: pointer;
+  }
+  .admin-page .icon-only:disabled { opacity: 0.3; cursor: default; }
+  .admin-page .wine-actions .text-btn { margin-left: 0.4rem; }
+  @media (max-width: 30rem) {
+    .admin-page .wine-row { grid-template-columns: 3rem 1fr; }
+    .admin-page .wine-actions { grid-column: 2; }
+    .admin-page .wf-pair { grid-template-columns: 1fr; gap: 0; }
   }
 </style>

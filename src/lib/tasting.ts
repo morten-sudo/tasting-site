@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-// Smagningens tilstand, som gæstesiderne skal bruge (fra invitationskode eller slug).
+// Tasting state used by the guest pages (from invite code or slug).
 export type Tasting = {
   id: string; slug: string; title: string; starts_at: string | null;
   place: string | null; language: string; mobilepay: string | null;

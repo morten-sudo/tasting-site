@@ -5,10 +5,10 @@ import { EVENT } from '../lib/config';
 <Base hero>
   <section class="hero">
     <picture>
-      <source type="image/webp" srcset="/img/kaelder-800.webp 800w, /img/kaelder-1200.webp 1200w" sizes="100vw" />
+      <source type="image/webp" srcset="/img/cellar-800.webp 800w, /img/cellar-1200.webp 1200w" sizes="100vw" />
       <img
-        src="/img/kaelder-1200.jpg"
-        srcset="/img/kaelder-800.jpg 800w, /img/kaelder-1200.jpg 1200w"
+        src="/img/cellar-1200.jpg"
+        srcset="/img/cellar-800.jpg 800w, /img/cellar-1200.jpg 1200w"
         sizes="100vw"
         width="1200"
         height="800"
@@ -34,14 +34,14 @@ import { EVENT } from '../lib/config';
       gennem stilarterne, hører historien bag og slutter af med en quiz, hvor
       pointtavlen følger med hele vejen.
     </p>
-    <a class="btn-ghost" href="/vine/">Se vinene</a>
+    <a class="btn-ghost" href="/wines/">Se vinene</a>
   </section>
 
   <section class="wrap rsvp">
     <h2>Tilmelding</h2>
     <div id="rsvp-known" hidden>
       <p>Du har allerede åbnet din invitation på denne telefon eller computer.</p>
-      <a class="btn" href="/profil/">Gå til din profil</a>
+      <a class="btn" href="/profile/">Gå til din profil</a>
     </div>
     <p id="rsvp-unknown">
       Du tilmelder dig via det personlige link i din invitation. Har du ikke fået
@@ -52,7 +52,7 @@ import { EVENT } from '../lib/config';
 
 <script>
   let known = false;
-  try { known = !!localStorage.getItem('portvin_kode'); } catch {}
+  try { known = !!localStorage.getItem('guest_code'); } catch {}
   if (known) {
     document.getElementById('rsvp-known')!.hidden = false;
     document.getElementById('rsvp-unknown')!.hidden = true;
@@ -75,7 +75,7 @@ import { EVENT } from '../lib/config';
     object-fit: cover;
     object-position: 52% 50%;
   }
-  /* Mørkt øverst til menuen, glider ned i siden forneden */
+  /* Dark at the top behind the header, fading into the page at the bottom */
   .hero::after {
     content: '';
     position: absolute;

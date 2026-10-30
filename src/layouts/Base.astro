@@ -26,25 +26,25 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     <header class="site-header">
       <div class="wrap header-inner">
       <div class="top-row">
-        <a href="/" class="mark">Portvin 2026</a>
+        <a href="/" class="mark" id="mark">{EVENT.title}</a>
         <div class="tools">
-          <a href="/kurv/" id="nav-cart" class="icon-btn cart-link" aria-label="Indkøbskurv" title="Indkøbskurv" hidden={!Astro.url.pathname.startsWith('/kurv')}>
+          <a href="/cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Indkøbskurv" title="Indkøbskurv" hidden={!Astro.url.pathname.startsWith('/cart')}>
             <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
             <span id="nav-cart-count" class="badge" hidden></span>
           </a>
           <span id="user-in" class="user-in" hidden>
-            <a href="/profil/" id="user-name" class:list={['user-name', { current: Astro.url.pathname.startsWith('/profil') }]} title="Din profil"></a>
+            <a href="/profile/" id="user-name" class:list={['user-name', { current: Astro.url.pathname.startsWith('/profile') }]} title="Din profil"></a>
             <button id="logout" type="button" class="icon-btn" aria-label="Log ud" title="Log ud">
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></svg>
             </button>
           </span>
-          <a id="user-out" href="/log-ind/" class="icon-btn" aria-label="Log ind" title="Log ind" hidden>
+          <a id="user-out" href="/login/" class="icon-btn" aria-label="Log ind" title="Log ind" hidden>
             <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
           </a>
         </div>
       </div>
       <nav aria-label="Hovedmenu">
-        <a href="/vine/" class:list={{ current: Astro.url.pathname.startsWith('/vin') }}>Vinene</a>
+        <a href="/wines/" class:list={{ current: Astro.url.pathname.startsWith('/wine') }}>Vinene</a>
         <a href="/quiz/" class:list={{ current: Astro.url.pathname.startsWith('/quiz') }}>Quiz</a>
       </nav>
       </div>
@@ -72,13 +72,28 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
         onScroll();
       }
 
-      // Log ind/ud for gæster (baseret på invitationskoden)
+      // Guest sign in/out (based on the invite code)
       const userIn = document.getElementById('user-in')!;
       const userOut = document.getElementById('user-out')!;
       let code: string | null = null;
       try {
-        code = new URLSearchParams(location.search).get('k') || localStorage.getItem('portvin_kode');
+        code = new URLSearchParams(location.search).get('k') || localStorage.getItem('guest_code');
       } catch {}
+      // Tasting title in the header, date and time in the footer
+      async function showTasting(c: string) {
+        const { data } = await supabase.rpc('get_tasting', { code: c });
+        const t = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null } | null;
+        if (!t) return;
+        if (t.title) document.getElementById('mark')!.textContent = t.title;
+        const when = document.getElementById('footer-when')!;
+        if (t.starts_at) {
+          const d = new Date(t.starts_at);
+          const day = new Intl.DateTimeFormat('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Copenhagen' }).format(d);
+          const time = new Intl.DateTimeFormat('da-DK', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' }).format(d);
+          when.textContent = `${day[0].toUpperCase()}${day.slice(1)} kl. ${time}` + (t.place ? ` · ${t.place}` : '');
+        }
+      }
+
       if (!code) {
         userOut.hidden = false;
       } else {
@@ -87,10 +102,11 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
           if (row) {
             document.getElementById('user-name')!.textContent = row.name;
             userIn.hidden = false;
-            // Gæster uden e-mail skal angive den på profilen, før de går videre
-            const free = ['/profil/', '/log-ind/', '/admin/', '/pointtavle/'];
+            showTasting(code!);
+            // Guests without an email must add one on the profile page before continuing
+            const free = ['/profile/', '/login/', '/admin/', '/leaderboard/', '/become-host/'];
             if (!row.email && !free.some((p) => location.pathname.startsWith(p))) {
-              location.replace('/profil/');
+              location.replace('/profile/');
             }
           } else {
             userOut.hidden = false;
@@ -104,13 +120,13 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
       });
     </script>
     <footer class="site-footer wrap">
-      <p>{EVENT.dateLong} {EVENT.time}</p>
+      <p id="footer-when"></p>
     </footer>
   </body>
 </html>
 
 <style>
-  /* Menuen bliver stående øverst, når man scroller */
+  /* Header stays at the top while scrolling */
   .site-header {
     position: sticky;
     top: 0;
@@ -121,7 +137,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     border-bottom: 1px solid var(--lodge-2);
     transition: background-color 0.2s, border-color 0.2s;
   }
-  /* Menuen bruger hele bredden */
+  /* Header spans the full width */
   .header-inner {
     padding-top: 1rem;
     padding-bottom: 0.3rem;
@@ -199,7 +215,7 @@ const pageTitle = title ? `${title} – ${EVENT.title}` : EVENT.title;
     color: var(--paper);
     text-decoration: none;
   }
-  /* Forsiden: gennemsigtig over fotoet, mørk så snart man scroller */
+  /* Front page: transparent over the photo, dark as soon as you scroll */
   body.has-hero .site-header {
     position: fixed;
     left: 0;

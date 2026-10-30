@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 ---
 <Base title="Vinene">
-  <section class="wrap vine-page">
+  <section class="wrap wines-page">
     <h1 class="title">Vinene</h1>
     <p id="intro" class="lead">Det her skænker vi i aften.</p>
 
@@ -11,7 +11,7 @@ import Base from '../layouts/Base.astro';
     <div id="need-login" class="message need-login" hidden>
       <p><strong>Log ind for at se vinene.</strong></p>
       <p>Brug linket fra din invitation, eller log ind med din e-mail.</p>
-      <a class="btn" href="/log-ind/">Log ind</a>
+      <a class="btn" href="/login/">Log ind</a>
     </div>
     <p id="loading" class="hint">Henter vinene …</p>
     <p id="load-error" class="message error" hidden>
@@ -31,7 +31,7 @@ import Base from '../layouts/Base.astro';
     </div>
   </section>
 
-  <a id="basket" class="basket" href="/kurv/" hidden>
+  <a id="basket" class="basket" href="/cart/" hidden>
     <div class="wrap basket-inner">
       <div>
         <span id="basket-count"></span>
@@ -82,7 +82,7 @@ import Base from '../layouts/Base.astro';
     li.setAttribute('aria-label', `${index + 1} af ${total}`);
 
     const link = el('a', 'card-link');
-    link.href = `/vin/?id=${w.id}`;
+    link.href = `/wine/?id=${w.id}`;
 
     const pic = el('div', 'pic');
     if (w.image_url) {
@@ -224,9 +224,9 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style is:global>
-  /* Vinsiden bruger hele skærmens bredde */
-  .vine-page { padding-top: 2.5rem; padding-bottom: 5rem; }
-  .vine-page .title {
+  /* The wines page uses the full screen width */
+  .wines-page { padding-top: 2.5rem; padding-bottom: 5rem; }
+  .wines-page .title {
     font-family: var(--display);
     font-weight: 400;
     font-weight: 300;
@@ -234,11 +234,11 @@ import Base from '../layouts/Base.astro';
     line-height: 0.95;
     margin-bottom: 0.75rem;
   }
-  .vine-page .lead { font-family: var(--display); font-style: italic; font-size: 1.35rem; color: var(--muted); }
-  .vine-page #order-status { margin: 1.25rem 0 0.5rem; }
+  .wines-page .lead { font-family: var(--display); font-style: italic; font-size: 1.35rem; color: var(--muted); }
+  .wines-page #order-status { margin: 1.25rem 0 0.5rem; }
 
-  /* Karrusellen: én vin ad gangen, næste kigger frem i kanten */
-  /* Hele karrusellen ligger på et hvidt bånd i fuld bredde */
+  /* Carousel: one wine at a time, the next one peeks in at the edge */
+  /* The carousel sits on a full-width white band */
   .carousel {
     margin: 1.75rem calc(-1 * var(--gutter)) 0;
     padding-top: 1.75rem;
@@ -272,7 +272,7 @@ import Base from '../layouts/Base.astro';
     opacity: 0.45;
   }
   .carousel .card.is-current { opacity: 1; }
-  /* Store skærme: flere vine ad gangen, alle i fuld styrke */
+  /* Large screens: several wines at a time, all at full opacity */
   @media (min-width: 640px) {
     .carousel .card { opacity: 1; }
   }
@@ -349,7 +349,7 @@ import Base from '../layouts/Base.astro';
     -webkit-tap-highlight-color: transparent;
   }
   .carousel .card-link:focus-visible { outline-offset: -3px; border-radius: var(--radius); }
-  /* Teksten står i samme hvide boks som flasken */
+  /* Text sits in the same white box as the bottle */
   .carousel .info { min-width: 0; padding: 0.4rem 1.25rem 1.3rem; }
   .carousel .name {
     font-family: var(--display);
@@ -411,6 +411,6 @@ import Base from '../layouts/Base.astro';
   #basket-total { font-size: 1.15rem; }
   .basket-go { color: var(--amber); font-weight: 500; white-space: nowrap; }
   .basket:hover .basket-go { color: var(--paper); }
-  /* Ingen vine at vise (ikke logget ind) → intet tomt bånd */
-  .vine-page .carousel:empty { display: none; }
+  /* No wines to show (not signed in) → no empty band */
+  .wines-page .carousel:empty { display: none; }
 </style>

@@ -1,16 +1,16 @@
-/* Portvin 2026 – farver og typografi
-   Rent og eksklusivt: næsten sort bund, elfenbenstekst, en dæmpet guldtone,
-   en let serif til overskrifter og tynde linjer frem for flader. */
+/* Colours and typography
+   Clean and refined: near-black background, ivory text, a muted gold accent,
+   a light serif for headings and thin rules rather than filled panels. */
 
 :root {
-  --lodge: #0b0908;      /* bund: kældermørke */
-  --lodge-2: #151210;    /* flader */
-  --lodge-3: #2a241f;    /* tynde linjer */
-  --paper: #ece4d6;      /* tekst */
-  --muted: #9b8f80;      /* sekundær tekst */
+  --lodge: #0b0908;      /* background: cellar dark */
+  --lodge-2: #151210;    /* surfaces */
+  --lodge-3: #2a241f;    /* thin rules */
+  --paper: #ece4d6;      /* text */
+  --muted: #9b8f80;      /* secondary text */
   --ruby: #a3213a;
   --tawny: #b8742e;
-  --amber: #c9a66b;      /* dæmpet guld: fokus og links */
+  --amber: #c9a66b;      /* muted gold: focus and links */
   --ok: #a9bf98;
   --error: #e59a8a;
 
@@ -18,7 +18,7 @@
   --body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --radius: 2px;
 
-  /* Sidemargen: hele siden bruger skærmens bredde */
+  /* Side gutter: the page uses the full screen width */
   --gutter: clamp(1rem, 4vw, 3rem);
 
   color-scheme: dark;
@@ -42,7 +42,7 @@ body {
 
 strong, b { font-weight: 500; }
 
-/* Små etiketter i versaler med luft */
+/* Small uppercase labels with letter spacing */
 .eyebrow {
   font-family: var(--body);
   font-size: 0.72rem;
@@ -77,11 +77,11 @@ p { margin: 0 0 1em; }
   padding: 0 var(--gutter);
 }
 
-/* Tekst og formularer holdes i en læsevenlig bredde, selvom siden er bred */
+/* Keep text and forms at a readable width on wide pages */
 main p, main .message { max-width: 44rem; }
 textarea, input[type='text'], input[type='email'], input[type='password'], select { max-width: 36rem; }
 
-/* Farveskalaen: ung ruby → gammel tawny */
+/* Colour scale: young ruby → old tawny */
 .spectrum {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -96,7 +96,7 @@ textarea, input[type='text'], input[type='email'], input[type='password'], selec
 .spectrum span:nth-child(5) { background: #b8742e; }
 .spectrum span:nth-child(6) { background: #dba65a; }
 
-/* Knapper og felter */
+/* Buttons and inputs */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -154,7 +154,7 @@ textarea { min-height: 5rem; resize: vertical; }
 
 [hidden] { display: none !important; }
 
-/* Pointtavle (bruges på quizsiden og storskærmssiden) */
+/* Leaderboard (quiz page and big-screen page) */
 .board {
   list-style: none;
   margin: 0;
@@ -185,7 +185,7 @@ textarea { min-height: 5rem; resize: vertical; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 
-/* MobilePay-betalingsboks (kurv og invitation) */
+/* MobilePay payment box (cart and profile) */
   .pay { margin-top: 0.75rem; }
   .pay-lead { font-weight: 500; margin-bottom: 0.6rem; }
   .pay-btn { display: flex; width: 100%; margin-bottom: 0.9rem; }
@@ -218,6 +218,6 @@ textarea { min-height: 5rem; resize: vertical; }
   }
   .pay .hint { font-size: 0.85rem; margin: 0; }
 
-/* Besked når man skal være logget ind */
+/* Notice shown when sign-in is required */
 .need-login { max-width: 32rem; margin: 1rem 0 2rem; }
 .need-login p:last-of-type { margin-bottom: 1rem; }

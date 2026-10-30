@@ -1,11 +1,11 @@
--- Winetastr trin 1: værter og smagninger (anvendt 30-10-2026).
--- Samlet udgave af migreringerne winetastr_step1_*; senere rettelser er foldet ind.
--- Kører oven på schema.sql.
+-- Winetastr step 1: hosts and tastings (applied 2026-10-30).
+-- Combined version of the winetastr_step1_* migrations, with later fixes folded in.
+-- Runs on top of schema.sql.
 
--- ---------- Tabeller ----------
+-- ---------- Tables ----------
 create table if not exists hosts (
   id          uuid primary key default gen_random_uuid(),
-  user_id     uuid unique,                -- auth.users.id, når værten har logget ind
+  user_id     uuid unique,                -- auth.users.id once the host has signed in
   email       text not null,
   name        text,
   language    text not null default 'da',
@@ -36,7 +36,7 @@ create table if not exists tastings (
 alter table hosts    enable row level security;
 alter table tastings enable row level security;
 
--- Morten som første vært og portvinssmagningen som første smagning
+-- Seed: the first host and the original port wine tasting
 insert into hosts (email, name, user_id)
 select 'morten@krusesoendergaard.dk', 'Morten',
        (select id from auth.users where lower(email) = 'morten@krusesoendergaard.dk' limit 1)
@@ -48,7 +48,7 @@ select h.id, 'portvin-2026', 'Portvin 2026', '2026-11-21 17:00 Europe/Copenhagen
 from hosts h where lower(h.email) = 'morten@krusesoendergaard.dk'
 on conflict (slug) do nothing;
 
--- tasting_id på alt, der hører til en smagning; eksisterende rækker → portvinssmagningen
+-- tasting_id on everything that belongs to a tasting; existing rows → the port wine tasting
 alter table participants   add column if not exists tasting_id uuid references tastings(id) on delete cascade;
 alter table wines          add column if not exists tasting_id uuid references tastings(id) on delete cascade;
 alter table quiz_questions add column if not exists tasting_id uuid references tastings(id) on delete cascade;
@@ -62,7 +62,7 @@ begin
   update quiz_questions set tasting_id = t where tasting_id is null;
   update orders o       set tasting_id = p.tasting_id from participants p
                         where o.participant_id = p.id and o.tasting_id is null;
-  -- Midlertidig standard, så ældre kode kan oprette rækker som før (fjernes senere)
+  -- Temporary default so older code can insert rows as before (dropped in step 3)
   execute format('alter table participants   alter column tasting_id set default %L', t);
   execute format('alter table wines          alter column tasting_id set default %L', t);
   execute format('alter table quiz_questions alter column tasting_id set default %L', t);
@@ -81,7 +81,7 @@ create sequence if not exists quiz_questions_id_seq owned by quiz_questions.id;
 select setval('quiz_questions_id_seq', greatest((select max(id) from quiz_questions), 1));
 alter table quiz_questions alter column id set default nextval('quiz_questions_id_seq');
 
--- ---------- Hjælpefunktioner ----------
+-- ---------- Helper functions ----------
 create or replace function current_host_id() returns uuid
 language sql stable security definer set search_path = public as $$
   select id from hosts
@@ -108,7 +108,7 @@ revoke all on function current_host_id() from public, anon;
 grant execute on function current_host_id() to authenticated;
 grant execute on function is_tasting_host(uuid) to authenticated;
 
--- ---------- Adgang: værten for smagningen (eller superadmin) ----------
+-- ---------- Access: the tasting's host (or superadmin) ----------
 alter policy admin_all on participants   using (is_tasting_host(tasting_id)) with check (is_tasting_host(tasting_id));
 alter policy admin_all on wines          using (is_tasting_host(tasting_id)) with check (is_tasting_host(tasting_id));
 alter policy admin_all on quiz_questions using (is_tasting_host(tasting_id)) with check (is_tasting_host(tasting_id));
@@ -127,7 +127,7 @@ create policy host_self on hosts for all to authenticated
   using (is_admin() or id = current_host_id())
   with check (is_admin() or id = current_host_id());
 
--- ---------- Overgang: den gamle settings-tabel spejles til portvinssmagningen ----------
+-- ---------- Transition: mirror the legacy settings table to the port wine tasting ----------
 create or replace function sync_settings_to_tasting() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare typ text;
@@ -143,7 +143,7 @@ end $$;
 create trigger settings_sync after insert or update on settings
   for each row execute function sync_settings_to_tasting();
 
--- ---------- Smagningens tilstand til gæstesiderne ----------
+-- ---------- Tasting state for the guest pages ----------
 create or replace function get_tasting(code text default null, slug text default null)
 returns jsonb
 language sql stable security definer set search_path = public as $$
@@ -161,7 +161,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function get_tasting(text, text) to anon, authenticated;
 
--- ---------- Gæstefunktioner pr. smagning ----------
+-- ---------- Guest functions per tasting ----------
 create or replace function get_wines(code text)
 returns setof wines
 language sql stable security definer set search_path = public as $$
@@ -232,7 +232,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function get_quiz(text) to anon, authenticated;
 
--- Gammel variant uden kode: kun portvinssmagningen
+-- Legacy variant without a code: port wine tasting only
 create or replace function get_quiz()
 returns table (id int, sort_order int, question text, options jsonb, correct_key text, explanation text)
 language sql stable security definer set search_path = public as $$

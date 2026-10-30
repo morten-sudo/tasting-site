@@ -1,6 +1,6 @@
-// Fælles indstillinger for sitet.
-// Supabase-nøglen er den offentlige "publishable" nøgle – den må gerne ligge her.
-// Adgang til data styres af reglerne i supabase/schema.sql.
+// Shared site settings.
+// The Supabase key is the public "publishable" key, so it is safe to keep here.
+// Data access is controlled by the policies in supabase/schema.sql and supabase/migrations.
 
 export const SUPABASE_URL = 'https://ydvdhhdpygzwalosbjcc.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC';
@@ -9,8 +9,8 @@ export const EVENT = {
   title: 'Portvin 2026',
   dateLong: 'Lørdag den 21. november 2026',
   time: 'kl. 17',
-  // Udfyldes, når adressen er på plads. Tom tekst = vises ikke.
+  // Empty string = not shown.
   place: 'Gl. Holte Gade 31, 2840 Holte',
-  // MobilePay-nummer, der vises efter bestilling. Tom tekst = "værten fortæller hvordan".
+  // Fallback MobilePay number. Empty string = "the host will tell you how".
   mobilepay: '53884312',
 };

@@ -1,7 +1,7 @@
-// Indkøbskurven gemmes i browseren, indtil gæsten trykker "Send bestilling".
-// Format: { [wineId]: antal }
+// The cart is stored in the browser until the guest submits the order.
+// Format: { [wineId]: quantity }
 
-const KEY = 'portvin_kurv';
+const KEY = 'cart';
 export const MAX_PER_WINE = 48;
 
 export type Cart = Record<string, number>;

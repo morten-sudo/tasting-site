@@ -15,7 +15,7 @@ import Base from '../layouts/Base.astro';
       <p>Quizzen åbner under smagningen. Hold siden åben – den starter af sig selv, når værten åbner.</p>
     </div>
 
-    <!-- Quizzen kører -->
+    <!-- Quiz in progress -->
     <div id="play" hidden>
       <p class="hint rules">
         13 spørgsmål om portvin. Svar i dit eget tempo. Et svar kan ikke ændres, når det er låst.
@@ -35,7 +35,7 @@ import Base from '../layouts/Base.astro';
       </div>
     </div>
 
-    <!-- Quizzen er afsluttet -->
+    <!-- Quiz finished -->
     <div id="results" hidden>
       <p class="lead">Quizzen er slut. Her er facit og forklaringerne.</p>
       <ol id="result-list" class="results"></ol>
@@ -92,7 +92,7 @@ import Base from '../layouts/Base.astro';
     }
   }
 
-  // ---------- Spil ----------
+  // ---------- Play ----------
   function firstUnanswered() {
     const i = questions.findIndex((q) => !answers.has(q.id));
     return i === -1 ? questions.length : i;
@@ -172,7 +172,7 @@ import Base from '../layouts/Base.astro';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ---------- Facit ----------
+  // ---------- Answers ----------
   function renderResults() {
     const ol = $('result-list');
     ol.replaceChildren();
@@ -210,7 +210,7 @@ import Base from '../layouts/Base.astro';
     }
   }
 
-  // ---------- Pointtavle ----------
+  // ---------- Leaderboard ----------
   async function refreshBoard() {
     const rows = await fetchLeaderboard({ code });
     if (!rows) return;
@@ -261,7 +261,7 @@ import Base from '../layouts/Base.astro';
     }
     myName = row.name;
     await start();
-    // Hold øje med åbning/lukning og stillingen
+    // Poll for quiz open/close and the standings
     setInterval(start, 10000);
     setInterval(() => { if (mode !== 'closed') refreshBoard(); }, 5000);
   }

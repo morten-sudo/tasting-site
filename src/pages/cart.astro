@@ -33,7 +33,7 @@ import Base from '../layouts/Base.astro';
 
     <div id="empty" hidden>
       <p>Kurven er tom.</p>
-      <a class="btn" href="/vine/">Se vinene</a>
+      <a class="btn" href="/wines/">Se vinene</a>
     </div>
 
     <section id="history" class="history" hidden>
@@ -46,7 +46,7 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase, getGuestCode } from '../lib/supabase';
   import { getCart, setQty, clearCart, MAX_PER_WINE } from '../lib/cart';
-  import { payBox } from '../lib/pay';
+  import { payBox, setPayee } from '../lib/pay';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number };
   type Line = {
@@ -145,7 +145,7 @@ import Base from '../layouts/Base.astro';
       if (!ls[0].paid) {
         const more = el('details', 'pay-more');
         more.append(el('summary', '', 'Sådan betaler du'));
-        more.append(payBox(total, `Portvin bestilling ${id}`));
+        more.append(payBox(total, `Bestilling ${id}`));
         card.append(more);
       }
       box.append(card);
@@ -181,7 +181,7 @@ import Base from '../layouts/Base.astro';
     const total = items.reduce((s, i) => s + i.qty * (wines.get(i.wine_id)?.price_dkk ?? 0), 0);
     clearCart();
     $('confirm-title').textContent = `Tak! Din bestilling nr. ${data} er modtaget.`;
-    $('confirm-pay').replaceChildren(payBox(total, `Portvin bestilling ${data}`));
+    $('confirm-pay').replaceChildren(payBox(total, `Bestilling ${data}`));
     $('confirm').hidden = false;
     renderCart();
     await renderHistory();
@@ -201,6 +201,7 @@ import Base from '../layouts/Base.astro';
     wines = new Map(((w.data ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
     const settings = ((s.data ?? {}) as Record<string, unknown>);
     open = settings.orders_open === true;
+    setPayee(settings.mobilepay ?? null);
     $('loading').hidden = true;
     $('closed').hidden = open;
     renderCart();

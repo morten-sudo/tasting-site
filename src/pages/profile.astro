@@ -8,12 +8,12 @@ import Base from '../layouts/Base.astro';
     <div id="invalid" class="message error" hidden>
       <p><strong>Du er ikke logget ind.</strong></p>
       <p>
-        <a href="/log-ind/">Log ind</a> med din e-mail eller med linket fra din
+        <a href="/login/">Log ind</a> med din e-mail eller med linket fra din
         invitation. Virker det ikke, så skriv til værten.
       </p>
     </div>
 
-    <!-- Første gang: e-mail skal angives, før man kommer videre -->
+    <!-- First visit: email required before continuing -->
     <form id="email-step" class="email-step" hidden novalidate>
       <h1 class="greeting">Velkommen, <span id="step-name"></span></h1>
       <p class="lead">Før du går videre, skal vi have din e-mail. Den bruges til at logge ind med et link på mail – fx hvis du skifter telefon.</p>
@@ -72,7 +72,7 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase, getGuestCode } from '../lib/supabase';
   import { EVENT } from '../lib/config';
-  import { payBox } from '../lib/pay';
+  import { payBox, setPayee } from '../lib/pay';
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -99,14 +99,18 @@ import Base from '../layouts/Base.astro';
   }
 
   async function loadFee() {
-    const { data } = await supabase.rpc('get_tasting_payment', { code });
+    const [{ data }, t] = await Promise.all([
+      supabase.rpc('get_tasting_payment', { code }),
+      supabase.rpc('get_tasting', { code }),
+    ]);
+    setPayee(((t.data ?? {}) as Record<string, unknown>).mobilepay ?? null);
     const row = Array.isArray(data) ? data[0] : null;
     const amount = row ? Number(row.amount) : 0;
     $('fee').hidden = !row || amount <= 0;
     if (!row || amount <= 0) return;
     $('fee-paid').hidden = !row.paid;
     $('fee-due').hidden = row.paid;
-    if (!row.paid) $('fee-pay').replaceChildren(payBox(amount, `Portvin smagning ${guestName}`));
+    if (!row.paid) $('fee-pay').replaceChildren(payBox(amount, `Smagning ${guestName}`));
   }
 
   async function load() {
@@ -254,11 +258,11 @@ import Base from '../layouts/Base.astro';
   .when { color: var(--muted); margin: 0 0 1.25rem; }
   .lead { margin-bottom: 1rem; }
 
-  /* Første gang: e-mail */
+  /* First visit: email */
   .email-step { display: grid; gap: 0.6rem; max-width: 28rem; }
   .email-step .btn { justify-self: start; margin-top: 0.3rem; }
 
-  /* Status: en enkelt linje med en prik */
+  /* Status: a single line with a dot */
   .status {
     display: flex;
     align-items: center;
@@ -278,7 +282,7 @@ import Base from '../layouts/Base.astro';
   .status.flash { animation: flash 0.6s ease-out; }
   @keyframes flash { from { color: var(--amber); } }
 
-  /* Betaling */
+  /* Payment */
   .fee {
     border: 1px solid var(--lodge-3);
     border-radius: var(--radius);
@@ -289,7 +293,7 @@ import Base from '../layouts/Base.astro';
   .fee #fee-paid { margin: 0; padding: 0; background: none; border: 0; color: var(--ok); }
   .fee #fee-due p { font-size: 0.92rem; color: var(--muted); }
 
-  /* Formularen */
+  /* Form */
   .rsvp { display: grid; gap: 1.25rem; }
   .seg-row {
     border: 0;
