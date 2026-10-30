@@ -217,3 +217,7 @@ textarea { min-height: 5rem; resize: vertical; }
     white-space: nowrap;
   }
   .pay .hint { font-size: 0.85rem; margin: 0; }
+
+/* Besked når man skal være logget ind */
+.need-login { max-width: 32rem; margin: 1rem 0 2rem; }
+.need-login p:last-of-type { margin-bottom: 1rem; }

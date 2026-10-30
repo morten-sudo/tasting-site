@@ -195,7 +195,7 @@ import Base from '../layouts/Base.astro';
       return;
     }
     const [w, s] = await Promise.all([
-      supabase.from('wines').select('id, name, price_dkk, orderable, sort_order'),
+      supabase.rpc('get_wines', { code }),
       supabase.from('settings').select('key, value'),
     ]);
     wines = new Map(((w.data ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));

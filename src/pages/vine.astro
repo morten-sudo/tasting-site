@@ -8,6 +8,11 @@ import Base from '../layouts/Base.astro';
 
     <p id="order-status" class="message" hidden></p>
 
+    <div id="need-login" class="message need-login" hidden>
+      <p><strong>Log ind for at se vinene.</strong></p>
+      <p>Brug linket fra din invitation, eller log ind med din e-mail.</p>
+      <a class="btn" href="/log-ind/">Log ind</a>
+    </div>
     <p id="loading" class="hint">Henter vinene …</p>
     <p id="load-error" class="message error" hidden>
       Vinene kunne ikke hentes. Tjek din forbindelse, og genindlæs siden.
@@ -185,12 +190,18 @@ import Base from '../layouts/Base.astro';
   $('next').addEventListener('click', () => scrollToCard(current + 1));
 
   async function load() {
+    if (!code) {
+      $('loading').hidden = true;
+      $('need-login').hidden = false;
+      return;
+    }
     const [winesRes, settingsRes] = await Promise.all([
-      supabase.from('wines').select('*').order('sort_order'),
+      supabase.rpc('get_wines', { code }),
       supabase.from('settings').select('key, value'),
     ]);
     $('loading').hidden = true;
     if (winesRes.error) { $('load-error').hidden = false; return; }
+    if (!winesRes.data?.length) { $('need-login').hidden = false; return; }
     wines = winesRes.data as Wine[];
 
     const settings = Object.fromEntries((settingsRes.data ?? []).map((s) => [s.key, s.value]));
@@ -400,4 +411,6 @@ import Base from '../layouts/Base.astro';
   #basket-total { font-size: 1.15rem; }
   .basket-go { color: var(--amber); font-weight: 500; white-space: nowrap; }
   .basket:hover .basket-go { color: var(--paper); }
+  /* Ingen vine at vise (ikke logget ind) → intet tomt bånd */
+  .vine-page .carousel:empty { display: none; }
 </style>

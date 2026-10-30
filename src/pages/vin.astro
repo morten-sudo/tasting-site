@@ -5,6 +5,11 @@ import Base from '../layouts/Base.astro';
   <article class="vin-page">
     <div class="wrap top">
       <a href="/vine/" class="back">Alle vinene</a>
+      <div id="need-login" class="message need-login" hidden>
+        <p><strong>Log ind for at se vinene.</strong></p>
+        <p>Brug linket fra din invitation, eller log ind med din e-mail.</p>
+        <a class="btn" href="/log-ind/">Log ind</a>
+      </div>
       <p id="loading" class="hint">Henter vinen …</p>
       <p id="load-error" class="message error" hidden>
         Vinen kunne ikke findes. <a href="/vine/">Gå tilbage til vinene</a>.
@@ -82,12 +87,18 @@ import Base from '../layouts/Base.astro';
   }
 
   async function load() {
+    if (!code) {
+      $('loading').hidden = true;
+      $('need-login').hidden = false;
+      return;
+    }
     const [winesRes, settingsRes] = await Promise.all([
-      supabase.from('wines').select('*').order('sort_order'),
+      supabase.rpc('get_wines', { code }),
       supabase.from('settings').select('key, value'),
     ]);
     $('loading').hidden = true;
     wines = (winesRes.data ?? []) as Wine[];
+    if (!winesRes.error && !wines.length) { $('need-login').hidden = false; return; }
     const index = wines.findIndex((w) => w.id === id);
     if (winesRes.error || index < 0) { $('load-error').hidden = false; return; }
     const w = wines[index];
