@@ -36,75 +36,14 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { supabase } from '../lib/supabase';
-  import { fetchMyTastings, getCodes, tastingUrl, type MyTasting } from '../lib/guest';
-  import { i18nReady, t as tr, formatWhen, type Key } from '../i18n';
+  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
+  import { i18nReady } from '../i18n';
 
   await i18nReady;
-
   const $ = (id: string) => document.getElementById(id)!;
-  const STATUS: Record<string, [Key, string]> = {
-    yes: ['status.yes', 'pill-yes'],
-    no: ['status.no', 'pill-no'],
-    invited: ['status.invited', 'pill-invited'],
-  };
-
-  function card(t: MyTasting) {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.className = 'tasting-card';
-    a.href = tastingUrl(t.slug);
-
-    const head = document.createElement('div');
-    head.className = 'card-head';
-    const title = document.createElement('span');
-    title.className = 'card-title';
-    title.textContent = t.title;
-    head.append(title);
-    const [label, cls] = STATUS[t.status] ?? STATUS.invited;
-    const pill = document.createElement('span');
-    pill.className = `pill ${cls}`;
-    pill.textContent = tr(label);
-    head.append(pill);
-    a.append(head);
-
-    const parts: string[] = [];
-    if (t.starts_at) {
-      parts.push(formatWhen(t.starts_at, { year: true }));
-    }
-    if (t.place) parts.push(t.place);
-    if (parts.length) {
-      const meta = document.createElement('span');
-      meta.className = 'card-meta';
-      meta.textContent = parts.join(' · ');
-      a.append(meta);
-    }
-    li.append(a);
-    return li;
-  }
-
-  // Tastings opened with an invite link on this device (no email sign-in needed)
-  async function fromStoredCodes(skip: Set<string>): Promise<MyTasting[]> {
-    const entries = Object.entries(getCodes()).filter(([slug]) => !skip.has(slug));
-    const rows = await Promise.all(entries.map(async ([, code]) => {
-      const [t, inv] = await Promise.all([
-        supabase.rpc('get_tasting', { code }),
-        supabase.rpc('get_invite', { code }),
-      ]);
-      const info = t.data as Record<string, unknown> | null;
-      const row = Array.isArray(inv.data) ? inv.data[0] : null;
-      if (!info?.slug || !row) return null;
-      return {
-        code, slug: String(info.slug), title: String(info.title ?? ''),
-        starts_at: (info.starts_at as string | null) ?? null, place: (info.place as string | null) ?? null,
-        status: row.status as string,
-      } satisfies MyTasting;
-    }));
-    return rows.filter((r): r is MyTasting => r !== null);
-  }
 
   const { data: s } = await supabase.auth.getSession();
-  const mine = await fetchMyTastings();
-  const all = [...mine, ...(await fromStoredCodes(new Set(mine.map((t) => t.slug))))];
+  const { all, upcoming, past } = await loadAllMyTastings();
 
   let isHost = false;
   if (s.session) {
@@ -116,13 +55,8 @@ import Base from '../layouts/Base.astro';
   if (!s.session && all.length === 0) {
     $('signed-out').hidden = false;
   } else {
-    const cutoff = Date.now() - 24 * 3600 * 1000;
-    const upcoming = all.filter((t) => !t.starts_at || new Date(t.starts_at).getTime() >= cutoff)
-      .sort((x, y) => (x.starts_at ?? '9999').localeCompare(y.starts_at ?? '9999'));
-    const past = all.filter((t) => t.starts_at && new Date(t.starts_at).getTime() < cutoff)
-      .sort((x, y) => y.starts_at!.localeCompare(x.starts_at!));
-    $('upcoming').replaceChildren(...upcoming.map(card));
-    $('past').replaceChildren(...past.map(card));
+    $('upcoming').replaceChildren(...upcoming.map(tastingCard));
+    $('past').replaceChildren(...past.map(tastingCard));
     $('upcoming-block').hidden = upcoming.length === 0;
     $('past-block').hidden = past.length === 0;
     $('none').hidden = all.length > 0 || isHost;
@@ -141,21 +75,6 @@ import Base from '../layouts/Base.astro';
   }
   .tastings-page section + section { margin-top: 2.5rem; }
   .tastings-page h2 { font-size: 1.6rem; }
-  .tastings-page .tasting-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
-  .tastings-page .tasting-card {
-    display: grid; gap: 0.3rem; padding: 1rem 1.1rem;
-    color: var(--paper); text-decoration: none;
-    border: 1px solid var(--lodge-3); border-radius: 0.6rem;
-    transition: border-color 0.2s;
-  }
-  .tastings-page .tasting-card:hover { border-color: var(--amber); color: var(--paper); }
-  .tastings-page .card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-  .tastings-page .card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
-  .tastings-page .card-meta { color: var(--muted); font-size: 0.92rem; }
-  .tastings-page .pill { flex-shrink: 0; font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px; }
-  .tastings-page .pill-yes { color: #ffffff; background: var(--ok); }
-  .tastings-page .pill-invited { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
-  .tastings-page .pill-no { color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); }
   .tastings-page .host-block { padding-top: 1.5rem; border-top: 1px solid var(--lodge-2); }
   .tastings-page .btn-ghost {
     display: inline-flex; align-items: center; min-height: 3rem; padding: 0 1.75rem;

@@ -12,23 +12,30 @@ import Base from '../layouts/Base.astro';
     </div>
 
     <div id="me" hidden>
-      <h1 class="title" id="me-name"></h1>
-      <p id="me-email" class="hint"></p>
-
-      <nav class="profile-links">
-        <a class="btn" href="/tastings/" data-i18n="nav.myTastings">My tastings</a>
-        <a id="to-admin" class="btn ghost" href="/admin/" hidden data-i18n="tastings.toAdmin">Go to admin</a>
-      </nav>
-
-      <!-- Name (only with an email sign-in; it belongs to the account) -->
-      <form id="name-form" class="profile-form" novalidate hidden>
-        <label for="name" data-i18n="profile.name">Your name</label>
-        <div class="inline">
-          <input id="name" type="text" autocomplete="name" maxlength="80" />
-          <button class="btn small" type="submit" data-i18n="common.save">Save</button>
+      <!-- Name and email; edited only after tapping the pencil -->
+      <header class="me-head">
+        <div>
+          <h1 class="title" id="me-name"></h1>
+          <p id="me-email" class="hint"></p>
         </div>
-        <p class="hint" data-i18n="profile.nameHint">Shown at the top of the site. Hosts may list you under the name they invited you by.</p>
-        <p id="name-msg" class="hint" aria-live="polite"></p>
+        <button id="edit-toggle" class="icon-edit" type="button" aria-label="Edit name and email" title="Edit name and email" data-i18n-attr="aria-label=profile.edit;title=profile.edit">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></svg>
+        </button>
+      </header>
+
+      <form id="edit-form" class="profile-form" novalidate hidden>
+        <div id="name-field">
+          <label for="name" data-i18n="profile.name">Your name</label>
+          <input id="name" type="text" autocomplete="name" maxlength="80" />
+          <p class="hint" data-i18n="profile.nameHint">Shown at the top of the site. Hosts may list you under the name they invited you by.</p>
+        </div>
+        <label for="email" data-i18n="common.email">Email</label>
+        <input id="email" type="email" autocomplete="email" inputmode="email" maxlength="200" />
+        <p id="edit-msg" class="message" hidden></p>
+        <div class="row">
+          <button id="edit-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+          <button id="edit-cancel" class="btn small ghost" type="button" data-i18n="common.cancel">Cancel</button>
+        </div>
       </form>
 
       <!-- Only an invite link on this device -->
@@ -37,7 +44,24 @@ import Base from '../layouts/Base.astro';
         <a class="btn small" href="/login/" data-i18n="login.submit">Sign in</a>
       </div>
 
-      <section class="profile-lang">
+      <section class="profile-block">
+        <h2 data-i18n="nav.myTastings">My tastings</h2>
+        <ul id="my-tastings" class="tasting-list"></ul>
+        <p id="no-tastings" class="hint" hidden data-i18n="tastings.none">You are not invited to any tastings with this email yet.</p>
+      </section>
+
+      <section class="profile-block">
+        <h2 data-i18n="profile.myOrders">My orders</h2>
+        <div id="my-orders"></div>
+        <p id="no-orders" class="hint" hidden data-i18n="profile.noOrders">You have no orders yet.</p>
+      </section>
+
+      <section id="host-block" class="profile-block" hidden>
+        <h2 data-i18n="tastings.asHost">As a host</h2>
+        <a class="btn small ghost" href="/admin/" data-i18n="tastings.toAdmin">Go to admin</a>
+      </section>
+
+      <section class="profile-block">
         <h2 data-i18n="profile.language">Language</h2>
         <div id="lang-buttons" class="lang-buttons"></div>
       </section>
@@ -49,24 +73,172 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { supabase } from '../lib/supabase';
-  import { loadMe, signOut } from '../lib/guest';
-  import { i18nReady, t, LANGS, lang, setLang } from '../i18n';
+  import { loadMe, signOut, getCodes, tastingUrl } from '../lib/guest';
+  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
+  import { i18nReady, t, LANGS, lang, setLang, money, locale } from '../i18n';
 
   await i18nReady;
   const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
+  const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+  type Line = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
+    wine_name: string; quantity: number; unit_price: number };
 
   const me = await loadMe();
   $('loading').hidden = true;
+
+  // ---------- Header and edit form ----------
+  function showMe() {
+    $('me-name').textContent = me?.name ?? t('nav.profile');
+    $('me-email').textContent = me?.email ?? '';
+  }
+
+  function openEdit() {
+    $<HTMLInputElement>('name').value = me?.name ?? '';
+    $<HTMLInputElement>('email').value = me?.email ?? '';
+    $('name-field').hidden = !me?.signedIn; // with only an invite link the host decides the name
+    $('edit-msg').hidden = true;
+    $('edit-form').hidden = false;
+    $('edit-toggle').hidden = true;
+    $<HTMLInputElement>(me?.signedIn ? 'name' : 'email').focus();
+  }
+  function closeEdit() {
+    $('edit-form').hidden = true;
+    $('edit-toggle').hidden = false;
+  }
+  function editMsg(text: string, ok: boolean) {
+    const m = $('edit-msg');
+    m.textContent = text;
+    m.className = 'message ' + (ok ? 'ok' : 'error');
+    m.hidden = false;
+  }
+
+  $('edit-toggle').addEventListener('click', openEdit);
+  $('edit-cancel').addEventListener('click', closeEdit);
+
+  $('edit-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!me) return;
+    const name = $<HTMLInputElement>('name').value.trim();
+    const email = $<HTMLInputElement>('email').value.trim().toLowerCase();
+    if (me.signedIn && !name) { editMsg(t('host.nameMissing'), false); return; }
+    if (!EMAIL_RE.test(email)) { editMsg(t('guest.emailBad'), false); return; }
+    const btn = $<HTMLButtonElement>('edit-save');
+    btn.disabled = true;
+
+    if (me.signedIn) {
+      // Name: on the account (and as host name)
+      if (name !== me.name) {
+        const { error } = await supabase.auth.updateUser({ data: { name } });
+        if (error) { btn.disabled = false; editMsg(t('admin.changesNotSaved'), false); return; }
+        if (me.isHost) {
+          const { data: hostId } = await supabase.rpc('current_host_id');
+          if (hostId) await supabase.from('hosts').update({ name }).eq('id', hostId);
+        }
+        me.name = name;
+        $('user-name').textContent = name;
+        try { localStorage.setItem('display_name', name); } catch {}
+      }
+      // Email: the sign-in address changes once the confirmation link has been opened
+      if (email !== (me.email ?? '').toLowerCase()) {
+        const { error } = await supabase.auth.updateUser(
+          { email }, { emailRedirectTo: location.origin + '/profile/' });
+        btn.disabled = false;
+        if (error) { editMsg(error.status === 429 ? t('login.tooManyMails') : t('profile.emailNotChanged'), false); return; }
+        showMe();
+        editMsg(t('profile.emailConfirm', { email }), true);
+        return;
+      }
+    } else {
+      // Only invite links: update the email on each invitation on this device
+      for (const code of Object.values(getCodes())) {
+        const { error } = await supabase.rpc('set_my_email', { code, e: email });
+        if (error) {
+          btn.disabled = false;
+          editMsg(error.message.includes('bruges') ? t('guest.emailTaken') : t('guest.emailNotSaved'), false);
+          return;
+        }
+      }
+      me.email = email;
+    }
+    btn.disabled = false;
+    showMe();
+    closeEdit();
+  });
+
+  // ---------- Orders ----------
+  async function loadOrders(): Promise<Line[]> {
+    if (me?.signedIn) {
+      const { data } = await supabase.rpc('my_orders');
+      return (data ?? []) as Line[];
+    }
+    // Invite links: the orders of each invitation on this device
+    const out: Line[] = [];
+    for (const [slug, code] of Object.entries(getCodes())) {
+      const [o, info] = await Promise.all([
+        supabase.rpc('get_my_orders', { code }),
+        supabase.rpc('get_tasting', { code }),
+      ]);
+      const title = String((info.data as Record<string, unknown> | null)?.title ?? slug);
+      for (const l of (o.data ?? []) as Omit<Line, 'slug' | 'title'>[]) out.push({ ...l, slug, title });
+    }
+    return out.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }
+
+  function renderOrders(lines: Line[]) {
+    const box = $('my-orders');
+    const byOrder = new Map<number, Line[]>();
+    for (const l of lines) {
+      if (!byOrder.has(l.order_id)) byOrder.set(l.order_id, []);
+      byOrder.get(l.order_id)!.push(l);
+    }
+    $('no-orders').hidden = byOrder.size > 0;
+    const date = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
+    box.replaceChildren(...[...byOrder.values()].map((ls) => {
+      const first = ls[0];
+      const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
+      const card = document.createElement('a');
+      card.className = 'order-card' + (first.paid ? ' paid' : '');
+      card.href = tastingUrl(first.slug, 'cart/');
+      const head = document.createElement('div');
+      head.className = 'card-head';
+      const title = document.createElement('span');
+      title.className = 'order-title';
+      title.textContent = `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`;
+      const pill = document.createElement('span');
+      pill.className = 'pill ' + (first.paid ? 'pill-yes' : 'pill-invited');
+      pill.textContent = first.paid ? t('cart.paid') : t('cart.awaiting');
+      head.append(title, pill);
+      const meta = document.createElement('span');
+      meta.className = 'card-meta';
+      meta.textContent = date.format(new Date(first.created_at));
+      const ul = document.createElement('ul');
+      for (const l of ls) {
+        const li = document.createElement('li');
+        li.textContent = `${l.quantity} × ${l.wine_name}`;
+        ul.append(li);
+      }
+      const foot = document.createElement('div');
+      foot.className = 'order-total';
+      foot.textContent = `${t('cart.total')} ${money(total)}`;
+      card.append(head, meta, ul, foot);
+      return card;
+    }));
+  }
+
+  // ---------- Startup ----------
   if (!me) {
     $('signed-out').hidden = false;
   } else {
     $('me').hidden = false;
-    $('me-name').textContent = me.name ?? t('nav.profile');
-    $('me-email').textContent = me.email ?? '';
-    $('to-admin').hidden = !me.isHost;
-    $('name-form').hidden = !me.signedIn;
+    showMe();
     $('link-only').hidden = me.signedIn;
-    $<HTMLInputElement>('name').value = me.name ?? '';
+    $('host-block').hidden = !me.isHost;
+    const [tastings, lines] = await Promise.all([loadAllMyTastings(), loadOrders()]);
+    const list = [...tastings.upcoming, ...tastings.past];
+    $('my-tastings').replaceChildren(...list.map(tastingCard));
+    $('no-tastings').hidden = list.length > 0;
+    renderOrders(lines);
   }
 
   for (const l of LANGS) {
@@ -80,24 +252,6 @@ import Base from '../layouts/Base.astro';
     $('lang-buttons').append(b);
   }
 
-  $('name-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = $<HTMLInputElement>('name').value.trim();
-    const msg = $('name-msg');
-    if (!name) { msg.textContent = t('host.nameMissing'); return; }
-    const { error } = await supabase.auth.updateUser({ data: { name } });
-    if (!error && me?.isHost) {
-      const { data: hostId } = await supabase.rpc('current_host_id');
-      if (hostId) await supabase.from('hosts').update({ name }).eq('id', hostId);
-    }
-    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
-    if (!error) {
-      $('me-name').textContent = name;
-      $('user-name').textContent = name;
-      try { localStorage.setItem('display_name', name); } catch {}
-    }
-  });
-
   $('sign-out').addEventListener('click', () => {
     signOut();
     location.href = '/';
@@ -105,20 +259,39 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style is:global>
-  .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 34rem; }
+  .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 40rem; }
   .profile-page .title {
     font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4.5rem);
     line-height: 0.95; margin-bottom: 0.4rem; overflow-wrap: anywhere;
   }
-  .profile-page .profile-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.5rem 0 2rem; }
+  .profile-page .me-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+  .profile-page .me-head .hint { margin: 0; }
+  .profile-page .icon-edit {
+    flex: none; width: 2.6rem; height: 2.6rem; margin-top: 0.4rem; display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%; border: 1px solid var(--lodge-3); background: transparent; color: var(--paper); cursor: pointer;
+  }
+  .profile-page .icon-edit:hover { border-color: var(--amber); color: var(--amber); }
+  .profile-page .icon-edit svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .profile-page .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
   .profile-page .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
   .profile-page .btn.small { min-height: 2.5rem; padding: 0 1rem; }
-  .profile-page .profile-form { display: grid; gap: 0.4rem; margin-bottom: 2rem; }
-  .profile-page .profile-form .inline { display: flex; gap: 0.5rem; }
-  .profile-page .profile-form input { flex: 1; min-width: 0; }
+  .profile-page .profile-form { display: grid; gap: 0.4rem; margin: 1.25rem 0 0; max-width: 28rem; }
+  .profile-page .profile-form #name-field { display: grid; gap: 0.4rem; margin-bottom: 0.4rem; }
   .profile-page .profile-form .hint { margin: 0; font-size: 0.88rem; }
-  .profile-page #link-only { margin-bottom: 2rem; }
-  .profile-page .profile-lang h2 { font-size: 1.5rem; }
-  .profile-page .lang-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2.5rem; }
+  .profile-page .profile-form .row { display: flex; gap: 0.6rem; margin-top: 0.4rem; }
+  .profile-page #link-only { margin-top: 1.5rem; }
+  .profile-page .profile-block { margin-top: 2.5rem; }
+  .profile-page .profile-block h2 { font-size: 1.6rem; }
+  .profile-page .order-card {
+    display: grid; gap: 0.25rem; padding: 1rem 1.1rem; margin-bottom: 0.75rem;
+    color: var(--paper); text-decoration: none; border: 1px solid var(--lodge-3); border-radius: 0.6rem;
+    border-left: 3px solid var(--amber);
+  }
+  .profile-page .order-card.paid { border-left-color: var(--ok); }
+  .profile-page .order-card:hover { border-color: var(--amber); color: var(--paper); }
+  .profile-page .order-title { font-weight: 500; }
+  .profile-page .order-card ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.95rem; }
+  .profile-page .order-total { margin-top: 0.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .profile-page .lang-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .profile-page > div > .btn.ghost:last-child { margin-top: 2.5rem; }
 </style>

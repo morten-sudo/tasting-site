@@ -110,6 +110,8 @@ function cacheName(name: string | null) {
 export async function loadMe(): Promise<Me | null> {
   const { data } = await supabase.auth.getSession();
   if (data.session) {
+    // Link my invitations to my account first (keeps them after an email change)
+    await supabase.rpc('link_me');
     const { data: p } = await supabase.rpc('my_profile');
     const prof = (p ?? {}) as { name?: string | null; email?: string; is_host?: boolean };
     const email = data.session.user.email ?? prof.email ?? null;

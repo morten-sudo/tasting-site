@@ -431,4 +431,9 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "profile.nameHint": "Vises øverst på siden. Værter kan have dig stående under det navn, de inviterede dig med.",
   "profile.linkOnly": "Du er logget ind med et invitationslink på denne enhed. Log ind med din e-mail for at se alle dine smagninger på alle dine enheder.",
   "profile.language": "Sprog",
+  "profile.edit": "Ret navn og e-mail",
+  "profile.noOrders": "Du har ingen bestillinger endnu.",
+  "profile.emailConfirm": "Vi har sendt en bekræftelse til {email}. Din e-mail skifter, når du åbner linket – tjek også din nuværende indbakke.",
+  "profile.emailNotChanged": "E-mailen kunne ikke ændres. Den er måske allerede i brug.",
+  "profile.myOrders": "Mine bestillinger",
 };

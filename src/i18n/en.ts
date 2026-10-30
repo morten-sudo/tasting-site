@@ -430,4 +430,9 @@ export const en = {
   "profile.nameHint": "Shown at the top of the site. Hosts may list you under the name they invited you by.",
   "profile.linkOnly": "You are signed in with an invitation link on this device. Sign in with your email to see all your tastings on any device.",
   "profile.language": "Language",
+  "profile.edit": "Edit name and email",
+  "profile.noOrders": "You have no orders yet.",
+  "profile.emailConfirm": "We have sent a confirmation to {email}. Your email changes when you open the link – check your current inbox too.",
+  "profile.emailNotChanged": "The email could not be changed. It may already be in use.",
+  "profile.myOrders": "My orders",
 } as const;

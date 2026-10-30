@@ -217,3 +217,20 @@ textarea { min-height: 5rem; resize: vertical; }
 /* Notice shown when sign-in is required */
 .need-login { max-width: 32rem; margin: 1rem 0 2rem; }
 .need-login p:last-of-type { margin-bottom: 1rem; }
+
+/* Tasting cards (My tastings and the profile page) */
+.tasting-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+.tasting-card {
+    display: grid; gap: 0.3rem; padding: 1rem 1.1rem;
+    color: var(--paper); text-decoration: none;
+    border: 1px solid var(--lodge-3); border-radius: 0.6rem;
+    transition: border-color 0.2s;
+  }
+.tasting-card:hover { border-color: var(--amber); color: var(--paper); }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
+.card-meta { color: var(--muted); font-size: 0.92rem; }
+.pill { flex-shrink: 0; font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px; }
+.pill-yes { color: #ffffff; background: var(--ok); }
+.pill-invited { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
+.pill-no { color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); }

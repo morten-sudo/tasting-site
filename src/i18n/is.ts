@@ -431,4 +431,9 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "profile.nameHint": "Birtist efst á síðunni. Gestgjafar geta skráð þig undir nafninu sem þeir buðu þér með.",
   "profile.linkOnly": "Þú ert skráð(ur) inn með boðshlekk á þessu tæki. Skráðu þig inn með netfangi til að sjá allar smakkanirnar þínar á öllum tækjum.",
   "profile.language": "Tungumál",
+  "profile.edit": "Breyta nafni og netfangi",
+  "profile.noOrders": "Þú átt engar pantanir enn.",
+  "profile.emailConfirm": "Við höfum sent staðfestingu á {email}. Netfangið breytist þegar þú opnar hlekkinn – athugaðu líka núverandi innhólf.",
+  "profile.emailNotChanged": "Ekki tókst að breyta netfanginu. Það gæti þegar verið í notkun.",
+  "profile.myOrders": "Pantanirnar mínar",
 };
