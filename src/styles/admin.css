@@ -297,7 +297,29 @@
 .admin-page .link-row input { min-width: 0; }
 /* Reading the label */
 .admin-page .label-status { margin: 0; font-size: 0.9rem; color: var(--muted); }
-.admin-page .label-status.busy::before { content: '◌ '; display: inline-block; animation: spin 1s linear infinite; }
+.admin-page .label-status.busy { color: var(--paper); display: flex; align-items: center; gap: 0.6rem; }
+.admin-page .label-status.busy::before {
+  content: ''; flex: none; width: 1rem; height: 1rem; border-radius: 50%;
+  border: 2px solid var(--lodge-3); border-top-color: var(--amber); animation: spin 0.8s linear infinite;
+}
+/* Spinner inside a button while it works */
+.admin-page .btn.loading { position: relative; color: transparent !important; }
+.admin-page .btn.loading::after {
+  content: ''; position: absolute; inset: 0; margin: auto; width: 1.1rem; height: 1.1rem; border-radius: 50%;
+  border: 2px solid var(--lodge-3); border-top-color: var(--amber); animation: spin 0.8s linear infinite;
+}
+/* Spinner over the photo while the label is read */
+.admin-page .wf-image { position: relative; }
+.admin-page .wf-image.busy img { opacity: 0.35; }
+.admin-page .wf-image.busy::after {
+  content: ''; position: absolute; left: 2.6rem; top: 3.6rem; width: 1.8rem; height: 1.8rem; border-radius: 50%;
+  border: 3px solid var(--lodge-3); border-top-color: var(--amber); animation: spin 0.8s linear infinite;
+}
+/* Fields are filled in when the answer comes; dim them meanwhile */
+.admin-page .wine-form.reading input:not(#wf-link):not([type='file']), .admin-page .wine-form.reading textarea, .admin-page .wine-form.reading select { opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  .admin-page .label-status.busy::before, .admin-page .btn.loading::after, .admin-page .wf-image.busy::after { animation-duration: 2.4s !important; }
+}
 .admin-page .label-status.ok { color: var(--ok); }
 .admin-page .label-status.error { color: var(--error); }
 .admin-page .from-label { border-color: var(--ok) !important; }

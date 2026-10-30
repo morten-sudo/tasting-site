@@ -23,10 +23,11 @@ import '../../styles/admin.css';
             <input id="wf-link" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
             <button id="wf-read-link" class="btn small ghost" type="button" data-i18n="link.fetch">Fetch</button>
           </div>
+          <p id="wf-link-status" class="label-status" hidden aria-live="polite"></p>
           <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
           <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>
-          <div class="wf-image">
+          <div class="wf-image" id="wf-image-box">
             <img id="wf-preview" alt="" hidden />
             <input id="wf-image" type="file" accept="image/*" />
             <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>

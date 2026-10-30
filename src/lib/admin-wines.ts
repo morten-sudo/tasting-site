@@ -90,17 +90,30 @@ export function initWineAdmin(hostId: string) {
   }
 
   // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
+  // Status line under the link field or under the photo, with a spinner while working
+  let statusTarget: 'wf-label-status' | 'wf-link-status' = 'wf-label-status';
   function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    const el = $('wf-label-status');
-    el.textContent = text;
-    el.className = 'label-status' + (kind ? ' ' + kind : '');
-    el.hidden = !text;
+    for (const id of ['wf-label-status', 'wf-link-status']) {
+      const el = $(id);
+      const mine = id === statusTarget;
+      el.textContent = mine ? text : '';
+      el.className = 'label-status' + (mine && kind ? ' ' + kind : '');
+      el.hidden = !mine || !text;
+    }
+    form.classList.toggle('reading', kind === 'busy');
+  }
+  function busyButton(btn: HTMLButtonElement, on: boolean) {
+    btn.disabled = on;
+    btn.classList.toggle('loading', on);
+    btn.setAttribute('aria-busy', String(on));
   }
 
   async function readLabel() {
     if (!pendingImage) return;
     const btn = $<HTMLButtonElement>('wf-read-label');
-    btn.disabled = true;
+    statusTarget = 'wf-label-status';
+    busyButton(btn, true);
+    $('wf-image-box').classList.add('busy');
     labelStatus(t('label.reading'), 'busy');
     try {
       const image = await labelDataUrl(pendingImage);
@@ -117,7 +130,8 @@ export function initWineAdmin(hostId: string) {
     } catch {
       labelStatus(t('label.failed'), 'error');
     } finally {
-      btn.disabled = false;
+      busyButton(btn, false);
+      $('wf-image-box').classList.remove('busy');
     }
   }
 
@@ -148,9 +162,10 @@ export function initWineAdmin(hostId: string) {
   async function readLink() {
     const input = field<HTMLInputElement>('wf-link');
     const url = input.value.trim();
+    statusTarget = 'wf-link-status';
     if (!/^https?:\/\//i.test(url)) { labelStatus(t('link.invalid'), 'error'); return; }
     const btn = $<HTMLButtonElement>('wf-read-link');
-    btn.disabled = true;
+    busyButton(btn, true);
     labelStatus(t('link.reading'), 'busy');
     try {
       const { data } = await supabase.auth.getSession();
@@ -189,7 +204,7 @@ export function initWineAdmin(hostId: string) {
     } catch {
       labelStatus(t('link.failed'), 'error');
     } finally {
-      btn.disabled = false;
+      busyButton(btn, false);
     }
   }
 
