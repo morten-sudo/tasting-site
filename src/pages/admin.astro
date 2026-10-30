@@ -117,11 +117,13 @@ import Base from '../layouts/Base.astro';
           <h3 id="wf-title" data-i18n="admin.newWine">New wine</h3>
           <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
-          <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(e.g. a photo of the bottle)</span></label>
+          <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>
           <div class="wf-image">
             <img id="wf-preview" alt="" hidden />
             <input id="wf-image" type="file" accept="image/*" />
             <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>
+            <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
+            <p id="wf-label-status" class="label-status" hidden aria-live="polite"></p>
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input id="wf-producer" type="text" />
@@ -1159,4 +1161,12 @@ import Base from '../layouts/Base.astro';
   @media (max-width: 30rem) {
     .admin-page .q-row { grid-template-columns: 1fr; }
   }
+
+  /* Reading the label */
+  .admin-page .label-status { margin: 0; font-size: 0.9rem; color: var(--muted); }
+  .admin-page .label-status.busy::before { content: '◌ '; display: inline-block; animation: spin 1s linear infinite; }
+  .admin-page .label-status.ok { color: var(--ok); }
+  .admin-page .label-status.error { color: var(--error); }
+  .admin-page .from-label { border-color: var(--ok) !important; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>

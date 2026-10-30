@@ -35,6 +35,23 @@ async function shrinkImage(file: File): Promise<Blob> {
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b ?? file), 'image/jpeg', 0.85));
 }
 
+/** A smaller JPEG data URI for reading the label (keeps the request light). */
+async function labelDataUrl(blob: Blob, maxSide = 1024): Promise<string | null> {
+  const bitmap = await createImageBitmap(blob).catch(() => null);
+  if (!bitmap) return null;
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.8);
+}
+
+type LabelResult = {
+  name: string | null; producer: string | null; vintage: string | null; style: string | null;
+  abv: number | null; region: string | null; country: string | null; grapes: string | null;
+};
+
 const toNumber = (v: string) => {
   const n = Number(v.replace(',', '.').trim());
   return v.trim() === '' || Number.isNaN(n) ? null : n;
@@ -64,11 +81,67 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     m.hidden = !text;
   }
 
+  // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
+  function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
+    const el = $('wf-label-status');
+    el.textContent = text;
+    el.className = 'label-status' + (kind ? ' ' + kind : '');
+    el.hidden = !text;
+  }
+
+  async function readLabel() {
+    if (!pendingImage) return;
+    const btn = $<HTMLButtonElement>('wf-read-label');
+    btn.disabled = true;
+    labelStatus(t('label.reading'), 'busy');
+    try {
+      const image = await labelDataUrl(pendingImage);
+      const { data } = await supabase.auth.getSession();
+      const res = await fetch('/api/read-label', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ image }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const r = (await res.json()) as LabelResult;
+      const filled = fillFromLabel(r);
+      labelStatus(filled ? t('label.filled', { n: filled }) : t('label.nothing'), filled ? 'ok' : 'error');
+    } catch {
+      labelStatus(t('label.failed'), 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  /** Fills only empty fields, so nothing the host typed is overwritten. Returns how many were filled. */
+  function fillFromLabel(r: LabelResult) {
+    let n = 0;
+    const put = (id: string, value: string | number | null) => {
+      const el = field<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id);
+      if (value == null || value === '' || el.value.trim()) return;
+      el.value = String(value).replace('.', id === 'wf-abv' ? ',' : '.');
+      el.classList.add('from-label');
+      n++;
+    };
+    put('wf-name', r.name);
+    put('wf-producer', r.producer);
+    put('wf-vintage', r.vintage);
+    if (r.style && !styleSelect.value) { styleSelect.value = r.style; styleSelect.classList.add('from-label'); n++; }
+    put('wf-abv', r.abv);
+    const lines = [
+      r.grapes ? `${t('label.grapes')}: ${r.grapes}` : null,
+      r.region || r.country ? `${t('label.region')}: ${[r.region, r.country].filter(Boolean).join(', ')}` : null,
+    ].filter(Boolean).join('\n');
+    put('wf-details', lines || null);
+    return n;
+  }
+
   function setPreview(url: string | null) {
     const img = $<HTMLImageElement>('wf-preview');
     img.hidden = !url;
     if (url) img.src = url;
     $('wf-image-remove').hidden = !url;
+    $('wf-read-label').hidden = !pendingImage;
   }
 
   function openForm(w: AdminWine | null) {
@@ -76,6 +149,8 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     pendingImage = null;
     removeImage = false;
     form.reset();
+    labelStatus('');
+    form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
     showMsg('');
     $('wf-title').textContent = w ? t('admin.editWine') : t('admin.newWine');
     $('wf-delete').hidden = !w;
@@ -197,13 +272,18 @@ export function initWineAdmin(tastingId: string, onChange: (wines: AdminWine[]) 
     pendingImage = await shrinkImage(file);
     removeImage = false;
     setPreview(URL.createObjectURL(pendingImage));
+    // A new wine: read the label straight away
+    if (!editing) readLabel();
   });
+
+  $('wf-read-label').addEventListener('click', readLabel);
 
   $('wf-image-remove').addEventListener('click', () => {
     pendingImage = null;
     removeImage = true;
     field<HTMLInputElement>('wf-image').value = '';
     setPreview(null);
+    labelStatus('');
   });
 
   form.addEventListener('submit', async (e) => {
