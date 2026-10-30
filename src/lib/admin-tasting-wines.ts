@@ -6,8 +6,10 @@ import { styleName } from './wines';
 import { t, locale } from '../i18n';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
-  image_url: string | null; retail_price_dkk: number | null };
-type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean; wines: LibWine };
+  image_url: string | null; retail_price_dkk: number | null;
+  offer_price_dkk: number | null; offer_quantity: number | null };
+type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean;
+  bulk_price_dkk: number | null; bulk_quantity: number | null; wines: LibWine };
 export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number };
 
 export function initTastingWines(tastingId: string, hostId: string, onChange: (wines: TastingWine[]) => void) {
@@ -30,7 +32,7 @@ export function initTastingWines(tastingId: string, hostId: string, onChange: (w
     return box;
   }
 
-  async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'sort_order'>>) {
+  async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'sort_order' | 'bulk_price_dkk' | 'bulk_quantity'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)
       .eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
     if (error) { alert(t('admin.changeNotSaved')); return false; }
@@ -69,6 +71,32 @@ export function initTastingWines(tastingId: string, hostId: string, onChange: (w
         if (ok) price.classList.add('saved');
       });
       priceLab.append(mk('span', '', t('adminTasting.guestPrice')), price);
+
+      // Quantity price: "from [6] bottles: [80] kr."
+      const bulkLab = mk('label', 'bulk-lab');
+      const qty = mk('input');
+      qty.type = 'text';
+      qty.inputMode = 'numeric';
+      qty.className = 'qty';
+      qty.value = r.bulk_quantity != null ? String(r.bulk_quantity) : '';
+      qty.placeholder = '6';
+      qty.setAttribute('aria-label', t('adminTasting.bulkQty'));
+      const bulk = mk('input');
+      bulk.type = 'text';
+      bulk.inputMode = 'decimal';
+      bulk.value = r.bulk_price_dkk != null ? String(r.bulk_price_dkk).replace('.', ',') : '';
+      bulk.setAttribute('aria-label', t('adminTasting.bulkPrice'));
+      const saveBulk = async () => {
+        const n = Math.round(Number(qty.value.trim()));
+        const p = toNumber(bulk.value);
+        const valid = Number.isFinite(n) && n >= 2 && n <= 99 && p != null;
+        if ((qty.value.trim() || bulk.value.trim()) && !valid) return; // wait until both make sense
+        const ok = await update(r, valid ? { bulk_quantity: n, bulk_price_dkk: p } : { bulk_quantity: null, bulk_price_dkk: null });
+        if (ok) { qty.classList.add('saved'); bulk.classList.add('saved'); }
+      };
+      qty.addEventListener('change', saveBulk);
+      bulk.addEventListener('change', saveBulk);
+      bulkLab.append(mk('span', '', t('adminTasting.bulkFrom')), qty, mk('span', '', t('adminTasting.bulkBottles')), bulk);
       const vis = mk('label');
       const visCb = mk('input');
       visCb.type = 'checkbox';
@@ -81,7 +109,7 @@ export function initTastingWines(tastingId: string, hostId: string, onChange: (w
       ordCb.checked = r.orderable;
       ordCb.addEventListener('change', async () => { if (!(await update(r, { orderable: ordCb.checked }))) ordCb.checked = !ordCb.checked; });
       ord.append(ordCb, mk('span', '', t('admin.orderable')));
-      controls.append(priceLab, vis, ord);
+      controls.append(priceLab, bulkLab, vis, ord);
       body.append(controls);
 
       const actions = mk('div', 'wine-actions');
@@ -145,11 +173,15 @@ export function initTastingWines(tastingId: string, hostId: string, onChange: (w
       add.addEventListener('click', async () => {
         add.disabled = true;
         const sort = rows.reduce((mx, r) => Math.max(mx, r.sort_order), 0) + 1;
-        const { error } = await supabase.from('tasting_wines').insert({
+        // Start from the regular price, and the shop's offer as quantity price when it is for several bottles
+        const bulkFrom = w.offer_quantity && w.offer_quantity >= 2 && w.offer_price_dkk != null;
+        const row = {
           tasting_id: tastingId, wine_id: w.id, sort_order: sort, price_dkk: w.retail_price_dkk,
-        });
+          bulk_quantity: bulkFrom ? w.offer_quantity : null, bulk_price_dkk: bulkFrom ? w.offer_price_dkk : null,
+        };
+        const { error } = await supabase.from('tasting_wines').insert(row);
         if (error) { add.disabled = false; alert(t('admin.changeNotSaved')); return; }
-        rows.push({ wine_id: w.id, sort_order: sort, price_dkk: w.retail_price_dkk, orderable: true, revealed: true, wines: w });
+        rows.push({ ...row, orderable: true, revealed: true, wines: w });
         render();
       });
       li.append(text, add);
@@ -170,9 +202,9 @@ export function initTastingWines(tastingId: string, hostId: string, onChange: (w
   $('tw-search').addEventListener('input', renderPicker);
 
   async function load() {
-    const cols = 'id, name, producer, style, vintage, image_url, retail_price_dkk';
+    const cols = 'id, name, producer, style, vintage, image_url, retail_price_dkk, offer_price_dkk, offer_quantity';
     const [tw, lib, r] = await Promise.all([
-      supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, orderable, revealed, wines(${cols})`)
+      supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, bulk_price_dkk, bulk_quantity, orderable, revealed, wines(${cols})`)
         .eq('tasting_id', tastingId).order('sort_order'),
       supabase.from('wines').select(cols).eq('host_id', hostId).order('name'),
       supabase.rpc('tasting_wine_ratings', { t_id: tastingId }),

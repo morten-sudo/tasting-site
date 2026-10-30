@@ -410,4 +410,13 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "payments.moreTitle": "Fleiri greiðsluleiðir",
   "payments.moreText": "Hægt verður að bæta við fleiri greiðsluleiðum hér síðar.",
   "payments.badNumber": "Þetta lítur ekki út eins og símanúmer.",
+  "price.bulk": "Frá {n} flöskum: {price} hver",
+  "adminTasting.bulkFrom": "Frá",
+  "adminTasting.bulkBottles": "flöskum",
+  "adminTasting.bulkQty": "Fjöldi flaskna fyrir magnverð",
+  "adminTasting.bulkPrice": "Magnverð á flösku",
+  "wineLib.offer": "Tilboð í verslun",
+  "wineLib.offerHint": "(valfrjálst – verður magnverð þegar vínið er sett í smökkun)",
+  "wineLib.offerPrice": "Tilboðsverð á flösku",
+  "wineLib.offerWhen": "ef keyptar eru",
 };

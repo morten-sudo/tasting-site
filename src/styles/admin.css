@@ -364,3 +364,10 @@ a.chip:hover { color: var(--paper); }
   .admin-page .tw-row, .admin-page .lib-row.with-thumb { grid-template-columns: 3rem 1fr; }
   .admin-page .tw-row .wine-actions, .admin-page .lib-row.with-thumb .wine-actions { grid-column: 2; }
 }
+
+.admin-page .tw-controls .bulk-lab input.qty { width: 3rem; }
+.admin-page .tw-controls input.saved { border-color: var(--ok); }
+.admin-page .offer-row { align-items: center; flex-wrap: wrap; }
+.admin-page .offer-row input { flex: 0 1 7rem !important; }
+.admin-page .offer-row input#wf-offer-qty { flex-basis: 3.5rem !important; }
+.admin-page .offer-row span { color: var(--muted); font-size: 0.9rem; }

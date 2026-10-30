@@ -62,7 +62,7 @@ import Base from '../../layouts/Base.astro';
 
   await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
-  import { type Wine, styleLabel, styleTone, vintageLabel, kr } from '../../lib/wines';
+  import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, bulkLabel } from '../../lib/wines';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -80,7 +80,7 @@ import Base from '../../layouts/Base.astro';
   function renderBasket() {
     const cart = getCart();
     let total = 0;
-    for (const w of wines) total += (cart[w.id] ?? 0) * (w.price_dkk ?? 0);
+    for (const w of wines) total += (cart[w.id] ?? 0) * unitPrice(w, cart[w.id] ?? 0);
     const bottles = cartCount(cart);
     $('basket').hidden = bottles === 0;
     $('basket-count').textContent = plural(bottles, 'wines.bottlesOne', 'wines.bottlesMany') + ', ';
@@ -144,6 +144,8 @@ import Base from '../../layouts/Base.astro';
         normal.append(t('wines.normalPrice') + ' ', el('s', '', kr.format(w.retail_price_dkk)));
         price.append(normal);
       }
+      const bulk = bulkLabel(w);
+      if (bulk) price.append(el('span', 'bulk', bulk));
     }
 
     if (w.description) $('desc').textContent = w.description;
@@ -203,6 +205,7 @@ import Base from '../../layouts/Base.astro';
 </script>
 
 <style is:global>
+  .bulk { display: block; color: #a07a3c; font-size: 0.9rem; margin-top: 0.15rem; }
   /* The wine page uses the full screen width:
      the image runs edge to edge, and on large screens image and text sit side by side */
   .wine-page { padding-top: 0.5rem; padding-bottom: 6rem; }

@@ -5,6 +5,7 @@ export type Wine = {
   style: string | null; vintage: string | null; abv: number | null;
   price_dkk: number | null; description: string | null; orderable: boolean;
   image_url: string | null; details: string | null; retail_price_dkk: number | null;
+  bulk_price_dkk?: number | null; bulk_quantity?: number | null;
 };
 
 import { t, money, type Key } from '../i18n';
@@ -42,3 +43,15 @@ export function vintageLabel(w: Wine): string | null {
 }
 
 export const kr = { format: (n: number) => money(n) };
+
+/** Price per bottle for n bottles: the quantity price applies from bulk_quantity bottles. */
+export function unitPrice(w: Pick<Wine, 'price_dkk' | 'bulk_price_dkk' | 'bulk_quantity'>, n: number) {
+  if (w.bulk_price_dkk != null && w.bulk_quantity != null && n >= w.bulk_quantity) return Number(w.bulk_price_dkk);
+  return Number(w.price_dkk ?? 0);
+}
+
+/** "From 6 bottles: 80 kr. per bottle", or null without a quantity price. */
+export function bulkLabel(w: Pick<Wine, 'bulk_price_dkk' | 'bulk_quantity'>) {
+  if (w.bulk_price_dkk == null || w.bulk_quantity == null) return null;
+  return t('price.bulk', { n: w.bulk_quantity, price: money(Number(w.bulk_price_dkk)) });
+}

@@ -9,10 +9,11 @@ export type AdminWine = {
   style: string | null; vintage: string | null; abv: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
   image_url: string | null; source_url: string | null;
+  offer_price_dkk: number | null; offer_quantity: number | null;
   tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, retail_price_dkk, description, details, image_url, source_url, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -170,6 +171,10 @@ export function initWineAdmin(hostId: string) {
       };
       put('wf-description', r.description);
       put('wf-retail', r.price != null ? String(r.price) : null);
+      if (r.offer) {
+        put('wf-offer-price', String(r.offer.price));
+        put('wf-offer-qty', String(r.offer.quantity));
+      }
       if (r.image && !pendingImage && $<HTMLImageElement>('wf-preview').hidden) {
         linkImage = r.image;
         removeImage = false;
@@ -216,6 +221,8 @@ export function initWineAdmin(hostId: string) {
     field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
     field<HTMLInputElement>('wf-abv').value = w?.abv != null ? String(w.abv).replace('.', ',') : '';
     field<HTMLInputElement>('wf-retail').value = w?.retail_price_dkk != null ? String(w.retail_price_dkk) : '';
+    field<HTMLInputElement>('wf-offer-price').value = w?.offer_price_dkk != null ? String(w.offer_price_dkk) : '';
+    field<HTMLInputElement>('wf-offer-qty').value = w?.offer_quantity != null ? String(w.offer_quantity) : '';
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
     setPreview(w?.image_url ?? null);
@@ -249,6 +256,10 @@ export function initWineAdmin(hostId: string) {
       const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
       if (w.retail_price_dkk != null) body.append(mk('p', 'wine-meta', t('admin.normally', { price: kr.format(w.retail_price_dkk) })));
+      if (w.offer_price_dkk != null) {
+        body.append(mk('p', 'wine-meta', t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
+          { price: kr.format(w.offer_price_dkk), n: w.offer_quantity ?? 1 })));
+      }
       // Which tastings the wine is in
       const ts = (w.tasting_wines ?? []).map((x) => x.tastings).filter(Boolean) as { slug: string; title: string }[];
       const chips = mk('div', 'chips');
@@ -345,6 +356,11 @@ export function initWineAdmin(hostId: string) {
       vintage: toText(field<HTMLInputElement>('wf-vintage').value),
       abv: toNumber(field<HTMLInputElement>('wf-abv').value),
       retail_price_dkk: toNumber(field<HTMLInputElement>('wf-retail').value),
+      offer_price_dkk: toNumber(field<HTMLInputElement>('wf-offer-price').value),
+      offer_quantity: (() => {
+        const n = Math.round(Number(field<HTMLInputElement>('wf-offer-qty').value.trim()));
+        return n >= 1 && n <= 99 && field<HTMLInputElement>('wf-offer-price').value.trim() ? n : null;
+      })(),
       description: toText(field<HTMLTextAreaElement>('wf-description').value),
       details: toText(field<HTMLTextAreaElement>('wf-details').value),
       image_url,

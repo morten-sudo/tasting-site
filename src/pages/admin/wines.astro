@@ -50,6 +50,13 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
           <input id="wf-retail" type="text" inputmode="decimal" />
+          <label for="wf-offer-price"><span data-i18n="wineLib.offer">Shop offer</span> <span class="hint" data-i18n="wineLib.offerHint">(optional – becomes the quantity price when you add the wine to a tasting)</span></label>
+          <div class="inline-form offer-row">
+            <input id="wf-offer-price" type="text" inputmode="decimal" placeholder="kr." aria-label="Offer price per bottle" data-i18n-attr="aria-label=wineLib.offerPrice" />
+            <span data-i18n="wineLib.offerWhen">when buying</span>
+            <input id="wf-offer-qty" type="text" inputmode="numeric" placeholder="6" aria-label="Number of bottles" data-i18n-attr="aria-label=adminTasting.bulkQty" />
+            <span data-i18n="adminTasting.bulkBottles">bottles</span>
+          </div>
           <label for="wf-abv" data-i18n="admin.abv">Alcohol (%)</label>
           <input id="wf-abv" type="text" inputmode="decimal" class="short" />
           <label for="wf-description" data-i18n="admin.description">Description</label>

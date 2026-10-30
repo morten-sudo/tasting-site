@@ -409,4 +409,13 @@ export const en = {
   "payments.moreTitle": "More payment methods",
   "payments.moreText": "More ways to pay can be added here later.",
   "payments.badNumber": "That does not look like a phone number.",
+  "price.bulk": "From {n} bottles: {price} each",
+  "adminTasting.bulkFrom": "From",
+  "adminTasting.bulkBottles": "bottles",
+  "adminTasting.bulkQty": "Number of bottles for the quantity price",
+  "adminTasting.bulkPrice": "Quantity price per bottle",
+  "wineLib.offer": "Shop offer",
+  "wineLib.offerHint": "(optional – becomes the quantity price when you add the wine to a tasting)",
+  "wineLib.offerPrice": "Offer price per bottle",
+  "wineLib.offerWhen": "when buying",
 } as const;

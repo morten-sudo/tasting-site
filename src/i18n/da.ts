@@ -410,4 +410,13 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "payments.moreTitle": "Flere betalingsformer",
   "payments.moreText": "Flere måder at betale på kan tilføjes her senere.",
   "payments.badNumber": "Det ligner ikke et telefonnummer.",
+  "price.bulk": "Ved {n} stk.: {price} pr. flaske",
+  "adminTasting.bulkFrom": "Ved",
+  "adminTasting.bulkBottles": "stk.",
+  "adminTasting.bulkQty": "Antal flasker for mængdeprisen",
+  "adminTasting.bulkPrice": "Mængdepris pr. flaske",
+  "wineLib.offer": "Tilbud i butikken",
+  "wineLib.offerHint": "(valgfrit – bliver mængdepris, når du sætter vinen i en smagning)",
+  "wineLib.offerPrice": "Tilbudspris pr. flaske",
+  "wineLib.offerWhen": "ved køb af",
 };
