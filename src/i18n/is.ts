@@ -419,4 +419,9 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineLib.offerHint": "(valfrjálst – verður magnverð þegar vínið er sett í smökkun)",
   "wineLib.offerPrice": "Tilboðsverð á flösku",
   "wineLib.offerWhen": "ef keyptar eru",
+  "adminTasting.addTier": "+ Magnverð",
+  "adminTasting.removeTier": "Fjarlægja magnverð",
+  "adminTasting.removeGuest": "Fjarlægja úr smökkun",
+  "adminTasting.confirmRemoveGuest": "Smelltu aftur – svör og einkunnir gestsins eyðast líka",
+  "adminTasting.guestHasOrders": "Gesturinn er með pantanir í smökkuninni og er ekki hægt að fjarlægja.",
 };

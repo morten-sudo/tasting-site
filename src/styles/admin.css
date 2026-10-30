@@ -387,7 +387,15 @@ a.chip:hover { color: var(--paper); }
   .admin-page .tw-row .wine-actions, .admin-page .lib-row.with-thumb .wine-actions { grid-column: 2; }
 }
 
-.admin-page .tw-controls .bulk-lab input.qty { width: 3rem; }
+.admin-page .tiers { display: grid; gap: 0.4rem; margin-top: 0.5rem; justify-items: start; }
+.admin-page .tier { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.admin-page .tier input {
+  width: 6.5rem; font: inherit; color: var(--paper); background: var(--lodge-2);
+  border: 1px solid var(--lodge-3); border-radius: 0.4rem; padding: 0.35rem 0.5rem;
+}
+.admin-page .tier input.qty { width: 3rem; }
+.admin-page .tier .icon-only { width: 1.9rem; height: 1.9rem; }
+.admin-page .tiers.saved .tier input { border-color: var(--ok); }
 .admin-page .tw-controls input.saved { border-color: var(--ok); }
 .admin-page .offer-row { align-items: center; flex-wrap: wrap; }
 .admin-page .offer-row input { flex: 0 1 7rem !important; }

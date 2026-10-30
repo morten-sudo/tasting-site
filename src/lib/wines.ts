@@ -5,7 +5,7 @@ export type Wine = {
   style: string | null; vintage: string | null; abv: number | null;
   price_dkk: number | null; description: string | null; orderable: boolean;
   image_url: string | null; details: string | null; retail_price_dkk: number | null;
-  bulk_price_dkk?: number | null; bulk_quantity?: number | null;
+  price_tiers?: PriceTier[] | null;
 };
 
 import { t, money, type Key } from '../i18n';
@@ -44,14 +44,24 @@ export function vintageLabel(w: Wine): string | null {
 
 export const kr = { format: (n: number) => money(n) };
 
-/** Price per bottle for n bottles: the quantity price applies from bulk_quantity bottles. */
-export function unitPrice(w: Pick<Wine, 'price_dkk' | 'bulk_price_dkk' | 'bulk_quantity'>, n: number) {
-  if (w.bulk_price_dkk != null && w.bulk_quantity != null && n >= w.bulk_quantity) return Number(w.bulk_price_dkk);
-  return Number(w.price_dkk ?? 0);
+export type PriceTier = { qty: number; price: number };
+
+const tiersOf = (w: Pick<Wine, 'price_tiers'>) =>
+  [...(w.price_tiers ?? [])].filter((x) => x && x.qty >= 2).sort((a, b) => a.qty - b.qty);
+
+/** Price per bottle for n bottles: the highest quantity tier that n reaches, else the guest price. */
+export function unitPrice(w: Pick<Wine, 'price_dkk' | 'price_tiers'>, n: number) {
+  const tier = tiersOf(w).filter((x) => n >= x.qty).pop();
+  return Number(tier ? tier.price : w.price_dkk ?? 0);
 }
 
-/** "From 6 bottles: 80 kr. per bottle", or null without a quantity price. */
-export function bulkLabel(w: Pick<Wine, 'bulk_price_dkk' | 'bulk_quantity'>) {
-  if (w.bulk_price_dkk == null || w.bulk_quantity == null) return null;
-  return t('price.bulk', { n: w.bulk_quantity, price: money(Number(w.bulk_price_dkk)) });
+/** One label per quantity price: "From 6 bottles: 80 kr. each". */
+export function tierLabels(w: Pick<Wine, 'price_tiers'>) {
+  return tiersOf(w).map((x) => t('price.bulk', { n: x.qty, price: money(Number(x.price)) }));
+}
+
+/** The next quantity price the guest can reach from n bottles, as a label, or null. */
+export function nextTierLabel(w: Pick<Wine, 'price_tiers'>, n: number) {
+  const next = tiersOf(w).find((x) => x.qty > n);
+  return next ? t('price.bulk', { n: next.qty, price: money(Number(next.price)) }) : null;
 }

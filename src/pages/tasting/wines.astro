@@ -53,7 +53,7 @@ import Base from '../../layouts/Base.astro';
   await i18nReady;
   import { getCart, cartCount } from '../../lib/cart';
 
-  import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, bulkLabel } from '../../lib/wines';
+  import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -126,8 +126,7 @@ import Base from '../../layouts/Base.astro';
         normal.append(t('wines.normalPrice') + ' ', el('s', '', kr.format(w.retail_price_dkk)));
         price.append(normal);
       }
-      const bulk = bulkLabel(w);
-      if (bulk) price.append(el('span', 'bulk', bulk));
+      for (const label of tierLabels(w)) price.append(el('span', 'bulk', label));
       foot.append(price);
     }
     const mine = myRatings.get(w.id)?.rating;

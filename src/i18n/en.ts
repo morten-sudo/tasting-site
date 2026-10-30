@@ -418,4 +418,9 @@ export const en = {
   "wineLib.offerHint": "(optional – becomes the quantity price when you add the wine to a tasting)",
   "wineLib.offerPrice": "Offer price per bottle",
   "wineLib.offerWhen": "when buying",
+  "adminTasting.addTier": "+ Quantity price",
+  "adminTasting.removeTier": "Remove quantity price",
+  "adminTasting.removeGuest": "Remove from tasting",
+  "adminTasting.confirmRemoveGuest": "Tap again – their answers and ratings are deleted too",
+  "adminTasting.guestHasOrders": "This guest has orders in the tasting and cannot be removed.",
 } as const;

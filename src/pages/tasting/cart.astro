@@ -49,10 +49,10 @@ import Base from '../../layouts/Base.astro';
   import { i18nReady, t, money, locale } from '../../i18n';
   import { getCart, setQty, clearCart, MAX_PER_WINE } from '../../lib/cart';
   import { payBox, setPayee } from '../../lib/pay';
-  import { unitPrice, bulkLabel } from '../../lib/wines';
+  import { unitPrice, nextTierLabel, type PriceTier } from '../../lib/wines';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number;
-    bulk_price_dkk: number | null; bulk_quantity: number | null };
+    price_tiers: PriceTier[] | null };
   type Line = {
     order_id: number; created_at: string; paid: boolean;
     wine_id: number; wine_name: string; quantity: number; unit_price: number;
@@ -95,7 +95,7 @@ import Base from '../../layouts/Base.astro';
       const li = el('li', 'line');
       const info = el('div', 'line-info');
       info.append(el('p', 'line-name', w.name), el('p', 'line-unit', [t('cart.perBottle', { price: kr.format(price) }),
-        w.bulk_quantity && n < w.bulk_quantity ? bulkLabel(w) : null].filter(Boolean).join(' · ')));
+        nextTierLabel(w, n)].filter(Boolean).join(' · ')));
 
       const ctrl = el('div', 'line-ctrl');
       const minus = el('button', 'step', '−');

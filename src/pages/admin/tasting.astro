@@ -431,7 +431,21 @@ import '../../styles/admin.css';
     const cancel = mk('button', 'text-btn', t('common.cancel'));
     cancel.type = 'button';
     cancel.addEventListener('click', () => { editingId = null; renderParticipants(); });
-    row.append(save, cancel);
+
+    // Remove from this tasting (the guest stays in the guest list). Two taps; not when they have orders.
+    const remove = mk('button', 'text-btn danger', t('adminTasting.removeGuest'));
+    remove.type = 'button';
+    remove.addEventListener('click', async () => {
+      if (orders.some((o) => o.participant_id === p.id)) { alert(t('adminTasting.guestHasOrders')); return; }
+      if (!remove.dataset.armed) { remove.dataset.armed = '1'; remove.textContent = t('adminTasting.confirmRemoveGuest'); return; }
+      const { error } = await supabase.from('participants').delete().eq('id', p.id);
+      if (error) { alert(t('admin.changeNotSaved')); return; }
+      participants = participants.filter((x) => x.id !== p.id);
+      editingId = null;
+      renderParticipants();
+      renderFee();
+    });
+    row.append(save, cancel, remove);
     form.append(row);
 
     form.addEventListener('submit', async (e) => {

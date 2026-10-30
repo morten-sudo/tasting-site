@@ -419,4 +419,9 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineLib.offerHint": "(valgfrit – bliver mængdepris, når du sætter vinen i en smagning)",
   "wineLib.offerPrice": "Tilbudspris pr. flaske",
   "wineLib.offerWhen": "ved køb af",
+  "adminTasting.addTier": "+ Mængdepris",
+  "adminTasting.removeTier": "Fjern mængdepris",
+  "adminTasting.removeGuest": "Fjern fra smagningen",
+  "adminTasting.confirmRemoveGuest": "Tryk igen – gæstens svar og vurderinger slettes også",
+  "adminTasting.guestHasOrders": "Gæsten har bestillinger i smagningen og kan ikke fjernes.",
 };
