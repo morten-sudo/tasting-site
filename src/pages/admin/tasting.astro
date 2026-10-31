@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
+import TastingWizard from '../../components/TastingWizard.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.admin">
@@ -16,6 +17,14 @@ import '../../styles/admin.css';
       <div id="tasting-panel">
       <!-- Tasting details -->
       <section class="block" data-section="overview">
+        <!-- Set-up status: the four steps of the guide, with a way back into it -->
+        <div id="setup-card" class="setup-card" hidden>
+          <div>
+            <p class="setup-title" data-i18n="wizard.continueTitle">Finish setting up the tasting</p>
+            <ol id="setup-steps" class="setup-steps"></ol>
+          </div>
+          <button id="setup-continue" class="btn small" type="button" data-i18n="wizard.continue">Continue set-up</button>
+        </div>
         <h2 data-i18n="page.tasting">Tasting</h2>
         <form id="details" class="add-form tasting-form" novalidate>
           <label for="d-title" data-i18n="admin.title">Title</label>
@@ -177,6 +186,7 @@ import '../../styles/admin.css';
       </div>
 
     </div>
+      <TastingWizard />
     </AdminNav>
   </section>
 </Base>
@@ -190,6 +200,7 @@ import '../../styles/admin.css';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
+  import { initWizard } from '../../lib/tasting-wizard';
   import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
 
   await i18nReady;
@@ -720,6 +731,25 @@ import '../../styles/admin.css';
   window.addEventListener('popstate', () => showSection(currentAdmin()?.section ?? 'overview'));
   showSection(currentAdmin()?.section ?? 'overview');
 
+  // ---------- Set-up status (the same four steps as the guide for a new tasting) ----------
+  let wizard: ReturnType<typeof initWizard> | null = null;
+  function renderSetup() {
+    if (!tasting) return;
+    const steps: { label: Key; done: boolean; info: string }[] = [
+      { label: 'wizard.details', done: true, info: '' },
+      { label: 'wizard.wines', done: wines.length > 0, info: wines.length ? String(wines.length) : '' },
+      { label: 'wizard.guests', done: participants.length > 0, info: participants.length ? String(participants.length) : '' },
+      { label: 'wizard.setup', done: Number(tasting.tasting_fee) > 0 || tasting.orders_open === true, info: '' },
+    ];
+    const next = steps.findIndex((s) => !s.done);
+    $('setup-card').hidden = steps[1].done && steps[2].done;
+    $('setup-steps').replaceChildren(...steps.map((s) => {
+      const li = mkEl('li', s.done ? 'done' : '', t(s.label) + (s.info ? ` (${s.info})` : ''));
+      return li;
+    }));
+    $('setup-continue').onclick = () => wizard?.openFor(tasting!, next > 0 ? next : 1);
+  }
+
   // ---------- Startup ----------
   let host: Host | null = null;
 
@@ -743,12 +773,14 @@ import '../../styles/admin.css';
     renderParticipants();
     renderOrders();
     loadSettings();
+    renderSetup();
     const rows = await fetchLeaderboard({ slug: tasting.slug });
     if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
   }
 
   host = await requireHost();
   if (host) {
+    wizard = initWizard(host, () => location.reload());
     await loadAll();
     setInterval(async () => {
       if (!tasting) return;

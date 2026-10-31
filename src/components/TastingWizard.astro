@@ -1,0 +1,90 @@
+---
+// Create or set up a tasting in four steps. Only step 1 is needed; the rest can be done later.
+import AddressFields from './AddressFields.astro';
+const steps = [
+  { key: 'details', label: 'wizard.details', text: 'Details' },
+  { key: 'wines', label: 'wizard.wines', text: 'Wines' },
+  { key: 'guests', label: 'wizard.guests', text: 'Guests' },
+  { key: 'setup', label: 'wizard.setup', text: 'Payment & setup' },
+];
+---
+<dialog id="wizard" class="wizard" aria-labelledby="wz-title">
+  <header class="wz-head">
+    <div class="wz-top">
+      <h2 id="wz-title" data-i18n="admin.newTasting">New tasting</h2>
+      <button id="wz-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+    </div>
+    <ol class="wz-steps">
+      {steps.map((s, i) => (
+        <li>
+          <button type="button" class="wz-step" data-step={i}>
+            <span class="wz-num">{i + 1}</span>
+            <span class="wz-label"><b data-i18n={s.label}>{s.text}</b>{i > 0 && <small data-i18n="wizard.optional">optional</small>}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  </header>
+
+  <div class="wz-body">
+    <!-- 1. Details -->
+    <section class="wz-pane add-form tasting-form" data-pane="0">
+      <p class="wz-note" data-i18n="wizard.onlyStep1">Only step 1 is needed. Save when you like and add wines, guests and payment later.</p>
+      <label for="wz-title-input" data-i18n="admin.title">Title</label>
+      <input id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required />
+      <label for="wz-when" data-i18n="admin.when">Date and time</label>
+      <input id="wz-when" type="datetime-local" />
+      <AddressFields prefix="wz" />
+      <label for="wz-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
+      <textarea id="wz-intro" rows="4" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
+      <label for="wz-language" data-i18n="admin.guestLanguage">Language for guests</label>
+      <select id="wz-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
+    </section>
+
+    <!-- 2. Wines -->
+    <section class="wz-pane" data-pane="1" hidden>
+      <p class="wz-note" data-i18n="wizard.winesNote">Choose the wines from your library. You set the guest price under Wines in the tasting.</p>
+      <input id="wz-wine-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+      <ul id="wz-wines" class="wz-list"></ul>
+      <p id="wz-wines-empty" class="hint" hidden data-i18n-html="wizard.noWines">Your wine library is empty. <a href="/admin/wines/">Add wines</a> – you can choose them here afterwards.</p>
+    </section>
+
+    <!-- 3. Guests -->
+    <section class="wz-pane" data-pane="2" hidden>
+      <p class="wz-note" data-i18n="wizard.guestsNote">Choose who to invite. Each guest gets a personal link you can send afterwards.</p>
+      <input id="wz-guest-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+      <ul id="wz-guests" class="wz-list"></ul>
+      <form id="wz-new-guest" class="wz-new-guest" novalidate>
+        <p class="wz-sub" data-i18n="wizard.newGuest">New guest</p>
+        <div class="wz-pair">
+          <input id="wz-guest-name" type="text" autocomplete="off" placeholder="Name" data-i18n-attr="placeholder=admin.name" aria-label="Name" />
+          <input id="wz-guest-email" type="email" autocomplete="off" placeholder="Email (optional)" data-i18n-attr="placeholder=wizard.emailOptional;aria-label=common.email" />
+          <button class="btn small ghost" type="submit" data-i18n="admin.add">Add</button>
+        </div>
+        <p id="wz-guest-msg" class="message error" hidden></p>
+      </form>
+    </section>
+
+    <!-- 4. Payment & setup -->
+    <section class="wz-pane add-form tasting-form" data-pane="3" hidden>
+      <label for="wz-fee"><span data-i18n="admin.feePer">Price per person (DKK)</span> <span class="hint" data-i18n="wizard.feeHint">(optional – you can also work it out after the tasting)</span></label>
+      <input id="wz-fee" type="text" inputmode="decimal" class="short" />
+      <label class="toggle"><input id="wz-fee-open" type="checkbox" /> <span data-i18n="admin.feeShow">Show the fee to attending guests</span></label>
+      <p id="wz-mp" class="hint"></p>
+      <p class="wz-sub" data-i18n="admin.controls">Controls</p>
+      <label class="toggle"><input id="wz-signup" type="checkbox" checked /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
+      <label class="toggle"><input id="wz-orders" type="checkbox" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
+      <p class="hint" data-i18n="wizard.quizLater">The quiz is set up under Quiz in the tasting.</p>
+    </section>
+  </div>
+
+  <footer class="wz-foot">
+    <p id="wz-msg" class="message error" hidden></p>
+    <div class="wz-actions">
+      <button id="wz-back" class="text-btn" type="button" data-i18n="wizard.back">Back</button>
+      <span class="wz-spacer"></span>
+      <button id="wz-save" class="btn small ghost" type="button" data-i18n="wizard.saveClose">Save and close</button>
+      <button id="wz-next" class="btn small" type="button">Next</button>
+    </div>
+  </footer>
+</dialog>

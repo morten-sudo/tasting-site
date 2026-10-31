@@ -521,3 +521,90 @@ dialog.zoom .zoom-close {
 .side-list > li > a, .side-new, .side-past summary { padding-left: 2.3rem; }
 .side-sub a { padding-left: 0.6rem; }
 .side-sub { margin-left: 2.3rem; }
+
+/* Guide for creating / setting up a tasting: a centred window on larger screens, full height on phones */
+dialog.wizard {
+  position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%;
+  height: 94vh; height: 94dvh; max-height: none; padding: 0; border: 0;
+  border-radius: 1rem 1rem 0 0; background: var(--lodge); color: var(--paper);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18);
+}
+dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up 0.22s ease-out; }
+dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
+@media (min-width: 48rem) {
+  dialog.wizard {
+    inset: 0; margin: auto; width: min(46rem, calc(100vw - 4rem)); height: min(48rem, calc(100vh - 4rem));
+    border-radius: 1rem; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  }
+  dialog.wizard[open] { animation: wz-in 0.18s ease-out; }
+}
+@keyframes wz-in { from { opacity: 0; transform: translateY(0.75rem); } to { opacity: 1; transform: none; } }
+.wz-head { padding: 1.1rem var(--gutter) 0; border-bottom: 1px solid var(--lodge-3); flex-shrink: 0; }
+@media (min-width: 48rem) { .wz-head, .wz-body, .wz-foot { padding-left: 2rem !important; padding-right: 2rem !important; } }
+.wz-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.wz-top h2 { margin: 0; font-size: 1.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-steps {
+  list-style: none; display: flex; gap: 0.25rem; margin: 0.9rem calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter);
+  overflow-x: auto; scrollbar-width: none; counter-reset: none;
+}
+.wz-steps::-webkit-scrollbar { display: none; }
+.wz-steps li { flex: 1 0 auto; }
+.wz-step {
+  display: flex; align-items: center; gap: 0.55rem; width: 100%; padding: 0.55rem 0.4rem 0.8rem;
+  background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
+  font: inherit; color: var(--muted); text-align: left; cursor: pointer; white-space: nowrap;
+}
+.wz-step:disabled { cursor: default; opacity: 0.55; }
+.wz-num {
+  display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid var(--lodge-3); font-size: 0.85rem; font-weight: 600; background: var(--lodge-2);
+}
+.wz-label { display: grid; line-height: 1.15; }
+.wz-label b { font-weight: 600; font-size: 0.93rem; }
+.wz-label small { font-size: 0.75rem; color: var(--muted); }
+.wz-step.current { color: var(--paper); border-bottom-color: var(--amber); }
+.wz-step.current .wz-num { background: var(--amber); border-color: var(--amber); color: #fff; }
+.wz-step.done .wz-num { border-color: var(--ok); color: var(--ok); font-size: 0; }
+.wz-step.done .wz-num::after { content: '✓'; font-size: 0.9rem; }
+.wz-body { flex: 1; overflow-y: auto; padding: 1.25rem var(--gutter) 1.5rem; }
+.admin-page .wz-body .add-form { margin: 0; padding: 0; background: none; max-width: none; }
+.wz-note { margin: 0 0 0.75rem; color: var(--muted); font-size: 0.93rem; }
+.wz-sub { margin: 1rem 0 0.3rem; font-weight: 600; font-size: 0.95rem; }
+.wz-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+.wz-item {
+  display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0.75rem; margin: 0 !important; cursor: pointer;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.6rem;
+}
+.wz-item:has(input:checked) { border-color: var(--amber); }
+.wz-item:has(input:disabled) { opacity: 0.7; cursor: default; }
+.wz-item input { width: 1.2rem; height: 1.2rem; flex-shrink: 0; accent-color: var(--amber); }
+.wz-thumb { width: 2.4rem; height: 3rem; flex-shrink: 0; border-radius: 0.3rem; background: var(--lodge); overflow: hidden; display: grid; place-items: center; }
+.wz-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.wz-text { display: grid; min-width: 0; }
+.wz-text b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-text small { color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-new-guest { margin-top: 1rem; }
+.wz-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 0.5rem; }
+@media (max-width: 34rem) { .wz-pair { grid-template-columns: 1fr; } .wz-pair .btn { justify-self: start; } }
+.admin-page .wz-pair input { width: 100%; min-width: 0; box-sizing: border-box; font: inherit; padding: 0.65rem 0.75rem;
+  border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); color: var(--paper); }
+.wz-foot { flex-shrink: 0; padding: 0.8rem var(--gutter) calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--lodge-3); background: var(--lodge); }
+.wz-foot .message { margin: 0 0 0.6rem; }
+.wz-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.wz-spacer { flex: 1; }
+.wz-actions [hidden] { display: none; }
+
+/* Set-up status on a tasting's overview */
+.setup-card {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+  margin: 0 0 1.75rem; padding: 1rem 1.1rem; max-width: 40rem;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-left: 3px solid var(--amber); border-radius: 0.6rem;
+}
+.setup-card[hidden] { display: none; }
+.setup-title { margin: 0 0 0.4rem; font-weight: 600; }
+.setup-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-size: 0.9rem; color: var(--muted); }
+.setup-steps li::before { content: '○ '; }
+.setup-steps li.done { color: var(--ok); }
+.setup-steps li.done::before { content: '✓ '; }
+.admin-page .wz-body .add-form input:not([type='checkbox']):not(.short), .admin-page .wz-body .add-form textarea, .admin-page .wz-body .add-form select { max-width: none; width: 100%; box-sizing: border-box; }
+#new-toggle { display: inline-flex; align-items: center; gap: 0.3rem; }

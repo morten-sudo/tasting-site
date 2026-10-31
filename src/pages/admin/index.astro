@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
-import AddressFields from '../../components/AddressFields.astro';
+import TastingWizard from '../../components/TastingWizard.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.admin">
@@ -13,24 +13,9 @@ import '../../styles/admin.css';
       <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
 
       <div class="guests-head" style="justify-content:flex-end">
-        <button id="new-toggle" class="btn small ghost" type="button" data-i18n="admin.newTasting">New tasting</button>
+        <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
       </div>
 
-      <form id="new-tasting" class="add-form tasting-form" novalidate hidden>
-        <h3 data-i18n="admin.newTasting">New tasting</h3>
-        <label for="nt-title" data-i18n="admin.title">Title</label>
-        <input id="nt-title" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required />
-        <label for="nt-when" data-i18n="admin.when">Date and time</label>
-        <input id="nt-when" type="datetime-local" />
-        <AddressFields prefix="nt" />
-        <label for="nt-language" data-i18n="admin.guestLanguage">Language for guests</label>
-        <select id="nt-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
-        <p id="nt-msg" class="message error" hidden></p>
-        <div class="row-actions">
-          <button id="nt-save" class="btn small" type="submit" data-i18n="admin.createTasting">Create tasting</button>
-          <button id="nt-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-        </div>
-      </form>
 
       <section>
         <h3 id="upcoming-h" data-i18n="tastings.upcoming" hidden>Upcoming</h3>
@@ -40,6 +25,7 @@ import '../../styles/admin.css';
       </section>
 
     </div>
+      <TastingWizard />
     </AdminNav>
   </section>
 </Base>
@@ -47,8 +33,8 @@ import '../../styles/admin.css';
 <script>
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
-  import { t, lang, formatWhen } from '../../i18n';
-  import { initAddress, readAddress } from '../../lib/address';
+  import { t, formatWhen } from '../../i18n';
+  import { initWizard } from '../../lib/tasting-wizard';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
     participants: { status: string }[]; tasting_wines: { count: number }[] };
@@ -88,48 +74,21 @@ import '../../styles/admin.css';
     $('past').replaceChildren(...past.map(card));
     $('upcoming-h').hidden = upcoming.length === 0 || past.length === 0;
     $('past-h').hidden = past.length === 0;
-    if (rows.length === 0) { $('intro').hidden = false; openNew(); }
+    $('intro').hidden = rows.length > 0;
   }
 
-  // ---------- New tasting ----------
-  function openNew() {
-    const form = $<HTMLFormElement>('new-tasting');
-    form.reset();
-    $<HTMLSelectElement>('nt-language').value = host?.language && ['da', 'en', 'is'].includes(host.language) ? host.language : lang();
-    $('nt-msg').hidden = true;
-    form.hidden = false;
-    $('new-toggle').hidden = true;
-    $<HTMLInputElement>('nt-title').focus();
-  }
-  initAddress('nt');
+  // ---------- New tasting: the four-step guide ----------
+  let wizard: ReturnType<typeof initWizard> | null = null;
+  const openNew = () => wizard?.openNew();
   $('new-toggle').addEventListener('click', openNew);
-  $('nt-cancel').addEventListener('click', () => { $('new-tasting').hidden = true; $('new-toggle').hidden = false; });
-
-  $('new-tasting').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = $('nt-msg');
-    const title = $<HTMLInputElement>('nt-title').value.trim();
-    if (!title) { msg.textContent = t('admin.titleMissing'); msg.hidden = false; return; }
-    const when = $<HTMLInputElement>('nt-when').value;
-    const btn = $<HTMLButtonElement>('nt-save');
-    btn.disabled = true;
-    const { data, error } = await supabase.rpc('create_tasting', {
-      title,
-      starts_at: when ? new Date(when).toISOString() : null,
-      place: null,
-      mobilepay: null,
-      language: $<HTMLSelectElement>('nt-language').value,
-      ...readAddress('nt'),
-    });
-    btn.disabled = false;
-    if (error || !data) { msg.textContent = t('admin.createFailed'); msg.hidden = false; return; }
-    location.href = adminUrl((data as { slug: string }).slug);
-  });
+  // "+ New tasting" in the menu opens the guide right here
+  document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); openNew(); });
 
   // ---------- Startup (after everything above is defined) ----------
   host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
+    wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
     await load();
     // "+ New tasting" in the menu links here with ?new=1
     if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', '/admin/'); }
