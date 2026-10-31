@@ -1,5 +1,5 @@
-// Translations for the site. English is the source language; Danish and Icelandic
-// dictionaries use the same keys. Markup carries English text plus data-i18n keys,
+// Translations for the site. English is the source language; the Danish, Icelandic,
+// French, German and Italian dictionaries use the same keys. Markup carries English text plus data-i18n keys,
 // which applyI18n() swaps for the active language.
 //   data-i18n="key"            → textContent
 //   data-i18n-html="key"       → innerHTML (dictionary values are our own trusted HTML)
@@ -7,20 +7,26 @@
 import { en } from './en';
 import { da } from './da';
 import { is } from './is';
+import { fr } from './fr';
+import { de } from './de';
+import { it } from './it';
 
-export type Lang = 'da' | 'en' | 'is';
+export type Lang = 'da' | 'en' | 'is' | 'fr' | 'de' | 'it';
 export type Key = keyof typeof en;
 
 export const LANGS: { code: Lang; name: string; locale: string }[] = [
   { code: 'da', name: 'Dansk', locale: 'da-DK' },
   { code: 'en', name: 'English', locale: 'en-GB' },
   { code: 'is', name: 'Íslenska', locale: 'is-IS' },
+  { code: 'fr', name: 'Français', locale: 'fr-FR' },
+  { code: 'de', name: 'Deutsch', locale: 'de-DE' },
+  { code: 'it', name: 'Italiano', locale: 'it-IT' },
 ];
 
-const DICTS: Record<Lang, Partial<Record<Key, string>>> = { en, da, is };
+const DICTS: Record<Lang, Partial<Record<Key, string>>> = { en, da, is, fr, de, it };
 const LANG_KEY = 'lang';
 
-const isLang = (v: unknown): v is Lang => v === 'da' || v === 'en' || v === 'is';
+export const isLang = (v: unknown): v is Lang => typeof v === 'string' && Object.hasOwn(DICTS, v);
 
 let current: Lang = 'en';
 
@@ -38,8 +44,7 @@ function browserLang(): Lang {
   for (const l of navigator.languages ?? [navigator.language]) {
     const code = l.toLowerCase().slice(0, 2);
     if (code === 'da' || code === 'nb' || code === 'no' || code === 'sv') return 'da';
-    if (code === 'is') return 'is';
-    if (code === 'en') return 'en';
+    if (code === 'is' || code === 'en' || code === 'fr' || code === 'de' || code === 'it') return code;
   }
   return 'en';
 }

@@ -83,6 +83,7 @@ import Base from '../layouts/Base.astro';
   import { loadMe, signOut, getCodes, tastingUrl } from '../lib/guest';
   import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
   import { i18nReady, t, LANGS, lang, setLang, money, locale } from '../i18n';
+  import { FLAGS } from '../i18n/flags';
 
   await i18nReady;
   const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
@@ -252,8 +253,9 @@ import Base from '../layouts/Base.astro';
   for (const l of LANGS) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'btn small' + (l.code === lang() ? '' : ' ghost');
-    b.textContent = l.name;
+    b.className = 'btn small lang-btn' + (l.code === lang() ? '' : ' ghost');
+    b.innerHTML = FLAGS[l.code];
+    b.append(document.createTextNode(l.name));
     b.lang = l.code;
     b.setAttribute('aria-pressed', String(l.code === lang()));
     b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); });
@@ -307,5 +309,7 @@ import Base from '../layouts/Base.astro';
   .profile-page .order-card ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.95rem; }
   .profile-page .order-total { margin-top: 0.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
   .profile-page .lang-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .profile-page .lang-buttons :global(.lang-btn) { display: inline-flex; align-items: center; gap: 0.5rem; }
+  .profile-page .lang-buttons :global(.flag) { width: 1.35rem; height: auto; aspect-ratio: 3 / 2; border-radius: 0.15rem; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15); }
   .profile-page > div > .btn.ghost:last-child { margin-top: 2.5rem; }
 </style>

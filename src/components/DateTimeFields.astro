@@ -1,0 +1,20 @@
+---
+// Date (calendar picker) and time (time picker) side by side. `prefix` makes the ids unique (e.g. "wz" → wz-date).
+const { prefix } = Astro.props as { prefix: string };
+---
+<div class="dt-row">
+  <div>
+    <label for={`${prefix}-date`} data-i18n="admin.date">Date</label>
+    <input id={`${prefix}-date`} type="date" />
+  </div>
+  <div>
+    <label for={`${prefix}-time`} data-i18n="admin.time">Time</label>
+    <input id={`${prefix}-time`} type="time" step="300" />
+  </div>
+</div>
+
+<style>
+  .dt-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 0.75rem; }
+  .dt-row > div { min-width: 0; display: flex; flex-direction: column; }
+  .dt-row input { width: 100%; min-width: 0; box-sizing: border-box; }
+</style>

@@ -3,6 +3,7 @@ import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
+import DateTimeFields from '../../components/DateTimeFields.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.admin">
@@ -31,11 +32,10 @@ import '../../styles/admin.css';
           <input id="d-title" type="text" required />
           <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
           <textarea id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
-          <label for="d-when" data-i18n="admin.when">Date and time</label>
-          <input id="d-when" type="datetime-local" />
+          <DateTimeFields prefix="d" />
           <AddressFields prefix="d" />
           <label for="d-language" data-i18n="admin.guestLanguage">Language for guests</label>
-          <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
+          <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="it">Italiano</option></select>
           <div class="row-actions">
             <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <span id="d-msg" class="hint" aria-live="polite"></span>
@@ -201,6 +201,7 @@ import '../../styles/admin.css';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
   import { initWizard } from '../../lib/tasting-wizard';
+  import { initWhen, readWhen, writeWhen } from '../../lib/datetime';
   import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
 
   await i18nReady;
@@ -234,14 +235,6 @@ import '../../styles/admin.css';
   let feeTotal = 0;
   let feeAmount = 0;
 
-  // datetime-local works in the browser's local time
-  function toLocalInput(iso: unknown) {
-    if (typeof iso !== 'string' || !iso) return '';
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : null);
 
   // The tasting comes from the address /t/<slug>/admin/
   async function loadTasting(host: Host) {
@@ -255,7 +248,7 @@ import '../../styles/admin.css';
     document.title = `${tasting.title} – Winetastr`;
 
     ($('d-title') as HTMLInputElement).value = tasting.title;
-    ($('d-when') as HTMLInputElement).value = toLocalInput(tasting.starts_at);
+    writeWhen('d', tasting.starts_at);
     writeAddress('d', tasting as Record<string, string | null>);
     ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
     ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
@@ -269,6 +262,7 @@ import '../../styles/admin.css';
   }
 
   initAddress('d');
+  initWhen('d');
   $('details').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!tasting) return;
@@ -277,7 +271,7 @@ import '../../styles/admin.css';
     if (!title) { msg.textContent = t('admin.titleEmpty'); return; }
     const patch = {
       title,
-      starts_at: fromLocalInput(($('d-when') as HTMLInputElement).value),
+      starts_at: readWhen('d'),
       intro: ($('d-intro') as HTMLTextAreaElement).value.trim() || null,
       ...readAddress('d'),
       language: ($('d-language') as HTMLSelectElement).value,

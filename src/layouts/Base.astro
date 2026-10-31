@@ -78,6 +78,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       import { supabase } from '../lib/supabase';
       import { currentSlug, tastingUrl, resolveGuestCode, signOut, loadMe, cachedName } from '../lib/guest';
       import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
+      import { FLAGS } from '../i18n/flags';
 
       await i18nReady;
       const titleKey = document.body.dataset.title as Key | undefined;
@@ -88,8 +89,10 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       for (const l of LANGS) {
         const b = document.createElement('button');
         b.type = 'button';
-        b.textContent = l.name;
+        b.innerHTML = FLAGS[l.code];
         b.lang = l.code;
+        b.title = l.name;
+        b.setAttribute('aria-label', l.name);
         if (l.code === lang()) b.setAttribute('aria-current', 'true');
         b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); });
         langs.append(b);
@@ -298,11 +301,12 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     padding-bottom: 2rem;
     border-top: 1px solid var(--lodge-3);
   }
-  .langs { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+  .langs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
   .langs :global(button) {
-    font: inherit; font-size: 0.85rem; color: var(--muted); background: none; border: 0; padding: 0.2rem 0;
-    cursor: pointer; text-underline-offset: 0.25em;
+    display: grid; place-items: center; padding: 0.3rem; background: none; cursor: pointer;
+    border: 1.5px solid transparent; border-radius: 0.4rem; opacity: 0.6; transition: opacity 0.15s, border-color 0.15s;
   }
-  .langs :global(button:hover) { color: var(--paper); }
-  .langs :global(button[aria-current='true']) { color: var(--paper); text-decoration: underline; }
+  .langs :global(button:hover) { opacity: 1; }
+  .langs :global(button[aria-current='true']) { opacity: 1; border-color: var(--paper); }
+  .langs :global(.flag) { display: block; width: 1.6rem; height: auto; aspect-ratio: 3 / 2; border-radius: 0.2rem; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); }
 </style>

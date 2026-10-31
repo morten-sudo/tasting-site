@@ -1,6 +1,7 @@
 ---
 // Create or set up a tasting in four steps. Only step 1 is needed; the rest can be done later.
 import AddressFields from './AddressFields.astro';
+import DateTimeFields from './DateTimeFields.astro';
 const steps = [
   { key: 'details', label: 'wizard.details', text: 'Details' },
   { key: 'wines', label: 'wizard.wines', text: 'Wines' },
@@ -32,13 +33,12 @@ const steps = [
       <p class="wz-note" data-i18n="wizard.onlyStep1">Only step 1 is needed. Save when you like and add wines, guests and payment later.</p>
       <label for="wz-title-input" data-i18n="admin.title">Title</label>
       <input id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required />
-      <label for="wz-when" data-i18n="admin.when">Date and time</label>
-      <input id="wz-when" type="datetime-local" />
+      <DateTimeFields prefix="wz" />
       <AddressFields prefix="wz" />
       <label for="wz-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
       <textarea id="wz-intro" rows="4" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
       <label for="wz-language" data-i18n="admin.guestLanguage">Language for guests</label>
-      <select id="wz-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option></select>
+      <select id="wz-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="it">Italiano</option></select>
     </section>
 
     <!-- 2. Wines -->

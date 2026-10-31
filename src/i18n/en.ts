@@ -482,4 +482,6 @@ export const en = {
   "wizard.alreadyInvited": "already invited",
   "wizard.continueTitle": "Finish setting up the tasting",
   "wizard.continue": "Continue set-up",
+  "admin.date": "Date",
+  "admin.time": "Time",
 } as const;

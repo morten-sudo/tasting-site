@@ -483,4 +483,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wizard.alreadyInvited": "er allerede inviteret",
   "wizard.continueTitle": "Gør smagningen færdig",
   "wizard.continue": "Fortsæt opsætning",
+  "admin.date": "Dato",
+  "admin.time": "Tid",
 };

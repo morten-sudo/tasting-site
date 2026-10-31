@@ -1,9 +1,10 @@
 // Create or set up a tasting in four steps: details, wines, guests, payment & setup.
 // Step 1 creates the tasting; every later step saves straight away, so the host can stop at any point.
 import { supabase } from './supabase';
-import { t, lang, type Key } from '../i18n';
+import { t, lang, isLang, type Key } from '../i18n';
 import { $, mk, toNumber, type Host } from './admin-common';
 import { initAddress, readAddress, writeAddress } from './address';
+import { initWhen, readWhen, writeWhen } from './datetime';
 
 type Tasting = { id: string; slug: string } & Record<string, unknown>;
 type LibWine = { id: number; name: string; producer: string | null; vintage: string | null; image_url: string | null;
@@ -12,13 +13,6 @@ type LibGuest = { id: string; name: string; email: string | null };
 
 const NEXT: Key[] = ['wizard.nextWines', 'wizard.nextGuests', 'wizard.nextSetup', 'wizard.done'];
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
-const pad = (n: number) => String(n).padStart(2, '0');
-function toLocalInput(iso: unknown) {
-  if (typeof iso !== 'string' || !iso) return '';
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   const dialog = $<HTMLDialogElement>('wizard');
@@ -32,6 +26,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   const pickedGuests = new Set<string>();
 
   initAddress('wz');
+  initWhen('wz');
   const val = (id: string) => $<HTMLInputElement>(id).value;
 
   function msg(text = '') { $('wz-msg').textContent = text; $('wz-msg').hidden = !text; }
@@ -58,19 +53,18 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   // ---------- Step 1: details ----------
   function fillDetails() {
     $<HTMLInputElement>('wz-title-input').value = (tasting?.title as string) ?? '';
-    $<HTMLInputElement>('wz-when').value = toLocalInput(tasting?.starts_at);
+    writeWhen('wz', tasting?.starts_at);
     $<HTMLTextAreaElement>('wz-intro').value = (tasting?.intro as string) ?? '';
     writeAddress('wz', (tasting ?? {}) as Record<string, string | null>);
     const l = (tasting?.language as string) ?? host.language;
-    $<HTMLSelectElement>('wz-language').value = ['da', 'en', 'is'].includes(l) ? l : lang();
+    $<HTMLSelectElement>('wz-language').value = isLang(l) ? l : lang();
   }
 
   async function saveDetails(): Promise<boolean> {
     const title = val('wz-title-input').trim();
     if (!title) { msg(t('admin.titleMissing')); $('wz-title-input').focus(); return false; }
-    const when = val('wz-when');
     const fields = {
-      starts_at: when ? new Date(when).toISOString() : null,
+      starts_at: readWhen('wz'),
       language: $<HTMLSelectElement>('wz-language').value,
       ...readAddress('wz'),
     };
