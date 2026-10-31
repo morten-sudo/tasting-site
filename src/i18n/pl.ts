@@ -560,4 +560,5 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "chat.noCode": "Zaloguj się e-mailem lub otwórz link z zaproszenia, aby dołączyć do czatu.",
   "chat.intro": "Wszyscy zaproszeni i gospodarz mogą to czytać.",
   "chat.hostIntro": "Czat gości tej degustacji. Piszesz jako gospodarz i możesz usuwać wiadomości.",
+  "login.chooseWhere": "Dokąd chcesz przejść?",
 };

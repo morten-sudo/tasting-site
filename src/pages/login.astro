@@ -13,6 +13,7 @@ import Base from '../layouts/Base.astro';
       <div class="choose-btns">
         <a class="btn" id="go-guest" href="/tastings/" data-i18n="nav.myTastings">My tastings</a>
         <a class="btn ghost" id="go-admin" href="/admin/" data-i18n="page.admin">Admin</a>
+        <a class="btn ghost" id="go-super" href="/superadmin/" hidden data-i18n="page.superadmin">Superadmin</a>
       </div>
     </div>
 
@@ -120,6 +121,18 @@ import Base from '../layouts/Base.astro';
     // One tasting → straight to it; several → the overview
     const guestUrl = next && !wantsAdmin ? next : mine.length === 1 ? tastingUrl(mine[0].slug) : '/tastings/';
 
+    // Winetastr administrators choose between their tastings, admin and superadmin
+    if (adminRes.data === true && !next) {
+      $('checking').hidden = true;
+      $('go-super').hidden = false;
+      const go = $('go-guest') as HTMLAnchorElement;
+      go.hidden = mine.length === 0;
+      go.href = guestUrl;
+      go.textContent = mine.length === 1 ? mine[0].title : t('nav.myTastings');
+      $('choose').querySelector('.lead')!.textContent = t('login.chooseWhere');
+      $('choose').hidden = false;
+      return true;
+    }
     if (isHost && (wantsAdmin || mine.length === 0)) { location.replace(adminUrl); return true; }
     if (isHost) {
       $('checking').hidden = true;

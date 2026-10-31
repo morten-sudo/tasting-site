@@ -571,4 +571,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "super.invitedSub": "{n} boðnir, {coming} koma",
   "super.ratings": "Einkunnir",
   "super.lastActive": "Síðast virkur",
+  "login.chooseWhere": "Hvert viltu fara?",
 };

@@ -571,4 +571,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "super.invitedSub": "{n} inviterede, {coming} kommer",
   "super.ratings": "Bedømmelser",
   "super.lastActive": "Senest aktiv",
+  "login.chooseWhere": "Hvor vil du hen?",
 };

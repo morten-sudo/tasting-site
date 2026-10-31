@@ -570,4 +570,5 @@ export const en = {
   "super.invitedSub": "{n} invited, {coming} coming",
   "super.ratings": "Ratings",
   "super.lastActive": "Last active",
+  "login.chooseWhere": "Where do you want to go?",
 } as const;

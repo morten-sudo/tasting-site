@@ -560,4 +560,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "chat.noCode": "Log in met je e-mail of open de link uit je uitnodiging om mee te chatten.",
   "chat.intro": "Iedereen die is uitgenodigd en de gastheer kunnen meelezen.",
   "chat.hostIntro": "De chat van de gasten voor deze proeverij. Je schrijft als gastheer en kunt berichten verwijderen.",
+  "login.chooseWhere": "Waar wil je heen?",
 };
