@@ -628,4 +628,10 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "tastingHome.quizDone": "Bekijk de uitslag",
   "tastingHome.chatSub": "Praat met de andere gasten",
   "tastingHome.closedHint": "De aanmelding is gesloten. Neem contact op met de gastheer om je antwoord te wijzigen.",
+  "origin.appellation": "Appellation",
+  "origin.appellationHint": "(bijv. Saint-Émilion Grand Cru, Porto, Barolo)",
+  "origin.region": "Streek",
+  "origin.country": "Land",
+  "origin.known": "Bekende appellation: {name} – {where}",
+  "origin.unknown": "Nog niet in onze lijst – opgeslagen zoals geschreven.",
 };

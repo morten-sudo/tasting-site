@@ -628,4 +628,10 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "tastingHome.quizDone": "Vedi i risultati",
   "tastingHome.chatSub": "Chiacchiera con gli altri ospiti",
   "tastingHome.closedHint": "Le iscrizioni sono chiuse. Contatta l’ospite per cambiare la risposta.",
+  "origin.appellation": "Denominazione",
+  "origin.appellationHint": "(es. Saint-Émilion Grand Cru, Porto, Barolo)",
+  "origin.region": "Regione",
+  "origin.country": "Paese",
+  "origin.known": "Denominazione nota: {name} – {where}",
+  "origin.unknown": "Non ancora nel nostro elenco – salvata così.",
 };

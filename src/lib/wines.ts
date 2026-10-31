@@ -6,6 +6,7 @@ export type Wine = {
   price_dkk: number | null; description: string | null; orderable: boolean;
   image_url: string | null; details: string | null; retail_price_dkk: number | null;
   price_tiers?: PriceTier[] | null;
+  country?: string | null; region?: string | null; appellation?: string | null; appellation_id?: string | null;
 };
 
 import { t, money, type Key } from '../i18n';

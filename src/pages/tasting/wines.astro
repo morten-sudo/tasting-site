@@ -54,6 +54,7 @@ import Base from '../../layouts/Base.astro';
   import { getCart, cartCount } from '../../lib/cart';
 
   import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
+  import { originLine } from '../../lib/origin';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -116,6 +117,8 @@ import Base from '../../layouts/Base.astro';
     info.append(el('h3', 'name', w.name));
     const vin = vintageLabel(w);
     if (vin) info.append(el('p', 'meta', vin));
+    const origin = originLine(w);
+    if (origin) info.append(el('p', 'meta origin', origin));
 
     const foot = el('div', 'foot');
     if (w.price_dkk != null) {

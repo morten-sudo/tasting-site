@@ -29,7 +29,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
         { type: 'text', text: PROMPT },
         { type: 'image_url', image_url: { url: image } },
       ] }],
-      max_tokens: 300,
+      max_tokens: 400,
       temperature: 0.1,
     });
     answer = parseAnswer(out.response);

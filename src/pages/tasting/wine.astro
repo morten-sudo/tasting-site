@@ -23,6 +23,7 @@ import Base from '../../layouts/Base.astro';
       <p id="style-tag" class="style-tag"></p>
       <h1 id="name" class="name"></h1>
       <p id="meta" class="meta"></p>
+      <p id="origin" class="origin" hidden></p>
 
       <div class="buy">
         <p id="price" class="price"></p>
@@ -63,6 +64,7 @@ import Base from '../../layouts/Base.astro';
   await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
   import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
+  import { originFull } from '../../lib/origin';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -135,6 +137,11 @@ import Base from '../../layouts/Base.astro';
       w.producer,
       w.abv ? `${w.abv.toString().replace('.', ',')} %` : null,
     ].filter(Boolean).join(' · ');
+    const origin = originFull(w);
+    if (origin) {
+      $('origin').textContent = origin;
+      $('origin').hidden = false;
+    }
 
     const price = $('price');
     if (w.price_dkk != null) {
@@ -297,6 +304,12 @@ import Base from '../../layouts/Base.astro';
     margin: 0 0 0.5rem;
   }
   .wine-page .meta { margin: 0; color: var(--muted); }
+  .wine-page .origin { margin: 0.3rem 0 0; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .wine-page .origin::before {
+    content: ''; flex: none; width: 0.95rem; height: 0.95rem; background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Cpath d='M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z'/%3E%3Ccircle cx='12' cy='10' r='2.3'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Cpath d='M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z'/%3E%3Ccircle cx='12' cy='10' r='2.3'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
 
   .wine-page .buy {
     display: flex;

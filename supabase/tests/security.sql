@@ -78,6 +78,10 @@ begin
   assert failed, 'host A can write in host B''s chat';
   failed := false; begin insert into chat_messages (tasting_id, author, body) values ('00000000-0000-4000-b000-00000000000a', 'x', 'x'); exception when others then failed := true; end;
   assert failed, 'chat messages can be inserted directly';
+  -- The shared appellation list is read-only
+  failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
+  assert failed, 'a host can add to the appellation list';
+  update appellations set name = 'hacked' where id = 'porto'; get diagnostics n = row_count;              assert n = 0, 'a host can change the appellation list';
   -- The superadmin list is closed to hosts
   failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
   assert failed, 'a host can list all tenants';
@@ -154,6 +158,10 @@ begin
   assert failed, 'anyone can use the host chat';
   failed := false; begin perform respond_invite('nosuchcode', true, null, null); exception when others then failed := true; end;
   assert failed, 'an unknown code can respond';
+  -- The appellation list can be read but not changed
+  select count(*) into n from appellations where id = 'porto';                                              assert n = 1, 'the appellation list is not readable';
+  failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
+  assert failed, 'anyone can add to the appellation list';
   -- Host functions are closed
   failed := false; begin perform create_tasting('x'); exception when others then failed := true; end;
   assert failed, 'anyone can create a tasting';

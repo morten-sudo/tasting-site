@@ -650,4 +650,10 @@ export const en = {
   "tastingHome.quizDone": "See the results",
   "tastingHome.chatSub": "Talk with the other guests",
   "tastingHome.closedHint": "Sign-up is closed. Contact the host to change your answer.",
+  "origin.appellation": "Appellation",
+  "origin.appellationHint": "(e.g. Saint-Émilion Grand Cru, Porto, Barolo)",
+  "origin.region": "Region",
+  "origin.country": "Country",
+  "origin.known": "Known appellation: {name} – {where}",
+  "origin.unknown": "Not in our list yet – saved as written.",
 } as const;

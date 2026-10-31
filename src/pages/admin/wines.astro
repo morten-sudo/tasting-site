@@ -74,6 +74,21 @@ import '../../styles/admin.css';
               </div>
             </div>
           </div>
+          <!-- Origin: a known appellation fills in region and country -->
+          <label for="wf-appellation"><span data-i18n="origin.appellation">Appellation</span> <span class="hint" data-i18n="origin.appellationHint">(e.g. Saint-Émilion Grand Cru, Porto, Barolo)</span></label>
+          <input id="wf-appellation" type="text" list="wf-appellations" autocomplete="off" />
+          <datalist id="wf-appellations"></datalist>
+          <p id="wf-app-status" class="app-status" hidden aria-live="polite"></p>
+          <div class="wf-pair">
+            <div>
+              <label for="wf-region" data-i18n="origin.region">Region</label>
+              <input id="wf-region" type="text" />
+            </div>
+            <div>
+              <label for="wf-country" data-i18n="origin.country">Country</label>
+              <select id="wf-country"></select>
+            </div>
+          </div>
           <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
           <input id="wf-retail" type="text" inputmode="decimal" />
           <label for="wf-offer-price"><span data-i18n="wineLib.offer">Shop offer</span> <span class="hint" data-i18n="wineLib.offerHint">(optional – becomes the quantity price when you add the wine to a tasting)</span></label>

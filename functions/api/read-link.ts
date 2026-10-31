@@ -162,7 +162,7 @@ ${text}`;
   try {
     const out = await env.AI.run(MODEL, {
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500,
+      max_tokens: 600,
       temperature: 0.1,
     });
     answer = parseAnswer(out.response);

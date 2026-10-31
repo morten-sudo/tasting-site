@@ -3,17 +3,19 @@
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
+import { WINE_COUNTRIES, countryName, loadAppellations, matchAppellation, originLine, type Appellation } from './origin';
 
 export type AdminWine = {
   id: number; host_id: string; name: string; producer: string | null;
   style: string | null; vintage: string | null; abv: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
   image_url: string | null; source_url: string | null;
+  country: string | null; region: string | null; appellation: string | null; appellation_id: string | null;
   offer_price_dkk: number | null; offer_quantity: number | null;
   tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -52,7 +54,7 @@ async function labelDataUrl(blob: Blob, maxSide = 1024): Promise<string | null> 
 
 type LabelResult = {
   name: string | null; producer: string | null; vintage: string | null; style: string | null;
-  abv: number | null; region: string | null; country: string | null; grapes: string | null;
+  abv: number | null; appellation: string | null; region: string | null; country: string | null; grapes: string | null;
 };
 type LinkResult = LabelResult & {
   description: string | null; image: string | null; price: number | null; source_url: string;
@@ -84,6 +86,43 @@ export function initWineAdmin(hostId: string) {
   const styleSelect = field<HTMLSelectElement>('wf-style');
   styleSelect.replaceChildren(new Option(t('admin.choose'), ''));
   for (const key of STYLES) styleSelect.append(new Option(styleName(key), key));
+
+  // ---------- Origin: appellation (known list), region and country ----------
+  const countrySelect = field<HTMLSelectElement>('wf-country');
+  countrySelect.replaceChildren(new Option(t('admin.choose'), ''),
+    ...WINE_COUNTRIES.map((c) => new Option(countryName(c) ?? c, c))
+      .sort((a, b) => a.text.localeCompare(b.text, lang())));
+  let appellations: Appellation[] = [];
+  loadAppellations().then((list) => {
+    appellations = list;
+    $('wf-appellations').replaceChildren(...list.map((a) => new Option(`${a.region} · ${countryName(a.country)}`, a.name)));
+    syncOrigin();
+  });
+  const appInput = field<HTMLInputElement>('wf-appellation');
+  const regionInput = field<HTMLInputElement>('wf-region');
+  /** A known appellation decides region and country (the database does the same when saving). */
+  function syncOrigin() {
+    const text = appInput.value.trim();
+    const known = text ? matchAppellation(appellations, text) : null;
+    const status = $('wf-app-status');
+    status.hidden = !text || !appellations.length;
+    status.classList.toggle('known', !!known);
+    status.textContent = known
+      ? '✓ ' + t('origin.known', { name: known.name, where: `${known.region}, ${countryName(known.country)}` })
+      : t('origin.unknown');
+    if (known) {
+      regionInput.value = known.region;
+      countrySelect.value = known.country;
+    } else if (regionInput.readOnly) {
+      // Region and country came from an appellation that no longer applies
+      regionInput.value = '';
+      countrySelect.value = '';
+    }
+    regionInput.readOnly = !!known;
+    countrySelect.disabled = !!known;
+  }
+  appInput.addEventListener('input', syncOrigin);
+  appInput.addEventListener('change', syncOrigin);
 
   function showMsg(text: string, ok = false) {
     const m = $('wf-msg');
@@ -154,11 +193,13 @@ export function initWineAdmin(hostId: string) {
     put('wf-vintage', r.vintage);
     if (r.style && !styleSelect.value) { styleSelect.value = r.style; styleSelect.classList.add('from-label'); n++; }
     put('wf-abv', r.abv);
-    const lines = [
-      r.grapes ? `${t('label.grapes')}: ${r.grapes}` : null,
-      r.region || r.country ? `${t('label.region')}: ${[r.region, r.country].filter(Boolean).join(', ')}` : null,
-    ].filter(Boolean).join('\n');
-    put('wf-details', lines || null);
+    put('wf-appellation', r.appellation);
+    put('wf-region', r.region);
+    if (r.country && !countrySelect.value && WINE_COUNTRIES.includes(r.country)) {
+      countrySelect.value = r.country; countrySelect.classList.add('from-label'); n++;
+    }
+    syncOrigin();
+    put('wf-details', r.grapes ? `${t('label.grapes')}: ${r.grapes}` : null);
     return n;
   }
 
@@ -244,6 +285,10 @@ export function initWineAdmin(hostId: string) {
     field<HTMLInputElement>('wf-offer-qty').value = w?.offer_quantity != null ? String(w.offer_quantity) : '';
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
+    appInput.value = w?.appellation ?? '';
+    regionInput.value = w?.region ?? '';
+    countrySelect.value = w?.country ?? '';
+    syncOrigin();
     setPreview(w?.image_url ?? null);
     // New wine: two tiles (photo / link) first; editing: the link field as before
     $('wf-start').hidden = !!w;
@@ -277,6 +322,8 @@ export function initWineAdmin(hostId: string) {
       body.append(mk('p', 'wine-name', w.name));
       const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
+      const origin = originLine(w);
+      if (origin) body.append(mk('p', 'wine-meta', origin));
       if (w.retail_price_dkk != null) body.append(mk('p', 'wine-meta', t('admin.normally', { price: kr.format(w.retail_price_dkk) })));
       if (w.offer_price_dkk != null) {
         body.append(mk('p', 'wine-meta', t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
@@ -398,6 +445,9 @@ export function initWineAdmin(hostId: string) {
       })(),
       description: toText(field<HTMLTextAreaElement>('wf-description').value),
       details: toText(field<HTMLTextAreaElement>('wf-details').value),
+      appellation: toText(appInput.value),
+      region: toText(regionInput.value),
+      country: countrySelect.value || null,
       image_url,
       source_url: sourceUrl,
     };

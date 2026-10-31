@@ -670,3 +670,8 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
   padding: 0.3rem 0.75rem; border: 1px solid var(--lodge-3); border-radius: 999px;
 }
 .admin-page .t-guest:hover { border-color: var(--amber); }
+
+/* Wine form: whether the appellation is known */
+.admin-page .app-status { margin: -0.15rem 0 0.2rem; font-size: 0.85rem; color: var(--muted); }
+.admin-page .app-status.known { color: var(--ok); }
+.admin-page .add-form input[readonly], .admin-page .add-form select:disabled { color: var(--muted); background: var(--lodge); }

@@ -651,4 +651,10 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "tastingHome.quizDone": "Se resultatet",
   "tastingHome.chatSub": "Snak med de andre gæster",
   "tastingHome.closedHint": "Tilmeldingen er lukket. Kontakt værten, hvis du vil ændre dit svar.",
+  "origin.appellation": "Appellation",
+  "origin.appellationHint": "(fx Saint-Émilion Grand Cru, Porto, Barolo)",
+  "origin.region": "Egn",
+  "origin.country": "Land",
+  "origin.known": "Kendt appellation: {name} – {where}",
+  "origin.unknown": "Ikke på vores liste endnu – gemmes som skrevet.",
 };
