@@ -2,79 +2,155 @@
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.login">
-  <section class="wrap login-page">
-    <h1 class="title" data-i18n="login.title">Sign in</h1>
-
-    <p id="checking" class="hint" hidden data-i18n="login.checking">Signing you in …</p>
-
-    <!-- Both guest and host: choose where to go -->
-    <div id="choose" class="choose" hidden>
-      <p class="lead" data-i18n="login.chooseLead">You are both a guest and a host. Where do you want to go?</p>
-      <div class="choose-btns">
-        <a class="btn" id="go-guest" href="/tastings/" data-i18n="nav.myTastings">My tastings</a>
-        <a class="btn ghost" id="go-admin" href="/admin/" data-i18n="page.admin">Admin</a>
-        <a class="btn ghost" id="go-super" href="/superadmin/" hidden data-i18n="page.superadmin">Superadmin</a>
+  <section class="login-page">
+    <!-- Left (top on phones): the cellar photo and what you can do here -->
+    <aside class="lp-visual">
+      <picture>
+        <source type="image/webp" srcset="/img/cellar-800.webp 800w, /img/cellar-1200.webp 1200w" sizes="(min-width: 60rem) 50vw, 100vw" />
+        <img src="/img/cellar-1200.jpg" srcset="/img/cellar-800.jpg 800w, /img/cellar-1200.jpg 1200w" sizes="(min-width: 60rem) 50vw, 100vw"
+             width="1200" height="800" alt="" />
+      </picture>
+      <div class="lp-visual-text">
+        <p class="lp-kicker">Winetastr</p>
+        <p class="lp-claim" data-i18n="loginx.claim">The whole tasting in your pocket</p>
+        <div class="lp-roles">
+          <div class="lp-role">
+            <h2 data-i18n="loginx.asGuest">As a guest</h2>
+            <ul>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg><span data-i18n="loginx.g1">Reply to the invitation</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4v4.2c0 .6.3 1.1.7 1.5 1 .9 1.6 2.2 1.6 3.6V20a1.5 1.5 0 0 1-1.5 1.5H9.2A1.5 1.5 0 0 1 7.7 20v-8.2c0-1.4.6-2.7 1.6-3.6.4-.4.7-.9.7-1.5z" /></svg><span data-i18n="loginx.g2">See the wines of the evening</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg><span data-i18n="loginx.g3">Order bottles and pay with MobilePay</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg><span data-i18n="loginx.g4">Rate, play the quiz and chat</span></li>
+            </ul>
+          </div>
+          <div class="lp-role">
+            <h2 data-i18n="loginx.asHost">As a host</h2>
+            <ul>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg><span data-i18n="loginx.h1">Set up a tasting in minutes</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19.5c.8-3.3 3.1-5 6-5s5.2 1.7 6 5" /><circle cx="17" cy="9" r="2.5" /><path d="M16.2 14.2c2.4.1 4 1.6 4.8 4.3" /></svg><span data-i18n="loginx.h2">Invite guests and follow replies</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg><span data-i18n="loginx.h3">Snap the label – the wine fills itself in</span></li>
+              <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg><span data-i18n="loginx.h4">Keep track of orders and payments</span></li>
+            </ul>
+          </div>
+        </div>
       </div>
-    </div>
+    </aside>
 
-    <div id="forms">
-      <!-- Step 1: email -->
-      <form id="mail-form" class="login-form" novalidate>
-        <p class="lead" id="mail-lead" data-i18n="login.mailLead">Enter your email and we will send you a code.</p>
-        <label for="email" data-i18n="common.email">Email</label>
-        <input id="email" type="email" autocomplete="email" inputmode="email" required />
-        <p id="mail-msg" class="message" hidden></p>
-        <button class="btn" type="submit" id="mail-btn" data-i18n="login.sendCode">Send code</button>
-      </form>
+    <!-- Right: signing in -->
+    <div class="lp-main">
+      <div class="lp-card">
+        <h1 class="title" data-i18n="login.title">Sign in</h1>
+        <p id="checking" class="lp-checking" hidden><span class="spinner" aria-hidden="true"></span><span data-i18n="login.checking">Signing you in …</span></p>
 
-      <!-- Step 2: code from the email -->
-      <form id="otp-form" class="login-form" novalidate hidden>
-        <p class="lead"><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
-        <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
-        <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
-               pattern="[0-9]*" maxlength="10" required />
-        <p id="otp-msg" class="message" hidden></p>
-        <button class="btn" type="submit" id="otp-btn" data-i18n="login.submit">Sign in</button>
-        <p class="hint small-links">
-          <button id="resend" class="link-btn" type="button" data-i18n="login.resend">Send a new code</button> ·
-          <button id="other-mail" class="link-btn" type="button" data-i18n="login.otherEmail">Use another email</button>
-        </p>
-        <p class="hint" data-i18n="login.spamHint">Can't find the email? Check your spam folder. You can also tap the link in the email.</p>
-      </form>
+        <!-- Several places to go: choose -->
+        <div id="choose" class="choose" hidden>
+          <p class="lead" data-i18n="login.chooseLead">You are both a guest and a host. Where do you want to go?</p>
+          <div class="choose-btns">
+            <a class="btn" id="go-guest" href="/tastings/" data-i18n="nav.myTastings">My tastings</a>
+            <a class="btn ghost" id="go-admin" href="/admin/" data-i18n="page.admin">Admin</a>
+            <a class="btn ghost" id="go-super" href="/superadmin/" hidden data-i18n="page.superadmin">Superadmin</a>
+          </div>
+        </div>
 
-      <!-- Invite link or code -->
-      <details class="alt" id="alt-invite">
-        <summary data-i18n="login.inviteSummary">Have your invitation link instead?</summary>
-        <form id="code-form" class="login-form" novalidate>
-          <p data-i18n-html="login.inviteHelp">Paste the link from your invitation, or just the code at the end of the link (after <code>?k=</code>).</p>
-          <label for="code" data-i18n="login.inviteLabel">Invitation link or code</label>
-          <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
-          <p id="code-msg" class="message error" hidden></p>
-          <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
-        </form>
-      </details>
+        <div id="forms">
+          <!-- Two steps: email, then the code from the email -->
+          <ol class="lp-steps" aria-label="Sign in">
+            <li id="step-mail" class="current"><span>1</span><b data-i18n="common.email">Email</b></li>
+            <li id="step-code"><span>2</span><b data-i18n="loginx.code">Code</b></li>
+          </ol>
 
-      <!-- Password (hosts who have set one) -->
-      <details class="alt" id="alt-pw">
-        <summary data-i18n="login.pwSummary">Sign in with a password</summary>
-        <form id="pw-form" class="login-form" novalidate>
-          <label for="pw-email" data-i18n="common.email">Email</label>
-          <input id="pw-email" type="email" autocomplete="username" required />
-          <label for="pw" data-i18n="login.password">Password</label>
-          <input id="pw" type="password" autocomplete="current-password" required />
-          <p id="pw-msg" class="message error" hidden></p>
-          <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
-        </form>
-      </details>
+          <!-- Step 1: email -->
+          <form id="mail-form" class="login-form" novalidate>
+            <p class="lead" id="mail-lead" data-i18n="login.mailLead">Enter your email and we will send you a code.</p>
+            <label for="email" data-i18n="common.email">Email</label>
+            <input id="email" type="email" autocomplete="email" inputmode="email" required />
+            <p id="mail-msg" class="message" hidden></p>
+            <button class="btn" type="submit" id="mail-btn" data-i18n="login.sendCode">Send code</button>
+            <p class="hint lp-fine" data-i18n="loginx.noPassword">No password needed – we email you a one-time code.</p>
+          </form>
 
-      <p class="hint small" data-i18n="login.lostHint">
-        If we don't know your email, sign in with your invitation link and add it on your page.
-        If you have lost both, contact the host.
-      </p>
-      <p class="hint small" data-i18n-html="login.hostHint">Want to host your own tasting? <a href="/signup/">Become a host</a>.</p>
+          <!-- Step 2: code from the email -->
+          <form id="otp-form" class="login-form" novalidate hidden>
+            <p class="lead"><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
+            <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
+            <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
+                   pattern="[0-9]*" maxlength="10" required />
+            <p id="otp-msg" class="message" hidden></p>
+            <button class="btn" type="submit" id="otp-btn" data-i18n="login.submit">Sign in</button>
+            <p class="hint small-links">
+              <button id="resend" class="link-btn" type="button" data-i18n="login.resend">Send a new code</button> ·
+              <button id="other-mail" class="link-btn" type="button" data-i18n="login.otherEmail">Use another email</button>
+            </p>
+            <p class="hint lp-fine" data-i18n="login.spamHint">Can't find the email? Check your spam folder. You can also tap the link in the email.</p>
+          </form>
+
+          <p class="lp-or"><span data-i18n="loginx.or">or</span></p>
+
+          <!-- Invite link or code -->
+          <details class="alt" id="alt-invite">
+            <summary>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.2 1.2" /><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.2-1.2" /></svg>
+              <span data-i18n="login.inviteSummary">Have your invitation link instead?</span>
+            </summary>
+            <form id="code-form" class="login-form" novalidate>
+              <p data-i18n-html="login.inviteHelp">Paste the link from your invitation, or just the code at the end of the link (after <code>?k=</code>).</p>
+              <label for="code" data-i18n="login.inviteLabel">Invitation link or code</label>
+              <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+              <p id="code-msg" class="message error" hidden></p>
+              <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
+            </form>
+          </details>
+
+          <!-- Password (hosts who have set one) -->
+          <details class="alt" id="alt-pw">
+            <summary>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+              <span data-i18n="login.pwSummary">Sign in with a password</span>
+            </summary>
+            <form id="pw-form" class="login-form" novalidate>
+              <label for="pw-email" data-i18n="common.email">Email</label>
+              <input id="pw-email" type="email" autocomplete="username" required />
+              <label for="pw" data-i18n="login.password">Password</label>
+              <input id="pw" type="password" autocomplete="current-password" required />
+              <p id="pw-msg" class="message error" hidden></p>
+              <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
+            </form>
+          </details>
+
+          <p class="hint lp-fine lp-lost" data-i18n="login.lostHint">
+            If we don't know your email, sign in with your invitation link and add it on your page.
+            If you have lost both, contact the host.
+          </p>
+        </div>
+      </div>
+
+      <a class="lp-signup" href="/signup/">
+        <span><b data-i18n="loginx.newHere">New to Winetastr?</b> <span data-i18n="loginx.newHereText">Create a free account and host your first tasting.</span></span>
+        <span aria-hidden="true">→</span>
+      </a>
     </div>
   </section>
 </Base>
+
+<script>
+  // The step indicator follows which form is showing
+  {
+    const otpForm = document.getElementById('otp-form')!;
+    const sync = () => {
+      const code = !otpForm.hidden;
+      document.getElementById('step-mail')!.className = code ? 'done' : 'current';
+      document.getElementById('step-code')!.className = code ? 'current' : '';
+    };
+    new MutationObserver(sync).observe(otpForm, { attributes: true, attributeFilter: ['hidden'] });
+    // On phones the "what you can do" lists follow below the sign-in card
+    const roles = document.querySelector('.lp-roles');
+    if (roles) {
+      const copy = roles.cloneNode(true) as HTMLElement;
+      copy.classList.add('lp-roles-below');
+      document.querySelector('.lp-main')!.append(copy);
+    }
+  }
+</script>
 
 <script>
   import { supabase } from '../lib/supabase';
@@ -308,53 +384,100 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style>
-  .login-page { padding-top: 2.5rem; }
-  .title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(3rem, 16vw, 5rem);
-    line-height: 0.9;
-    margin-bottom: 1.25rem;
+  .login-page { display: grid; min-height: calc(100vh - 4rem); background: var(--lodge); }
+  @media (min-width: 60rem) { .login-page { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+  /* Photo side */
+  .lp-visual { position: relative; overflow: hidden; color: #fff; min-height: 15rem; }
+  .lp-visual img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 52% 50%; }
+  .lp-visual::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(36, 10, 16, 0.92) 0%, rgba(36, 10, 16, 0.55) 55%, rgba(36, 10, 16, 0.25) 100%); }
+  .lp-visual-text { position: relative; z-index: 1; padding: 1.5rem var(--gutter) 3.5rem; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; box-sizing: border-box; }
+  .lp-kicker { margin: 0; font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.85; }
+  .lp-claim { font-family: var(--display); font-size: clamp(2rem, 7vw, 3.4rem); line-height: 1; margin: 0.4rem 0 0; max-width: 14ch; }
+  .lp-roles { display: none; }
+  @media (min-width: 60rem) {
+    .lp-visual { min-height: 0; }
+    .lp-visual-text { padding: 3rem clamp(2rem, 4vw, 4rem); }
+    .lp-roles { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.25rem; }
   }
-  .lead { max-width: 32rem; margin-bottom: 0.4rem; }
-  .login-form { display: grid; gap: 0.6rem; max-width: 26rem; }
-  .login-form .btn { justify-self: start; margin-top: 0.3rem; }
-  .login-form input[type='email'], .login-form input[type='password'] {
-    width: 100%;
-    font: inherit;
-    color: var(--paper);
-    background: transparent;
-    border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
-    padding: 0.7rem 0.8rem;
+  .lp-role h2 { margin: 0 0 0.75rem; font-family: var(--body); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
+  .lp-role ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
+  .lp-role li { display: flex; gap: 0.65rem; align-items: flex-start; font-size: 0.97rem; line-height: 1.35; }
+  .lp-role svg { width: 1.2rem; height: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; fill: none; stroke: #f3d9c4; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  .lp-roles.lp-roles-below { display: grid; gap: 1.5rem; width: 100%; max-width: 28rem; align-self: center; margin-top: 1rem; color: var(--paper); }
+  .lp-roles-below h2 { color: var(--muted); opacity: 1; }
+  .lp-roles-below svg { stroke: var(--amber); }
+  @media (min-width: 60rem) { .lp-roles.lp-roles-below { display: none; } }
+
+  /* Sign-in side */
+  .lp-main { padding: 1.5rem var(--gutter) 2.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: stretch; }
+  @media (min-width: 60rem) { .lp-main { justify-content: center; padding: 3rem clamp(2rem, 5vw, 5rem); } }
+  .lp-card {
+    width: 100%; max-width: 28rem; align-self: center; box-sizing: border-box;
+    padding: 1.75rem 1.5rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 1rem;
+    box-shadow: 0 12px 40px rgba(36, 28, 27, 0.07);
   }
+  @media (max-width: 30rem) { .lp-card { padding: 1.4rem 1.1rem; margin-top: -2.5rem; position: relative; } }
+  .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 9vw, 3rem); line-height: 1; margin: 0 0 1rem; }
+  .lp-checking { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); }
+  .spinner { width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid var(--lodge-3); border-top-color: var(--amber); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .lp-steps { list-style: none; display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1.1rem; padding: 0; font-size: 0.85rem; color: var(--muted); }
+  .lp-steps li { display: flex; align-items: center; gap: 0.4rem; }
+  .lp-steps li + li::before { content: ''; width: 1.5rem; height: 1px; background: var(--lodge-3); margin-right: 0.1rem; }
+  .lp-steps span { display: grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 50%; border: 1.5px solid var(--lodge-3); font-size: 0.75rem; font-weight: 600; }
+  .lp-steps b { font-weight: 500; }
+  .lp-steps .current { color: var(--paper); }
+  .lp-steps .current span { background: var(--amber); border-color: var(--amber); color: #fff; }
+  .lp-steps .done span { border-color: var(--ok); color: var(--ok); font-size: 0; }
+  .lp-steps .done span::after { content: '✓'; font-size: 0.8rem; }
+
+  .lead { margin: 0 0 0.3rem; }
+  .login-form { display: grid; gap: 0.6rem; }
+  .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
+  .login-form input[type='email'], .login-form input[type='password'], .login-form input[type='text'] {
+    width: 100%; box-sizing: border-box; font: inherit; color: var(--paper); background: #fff;
+    border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 0.75rem 0.85rem;
+  }
+  .login-form input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(110, 15, 31, 0.12); }
   .login-form input.otp {
-    font-family: var(--display);
-    font-size: 2rem;
-    letter-spacing: 0.35em;
-    padding: 0.4rem 0.8rem;
-    max-width: 16rem;
-    font-variant-numeric: tabular-nums;
+    font-family: var(--display); font-size: 2.1rem; letter-spacing: 0.4em; text-align: center;
+    padding: 0.45rem 0.8rem; font-variant-numeric: tabular-nums;
   }
-  .small-links { margin: 0.2rem 0 0; }
+  .lp-fine { font-size: 0.85rem; margin: 0.2rem 0 0; }
+  .small-links { margin: 0.2rem 0 0; text-align: center; }
   .link-btn {
-    font: inherit;
-    color: var(--amber);
-    background: none;
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 0.22em;
-    text-decoration-thickness: 1px;
+    font: inherit; color: var(--amber); background: none; border: 0; padding: 0; cursor: pointer;
+    text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px;
   }
-  .alt { margin-top: 2rem; max-width: 26rem; }
-  .alt + .alt { margin-top: 0.75rem; }
-  .alt summary { cursor: pointer; color: var(--amber); padding: 0.3rem 0; }
-  .alt .login-form { margin-top: 0.8rem; }
-  .small { margin-top: 1.75rem; font-size: 0.9rem; max-width: 32rem; }
+
+  .lp-or { display: flex; align-items: center; gap: 0.75rem; margin: 1.4rem 0 0.6rem; color: var(--muted); font-size: 0.82rem; }
+  .lp-or::before, .lp-or::after { content: ''; flex: 1; height: 1px; background: var(--lodge-3); }
+  .alt { border: 1px solid var(--lodge-3); border-radius: 0.6rem; }
+  .alt + .alt { margin-top: 0.5rem; }
+  .alt summary { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.7rem 0.85rem; font-size: 0.95rem; list-style: none; }
+  .alt summary::-webkit-details-marker { display: none; }
+  .alt summary::after { content: '›'; margin-left: auto; color: var(--muted); transition: transform 0.15s; }
+  .alt[open] summary::after { transform: rotate(90deg); }
+  .alt summary svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: var(--amber); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .alt .login-form { padding: 0 0.85rem 0.9rem; }
+  .lp-lost { margin-top: 1.2rem; }
   code { font-size: 0.9em; color: var(--amber); }
-  .choose-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+  .choose-btns { display: grid; gap: 0.6rem; margin-top: 0.8rem; }
+  .choose-btns .btn { justify-content: center; }
   .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
   .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
+
+  .lp-signup {
+    width: 100%; max-width: 28rem; align-self: center; box-sizing: border-box;
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    padding: 1rem 1.25rem; border-radius: 0.8rem; border: 1px dashed var(--lodge-3);
+    color: var(--paper); text-decoration: none; font-size: 0.93rem; line-height: 1.4;
+  }
+  .lp-signup:hover { border-color: var(--amber); }
+  .lp-signup b { font-weight: 600; }
+  .lp-signup > span:last-child { color: var(--amber); font-size: 1.2rem; }
 </style>
