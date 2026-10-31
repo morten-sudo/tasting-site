@@ -485,4 +485,6 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "wizard.continue": "Continua la preparazione",
   "admin.date": "Data",
   "admin.time": "Ora",
+  "address.country": "Paese",
+  "address.postalFormat": "Lì i codici postali sono così: {example}.",
 };

@@ -485,4 +485,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wizard.continue": "Halda áfram",
   "admin.date": "Dagsetning",
   "admin.time": "Tími",
+  "address.country": "Land",
+  "address.postalFormat": "Póstnúmer þar líta svona út: {example}.",
 };

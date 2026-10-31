@@ -484,4 +484,6 @@ export const en = {
   "wizard.continue": "Continue set-up",
   "admin.date": "Date",
   "admin.time": "Time",
+  "address.country": "Country",
+  "address.postalFormat": "Postal codes there look like {example}.",
 } as const;

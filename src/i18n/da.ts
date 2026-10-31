@@ -485,4 +485,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wizard.continue": "Fortsæt opsætning",
   "admin.date": "Dato",
   "admin.time": "Tid",
+  "address.country": "Land",
+  "address.postalFormat": "Postnumre dér ser sådan ud: {example}.",
 };

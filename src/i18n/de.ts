@@ -485,4 +485,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "wizard.continue": "Einrichtung fortsetzen",
   "admin.date": "Datum",
   "admin.time": "Uhrzeit",
+  "address.country": "Land",
+  "address.postalFormat": "Postleitzahlen sehen dort so aus: {example}.",
 };
