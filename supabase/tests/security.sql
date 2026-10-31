@@ -8,13 +8,16 @@ begin;
 -- ---------- Fixtures: host A and host B, each with a tasting, wine, guest, order and quiz question ----------
 insert into hosts (id, email, name) values
   ('00000000-0000-4000-a000-00000000000a', 'host-a@selftest.invalid', 'Host A'),
-  ('00000000-0000-4000-a000-00000000000b', 'host-b@selftest.invalid', 'Host B');
+  ('00000000-0000-4000-a000-00000000000b', 'host-b@selftest.invalid', 'Host B'),
+  ('00000000-0000-4000-a000-00000000000c', 'host-c@selftest.invalid', 'Host C');
 insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
   ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', '11111111', true, true, true),
   ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', '22222222', true, true, true);
 insert into wines (id, host_id, name) values
   (-1001, '00000000-0000-4000-a000-00000000000a', 'Wine A'),
-  (-1002, '00000000-0000-4000-a000-00000000000b', 'Wine B');
+  (-1002, '00000000-0000-4000-a000-00000000000b', 'Wine B'),
+  (-1003, '00000000-0000-4000-a000-00000000000c', 'Wine C'),
+  (-1004, '00000000-0000-4000-a000-00000000000a', 'Wine A, library only');
 insert into tasting_wines (tasting_id, wine_id, sort_order, price_dkk, orderable, revealed) values
   ('00000000-0000-4000-b000-00000000000a', -1001, 1, 100, true, true),
   ('00000000-0000-4000-b000-00000000000b', -1002, 1, 100, true, true);
@@ -33,6 +36,10 @@ insert into quiz_questions (id, tasting_id, sort_order, question, options, corre
 insert into chat_messages (tasting_id, participant_id, author, body) values
   ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-d000-00000000000a', 'Guest A', 'hello A'),
   ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-d000-00000000000b', 'Guest B', 'hello B');
+
+-- Host C is co-host of host A's tasting
+insert into tasting_hosts (tasting_id, email, host_id) values
+  ('00000000-0000-4000-b000-00000000000a', 'host-c@selftest.invalid', '00000000-0000-4000-a000-00000000000c');
 
 -- ---------- Host A, signed in ----------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
@@ -82,6 +89,11 @@ begin
   failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
   assert failed, 'a host can add to the appellation list';
   update appellations set name = 'hacked' where id = 'porto'; get diagnostics n = row_count;              assert n = 0, 'a host can change the appellation list';
+  -- Hosts are managed only by the owner of the tasting
+  failed := false; begin perform add_cohost('00000000-0000-4000-b000-00000000000b', 'x@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'host A can add a host to host B''s tasting';
+  select count(*) into n from tasting_cohosts('00000000-0000-4000-b000-00000000000b');                     assert n = 0, 'host A sees host B''s hosts';
+  select count(*) into n from tasting_cohosts('00000000-0000-4000-b000-00000000000a');                     assert n = 2, 'host A does not see the co-host';
   -- The superadmin list is closed to hosts
   failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
   assert failed, 'a host can list all tenants';
@@ -91,6 +103,47 @@ begin
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
   assert (host_dashboard() ->> 'guests')::int = (select count(*) from guests), 'overview counts other hosts'' guests';
+end $$;
+reset role;
+
+-- ---------- Host C, co-host of host A's tasting ----------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000c","email":"host-c@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare n int; failed boolean;
+begin
+  assert current_host_id() = '00000000-0000-4000-a000-00000000000c', 'host C is not recognised';
+  assert is_tasting_host('00000000-0000-4000-b000-00000000000a'), 'the co-host is not a host of the tasting';
+  assert not is_tasting_host('00000000-0000-4000-b000-00000000000b'), 'the co-host is a host of another tasting';
+  select count(*) into n from tastings where slug like 'selftest-%';                                        assert n = 1, 'the co-host sees the wrong tastings';
+  select count(*) into n from tastings where slug = 'selftest-b';                                           assert n = 0, 'the co-host sees host B''s tasting';
+  select count(*) into n from participants where id::text like '00000000-0000-4000-d000-%';                 assert n = 1, 'the co-host sees the wrong guests';
+  select count(*) into n from orders where id in (-2001, -2002);                                            assert n = 1, 'the co-host sees the wrong orders';
+  select count(*) into n from quiz_questions where id in (-3001, -3002);                                    assert n = 1, 'the co-host sees the wrong quiz';
+  select count(*) into n from host_chat('00000000-0000-4000-b000-00000000000a');                           assert n = 1, 'the co-host cannot read the chat';
+  -- Wines: the tasting's wines and the co-host's own library, nothing else of host A or B
+  select count(*) into n from wines where id = -1001;                                                       assert n = 1, 'the co-host cannot see the tasting''s wine';
+  select count(*) into n from wines where id in (-1002, -1004);                                             assert n = 0, 'the co-host sees wines outside the tasting';
+  update wines set name = 'Wine A (edited)' where id = -1001; get diagnostics n = row_count;                assert n = 1, 'the co-host cannot edit the tasting''s wine';
+  update wines set name = 'hacked' where id = -1004; get diagnostics n = row_count;                         assert n = 0, 'the co-host can edit host A''s library';
+  failed := false; begin update wines set host_id = '00000000-0000-4000-a000-00000000000c' where id = -1001; exception when others then failed := true; end;
+  assert failed, 'the co-host can take over host A''s wine';
+  insert into tasting_wines (tasting_id, wine_id, sort_order) values ('00000000-0000-4000-b000-00000000000a', -1003, 2);
+  failed := false; begin insert into tasting_wines (tasting_id, wine_id, sort_order) values ('00000000-0000-4000-b000-00000000000a', -1002, 3); exception when others then failed := true; end;
+  assert failed, 'the co-host can put host B''s wine in the tasting';
+  -- The tasting: change it, but not delete it, move it or manage its hosts
+  update tastings set title = 'Test A (edited)' where slug = 'selftest-a'; get diagnostics n = row_count;   assert n = 1, 'the co-host cannot change the tasting';
+  update tastings set title = 'hacked' where slug = 'selftest-b'; get diagnostics n = row_count;            assert n = 0, 'the co-host can change host B''s tasting';
+  delete from tastings where slug = 'selftest-a'; get diagnostics n = row_count;                            assert n = 0, 'the co-host can delete the tasting';
+  failed := false; begin update tastings set host_id = '00000000-0000-4000-a000-00000000000c' where slug = 'selftest-a'; exception when others then failed := true; end;
+  assert failed, 'the co-host can take over the tasting';
+  failed := false; begin perform add_cohost('00000000-0000-4000-b000-00000000000a', 'x@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the co-host can add hosts';
+  failed := false; begin perform remove_cohost('00000000-0000-4000-b000-00000000000a', 'host-c@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the co-host can remove hosts';
+  select count(*) into n from tasting_cohosts('00000000-0000-4000-b000-00000000000a');                     assert n = 2, 'the co-host cannot see the hosts';
+  failed := false; begin perform count(*) from tasting_hosts; exception when others then failed := true; end;
+  assert failed, 'tasting_hosts is readable directly';
 end $$;
 reset role;
 
@@ -131,6 +184,8 @@ begin
   -- With code A: A's host and A's guest count, never B's
   j := get_tasting('selftestaa', null);
   assert j ->> 'host_name' = 'Host A' and (j ->> 'coming')::int = 1, 'code A gives the wrong host or guest count';
+  assert j -> 'host_names' = '["Host A", "Host C"]'::jsonb, 'code A gives the wrong host names';
+  assert get_tasting(null, 'selftest-a') ->> 'host_names' is null, 'host names visible without a code';
   select count(*) into n from get_wines('selftestaa') w where w.id = -1002;                                 assert n = 0, 'code A lists wine B';
   select count(*) into n from get_wines('nosuchcode');                                                      assert n = 0, 'an unknown code lists wines';
   select count(*) into n from get_invite('selftestaa') i where i.name = 'Guest B';                          assert n = 0, 'code A shows guest B';
@@ -163,6 +218,8 @@ begin
   failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
   assert failed, 'anyone can add to the appellation list';
   -- Host functions are closed
+  failed := false; begin perform add_cohost('00000000-0000-4000-b000-00000000000a', 'x@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can add a host';
   failed := false; begin perform create_tasting('x'); exception when others then failed := true; end;
   assert failed, 'anyone can create a tasting';
   failed := false; begin perform host_dashboard(); exception when others then failed := true; end;

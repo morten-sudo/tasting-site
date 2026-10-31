@@ -35,11 +35,13 @@ import '../../styles/admin.css';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, formatWhen } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
+  import { hostedTastings } from '../../lib/admin-side';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
     participants: { status: string }[]; tasting_wines: { count: number }[] };
 
   let host: Awaited<ReturnType<typeof requireHost>> = null;
+  let cohosted = new Set<string>();
 
   const adminUrl = (slug: string) => `/t/${slug}/admin/`;
 
@@ -56,15 +58,18 @@ import '../../styles/admin.css';
       mk('span', '', t('tastingsAdmin.guests', { coming, n: r.participants.length })),
       mk('span', '', t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })),
     );
+    if (cohosted.has(r.id)) stats.append(mk('span', 'cohost-tag', t('hosts.cohost')));
     a.append(stats);
     li.append(a);
     return li;
   }
 
   async function load() {
+    const hosted = await hostedTastings();
+    cohosted = new Set(hosted.filter((x) => !x.owner).map((x) => x.tasting_id));
     const { data } = await supabase.from('tastings')
       .select('id, slug, title, starts_at, place, participants(status), tasting_wines(count)')
-      .eq('host_id', host!.id)
+      .in('id', hosted.map((x) => x.tasting_id))
       .order('starts_at', { ascending: true, nullsFirst: false });
     const rows = (data ?? []) as Row[];
     const cutoff = Date.now() - 24 * 3600 * 1000;

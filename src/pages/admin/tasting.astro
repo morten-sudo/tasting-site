@@ -62,6 +62,25 @@ import '../../styles/admin.css';
         <p class="hint"><span data-i18n="admin.tvLink">Leaderboard for the TV:</span> <a id="tv-link" href="/" target="_blank"></a></p>
       </section>
 
+      <!-- Hosts: the owner gives others the host role for this tasting -->
+      <section class="block" data-section="settings">
+        <h2 data-i18n="hosts.title">Hosts</h2>
+        <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
+        <ul id="hosts-list" class="hosts-list"></ul>
+        <form id="host-add" class="inline-form host-add" novalidate hidden>
+          <input id="host-email" type="email" inputmode="email" autocomplete="off" placeholder="Email" aria-label="Email of the new host" data-i18n-attr="placeholder=common.email;aria-label=hosts.emailLabel" />
+          <button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button>
+        </form>
+        <p id="host-msg" class="message" hidden></p>
+        <div id="host-link" class="host-link" hidden>
+          <p id="host-link-text" class="hint"></p>
+          <div class="inline-form">
+            <input id="host-link-url" type="text" readonly />
+            <button id="host-link-copy" class="btn small ghost" type="button" data-i18n="hosts.copy">Copy</button>
+          </div>
+        </div>
+      </section>
+
       <!-- Tasting fee -->
       <section class="block" data-section="settings">
         <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
@@ -206,6 +225,7 @@ import '../../styles/admin.css';
 <script>
   import { supabase } from '../../lib/supabase';
   import { currentSlug, tastingUrl } from '../../lib/guest';
+  import { initHosts } from '../../lib/admin-hosts';
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   import { requireHost, mk as mkEl, type Host } from '../../lib/admin-common';
@@ -253,10 +273,12 @@ import '../../styles/admin.css';
   async function loadTasting(host: Host) {
     const slug = currentSlug();
     if (!slug) return;
-    const { data } = await supabase.from('tastings').select('*').eq('slug', slug).eq('host_id', host.id).maybeSingle();
+    // Row-level security returns the tasting to its owner and its co-hosts
+    const { data } = await supabase.from('tastings').select('*').eq('slug', slug).maybeSingle();
     tasting = (data ?? null) as T | null;
     if (!tasting) return;
     ($('t-guest') as HTMLAnchorElement).href = tastingUrl(slug);
+    initHosts(tasting.id, slug, tasting.host_id === host.id);
     $('t-heading').textContent = tasting.title;
     document.title = `${tasting.title} – Winetastr`;
 

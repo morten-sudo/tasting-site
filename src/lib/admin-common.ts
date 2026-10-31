@@ -33,6 +33,8 @@ export async function requireHost(): Promise<Host | null> {
   $('logout2')?.addEventListener('click', signOut);
   $('side-logout')?.addEventListener('click', signOut);
 
+  // Turns a co-host invitation for this email into a host account (first sign-in)
+  await supabase.rpc('link_me');
   const { data: hostId } = await supabase.rpc('current_host_id');
   if (!hostId) { $('not-host').hidden = false; return null; }
   const { data: host } = await supabase.from('hosts').select('id, email, name, language, mobilepay').eq('id', hostId).single();

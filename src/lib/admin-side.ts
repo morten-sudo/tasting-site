@@ -89,8 +89,9 @@ export async function initSide(hostId: string) {
   // Winetastr administrators also get the superadmin page
   supabase.rpc('is_admin').then(({ data: admin }) => { $('side-super').hidden = admin !== true; });
 
+  const ids = (await hostedTastings()).map((x) => x.tasting_id);
   const { data } = await supabase.from('tastings').select('slug, title, starts_at')
-    .eq('host_id', hostId).order('starts_at', { ascending: true, nullsFirst: false });
+    .in('id', ids).order('starts_at', { ascending: true, nullsFirst: false });
   const rows = (data ?? []) as Row[];
   const cutoff = Date.now() - 24 * 3600 * 1000;
   const isPast = (r: Row) => !!r.starts_at && new Date(r.starts_at).getTime() < cutoff;
@@ -106,4 +107,10 @@ export async function initSide(hostId: string) {
     const a = document.querySelector<HTMLElement>('#admin-side a[aria-current="page"]');
     if (a?.textContent) $('side-where').textContent = a.textContent;
   }
+}
+
+/** The tastings I host – my own and those I co-host (not every tenant's, even for an administrator). */
+export async function hostedTastings(): Promise<{ tasting_id: string; owner: boolean }[]> {
+  const { data } = await supabase.rpc('my_hosted_tastings');
+  return (data ?? []) as { tasting_id: string; owner: boolean }[];
 }

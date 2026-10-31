@@ -182,8 +182,12 @@ import Base from '../../layouts/Base.astro';
       ($('h-map') as HTMLAnchorElement).href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
       $('f-place').hidden = false;
     }
-    if (typeof info.host_name === 'string' && info.host_name) {
-      $('h-host').textContent = t('tastingHome.host', { name: info.host_name });
+    // One host or several ("Morten and Erlingur")
+    const names = (Array.isArray(info.host_names) ? info.host_names : [info.host_name])
+      .filter((n): n is string => typeof n === 'string' && n.trim() !== '');
+    if (names.length) {
+      const list = new Intl.ListFormat(lang(), { style: 'long', type: 'conjunction' }).format(names);
+      $('h-host').textContent = names.length > 1 ? t('tastingHome.hosts', { names: list }) : t('tastingHome.host', { name: list });
       $('f-host').hidden = false;
     }
     setComing(info.coming);
