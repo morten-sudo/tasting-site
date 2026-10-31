@@ -19,6 +19,8 @@ import '../../styles/admin.css';
         <form id="details" class="add-form tasting-form" novalidate>
           <label for="d-title" data-i18n="admin.title">Title</label>
           <input id="d-title" type="text" required />
+          <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
+          <textarea id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
           <label for="d-when" data-i18n="admin.when">Date and time</label>
           <input id="d-when" type="datetime-local" />
           <AddressFields prefix="d" />
@@ -241,6 +243,7 @@ import '../../styles/admin.css';
     ($('d-title') as HTMLInputElement).value = tasting.title;
     ($('d-when') as HTMLInputElement).value = toLocalInput(tasting.starts_at);
     writeAddress('d', tasting as Record<string, string | null>);
+    ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
     ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
 
     const tv = $('tv-link') as HTMLAnchorElement;
@@ -261,6 +264,7 @@ import '../../styles/admin.css';
     const patch = {
       title,
       starts_at: fromLocalInput(($('d-when') as HTMLInputElement).value),
+      intro: ($('d-intro') as HTMLTextAreaElement).value.trim() || null,
       ...readAddress('d'),
       language: ($('d-language') as HTMLSelectElement).value,
     };

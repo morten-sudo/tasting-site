@@ -29,6 +29,8 @@ import Base from '../../layouts/Base.astro';
         <p id="t-when" class="t-when"></p>
       </header>
 
+      <div id="t-intro" class="t-intro" hidden></div>
+
       <p id="current" class="status" role="status" hidden></p>
 
 
@@ -119,6 +121,14 @@ import Base from '../../layouts/Base.astro';
     }
     if (typeof info.place === 'string' && info.place) parts.push(info.place);
     $('t-when').textContent = parts.join(' · ');
+    // The host's introduction: plain text, blank lines separate paragraphs
+    const intro = typeof info.intro === 'string' ? info.intro.trim() : '';
+    $('t-intro').replaceChildren(...intro.split(/\n\s*\n/).map((para) => {
+      const el = document.createElement('p');
+      el.textContent = para.trim();
+      return el;
+    }));
+    $('t-intro').hidden = !intro;
     const row = Array.isArray(data) ? data[0] : null;
     const amount = row ? Number(row.amount) : 0;
     $('fee').hidden = !row || amount <= 0;
@@ -264,6 +274,9 @@ import Base from '../../layouts/Base.astro';
     margin: 0 0 0.5rem;
   }
   .t-when { color: var(--muted); margin: 0; }
+  .t-intro { margin: 1.25rem 0 1.5rem; max-width: 38rem; font-size: 1.05rem; line-height: 1.6; }
+  .t-intro :global(p) { margin: 0 0 0.8rem; white-space: pre-line; }
+  .t-intro :global(p:last-child) { margin-bottom: 0; }
   .visually-hidden {
     position: absolute;
     width: 1px;

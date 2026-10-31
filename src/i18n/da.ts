@@ -440,4 +440,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "address.number": "Nr.",
   "address.postalCode": "Postnummer",
   "address.city": "By",
+  "admin.intro": "Introduktion",
+  "admin.introHint": "(hvad skal der ske – vises for dine gæster)",
+  "admin.introPlaceholder": "Fx Vi starter med et glas hvid portvin og smager derefter seks vine blindt…",
 };

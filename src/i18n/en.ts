@@ -439,4 +439,7 @@ export const en = {
   "address.number": "No.",
   "address.postalCode": "Postal code",
   "address.city": "City",
+  "admin.intro": "Introduction",
+  "admin.introHint": "(what is going to happen – shown to your guests)",
+  "admin.introPlaceholder": "E.g. We start with a glass of white port, then taste six wines blind…",
 } as const;

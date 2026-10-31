@@ -440,4 +440,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "address.number": "Nr.",
   "address.postalCode": "Póstnúmer",
   "address.city": "Bær",
+  "admin.intro": "Kynning",
+  "admin.introHint": "(hvað mun gerast – sýnt gestunum þínum)",
+  "admin.introPlaceholder": "T.d. Við byrjum á glasi af hvítu púrtvíni og smökkum svo sex vín blint…",
 };
