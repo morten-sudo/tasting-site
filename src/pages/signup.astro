@@ -2,42 +2,131 @@
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.signup">
-  <section class="wrap host-page">
-    <p class="eyebrow" data-i18n="host.eyebrow">Free</p>
-    <h1 class="title" data-i18n="host.title">Host your own tasting</h1>
-    <p class="lead" data-i18n="host.lead">
-      Invite your guests, show them the wines, take orders and finish with a quiz.
-      Sign up with your email and you are ready in a few minutes.
-    </p>
-
-    <p id="checking" class="hint" hidden data-i18n="host.creating">Setting you up as a host …</p>
-
-    <!-- Step 1: name and email -->
-    <form id="start-form" class="login-form" novalidate>
-      <label for="name" data-i18n="host.name">Your name</label>
-      <input id="name" type="text" autocomplete="name" required />
-      <div id="email-wrap">
-        <label for="email" data-i18n="common.email">Email</label>
-        <input id="email" type="email" autocomplete="email" inputmode="email" required />
+  <section class="wrap signup-page">
+    <!-- Hero: what Winetastr is, with the sign-up form beside it -->
+    <div class="su-hero">
+      <div class="su-pitch">
+        <p class="eyebrow" data-i18n="signup.eyebrow">For hosts</p>
+        <h1 class="su-title" data-i18n="signup.title">Wine tastings your guests remember</h1>
+        <p class="su-lead" data-i18n="signup.lead">Winetastr gathers the whole evening in one place: invitations and replies, the wines with photos and prices, orders paid with MobilePay, ratings, and a quiz with a live leaderboard on the big screen. You prepare it in minutes – your guests only need their phone.</p>
+        <ul class="su-points">
+          <li data-i18n="signup.point1">Free to get started</li>
+          <li data-i18n="signup.point2">No app to install – for you or your guests</li>
+          <li data-i18n="signup.point3">Nine languages, chosen per tasting</li>
+        </ul>
       </div>
-      <p id="start-msg" class="message" hidden></p>
-      <button class="btn" type="submit" id="start-btn" data-i18n="login.sendCode">Send code</button>
-    </form>
 
-    <!-- Step 2: code from the email -->
-    <form id="otp-form" class="login-form" novalidate hidden>
-      <p><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
-      <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
-      <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
-             pattern="[0-9]*" maxlength="10" required />
-      <p id="otp-msg" class="message" hidden></p>
-      <button class="btn" type="submit" id="otp-btn" data-i18n="host.create">Make me a host</button>
-      <p class="hint">
-        <button id="back" class="link-btn" type="button" data-i18n="host.back">Change name or email</button>
-      </p>
-    </form>
+      <div id="signup" class="su-card">
+        <h2 data-i18n="signup.formTitle">Create your free account</h2>
+        <p id="checking" class="hint" hidden data-i18n="host.creating">Setting you up as a host …</p>
 
-    <p class="hint small" data-i18n-html="host.already">Already a host? <a href="/login/?next=%2Fadmin%2F">Sign in here</a>.</p>
+        <!-- Step 1: name and email -->
+        <form id="start-form" class="login-form" novalidate>
+          <label for="name" data-i18n="host.name">Your name</label>
+          <input id="name" type="text" autocomplete="name" required />
+          <div id="email-wrap">
+            <label for="email" data-i18n="common.email">Email</label>
+            <input id="email" type="email" autocomplete="email" inputmode="email" required />
+          </div>
+          <p id="start-msg" class="message" hidden></p>
+          <button class="btn" type="submit" id="start-btn" data-i18n="login.sendCode">Send code</button>
+          <p class="hint su-fine" data-i18n="signup.noPassword">We send you a code by email – no password needed.</p>
+        </form>
+
+        <!-- Step 2: code from the email -->
+        <form id="otp-form" class="login-form" novalidate hidden>
+          <p><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
+          <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
+          <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
+                 pattern="[0-9]*" maxlength="10" required />
+          <p id="otp-msg" class="message" hidden></p>
+          <button class="btn" type="submit" id="otp-btn" data-i18n="signup.create">Create my account</button>
+          <p class="hint">
+            <button id="back" class="link-btn" type="button" data-i18n="host.back">Change name or email</button>
+          </p>
+        </form>
+
+        <p class="hint su-fine" data-i18n-html="host.already">Already a host? <a href="/login/?next=%2Fadmin%2F">Sign in here</a>.</p>
+      </div>
+    </div>
+
+    <!-- Main features -->
+    <section class="su-section">
+      <h2 class="su-h2" data-i18n="signup.featuresTitle">Everything for the evening</h2>
+      <ul class="su-features">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3.5 6.5l8.5 6.5 8.5-6.5" /></svg>
+          <h3 data-i18n="signup.f1Title">Invitations and replies</h3>
+          <p data-i18n="signup.f1Text">Every guest gets a personal link. Replies, diets and messages come in by themselves, and you always know who is coming.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4v4.2c0 .6.3 1.1.7 1.5 1 .9 1.6 2.2 1.6 3.6V20a1.5 1.5 0 0 1-1.5 1.5H9.2A1.5 1.5 0 0 1 7.7 20v-8.2c0-1.4.6-2.7 1.6-3.6.4-.4.7-.9.7-1.5z" /><path d="M7.7 13h8.6v4.5H7.7z" /></svg>
+          <h3 data-i18n="signup.f2Title">The wines on every phone</h3>
+          <p data-i18n="signup.f2Text">Photos, descriptions and prices. Snap the label or paste a shop link, and the details fill themselves in.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
+          <h3 data-i18n="signup.f3Title">Orders and payment</h3>
+          <p data-i18n="signup.f3Text">Guests order bottles during the evening – with quantity prices – and pay with MobilePay. You get the shopping list.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg>
+          <h3 data-i18n="signup.f4Title">Ratings and notes</h3>
+          <p data-i18n="signup.f4Text">Guests give each wine stars and keep private notes. You see which wines the room loved.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M8 20h8M12 16v4M7 12V9M11 12V7M15 12v-2" /></svg>
+          <h3 data-i18n="signup.f5Title">Quiz with a live leaderboard</h3>
+          <p data-i18n="signup.f5Text">Write your own questions and show the standings on the TV while the answers come in.</p>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5S9.6 5.9 12 3.5z" /></svg>
+          <h3 data-i18n="signup.f6Title">In your guests' language</h3>
+          <p data-i18n="signup.f6Text">Nine languages. Each tasting has its own, and every guest can switch for themselves.</p>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Plans -->
+    <section class="su-section">
+      <h2 class="su-h2" data-i18n="signup.plansTitle">Plans</h2>
+      <div class="su-plans">
+        <article class="su-plan current">
+          <h3>Free</h3>
+          <p class="su-price" data-i18n="signup.freePrice">0 kr.</p>
+          <p class="su-plan-lead" data-i18n="signup.freeLead">For private tastings with friends and family.</p>
+          <ul>
+            <li data-i18n="signup.freeA">Every feature above</li>
+            <li data-i18n="signup.freeB">Your own wine and guest library</li>
+            <li data-i18n="signup.freeC">No card needed</li>
+          </ul>
+          <a class="btn" href="#signup" data-i18n="signup.freeCta">Get started</a>
+        </article>
+        <article class="su-plan soon">
+          <h3>Pro <span class="su-soon" data-i18n="signup.soon">Coming soon</span></h3>
+          <p class="su-plan-lead" data-i18n="signup.proLead">For the keen host who holds tastings often.</p>
+          <ul>
+            <li data-i18n="signup.proA">Your own logo and colours</li>
+            <li data-i18n="signup.proB">Co-hosts on a tasting</li>
+            <li data-i18n="signup.proC">Statistics across your tastings</li>
+          </ul>
+        </article>
+        <article class="su-plan soon">
+          <h3>Commercial <span class="su-soon" data-i18n="signup.soon">Coming soon</span></h3>
+          <p class="su-plan-lead" data-i18n="signup.comLead">For wine bars, shops and importers.</p>
+          <ul>
+            <li data-i18n="signup.comA">Ticket sales for public tastings</li>
+            <li data-i18n="signup.comB">Several staff accounts</li>
+            <li data-i18n="signup.comC">Your own payment and invoicing</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="su-final">
+      <h2 class="su-h2" data-i18n="signup.finalTitle">Ready for your next tasting?</h2>
+      <a class="btn" href="#signup" data-i18n="signup.formTitle">Create your free account</a>
+    </section>
   </section>
 </Base>
 
@@ -93,7 +182,7 @@ import Base from '../layouts/Base.astro';
     if (pending) { finish(pending); return; }
     // Signed in (e.g. as a guest) but no name yet: only ask for the name
     $('email-wrap').hidden = true;
-    ($('start-btn') as HTMLButtonElement).textContent = t('host.create');
+    ($('start-btn') as HTMLButtonElement).textContent = t('signup.create');
     ($('start-form') as HTMLFormElement).dataset.signedIn = '1';
   }
 
@@ -167,35 +256,61 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style>
-  .host-page { padding-top: 2.5rem; padding-bottom: 3rem; }
-  .title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(2.6rem, 11vw, 4.5rem);
-    line-height: 0.95;
-    margin: 0.4rem 0 1rem;
-    max-width: 14ch;
+  .signup-page { padding-top: 2.5rem; padding-bottom: 4rem; }
+  .su-hero { display: grid; gap: 2rem; align-items: start; }
+  @media (min-width: 56rem) { .su-hero { grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.9fr); gap: 3.5rem; } }
+  .su-title {
+    font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 9vw, 4.6rem);
+    line-height: 0.98; margin: 0.4rem 0 1.1rem; max-width: 15ch;
   }
-  .lead { max-width: 32rem; margin-bottom: 1.75rem; }
-  .login-form { display: grid; gap: 0.6rem; max-width: 26rem; }
-  .login-form .btn { justify-self: start; margin-top: 0.3rem; }
+  .su-lead { font-size: 1.12rem; line-height: 1.6; max-width: 36rem; margin: 0 0 1.2rem; }
+  .su-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+  .su-points li { display: flex; gap: 0.6rem; align-items: baseline; }
+  .su-points li::before { content: '✓'; color: var(--ok); font-weight: 700; }
+
+  .su-card {
+    padding: 1.5rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 1rem;
+    box-shadow: 0 12px 40px rgba(36, 28, 27, 0.08); scroll-margin-top: 6rem;
+  }
+  .su-card h2 { margin: 0 0 1rem; font-size: 1.5rem; }
+  .su-fine { font-size: 0.88rem; margin: 0.6rem 0 0; }
+  .login-form { display: grid; gap: 0.6rem; }
+  .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
   #email-wrap { display: grid; gap: 0.6rem; }
   #email-wrap label { margin: 0; }
   .login-form input.otp {
-    font-family: var(--display);
-    font-size: 2rem;
-    letter-spacing: 0.35em;
-    padding: 0.4rem 0.8rem;
-    max-width: 16rem;
-    width: 100%;
-    color: var(--paper);
-    background: transparent;
-    border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
+    font-family: var(--display); font-size: 2rem; letter-spacing: 0.35em; padding: 0.4rem 0.8rem;
+    max-width: 16rem; width: 100%; color: var(--paper); background: transparent;
+    border: 1px solid var(--lodge-3); border-radius: var(--radius);
   }
   .link-btn {
     font: inherit; color: var(--amber); background: none; border: 0; padding: 0; cursor: pointer;
     text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px;
   }
-  .small { margin-top: 2rem; font-size: 0.9rem; }
+
+  .su-section { margin-top: 4.5rem; }
+  .su-h2 { font-size: clamp(1.8rem, 5vw, 2.4rem); margin: 0 0 1.5rem; }
+  .su-features { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  @media (min-width: 56rem) { .su-features { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .su-features li { padding: 1.25rem; border: 1px solid var(--lodge-3); border-radius: 0.8rem; background: var(--lodge-2); }
+  .su-features svg { width: 1.8rem; height: 1.8rem; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .su-features h3 { margin: 0.6rem 0 0.35rem; font-size: 1.08rem; font-family: var(--body); font-weight: 600; }
+  .su-features p { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.55; }
+
+  .su-plans { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); align-items: stretch; }
+  .su-plan { display: flex; flex-direction: column; padding: 1.4rem; border: 1px solid var(--lodge-3); border-radius: 0.9rem; background: var(--lodge-2); }
+  .su-plan.current { border: 2px solid var(--amber); }
+  .su-plan.soon { background: transparent; }
+  .su-plan.soon h3, .su-plan.soon .su-plan-lead, .su-plan.soon li { color: var(--muted); }
+  .su-plan h3 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .su-soon { font-family: var(--body); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); }
+  .su-price { font-family: var(--display); font-size: 2.4rem; margin: 0.3rem 0 0; line-height: 1; }
+  .su-plan-lead { margin: 0.6rem 0 0.8rem; }
+  .su-plan ul { list-style: none; margin: 0 0 1.2rem; padding: 0; display: grid; gap: 0.4rem; font-size: 0.95rem; }
+  .su-plan li::before { content: '✓ '; color: var(--ok); }
+  .su-plan.soon li::before { color: var(--lodge-3); }
+  .su-plan .btn { margin-top: auto; align-self: flex-start; }
+
+  .su-final { margin-top: 4.5rem; padding: 2rem 1.5rem; text-align: center; border-radius: 1rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); }
+  .su-final .su-h2 { margin-bottom: 1rem; }
 </style>
