@@ -280,3 +280,36 @@ dialog.sheet .sheet-head { position: sticky; top: -1.25rem; z-index: 1; backgrou
   dialog.sheet.wide { width: 34rem; }
   dialog.sheet .sheet-head { top: -1.75rem; }
 }
+
+/* Event chat (guests and host) */
+.chat { display: flex; flex-direction: column; gap: 0.6rem; max-width: 44rem; }
+.chat-list {
+  list-style: none; margin: 0; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;
+  height: min(60vh, 36rem); height: min(60dvh, 36rem); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.8rem;
+}
+.chat-empty { margin: -0.2rem 0 0; }
+.chat-day { align-self: center; font-size: 0.78rem; color: var(--muted); margin: 0.5rem 0 0.1rem; }
+.chat-msg { display: grid; justify-items: start; max-width: 85%; gap: 0.15rem; }
+.chat-msg.mine { align-self: flex-end; justify-items: end; }
+.chat-who { font-size: 0.78rem; color: var(--muted); padding: 0 0.6rem; }
+.chat-msg.host .chat-who { color: var(--amber); font-weight: 600; }
+.chat-bubble {
+  margin: 0; padding: 0.55rem 0.8rem; border-radius: 1rem 1rem 1rem 0.3rem; background: var(--lodge);
+  border: 1px solid var(--lodge-3); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.4;
+}
+.chat-msg.mine .chat-bubble { background: var(--amber); border-color: var(--amber); color: #fff; border-radius: 1rem 1rem 0.3rem 1rem; }
+.chat-msg time { font-size: 0.72rem; color: var(--muted); padding: 0 0.6rem; }
+.chat-del { font: inherit; font-size: 0.75rem; color: var(--error); background: none; border: 0; padding: 0 0.6rem; cursor: pointer; }
+.chat-form { display: flex; gap: 0.5rem; align-items: flex-end; }
+.chat-form textarea {
+  flex: 1; min-width: 0; resize: none; font: inherit; line-height: 1.4; padding: 0.65rem 0.85rem; min-height: 2.8rem;
+  border: 1px solid var(--lodge-3); border-radius: 1.4rem; background: var(--lodge-2); color: var(--paper);
+}
+.chat-form textarea:focus { outline: none; border-color: var(--amber); }
+.chat-send {
+  width: 2.8rem; height: 2.8rem; flex-shrink: 0; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--amber); color: #fff; display: grid; place-items: center;
+}
+.chat-send svg { fill: currentColor; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

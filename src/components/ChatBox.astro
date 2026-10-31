@@ -1,0 +1,16 @@
+---
+// Event chat for one tasting: the message list and a box to write in. Used by guests and the host.
+const { prefix } = Astro.props as { prefix: string };
+---
+<div class="chat" id={`${prefix}-chat`}>
+  <ol id={`${prefix}-messages`} class="chat-list" aria-live="polite"></ol>
+  <p id={`${prefix}-empty`} class="chat-empty hint" hidden data-i18n="chat.empty">No messages yet. Say hello!</p>
+  <form id={`${prefix}-form`} class="chat-form" novalidate>
+    <label for={`${prefix}-input`} class="sr" data-i18n="chat.write">Write a message</label>
+    <textarea id={`${prefix}-input`} rows="1" maxlength="1000" placeholder="Write a message" data-i18n-attr="placeholder=chat.write" enterkeyhint="send"></textarea>
+    <button class="chat-send" type="submit" aria-label="Send" data-i18n-attr="aria-label=chat.send;title=chat.send" title="Send">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z" /></svg>
+    </button>
+  </form>
+  <p id={`${prefix}-error`} class="message error" hidden></p>
+</div>

@@ -30,6 +30,9 @@ insert into orders (id, participant_id, tasting_id) values
 insert into quiz_questions (id, tasting_id, sort_order, question, options, correct_key) values
   (-3001, '00000000-0000-4000-b000-00000000000a', 1, 'Q A', '[{"key":"a","text":"x"}]', 'a'),
   (-3002, '00000000-0000-4000-b000-00000000000b', 1, 'Q B', '[{"key":"a","text":"x"}]', 'a');
+insert into chat_messages (tasting_id, participant_id, author, body) values
+  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-d000-00000000000a', 'Guest A', 'hello A'),
+  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-d000-00000000000b', 'Guest B', 'hello B');
 
 -- ---------- Host A, signed in ----------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
@@ -67,6 +70,14 @@ begin
   failed := false; begin perform count(*) from login_checks; exception when others then failed := true; end;
   assert failed, 'login_checks is readable';
   select count(*) into n from wine_ratings;                                                                 assert n = 0, 'wine ratings are readable directly';
+  -- Event chat: only A's own tasting
+  select count(*) into n from chat_messages where body in ('hello A', 'hello B');                         assert n = 1, 'host A reads host B''s chat';
+  select count(*) into n from host_chat('00000000-0000-4000-b000-00000000000b');                           assert n = 0, 'host A reads host B''s chat via RPC';
+  delete from chat_messages where body = 'hello B'; get diagnostics n = row_count;                          assert n = 0, 'host A can delete in host B''s chat';
+  failed := false; begin perform host_post_chat('00000000-0000-4000-b000-00000000000b', 'x'); exception when others then failed := true; end;
+  assert failed, 'host A can write in host B''s chat';
+  failed := false; begin insert into chat_messages (tasting_id, author, body) values ('00000000-0000-4000-b000-00000000000a', 'x', 'x'); exception when others then failed := true; end;
+  assert failed, 'chat messages can be inserted directly';
   -- The admin overview only counts A's own data
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
@@ -117,6 +128,13 @@ begin
   assert failed, 'code A can rate wine B';
   failed := false; begin perform submit_answer('selftestaa', -3002, 'a'); exception when others then failed := true; end;
   assert failed, 'code A can answer quiz B';
+  select count(*) into n from get_chat('selftestaa') c where c.body = 'hello B';                          assert n = 0, 'code A reads chat B';
+  select count(*) into n from get_chat('nosuchcode');                                                       assert n = 0, 'an unknown code reads a chat';
+  select count(*) into n from chat_messages;                                                                assert n = 0, 'anyone can read chat messages directly';
+  failed := false; begin perform post_chat('nosuchcode', 'x'); exception when others then failed := true; end;
+  assert failed, 'an unknown code can write in a chat';
+  failed := false; begin perform host_chat('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can use the host chat';
   failed := false; begin perform respond_invite('nosuchcode', true, null, null); exception when others then failed := true; end;
   assert failed, 'an unknown code can respond';
   -- Host functions are closed
@@ -124,6 +142,9 @@ begin
   assert failed, 'anyone can create a tasting';
   failed := false; begin perform host_dashboard(); exception when others then failed := true; end;
   assert failed, 'anyone can read a host overview';
+  -- …while a guest's own chat works
+  perform post_chat('selftestaa', 'hi from A');
+  select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';
 end $$;
 reset role;
 

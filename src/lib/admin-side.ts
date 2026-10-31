@@ -10,6 +10,7 @@ export const SECTIONS: { id: string; path: string; label: Key }[] = [
   { id: 'guests', path: 'guests/', label: 'admin.guests' },
   { id: 'orders', path: 'orders/', label: 'admin.orders' },
   { id: 'quiz', path: 'quiz/', label: 'page.quiz' },
+  { id: 'chat', path: 'chat/', label: 'page.chat' },
   { id: 'settings', path: 'settings/', label: 'section.settings' },
 ];
 

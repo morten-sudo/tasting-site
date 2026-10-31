@@ -10,6 +10,8 @@
 /t/:slug/cart/            /tasting/cart/            200
 /t/:slug/quiz             /t/:slug/quiz/            301
 /t/:slug/quiz/            /tasting/quiz/            200
+/t/:slug/chat             /t/:slug/chat/            301
+/t/:slug/chat/            /tasting/chat/            200
 /t/:slug/leaderboard      /t/:slug/leaderboard/     301
 /t/:slug/leaderboard/     /tasting/leaderboard/     200
 /t/:slug/admin            /t/:slug/admin/           301

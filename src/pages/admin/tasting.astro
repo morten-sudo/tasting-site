@@ -4,6 +4,7 @@ import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
+import ChatBox from '../../components/ChatBox.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.admin">
@@ -150,6 +151,13 @@ import '../../styles/admin.css';
         <button id="csv" class="btn small ghost" type="button" data-i18n="admin.csv">Download orders as CSV</button>
       </section>
 
+      <!-- Event chat -->
+      <section class="block" data-section="chat">
+        <h2 data-i18n="page.chat">Chat</h2>
+        <p class="hint" data-i18n="chat.hostIntro">The guests' chat for this tasting. You write as the host and can remove messages.</p>
+        <ChatBox prefix="h" />
+      </section>
+
       <!-- Quiz -->
       <section class="block quiz-admin" data-section="quiz">
         <div class="guests-head">
@@ -202,6 +210,7 @@ import '../../styles/admin.css';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
   import { initWizard } from '../../lib/tasting-wizard';
   import { initWhen, readWhen, writeWhen } from '../../lib/datetime';
+  import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
 
   await i18nReady;
@@ -705,6 +714,24 @@ import '../../styles/admin.css';
       else a.removeAttribute('aria-current');
     });
     markSection(id);
+    if (id === 'chat') startChat();
+  }
+
+  // The chat only polls once the host opens it
+  let chatStarted = false;
+  function startChat() {
+    if (chatStarted || !tasting) return;
+    chatStarted = true;
+    const tId = tasting.id;
+    initChat({
+      prefix: 'h',
+      load: async (after) => {
+        const { data, error } = await supabase.rpc('host_chat', { t_id: tId, after_id: after });
+        return error ? null : (data as ChatMessage[]);
+      },
+      send: async (body) => ((await supabase.rpc('host_post_chat', { t_id: tId, body })).error ? 'error' : 'ok'),
+      remove: async (msgId) => !(await supabase.from('chat_messages').delete().eq('id', msgId)).error,
+    }).start();
   }
   const startSlug = currentSlug() ?? '';
   $('section-tabs').replaceChildren(...SECTIONS.map((sec) => {
@@ -776,6 +803,7 @@ import '../../styles/admin.css';
   if (host) {
     wizard = initWizard(host, () => location.reload());
     await loadAll();
+    if (currentAdmin()?.section === 'chat') startChat();
     setInterval(async () => {
       if (!tasting) return;
       const [o, rows] = await Promise.all([

@@ -1,0 +1,51 @@
+---
+import Base from '../../layouts/Base.astro';
+import ChatBox from '../../components/ChatBox.astro';
+---
+<Base title="page.chat" tasting>
+  <section class="wrap chat-page">
+    <h1 class="title" data-i18n="page.chat">Chat</h1>
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+    <div id="no-code" class="message" hidden>
+      <p data-i18n="chat.noCode">Sign in with your email or open the link from your invitation to join the chat.</p>
+    </div>
+    <div id="chat-wrap" hidden>
+      <p class="hint" data-i18n="chat.intro">Everyone invited to the tasting and the host can read along.</p>
+      <ChatBox prefix="g" />
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { resolveGuestCode } from '../../lib/guest';
+  import { initChat, type ChatMessage } from '../../lib/chat';
+  import { i18nReady } from '../../i18n';
+
+  await i18nReady;
+  const $ = (id: string) => document.getElementById(id)!;
+  const code = await resolveGuestCode();
+  $('loading').hidden = true;
+  if (!code) {
+    $('no-code').hidden = false;
+  } else {
+    $('chat-wrap').hidden = false;
+    await initChat({
+      prefix: 'g',
+      load: async (after) => {
+        const { data, error } = await supabase.rpc('get_chat', { code, after_id: after });
+        return error ? null : (data as ChatMessage[]);
+      },
+      send: async (body) => {
+        const { error } = await supabase.rpc('post_chat', { code, body });
+        if (!error) return 'ok';
+        return error.message.includes('too_many') ? 'too_many' : 'error';
+      },
+    }).start();
+  }
+</script>
+
+<style>
+  .chat-page { padding-top: 2rem; padding-bottom: 2rem; }
+  .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4rem); line-height: 1; margin: 0 0 0.75rem; }
+</style>
