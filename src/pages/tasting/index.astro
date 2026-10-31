@@ -23,53 +23,101 @@ import Base from '../../layouts/Base.astro';
       <button class="btn" type="submit" id="step-btn" data-i18n="common.continue">Continue</button>
     </form>
 
-    <div id="invite" hidden>
-      <header class="tasting-head">
-        <h1 id="t-title" class="t-title"></h1>
-        <p id="t-when" class="t-when"></p>
+    <div id="invite" class="t-home" hidden>
+      <!-- The tasting at a glance -->
+      <header class="t-hero">
+        <p id="h-count" class="h-count" hidden></p>
+        <h1 id="h-title" class="h-title"></h1>
+        <ul class="facts">
+          <li id="f-when" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
+            <span><span id="h-when"></span> <button id="h-ics" type="button" class="fact-link" data-i18n="tastingHome.calendar">Add to calendar</button></span>
+          </li>
+          <li id="f-place" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.3" /></svg>
+            <span><span id="h-place"></span> <a id="h-map" class="fact-link" target="_blank" rel="noopener" data-i18n="tastingHome.map">Open in maps</a></span>
+          </li>
+          <li id="f-host" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
+            <span id="h-host"></span>
+          </li>
+        </ul>
       </header>
 
-      <div id="t-intro" class="t-intro" hidden></div>
+      <div class="t-grid">
+        <!-- Sign-up and payment (right column on large screens, right after the heading on phones) -->
+        <aside class="t-side">
+          <section class="rsvp-card">
+            <h2 data-i18n="tastingHome.yourAnswer">Your answer</h2>
+            <p id="current" class="status" role="status" hidden></p>
+            <p id="h-coming" class="coming" hidden></p>
+            <button id="change" type="button" class="change" hidden data-i18n="tastingHome.change">Change answer</button>
+            <p id="closed-hint" class="field-hint" hidden data-i18n="tastingHome.closedHint">Sign-up is closed.</p>
 
-      <p id="current" class="status" role="status" hidden></p>
+            <form id="rsvp-form" class="rsvp" novalidate>
+              <fieldset class="seg-row">
+                <legend data-i18n="guest.coming">Are you coming?</legend>
+                <div class="seg">
+                  <label><input type="radio" name="attending" value="yes" required /><span data-i18n="common.yes">Yes</span></label>
+                  <label><input type="radio" name="attending" value="no" /><span data-i18n="common.no">No</span></label>
+                </div>
+              </fieldset>
 
+              <div class="field">
+                <label for="email" data-i18n="common.email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="200" required aria-describedby="email-hint" />
+                <p id="email-hint" class="field-hint" data-i18n="guest.emailHint">For signing in with a code by email.</p>
+              </div>
 
-      <form id="rsvp-form" class="rsvp" novalidate>
-        <fieldset class="seg-row">
-          <legend data-i18n="guest.coming">Are you coming?</legend>
-          <div class="seg">
-            <label><input type="radio" name="attending" value="yes" required /><span data-i18n="common.yes">Yes</span></label>
-            <label><input type="radio" name="attending" value="no" /><span data-i18n="common.no">No</span></label>
-          </div>
-        </fieldset>
+              <details id="note-box" class="note">
+                <summary data-i18n="guest.note">Message to the host</summary>
+                <textarea id="note" name="note" maxlength="1000" aria-label="Message to the host" data-i18n-attr="aria-label=guest.note"></textarea>
+              </details>
 
-        <div class="field">
-          <label for="email" data-i18n="common.email">Email</label>
-          <input id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="200" required aria-describedby="email-hint" />
-          <p id="email-hint" class="field-hint" data-i18n="guest.emailHint">For signing in with a code by email.</p>
+              <p id="form-error" class="message error" hidden></p>
+
+              <div class="actions">
+                <button type="submit" class="btn btn-small" id="submit" data-i18n="common.save">Save</button>
+                <span class="hint" data-i18n="guest.canChange">You can change your answer while sign-up is open.</span>
+              </div>
+            </form>
+          </section>
+
+          <section id="fee" class="fee" hidden>
+            <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
+            <p id="fee-paid" class="message ok" hidden data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p>
+            <div id="fee-due" hidden>
+              <p data-i18n="guest.feeText">The price for the evening is based on purchases and the number of guests.</p>
+              <div id="fee-pay"></div>
+            </div>
+          </section>
+        </aside>
+
+        <div class="t-main">
+          <section id="intro-block" class="intro-block" hidden>
+            <h2 class="sec-h" data-i18n="tastingHome.about">About the evening</h2>
+            <div id="h-intro" class="h-intro"></div>
+          </section>
+
+          <section>
+            <h2 class="sec-h" data-i18n="tastingHome.during">During the tasting</h2>
+            <ul class="tiles">
+              <li><a id="tile-wines" class="tile" href="/home/">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l-.5 6a3.5 3.5 0 0 1-7 0L8 3z" /><path d="M12 12.5V20M8.5 20.5h7" /></svg>
+                <span><strong data-i18n="nav.wines">Wines</strong><span id="tile-wines-sub" class="tile-sub"></span></span>
+              </a></li>
+              <li id="tile-quiz-li" hidden><a id="tile-quiz" class="tile" href="/home/">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .8-1 1.5v.4" /><path d="M12 16.6v.2" /></svg>
+                <span><strong data-i18n="nav.quiz">Quiz</strong><span id="tile-quiz-sub" class="tile-sub"></span></span>
+              </a></li>
+              <li><a id="tile-chat" class="tile" href="/home/">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z" /></svg>
+                <span><strong data-i18n="nav.chat">Chat</strong><span class="tile-sub" data-i18n="tastingHome.chatSub">Talk with the other guests</span></span>
+              </a></li>
+            </ul>
+          </section>
         </div>
-
-        <details id="note-box" class="note">
-          <summary data-i18n="guest.note">Message to the host</summary>
-          <textarea id="note" name="note" maxlength="1000" aria-label="Message to the host" data-i18n-attr="aria-label=guest.note"></textarea>
-        </details>
-
-        <p id="form-error" class="message error" hidden></p>
-
-        <div class="actions">
-          <button type="submit" class="btn btn-small" id="submit" data-i18n="common.save">Save</button>
-          <span class="hint" data-i18n="guest.canChange">You can change your answer while sign-up is open.</span>
-        </div>
-      </form>
-
-      <section id="fee" class="fee" hidden>
-        <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
-        <p id="fee-paid" class="message ok" hidden data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p>
-        <div id="fee-due" hidden>
-          <p data-i18n="guest.feeText">The price for the evening is based on purchases and the number of guests.</p>
-          <div id="fee-pay"></div>
-        </div>
-      </section>
+      </div>
     </div>
   </section>
 </Base>
@@ -78,7 +126,7 @@ import Base from '../../layouts/Base.astro';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { payBox, setPayee } from '../../lib/pay';
-  import { i18nReady, t, formatWhen } from '../../i18n';
+  import { i18nReady, t, formatWhen, lang } from '../../i18n';
 
   await i18nReady;
 
@@ -107,6 +155,110 @@ import Base from '../../layouts/Base.astro';
     }
   }
 
+  // ---------- The tasting at a glance ----------
+  let headerDone = false;
+  function showHeader(info: Record<string, unknown>) {
+    signupOpen = info.signup_open !== false;
+    updateRsvpView();
+    if (headerDone) {
+      setComing(info.coming);
+      return;
+    }
+    headerDone = true;
+    const title = String(info.title ?? '');
+    $('h-title').textContent = title;
+    const starts = typeof info.starts_at === 'string' ? info.starts_at : null;
+    const place = typeof info.place === 'string' && info.place ? info.place : null;
+    if (starts) {
+      $('h-when').textContent = formatWhen(starts, { year: new Date(starts).getFullYear() !== new Date().getFullYear() });
+      $('f-when').hidden = false;
+      $('h-ics').onclick = () => downloadIcs(title, starts, place);
+      const count = countdown(starts);
+      $('h-count').textContent = count ?? '';
+      $('h-count').hidden = !count;
+    }
+    if (place) {
+      $('h-place').textContent = place;
+      ($('h-map') as HTMLAnchorElement).href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
+      $('f-place').hidden = false;
+    }
+    if (typeof info.host_name === 'string' && info.host_name) {
+      $('h-host').textContent = t('tastingHome.host', { name: info.host_name });
+      $('f-host').hidden = false;
+    }
+    setComing(info.coming);
+    // The host's introduction: plain text, blank lines separate paragraphs
+    const intro = typeof info.intro === 'string' ? info.intro.trim() : '';
+    $('h-intro').replaceChildren(...intro.split(/\n\s*\n/).map((para) => {
+      const el = document.createElement('p');
+      el.textContent = para.trim();
+      return el;
+    }));
+    $('intro-block').hidden = !intro;
+    // Tiles for the evening
+    ($('tile-wines') as HTMLAnchorElement).href = tastingUrl(slug, 'wines/');
+    ($('tile-quiz') as HTMLAnchorElement).href = tastingUrl(slug, 'quiz/');
+    ($('tile-chat') as HTMLAnchorElement).href = tastingUrl(slug, 'chat/');
+    const quizCount = Number(info.quiz_count ?? 0);
+    $('tile-quiz-li').hidden = quizCount === 0;
+    $('tile-quiz-sub').textContent = info.quiz_finished ? t('tastingHome.quizDone')
+      : info.quiz_open ? t('tastingHome.quizOpen') : t('tastingHome.quizLater');
+    supabase.rpc('get_wines', { code }).then(({ data: wines }) => {
+      const n = Array.isArray(wines) ? wines.length : 0;
+      $('tile-wines-sub').textContent = n ? t('tastingHome.winesSub', { n }) : '';
+    });
+  }
+
+  function setComing(n: unknown) {
+    const count = Number(n ?? 0);
+    $('h-coming').textContent = count > 0 ? t('tastingHome.coming', { n: count }) : '';
+    $('h-coming').hidden = count === 0;
+  }
+
+  // "In 21 days", "Tomorrow", "Today" – in the page's language
+  function countdown(iso: string): string | null {
+    const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((day(new Date(iso)) - day(new Date())) / 86400000);
+    if (days < 0 || days > 60) return null;
+    const text = new Intl.RelativeTimeFormat(lang(), { numeric: 'auto' }).format(days, 'day');
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  // A calendar file (.ics) the phone or computer can open in its calendar
+  function downloadIcs(title: string, startsAt: string, place: string | null) {
+    const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const esc = (v: string) => v.replace(/[\\;,]/g, (c) => '\\' + c).replace(/\n/g, '\\n');
+    const start = new Date(startsAt);
+    const end = new Date(start.getTime() + 4 * 3600 * 1000);
+    const lines = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Winetastr//EN', 'BEGIN:VEVENT',
+      `UID:${slug}@winetastr`, `DTSTAMP:${stamp(new Date())}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
+      `SUMMARY:${esc(title)}`, ...(place ? [`LOCATION:${esc(place)}`] : []),
+      `URL:${location.origin}${tastingUrl(slug)}`, 'END:VEVENT', 'END:VCALENDAR',
+    ];
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${slug}.ics`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // ---------- Answer: a short summary once answered, the form when changing ----------
+  let signupOpen = true;
+  let editing = false;
+  function updateRsvpView() {
+    const answered = !current.hidden;
+    form.hidden = answered && !editing || !signupOpen && answered;
+    $('change').hidden = !answered || editing || !signupOpen;
+    $('closed-hint').hidden = signupOpen;
+  }
+  $('change').addEventListener('click', () => {
+    editing = true;
+    updateRsvpView();
+    form.querySelector<HTMLInputElement>('input[name="attending"]:checked')?.focus();
+  });
+
   async function loadFee() {
     const [{ data }, tastingRes] = await Promise.all([
       supabase.rpc('get_tasting_payment', { code }),
@@ -114,21 +266,7 @@ import Base from '../../layouts/Base.astro';
     ]);
     const info = (tastingRes.data ?? {}) as Record<string, unknown>;
     setPayee(info.mobilepay ?? null);
-    $('t-title').textContent = String(info.title ?? '');
-    const parts: string[] = [];
-    if (typeof info.starts_at === 'string') {
-      parts.push(formatWhen(info.starts_at));
-    }
-    if (typeof info.place === 'string' && info.place) parts.push(info.place);
-    $('t-when').textContent = parts.join(' · ');
-    // The host's introduction: plain text, blank lines separate paragraphs
-    const intro = typeof info.intro === 'string' ? info.intro.trim() : '';
-    $('t-intro').replaceChildren(...intro.split(/\n\s*\n/).map((para) => {
-      const el = document.createElement('p');
-      el.textContent = para.trim();
-      return el;
-    }));
-    $('t-intro').hidden = !intro;
+    showHeader(info);
     const row = Array.isArray(data) ? data[0] : null;
     const amount = row ? Number(row.amount) : 0;
     $('fee').hidden = !row || amount <= 0;
@@ -259,6 +397,8 @@ import Base from '../../layouts/Base.astro';
       return;
     }
     showCurrent(data as string);
+    editing = false;
+    updateRsvpView();
     current.textContent = t('common.saved') + ' ' + current.textContent;
     current.classList.remove('flash');
     void current.offsetWidth;
@@ -270,19 +410,64 @@ import Base from '../../layouts/Base.astro';
 </script>
 
 <style>
-  .page { padding-top: 2rem; padding-bottom: 2rem; max-width: 34rem; }
-  .tasting-head { margin-bottom: 1.5rem; }
-  .t-title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(2.6rem, 12vw, 4.5rem);
-    line-height: 0.95;
-    margin: 0 0 0.5rem;
+  .page { padding-top: 2rem; padding-bottom: 2rem; }
+  #email-step, #invalid, #loading { max-width: 34rem; }
+
+  /* The tasting at a glance */
+  .t-hero { margin-bottom: 2rem; }
+  .h-count {
+    display: inline-block; margin: 0 0 0.8rem; padding: 0.25rem 0.7rem; border-radius: 999px;
+    background: var(--lodge-2); border: 1px solid var(--lodge-3); color: var(--amber); font-size: 0.85rem; font-weight: 500;
   }
-  .t-when { color: var(--muted); margin: 0; }
-  .t-intro { margin: 1.25rem 0 1.5rem; max-width: 38rem; font-size: 1.05rem; line-height: 1.6; }
-  .t-intro :global(p) { margin: 0 0 0.8rem; white-space: pre-line; }
-  .t-intro :global(p:last-child) { margin-bottom: 0; }
+  .h-title {
+    font-family: var(--display); font-weight: 400; font-size: clamp(2.8rem, 12vw, 5rem);
+    line-height: 0.95; margin: 0 0 1.1rem;
+  }
+  .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+  .facts li { display: flex; align-items: flex-start; gap: 0.65rem; line-height: 1.45; }
+  .facts li[hidden] { display: none; }
+  .facts svg { flex: none; width: 1.25rem; height: 1.25rem; margin-top: 0.05rem; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .fact-link {
+    display: inline; padding: 0; margin-left: 0.4rem; background: none; border: 0; font: inherit; font-size: 0.88rem;
+    color: var(--amber); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; white-space: nowrap;
+  }
+
+  /* Two columns on large screens: the evening on the left, your answer on the right */
+  .t-grid { display: grid; gap: 2.25rem; }
+  @media (min-width: 56rem) {
+    .t-grid { grid-template-columns: minmax(0, 1fr) 21rem; align-items: start; gap: 3rem; }
+    .t-side { grid-column: 2; grid-row: 1; position: sticky; top: 7.5rem; }
+    .t-main { grid-column: 1; grid-row: 1; }
+  }
+  .t-main { display: grid; gap: 2.25rem; align-content: start; }
+  .sec-h { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.9rem; }
+
+  .rsvp-card { background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.9rem; padding: 1.2rem 1.25rem; }
+  .rsvp-card h2 { font-family: var(--body); font-size: 1rem; font-weight: 600; margin: 0 0 0.75rem; }
+  .rsvp-card .status { margin-bottom: 0.4rem; }
+  .coming { margin: 0 0 0.6rem; font-size: 0.88rem; color: var(--muted); }
+  .change {
+    padding: 0; background: none; border: 0; font: inherit; font-size: 0.92rem; color: var(--amber);
+    text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; min-height: 2.25rem;
+  }
+  .change[hidden], .rsvp[hidden], .coming[hidden] { display: none; }
+
+  .h-intro { font-size: 1.05rem; line-height: 1.65; max-width: 40rem; }
+  .h-intro :global(p) { margin: 0 0 0.9rem; white-space: pre-line; }
+  .h-intro :global(p:first-child) { font-family: var(--display); font-size: 1.45rem; line-height: 1.35; }
+  .h-intro :global(p:last-child) { margin-bottom: 0; }
+
+  .tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+  .tiles li[hidden] { display: none; }
+  .tile {
+    display: flex; align-items: center; gap: 0.9rem; height: 100%; padding: 1rem 1.1rem;
+    background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.8rem;
+    color: var(--paper); text-decoration: none; transition: border-color 0.15s, transform 0.15s;
+  }
+  .tile:hover { border-color: var(--amber); transform: translateY(-1px); }
+  .tile svg { flex: none; width: 1.7rem; height: 1.7rem; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .tile strong { display: block; font-weight: 600; }
+  .tile-sub { display: block; font-size: 0.85rem; color: var(--muted); margin-top: 0.1rem; }
   .visually-hidden {
     position: absolute;
     width: 1px;
@@ -328,9 +513,9 @@ import Base from '../../layouts/Base.astro';
   /* Payment */
   .fee {
     border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
-    padding: 0.9rem 1rem;
-    margin-top: 2rem;
+    border-radius: 0.9rem;
+    padding: 0.9rem 1.25rem;
+    margin-top: 1rem;
   }
   .fee h2 { font-family: var(--body); font-size: 1rem; font-weight: 500; margin: 0 0 0.3rem; }
   .fee #fee-paid { margin: 0; padding: 0; background: none; border: 0; color: var(--ok); }

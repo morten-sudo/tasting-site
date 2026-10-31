@@ -190,7 +190,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         }
         const when = document.getElementById('footer-when')!;
         // The tasting home shows date and place itself
-        if (info.starts_at && !document.getElementById('t-when')) {
+        if (info.starts_at && !document.getElementById('h-when')) {
           when.textContent = formatWhen(info.starts_at, { year: true }) + (info.place ? ` · ${info.place}` : '');
         }
       }

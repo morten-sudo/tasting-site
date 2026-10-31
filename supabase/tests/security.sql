@@ -123,6 +123,10 @@ begin
   -- Without a code: no address, introduction or payment number
   j := get_tasting(null, 'selftest-b');
   assert j ->> 'place' is null and j ->> 'intro' is null and j ->> 'mobilepay' is null, 'tasting details visible without a code';
+  assert j ->> 'host_name' is null and j ->> 'coming' is null, 'host name or guest count visible without a code';
+  -- With code A: A's host and A's guest count, never B's
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'host_name' = 'Host A' and (j ->> 'coming')::int = 1, 'code A gives the wrong host or guest count';
   select count(*) into n from get_wines('selftestaa') w where w.id = -1002;                                 assert n = 0, 'code A lists wine B';
   select count(*) into n from get_wines('nosuchcode');                                                      assert n = 0, 'an unknown code lists wines';
   select count(*) into n from get_invite('selftestaa') i where i.name = 'Guest B';                          assert n = 0, 'code A shows guest B';
