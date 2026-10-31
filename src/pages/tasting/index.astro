@@ -26,6 +26,8 @@ import Base from '../../layouts/Base.astro';
     <div id="invite" class="t-home" hidden>
       <!-- The tasting at a glance -->
       <header class="t-hero">
+        <!-- The region's map, faint behind the heading -->
+        <div id="hero-map" class="hero-map" aria-hidden="true"></div>
         <p id="h-count" class="h-count" hidden></p>
         <h1 id="h-title" class="h-title"></h1>
         <ul class="facts">
@@ -99,6 +101,14 @@ import Base from '../../layouts/Base.astro';
             <div id="h-intro" class="h-intro"></div>
           </section>
 
+          <!-- Where the wines come from: the region's map with their appellations -->
+          <section id="origin-block" class="origin-block" hidden>
+            <h2 class="sec-h" data-i18n="map.title">Where the wines come from</h2>
+            <div id="origin-map" class="origin-map"></div>
+            <ul id="origin-legend" class="origin-legend"></ul>
+            <p id="map-source" class="map-source"></p>
+          </section>
+
           <section>
             <h2 class="sec-h" data-i18n="tastingHome.during">During the tasting</h2>
             <ul class="tiles">
@@ -127,6 +137,7 @@ import Base from '../../layouts/Base.astro';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { payBox, setPayee } from '../../lib/pay';
   import { i18nReady, t, formatWhen, lang } from '../../i18n';
+  import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from '../../lib/region-map';
 
   await i18nReady;
 
@@ -208,9 +219,52 @@ import Base from '../../layouts/Base.astro';
     $('tile-quiz-sub').textContent = info.quiz_finished ? t('tastingHome.quizDone')
       : info.quiz_open ? t('tastingHome.quizOpen') : t('tastingHome.quizLater');
     supabase.rpc('get_wines', { code }).then(({ data: wines }) => {
-      const n = Array.isArray(wines) ? wines.length : 0;
-      $('tile-wines-sub').textContent = n ? t('tastingHome.winesSub', { n }) : '';
+      const list = (Array.isArray(wines) ? wines : []) as MapWine[];
+      $('tile-wines-sub').textContent = list.length ? t('tastingHome.winesSub', { n: list.length }) : '';
+      showOrigins(list);
     });
+  }
+
+  // ---------- Where the wines come from ----------
+  type MapWine = { id: number; sort_order: number; name: string; region: string | null; appellation: string | null; appellation_id: string | null };
+  async function showOrigins(wines: MapWine[]) {
+    const region = mainRegion(wines);
+    if (!region) return;
+    const map = await loadMap(region);
+    if (!map) return;
+    const groups = await groupWines(map, wines);
+    const counts = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.count]));
+    const titles = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.title]));
+    const whole = groups.some((g) => g.whole);
+    // Faint map behind the heading
+    $('hero-map').innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion: whole && !counts.size });
+    // The map card; on phones it zooms to the filled appellations
+    const box = $('origin-map');
+    box.innerHTML = drawMap(map, { counts, titles, wholeRegion: whole && !counts.size });
+    // Shown before zooming: sizes can only be measured on a visible map
+    $('origin-block').hidden = false;
+    if (matchMedia('(max-width: 40rem)').matches) fitToAreas(box.querySelector('svg')!, map);
+    // The legend: number of wines per appellation, with their numbers in the evening
+    const no = new Map(wines.map((w, i) => [w.id, i + 1]));
+    $('origin-legend').replaceChildren(...groups.map((g) => {
+      const li = document.createElement('li');
+      li.className = g.inMap ? 'in-map' : g.whole ? 'whole' : 'other';
+      const n = document.createElement('span');
+      n.className = 'n';
+      n.textContent = String(g.count);
+      const text = document.createElement('span');
+      const title = document.createElement('b');
+      title.textContent = g.title;
+      const sub = document.createElement('span');
+      sub.className = 'sub';
+      const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((id) => no.get(id) ?? 0)) });
+      sub.textContent = g.inMap ? nums : g.whole ? `${t('map.wholeRegion', { region: map.name })} · ${nums}` : `${t('map.otherRegion')} · ${nums}`;
+      text.append(title, sub);
+      li.append(n, text);
+      return li;
+    }));
+    $('map-source').textContent = t('map.source', { sources: map.sources });
+    $('origin-block').hidden = false;
   }
 
   function setComing(n: unknown) {
@@ -418,7 +472,23 @@ import Base from '../../layouts/Base.astro';
   #email-step, #invalid, #loading { max-width: 34rem; }
 
   /* The tasting at a glance */
-  .t-hero { margin-bottom: 2rem; }
+  .t-home { overflow-x: clip; }
+  .t-hero { position: relative; isolation: isolate; margin-bottom: 2rem; }
+  .hero-map {
+    position: absolute; z-index: -1; right: -2rem; top: -3rem; width: min(55vw, 34rem); color: var(--amber); opacity: 0.12;
+    pointer-events: none; -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent); mask-image: radial-gradient(closest-side, #000 55%, transparent);
+  }
+  @media (max-width: 40rem) { .hero-map { width: 120vw; right: -40vw; top: -1rem; opacity: 0.09; } }
+  .origin-map :global(svg) { display: block; }
+  .origin-map { border: 1px solid var(--lodge-3); border-radius: 0.9rem; overflow: hidden; background: #fbf6ee; }
+  .origin-legend { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; gap: 0.45rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+  .origin-legend :global(li) { display: flex; gap: 0.6rem; align-items: flex-start; }
+  .origin-legend :global(.n) { flex: none; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--amber); color: #fff; font-size: 0.8rem; font-weight: 600; }
+  .origin-legend :global(li.whole .n) { background: #b07a85; }
+  .origin-legend :global(li.other .n) { background: transparent; color: var(--amber); box-shadow: inset 0 0 0 1.5px var(--amber); }
+  .origin-legend :global(b) { display: block; font-weight: 600; font-size: 0.95rem; }
+  .origin-legend :global(.sub) { display: block; font-size: 0.82rem; color: var(--muted); }
+  .map-source { margin: 0.6rem 0 0; font-size: 0.72rem; color: var(--muted); }
   .h-count {
     display: inline-block; margin: 0 0 0.8rem; padding: 0.25rem 0.7rem; border-radius: 999px;
     background: var(--lodge-2); border: 1px solid var(--lodge-3); color: var(--amber); font-size: 0.85rem; font-weight: 500;

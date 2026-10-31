@@ -326,3 +326,28 @@ dialog.sheet .sheet-head { position: sticky; top: -1.25rem; z-index: 1; backgrou
 .order-title { font-weight: 500; }
 .order-card ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.95rem; }
 .order-total { margin-top: 0.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* Region maps (src/lib/region-map.ts): an old atlas in ink and wine red */
+.region-map { display: block; width: 100%; height: auto; font-family: var(--display); }
+.region-map .rm-sea { fill: #e6ecec; }
+.region-map .rm-wave { fill: none; stroke: #7d97a3; stroke-width: 0.7; }
+.region-map .rm-land { fill: #fbf6ee; stroke: none; }
+.region-map .rm-area { fill: #6e0f1f; fill-opacity: 0; stroke: #8a6a55; stroke-width: 0.7; stroke-dasharray: 3 3; stroke-linejoin: round; }
+.region-map .rm-area.on { stroke: #6e0f1f; stroke-width: 1.2; stroke-dasharray: none; }
+.region-map .rm-border { fill: none; stroke: #8a7a70; stroke-width: 1; stroke-dasharray: 8 4 2 4; }
+.region-map .rm-river { fill: none; stroke: #6f93a8; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.region-map .rm-coast { fill: none; stroke: #6f93a8; stroke-width: 1.2; }
+.region-map .rm-town circle { fill: #3d2a22; }
+.region-map .rm-town text { fill: #3d2a22; font-style: italic; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
+.region-map .rm-part { fill: #6e0f1f; font-family: var(--body); font-size: 15px; font-weight: 600; letter-spacing: 0.25em; text-anchor: middle; opacity: 0.75; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; }
+.region-map .rm-badge circle { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }
+.region-map .rm-badge-n { fill: #fff; font-family: var(--body); font-size: 14px; font-weight: 600; text-anchor: middle; }
+.region-map .rm-badge-title { fill: #6e0f1f; font-size: 17px; font-weight: 600; font-style: italic; paint-order: stroke; stroke: #fbf6ee; stroke-width: 4px; stroke-linejoin: round; }
+/* Faint, behind a heading */
+.region-map.background .rm-sea { fill: transparent; }
+.region-map.background .rm-land { fill: transparent; }
+.region-map.background .rm-area { stroke: currentColor; stroke-dasharray: none; stroke-width: 0.8; }
+.region-map.background .rm-river, .region-map.background .rm-coast, .region-map.background .rm-border { stroke: currentColor; }
+/* Small locator on a wine */
+.region-map.mini .rm-area { stroke-width: 0.5; stroke-dasharray: 2 2; }
+.region-map.mini .rm-area.on { fill-opacity: 0.85 !important; }

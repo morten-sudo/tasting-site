@@ -102,20 +102,49 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
   for (const r of map.rivers) parts.push(`<path class="rm-river" d="${r.d}"/>`);
   parts.push(`<path class="rm-coast" d="${map.coast}"/>`);
   if (mode === 'full') {
+    // Badges first, so labels can be placed around them without overlapping
+    type Box = { x0: number; y0: number; x1: number; y1: number };
+    const taken: Box[] = [];
+    const hits = (b: Box) => taken.some((t) => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
+    const badges = [...counts].filter(([id, n]) => n && map.areas[id]).map(([id, n]) => ({ id, n, x: map.areas[id].label[0], y: map.areas[id].label[1] }));
+    for (const b of badges) taken.push({ x0: b.x - 15, y0: b.y - 15, x1: b.x + 15, y1: b.y + 15 });
+    const titleSvg: string[] = [];
+    for (const b of badges) {
+      const title = titles.get(b.id) ?? map.areas[b.id].title ?? '';
+      if (!title) continue;
+      const w = title.length * 8.6, h = 18;
+      // Right, left, below, above – the first spot that is free
+      const spots: [number, number, string][] = [
+        [b.x + 18, b.y + 6, 'start'], [b.x - 18, b.y + 6, 'end'], [b.x, b.y + 32, 'middle'], [b.x, b.y - 22, 'middle'],
+        [b.x + 18, b.y + 30, 'start'], [b.x - 18, b.y - 18, 'end'],
+      ];
+      const box = ([x, y, anchor]: [number, number, string]): Box => {
+        const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
+        return { x0, y0: y - h + 4, x1: x0 + w, y1: y + 4 };
+      };
+      const spot = spots.find((sp) => !hits(box(sp)) && box(sp).x0 >= 0 && box(sp).x1 <= map.w) ?? spots[0];
+      taken.push(box(spot));
+      titleSvg.push(`<text class="rm-badge-title" x="${spot[0].toFixed(0)}" y="${spot[1].toFixed(0)}" text-anchor="${spot[2]}">${esc(title)}</text>`);
+    }
+    // Towns, unless they would clash with a label or repeat an appellation's name
+    const named = [...titles.values()].map((t) => normOrigin(t));
     for (const t of map.towns) {
       const r = t.size === 'big' ? 4.5 : t.size === 'mid' ? 3.5 : 2.6;
       const fs = t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 14;
+      const tb = { x0: t.x - 4, y0: t.y - 6 - fs, x1: t.x + 7 + t.name.length * fs * 0.48, y1: t.y + 4 };
+      if (t.size !== 'big' && (hits(tb) || named.some((n) => n.includes(normOrigin(t.name).split(' ')[0])))) continue;
+      taken.push(tb);
       parts.push(`<g class="rm-town ${t.size}"><circle cx="${t.x}" cy="${t.y}" r="${r}"/><text x="${t.x + 7}" y="${t.y - 6}" font-size="${fs}">${esc(t.name)}</text></g>`);
     }
-    // Numbered badges with the appellation name
-    for (const [id, n] of counts) {
-      const a = map.areas[id];
-      if (!a || !n) continue;
-      const [x, y] = a.label;
-      const title = titles.get(id) ?? a.title ?? '';
-      parts.push(`<g class="rm-badge" transform="translate(${x} ${y})">` +
-        (title ? `<text class="rm-badge-title" x="18" y="6">${esc(title)}</text>` : '') +
-        `<circle r="13"/><text class="rm-badge-n" y="5">${n}</text></g>`);
+    // The whole region lit (e.g. port from the Douro): name its parts quietly
+    if (wholeRegion && !badges.length) {
+      for (const a of Object.values(map.areas)) {
+        if (a.title) parts.push(`<text class="rm-part" x="${a.label[0]}" y="${a.label[1]}">${esc(a.title.toUpperCase())}</text>`);
+      }
+    }
+    parts.push(...titleSvg);
+    for (const b of badges) {
+      parts.push(`<g class="rm-badge" transform="translate(${b.x} ${b.y})"><circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text></g>`);
     }
   }
   parts.push('</svg>');
@@ -140,4 +169,17 @@ export function fitToAreas(svg: SVGSVGElement, map: RegionMap, minShare = 0.55) 
   const x = Math.min(Math.max(cx - w / 2, 0), map.w - w);
   const y = Math.min(Math.max(cy - h / 2, 0), map.h - h);
   svg.setAttribute('viewBox', `${x.toFixed(0)} ${y.toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}`);
+}
+
+/** [1, 2, 3, 5, 9, 10] → "1–3, 5, 9–10" */
+export function numberRanges(nums: number[]): string {
+  const n = [...new Set(nums)].filter((x) => x > 0).sort((a, b) => a - b);
+  const out: string[] = [];
+  for (let i = 0; i < n.length; i++) {
+    let j = i;
+    while (j + 1 < n.length && n[j + 1] === n[j] + 1) j++;
+    out.push(j > i + 1 ? `${n[i]}–${n[j]}` : j === i + 1 ? `${n[i]}, ${n[j]}` : `${n[i]}`);
+    i = j;
+  }
+  return out.join(', ');
 }

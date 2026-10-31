@@ -694,4 +694,9 @@ export const en = {
   "book.tastedAt": "{tasting} · {when}",
   "book.bought": "Bought {n}",
   "book.ordersSum": "{n} bottles in all, {total}",
+  "map.title": "Where the wines come from",
+  "map.wineNumbers": "Wine {list}",
+  "map.wholeRegion": "All of {region}",
+  "map.otherRegion": "Another region",
+  "map.source": "Map: {sources}",
 } as const;

@@ -3,7 +3,7 @@
 
 Sources (downloaded into a data folder given as the first argument):
 - Natural Earth 10m land, coastline, rivers and country borders (public domain) – github.com/nvkelso/natural-earth-vector
-- Gironde municipalities (IGN / OpenStreetMap, Etalab licence) – github.com/gregoiredavid/france-geojson
+- Gironde municipalities (IGN Admin Express, Licence ouverte) – github.com/gregoiredavid/france-geojson
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
@@ -146,7 +146,7 @@ BORDEAUX = {
     'rivers': ['Garonne', 'Dordogne'],
     'municipalities': gironde,
     'whole': ['bordeaux', 'bordeaux-superieur'],
-    'sources': 'Natural Earth; IGN/OpenStreetMap (Etalab)',
+    'sources': 'Natural Earth; IGN Admin Express',
     'areas': {
         'medoc': ['Saint-Yzans-de-Médoc', 'Ordonnac', "Saint-Germain-d'Esteuil", 'Lesparre-Médoc', 'Bégadan',
                   'Saint-Christoly-Médoc', 'Couquèques', 'Blaignan', 'Civrac-en-Médoc', 'Valeyrac',
@@ -222,7 +222,7 @@ DOURO = {
     'rivers': ['Duero'],
     'municipalities': portugal,
     'whole': ['porto', 'douro'],
-    'sources': 'Natural Earth; CAOP (DGT)',
+    'sources': 'Natural Earth; DGT (CAOP)',
     'titles': {'baixo-corgo': 'Baixo Corgo', 'cima-corgo': 'Cima Corgo', 'douro-superior': 'Douro Superior'},
     # The demarcated region by sub-region, drawn with the municipalities it lies in
     'areas': {

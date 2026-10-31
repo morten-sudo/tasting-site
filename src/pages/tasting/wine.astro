@@ -24,6 +24,7 @@ import Base from '../../layouts/Base.astro';
       <h1 id="name" class="name"></h1>
       <p id="meta" class="meta"></p>
       <p id="origin" class="origin" hidden></p>
+      <div id="mini-map" class="mini-map" hidden></div>
 
       <div class="buy">
         <p id="price" class="price"></p>
@@ -65,6 +66,7 @@ import Base from '../../layouts/Base.astro';
   import { getCart, addToCart, cartCount } from '../../lib/cart';
   import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
+  import { loadMap, mapIdFor, drawMap } from '../../lib/region-map';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -141,6 +143,18 @@ import Base from '../../layouts/Base.astro';
     if (origin) {
       $('origin').textContent = origin;
       $('origin').hidden = false;
+    }
+    // Small map of the region with the wine's appellation filled in
+    const mapId = mapIdFor(w.region);
+    if (mapId) {
+      loadMap(mapId).then((map) => {
+        if (!map) return;
+        const inMap = !!(w.appellation_id && map.areas[w.appellation_id]);
+        const box = $('mini-map');
+        box.innerHTML = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[w.appellation_id!, 1]]) : new Map(), wholeRegion: !inMap });
+        box.title = originFull(w) ?? '';
+        box.hidden = false;
+      });
     }
 
     const price = $('price');
@@ -304,6 +318,8 @@ import Base from '../../layouts/Base.astro';
     margin: 0 0 0.5rem;
   }
   .wine-page .meta { margin: 0; color: var(--muted); }
+  .wine-page .mini-map { width: min(100%, 12rem); margin: 0.6rem 0 0; border: 1px solid var(--lodge-3); border-radius: 0.6rem; overflow: hidden; }
+  .wine-page .mini-map[hidden] { display: none; }
   .wine-page .origin { margin: 0.3rem 0 0; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
   .wine-page .origin::before {
     content: ''; flex: none; width: 0.95rem; height: 0.95rem; background: currentColor;

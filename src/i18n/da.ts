@@ -695,4 +695,9 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "book.tastedAt": "{tasting} · {when}",
   "book.bought": "Købt {n} fl.",
   "book.ordersSum": "{n} flasker i alt, {total}",
+  "map.title": "Hvor vinene kommer fra",
+  "map.wineNumbers": "Vin {list}",
+  "map.wholeRegion": "Hele {region}",
+  "map.otherRegion": "Anden egn",
+  "map.source": "Kort: {sources}",
 };
