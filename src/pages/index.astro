@@ -29,11 +29,14 @@ import Base from '../layouts/Base.astro';
   </section>
 
   <section class="wrap choices">
-    <div class="choice">
-      <h2 data-i18n="home.invitedTitle">Invited?</h2>
-      <p id="guest-known" hidden data-i18n="home.signedIn">You are signed in on this device.</p>
-      <p id="guest-unknown" data-i18n="home.signInHint">Sign in with your email or with the link in your invitation.</p>
-      <a id="guest-btn" class="btn" href="/login/" data-i18n="home.signIn">Sign in</a>
+    <!-- Not signed in: sign in. Signed in: the upcoming tastings -->
+    <div id="signed-out" class="choice">
+      <a class="btn" href="/login/" data-i18n="home.signInHere">Sign in here</a>
+    </div>
+    <div id="signed-in" class="choice" hidden>
+      <h2 id="upcoming-title" data-i18n="home.upcomingMany">Upcoming tastings</h2>
+      <ul id="upcoming" class="tasting-list"></ul>
+      <p id="no-upcoming" class="hint" hidden><span data-i18n="home.noUpcoming">No upcoming tastings.</span> <a href="/tastings/" data-i18n="nav.myTastings">My tastings</a></p>
     </div>
     <div class="choice">
       <h2 data-i18n="home.hostTitle">Hosting a tasting?</h2>
@@ -46,16 +49,19 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { getCodes } from '../lib/guest';
+  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
   import { i18nReady, t } from '../i18n';
 
   await i18nReady;
+  const $ = (id: string) => document.getElementById(id)!;
   const { data } = await supabase.auth.getSession();
   if (data.session || Object.keys(getCodes()).length > 0) {
-    document.getElementById('guest-known')!.hidden = false;
-    document.getElementById('guest-unknown')!.hidden = true;
-    const btn = document.getElementById('guest-btn') as HTMLAnchorElement;
-    btn.href = '/tastings/';
-    btn.textContent = t('nav.myTastings');
+    $('signed-out').hidden = true;
+    $('signed-in').hidden = false;
+    const { upcoming } = await loadAllMyTastings();
+    $('upcoming-title').textContent = t(upcoming.length === 1 ? 'home.upcomingOne' : 'home.upcomingMany');
+    $('upcoming').replaceChildren(...upcoming.map(tastingCard));
+    $('no-upcoming').hidden = upcoming.length > 0;
   }
 </script>
 
@@ -139,4 +145,5 @@ import Base from '../layouts/Base.astro';
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   }
   .choice h2 { font-size: 1.7rem; }
+  #signed-in { grid-column: 1 / -1; }
 </style>

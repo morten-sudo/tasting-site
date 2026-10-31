@@ -6,7 +6,7 @@ import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEn
 
 const MAX_HTML = 2_000_000;
 const MAX_TEXT = 9_000;
-const LANG_NAMES: Record<string, string> = { da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian' };
+const LANG_NAMES: Record<string, string> = { da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', nl: 'Dutch', pl: 'Polish' };
 const TRACKING = /^(utm_|gad_|gclid|gbraid|wbraid|fbclid|mc_|_ga|srsltid)/i;
 
 /** Only public http(s) addresses; tracking parameters removed. */

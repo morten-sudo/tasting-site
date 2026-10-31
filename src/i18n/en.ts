@@ -504,4 +504,8 @@ export const en = {
   "dash.declined": "{name} declined {tasting}",
   "dash.ordered": "{name} ordered {n} bottles ({amount})",
   "dash.none": "Nothing yet",
+  "home.signInHere": "Sign in here",
+  "home.upcomingOne": "Upcoming tasting",
+  "home.upcomingMany": "Upcoming tastings",
+  "home.noUpcoming": "No upcoming tastings.",
 } as const;

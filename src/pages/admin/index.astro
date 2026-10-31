@@ -149,6 +149,6 @@ import '../../styles/admin.css';
     $('new-toggle').addEventListener('click', () => wizard.openNew());
     document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
     const { data } = await supabase.rpc('host_dashboard');
-    if (data) render(data as Dash);
+    if (data && typeof data === 'object' && 'tastings' in data) render(data as Dash);
   }
 </script>

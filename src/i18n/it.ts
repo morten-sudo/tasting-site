@@ -505,4 +505,8 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "dash.declined": "{name} ha declinato {tasting}",
   "dash.ordered": "{name} ha ordinato {n} bottiglie ({amount})",
   "dash.none": "Ancora niente",
+  "home.signInHere": "Accedi qui",
+  "home.upcomingOne": "Prossima degustazione",
+  "home.upcomingMany": "Prossime degustazioni",
+  "home.noUpcoming": "Nessuna degustazione in programma.",
 };
