@@ -6,7 +6,7 @@ import '../../styles/admin.css';
 ---
 <Base title="page.admin">
   <section class="wrap admin-page">
-    <AdminNav active="tastings" />
+    <AdminNav active="tastings">
 
     <div id="admin-main" hidden>
       <h1 class="title" data-i18n="adminNav.tastings">Tastings</h1>
@@ -39,17 +39,8 @@ import '../../styles/admin.css';
         <ul id="past" class="tasting-cards"></ul>
       </section>
 
-      <!-- Account -->
-      <details class="block pw-box">
-        <summary data-i18n="admin.setPassword">Set or change password</summary>
-        <form id="pw-form" class="login">
-          <label for="new-pw" data-i18n="admin.newPassword">New password (at least 8 characters)</label>
-          <input id="new-pw" type="password" autocomplete="new-password" minlength="8" required />
-          <button class="btn small" type="submit" data-i18n="admin.savePassword">Save password</button>
-          <p id="pw-msg" class="message" hidden></p>
-        </form>
-      </details>
     </div>
+    </AdminNav>
   </section>
 </Base>
 
@@ -135,24 +126,12 @@ import '../../styles/admin.css';
     location.href = adminUrl((data as { slug: string }).slug);
   });
 
-  // ---------- Password ----------
-  $('pw-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = $<HTMLInputElement>('new-pw');
-    const msg = $('pw-msg');
-    const { error } = await supabase.auth.updateUser({ password: input.value });
-    msg.hidden = false;
-    msg.className = 'message ' + (error ? 'error' : 'ok');
-    msg.textContent = error
-      ? (error.message.toLowerCase().includes('weak') || error.message.includes('characters') ? t('admin.pwWeak') : t('admin.pwNotSaved'))
-      : t('admin.pwSaved');
-    if (!error) input.value = '';
-  });
-
   // ---------- Startup (after everything above is defined) ----------
   host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
     await load();
+    // "+ New tasting" in the menu links here with ?new=1
+    if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', '/admin/'); }
   }
 </script>

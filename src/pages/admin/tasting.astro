@@ -6,15 +6,16 @@ import '../../styles/admin.css';
 ---
 <Base title="page.admin">
   <section class="wrap admin-page">
-    <AdminNav active="tastings" />
+    <AdminNav>
     <p id="not-found" class="message error" hidden><span data-i18n="adminTasting.notFound">This tasting was not found.</span> <a href="/admin/" data-i18n="adminTasting.back">All tastings</a></p>
 
     <div id="admin-main" hidden>
-      <a class="back" href="/admin/" data-i18n="adminTasting.back">All tastings</a>
       <h1 class="title" id="t-heading"></h1>
+      <!-- Phones: the tasting's sections as tabs (on larger screens they are in the menu) -->
+      <nav id="section-tabs" class="section-tabs" aria-label="Tasting"></nav>
       <div id="tasting-panel">
       <!-- Tasting details -->
-      <section class="block">
+      <section class="block" data-section="overview">
         <h2 data-i18n="page.tasting">Tasting</h2>
         <form id="details" class="add-form tasting-form" novalidate>
           <label for="d-title" data-i18n="admin.title">Title</label>
@@ -36,7 +37,7 @@ import '../../styles/admin.css';
       </section>
 
       <!-- Controls -->
-      <section class="block">
+      <section class="block" data-section="settings">
         <h2 data-i18n="admin.controls">Controls</h2>
         <div class="toggles">
           <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
@@ -48,7 +49,7 @@ import '../../styles/admin.css';
       </section>
 
       <!-- Tasting fee -->
-      <section class="block">
+      <section class="block" data-section="settings">
         <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
         <div class="fee-grid">
           <label for="fee-total" data-i18n="admin.feeTotal">Total cost (DKK)</label>
@@ -66,7 +67,7 @@ import '../../styles/admin.css';
       </section>
 
       <!-- Wines in this tasting (from the wine library) -->
-      <section class="block wines-admin">
+      <section class="block wines-admin" data-section="wines">
         <div class="guests-head">
           <h2 data-i18n="page.wines">Wines</h2>
           <button id="tw-add-toggle" class="btn small ghost" type="button" data-i18n="adminTasting.addWines">Add wines</button>
@@ -84,7 +85,7 @@ import '../../styles/admin.css';
       </section>
 
       <!-- Guests -->
-      <section class="block guests">
+      <section class="block guests" data-section="guests">
         <div class="guests-head">
           <h2 data-i18n="admin.guests">Guests</h2>
           <div class="row-actions" style="margin:0">
@@ -127,7 +128,7 @@ import '../../styles/admin.css';
       </section>
 
       <!-- Orders -->
-      <section class="block">
+      <section class="block" data-section="orders">
         <h2 data-i18n="admin.orders">Orders</h2>
         <div id="orders-by-guest"></div>
         <h3 data-i18n="admin.totalPurchase">Total purchase</h3>
@@ -141,7 +142,7 @@ import '../../styles/admin.css';
       </section>
 
       <!-- Quiz -->
-      <section class="block quiz-admin">
+      <section class="block quiz-admin" data-section="quiz">
         <div class="guests-head">
           <h2 data-i18n="page.quiz">Quiz</h2>
           <button id="q-add-toggle" class="btn small ghost" type="button" data-i18n="aq.add">Add question</button>
@@ -176,6 +177,7 @@ import '../../styles/admin.css';
       </div>
 
     </div>
+    </AdminNav>
   </section>
 </Base>
 
@@ -187,6 +189,7 @@ import '../../styles/admin.css';
   import { requireHost, mk as mkEl, type Host } from '../../lib/admin-common';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
+  import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
   import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
 
   await i18nReady;
@@ -688,6 +691,34 @@ import '../../styles/admin.css';
   });
   $('g-picker-close').addEventListener('click', () => { $('g-picker').hidden = true; $('g-invite-toggle').hidden = false; });
   $('g-search').addEventListener('input', renderGuestPicker);
+
+  // ---------- Sections: each part of the tasting has its own address /t/<slug>/admin/<section>/ ----------
+  function showSection(id: string) {
+    document.querySelectorAll<HTMLElement>('#tasting-panel [data-section]').forEach((el) => { el.hidden = el.dataset.section !== id; });
+    document.querySelectorAll<HTMLAnchorElement>('#section-tabs a').forEach((a) => {
+      if (a.dataset.section === id) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+      else a.removeAttribute('aria-current');
+    });
+    markSection(id);
+  }
+  const startSlug = currentSlug() ?? '';
+  $('section-tabs').replaceChildren(...SECTIONS.map((sec) => {
+    const a = mkEl('a', '', t(sec.label));
+    a.href = adminUrl(startSlug, sec.path);
+    a.dataset.section = sec.id;
+    return a;
+  }));
+  // Switch section without reloading the page (menu and tabs)
+  document.addEventListener('click', (e) => {
+    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-section]');
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || !a.pathname.startsWith(`/t/${startSlug}/admin/`)) return;
+    e.preventDefault();
+    if (a.pathname !== location.pathname) history.pushState(null, '', a.pathname);
+    showSection(a.dataset.section!);
+    window.scrollTo({ top: 0 });
+  });
+  window.addEventListener('popstate', () => showSection(currentAdmin()?.section ?? 'overview'));
+  showSection(currentAdmin()?.section ?? 'overview');
 
   // ---------- Startup ----------
   let host: Host | null = null;

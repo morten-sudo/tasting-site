@@ -5,7 +5,7 @@ import '../../styles/admin.css';
 ---
 <Base title="page.admin">
   <section class="wrap admin-page">
-    <AdminNav active="wines" />
+    <AdminNav active="wines">
     <div id="admin-main" hidden>
       <h1 class="title" data-i18n="adminNav.wines">Wines</h1>
       <p class="hint" data-i18n="wineLib.intro">All your wines. Add them here, then choose them for each tasting – where you also set the guest price.</p>
@@ -102,6 +102,7 @@ import '../../styles/admin.css';
         <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
       </section>
     </div>
+    </AdminNav>
   </section>
 </Base>
 

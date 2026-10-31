@@ -448,4 +448,12 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "start.link": "Tengill á vínið",
   "start.linkText": "Límdu inn tengil úr vefverslun",
   "start.orManual": "… eða fylltu sjálf(ur) út reitina.",
+  "adminNav.menu": "Valmynd",
+  "adminNav.past": "Liðnar",
+  "adminNav.library": "Safn",
+  "adminNav.settings": "Stillingar",
+  "adminNav.account": "Aðgangur",
+  "section.overview": "Yfirlit",
+  "section.settings": "Stýring og greiðsla",
+  "account.pwHint": "Þú getur alltaf skráð þig inn með kóða í tölvupósti. Lykilorð er valfrjálst.",
 };

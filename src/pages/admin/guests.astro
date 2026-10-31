@@ -5,7 +5,7 @@ import '../../styles/admin.css';
 ---
 <Base title="page.admin">
   <section class="wrap admin-page">
-    <AdminNav active="guests" />
+    <AdminNav active="guests">
     <div id="admin-main" hidden>
       <h1 class="title" data-i18n="adminNav.guests">Guests</h1>
       <p class="hint" data-i18n="guestLib.intro">Everyone you invite. Add them here once, then invite them to each tasting.</p>
@@ -34,6 +34,7 @@ import '../../styles/admin.css';
         <p id="guest-empty" class="hint" hidden data-i18n="guestLib.empty">No guests yet. Add the first one.</p>
       </section>
     </div>
+    </AdminNav>
   </section>
 </Base>
 

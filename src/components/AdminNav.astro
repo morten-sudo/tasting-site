@@ -1,25 +1,56 @@
 ---
-// Admin menu shared by all host pages, plus the signed-in line and the "not a host" notice.
-interface Props { active: 'tastings' | 'wines' | 'guests' | 'payments' }
+// Admin shell shared by all host pages: the menu on the left (a drawer on phones),
+// the signed-in line and the "not a host" notice. Page content goes in the slot.
+interface Props { active?: 'tastings' | 'wines' | 'guests' | 'payments' | 'account' }
 const { active } = Astro.props;
-const items = [
-  { key: 'tastings', href: '/admin/', label: 'Tastings' },
-  { key: 'wines', href: '/admin/wines/', label: 'Wines' },
-  { key: 'guests', href: '/admin/guests/', label: 'Guests' },
-  { key: 'payments', href: '/admin/payments/', label: 'Payments' },
-] as const;
+const cur = (key: string) => (active === key ? 'page' : undefined);
 ---
-<p id="not-host" class="message error" hidden>
-  <span data-i18n-html="admin.notHost">You are signed in but not registered as a host. <a href="/become-host/">Become a host</a></span> ·
-  <button id="logout2" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
-</p>
+<div class="admin-shell">
+  <p id="not-host" class="message error" hidden>
+    <span data-i18n-html="admin.notHost">You are signed in but not registered as a host. <a href="/become-host/">Become a host</a></span> ·
+    <button id="logout2" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
+  </p>
 
-<div id="admin-top" hidden>
-  <nav class="admin-nav" aria-label="Admin">
-    {items.map((i) => (
-      <a href={i.href} aria-current={active === i.key ? 'page' : undefined} data-i18n={`adminNav.${i.key}`}>{i.label}</a>
-    ))}
-  </nav>
-  <p class="hint who"><span data-i18n="admin.signedInAs">Signed in as</span> <span id="me"></span> ·
-    <button id="logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button></p>
+  <!-- Phones: a menu button that opens the menu as a drawer from the left -->
+  <button id="side-open" class="side-open" type="button" aria-controls="admin-side" aria-expanded="false" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+    <span id="side-where" data-i18n="adminNav.menu">Menu</span>
+  </button>
+  <div id="side-backdrop" class="side-backdrop" hidden></div>
+
+  <aside id="admin-side" class="admin-side" data-active={active} hidden>
+    <div class="side-head">
+      <span class="side-kicker">Admin</span>
+      <button id="side-close" class="side-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+    </div>
+    <nav aria-label="Admin">
+      <a class="side-group" href="/admin/" aria-current={cur('tastings')} data-i18n="adminNav.tastings">Tastings</a>
+      <ul id="side-tastings" class="side-list"></ul>
+      <details id="side-past" class="side-past" hidden>
+        <summary data-i18n="adminNav.past">Past</summary>
+        <ul id="side-past-list" class="side-list"></ul>
+      </details>
+      <a class="side-new" href="/admin/?new=1"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></a>
+
+      <p class="side-group" data-i18n="adminNav.library">Library</p>
+      <ul class="side-list">
+        <li><a href="/admin/wines/" aria-current={cur('wines')} data-i18n="adminNav.wines">Wines</a></li>
+        <li><a href="/admin/guests/" aria-current={cur('guests')} data-i18n="adminNav.guests">Guests</a></li>
+      </ul>
+
+      <p class="side-group" data-i18n="adminNav.settings">Settings</p>
+      <ul class="side-list">
+        <li><a href="/admin/payments/" aria-current={cur('payments')} data-i18n="adminNav.payments">Payments</a></li>
+        <li><a href="/admin/account/" aria-current={cur('account')} data-i18n="adminNav.account">Account</a></li>
+      </ul>
+    </nav>
+    <div class="side-foot">
+      <span id="me" class="side-me"></span>
+      <button id="logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="admin-content">
+    <slot />
+  </div>
 </div>

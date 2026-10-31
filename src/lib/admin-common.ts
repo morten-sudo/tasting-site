@@ -1,6 +1,7 @@
 // Shared by the host's admin pages: sign-in check, host record and small DOM helpers.
 import { supabase } from './supabase';
 import { i18nReady, t } from '../i18n';
+import { initSide } from './admin-side';
 
 export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null };
 
@@ -38,7 +39,7 @@ export async function requireHost(): Promise<Host | null> {
   if (!host) { $('not-host').hidden = false; return null; }
 
   $('me').textContent = data.session.user.email ?? '';
-  $('admin-top').hidden = false;
+  initSide(host.id);
   enableImageZoom(t('admin.close'));
   return host as Host;
 }

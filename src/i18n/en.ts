@@ -447,4 +447,12 @@ export const en = {
   "start.link": "Link to the wine",
   "start.linkText": "Paste a link from a web shop",
   "start.orManual": "… or fill in the fields yourself.",
+  "adminNav.menu": "Menu",
+  "adminNav.past": "Past",
+  "adminNav.library": "Library",
+  "adminNav.settings": "Settings",
+  "adminNav.account": "Account",
+  "section.overview": "Overview",
+  "section.settings": "Controls & payment",
+  "account.pwHint": "You can always sign in with a code by email. A password is optional.",
 } as const;

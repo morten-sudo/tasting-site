@@ -17,7 +17,6 @@
   border-radius: var(--radius);
   padding: 0.7rem 0.8rem;
 }
-.admin-page .who { margin-bottom: 1rem; }
 .admin-page .login .btn { margin-top: 0.4rem; justify-self: start; }
 .admin-page .pw-box summary { cursor: pointer; color: var(--amber); }
 .admin-page .pw-box .login { margin-top: 0.8rem; }
@@ -325,18 +324,90 @@
 .admin-page .from-label { border-color: var(--ok) !important; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Admin menu */
-.admin-nav {
+/* Admin shell: the menu on the left on larger screens, a drawer from the left on phones */
+.side-open {
+  display: inline-flex; align-items: center; gap: 0.6rem; max-width: 100%;
+  margin: 0 0 1.25rem; padding: 0.55rem 1rem 0.55rem 0.8rem; cursor: pointer;
+  font: inherit; font-size: 0.95rem; color: var(--paper);
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 999px;
+}
+.side-open span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-open svg, .admin-side svg { width: 1.2rem; height: 1.2rem; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.side-backdrop { position: fixed; inset: 0; z-index: 49; background: rgba(20, 12, 12, 0.45); }
+.side-backdrop[hidden] { display: none; }
+html.side-locked { overflow: hidden; }
+
+.admin-side {
+  position: fixed; inset: 0 auto 0 0; z-index: 50; width: min(19rem, 86vw);
+  display: flex; flex-direction: column; overflow-y: auto;
+  padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
+  background: var(--lodge); box-shadow: 10px 0 40px rgba(0, 0, 0, 0.18);
+  transform: translateX(-105%); transition: transform 0.22s ease-out; visibility: hidden;
+}
+.admin-side.open { transform: none; visibility: visible; }
+.admin-side[hidden] { display: none; }
+.side-head { display: flex; justify-content: space-between; align-items: center; padding: 0 0.6rem 0.5rem; }
+.side-kicker { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.side-close {
+  width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 1px solid var(--lodge-3);
+  background: transparent; color: var(--paper); font-size: 1.3rem; line-height: 1; cursor: pointer;
+}
+.admin-side nav { display: block; }
+.side-group {
+  display: block; margin: 1.4rem 0 0.35rem; padding: 0 0.6rem;
+  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+}
+a.side-group:first-child { margin-top: 0.5rem; }
+a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
+.side-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+.side-list a, .side-new, .side-past summary {
+  display: block; padding: 0.5rem 0.6rem; border-radius: 0.45rem;
+  color: var(--paper); text-decoration: none; font-size: 0.97rem; line-height: 1.3;
+}
+.side-list a:hover, .side-past summary:hover { background: rgba(36, 28, 27, 0.05); }
+.side-list a[aria-current='page'] { background: var(--paper); color: var(--lodge); }
+.side-list .current > a { font-weight: 600; }
+.side-sub { list-style: none; margin: 0.15rem 0 0.4rem 0.9rem; padding: 0 0 0 0.6rem; border-left: 1px solid var(--lodge-3); display: grid; gap: 0.05rem; }
+.side-sub a { font-size: 0.92rem; padding: 0.38rem 0.6rem; color: var(--muted); }
+.side-sub a[aria-current='page'] { background: none; color: var(--amber); font-weight: 600; box-shadow: inset 2px 0 0 var(--amber); border-radius: 0 0.45rem 0.45rem 0; margin-left: -0.65rem; padding-left: 1.25rem; }
+.side-past summary { color: var(--muted); cursor: pointer; font-size: 0.92rem; }
+.side-new { color: var(--amber); font-size: 0.93rem; margin-top: 0.15rem; }
+.side-new:hover { background: rgba(36, 28, 27, 0.05); }
+.side-foot {
+  margin-top: auto; padding: 1.5rem 0.6rem 0; display: grid; gap: 0.2rem;
+  font-size: 0.85rem; color: var(--muted);
+}
+.side-foot { border-top: 0; }
+.side-me { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-foot .link-btn { justify-self: start; }
+
+/* A tasting's sections as tabs on phones */
+.section-tabs {
   display: flex; gap: 0.4rem; overflow-x: auto; scrollbar-width: none;
-  margin: 0 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--lodge-2);
+  margin: -0.25rem calc(-1 * var(--gutter)) 0.5rem; padding: 0 var(--gutter) 0.4rem;
 }
-.admin-nav::-webkit-scrollbar { display: none; }
-.admin-nav a {
-  flex-shrink: 0; padding: 0.55rem 0.9rem; border-radius: 999px; text-decoration: none;
-  color: var(--muted); font-size: 0.95rem; white-space: nowrap;
+.section-tabs::-webkit-scrollbar { display: none; }
+.section-tabs a {
+  flex-shrink: 0; padding: 0.5rem 0.9rem; border-radius: 999px; text-decoration: none;
+  color: var(--muted); font-size: 0.93rem; white-space: nowrap; border: 1px solid var(--lodge-3);
 }
-.admin-nav a:hover { color: var(--paper); }
-.admin-nav a[aria-current='page'] { color: var(--lodge); background: var(--paper); }
+.section-tabs a[aria-current='page'] { color: var(--lodge); background: var(--paper); border-color: var(--paper); }
+.admin-page #tasting-panel > .block:not([hidden]) ~ .block:not([hidden]) { margin-top: 2.25rem; }
+.admin-page #tasting-panel > .block:not([hidden]) { margin-top: 1.25rem; }
+
+@media (min-width: 60rem) {
+  .admin-shell { display: grid; grid-template-columns: 14.5rem minmax(0, 1fr); column-gap: clamp(2rem, 4vw, 4rem); align-items: start; }
+  .admin-shell > #not-host { grid-column: 1 / -1; }
+  .side-open, .side-close, .side-backdrop, .section-tabs { display: none !important; }
+  .admin-side {
+    grid-column: 1; grid-row: 1; position: sticky; top: calc(var(--header-h, 4.5rem) + 1.25rem);
+    inset: auto; z-index: auto; width: auto; max-height: calc(100vh - var(--header-h, 4.5rem) - 2.5rem);
+    padding: 0; background: none; box-shadow: none; transform: none; transition: none; visibility: visible;
+  }
+  .side-head { display: none; }
+  .admin-content { grid-column: 2; grid-row: 1; min-width: 0; }
+}
 .admin-page .back { display: inline-block; margin-bottom: 0.5rem; font-size: 0.95rem; text-decoration: none; }
 .admin-page .back::before { content: '← '; }
 

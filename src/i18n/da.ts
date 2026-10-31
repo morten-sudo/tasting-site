@@ -448,4 +448,12 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "start.link": "Link til vinen",
   "start.linkText": "Indsæt et link fra en webshop",
   "start.orManual": "… eller udfyld felterne selv.",
+  "adminNav.menu": "Menu",
+  "adminNav.past": "Tidligere",
+  "adminNav.library": "Bibliotek",
+  "adminNav.settings": "Indstillinger",
+  "adminNav.account": "Konto",
+  "section.overview": "Oversigt",
+  "section.settings": "Styring & betaling",
+  "account.pwHint": "Du kan altid logge ind med en kode på mail. En adgangskode er valgfri.",
 };
