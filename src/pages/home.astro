@@ -55,6 +55,7 @@ import Base from '../layouts/Base.astro';
         </section>
       </div>
 
+      <p class="book-more"><a href="/my/"><span data-i18n="book.homeLink">My wine book – wines, tastings and purchases</span> →</a></p>
       <p id="none" class="hint" hidden data-i18n="tastings.noneHint">If you got a link in an invitation, open it – or sign in with the email the host has.</p>
     </div>
   </section>
@@ -148,6 +149,8 @@ import Base from '../layouts/Base.astro';
   .ws-go { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--amber); font-size: 1.2rem; }
   .ws-soft { background: transparent; border-style: dashed; }
   #my-tastings { scroll-margin-top: 5rem; }
+  .book-more { margin: 1.5rem 0 0; }
+  .book-more a { color: var(--amber); font-weight: 500; text-decoration: none; }
   .home-section { margin-top: 2.75rem; }
   .home-section h2 { font-size: 1.6rem; }
 </style>

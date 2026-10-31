@@ -313,3 +313,16 @@ dialog.sheet .sheet-head { position: sticky; top: -1.25rem; z-index: 1; backgrou
 }
 .chat-send svg { fill: currentColor; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* An order (wine book and profile) */
+.order-card {
+  display: grid; gap: 0.25rem; padding: 1rem 1.1rem; margin-bottom: 0.75rem;
+  color: var(--paper); text-decoration: none; border: 1px solid var(--lodge-3); border-radius: 0.6rem;
+  border-left: 3px solid var(--amber); background: var(--lodge-2);
+}
+.order-card.paid { border-left-color: var(--ok); }
+.order-card:hover { border-color: var(--amber); color: var(--paper); }
+.order-card .card-head { display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; }
+.order-title { font-weight: 500; }
+.order-card ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.95rem; }
+.order-total { margin-top: 0.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }

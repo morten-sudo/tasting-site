@@ -113,7 +113,7 @@ import Base from '../../layouts/Base.astro';
     if (winesRes.error || index < 0) { $('load-error').hidden = false; return; }
     const w = wines[index];
 
-    document.title = `${w.name} – Portvin 2026`;
+    document.title = `${w.name} – Winetastr`;
 
     const pic = $('pic');
     if (w.image_url) {

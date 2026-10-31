@@ -51,17 +51,11 @@ import Base from '../layouts/Base.astro';
         <a class="btn small" href="/login/" data-i18n="login.submit">Sign in</a>
       </div>
 
-      <section class="profile-block">
-        <h2 data-i18n="nav.myTastings">My tastings</h2>
-        <ul id="my-tastings" class="tasting-list"></ul>
-        <p id="no-tastings" class="hint" hidden data-i18n="tastings.none">You are not invited to any tastings with this email yet.</p>
-      </section>
-
-      <section class="profile-block">
-        <h2 data-i18n="profile.myOrders">My orders</h2>
-        <div id="my-orders"></div>
-        <p id="no-orders" class="hint" hidden data-i18n="profile.noOrders">You have no orders yet.</p>
-      </section>
+      <!-- Tastings, wines and orders live in the wine book -->
+      <a class="book-link" href="/my/">
+        <span><b data-i18n="book.title">My wine book</b><span data-i18n="book.linkText">The wines you have tasted, your tastings and what you have bought</span></span>
+        <span aria-hidden="true">→</span>
+      </a>
 
       <section id="host-block" class="profile-block" hidden>
         <h2 data-i18n="tastings.asHost">As a host</h2>
@@ -82,7 +76,6 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { loadMe, signOut, getCodes, tastingUrl } from '../lib/guest';
-  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
   import { i18nReady, t, LANGS, lang, setLang, money, locale } from '../i18n';
   import { FLAGS } from '../i18n/flags';
 
@@ -90,8 +83,6 @@ import Base from '../layouts/Base.astro';
   const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
   const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-  type Line = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
-    wine_name: string; quantity: number; unit_price: number };
 
   const me = await loadMe();
   $('loading').hidden = true;
@@ -177,66 +168,6 @@ import Base from '../layouts/Base.astro';
     closeEdit();
   });
 
-  // ---------- Orders ----------
-  async function loadOrders(): Promise<Line[]> {
-    if (me?.signedIn) {
-      const { data } = await supabase.rpc('my_orders');
-      return (data ?? []) as Line[];
-    }
-    // Invite links: the orders of each invitation on this device
-    const out: Line[] = [];
-    for (const [slug, code] of Object.entries(getCodes())) {
-      const [o, info] = await Promise.all([
-        supabase.rpc('get_my_orders', { code }),
-        supabase.rpc('get_tasting', { code }),
-      ]);
-      const title = String((info.data as Record<string, unknown> | null)?.title ?? slug);
-      for (const l of (o.data ?? []) as Omit<Line, 'slug' | 'title'>[]) out.push({ ...l, slug, title });
-    }
-    return out.sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }
-
-  function renderOrders(lines: Line[]) {
-    const box = $('my-orders');
-    const byOrder = new Map<number, Line[]>();
-    for (const l of lines) {
-      if (!byOrder.has(l.order_id)) byOrder.set(l.order_id, []);
-      byOrder.get(l.order_id)!.push(l);
-    }
-    $('no-orders').hidden = byOrder.size > 0;
-    const date = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
-    box.replaceChildren(...[...byOrder.values()].map((ls) => {
-      const first = ls[0];
-      const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
-      const card = document.createElement('a');
-      card.className = 'order-card' + (first.paid ? ' paid' : '');
-      card.href = tastingUrl(first.slug, 'cart/');
-      const head = document.createElement('div');
-      head.className = 'card-head';
-      const title = document.createElement('span');
-      title.className = 'order-title';
-      title.textContent = `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`;
-      const pill = document.createElement('span');
-      pill.className = 'pill ' + (first.paid ? 'pill-yes' : 'pill-invited');
-      pill.textContent = first.paid ? t('cart.paid') : t('cart.awaiting');
-      head.append(title, pill);
-      const meta = document.createElement('span');
-      meta.className = 'card-meta';
-      meta.textContent = date.format(new Date(first.created_at));
-      const ul = document.createElement('ul');
-      for (const l of ls) {
-        const li = document.createElement('li');
-        li.textContent = `${l.quantity} × ${l.wine_name}`;
-        ul.append(li);
-      }
-      const foot = document.createElement('div');
-      foot.className = 'order-total';
-      foot.textContent = `${t('cart.total')} ${money(total)}`;
-      card.append(head, meta, ul, foot);
-      return card;
-    }));
-  }
-
   // ---------- Startup ----------
   if (!me) {
     $('signed-out').hidden = false;
@@ -245,11 +176,6 @@ import Base from '../layouts/Base.astro';
     showMe();
     $('link-only').hidden = me.signedIn;
     $('host-block').hidden = !me.isHost;
-    const [tastings, lines] = await Promise.all([loadAllMyTastings(), loadOrders()]);
-    const list = [...tastings.upcoming, ...tastings.past];
-    $('my-tastings').replaceChildren(...list.map(tastingCard));
-    $('no-tastings').hidden = list.length > 0;
-    renderOrders(lines);
   }
 
   // Languages as a quiet list: flag, name and a tick on the current one
@@ -308,16 +234,14 @@ import Base from '../layouts/Base.astro';
   .profile-page #link-only { margin-top: 1.5rem; }
   .profile-page .profile-block { margin-top: 2.5rem; }
   .profile-page .profile-block h2 { font-size: 1.6rem; }
-  .profile-page .order-card {
-    display: grid; gap: 0.25rem; padding: 1rem 1.1rem; margin-bottom: 0.75rem;
-    color: var(--paper); text-decoration: none; border: 1px solid var(--lodge-3); border-radius: 0.6rem;
-    border-left: 3px solid var(--amber);
+  .profile-page .book-link {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem;
+    padding: 1.1rem 1.25rem; border: 1px solid var(--lodge-3); border-radius: 0.8rem; background: var(--lodge-2);
+    color: var(--paper); text-decoration: none;
   }
-  .profile-page .order-card.paid { border-left-color: var(--ok); }
-  .profile-page .order-card:hover { border-color: var(--amber); color: var(--paper); }
-  .profile-page .order-title { font-weight: 500; }
-  .profile-page .order-card ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.95rem; }
-  .profile-page .order-total { margin-top: 0.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .profile-page .book-link:hover { border-color: var(--amber); }
+  .profile-page .book-link b { display: block; font-size: 1.1rem; }
+  .profile-page .book-link span span { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
   .profile-page .lang-list {
     list-style: none; margin: 0; padding: 0; max-width: 34rem;
     display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.4rem;

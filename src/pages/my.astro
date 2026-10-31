@@ -1,0 +1,267 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<!-- The guest's wine book: wines tasted, tastings and orders across all tastings -->
+<Base title="book.title">
+  <section class="wrap book-page">
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+
+    <div id="signed-out" hidden>
+      <h1 class="title" data-i18n="book.title">My wine book</h1>
+      <p data-i18n="profile.signedOut">You are not signed in.</p>
+      <a class="btn" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a>
+    </div>
+
+    <div id="book" hidden>
+      <h1 class="title" data-i18n="book.title">My wine book</h1>
+      <ul class="book-stats">
+        <li><b id="st-wines">0</b><span data-i18n="book.statWines">wines tasted</span></li>
+        <li><b id="st-tastings">0</b><span data-i18n="book.statTastings">tastings</span></li>
+        <li><b id="st-bottles">0</b><span data-i18n="book.statBottles">bottles bought</span></li>
+      </ul>
+      <div id="link-only" class="message" hidden>
+        <p data-i18n="book.linkOnly">You only see the tastings opened with an invitation link on this device. Sign in with your email to see everything, on any device.</p>
+        <a class="btn small" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a>
+      </div>
+
+      <div class="book-tabs" role="tablist" aria-label="My wine book" data-i18n-attr="aria-label=book.title">
+        <button type="button" role="tab" id="tab-wines" aria-controls="panel-wines" data-tab="wines" data-i18n="book.tabWines">Wines</button>
+        <button type="button" role="tab" id="tab-tastings" aria-controls="panel-tastings" data-tab="tastings" data-i18n="book.tabTastings">Tastings</button>
+        <button type="button" role="tab" id="tab-orders" aria-controls="panel-orders" data-tab="orders" data-i18n="book.tabOrders">Purchases</button>
+      </div>
+
+      <!-- Wines I have tasted -->
+      <section id="panel-wines" role="tabpanel" aria-labelledby="tab-wines" class="book-panel">
+        <div class="book-tools">
+          <input id="w-search" type="search" class="search" autocomplete="off" placeholder="Search" aria-label="Search" data-i18n-attr="placeholder=adminTasting.search;aria-label=adminTasting.search" />
+          <select id="w-sort" aria-label="Sort" data-i18n-attr="aria-label=book.sort">
+            <option value="recent" data-i18n="book.sortRecent">Newest first</option>
+            <option value="rating" data-i18n="book.sortRating">Best rated</option>
+            <option value="name" data-i18n="book.sortName">Name</option>
+          </select>
+        </div>
+        <ul id="wine-list" class="book-wines"></ul>
+        <p id="no-wines" class="hint" hidden data-i18n="book.noWines">When you have been to a tasting, or rated a wine, it appears here – with your stars and notes.</p>
+        <p id="no-match" class="hint" hidden data-i18n="book.noMatch">No wines match the search.</p>
+      </section>
+
+      <!-- Tastings I am invited to or have been to -->
+      <section id="panel-tastings" role="tabpanel" aria-labelledby="tab-tastings" class="book-panel" hidden>
+        <h2 id="up-h" class="book-h" data-i18n="home.upcomingMany" hidden>Upcoming tastings</h2>
+        <ul id="up-list" class="tasting-list"></ul>
+        <h2 id="past-h" class="book-h" data-i18n="tastings.past" hidden>Past</h2>
+        <ul id="past-list" class="tasting-list"></ul>
+        <p id="no-tastings" class="hint" hidden data-i18n="tastings.none">You are not invited to any tastings with this email yet.</p>
+      </section>
+
+      <!-- Purchases -->
+      <section id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" class="book-panel" hidden>
+        <p id="orders-sum" class="hint"></p>
+        <div id="order-list"></div>
+        <p id="no-orders" class="hint" hidden data-i18n="profile.noOrders">You have no orders yet.</p>
+      </section>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  import { loadMe, getCodes, tastingUrl } from '../lib/guest';
+  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
+  import { loadOrders, orderCards } from '../lib/my-orders';
+  import { originLine, normOrigin } from '../lib/origin';
+  import { styleName } from '../lib/wines';
+  import { starsText } from '../lib/rating';
+  import { i18nReady, t, money, lang, locale } from '../i18n';
+
+  await i18nReady;
+  const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
+
+  type BookWine = {
+    wine_id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
+    image_url: string | null; appellation: string | null; region: string | null; country: string | null;
+    slug: string; title: string; starts_at: string | null; sort_order: number;
+    rating: number | null; note: string | null; rated_at: string | null; bought: number;
+  };
+
+  const me = await loadMe();
+  $('loading').hidden = true;
+  const codes = Object.values(getCodes());
+  if (!me && !codes.length) {
+    $('signed-out').hidden = false;
+  } else {
+    $('book').hidden = false;
+    $('link-only').hidden = !!me?.signedIn;
+    initTabs();
+    const [wineRes, tastings, lines] = await Promise.all([
+      supabase.rpc('my_wine_book', { codes }),
+      loadAllMyTastings(),
+      loadOrders(!!me?.signedIn),
+    ]);
+    showWines((wineRes.data ?? []) as BookWine[]);
+    showTastings(tastings);
+    showOrders(lines);
+  }
+
+  // ---------- Tabs (remembered in the address, e.g. /my/#orders) ----------
+  function initTabs() {
+    const tabs = [...document.querySelectorAll<HTMLButtonElement>('.book-tabs [data-tab]')];
+    const select = (name: string, push = false) => {
+      if (!tabs.some((b) => b.dataset.tab === name)) name = 'wines';
+      for (const b of tabs) {
+        const on = b.dataset.tab === name;
+        b.setAttribute('aria-selected', String(on));
+        b.tabIndex = on ? 0 : -1;
+        $(`panel-${b.dataset.tab}`).hidden = !on;
+      }
+      if (push) history.replaceState(null, '', name === 'wines' ? location.pathname : `#${name}`);
+    };
+    tabs.forEach((b, i) => {
+      b.addEventListener('click', () => select(b.dataset.tab!, true));
+      b.addEventListener('keydown', (e) => {
+        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        const next = tabs[(i + step + tabs.length) % tabs.length];
+        next.focus();
+        select(next.dataset.tab!, true);
+      });
+    });
+    select(location.hash.slice(1));
+  }
+
+  // ---------- Wines ----------
+  function showWines(all: BookWine[]) {
+    $('st-wines').textContent = String(new Set(all.map((w) => w.wine_id)).size);
+    $('no-wines').hidden = all.length > 0;
+    $('w-search').parentElement!.hidden = all.length < 4;
+    const render = () => {
+      const q = normOrigin($<HTMLInputElement>('w-search').value);
+      const sort = $<HTMLSelectElement>('w-sort').value;
+      const rows = all.filter((w) => !q || normOrigin([w.name, w.producer, w.appellation, w.region, w.title].join(' ')).includes(q));
+      if (sort === 'rating') rows.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || a.name.localeCompare(b.name, lang()));
+      else if (sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name, lang()));
+      $('wine-list').replaceChildren(...rows.map(wineItem));
+      $('no-match').hidden = !all.length || rows.length > 0;
+    };
+    $('w-search').addEventListener('input', render);
+    $('w-sort').addEventListener('change', render);
+    render();
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function wineItem(w: BookWine) {
+    const li = el('li');
+    const a = el('a', 'book-wine');
+    a.href = tastingUrl(w.slug, `wines/${w.wine_id}/`);
+    const pic = el('span', 'bw-pic');
+    if (w.image_url) {
+      const img = el('img');
+      img.src = w.image_url;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => img.remove());
+      pic.append(img);
+    }
+    const body = el('span', 'bw-body');
+    body.append(el('span', 'bw-name', w.name));
+    const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer]
+      .filter(Boolean).filter((x, i, arr) => arr.indexOf(x) === i).join(' · ');
+    if (meta) body.append(el('span', 'bw-meta', meta));
+    const origin = originLine(w);
+    if (origin) body.append(el('span', 'bw-meta', origin));
+    if (w.note?.trim()) body.append(el('span', 'bw-note', `“${w.note.trim()}”`));
+    const where = el('span', 'bw-where', w.starts_at
+      ? t('book.tastedAt', { tasting: w.title, when: new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(w.starts_at)) })
+      : w.title);
+    body.append(where);
+    const side = el('span', 'bw-side');
+    if (w.rating) {
+      const s = el('span', 'bw-stars', starsText(w.rating));
+      s.setAttribute('aria-label', t('rating.yours', { n: w.rating }));
+      side.append(s);
+    }
+    if (w.bought > 0) side.append(el('span', 'bw-bought', t('book.bought', { n: w.bought })));
+    a.append(pic, body, side);
+    li.append(a);
+    return li;
+  }
+
+  // ---------- Tastings ----------
+  function showTastings({ upcoming, past, all }: Awaited<ReturnType<typeof loadAllMyTastings>>) {
+    $('st-tastings').textContent = String(past.filter((x) => x.status === 'yes').length || all.length);
+    $('up-list').replaceChildren(...upcoming.map(tastingCard));
+    $('past-list').replaceChildren(...past.map(tastingCard));
+    $('up-h').hidden = !upcoming.length || !past.length;
+    $('past-h').hidden = !past.length;
+    $('no-tastings').hidden = all.length > 0;
+  }
+
+  // ---------- Purchases ----------
+  function showOrders(lines: Awaited<ReturnType<typeof loadOrders>>) {
+    const bottles = lines.reduce((s, l) => s + l.quantity, 0);
+    const total = lines.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
+    $('st-bottles').textContent = String(bottles);
+    $('order-list').replaceChildren(...orderCards(lines));
+    $('no-orders').hidden = lines.length > 0;
+    $('orders-sum').textContent = lines.length ? t('book.ordersSum', { n: bottles, total: money(total) }) : '';
+    $('orders-sum').hidden = !lines.length;
+  }
+</script>
+
+<style is:global>
+  .book-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 52rem; }
+  .book-page .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 11vw, 4.2rem); line-height: 0.95; margin: 0 0 1.2rem; }
+  .book-stats { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+  .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.7rem; }
+  .book-stats b { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); }
+  .book-stats span { font-size: 0.85rem; color: var(--muted); }
+  .book-page #link-only { margin-bottom: 1.25rem; }
+  .book-tabs { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--lodge-3); margin-bottom: 1.25rem; overflow-x: auto; scrollbar-width: none; }
+  .book-tabs button {
+    flex: none; padding: 0.7rem 0; background: none; border: 0; font: inherit; font-size: 0.98rem; color: var(--muted); cursor: pointer;
+  }
+  .book-tabs button:hover { color: var(--paper); }
+  .book-tabs button[aria-selected='true'] { color: var(--amber); font-weight: 500; box-shadow: inset 0 -2px 0 var(--amber); }
+  .book-panel[hidden] { display: none; }
+  .book-h { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.75rem; }
+  .book-h:first-child { margin-top: 0; }
+  .book-tools { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
+  .book-tools[hidden] { display: none; }
+  .book-tools .search { flex: 1; min-width: 0; margin: 0; }
+  .book-tools input, .book-tools select {
+    font: inherit; font-size: 0.95rem; color: var(--paper); background: #fff;
+    border: 1px solid #d9cfc7; border-radius: var(--radius); padding: 0.6rem 0.8rem; min-height: 2.75rem;
+  }
+  .book-tools input:focus, .book-tools select:focus { outline: none; border-color: var(--amber); }
+  .book-tools select { flex: none; width: auto; cursor: pointer; }
+  .book-wines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+  .book-wine {
+    display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.9rem; align-items: center; padding: 0.75rem 0.9rem;
+    background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; color: var(--paper); text-decoration: none;
+  }
+  .book-wine:hover { border-color: var(--amber); color: var(--paper); }
+  .bw-pic { width: 3.4rem; height: 4.4rem; border-radius: 0.45rem; background: linear-gradient(160deg, #a3213a, #b8742e); overflow: hidden; display: grid; place-items: center; }
+  .bw-pic img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+  .bw-body { display: grid; gap: 0.12rem; min-width: 0; }
+  .bw-name { font-family: var(--display); font-size: 1.3rem; line-height: 1.15; }
+  .bw-meta { font-size: 0.86rem; color: var(--muted); }
+  .bw-note { font-size: 0.9rem; font-style: italic; color: var(--paper); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .bw-where { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
+  .bw-side { display: grid; justify-items: end; gap: 0.35rem; align-self: start; }
+  .bw-stars { color: var(--amber); letter-spacing: 0.05em; white-space: nowrap; }
+  .bw-bought { font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--lodge); border: 1px solid var(--lodge-3); white-space: nowrap; }
+  #orders-sum { margin: 0 0 1rem; }
+  @media (max-width: 30rem) {
+    .book-stats b { font-size: 1.6rem; }
+    .book-wine { grid-template-columns: 2.8rem 1fr; }
+    .bw-pic { width: 2.8rem; height: 3.6rem; }
+    .bw-side { grid-column: 2; justify-items: start; grid-auto-flow: column; justify-content: start; }
+  }
+</style>
