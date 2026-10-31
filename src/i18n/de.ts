@@ -487,4 +487,5 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "admin.time": "Uhrzeit",
   "address.country": "Land",
   "address.postalFormat": "Postleitzahlen sehen dort so aus: {example}.",
+  "address.region": "Bundesstaat / Provinz",
 };

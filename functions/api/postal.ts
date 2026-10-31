@@ -1,8 +1,8 @@
-// Cloudflare Pages Function: GET /api/postal?country=DE&code=10115 → { city }
+// Cloudflare Pages Function: GET /api/postal?country=DE&code=10115 → { city, region }
 // Looks up the city for a postal code outside Denmark (Denmark uses a list in the site itself)
 // through the free Zippopotam.us service. Answers are cached for a month at Cloudflare.
 
-const COUNTRIES = new Set(['SE', 'NO', 'IS', 'FI', 'DE', 'AT', 'CH', 'NL', 'BE', 'LU', 'FR', 'IT', 'ES', 'PT', 'GB', 'PL', 'DK']);
+const COUNTRIES = new Set(['SE', 'NO', 'IS', 'FI', 'DE', 'AT', 'CH', 'NL', 'BE', 'LU', 'FR', 'IT', 'ES', 'PT', 'GB', 'PL', 'DK', 'US', 'CA']);
 
 const json = (body: unknown, status = 200, cache = 'public, max-age=86400') =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': cache } });
@@ -13,6 +13,8 @@ export function candidates(country: string, code: string): string[] {
   const list: string[] = [c];
   if (country === 'NL') list.unshift(c.slice(0, 4));                 // the service only has the four digits
   if (country === 'GB') list.unshift(c.split(' ')[0]);               // and only the outward code in the UK
+  if (country === 'CA') list.unshift(c.slice(0, 3));                 // and the first three characters in Canada
+  if (country === 'US') list.unshift(c.slice(0, 5));
   if (country === 'PT') list.push(c.slice(0, 4));
   if (country === 'SE') list.push(c.replace(/\s/g, ''));
   if (country === 'LU') list.push('L-' + c.replace(/^L-?/, ''));
@@ -32,9 +34,12 @@ export const onRequestGet = async ({ request }: { request: Request }) => {
         cf: { cacheTtl: 30 * 86400, cacheEverything: true },
       } as RequestInit);
       if (!res.ok) continue;
-      const data = (await res.json()) as { places?: { 'place name'?: string }[] };
-      const names = [...new Set((data.places ?? []).map((p) => p['place name']?.trim()).filter(Boolean))] as string[];
-      if (names.length) return json({ city: names[0], others: names.slice(1, 5) });
+      const data = (await res.json()) as { places?: { 'place name'?: string; 'state abbreviation'?: string }[] };
+      const places = data.places ?? [];
+      const names = [...new Set(places.map((p) => p['place name']?.trim()).filter(Boolean))] as string[];
+      // States and provinces matter in the USA and Canada
+      const region = country === 'US' || country === 'CA' ? places[0]?.['state abbreviation']?.trim() || null : null;
+      if (names.length) return json({ city: names[0], region, others: names.slice(1, 5) });
     } catch {}
   }
   return json({ city: null }, 404);

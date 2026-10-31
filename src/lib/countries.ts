@@ -9,7 +9,26 @@ export type Country = {
   pattern: RegExp;         // a valid, normalised postal code
   numeric: boolean;        // only digits → numeric keyboard on phones
   normalise?: (raw: string) => string;
+  regions?: [string, string][];   // states / provinces (code, name) where the address needs one
 };
+
+const US_STATES: [string, string][] = [
+  ['AL', 'Alabama'], ['AK', 'Alaska'], ['AZ', 'Arizona'], ['AR', 'Arkansas'], ['CA', 'California'], ['CO', 'Colorado'],
+  ['CT', 'Connecticut'], ['DE', 'Delaware'], ['DC', 'District of Columbia'], ['FL', 'Florida'], ['GA', 'Georgia'],
+  ['HI', 'Hawaii'], ['ID', 'Idaho'], ['IL', 'Illinois'], ['IN', 'Indiana'], ['IA', 'Iowa'], ['KS', 'Kansas'],
+  ['KY', 'Kentucky'], ['LA', 'Louisiana'], ['ME', 'Maine'], ['MD', 'Maryland'], ['MA', 'Massachusetts'],
+  ['MI', 'Michigan'], ['MN', 'Minnesota'], ['MS', 'Mississippi'], ['MO', 'Missouri'], ['MT', 'Montana'],
+  ['NE', 'Nebraska'], ['NV', 'Nevada'], ['NH', 'New Hampshire'], ['NJ', 'New Jersey'], ['NM', 'New Mexico'],
+  ['NY', 'New York'], ['NC', 'North Carolina'], ['ND', 'North Dakota'], ['OH', 'Ohio'], ['OK', 'Oklahoma'],
+  ['OR', 'Oregon'], ['PA', 'Pennsylvania'], ['RI', 'Rhode Island'], ['SC', 'South Carolina'], ['SD', 'South Dakota'],
+  ['TN', 'Tennessee'], ['TX', 'Texas'], ['UT', 'Utah'], ['VT', 'Vermont'], ['VA', 'Virginia'], ['WA', 'Washington'],
+  ['WV', 'West Virginia'], ['WI', 'Wisconsin'], ['WY', 'Wyoming'], ['PR', 'Puerto Rico'],
+];
+const CA_PROVINCES: [string, string][] = [
+  ['AB', 'Alberta'], ['BC', 'British Columbia'], ['MB', 'Manitoba'], ['NB', 'New Brunswick'],
+  ['NL', 'Newfoundland and Labrador'], ['NS', 'Nova Scotia'], ['NT', 'Northwest Territories'], ['NU', 'Nunavut'],
+  ['ON', 'Ontario'], ['PE', 'Prince Edward Island'], ['QC', 'Québec'], ['SK', 'Saskatchewan'], ['YT', 'Yukon'],
+];
 
 const digits = (n: number) => new RegExp(`^\\d{${n}}$`);
 const upper = (s: string) => s.toUpperCase().replace(/\s+/g, ' ').trim();
@@ -36,6 +55,10 @@ export const COUNTRIES: Country[] = [
     normalise: (s) => s.replace(/\D/g, '').replace(/^(\d{4})(\d{3})$/, '$1-$2') },
   { code: 'GB', name: 'United Kingdom', example: 'SW1A 1AA', pattern: /^[A-Z]{1,2}\d[A-Z\d]? \d[A-Z]{2}$/, numeric: false,
     normalise: (s) => upper(s).replace(/\s/g, '').replace(/^(.+)(\d[A-Z]{2})$/, '$1 $2') },
+  { code: 'US', name: 'United States', example: '10001', pattern: /^\d{5}(-\d{4})?$/, numeric: true,
+    normalise: (s) => s.replace(/[^\d-]/g, '').replace(/^(\d{5})(\d{4})$/, '$1-$2'), regions: US_STATES },
+  { code: 'CA', name: 'Canada', example: 'M5V 2T6', pattern: /^[A-Z]\d[A-Z] \d[A-Z]\d$/, numeric: false,
+    normalise: (s) => upper(s).replace(/\s/g, '').replace(/^(.{3})(.{3})$/, '$1 $2'), regions: CA_PROVINCES },
   { code: 'PL', name: 'Polska', example: '00-950', pattern: /^\d{2}-\d{3}$/, numeric: true,
     normalise: (s) => s.replace(/\D/g, '').replace(/^(\d{2})(\d{3})$/, '$1-$2') },
 ];

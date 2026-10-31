@@ -5,7 +5,7 @@ import { t } from '../i18n';
 import { countryBy, normalisePostal, DEFAULT_COUNTRY } from './countries';
 
 export type Address = {
-  country: string; street: string | null; house_number: string | null; postal_code: string | null; city: string | null;
+  country: string; region: string | null; street: string | null; house_number: string | null; postal_code: string | null; city: string | null;
 };
 
 let dkCodes: Promise<Record<string, string>> | null = null;
@@ -13,13 +13,14 @@ function loadDk() {
   dkCodes ??= fetch('/data/postal-codes-dk.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
   return dkCodes;
 }
-const cache = new Map<string, Promise<string | null>>();
-function lookupCity(country: string, code: string): Promise<string | null> {
-  if (country === 'DK') return loadDk().then((m) => m[code] ?? null);
+type Found = { city: string | null; region?: string | null };
+const cache = new Map<string, Promise<Found>>();
+function lookup(country: string, code: string): Promise<Found> {
+  if (country === 'DK') return loadDk().then((m) => ({ city: m[code] ?? null }));
   const key = `${country}:${code}`;
   if (!cache.has(key)) {
     cache.set(key, fetch(`/api/postal?country=${country}&code=${encodeURIComponent(code)}`)
-      .then((r) => (r.ok ? r.json() : null)).then((d) => (d?.city as string) ?? null).catch(() => null));
+      .then((r) => (r.ok ? r.json() : { city: null })).catch(() => ({ city: null })));
   }
   return cache.get(key)!;
 }
@@ -30,6 +31,8 @@ const val = (el: HTMLInputElement) => el.value.trim() || null;
 /** Wires up the country choice, postal code format and city lookup. */
 export function initAddress(prefix: string) {
   const country = field(prefix, 'country') as unknown as HTMLSelectElement;
+  const region = field(prefix, 'region') as unknown as HTMLSelectElement;
+  const regionBox = document.getElementById(`${prefix}-region-box`)!;
   const postal = field(prefix, 'postal');
   const city = field(prefix, 'city');
   const hint = document.getElementById(`${prefix}-postal-hint`)!;
@@ -42,6 +45,11 @@ export function initAddress(prefix: string) {
     const c = countryBy(country.value);
     postal.placeholder = c.example;
     postal.inputMode = c.numeric ? 'numeric' : 'text';
+    // States / provinces for the countries that use them
+    const keep = region.value;
+    regionBox.hidden = !c.regions;
+    region.replaceChildren(new Option('', ''), ...(c.regions ?? []).map(([code, name]) => new Option(`${name} (${code})`, code)));
+    if (c.regions?.some(([code]) => code === keep)) region.value = keep;
     setHint();
   }
 
@@ -60,10 +68,12 @@ export function initAddress(prefix: string) {
     const key = `${c.code}:${code}`;
     if (key === lastLookup) return;
     lastLookup = key;
-    const name = await lookupCity(c.code, code);
+    const found = await lookup(c.code, code);
     if (lastLookup !== key) return;                 // a newer code was typed meanwhile
     // Only replace the city if it is empty or was filled in by us
+    const name = found.city;
     if (name && (!city.value.trim() || city.value === autoCity)) { city.value = name; autoCity = name; }
+    if (found.region && c.regions?.some(([r]) => r === found.region) && !region.value) region.value = found.region;
   }
 
   country.addEventListener('change', () => { applyCountry(); lastLookup = ''; check(true); });
@@ -78,6 +88,7 @@ export function readAddress(prefix: string): Address {
   const raw = field(prefix, 'postal').value;
   return {
     country: c.code,
+    region: c.regions ? (field(prefix, 'region').value || null) : null,
     street: val(field(prefix, 'street')),
     house_number: val(field(prefix, 'number')),
     postal_code: raw.trim() ? normalisePostal(c, raw) : null,
@@ -94,5 +105,6 @@ export function writeAddress(prefix: string, a: Partial<Address> & { place?: str
   field(prefix, 'city').value = a.city ?? '';
   const country = field(prefix, 'country') as unknown as HTMLSelectElement;
   country.value = countryBy(a.country ?? DEFAULT_COUNTRY).code;
-  country.dispatchEvent(new Event('change'));   // placeholder and keyboard for the country
+  country.dispatchEvent(new Event('change'));   // placeholder, keyboard and states for the country
+  field(prefix, 'region').value = a.region ?? '';
 }

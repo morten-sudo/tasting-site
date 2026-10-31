@@ -487,4 +487,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "admin.time": "Tími",
   "address.country": "Land",
   "address.postalFormat": "Póstnúmer þar líta svona út: {example}.",
+  "address.region": "Fylki / hérað",
 };

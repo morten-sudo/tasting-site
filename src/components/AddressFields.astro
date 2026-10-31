@@ -31,10 +31,16 @@ const { prefix } = Astro.props as { prefix: string };
     </div>
   </div>
   <p id={`${prefix}-postal-hint`} class="addr-hint" hidden aria-live="polite"></p>
+  <!-- State / province: only for countries whose addresses need one (USA, Canada) -->
+  <div id={`${prefix}-region-box`} class="addr-region" hidden>
+    <label for={`${prefix}-region`} data-i18n="address.region">State / province</label>
+    <select id={`${prefix}-region`} autocomplete="address-level1"></select>
+  </div>
 </div>
 
 <style>
-  .addr-country { display: flex; flex-direction: column; }
+  .addr-country, .addr-region { display: flex; flex-direction: column; }
+  .addr-region[hidden] { display: none; }
   .addr-hint { margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--muted); }
   .addr-row { display: grid; gap: 0.75rem; }
   .addr-street { grid-template-columns: minmax(0, 1fr) 5.5rem; }

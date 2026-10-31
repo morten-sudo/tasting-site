@@ -486,4 +486,5 @@ export const en = {
   "admin.time": "Time",
   "address.country": "Country",
   "address.postalFormat": "Postal codes there look like {example}.",
+  "address.region": "State / province",
 } as const;
