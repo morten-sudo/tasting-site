@@ -23,12 +23,32 @@ import '../../styles/admin.css';
           <button id="wf-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
         </div>
         <form id="wine-form" class="add-form wine-form" novalidate>
+          <!-- Two ways to fill in the form automatically (new wines) -->
+          <div id="wf-start" class="wf-start">
+            <div class="start-tiles">
+              <label class="start-tile" for="wf-camera">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg>
+                <b data-i18n="start.photo">Photo of the label</b>
+                <span data-i18n="start.photoText">Take a picture – we read the label</span>
+              </label>
+              <input id="wf-camera" class="visually-hidden" type="file" accept="image/*" tabindex="-1" />
+              <button id="wf-start-link" class="start-tile" type="button" aria-controls="wf-link-box" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.2 1.2" /><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.2-1.2" /></svg>
+                <b data-i18n="start.link">Link to the wine</b>
+                <span data-i18n="start.linkText">Paste a link from a web shop</span>
+              </button>
+            </div>
+            <p id="wf-start-status" class="label-status" hidden aria-live="polite"></p>
+            <p class="hint start-or" data-i18n="start.orManual">… or fill in the fields yourself.</p>
+          </div>
+          <div id="wf-link-box" class="wf-link-box">
           <label for="wf-link"><span data-i18n="link.label">Link to the wine</span> <span class="hint" data-i18n="link.hint">(e.g. from a web shop – fills in the form)</span></label>
           <div class="inline-form link-row">
             <input id="wf-link" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
             <button id="wf-read-link" class="btn small ghost" type="button" data-i18n="link.fetch">Fetch</button>
           </div>
           <p id="wf-link-status" class="label-status" hidden aria-live="polite"></p>
+          </div>
           <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
           <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>

@@ -442,4 +442,9 @@ export const en = {
   "admin.intro": "Introduction",
   "admin.introHint": "(what is going to happen – shown to your guests)",
   "admin.introPlaceholder": "E.g. We start with a glass of white port, then taste six wines blind…",
+  "start.photo": "Photo of the label",
+  "start.photoText": "Take a picture – we read the label",
+  "start.link": "Link to the wine",
+  "start.linkText": "Paste a link from a web shop",
+  "start.orManual": "… or fill in the fields yourself.",
 } as const;

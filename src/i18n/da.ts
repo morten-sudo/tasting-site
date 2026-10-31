@@ -443,4 +443,9 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "admin.intro": "Introduktion",
   "admin.introHint": "(hvad skal der ske – vises for dine gæster)",
   "admin.introPlaceholder": "Fx Vi starter med et glas hvid portvin og smager derefter seks vine blindt…",
+  "start.photo": "Foto af etiketten",
+  "start.photoText": "Tag et billede – vi læser etiketten",
+  "start.link": "Link til vinen",
+  "start.linkText": "Indsæt et link fra en webshop",
+  "start.orManual": "… eller udfyld felterne selv.",
 };

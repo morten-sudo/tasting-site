@@ -443,4 +443,9 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "admin.intro": "Kynning",
   "admin.introHint": "(hvað mun gerast – sýnt gestunum þínum)",
   "admin.introPlaceholder": "T.d. Við byrjum á glasi af hvítu púrtvíni og smökkum svo sex vín blint…",
+  "start.photo": "Mynd af miðanum",
+  "start.photoText": "Taktu mynd – við lesum miðann",
+  "start.link": "Tengill á vínið",
+  "start.linkText": "Límdu inn tengil úr vefverslun",
+  "start.orManual": "… eða fylltu sjálf(ur) út reitina.",
 };

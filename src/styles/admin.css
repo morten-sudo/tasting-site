@@ -419,3 +419,26 @@ dialog.zoom .zoom-close {
 
 /* Forms inside a side panel / bottom sheet: the panel is the surface */
 .admin-page dialog.sheet .add-form { margin: 0; padding: 0; background: none; max-width: none; }
+
+/* New wine: two tiles for filling in the form automatically */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.admin-page .wf-start { display: grid; gap: 0.6rem; margin-bottom: 0.4rem; }
+.admin-page .start-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.admin-page .add-form .start-tile {
+  display: grid; justify-items: center; align-content: start; gap: 0.3rem; margin: 0;
+  padding: 1.1rem 0.75rem 1rem; text-align: center; cursor: pointer;
+  background: var(--lodge-2); color: var(--paper); font: inherit;
+  border: 1.5px solid var(--lodge-3); border-radius: 0.75rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+.admin-page .start-tile:hover, .admin-page .start-tile.active, .admin-page .start-tile:focus-visible { border-color: var(--amber); }
+.admin-page .start-tile:has(+ input:focus-visible) { border-color: var(--amber); }
+.admin-page .start-tile svg {
+  width: 2rem; height: 2rem; fill: none; stroke: var(--amber); stroke-width: 1.6;
+  stroke-linecap: round; stroke-linejoin: round; margin-bottom: 0.2rem;
+}
+.admin-page .start-tile b { font-size: 1rem; font-weight: 600; }
+.admin-page .start-tile span { font-size: 0.85rem; color: var(--muted); line-height: 1.35; text-transform: none; letter-spacing: 0; }
+.admin-page .start-or { margin: 0.2rem 0 0; }
+.admin-page .wf-link-box { display: grid; gap: 0.4rem; }
+.admin-page .wf-link-box[hidden] { display: none; }

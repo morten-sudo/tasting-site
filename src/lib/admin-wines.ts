@@ -94,9 +94,10 @@ export function initWineAdmin(hostId: string) {
 
   // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
   // Status line under the link field or under the photo, with a spinner while working
-  let statusTarget: 'wf-label-status' | 'wf-link-status' = 'wf-label-status';
+  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-start-status';
+  let statusTarget: StatusId = 'wf-label-status';
   function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    for (const id of ['wf-label-status', 'wf-link-status']) {
+    for (const id of ['wf-label-status', 'wf-link-status', 'wf-start-status']) {
       const el = $(id);
       const mine = id === statusTarget;
       el.textContent = mine ? text : '';
@@ -111,10 +112,10 @@ export function initWineAdmin(hostId: string) {
     btn.setAttribute('aria-busy', String(on));
   }
 
-  async function readLabel() {
+  async function readLabel(target: StatusId = 'wf-label-status') {
     if (!pendingImage) return;
     const btn = $<HTMLButtonElement>('wf-read-label');
-    statusTarget = 'wf-label-status';
+    statusTarget = target;
     busyButton(btn, true);
     $('wf-image-box').classList.add('busy');
     labelStatus(t('label.reading'), 'busy');
@@ -244,10 +245,13 @@ export function initWineAdmin(hostId: string) {
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
     setPreview(w?.image_url ?? null);
+    // New wine: two tiles (photo / link) first; editing: the link field as before
+    $('wf-start').hidden = !!w;
+    showLinkBox(!!w);
     panel.showModal();
     panel.scrollTop = 0;
     // On phones the keyboard would cover the sheet, so only focus a field on larger screens
-    if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>(w ? 'wf-name' : 'wf-link').focus({ preventScroll: true });
+    if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
     else (document.activeElement as HTMLElement | null)?.blur();
   }
 
@@ -318,17 +322,30 @@ export function initWineAdmin(hostId: string) {
   $('wine-add-toggle').addEventListener('click', () => openForm(null));
   $('wf-cancel').addEventListener('click', closeForm);
 
-  field<HTMLInputElement>('wf-image').addEventListener('change', async (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
+  async function useImage(input: HTMLInputElement, status: StatusId) {
+    const file = input.files?.[0];
     if (!file) return;
     pendingImage = await shrinkImage(file);
     removeImage = false;
     setPreview(URL.createObjectURL(pendingImage));
+    input.value = '';
     // A new wine: read the label straight away
-    if (!editing) readLabel();
+    if (!editing) readLabel(status);
+  }
+  field<HTMLInputElement>('wf-image').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-label-status'));
+  field<HTMLInputElement>('wf-camera').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-start-status'));
+  // The link tile shows the link field
+  $('wf-start-link').addEventListener('click', () => {
+    showLinkBox(true);
+    field<HTMLInputElement>('wf-link').focus();
   });
+  function showLinkBox(on: boolean) {
+    $('wf-link-box').hidden = !on;
+    $('wf-start-link').classList.toggle('active', on);
+    $('wf-start-link').setAttribute('aria-expanded', String(on));
+  }
 
-  $('wf-read-label').addEventListener('click', readLabel);
+  $('wf-read-label').addEventListener('click', () => readLabel());
   $('wf-nv').addEventListener('click', () => { field<HTMLInputElement>('wf-vintage').value = 'NV'; });
   $('wf-read-link').addEventListener('click', readLink);
   field<HTMLInputElement>('wf-link').addEventListener('keydown', (e) => {
