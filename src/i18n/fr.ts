@@ -601,4 +601,5 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "landing.more": "Toutes les fonctions et formules →",
   "landing.finalText": "Deux minutes suffisent pour créer un compte et votre première dégustation.",
   "landing.haveAccount": "J’ai déjà un compte",
+  "dash.alsoGuest": "Vous êtes aussi invité :",
 };

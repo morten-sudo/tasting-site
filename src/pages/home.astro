@@ -64,6 +64,7 @@ import Base from '../layouts/Base.astro';
   import { supabase } from '../lib/supabase';
   import { loadMe, getCodes, tastingUrl } from '../lib/guest';
   import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
+  import { landingUrl } from '../lib/landing';
   import { i18nReady, t, formatWhen } from '../i18n';
 
   await i18nReady;
@@ -78,6 +79,10 @@ import Base from '../layouts/Base.astro';
     s.session ? supabase.rpc('host_dashboard') : Promise.resolve({ data: null }),
     s.session ? supabase.rpc('is_admin') : Promise.resolve({ data: false }),
   ]);
+  // Only one place to go (just a host, or a guest with one tasting): go there directly
+  const isHostNow = !!(host.data && typeof host.data === 'object' && 'tastings' in host.data);
+  const to = landingUrl(mine.all, isHostNow, admin.data === true);
+  if (to && to !== '/home/') { location.replace(to); await new Promise(() => {}); }
   $('loading').hidden = true;
   $('main').hidden = false;
 

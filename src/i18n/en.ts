@@ -611,4 +611,5 @@ export const en = {
   "landing.more": "All features and plans →",
   "landing.finalText": "It takes two minutes to create an account and your first tasting.",
   "landing.haveAccount": "I already have an account",
+  "dash.alsoGuest": "You are also invited as a guest:",
 } as const;

@@ -12,6 +12,8 @@ import '../../styles/admin.css';
         <h1 class="title" data-i18n="adminNav.overview">Overview</h1>
         <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
       </div>
+      <!-- The host is also invited somewhere as a guest -->
+      <p id="also-guest" class="also-guest" hidden></p>
       <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
 
       <!-- Counts -->
@@ -51,6 +53,8 @@ import '../../styles/admin.css';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, money, locale, formatWhen, type Key } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
+  import { loadAllMyTastings } from '../../lib/my-tastings';
+  import { tastingUrl } from '../../lib/guest';
 
   type Dash = {
     tastings: number; upcoming: number; guests: number; wines: number;
@@ -117,8 +121,8 @@ import '../../styles/admin.css';
     // Awaiting payment
     const unpaid = $('unpaid');
     unpaid.replaceChildren();
-    if (d.unpaid_orders.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: money(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
-    if (d.unpaid_fees.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: money(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
+    if (d.unpaid_orders?.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: money(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
+    if (d.unpaid_fees?.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: money(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
     $('unpaid-card').hidden = !unpaid.children.length;
 
     // Latest sign-up, order and rating
@@ -148,6 +152,20 @@ import '../../styles/admin.css';
     const wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
     $('new-toggle').addEventListener('click', () => wizard.openNew());
     document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
+    // Invitations as a guest: a quiet link to each upcoming one
+    loadAllMyTastings().then(({ upcoming }) => {
+      if (!upcoming.length) return;
+      const box = $('also-guest');
+      box.append(mk('span', '', t('dash.alsoGuest') + ' '));
+      upcoming.forEach((x, i) => {
+        if (i) box.append(', ');
+        const a = mk('a', '', x.title);
+        a.href = tastingUrl(x.slug);
+        box.append(a);
+      });
+      box.append(' →');
+      box.hidden = false;
+    });
     const { data } = await supabase.rpc('host_dashboard');
     if (data && typeof data === 'object' && 'tastings' in data) render(data as Dash);
   }

@@ -130,6 +130,7 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { fetchMyTastings, setCode, tastingUrl } from '../lib/guest';
+  import { landingUrl } from '../lib/landing';
   import { i18nReady, lang, t } from '../i18n';
 
   await i18nReady;
@@ -169,7 +170,8 @@ import Base from '../layouts/Base.astro';
       supabase.rpc('current_host_id'),
       supabase.rpc('is_admin'),
     ]);
-    if (mine.length > 0 || hostRes.data || adminRes.data === true) { location.replace('/home/'); return true; }
+    const to = landingUrl(mine, !!hostRes.data, adminRes.data === true);
+    if (to) { location.replace(to); return true; }
 
     routing = false;
     $('checking').hidden = true;

@@ -612,4 +612,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "landing.more": "Alle funktioner og abonnementer →",
   "landing.finalText": "Det tager to minutter at oprette en konto og din første smagning.",
   "landing.haveAccount": "Jeg har allerede en konto",
+  "dash.alsoGuest": "Du er også inviteret som gæst:",
 };

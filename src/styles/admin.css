@@ -654,3 +654,10 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 }
 .admin-page svg.stat-icon[viewBox='0 0 100 100'] { width: 1.8rem; height: 1.8rem; top: 0.8rem; right: 0.8rem; }
 @media (max-width: 30rem) { .admin-page .stat-icon { width: 1.25rem; height: 1.25rem; top: 0.7rem; right: 0.7rem; } .admin-page svg.stat-icon[viewBox='0 0 100 100'] { width: 1.4rem; height: 1.4rem; } }
+
+.admin-page .also-guest {
+  max-width: 52rem; margin: 0 0 1.25rem; padding: 0.7rem 1rem; border-radius: 0.6rem;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); font-size: 0.95rem;
+}
+.admin-page .also-guest[hidden] { display: none; }
+.admin-page .also-guest a { color: var(--amber); font-weight: 500; }

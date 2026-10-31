@@ -612,4 +612,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "landing.more": "Allir eiginleikar og áskriftir →",
   "landing.finalText": "Það tekur tvær mínútur að stofna aðgang og fyrstu smökkunina.",
   "landing.haveAccount": "Ég er þegar með aðgang",
+  "dash.alsoGuest": "Þér er líka boðið sem gesti:",
 };
