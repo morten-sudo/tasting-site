@@ -646,3 +646,11 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .dash-text { font-weight: 500; overflow-wrap: anywhere; }
 .admin-page .dash-meta { font-size: 0.85rem; color: var(--muted); }
 .admin-page .dash-meta:empty { display: none; }
+
+.admin-page .stat { position: relative; }
+.admin-page .stat-icon {
+  position: absolute; top: 0.9rem; right: 0.9rem; width: 1.6rem; height: 1.6rem; color: var(--amber);
+  fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+}
+.admin-page svg.stat-icon[viewBox='0 0 100 100'] { width: 1.8rem; height: 1.8rem; top: 0.8rem; right: 0.8rem; }
+@media (max-width: 30rem) { .admin-page .stat-icon { width: 1.25rem; height: 1.25rem; top: 0.7rem; right: 0.7rem; } .admin-page svg.stat-icon[viewBox='0 0 100 100'] { width: 1.4rem; height: 1.4rem; } }
