@@ -602,4 +602,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "landing.finalText": "In twee minuten heb je een account en je eerste proeverij.",
   "landing.haveAccount": "Ik heb al een account",
   "dash.alsoGuest": "Je bent ook uitgenodigd als gast:",
+  "guest.emailLockedHint": "Deels verborgen voor je privacy. <a href=\"/login/\">Log in met je e-mail</a> om het te wijzigen.",
+  "guest.emailLocked": "Log in met je huidige e-mail om hem te wijzigen.",
 };

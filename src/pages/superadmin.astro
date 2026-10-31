@@ -43,6 +43,21 @@ import '../styles/admin.css';
           <tbody id="rows"></tbody>
         </table>
       </div>
+
+      <!-- GDPR: see and delete everything stored about one person -->
+      <section class="block gdpr">
+        <h2 data-i18n="super.gdprTitle">Delete personal data</h2>
+        <p class="hint" data-i18n="super.gdprHint">When someone asks to be forgotten: look up their email, check what is stored, then delete it all – invitations with answers, ratings, orders and chat messages, guest-list entries, a host account with everything in it, and the sign-in account. This cannot be undone.</p>
+        <form id="gdpr-form" class="inline-form" novalidate>
+          <input id="gdpr-email" type="email" autocomplete="off" placeholder="name@example.com" aria-label="Email" data-i18n-attr="aria-label=common.email" />
+          <button class="btn small ghost" type="submit" data-i18n="super.gdprLookup">Look up</button>
+        </form>
+        <div id="gdpr-result" hidden>
+          <ul id="gdpr-list" class="gdpr-list"></ul>
+          <button id="gdpr-delete" class="btn small danger-btn" type="button" data-i18n="super.gdprDelete">Delete everything</button>
+        </div>
+        <p id="gdpr-msg" class="message" hidden></p>
+      </section>
     </div>
   </section>
 </Base>
@@ -136,6 +151,49 @@ import '../styles/admin.css';
   }
 
   $('search').addEventListener('input', render);
+
+  // ---------- GDPR ----------
+  type Summary = { email: string; host: { name: string | null; tastings: number; wines: number; guests: number } | null;
+    invitations: number; orders: number; ratings: number; chat_messages: number; library_entries: number; account: boolean; is_admin: boolean };
+  let gdprEmail = '';
+  const gdprMsg = (text: string, ok: boolean) => { const m = $('gdpr-msg'); m.textContent = text; m.className = 'message ' + (ok ? 'ok' : 'error'); m.hidden = !text; };
+
+  $('gdpr-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    gdprMsg('', true);
+    $('gdpr-result').hidden = true;
+    gdprEmail = ($('gdpr-email') as HTMLInputElement).value.trim().toLowerCase();
+    if (!gdprEmail) return;
+    const { data, error } = await supabase.rpc('admin_person_summary', { e: gdprEmail });
+    if (error || !data) { gdprMsg(t('admin.couldNotSave'), false); return; }
+    const sum = data as Summary;
+    const rows: string[] = [];
+    if (sum.host) rows.push(t('super.gdprHost', { tastings: sum.host.tastings, wines: sum.host.wines, guests: sum.host.guests }));
+    if (sum.invitations) rows.push(t('super.gdprInvites', { n: sum.invitations, orders: sum.orders, ratings: sum.ratings, chat: sum.chat_messages }));
+    if (sum.library_entries) rows.push(t('super.gdprLibrary', { n: sum.library_entries }));
+    if (sum.account) rows.push(t('super.gdprAccount'));
+    if (!rows.length) { gdprMsg(t('super.gdprNothing'), true); return; }
+    $('gdpr-list').replaceChildren(...rows.map((r) => { const li = document.createElement('li'); li.textContent = r; return li; }));
+    const del = $('gdpr-delete') as HTMLButtonElement;
+    del.hidden = sum.is_admin;
+    del.textContent = t('super.gdprDelete');
+    delete del.dataset.armed;
+    if (sum.is_admin) gdprMsg(t('super.gdprAdmin'), false);
+    $('gdpr-result').hidden = false;
+  });
+
+  $('gdpr-delete').addEventListener('click', async () => {
+    const del = $('gdpr-delete') as HTMLButtonElement;
+    if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = t('super.gdprConfirm', { email: gdprEmail }); return; }
+    del.disabled = true;
+    const { error } = await supabase.rpc('admin_delete_person', { e: gdprEmail });
+    del.disabled = false;
+    if (error) { gdprMsg(t('admin.couldNotSave'), false); return; }
+    $('gdpr-result').hidden = true;
+    gdprMsg(t('super.gdprDone', { email: gdprEmail }), true);
+    const { data } = await supabase.rpc('admin_tenants');
+    if (Array.isArray(data)) { tenants = data as Tenant[]; totals(); render(); }
+  });
   document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
     th.addEventListener('click', () => {
       const k = th.dataset.sort as keyof Tenant;
@@ -154,4 +212,9 @@ import '../styles/admin.css';
   .super-page .super-table td { vertical-align: top; white-space: nowrap; }
   .super-page .super-mail { font-size: 0.85rem; color: var(--muted); }
   .super-page .table-wrap { overflow-x: auto; }
+  .super-page .gdpr { margin-top: 3rem; max-width: 40rem; }
+  .super-page .gdpr .inline-form { display: flex; gap: 0.5rem; }
+  .super-page .gdpr input { flex: 1; min-width: 0; font: inherit; padding: 0.6rem 0.75rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); }
+  .super-page .gdpr-list { margin: 1rem 0; padding-left: 1.2rem; }
+  .super-page .danger-btn { background: var(--error); border-color: var(--error); color: #fff; }
 </style>

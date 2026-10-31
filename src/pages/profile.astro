@@ -165,7 +165,8 @@ import Base from '../layouts/Base.astro';
         const { error } = await supabase.rpc('set_my_email', { code, e: email });
         if (error) {
           btn.disabled = false;
-          editMsg(error.message.includes('bruges') ? t('guest.emailTaken') : t('guest.emailNotSaved'), false);
+          editMsg(error.message.includes('bruges') ? t('guest.emailTaken')
+            : error.message.includes('email_locked') ? t('guest.emailLocked') : t('guest.emailNotSaved'), false);
           return;
         }
       }

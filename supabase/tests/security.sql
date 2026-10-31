@@ -81,6 +81,8 @@ begin
   -- The superadmin list is closed to hosts
   failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
   assert failed, 'a host can list all tenants';
+  failed := false; begin perform admin_delete_person('guest-b@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'a host can delete a person';
   -- The admin overview only counts A's own data
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
@@ -124,6 +126,14 @@ begin
   select count(*) into n from get_wines('selftestaa') w where w.id = -1002;                                 assert n = 0, 'code A lists wine B';
   select count(*) into n from get_wines('nosuchcode');                                                      assert n = 0, 'an unknown code lists wines';
   select count(*) into n from get_invite('selftestaa') i where i.name = 'Guest B';                          assert n = 0, 'code A shows guest B';
+  -- The link alone does not reveal or change the guest's email
+  assert (select email from get_invite('selftestaa')) = 'gu***@selftest.invalid', 'the invite link shows the full email';
+  failed := false; begin perform set_my_email('selftestaa', 'thief@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the invite link can change the email';
+  failed := false; begin perform admin_person_summary('guest-a@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can look up a person';
+  failed := false; begin perform admin_delete_person('guest-a@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can delete a person';
   -- Acting with code A on tasting B is refused
   failed := false; begin perform place_order('selftestaa', '[{"wine_id":-1002,"qty":1}]'); exception when others then failed := true; end;
   assert failed, 'code A can order wine B';

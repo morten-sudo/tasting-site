@@ -602,4 +602,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "landing.finalText": "In zwei Minuten haben Sie ein Konto und Ihre erste Verkostung.",
   "landing.haveAccount": "Ich habe schon ein Konto",
   "dash.alsoGuest": "Sie sind auch als Gast eingeladen:",
+  "guest.emailLockedHint": "Zum Schutz Ihrer Privatsphäre teilweise verborgen. <a href=\"/login/\">Melden Sie sich mit Ihrer E-Mail an</a>, um sie zu ändern.",
+  "guest.emailLocked": "Um Ihre E-Mail zu ändern, melden Sie sich mit der jetzigen E-Mail an.",
 };
