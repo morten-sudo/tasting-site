@@ -57,6 +57,7 @@ export async function fetchMyTastings(): Promise<MyTasting[]> {
  * 1. ?k=CODE from an invite link (checked against the slug; wrong slug → redirect)
  * 2. a code stored earlier for this slug
  * 3. the signed-in email's invitation to this tasting
+ * 4. the tasting's own host (or co-host): added to the guest list as attending
  */
 export async function resolveGuestCode(): Promise<string | null> {
   const slug = currentSlug();
@@ -77,7 +78,17 @@ export async function resolveGuestCode(): Promise<string | null> {
   const stored = storedCode(slug);
   if (stored) return stored;
   const mine = await fetchMyTastings();
-  return mine.find((t) => t.slug === slug)?.code ?? null;
+  const found = mine.find((t) => t.slug === slug)?.code;
+  if (found) return found;
+  // The tasting's own host (or co-host) without an invitation: put on the guest list as attending
+  const { data: s } = await supabase.auth.getSession();
+  if (!s.session) return null;
+  const { data: hostCode } = await supabase.rpc('host_guest_code', { t_slug: slug });
+  if (typeof hostCode === 'string' && hostCode) {
+    setCode(slug, hostCode);
+    return hostCode;
+  }
+  return null;
 }
 
 /** Sign out: forget all codes and end any email session on this device. */
