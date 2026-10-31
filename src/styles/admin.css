@@ -661,3 +661,12 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 }
 .admin-page .also-guest[hidden] { display: none; }
 .admin-page .also-guest a { color: var(--amber); font-weight: 500; }
+
+/* Tasting heading with a link to the guests' view */
+.admin-page .t-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.4rem 1rem; }
+.admin-page .t-head .title { min-width: 0; }
+.admin-page .t-guest {
+  flex: none; white-space: nowrap; font-size: 0.85rem; color: var(--amber); text-decoration: none;
+  padding: 0.3rem 0.75rem; border: 1px solid var(--lodge-3); border-radius: 999px;
+}
+.admin-page .t-guest:hover { border-color: var(--amber); }

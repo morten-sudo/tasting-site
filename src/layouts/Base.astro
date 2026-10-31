@@ -36,9 +36,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       <div class="top-row">
         <div class="brand">
           <Fragment set:html={LOGO} />
-          {tasting
-            ? <a href="/home/" data-tpath="" class="mark" id="mark">{SITE_NAME}</a>
-            : <a href="/" class="mark" id="mark">{SITE_NAME}</a>}
+          <a href={tasting ? '/home/' : '/'} class="mark" id="mark">{SITE_NAME}</a>
         </div>
         <div class="tools">
           <div class="lang-pick">
@@ -54,27 +52,49 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
               <span id="nav-cart-count" class="badge" hidden></span>
             </a>
           )}
-          <span id="user-in" class="user-in" hidden>
-            <a href="/profile/" id="user-link" class:list={['user-name', { current: path.startsWith('/profile') }]} title="My profile" aria-label="My profile" data-i18n-attr="title=nav.profile;aria-label=nav.profile">
+          <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->
+          <div id="user-in" class="user-in" hidden>
+            <button id="user-btn" type="button" class:list={['user-name', { current: path.startsWith('/profile') }]} aria-haspopup="true" aria-expanded="false" aria-controls="user-menu" title="Account menu" data-i18n-attr="title=nav.userMenu">
               <span id="user-name" class="user-name-text"></span>
               <svg class="user-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
-            </a>
-            <button id="logout" type="button" class="icon-btn" aria-label="Sign out" title="Sign out" data-i18n-attr="aria-label=nav.signOut;title=nav.signOut">
-              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" /><path d="M10 8l-4 4 4 4" /><path d="M6 12h10" /></svg>
+              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
             </button>
-          </span>
+            <ul id="user-menu" class="pop-menu" hidden>
+              <li><a href="/home/" data-i18n="nav.home">Home</a></li>
+              <li id="um-admin" hidden><a href="/admin/" data-i18n="nav.admin">Admin</a></li>
+              <li id="um-super" hidden><a href="/superadmin/" data-i18n="nav.superadmin">Superadmin</a></li>
+              <li><a href="/profile/" data-i18n="nav.profile">My profile</a></li>
+              <li class="sep"><button id="logout" type="button" data-i18n="nav.signOut">Sign out</button></li>
+            </ul>
+          </div>
           <a id="user-out" href="/login/" class="icon-btn" aria-label="Sign in" title="Sign in" data-i18n-attr="aria-label=nav.signIn;title=nav.signIn" hidden>
             <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
           </a>
         </div>
       </div>
       {tasting && (
-        <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
-          <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
-          <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
-          <a href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
-          <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
-        </nav>
+        <div class="ctx">
+          <!-- Tasting context: which tasting (with a switcher), its tabs, and Admin for its host -->
+          <div class="ctx-bar">
+            <button id="t-switch" type="button" class="t-switch" aria-haspopup="true" aria-expanded="false" aria-controls="t-menu" disabled>
+              <span id="t-title" class="t-title"></span>
+              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+            <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
+              <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
+              <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
+              <a href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
+              <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
+            </nav>
+            <a id="t-admin" class="t-admin" href="/admin/" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span> ↗</a>
+          </div>
+          <div id="t-backdrop" class="t-backdrop" hidden></div>
+          <div id="t-menu" class="pop-menu t-menu" role="menu" hidden>
+            <p class="t-menu-head" data-i18n="nav.switchTasting">Switch tasting</p>
+            <ul id="t-list"></ul>
+            <a class="t-all" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
+          </div>
+        </div>
       )}
       </div>
     </header>
@@ -85,6 +105,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       import { getCart, cartCount } from '../lib/cart';
       import { supabase } from '../lib/supabase';
       import { currentSlug, tastingUrl, resolveGuestCode, signOut, loadMe, cachedName } from '../lib/guest';
+      import { loadAllMyTastings } from '../lib/my-tastings';
       import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
       import { FLAGS } from '../i18n/flags';
 
@@ -113,7 +134,13 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         langBtn.setAttribute('aria-expanded', String(open));
         if (open) (langMenu.querySelector('[aria-current]') as HTMLElement | null)?.focus();
       }
-      langBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLangs(langMenu.hidden); });
+      langBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Only one menu open at a time
+        document.querySelectorAll<HTMLElement>('.pop-menu, .t-backdrop').forEach((el) => { el.hidden = true; });
+        document.body.classList.remove('sheet-open');
+        toggleLangs(langMenu.hidden);
+      });
       document.addEventListener('click', (e) => { if (!langMenu.hidden && !langMenu.contains(e.target as Node)) toggleLangs(false); });
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !langMenu.hidden) { toggleLangs(false); langBtn.focus(); } });
 
@@ -152,12 +179,15 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       const userOut = document.getElementById('user-out')!;
       const userName = document.getElementById('user-name')!;
 
-      // Tasting title in the header, date and time in the footer
+      // Tasting title in the context bar, date and time in the footer
       async function showTasting(c: string) {
         const { data } = await supabase.rpc('get_tasting', { code: c });
         const info = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null } | null;
         if (!info) return;
-        if (info.title) document.getElementById('mark')!.textContent = info.title;
+        if (info.title) {
+          document.getElementById('t-title')!.textContent = info.title;
+          document.title = `${info.title} – ${document.title.split(' – ').pop()}`;
+        }
         const when = document.getElementById('footer-when')!;
         // The tasting home shows date and place itself
         if (info.starts_at && !document.getElementById('t-when')) {
@@ -165,11 +195,91 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         }
       }
 
-      // The person's name is always shown top right and leads to the profile page
+      // ---------- Dropdown menus (user menu and tasting switcher) ----------
+      type Menu = { btn: HTMLElement; menu: HTMLElement; backdrop?: HTMLElement };
+      const menus: Menu[] = [];
+      function setOpen(m: Menu, open: boolean) {
+        m.menu.hidden = !open;
+        if (m.backdrop) m.backdrop.hidden = !open;
+        m.btn.setAttribute('aria-expanded', String(open));
+        // Phones: the tasting switcher is a bottom sheet, so the page behind should not scroll
+        if (m.backdrop) document.body.classList.toggle('sheet-open', open);
+      }
+      function addMenu(m: Menu) {
+        menus.push(m);
+        m.btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const open = m.menu.hidden;
+          menus.forEach((o) => setOpen(o, false));
+          document.getElementById('lang-menu')!.hidden = true;
+          setOpen(m, open);
+          if (open) m.menu.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });
+        });
+        m.backdrop?.addEventListener('click', () => setOpen(m, false));
+      }
+      document.addEventListener('click', (e) => {
+        menus.forEach((m) => { if (!m.menu.hidden && !m.menu.contains(e.target as Node)) setOpen(m, false); });
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        menus.forEach((m) => { if (!m.menu.hidden) { setOpen(m, false); m.btn.focus(); } });
+      });
+      addMenu({ btn: document.getElementById('user-btn')!, menu: document.getElementById('user-menu')! });
+
+      // Switch to another of my tastings, staying on the same tab
+      async function initSwitcher() {
+        const btn = document.getElementById('t-switch') as HTMLButtonElement | null;
+        if (!btn || !slug) return;
+        const { all, upcoming, past } = await loadAllMyTastings();
+        if (all.length < 2) return;
+        const tab = document.querySelector<HTMLAnchorElement>('.ctx nav a.current')?.dataset.tpath ?? '';
+        const list = document.getElementById('t-list')!;
+        list.replaceChildren(...[...upcoming, ...past].map((x) => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = tastingUrl(x.slug, tab);
+          a.setAttribute('role', 'menuitem');
+          const name = document.createElement('span');
+          name.className = 't-name';
+          name.textContent = x.title;
+          a.append(name);
+          if (x.starts_at) {
+            const when = document.createElement('span');
+            when.className = 't-when';
+            when.textContent = formatWhen(x.starts_at, { year: new Date(x.starts_at).getFullYear() !== new Date().getFullYear() });
+            a.append(when);
+          }
+          if (x.slug === slug) a.setAttribute('aria-current', 'page');
+          li.append(a);
+          return li;
+        }));
+        btn.disabled = false;
+        btn.classList.add('can-switch');
+        btn.title = t('nav.switchTasting');
+        addMenu({ btn, menu: document.getElementById('t-menu')!, backdrop: document.getElementById('t-backdrop')! });
+      }
+
+      // Admin links for hosts and administrators
+      async function showRoles(signedIn: boolean, isHost: boolean) {
+        if (!signedIn) return;
+        document.getElementById('um-admin')!.hidden = !isHost;
+        const [{ data: admin }, own] = await Promise.all([
+          supabase.rpc('is_admin'),
+          // Row-level security only returns the tasting to its host (or an administrator)
+          inTasting && slug && isHost
+            ? supabase.from('tastings').select('id').eq('slug', slug).maybeSingle()
+            : Promise.resolve({ data: null }),
+        ]);
+        document.getElementById('um-super')!.hidden = admin !== true;
+        if (admin === true) document.getElementById('um-admin')!.hidden = false;
+        const tAdmin = document.getElementById('t-admin');
+        if (tAdmin && own.data) tAdmin.hidden = false;
+      }
+
+      // The person's name is always shown top right and opens the account menu
       function showName(name: string | null) {
         userName.textContent = name || t('nav.profile');
-        // The icon on phones carries the name for screen readers
-        document.getElementById('user-link')!.setAttribute('aria-label', name ? `${name} – ${t('nav.profile')}` : t('nav.profile'));
+        document.getElementById('user-btn')!.setAttribute('aria-label', name ? `${name} – ${t('nav.userMenu')}` : t('nav.userMenu'));
         userIn.hidden = false;
         userOut.hidden = true;
       }
@@ -184,12 +294,14 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           const { data } = await supabase.rpc('get_invite', { code });
           const row = Array.isArray(data) ? data[0] : null;
           if (!row) { userIn.hidden = true; userOut.hidden = false; return; }
+          showTasting(code);
           const who = await me;
           showName(who?.signedIn && who.name ? who.name : row.name);
-          showTasting(code);
           // Guests without an email must add one on the tasting page before continuing
           const home = tastingUrl(slug);
-          if (!row.email && location.pathname !== home) location.replace(home);
+          if (!row.email && location.pathname !== home) { location.replace(home); return; }
+          initSwitcher();
+          showRoles(!!who?.signedIn, !!who?.isHost);
           return;
         }
         // Outside a tasting: signed in if there is an email session or a stored invite code
@@ -198,6 +310,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           showName(who.name);
           // Signed in: the logo leads to the user's home
           (document.getElementById('mark') as HTMLAnchorElement).href = '/home/';
+          showRoles(who.signedIn, who.isHost);
         } else { userIn.hidden = true; userOut.hidden = false; }
       }
       initUser();
@@ -257,25 +370,112 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   }
   .icon-btn svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .icon-btn:hover { color: var(--amber); }
-  .user-in { display: inline-flex; align-items: center; gap: 0.1rem; min-width: 0; }
+  .user-in { position: relative; display: inline-flex; align-items: center; min-width: 0; }
   .user-name {
     display: inline-flex;
     align-items: center;
+    gap: 0.2rem;
+    min-height: 2.75rem;
     color: var(--muted);
-    text-decoration: none;
-    padding: 0.4rem 0.2rem;
+    background: none;
+    border: 0;
+    border-radius: 0.5rem;
+    padding: 0 0.45rem;
+    font: inherit;
     font-size: 0.88rem;
+    cursor: pointer;
   }
-  .user-name-text { white-space: nowrap; }
+  .user-name-text { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
   .user-icon { display: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+  .chev { flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   /* Phones: a profile icon instead of the name */
   @media (max-width: 40rem) {
-    .user-name { width: 2.75rem; height: 2.75rem; justify-content: center; padding: 0; color: var(--paper); }
+    .user-name { padding: 0 0.2rem; color: var(--paper); }
     .user-name-text { display: none; }
     .user-icon { display: block; }
   }
-  .user-name:hover, .user-name.current { color: var(--paper); text-decoration: underline; text-underline-offset: 0.2em; }
-  nav { display: flex; flex-wrap: wrap; gap: 0 1.5rem; margin-top: 0.2rem; }
+  .user-name:hover, .user-name.current, .user-name[aria-expanded='true'] { color: var(--paper); }
+  /* Dropdown menus */
+  .pop-menu {
+    position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 12rem;
+    list-style: none; margin: 0; padding: 0.35rem; background: var(--lodge-2);
+    border: 1px solid var(--lodge-3); border-radius: 0.6rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  }
+  .pop-menu[hidden], .t-backdrop[hidden] { display: none; }
+  .pop-menu ul { list-style: none; margin: 0; padding: 0; }
+  .pop-menu a, .pop-menu button {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.7rem;
+    background: none; border: 0; border-radius: 0.4rem; font: inherit; font-size: 0.92rem;
+    color: var(--paper); text-decoration: none; cursor: pointer; text-align: left;
+  }
+  .pop-menu a:hover, .pop-menu button:hover, .pop-menu a:focus-visible, .pop-menu button:focus-visible { background: var(--lodge); outline: none; }
+  .pop-menu .sep { margin-top: 0.3rem; padding-top: 0.3rem; border-top: 1px solid var(--lodge-3); }
+  .pop-menu #logout { color: var(--muted); }
+  /* Tasting context bar under the top row */
+  .header-inner { position: relative; }
+  .ctx-bar {
+    display: flex; align-items: center; gap: 1.5rem; margin-top: 0.35rem;
+    border-top: 1px solid var(--lodge-3);
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .ctx-bar::-webkit-scrollbar { display: none; }
+  .t-switch {
+    flex: 0 1 auto; flex-shrink: 0; min-width: 0; display: inline-flex; align-items: center; gap: 0.3rem;
+    padding: 0.7rem 0; background: none; border: 0; font: inherit; font-size: 0.95rem; font-weight: 600;
+    color: var(--paper); cursor: default;
+  }
+  .t-switch:disabled { opacity: 1; }
+  .t-switch .chev { display: none; }
+  .t-switch.can-switch { cursor: pointer; }
+  .t-switch.can-switch .chev { display: block; color: var(--muted); }
+  .t-switch.can-switch:hover .chev, .t-switch[aria-expanded='true'] .chev { color: var(--amber); }
+  .t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; }
+  .t-title:empty::before { content: '…'; color: var(--muted); }
+  nav { display: flex; gap: 0 1.5rem; flex: none; }
+  .t-admin {
+    margin-left: auto; flex: none; white-space: nowrap; font-size: 0.85rem; color: var(--amber);
+    text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid var(--lodge-3); border-radius: 999px;
+  }
+  .t-admin:hover { border-color: var(--amber); }
+  .t-admin[hidden] { display: none; }
+  .t-menu { left: var(--gutter); right: auto; top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); padding: 0.35rem; }
+  .t-menu-head { margin: 0.35rem 0.7rem 0.25rem; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .t-menu ul { max-height: 50vh; overflow-y: auto; }
+  .t-menu :global(a) { flex-direction: column; align-items: flex-start; gap: 0.05rem; }
+  /* The list is built in the script, so its items need global selectors */
+  .t-menu ul :global(a) {
+    display: flex; width: 100%; padding: 0.55rem 0.7rem; border-radius: 0.4rem;
+    color: var(--paper); text-decoration: none; font-size: 0.92rem;
+  }
+  .t-menu ul :global(a:hover), .t-menu ul :global(a:focus-visible) { background: var(--lodge); outline: none; }
+  .t-menu :global(.t-when) { font-size: 0.8rem; color: var(--muted); }
+  .t-menu :global(a[aria-current='page']) { background: var(--lodge); }
+  .t-menu :global(a[aria-current='page'] .t-name) { font-weight: 600; color: var(--amber); }
+  .t-menu .t-all { margin-top: 0.3rem; border-top: 1px solid var(--lodge-3); border-radius: 0 0 0.4rem 0.4rem; color: var(--amber); flex-direction: row; }
+  .t-backdrop { display: none; }
+  /* Phones: the switcher opens as a bottom sheet */
+  @media (max-width: 40rem) {
+    /* Two rows: the tasting (and Admin) on top, the tabs below – scrolling sideways if they do not fit */
+    .ctx-bar { flex-wrap: wrap; gap: 0 0.75rem; overflow: visible; }
+    .t-switch { flex: 1 1 0; padding: 0.55rem 0 0.15rem; }
+    .t-title { max-width: none; }
+    .t-admin { margin-top: 0.4rem; }
+    nav {
+      order: 3; flex: 1 0 100%; gap: 0 1.25rem; overflow-x: auto; scrollbar-width: none;
+      margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter);
+    }
+    nav::-webkit-scrollbar { display: none; }
+    /* A backdrop filter would make the fixed bottom sheet position itself inside the header */
+    .site-header { -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .t-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(20, 12, 12, 0.45); }
+    .t-menu {
+      position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 41; max-width: none; min-width: 0;
+      border-radius: 1rem 1rem 0 0; padding: 0.6rem 0.6rem calc(0.8rem + env(safe-area-inset-bottom));
+      animation: sheet-up 0.22s ease-out;
+    }
+    .t-menu ul :global(a) { padding: 0.75rem 0.8rem; }
+  }
+  :global(body.sheet-open) { overflow: hidden; }
   .badge {
     position: absolute;
     top: 0.2rem;
@@ -291,6 +491,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     line-height: 1.15rem;
   }
   nav a {
+    white-space: nowrap;
     color: var(--muted);
     text-decoration: none;
     font-size: 0.9rem;
@@ -331,7 +532,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   .lang-btn:hover { color: var(--paper); }
   .lang-current { display: grid; }
   .lang-current :global(.flag) { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
-  .lang-btn .chev { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .lang-menu {
     position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 10.5rem;
     list-style: none; margin: 0; padding: 0.35rem; background: var(--lodge-2);
