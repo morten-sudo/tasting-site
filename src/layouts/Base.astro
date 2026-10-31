@@ -41,6 +41,13 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             : <a href="/" class="mark" id="mark">{SITE_NAME}</a>}
         </div>
         <div class="tools">
+          <div class="lang-pick">
+            <button id="lang-btn" class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;title=profile.language" title="Language">
+              <span id="lang-current" class="lang-current"></span>
+              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+            <ul id="lang-menu" class="lang-menu" hidden></ul>
+          </div>
           {tasting && (
             <a href="/tastings/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Cart" title="Cart" data-i18n-attr="aria-label=nav.cart;title=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
@@ -84,19 +91,30 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       const titleKey = document.body.dataset.title as Key | undefined;
       if (titleKey) document.title = `${t(titleKey)} – Winetastr`;
 
-      // Language switcher in the footer
-      const langs = document.getElementById('langs')!;
+      // Language picker in the top right corner: the current flag opens a small list
+      const langBtn = document.getElementById('lang-btn')!;
+      const langMenu = document.getElementById('lang-menu')!;
+      document.getElementById('lang-current')!.innerHTML = FLAGS[lang()];
       for (const l of LANGS) {
+        const li = document.createElement('li');
         const b = document.createElement('button');
         b.type = 'button';
-        b.innerHTML = FLAGS[l.code];
         b.lang = l.code;
-        b.title = l.name;
-        b.setAttribute('aria-label', l.name);
+        b.innerHTML = FLAGS[l.code];
+        b.append(document.createTextNode(l.name));
         if (l.code === lang()) b.setAttribute('aria-current', 'true');
-        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); });
-        langs.append(b);
+        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else toggleLangs(false); });
+        li.append(b);
+        langMenu.append(li);
       }
+      function toggleLangs(open: boolean) {
+        langMenu.hidden = !open;
+        langBtn.setAttribute('aria-expanded', String(open));
+        if (open) (langMenu.querySelector('[aria-current]') as HTMLElement | null)?.focus();
+      }
+      langBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleLangs(langMenu.hidden); });
+      document.addEventListener('click', (e) => { if (!langMenu.hidden && !langMenu.contains(e.target as Node)) toggleLangs(false); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !langMenu.hidden) { toggleLangs(false); langBtn.focus(); } });
 
       const inTasting = document.body.dataset.tasting === '1';
       const slug = currentSlug();
@@ -190,7 +208,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     </script>
     <footer class="site-footer wrap">
       <p id="footer-when"></p>
-      <div id="langs" class="langs" role="group" aria-label="Language"></div>
     </footer>
   </body>
 </html>
@@ -301,12 +318,27 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     padding-bottom: 2rem;
     border-top: 1px solid var(--lodge-3);
   }
-  .langs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
-  .langs :global(button) {
-    display: grid; place-items: center; padding: 0.3rem; background: none; cursor: pointer;
-    border: 1.5px solid transparent; border-radius: 0.4rem; opacity: 0.6; transition: opacity 0.15s, border-color 0.15s;
+  /* Language picker (top right) */
+  .lang-pick { position: relative; }
+  .lang-btn {
+    display: inline-flex; align-items: center; gap: 0.2rem; height: 2.75rem; padding: 0 0.45rem;
+    background: none; border: 0; cursor: pointer; color: var(--muted); border-radius: 0.5rem;
   }
-  .langs :global(button:hover) { opacity: 1; }
-  .langs :global(button[aria-current='true']) { opacity: 1; border-color: var(--paper); }
-  .langs :global(.flag) { display: block; width: 1.6rem; height: auto; aspect-ratio: 3 / 2; border-radius: 0.2rem; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); }
+  .lang-btn:hover { color: var(--paper); }
+  .lang-current { display: grid; }
+  .lang-current :global(.flag) { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
+  .lang-btn .chev { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .lang-menu {
+    position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 10.5rem;
+    list-style: none; margin: 0; padding: 0.35rem; background: var(--lodge-2);
+    border: 1px solid var(--lodge-3); border-radius: 0.6rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  }
+  .lang-menu[hidden] { display: none; }
+  .lang-menu :global(button) {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.5rem 0.6rem;
+    background: none; border: 0; border-radius: 0.4rem; font: inherit; font-size: 0.92rem; color: var(--paper); cursor: pointer; text-align: left;
+  }
+  .lang-menu :global(button:hover), .lang-menu :global(button:focus-visible) { background: var(--lodge); outline: none; }
+  .lang-menu :global(button[aria-current='true']) { font-weight: 600; }
+  .lang-menu :global(.flag) { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); flex-shrink: 0; }
 </style>
