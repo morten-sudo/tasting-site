@@ -5,8 +5,19 @@ import { en } from '../i18n/en';
 
 // title: a translation key for the page title
 // tasting: the page lives under /t/<slug>/ and gets the tasting's menu
-interface Props { title?: keyof typeof en; hero?: boolean; tasting?: boolean }
-const { title, hero = false, tasting = false } = Astro.props;
+// adminTasting: a tasting's admin page (/t/<slug>/admin/...) – the same bar with the admin's tabs
+interface Props { title?: keyof typeof en; hero?: boolean; tasting?: boolean; adminTasting?: boolean }
+const { title, hero = false, tasting = false, adminTasting = false } = Astro.props;
+// The parts of a tasting's admin (as SECTIONS in src/lib/admin-side.ts)
+const ADMIN_TABS: { id: string; path: string; key: keyof typeof en }[] = [
+  { id: 'overview', path: '', key: 'section.overview' },
+  { id: 'wines', path: 'wines/', key: 'page.wines' },
+  { id: 'guests', path: 'guests/', key: 'admin.guests' },
+  { id: 'orders', path: 'orders/', key: 'admin.orders' },
+  { id: 'quiz', path: 'quiz/', key: 'page.quiz' },
+  { id: 'chat', path: 'chat/', key: 'page.chat' },
+  { id: 'settings', path: 'settings/', key: 'section.settings' },
+];
 const pageTitle = title ? `${en[title]} – ${SITE_NAME}` : SITE_NAME;
 const path = Astro.url.pathname;
 const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect width="100" height="100" rx="22" fill="#6e0f1f" /><g transform="translate(50 50) scale(0.84) translate(-50 -50)"><rect x="0" y="43" width="100" height="100" fill="#fff" clip-path="url(#logo-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></g></svg>`;
@@ -30,7 +41,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap"
     />
   </head>
-  <body class:list={{ 'has-hero': hero }} data-tasting={tasting ? '1' : undefined} data-title={title}>
+  <body class:list={{ 'has-hero': hero }} data-tasting={tasting ? '1' : undefined} data-admin={adminTasting ? '1' : undefined} data-title={title}>
     <header class="site-header">
       <div class="wrap header-inner">
       <div class="top-row">
@@ -73,27 +84,35 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           </a>
         </div>
       </div>
-      {tasting && (
+      {(tasting || adminTasting) && (
         <div class="ctx">
-          <!-- Tasting context: which tasting (with a switcher), its tabs, and Admin for its host -->
+          <!-- Tasting context: which tasting (with a switcher), its tabs, and the way between guest page and admin -->
           <div class="ctx-bar">
             <button id="t-switch" type="button" class="t-switch" aria-haspopup="true" aria-expanded="false" aria-controls="t-menu" disabled>
               <span id="t-title" class="t-title"></span>
               <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
             </button>
-            <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
-              <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
-              <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
-              <a href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
-              <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
-            </nav>
-            <a id="t-admin" class="t-admin" href="/admin/" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span> ↗</a>
+            {tasting ? (
+              <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
+                <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
+                <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
+                <a href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
+                <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
+              </nav>
+            ) : (
+              <nav id="admin-tabs" aria-label="Tasting admin" data-i18n-attr="aria-label=adminBar.label">
+                {ADMIN_TABS.map((tab) => <a href="/admin/" data-apath={tab.path} data-section={tab.id} data-i18n={tab.key}>{en[tab.key]}</a>)}
+              </nav>
+            )}
+            {tasting
+              ? <a id="t-admin" class="t-admin" href="/admin/" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span> ↗</a>
+              : <a id="t-guestpage" class="t-admin" href="/home/" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span> ↗</a>}
           </div>
           <div id="t-backdrop" class="t-backdrop" hidden></div>
           <div id="t-menu" class="pop-menu t-menu" role="menu" hidden>
             <p class="t-menu-head" data-i18n="nav.switchTasting">Switch tasting</p>
             <ul id="t-list"></ul>
-            <a class="t-all" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
+            <a id="t-all" class="t-all" href={adminTasting ? '/admin/tastings/' : '/home/#my-tastings'} data-i18n="nav.allMyTastings">All my tastings</a>
           </div>
         </div>
       )}
@@ -146,6 +165,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !langMenu.hidden) { toggleLangs(false); langBtn.focus(); } });
 
       const inTasting = document.body.dataset.tasting === '1';
+      const inAdmin = document.body.dataset.admin === '1';
       const slug = currentSlug();
 
       // Links inside a tasting point to /t/<slug>/...
@@ -228,17 +248,20 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       addMenu({ btn: document.getElementById('user-btn')!, menu: document.getElementById('user-menu')! });
 
       // Switch to another of my tastings, staying on the same tab
+      type SwitchItem = { slug: string; title: string; starts_at: string | null };
       async function initSwitcher() {
-        const btn = document.getElementById('t-switch') as HTMLButtonElement | null;
-        if (!btn || !slug) return;
         const { all, upcoming, past } = await loadAllMyTastings();
-        if (all.length < 2) return;
         const tab = document.querySelector<HTMLAnchorElement>('.ctx nav a.current')?.dataset.tpath ?? '';
+        fillSwitcher(all.length < 2 ? [] : [...upcoming, ...past], (s) => tastingUrl(s, tab));
+      }
+      function fillSwitcher(items: SwitchItem[], hrefFor: (slug: string) => string) {
+        const btn = document.getElementById('t-switch') as HTMLButtonElement | null;
+        if (!btn || !slug || items.length < 2) return;
         const list = document.getElementById('t-list')!;
-        list.replaceChildren(...[...upcoming, ...past].map((x) => {
+        list.replaceChildren(...items.map((x) => {
           const li = document.createElement('li');
           const a = document.createElement('a');
-          a.href = tastingUrl(x.slug, tab);
+          a.href = hrefFor(x.slug);
           a.setAttribute('role', 'menuitem');
           const name = document.createElement('span');
           name.className = 't-name';
@@ -250,15 +273,46 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             when.textContent = formatWhen(x.starts_at, { year: new Date(x.starts_at).getFullYear() !== new Date().getFullYear() });
             a.append(when);
           }
+          a.dataset.slug = x.slug;
           if (x.slug === slug) a.setAttribute('aria-current', 'page');
           li.append(a);
           return li;
         }));
+        // The link is worked out again on click (an admin page can change section without reloading)
+        list.addEventListener('click', (e) => {
+          const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-slug]');
+          if (a) a.href = hrefFor(a.dataset.slug!);
+        });
         btn.disabled = false;
         btn.classList.add('can-switch');
         btn.title = t('nav.switchTasting');
         addMenu({ btn, menu: document.getElementById('t-menu')!, backdrop: document.getElementById('t-backdrop')! });
       }
+
+      // ---------- A tasting's admin: title, tabs, switcher and the guest page ----------
+      async function initAdminBar() {
+        if (!slug) return;
+        document.querySelectorAll<HTMLAnchorElement>('a[data-apath]').forEach((a) => { a.href = `/t/${slug}/admin/${a.dataset.apath}`; });
+        (document.getElementById('t-guestpage') as HTMLAnchorElement).href = tastingUrl(slug);
+        const { data: hosted } = await supabase.rpc('my_hosted_tastings');
+        const ids = ((hosted ?? []) as { tasting_id: string }[]).map((x) => x.tasting_id);
+        const { data } = await supabase.from('tastings').select('slug, title, starts_at').in('id', ids)
+          .order('starts_at', { ascending: false, nullsFirst: true });
+        const rows = (data ?? []) as SwitchItem[];
+        const mine = rows.find((r) => r.slug === slug);
+        if (mine) document.getElementById('t-title')!.textContent = mine.title;
+        else {
+          // An administrator looking at another host's tasting
+          const { data: one } = await supabase.from('tastings').select('title').eq('slug', slug).maybeSingle();
+          if (one) document.getElementById('t-title')!.textContent = (one as { title: string }).title;
+        }
+        // Switching keeps the current section
+        fillSwitcher(rows, (s) => {
+          const cur = document.querySelector<HTMLAnchorElement>('#admin-tabs a.current')?.dataset.apath ?? '';
+          return `/t/${s}/admin/${cur}`;
+        });
+      }
+      if (inAdmin) initAdminBar();
 
       // Admin links for hosts and administrators
       async function showRoles(signedIn: boolean, isHost: boolean) {

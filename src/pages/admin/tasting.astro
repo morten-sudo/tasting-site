@@ -7,19 +7,12 @@ import DateTimeFields from '../../components/DateTimeFields.astro';
 import ChatBox from '../../components/ChatBox.astro';
 import '../../styles/admin.css';
 ---
-<Base title="page.admin">
+<Base title="page.admin" adminTasting>
   <section class="wrap admin-page">
     <AdminNav>
     <p id="not-found" class="message error" hidden><span data-i18n="adminTasting.notFound">This tasting was not found.</span> <a href="/admin/tastings/" data-i18n="adminTasting.back">All tastings</a></p>
 
     <div id="admin-main" hidden>
-      <div class="t-head">
-        <h1 class="title" id="t-heading"></h1>
-        <!-- The same tasting as the guests see it -->
-        <a id="t-guest" class="t-guest" href="/home/" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span> ↗</a>
-      </div>
-      <!-- Phones: the tasting's sections as tabs (on larger screens they are in the menu) -->
-      <nav id="section-tabs" class="section-tabs" aria-label="Tasting"></nav>
       <div id="tasting-panel">
       <!-- Tasting details -->
       <section class="block" data-section="overview">
@@ -31,7 +24,7 @@ import '../../styles/admin.css';
           </div>
           <button id="setup-continue" class="btn small" type="button" data-i18n="wizard.continue">Continue set-up</button>
         </div>
-        <h2 data-i18n="page.tasting">Tasting</h2>
+        <h2 data-i18n="section.details">Details</h2>
         <form id="details" class="add-form tasting-form" novalidate>
           <label for="d-title" data-i18n="admin.title">Title</label>
           <input id="d-title" type="text" required />
@@ -277,9 +270,7 @@ import '../../styles/admin.css';
     const { data } = await supabase.from('tastings').select('*').eq('slug', slug).maybeSingle();
     tasting = (data ?? null) as T | null;
     if (!tasting) return;
-    ($('t-guest') as HTMLAnchorElement).href = tastingUrl(slug);
     initHosts(tasting.id, slug, tasting.host_id === host.id);
-    $('t-heading').textContent = tasting.title;
     document.title = `${tasting.title} – Winetastr`;
 
     ($('d-title') as HTMLInputElement).value = tasting.title;
@@ -315,7 +306,6 @@ import '../../styles/admin.css';
     msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
     if (!error) {
       Object.assign(tasting, patch);
-      $('t-heading').textContent = title;
       setTimeout(() => (msg.textContent = ''), 2000);
     }
   });
@@ -734,8 +724,11 @@ import '../../styles/admin.css';
   // ---------- Sections: each part of the tasting has its own address /t/<slug>/admin/<section>/ ----------
   function showSection(id: string) {
     document.querySelectorAll<HTMLElement>('#tasting-panel [data-section]').forEach((el) => { el.hidden = el.dataset.section !== id; });
-    document.querySelectorAll<HTMLAnchorElement>('#section-tabs a').forEach((a) => {
-      if (a.dataset.section === id) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    // The tabs in the tasting bar at the top
+    document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a').forEach((a) => {
+      const on = a.dataset.section === id;
+      a.classList.toggle('current', on);
+      if (on) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
       else a.removeAttribute('aria-current');
     });
     markSection(id);
@@ -759,12 +752,6 @@ import '../../styles/admin.css';
     }).start();
   }
   const startSlug = currentSlug() ?? '';
-  $('section-tabs').replaceChildren(...SECTIONS.map((sec) => {
-    const a = mkEl('a', '', t(sec.label));
-    a.href = adminUrl(startSlug, sec.path);
-    a.dataset.section = sec.id;
-    return a;
-  }));
   // Switch section without reloading the page (menu and tabs)
   document.addEventListener('click', (e) => {
     const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-section]');

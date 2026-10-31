@@ -1,4 +1,4 @@
-// The admin menu on the left: the host's tastings (the current one with its sections),
+// The admin menu on the left: the host's tastings (the tasting's own sections are tabs in the bar at the top),
 // the libraries and settings. On phones the same menu opens as a drawer.
 import { supabase } from './supabase';
 import { t, type Key } from '../i18n';
@@ -47,10 +47,6 @@ export function markSection(section: string) {
     if (a.dataset.section === section) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
-  const cur = currentAdmin();
-  const title = document.querySelector<HTMLElement>('#side-tastings .current > a')?.textContent;
-  const label = SECTIONS.find((s) => s.id === section)?.label;
-  if (cur && title && label) $('side-where').textContent = `${title} › ${t(label)}`;
   setOpen(false);
 }
 
@@ -59,18 +55,10 @@ function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>) {
   const a = mk('a', '', r.title);
   a.href = adminUrl(r.slug);
   li.append(a);
+  // The tasting's sections are tabs in the bar at the top; here it is only marked
   if (current?.slug === r.slug) {
     li.className = 'current';
-    const sub = mk('ul', 'side-sub');
-    for (const s of SECTIONS) {
-      const sa = mk('a', '', t(s.label));
-      sa.href = adminUrl(r.slug, s.path);
-      sa.dataset.section = s.id;
-      const sli = mk('li');
-      sli.append(sa);
-      sub.append(sli);
-    }
-    li.append(sub);
+    a.setAttribute('aria-current', 'page');
   }
   return li;
 }
@@ -103,10 +91,7 @@ export async function initSide(hostId: string) {
   if (current && past.some((r) => r.slug === current.slug)) ($('side-past') as HTMLDetailsElement).open = true;
 
   if (current) markSection(current.section);
-  else {
-    const a = document.querySelector<HTMLElement>('#admin-side a[aria-current="page"]');
-    if (a?.textContent) $('side-where').textContent = a.textContent;
-  }
+
 }
 
 /** The tastings I host – my own and those I co-host (not every tenant's, even for an administrator). */
