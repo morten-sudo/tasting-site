@@ -101,21 +101,6 @@ import Base from '../layouts/Base.astro';
             </form>
           </details>
 
-          <!-- Password (hosts who have set one) -->
-          <details class="alt" id="alt-pw">
-            <summary>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-              <span data-i18n="login.pwSummary">Sign in with a password</span>
-            </summary>
-            <form id="pw-form" class="login-form" novalidate>
-              <label for="pw-email" data-i18n="common.email">Email</label>
-              <input id="pw-email" type="email" autocomplete="username" required />
-              <label for="pw" data-i18n="login.password">Password</label>
-              <input id="pw" type="password" autocomplete="current-password" required />
-              <p id="pw-msg" class="message error" hidden></p>
-              <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
-            </form>
-          </details>
 
           <p class="hint lp-fine lp-lost" data-i18n="login.lostHint">
             If we don't know your email, sign in with your invitation link and add it on your page.
@@ -362,22 +347,11 @@ import Base from '../layouts/Base.astro';
     location.href = tastingUrl(slug);
   });
 
-  // ---------- Password ----------
-  $('pw-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = $('pw-msg');
-    msg.hidden = true;
-    const em = ($('pw-email') as HTMLInputElement).value.trim();
-    const password = ($('pw') as HTMLInputElement).value;
-    const { error } = await supabase.auth.signInWithPassword({ email: em, password });
-    if (error) { msg.textContent = t('login.wrongPassword'); msg.hidden = false; return; }
-    route();
-  });
-
   if (wantsAdmin) {
     (document.querySelector('#mail-form .lead') as HTMLElement).textContent =
       t('login.hostMailLead');
     $('alt-invite').hidden = true;
+    (document.querySelector('.lp-or') as HTMLElement).hidden = true;
   }
 
   route();
@@ -437,7 +411,7 @@ import Base from '../layouts/Base.astro';
   .lead { margin: 0 0 0.3rem; }
   .login-form { display: grid; gap: 0.6rem; }
   .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
-  .login-form input[type='email'], .login-form input[type='password'], .login-form input[type='text'] {
+  .login-form input[type='email'], .login-form input[type='text'] {
     width: 100%; box-sizing: border-box; font: inherit; color: var(--paper); background: #fff;
     border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 0.75rem 0.85rem;
   }
@@ -456,7 +430,6 @@ import Base from '../layouts/Base.astro';
   .lp-or { display: flex; align-items: center; gap: 0.75rem; margin: 1.4rem 0 0.6rem; color: var(--muted); font-size: 0.82rem; }
   .lp-or::before, .lp-or::after { content: ''; flex: 1; height: 1px; background: var(--lodge-3); }
   .alt { border: 1px solid var(--lodge-3); border-radius: 0.6rem; }
-  .alt + .alt { margin-top: 0.5rem; }
   .alt summary { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.7rem 0.85rem; font-size: 0.95rem; list-style: none; }
   .alt summary::-webkit-details-marker { display: none; }
   .alt summary::after { content: '›'; margin-left: auto; color: var(--muted); transition: transform 0.15s; }
