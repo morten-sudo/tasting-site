@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 ---
-<Base title="page.becomeHost">
+<Base title="page.signup">
   <section class="wrap host-page">
     <p class="eyebrow" data-i18n="host.eyebrow">Free</p>
     <h1 class="title" data-i18n="host.title">Host your own tasting</h1>
@@ -104,7 +104,7 @@ import Base from '../layouts/Base.astro';
   async function sendCode() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: location.origin + '/become-host/', shouldCreateUser: true, data: { lang: lang() } },
+      options: { emailRedirectTo: location.origin + '/signup/', shouldCreateUser: true, data: { lang: lang() } },
     });
     if (error?.status === 429) { show($('start-msg'), t('login.tooManyMails'), false); return false; }
     if (error) { show($('start-msg'), t('login.sendFailed'), false); return false; }

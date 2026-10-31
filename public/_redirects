@@ -1,5 +1,7 @@
 # Cloudflare Pages: every tasting has its own address, /t/<slug>/...
 # The pages are built once under /tasting/ and served for any slug (200 = rewrite).
+/become-host              /signup/                  301
+/become-host/             /signup/                  301
 /t/:slug                  /t/:slug/                 301
 /t/:slug/                 /tasting/                 200
 /t/:slug/wines            /t/:slug/wines/           301
