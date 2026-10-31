@@ -354,7 +354,7 @@ html.side-locked { overflow: hidden; }
 }
 .admin-side nav { display: block; }
 .side-group {
-  display: block; margin: 1.4rem 0 0.35rem; padding: 0 0.6rem;
+  display: flex; align-items: center; gap: 0.55rem; margin: 1.4rem 0 0.35rem; padding: 0 0.6rem;
   font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--muted); text-decoration: none;
 }
@@ -513,3 +513,11 @@ dialog.zoom .zoom-close {
 .admin-page .start-or { margin: 0.2rem 0 0; }
 .admin-page .wf-link-box { display: grid; gap: 0.4rem; }
 .admin-page .wf-link-box[hidden] { display: none; }
+
+/* Icons on the menu groups */
+.admin-side .side-icon { width: 1.15rem; height: 1.15rem; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.admin-side svg.side-icon[viewBox='0 0 100 100'] { width: 1.35rem; height: 1.35rem; margin: -0.05rem; }
+.side-list { padding-left: 0; }
+.side-list > li > a, .side-new, .side-past summary { padding-left: 2.3rem; }
+.side-sub a { padding-left: 0.6rem; }
+.side-sub { margin-left: 2.3rem; }

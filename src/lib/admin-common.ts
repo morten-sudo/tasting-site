@@ -31,7 +31,7 @@ export async function requireHost(): Promise<Host | null> {
     return null;
   }
   $('logout2')?.addEventListener('click', signOut);
-  $('logout')?.addEventListener('click', signOut);
+  $('side-logout')?.addEventListener('click', signOut);
 
   const { data: hostId } = await supabase.rpc('current_host_id');
   if (!hostId) { $('not-host').hidden = false; return null; }

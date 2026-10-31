@@ -24,7 +24,7 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
       <button id="side-close" class="side-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
     </div>
     <nav aria-label="Admin">
-      <a class="side-group" href="/admin/" aria-current={cur('tastings')} data-i18n="adminNav.tastings">Tastings</a>
+      <a class="side-group" href="/admin/" aria-current={cur('tastings')}><svg class="side-icon" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="side-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" stroke="none" clip-path="url(#side-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" stroke-width="7"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg><span data-i18n="adminNav.tastings">Tastings</span></a>
       <ul id="side-tastings" class="side-list"></ul>
       <details id="side-past" class="side-past" hidden>
         <summary data-i18n="adminNav.past">Past</summary>
@@ -32,13 +32,13 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
       </details>
       <a class="side-new" href="/admin/?new=1"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></a>
 
-      <p class="side-group" data-i18n="adminNav.library">Library</p>
+      <p class="side-group"><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v14a1.5 1.5 0 0 0-1.5-1.5H4z" /><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v14a1.5 1.5 0 0 1 1.5-1.5H20z" /></svg><span data-i18n="adminNav.library">Library</span></p>
       <ul class="side-list">
         <li><a href="/admin/wines/" aria-current={cur('wines')} data-i18n="adminNav.wines">Wines</a></li>
         <li><a href="/admin/guests/" aria-current={cur('guests')} data-i18n="adminNav.guests">Guests</a></li>
       </ul>
 
-      <p class="side-group" data-i18n="adminNav.settings">Settings</p>
+      <p class="side-group"><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg><span data-i18n="adminNav.settings">Settings</span></p>
       <ul class="side-list">
         <li><a href="/admin/payments/" aria-current={cur('payments')} data-i18n="adminNav.payments">Payments</a></li>
         <li><a href="/admin/account/" aria-current={cur('account')} data-i18n="adminNav.account">Account</a></li>
@@ -46,7 +46,7 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
     </nav>
     <div class="side-foot">
       <span id="me" class="side-me"></span>
-      <button id="logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
+      <button id="side-logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
     </div>
   </aside>
 
