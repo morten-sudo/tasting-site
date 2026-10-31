@@ -1,9 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+import AdminNav from '../components/AdminNav.astro';
 import '../styles/admin.css';
 ---
 <Base title="page.superadmin">
   <section class="wrap admin-page super-page">
+    <AdminNav active="super">
     <p class="eyebrow">Winetastr</p>
     <h1 class="title" data-i18n="page.superadmin">Superadmin</h1>
     <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
@@ -59,12 +61,14 @@ import '../styles/admin.css';
         <p id="gdpr-msg" class="message" hidden></p>
       </section>
     </div>
+    </AdminNav>
   </section>
 </Base>
 
 <script>
   import { supabase } from '../lib/supabase';
   import { i18nReady, t, money, locale } from '../i18n';
+  import { initSide } from '../lib/admin-side';
 
   type Tenant = { id: string; name: string | null; email: string; plan: string; created_at: string;
     tastings: number; upcoming: number; wines: number; guests: number; invited: number; coming: number;
@@ -89,6 +93,12 @@ import '../styles/admin.css';
       invited: Number(x.invited), coming: Number(x.coming), orders: Number(x.orders), order_amount: Number(x.order_amount),
       ratings: Number(x.ratings), chat_messages: Number(x.chat_messages) }));
     $('main').hidden = false;
+    // The admin menu (a drawer behind the menu button on phones)
+    const { data: me } = await supabase.auth.getUser();
+    $('me').textContent = me.user?.email ?? '';
+    const { data: hostId } = await supabase.rpc('current_host_id');
+    initSide(hostId ?? '');
+    $('side-logout').addEventListener('click', async () => { await supabase.auth.signOut(); location.href = '/'; });
     totals();
     render();
   }
