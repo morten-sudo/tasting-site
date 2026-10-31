@@ -97,7 +97,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
               <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
                 <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
                 <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
-                <a href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
+                <!-- Only when the tasting has a quiz (shown by the script) -->
+                <a id="t-quiz-tab" href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} hidden={!path.startsWith('/tasting/quiz')} data-i18n="nav.quiz">Quiz</a>
                 <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
               </nav>
             ) : (
@@ -204,8 +205,9 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       // Tasting title in the context bar, date and time in the footer
       async function showTasting(c: string) {
         const { data } = await supabase.rpc('get_tasting', { code: c });
-        const info = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null } | null;
+        const info = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null; quiz_count?: number } | null;
         if (!info) return;
+        if (Number(info.quiz_count ?? 0) > 0) document.getElementById('t-quiz-tab')!.hidden = false;
         if (info.title) {
           document.getElementById('t-title')!.textContent = info.title;
           document.title = `${info.title} – ${document.title.split(' – ').pop()}`;
@@ -550,6 +552,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     text-align: center;
     line-height: 1.15rem;
   }
+  nav a[hidden] { display: none; }
   nav a {
     white-space: nowrap;
     color: var(--muted);
