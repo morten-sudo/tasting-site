@@ -67,6 +67,10 @@ begin
   failed := false; begin perform count(*) from login_checks; exception when others then failed := true; end;
   assert failed, 'login_checks is readable';
   select count(*) into n from wine_ratings;                                                                 assert n = 0, 'wine ratings are readable directly';
+  -- The admin overview only counts A's own data
+  assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
+  assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
+  assert (host_dashboard() ->> 'guests')::int = (select count(*) from guests), 'overview counts other hosts'' guests';
 end $$;
 reset role;
 
@@ -80,6 +84,7 @@ begin
   select count(*) into n from tastings where slug like 'selftest-%';                                        assert n = 0, 'a guest can read tastings directly';
   select count(*) into n from participants where id::text like '00000000-0000-4000-d000-%';                 assert n = 0, 'a guest can read participants directly';
   select count(*) into n from orders where id in (-2001, -2002);                                            assert n = 0, 'a guest can read orders directly';
+  assert host_dashboard() is null, 'a guest gets a host overview';
 end $$;
 reset role;
 
@@ -117,6 +122,8 @@ begin
   -- Host functions are closed
   failed := false; begin perform create_tasting('x'); exception when others then failed := true; end;
   assert failed, 'anyone can create a tasting';
+  failed := false; begin perform host_dashboard(); exception when others then failed := true; end;
+  assert failed, 'anyone can read a host overview';
 end $$;
 reset role;
 

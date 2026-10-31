@@ -1,7 +1,7 @@
 ---
 // Admin shell shared by all host pages: the menu on the left (a drawer on phones),
 // the signed-in line and the "not a host" notice. Page content goes in the slot.
-interface Props { active?: 'tastings' | 'wines' | 'guests' | 'payments' | 'account' }
+interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'payments' | 'account' }
 const { active } = Astro.props;
 const cur = (key: string) => (active === key ? 'page' : undefined);
 ---
@@ -24,13 +24,14 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
       <button id="side-close" class="side-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
     </div>
     <nav aria-label="Admin">
-      <a class="side-group" href="/admin/" aria-current={cur('tastings')}><svg class="side-icon" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="side-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" stroke="none" clip-path="url(#side-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" stroke-width="7"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg><span data-i18n="adminNav.tastings">Tastings</span></a>
+      <a class="side-group side-home" href="/admin/" aria-current={cur('overview')}><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg><span data-i18n="adminNav.overview">Overview</span></a>
+      <a class="side-group" href="/admin/tastings/" aria-current={cur('tastings')}><svg class="side-icon" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="side-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" stroke="none" clip-path="url(#side-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" stroke-width="7"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg><span data-i18n="adminNav.tastings">Tastings</span></a>
       <ul id="side-tastings" class="side-list"></ul>
       <details id="side-past" class="side-past" hidden>
         <summary data-i18n="adminNav.past">Past</summary>
         <ul id="side-past-list" class="side-list"></ul>
       </details>
-      <a class="side-new" href="/admin/?new=1"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></a>
+      <a class="side-new" href="/admin/tastings/?new=1"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></a>
 
       <p class="side-group"><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v14a1.5 1.5 0 0 0-1.5-1.5H4z" /><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v14a1.5 1.5 0 0 1 1.5-1.5H20z" /></svg><span data-i18n="adminNav.library">Library</span></p>
       <ul class="side-list">

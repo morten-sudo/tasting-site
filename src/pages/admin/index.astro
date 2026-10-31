@@ -6,26 +6,42 @@ import '../../styles/admin.css';
 ---
 <Base title="page.admin">
   <section class="wrap admin-page">
-    <AdminNav active="tastings">
-
+    <AdminNav active="overview">
     <div id="admin-main" hidden>
-      <h1 class="title" data-i18n="adminNav.tastings">Tastings</h1>
-      <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
-
-      <div class="guests-head" style="justify-content:flex-end">
+      <div class="dash-head">
+        <h1 class="title" data-i18n="adminNav.overview">Overview</h1>
         <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
       </div>
+      <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
 
+      <!-- Counts -->
+      <div class="dash-stats">
+        <a class="stat" href="/admin/tastings/"><span id="s-tastings" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.tastings">Tastings</span><span id="s-upcoming" class="stat-sub"></span></a>
+        <a class="stat" href="/admin/guests/"><span id="s-guests" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.guests">Guests</span><span class="stat-sub" data-i18n="dash.inLibrary">in your library</span></a>
+        <a class="stat" href="/admin/wines/"><span id="s-wines" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.wines">Wines</span><span class="stat-sub" data-i18n="dash.inLibrary">in your library</span></a>
+      </div>
 
-      <section>
-        <h3 id="upcoming-h" data-i18n="tastings.upcoming" hidden>Upcoming</h3>
-        <ul id="upcoming" class="tasting-cards"></ul>
-        <h3 id="past-h" data-i18n="tastings.past" hidden>Past</h3>
-        <ul id="past" class="tasting-cards"></ul>
-      </section>
+      <div class="dash-grid">
+        <!-- Next tasting -->
+        <section class="dash-card">
+          <h2 data-i18n="dash.next">Next tasting</h2>
+          <div id="next"></div>
+        </section>
 
-    </div>
+        <!-- Needs paying -->
+        <section id="unpaid-card" class="dash-card" hidden>
+          <h2 data-i18n="dash.unpaid">Awaiting payment</h2>
+          <ul id="unpaid" class="dash-list"></ul>
+        </section>
+
+        <!-- Latest activity -->
+        <section class="dash-card dash-wide">
+          <h2 data-i18n="dash.latest">Latest activity</h2>
+          <ul id="activity" class="dash-list"></ul>
+        </section>
+      </div>
       <TastingWizard />
+    </div>
     </AdminNav>
   </section>
 </Base>
@@ -33,64 +49,106 @@ import '../../styles/admin.css';
 <script>
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
-  import { t, formatWhen } from '../../i18n';
+  import { t, money, locale, formatWhen, type Key } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
 
-  type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
-    participants: { status: string }[]; tasting_wines: { count: number }[] };
+  type Dash = {
+    tastings: number; upcoming: number; guests: number; wines: number;
+    next: { slug: string; title: string; starts_at: string | null; place: string | null; invited: number; coming: number; no_reply: number; wines: number } | null;
+    latest_signup: { name: string; status: string; at: string; tasting: string; slug: string } | null;
+    latest_order: { id: number; name: string; at: string; paid: boolean; tasting: string; slug: string; bottles: number; amount: number } | null;
+    latest_rating: { wine: string; rating: number; at: string; tasting: string; slug: string } | null;
+    unpaid_orders: { count: number; amount: number };
+    unpaid_fees: { count: number; amount: number };
+  };
 
-  let host: Awaited<ReturnType<typeof requireHost>> = null;
+  const adminUrl = (slug: string, section = '') => `/t/${slug}/admin/${section}`;
 
-  const adminUrl = (slug: string) => `/t/${slug}/admin/`;
+  /** "2 hours ago", "yesterday" … in the active language */
+  function ago(iso: string) {
+    const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' });
+    const s = (new Date(iso).getTime() - Date.now()) / 1000;
+    const steps: [Intl.RelativeTimeFormatUnit, number][] = [['minute', 60], ['hour', 3600], ['day', 86400], ['week', 604800], ['month', 2629800]];
+    if (Math.abs(s) < 60) return rtf.format(0, 'minute');
+    let unit: Intl.RelativeTimeFormatUnit = 'minute';
+    let div = 60;
+    for (const [u, d] of steps) if (Math.abs(s) >= d) { unit = u; div = d; }
+    return rtf.format(Math.round(s / div), unit);
+  }
 
-  function card(r: Row) {
+  function activity(icon: string, label: Key, text: string, meta: string, href: string | null) {
     const li = mk('li');
-    const a = mk('a', 'tasting-card');
-    a.href = adminUrl(r.slug);
-    a.append(mk('span', 'card-title', r.title));
-    const meta = [r.starts_at ? formatWhen(r.starts_at, { year: true }) : null, r.place].filter(Boolean).join(' · ');
-    if (meta) a.append(mk('span', 'card-meta', meta));
-    const stats = mk('span', 'card-stats');
-    const coming = r.participants.filter((p) => p.status === 'yes').length;
-    stats.append(
-      mk('span', '', t('tastingsAdmin.guests', { coming, n: r.participants.length })),
-      mk('span', '', t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })),
-    );
-    a.append(stats);
-    li.append(a);
+    const el = href ? mk('a', 'dash-item') : mk('div', 'dash-item');
+    if (href) (el as HTMLAnchorElement).href = href;
+    el.append(mk('span', 'dash-icon', icon));
+    const body = mk('span', 'dash-body');
+    body.append(mk('span', 'dash-label', t(label)), mk('span', 'dash-text', text), mk('span', 'dash-meta', meta));
+    el.append(body);
+    li.append(el);
     return li;
   }
 
-  async function load() {
-    const { data } = await supabase.from('tastings')
-      .select('id, slug, title, starts_at, place, participants(status), tasting_wines(count)')
-      .eq('host_id', host!.id)
-      .order('starts_at', { ascending: true, nullsFirst: false });
-    const rows = (data ?? []) as Row[];
-    const cutoff = Date.now() - 24 * 3600 * 1000;
-    const upcoming = rows.filter((r) => !r.starts_at || new Date(r.starts_at).getTime() >= cutoff);
-    const past = rows.filter((r) => r.starts_at && new Date(r.starts_at).getTime() < cutoff).reverse();
-    $('upcoming').replaceChildren(...upcoming.map(card));
-    $('past').replaceChildren(...past.map(card));
-    $('upcoming-h').hidden = upcoming.length === 0 || past.length === 0;
-    $('past-h').hidden = past.length === 0;
-    $('intro').hidden = rows.length > 0;
+  function render(d: Dash) {
+    $('s-tastings').textContent = String(d.tastings);
+    $('s-upcoming').textContent = t('dash.upcoming', { n: d.upcoming });
+    $('s-guests').textContent = String(d.guests);
+    $('s-wines').textContent = String(d.wines);
+    $('intro').hidden = d.tastings > 0;
+
+    // Next tasting
+    const next = $('next');
+    if (d.next) {
+      const n = d.next;
+      const a = mk('a', 'dash-next');
+      a.href = adminUrl(n.slug);
+      a.append(mk('span', 'card-title', n.title));
+      const meta = [n.starts_at ? formatWhen(n.starts_at) : null, n.place].filter(Boolean).join(' · ');
+      if (meta) a.append(mk('span', 'card-meta', meta));
+      const chips = mk('span', 'dash-chips');
+      chips.append(mk('span', 'chip ok', t('tastingsAdmin.guests', { coming: n.coming, n: n.invited })));
+      if (n.no_reply) chips.append(mk('span', 'chip warn', t('dash.noReply', { n: n.no_reply })));
+      chips.append(mk('span', 'chip', t('tastingsAdmin.wines', { n: n.wines })));
+      a.append(chips);
+      next.replaceChildren(a);
+    } else {
+      next.replaceChildren(mk('p', 'hint', t('dash.noNext')));
+    }
+
+    // Awaiting payment
+    const unpaid = $('unpaid');
+    unpaid.replaceChildren();
+    if (d.unpaid_orders.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: money(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
+    if (d.unpaid_fees.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: money(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
+    $('unpaid-card').hidden = !unpaid.children.length;
+
+    // Latest sign-up, order and rating
+    const list = $('activity');
+    list.replaceChildren();
+    const s = d.latest_signup;
+    list.append(s
+      ? activity(s.status === 'yes' ? '✓' : '✕', 'dash.latestSignup',
+          t(s.status === 'yes' ? 'dash.signedUp' : 'dash.declined', { name: s.name, tasting: s.tasting }), ago(s.at), adminUrl(s.slug, 'guests/'))
+      : activity('✓', 'dash.latestSignup', t('dash.none'), '', null));
+    const o = d.latest_order;
+    list.append(o
+      ? activity('🛒', 'dash.latestOrder',
+          t('dash.ordered', { name: o.name, n: o.bottles, amount: money(Number(o.amount)) }),
+          [o.tasting, o.paid ? t('cart.paid') : t('cart.awaiting'), ago(o.at)].join(' · '), adminUrl(o.slug, 'orders/'))
+      : activity('🛒', 'dash.latestOrder', t('dash.none'), '', null));
+    const r = d.latest_rating;
+    list.append(r
+      ? activity('★', 'dash.latestRating', `${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} ${r.wine}`, [r.tasting, ago(r.at)].join(' · '), adminUrl(r.slug, 'wines/'))
+      : activity('★', 'dash.latestRating', t('dash.none'), '', null));
   }
 
-  // ---------- New tasting: the four-step guide ----------
-  let wizard: ReturnType<typeof initWizard> | null = null;
-  const openNew = () => wizard?.openNew();
-  $('new-toggle').addEventListener('click', openNew);
-  // "+ New tasting" in the menu opens the guide right here
-  document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); openNew(); });
-
-  // ---------- Startup (after everything above is defined) ----------
-  host = await requireHost();
+  // ---------- Startup ----------
+  const host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
-    wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
-    await load();
-    // "+ New tasting" in the menu links here with ?new=1
-    if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', '/admin/'); }
+    const wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
+    $('new-toggle').addEventListener('click', () => wizard.openNew());
+    document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
+    const { data } = await supabase.rpc('host_dashboard');
+    if (data) render(data as Dash);
   }
 </script>

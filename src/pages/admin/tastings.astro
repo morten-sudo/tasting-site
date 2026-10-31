@@ -1,0 +1,96 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import TastingWizard from '../../components/TastingWizard.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav active="tastings">
+
+    <div id="admin-main" hidden>
+      <h1 class="title" data-i18n="adminNav.tastings">Tastings</h1>
+      <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
+
+      <div class="guests-head" style="justify-content:flex-end">
+        <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
+      </div>
+
+
+      <section>
+        <h3 id="upcoming-h" data-i18n="tastings.upcoming" hidden>Upcoming</h3>
+        <ul id="upcoming" class="tasting-cards"></ul>
+        <h3 id="past-h" data-i18n="tastings.past" hidden>Past</h3>
+        <ul id="past" class="tasting-cards"></ul>
+      </section>
+
+    </div>
+      <TastingWizard />
+    </AdminNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { requireHost, $, mk } from '../../lib/admin-common';
+  import { t, formatWhen } from '../../i18n';
+  import { initWizard } from '../../lib/tasting-wizard';
+
+  type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
+    participants: { status: string }[]; tasting_wines: { count: number }[] };
+
+  let host: Awaited<ReturnType<typeof requireHost>> = null;
+
+  const adminUrl = (slug: string) => `/t/${slug}/admin/`;
+
+  function card(r: Row) {
+    const li = mk('li');
+    const a = mk('a', 'tasting-card');
+    a.href = adminUrl(r.slug);
+    a.append(mk('span', 'card-title', r.title));
+    const meta = [r.starts_at ? formatWhen(r.starts_at, { year: true }) : null, r.place].filter(Boolean).join(' · ');
+    if (meta) a.append(mk('span', 'card-meta', meta));
+    const stats = mk('span', 'card-stats');
+    const coming = r.participants.filter((p) => p.status === 'yes').length;
+    stats.append(
+      mk('span', '', t('tastingsAdmin.guests', { coming, n: r.participants.length })),
+      mk('span', '', t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })),
+    );
+    a.append(stats);
+    li.append(a);
+    return li;
+  }
+
+  async function load() {
+    const { data } = await supabase.from('tastings')
+      .select('id, slug, title, starts_at, place, participants(status), tasting_wines(count)')
+      .eq('host_id', host!.id)
+      .order('starts_at', { ascending: true, nullsFirst: false });
+    const rows = (data ?? []) as Row[];
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    const upcoming = rows.filter((r) => !r.starts_at || new Date(r.starts_at).getTime() >= cutoff);
+    const past = rows.filter((r) => r.starts_at && new Date(r.starts_at).getTime() < cutoff).reverse();
+    $('upcoming').replaceChildren(...upcoming.map(card));
+    $('past').replaceChildren(...past.map(card));
+    $('upcoming-h').hidden = upcoming.length === 0 || past.length === 0;
+    $('past-h').hidden = past.length === 0;
+    $('intro').hidden = rows.length > 0;
+  }
+
+  // ---------- New tasting: the four-step guide ----------
+  let wizard: ReturnType<typeof initWizard> | null = null;
+  const openNew = () => wizard?.openNew();
+  $('new-toggle').addEventListener('click', openNew);
+  // "+ New tasting" in the menu opens the guide right here
+  document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); openNew(); });
+
+  // ---------- Startup (after everything above is defined) ----------
+  host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
+    await load();
+    // "+ New tasting" in the menu links here with ?new=1
+    if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', '/admin/tastings/'); }
+  }
+</script>
