@@ -691,3 +691,8 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .host-link { margin-top: 0.6rem; }
 .admin-page .host-link input { flex: 1; min-width: 0; font-size: 0.85rem; }
 .admin-page .tasting-card .cohost-tag { color: var(--amber); }
+
+/* A tasting's admin: the bar at the top is the navigation, so no menu on the left */
+.admin-shell.in-tasting { display: block; }
+.admin-shell.in-tasting .admin-side, .admin-shell.in-tasting .side-open, .admin-shell.in-tasting .side-backdrop { display: none !important; }
+.admin-shell.in-tasting .admin-content { max-width: 60rem; }
