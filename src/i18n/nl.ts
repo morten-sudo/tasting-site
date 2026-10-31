@@ -577,4 +577,13 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "loginx.or": "of",
   "loginx.newHere": "Nieuw bij Winetastr?",
   "loginx.newHereText": "Maak een gratis account en houd je eerste proeverij.",
+  "page.home": "Start",
+  "home2.hello": "Hallo",
+  "home2.lead": "Waar wil je heen?",
+  "home2.guest": "Als gast",
+  "home2.host": "Als gastheer",
+  "home2.hostToo": "Zelf gastheer worden?",
+  "home2.hostTooText": "Maak een gratis gastheeraccount en nodig je eigen gasten uit.",
+  "home2.tastingsCount": "{n} proeverijen",
+  "home2.hosts": "{n} gastheren",
 };

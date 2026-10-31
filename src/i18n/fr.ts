@@ -577,4 +577,13 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "loginx.or": "ou",
   "loginx.newHere": "Nouveau sur Winetastr ?",
   "loginx.newHereText": "Créez un compte gratuit et organisez votre première dégustation.",
+  "page.home": "Accueil",
+  "home2.hello": "Bonjour",
+  "home2.lead": "Où voulez-vous aller ?",
+  "home2.guest": "En tant qu’invité",
+  "home2.host": "En tant qu’hôte",
+  "home2.hostToo": "Envie d’être hôte ?",
+  "home2.hostTooText": "Créez un compte hôte gratuit et invitez vos propres invités.",
+  "home2.tastingsCount": "{n} dégustations",
+  "home2.hosts": "{n} hôtes",
 };

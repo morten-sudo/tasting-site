@@ -194,8 +194,11 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         }
         // Outside a tasting: signed in if there is an email session or a stored invite code
         const who = await me;
-        if (who) showName(who.name);
-        else { userIn.hidden = true; userOut.hidden = false; }
+        if (who) {
+          showName(who.name);
+          // Signed in: the logo leads to the user's home
+          (document.getElementById('mark') as HTMLAnchorElement).href = '/home/';
+        } else { userIn.hidden = true; userOut.hidden = false; }
       }
       initUser();
 

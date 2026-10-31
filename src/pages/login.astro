@@ -42,16 +42,6 @@ import Base from '../layouts/Base.astro';
         <h1 class="title" data-i18n="login.title">Sign in</h1>
         <p id="checking" class="lp-checking" hidden><span class="spinner" aria-hidden="true"></span><span data-i18n="login.checking">Signing you in …</span></p>
 
-        <!-- Several places to go: choose -->
-        <div id="choose" class="choose" hidden>
-          <p class="lead" data-i18n="login.chooseLead">You are both a guest and a host. Where do you want to go?</p>
-          <div class="choose-btns">
-            <a class="btn" id="go-guest" href="/tastings/" data-i18n="nav.myTastings">My tastings</a>
-            <a class="btn ghost" id="go-admin" href="/admin/" data-i18n="page.admin">Admin</a>
-            <a class="btn ghost" id="go-super" href="/superadmin/" hidden data-i18n="page.superadmin">Superadmin</a>
-          </div>
-        </div>
-
         <div id="forms">
           <!-- Two steps: email, then the code from the email -->
           <ol class="lp-steps" aria-label="Sign in">
@@ -172,39 +162,14 @@ import Base from '../layouts/Base.astro';
     $('forms').hidden = true;
     $('checking').hidden = false;
 
+    // A link that asked for sign-in goes back there; otherwise everyone lands on their home
+    if (next) { location.replace(next); return true; }
     const [mine, hostRes, adminRes] = await Promise.all([
       fetchMyTastings(),
       supabase.rpc('current_host_id'),
       supabase.rpc('is_admin'),
     ]);
-    const isHost = !!hostRes.data || adminRes.data === true;
-    const adminUrl = wantsAdmin ? next : '/admin/';
-    // One tasting → straight to it; several → the overview
-    const guestUrl = next && !wantsAdmin ? next : mine.length === 1 ? tastingUrl(mine[0].slug) : '/tastings/';
-
-    // Winetastr administrators choose between their tastings, admin and superadmin
-    if (adminRes.data === true && !next) {
-      $('checking').hidden = true;
-      $('go-super').hidden = false;
-      const go = $('go-guest') as HTMLAnchorElement;
-      go.hidden = mine.length === 0;
-      go.href = guestUrl;
-      go.textContent = mine.length === 1 ? mine[0].title : t('nav.myTastings');
-      $('choose').querySelector('.lead')!.textContent = t('login.chooseWhere');
-      $('choose').hidden = false;
-      return true;
-    }
-    if (isHost && (wantsAdmin || mine.length === 0)) { location.replace(adminUrl); return true; }
-    if (isHost) {
-      $('checking').hidden = true;
-      ($('go-admin') as HTMLAnchorElement).href = adminUrl;
-      const go = $('go-guest') as HTMLAnchorElement;
-      go.href = guestUrl;
-      go.textContent = mine.length === 1 ? mine[0].title : t('nav.myTastings');
-      $('choose').hidden = false;
-      return true;
-    }
-    if (mine.length > 0) { location.replace(guestUrl); return true; }
+    if (mine.length > 0 || hostRes.data || adminRes.data === true) { location.replace('/home/'); return true; }
 
     routing = false;
     $('checking').hidden = true;
@@ -439,8 +404,6 @@ import Base from '../layouts/Base.astro';
   .lp-lost { margin-top: 1.2rem; }
   code { font-size: 0.9em; color: var(--amber); }
 
-  .choose-btns { display: grid; gap: 0.6rem; margin-top: 0.8rem; }
-  .choose-btns .btn { justify-content: center; }
   .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
   .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
 

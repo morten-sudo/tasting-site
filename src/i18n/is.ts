@@ -588,4 +588,13 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "loginx.or": "eða",
   "loginx.newHere": "Ný(r) á Winetastr?",
   "loginx.newHereText": "Stofnaðu ókeypis aðgang og haltu fyrstu smökkunina.",
+  "page.home": "Heim",
+  "home2.hello": "Hæ",
+  "home2.lead": "Hvert viltu fara?",
+  "home2.guest": "Sem gestur",
+  "home2.host": "Sem gestgjafi",
+  "home2.hostToo": "Viltu halda sjálf(ur)?",
+  "home2.hostTooText": "Stofnaðu ókeypis gestgjafaaðgang og bjóddu þínum eigin gestum.",
+  "home2.tastingsCount": "{n} smakkanir",
+  "home2.hosts": "{n} gestgjafar",
 };

@@ -587,4 +587,13 @@ export const en = {
   "loginx.or": "or",
   "loginx.newHere": "New to Winetastr?",
   "loginx.newHereText": "Create a free account and host your first tasting.",
+  "page.home": "Home",
+  "home2.hello": "Hello",
+  "home2.lead": "Where do you want to go?",
+  "home2.guest": "As a guest",
+  "home2.host": "As a host",
+  "home2.hostToo": "Host your own?",
+  "home2.hostTooText": "Create a free host account and invite your own guests.",
+  "home2.tastingsCount": "{n} tastings",
+  "home2.hosts": "{n} hosts",
 } as const;
