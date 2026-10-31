@@ -37,7 +37,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         <div class="brand">
           <Fragment set:html={LOGO} />
           {tasting
-            ? <a href="/tastings/" data-tpath="" class="mark" id="mark">{SITE_NAME}</a>
+            ? <a href="/home/" data-tpath="" class="mark" id="mark">{SITE_NAME}</a>
             : <a href="/" class="mark" id="mark">{SITE_NAME}</a>}
         </div>
         <div class="tools">
@@ -49,7 +49,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             <ul id="lang-menu" class="lang-menu" hidden></ul>
           </div>
           {tasting && (
-            <a href="/tastings/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Cart" title="Cart" data-i18n-attr="aria-label=nav.cart;title=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
+            <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Cart" title="Cart" data-i18n-attr="aria-label=nav.cart;title=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
               <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
               <span id="nav-cart-count" class="badge" hidden></span>
             </a>
@@ -70,10 +70,10 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       </div>
       {tasting && (
         <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
-          <a href="/tastings/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
-          <a href="/tastings/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
-          <a href="/tastings/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
-          <a href="/tastings/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
+          <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
+          <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
+          <a href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} data-i18n="nav.quiz">Quiz</a>
+          <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
         </nav>
       )}
       </div>
@@ -126,7 +126,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           a.href = tastingUrl(slug, a.dataset.tpath ?? '');
         });
       } else if (inTasting) {
-        location.replace('/tastings/');
+        location.replace('/home/');
       }
 
       // Cart badge (tasting pages only)

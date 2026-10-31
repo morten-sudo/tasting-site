@@ -4,7 +4,7 @@ import Base from '../../layouts/Base.astro';
 <Base title="page.wine" tasting>
   <article class="wine-page">
     <div class="wrap top">
-      <a href="/tastings/" data-tpath="wines/" class="back" data-i18n="wine.all">All wines</a>
+      <a href="/home/" data-tpath="wines/" class="back" data-i18n="wine.all">All wines</a>
       <div id="need-login" class="message need-login" hidden>
         <p><strong data-i18n="wines.signInTitle">Sign in to see the wines.</strong></p>
         <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
@@ -12,7 +12,7 @@ import Base from '../../layouts/Base.astro';
       </div>
       <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
       <p id="load-error" class="message error" hidden>
-        <span data-i18n="wine.notFound">The wine could not be found.</span> <a href="/tastings/" data-tpath="wines/" data-i18n="wine.back">Back to the wines</a>.
+        <span data-i18n="wine.notFound">The wine could not be found.</span> <a href="/home/" data-tpath="wines/" data-i18n="wine.back">Back to the wines</a>.
       </p>
     </div>
 
@@ -43,7 +43,7 @@ import Base from '../../layouts/Base.astro';
     </div>
   </article>
 
-  <a id="basket" class="basket" href="/tastings/" data-tpath="cart/" hidden>
+  <a id="basket" class="basket" href="/home/" data-tpath="cart/" hidden>
     <div class="wrap basket-inner">
       <div>
         <span id="basket-count"></span>

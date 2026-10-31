@@ -1,5 +1,5 @@
 // The person's tastings (email sign-in and invite links on this device) as cards.
-// Used by /tastings/ and the profile page.
+// Used by the home page, the front page and the profile page.
 import { supabase } from './supabase';
 import { fetchMyTastings, getCodes, tastingUrl, type MyTasting } from './guest';
 import { t, formatWhen, type Key } from '../i18n';

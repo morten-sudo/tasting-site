@@ -11,7 +11,7 @@ import Base from '../layouts/Base.astro';
 
       <!-- Workspaces: guest, host and (for administrators) superadmin -->
       <div class="ws-grid">
-        <a id="ws-guest" class="ws-card" href="/tastings/" hidden>
+        <a id="ws-guest" class="ws-card" href="#my-tastings" hidden>
           <span class="ws-icon"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="ws-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" clip-path="url(#ws-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg></span>
           <span class="ws-kicker" data-i18n="home2.guest">As a guest</span>
           <span class="ws-title" data-i18n="nav.myTastings">My tastings</span>
@@ -43,11 +43,17 @@ import Base from '../layouts/Base.astro';
         </a>
       </div>
 
-      <!-- The guest's upcoming tastings -->
-      <section id="upcoming-block" class="home-section" hidden>
-        <h2 data-i18n="home.upcomingMany">Upcoming tastings</h2>
-        <ul id="upcoming" class="tasting-list"></ul>
-      </section>
+      <!-- The guest's tastings (this replaces the old "My tastings" page) -->
+      <div id="my-tastings">
+        <section id="upcoming-block" class="home-section" hidden>
+          <h2 data-i18n="home.upcomingMany">Upcoming tastings</h2>
+          <ul id="upcoming" class="tasting-list"></ul>
+        </section>
+        <section id="past-block" class="home-section" hidden>
+          <h2 data-i18n="tastings.past">Past</h2>
+          <ul id="past" class="tasting-list"></ul>
+        </section>
+      </div>
 
       <p id="none" class="hint" hidden data-i18n="tastings.noneHint">If you got a link in an invitation, open it – or sign in with the email the host has.</p>
     </div>
@@ -79,11 +85,11 @@ import Base from '../layouts/Base.astro';
   if (first) $('hello-name').textContent = `, ${first}`;
 
   // Guest
-  const { all, upcoming } = mine;
+  const { all, upcoming, past } = mine;
   if (all.length) {
     const g = $('ws-guest') as HTMLAnchorElement;
     g.hidden = false;
-    g.href = all.length === 1 ? tastingUrl(all[0].slug) : '/tastings/';
+    g.href = all.length === 1 ? tastingUrl(all[0].slug) : '#my-tastings';
     const next = upcoming[0];
     $('ws-guest-info').textContent = next
       ? [next.title, next.starts_at ? formatWhen(next.starts_at) : ''].filter(Boolean).join(' · ')
@@ -91,6 +97,8 @@ import Base from '../layouts/Base.astro';
   }
   $('upcoming').replaceChildren(...upcoming.map(tastingCard));
   $('upcoming-block').hidden = upcoming.length === 0;
+  $('past').replaceChildren(...past.map(tastingCard));
+  $('past-block').hidden = past.length === 0;
 
   // Host
   type Dash = { tastings: number; upcoming: number; next: { title: string; starts_at: string | null; coming: number; invited: number } | null };
@@ -134,6 +142,7 @@ import Base from '../layouts/Base.astro';
   .ws-info { font-size: 0.92rem; color: var(--muted); margin-top: 0.2rem; }
   .ws-go { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--amber); font-size: 1.2rem; }
   .ws-soft { background: transparent; border-style: dashed; }
+  #my-tastings { scroll-margin-top: 5rem; }
   .home-section { margin-top: 2.75rem; }
   .home-section h2 { font-size: 1.6rem; }
 </style>

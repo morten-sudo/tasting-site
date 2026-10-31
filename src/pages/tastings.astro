@@ -1,85 +1,11 @@
 ---
+// "My tastings" now lives on the home page; this address just forwards there.
 import Base from '../layouts/Base.astro';
 ---
-<Base title="page.myTastings">
-  <section class="wrap tastings-page">
-    <h1 class="title" data-i18n="nav.myTastings">My tastings</h1>
-    <p id="loading" class="hint" data-i18n="tastings.loading">Loading your tastings …</p>
-
-    <div id="signed-out" hidden>
-      <p data-i18n="tastings.signInFirst">Sign in to see the tastings you are invited to.</p>
-      <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
-    </div>
-
-    <div id="none" hidden>
-      <p data-i18n="tastings.none">You are not invited to any tastings with this email yet.</p>
-      <p class="hint" data-i18n="tastings.noneHint">If you got a link in an invitation, open it – or sign in with the email the host has.</p>
-    </div>
-
-    <section id="upcoming-block" hidden>
-      <h2 data-i18n="tastings.upcoming">Upcoming</h2>
-      <ul id="upcoming" class="tasting-list"></ul>
-    </section>
-
-    <section id="past-block" hidden>
-      <h2 data-i18n="tastings.past">Past</h2>
-      <ul id="past" class="tasting-list"></ul>
-    </section>
-
-    <section id="host-block" class="host-block" hidden>
-      <h2 data-i18n="tastings.asHost">As a host</h2>
-      <p data-i18n="tastings.hostText">Create tastings, invite guests and add wines.</p>
-      <a class="btn-ghost" href="/admin/" data-i18n="tastings.toAdmin">Go to admin</a>
-    </section>
-  </section>
+<Base title="page.home">
+  <section class="wrap" style="padding-top:2.5rem"><p class="hint" data-i18n="common.loading">Loading …</p></section>
 </Base>
 
 <script>
-  import { supabase } from '../lib/supabase';
-  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
-  import { i18nReady } from '../i18n';
-
-  await i18nReady;
-  const $ = (id: string) => document.getElementById(id)!;
-
-  const { data: s } = await supabase.auth.getSession();
-  const { all, upcoming, past } = await loadAllMyTastings();
-
-  let isHost = false;
-  if (s.session) {
-    const [h, a] = await Promise.all([supabase.rpc('current_host_id'), supabase.rpc('is_admin')]);
-    isHost = !!h.data || a.data === true;
-  }
-
-  $('loading').hidden = true;
-  if (!s.session && all.length === 0) {
-    $('signed-out').hidden = false;
-  } else {
-    $('upcoming').replaceChildren(...upcoming.map(tastingCard));
-    $('past').replaceChildren(...past.map(tastingCard));
-    $('upcoming-block').hidden = upcoming.length === 0;
-    $('past-block').hidden = past.length === 0;
-    $('none').hidden = all.length > 0 || isHost;
-    $('host-block').hidden = !isHost;
-  }
+  location.replace('/home/' + location.search);
 </script>
-
-<style is:global>
-  .tastings-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 40rem; }
-  .tastings-page .title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(2.6rem, 12vw, 4.5rem);
-    line-height: 0.95;
-    margin-bottom: 1.5rem;
-  }
-  .tastings-page section + section { margin-top: 2.5rem; }
-  .tastings-page h2 { font-size: 1.6rem; }
-  .tastings-page .host-block { padding-top: 1.5rem; border-top: 1px solid var(--lodge-2); }
-  .tastings-page .btn-ghost {
-    display: inline-flex; align-items: center; min-height: 3rem; padding: 0 1.75rem;
-    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
-    border-radius: var(--radius); border: 1px solid var(--lodge-3); color: var(--paper); text-decoration: none;
-  }
-  .tastings-page .btn-ghost:hover { border-color: var(--amber); color: var(--paper); }
-</style>
