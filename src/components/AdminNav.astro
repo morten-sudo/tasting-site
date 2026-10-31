@@ -43,6 +43,7 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
       <ul class="side-list">
         <li><a href="/admin/payments/" aria-current={cur('payments')} data-i18n="adminNav.payments">Payments</a></li>
         <li><a href="/admin/account/" aria-current={cur('account')} data-i18n="adminNav.account">Account</a></li>
+        <li id="side-super" hidden><a href="/superadmin/" data-i18n="page.superadmin">Superadmin</a></li>
       </ul>
     </nav>
     <div class="side-foot">

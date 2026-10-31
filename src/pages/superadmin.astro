@@ -1,0 +1,157 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/admin.css';
+---
+<Base title="page.superadmin">
+  <section class="wrap admin-page super-page">
+    <p class="eyebrow">Winetastr</p>
+    <h1 class="title" data-i18n="page.superadmin">Superadmin</h1>
+    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+    <p id="denied" class="message error" hidden data-i18n="super.denied">This page is only for Winetastr administrators.</p>
+
+    <div id="main" hidden>
+      <!-- Totals across all hosts -->
+      <div class="super-stats">
+        <div class="stat"><span id="t-hosts" class="stat-n"></span><span class="stat-label" data-i18n="super.hosts">Hosts</span></div>
+        <div class="stat"><span id="t-tastings" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.tastings">Tastings</span><span id="t-upcoming" class="stat-sub"></span></div>
+        <div class="stat"><span id="t-wines" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.wines">Wines</span></div>
+        <div class="stat"><span id="t-guests" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.guests">Guests</span><span id="t-invited" class="stat-sub"></span></div>
+        <div class="stat"><span id="t-orders" class="stat-n"></span><span class="stat-label" data-i18n="admin.orders">Orders</span><span id="t-amount" class="stat-sub"></span></div>
+        <div class="stat"><span id="t-activity" class="stat-n"></span><span class="stat-label" data-i18n="super.active30">Active last 30 days</span></div>
+      </div>
+
+      <div class="guests-head">
+        <h2 data-i18n="super.tenants">All hosts</h2>
+        <input id="search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" style="max-width:18rem;margin:0" />
+      </div>
+      <div class="table-wrap super-table">
+        <table class="table">
+          <thead>
+            <tr>
+              <th data-sort="name" data-i18n="super.host">Host</th>
+              <th data-sort="created_at" data-i18n="super.created">Created</th>
+              <th data-sort="tastings" class="num" data-i18n="adminNav.tastings">Tastings</th>
+              <th data-sort="wines" class="num" data-i18n="adminNav.wines">Wines</th>
+              <th data-sort="guests" class="num" data-i18n="adminNav.guests">Guests</th>
+              <th data-sort="invited" class="num" data-i18n="super.invited">Invited</th>
+              <th data-sort="orders" class="num" data-i18n="admin.orders">Orders</th>
+              <th data-sort="ratings" class="num" data-i18n="super.ratings">Ratings</th>
+              <th data-sort="chat_messages" class="num" data-i18n="page.chat">Chat</th>
+              <th data-sort="last_activity" data-i18n="super.lastActive">Last active</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  import { i18nReady, t, money, locale } from '../i18n';
+
+  type Tenant = { id: string; name: string | null; email: string; plan: string; created_at: string;
+    tastings: number; upcoming: number; wines: number; guests: number; invited: number; coming: number;
+    orders: number; order_amount: number; ratings: number; chat_messages: number; last_activity: string };
+
+  await i18nReady;
+  const $ = (id: string) => document.getElementById(id)!;
+  const date = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
+  let tenants: Tenant[] = [];
+  let sortKey: keyof Tenant = 'last_activity';
+  let desc = true;
+
+  const { data: s } = await supabase.auth.getSession();
+  if (!s.session) location.replace('/login/?next=' + encodeURIComponent('/superadmin/'));
+  const { data, error } = await supabase.rpc('admin_tenants');
+  $('loading').hidden = true;
+  if (error || !data) {
+    $('denied').hidden = false;
+  } else {
+    tenants = (data as Tenant[]).map((x) => ({ ...x,
+      tastings: Number(x.tastings), upcoming: Number(x.upcoming), wines: Number(x.wines), guests: Number(x.guests),
+      invited: Number(x.invited), coming: Number(x.coming), orders: Number(x.orders), order_amount: Number(x.order_amount),
+      ratings: Number(x.ratings), chat_messages: Number(x.chat_messages) }));
+    $('main').hidden = false;
+    totals();
+    render();
+  }
+
+  function totals() {
+    const sum = (k: keyof Tenant) => tenants.reduce((n, x) => n + (x[k] as number), 0);
+    $('t-hosts').textContent = String(tenants.length);
+    $('t-tastings').textContent = String(sum('tastings'));
+    $('t-upcoming').textContent = t('dash.upcoming', { n: sum('upcoming') });
+    $('t-wines').textContent = String(sum('wines'));
+    $('t-guests').textContent = String(sum('guests'));
+    $('t-invited').textContent = t('super.invitedSub', { n: sum('invited'), coming: sum('coming') });
+    $('t-orders').textContent = String(sum('orders'));
+    $('t-amount').textContent = money(sum('order_amount'));
+    const month = Date.now() - 30 * 86400000;
+    $('t-activity').textContent = String(tenants.filter((x) => new Date(x.last_activity).getTime() >= month).length);
+  }
+
+  function cell(text: string, cls = '') {
+    const td = document.createElement('td');
+    td.textContent = text;
+    if (cls) td.className = cls;
+    return td;
+  }
+
+  function render() {
+    const q = ($('search') as HTMLInputElement).value.trim().toLowerCase();
+    const rows = tenants
+      .filter((x) => !q || `${x.name ?? ''} ${x.email}`.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
+        const c = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb));
+        return desc ? -c : c;
+      });
+    $('rows').replaceChildren(...rows.map((x) => {
+      const tr = document.createElement('tr');
+      const who = document.createElement('td');
+      const name = document.createElement('strong');
+      name.textContent = x.name || '—';
+      const mail = document.createElement('a');
+      mail.href = `mailto:${x.email}`;
+      mail.textContent = x.email;
+      mail.className = 'super-mail';
+      who.append(name, document.createElement('br'), mail);
+      tr.append(who,
+        cell(date.format(new Date(x.created_at))),
+        cell(x.upcoming ? `${x.tastings} (${x.upcoming})` : String(x.tastings), 'num'),
+        cell(String(x.wines), 'num'),
+        cell(String(x.guests), 'num'),
+        cell(x.invited ? `${x.invited} (${x.coming})` : '0', 'num'),
+        cell(x.orders ? `${x.orders} · ${money(x.order_amount)}` : '0', 'num'),
+        cell(String(x.ratings), 'num'),
+        cell(String(x.chat_messages), 'num'),
+        cell(date.format(new Date(x.last_activity))));
+      return tr;
+    }));
+    document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
+      th.setAttribute('aria-sort', th.dataset.sort === sortKey ? (desc ? 'descending' : 'ascending') : 'none');
+    });
+  }
+
+  $('search').addEventListener('input', render);
+  document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort as keyof Tenant;
+      if (k === sortKey) desc = !desc; else { sortKey = k; desc = k !== 'name'; }
+      render();
+    });
+  });
+</script>
+
+<style is:global>
+  .super-page .super-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 2rem; }
+  .super-page .stat { display: grid; gap: 0.1rem; padding: 0.9rem 1rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; }
+  .super-page th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+  .super-page th[aria-sort='ascending']::after { content: ' ▲'; font-size: 0.7em; }
+  .super-page th[aria-sort='descending']::after { content: ' ▼'; font-size: 0.7em; }
+  .super-page .super-table td { vertical-align: top; white-space: nowrap; }
+  .super-page .super-mail { font-size: 0.85rem; color: var(--muted); }
+  .super-page .table-wrap { overflow-x: auto; }
+</style>

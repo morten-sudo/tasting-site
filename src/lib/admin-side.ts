@@ -86,6 +86,9 @@ export async function initSide(hostId: string) {
   $('side-backdrop').addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 
+  // Winetastr administrators also get the superadmin page
+  supabase.rpc('is_admin').then(({ data: admin }) => { $('side-super').hidden = admin !== true; });
+
   const { data } = await supabase.from('tastings').select('slug, title, starts_at')
     .eq('host_id', hostId).order('starts_at', { ascending: true, nullsFirst: false });
   const rows = (data ?? []) as Row[];

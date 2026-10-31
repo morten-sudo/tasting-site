@@ -78,6 +78,9 @@ begin
   assert failed, 'host A can write in host B''s chat';
   failed := false; begin insert into chat_messages (tasting_id, author, body) values ('00000000-0000-4000-b000-00000000000a', 'x', 'x'); exception when others then failed := true; end;
   assert failed, 'chat messages can be inserted directly';
+  -- The superadmin list is closed to hosts
+  failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
+  assert failed, 'a host can list all tenants';
   -- The admin overview only counts A's own data
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
@@ -142,6 +145,8 @@ begin
   assert failed, 'anyone can create a tasting';
   failed := false; begin perform host_dashboard(); exception when others then failed := true; end;
   assert failed, 'anyone can read a host overview';
+  failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
+  assert failed, 'anyone can list tenants';
   -- …while a guest's own chat works
   perform post_chat('selftestaa', 'hi from A');
   select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';
