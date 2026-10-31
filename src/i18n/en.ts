@@ -455,4 +455,5 @@ export const en = {
   "section.overview": "Overview",
   "section.settings": "Controls & payment",
   "account.pwHint": "You can always sign in with a code by email. A password is optional.",
+  "login.tooManyChecks": "Too many attempts. Wait a while and try again.",
 } as const;

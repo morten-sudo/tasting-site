@@ -158,7 +158,12 @@ import Base from '../layouts/Base.astro';
 
   async function sendCode(): Promise<boolean> {
     const msg = $('mail-msg');
-    const { data: known } = await supabase.rpc('login_email_known', { e: email });
+    const { data: known, error: checkError } = await supabase.rpc('login_email_known', { e: email });
+    if (checkError) {
+      // Too many attempts from this connection (limited so emails cannot be tested in bulk)
+      show(msg, checkError.message.includes('too_many') ? t('login.tooManyChecks') : t('login.sendFailed'), false);
+      return false;
+    }
     if (!known) {
       show(msg, wantsAdmin ? t('login.notHost', { email }) : t('login.unknownEmail', { email }), false);
       return false;

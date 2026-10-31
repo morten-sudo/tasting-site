@@ -456,4 +456,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "section.overview": "Yfirlit",
   "section.settings": "Stýring og greiðsla",
   "account.pwHint": "Þú getur alltaf skráð þig inn með kóða í tölvupósti. Lykilorð er valfrjálst.",
+  "login.tooManyChecks": "Of margar tilraunir. Bíddu aðeins og reyndu aftur.",
 };

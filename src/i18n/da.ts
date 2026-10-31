@@ -456,4 +456,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "section.overview": "Oversigt",
   "section.settings": "Styring & betaling",
   "account.pwHint": "Du kan altid logge ind med en kode på mail. En adgangskode er valgfri.",
+  "login.tooManyChecks": "For mange forsøg. Vent lidt og prøv igen.",
 };
