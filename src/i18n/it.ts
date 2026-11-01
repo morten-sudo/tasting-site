@@ -743,4 +743,5 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.addWine": "Aggiungi vino",
   "adminTasting.wineAdded": "{name} è stato aggiunto.",
   "style.Other": "Altro",
+  "start.photoTextUpload": "Carica una foto – leggiamo l’etichetta",
 };

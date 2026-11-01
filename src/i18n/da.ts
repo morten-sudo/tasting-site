@@ -814,4 +814,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.addWine": "Tilføj vin",
   "adminTasting.wineAdded": "{name} er tilføjet.",
   "style.Other": "Andet",
+  "start.photoTextUpload": "Upload et billede – vi læser etiketten",
 };

@@ -108,6 +108,12 @@ export function initWineAdmin(hostId: string, tenantId: string) {
   const list = $<HTMLUListElement>('wine-admin-list');
   const field = <E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id: string) => $<E>(id);
 
+  // On a computer the photo tile uploads a picture; on a phone it opens the camera
+  if (!matchMedia('(pointer: coarse)').matches) {
+    const text = document.getElementById('wf-photo-text');
+    if (text) { text.dataset.i18n = 'start.photoTextUpload'; text.textContent = t('start.photoTextUpload'); }
+  }
+
   // Style options
   const styleSelect = field<HTMLSelectElement>('wf-style');
   styleSelect.replaceChildren(new Option(t('admin.choose'), ''));

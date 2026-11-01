@@ -813,4 +813,5 @@ export const en = {
   "adminTasting.addWine": "Add wine",
   "adminTasting.wineAdded": "{name} is added.",
   "style.Other": "Other",
+  "start.photoTextUpload": "Upload a picture – we read the label",
 } as const;

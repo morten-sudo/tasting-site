@@ -743,4 +743,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.addWine": "Wijn toevoegen",
   "adminTasting.wineAdded": "{name} is toegevoegd.",
   "style.Other": "Overig",
+  "start.photoTextUpload": "Upload een foto – wij lezen het etiket",
 };
