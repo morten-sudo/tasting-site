@@ -802,4 +802,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "roles.mineTitle": "Smagninger du er vært for",
   "roles.mineNone": "Du er ikke vært for nogen kommende smagning.",
   "roles.othersOnAccount": "+ {n} flere på kontoen – se alle →",
+  "hosts.manage": "Administrer værter",
 };

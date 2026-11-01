@@ -45,7 +45,31 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <button id="setup-continue" class="btn small" type="button" data-i18n="wizard.continue">Continue set-up</button>
         </div>
-        <h2 data-i18n="section.details">Details</h2>
+        <div class="guests-head">
+          <h2 data-i18n="section.details">Details</h2>
+          <button id="details-edit" class="text-btn" type="button" data-i18n="admin.edit">Edit</button>
+        </div>
+        <!-- Read-only; changed in the side panel ("Edit") -->
+        <dl id="details-view" class="details-view">
+          <dt data-i18n="admin.title">Title</dt><dd id="v-title"></dd>
+          <dt data-i18n="admin.when">Date and time</dt><dd id="v-when"></dd>
+          <dt data-i18n="admin.place">Place</dt><dd id="v-place"></dd>
+          <dt data-i18n="admin.guestLanguage">Language for guests</dt><dd id="v-language"></dd>
+          <dt data-i18n="admin.intro">Introduction</dt><dd id="v-intro" class="v-intro"></dd>
+        </dl>
+
+        <!-- Who hosts the tasting -->
+        <div class="guests-head ov-hosts-head">
+          <h2 data-i18n="hosts.title">Hosts</h2>
+          <a id="ov-hosts-manage" class="text-btn" href="settings/" data-section="settings" hidden data-i18n="hosts.manage">Manage hosts</a>
+        </div>
+        <ul id="ov-hosts" class="hosts-list"></ul>
+
+        <dialog id="details-panel" class="sheet wide" aria-labelledby="details-panel-title">
+          <div class="sheet-head">
+            <h2 id="details-panel-title" data-i18n="section.details">Details</h2>
+            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          </div>
         <form id="details" class="add-form tasting-form" novalidate>
           <label for="d-title" data-i18n="admin.title">Title</label>
           <input id="d-title" type="text" required />
@@ -57,9 +81,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="it">Italiano</option><option value="es">Español</option><option value="nl">Nederlands</option><option value="pl">Polski</option></select>
           <div class="row-actions">
             <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="d-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
             <span id="d-msg" class="hint" aria-live="polite"></span>
           </div>
         </form>
+        </dialog>
         <p class="hint"><span data-i18n="admin.tastingPage">Tasting page:</span> <a id="tasting-link" href="/" target="_blank"></a><br />
           <span data-i18n="admin.personalLinks">Each guest gets a personal link under Guests.</span></p>
       </section>
@@ -265,7 +291,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initWizard } from '../../lib/tasting-wizard';
   import { initWhen, readWhen, writeWhen } from '../../lib/datetime';
   import { initChat, type ChatMessage } from '../../lib/chat';
-  import { i18nReady, t, lang, locale, money, type Key } from '../../i18n';
+  import { i18nReady, t, lang, locale, money, formatWhen, LANGS, type Key } from '../../i18n';
 
   await i18nReady;
 
@@ -314,11 +340,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     ($('t-guestpage') as HTMLAnchorElement).href = tastingUrl(slug);
     document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a[data-apath]').forEach((a) => { a.href = `/t/${slug}/admin/${a.dataset.apath}`; });
 
-    ($('d-title') as HTMLInputElement).value = tasting.title;
-    writeWhen('d', tasting.starts_at);
-    writeAddress('d', tasting as Record<string, string | null>);
-    ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
-    ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
+    renderDetails();
+    loadOverviewHosts(slug, tasting.host_id === host.id || (host.tenant_owner && tasting.tenant_id === host.tenant_id));
 
     const tv = $('tv-link') as HTMLAnchorElement;
     tv.href = `/t/${tasting.slug}/leaderboard/`;
@@ -326,6 +349,53 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const pub = $('tasting-link') as HTMLAnchorElement;
     pub.href = `/t/${tasting.slug}/`;
     pub.textContent = `${location.host}/t/${tasting.slug}/`;
+  }
+
+  // ---------- Details: shown read-only, edited in the side panel ----------
+  function fillDetailsForm() {
+    if (!tasting) return;
+    ($('d-title') as HTMLInputElement).value = tasting.title;
+    writeWhen('d', tasting.starts_at as string | null);
+    writeAddress('d', tasting as Record<string, string | null>);
+    ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
+    ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
+  }
+  function renderDetails() {
+    if (!tasting) return;
+    const dash = '—';
+    $('v-title').textContent = tasting.title;
+    $('v-when').textContent = tasting.starts_at ? formatWhen(tasting.starts_at as string, { year: true }) : dash;
+    $('v-place').textContent = (tasting.place as string) || dash;
+    $('v-language').textContent = LANGS.find((l) => l.code === tasting!.language)?.name ?? dash;
+    $('v-intro').textContent = (tasting.intro as string) || dash;
+  }
+  const detailsPanel = sheetPanel($('details-panel') as HTMLDialogElement);
+  $('details-edit').addEventListener('click', () => {
+    fillDetailsForm();
+    $('d-msg').textContent = '';
+    detailsPanel.open();
+  });
+  $('d-cancel').addEventListener('click', () => detailsPanel.close());
+
+  // ---------- Hosts on the overview ----------
+  async function loadOverviewHosts(slug: string, canManage: boolean) {
+    if (!tasting) return;
+    const { data } = await supabase.rpc('tasting_cohosts', { t_id: tasting.id });
+    type H = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
+    $('ov-hosts').replaceChildren(...((data ?? []) as H[]).map((h) => {
+      const li = mkEl('li', 'host-row');
+      const who = mkEl('div', 'host-who');
+      const name = mkEl('span', 'host-name', h.name || h.email);
+      if (h.me) name.append(mkEl('span', 'host-me', ` (${t('hosts.you')})`));
+      who.append(name);
+      if (h.name) who.append(mkEl('span', 'host-email', h.email));
+      li.append(who, mkEl('span', 'host-tag' + (h.pending ? ' pending' : h.owner ? ' owner' : ''),
+        h.owner ? t('hosts.owner') : h.pending ? t('hosts.pending') : t('hosts.cohost')));
+      return li;
+    }));
+    const manage = $('ov-hosts-manage') as HTMLAnchorElement;
+    manage.href = `/t/${slug}/admin/settings/`;
+    manage.hidden = !canManage;
   }
 
   initAddress('d');
@@ -346,9 +416,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
     msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
     if (!error) {
-      Object.assign(tasting, patch);
+      // Read it back: the database composes the place line from the address
+      const { data: fresh } = await supabase.from('tastings').select('*').eq('id', tasting.id).maybeSingle();
+      Object.assign(tasting, fresh ?? patch);
       $('ta-title').textContent = title;
-      setTimeout(() => (msg.textContent = ''), 2000);
+      renderDetails();
+      detailsPanel.close();
     }
   });
 

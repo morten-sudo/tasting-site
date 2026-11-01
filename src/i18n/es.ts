@@ -731,4 +731,5 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "roles.mineTitle": "Catas de las que eres anfitrión",
   "roles.mineNone": "No eres anfitrión de ninguna cata próxima.",
   "roles.othersOnAccount": "+ {n} más en la cuenta – ver todas →",
+  "hosts.manage": "Gestionar anfitriones",
 };

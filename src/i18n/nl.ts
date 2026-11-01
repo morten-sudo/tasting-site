@@ -731,4 +731,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "roles.mineTitle": "Proeverijen waarvan je gastheer bent",
   "roles.mineNone": "Je bent geen gastheer van een komende proeverij.",
   "roles.othersOnAccount": "+ {n} meer in het account – alles bekijken →",
+  "hosts.manage": "Gastheren beheren",
 };

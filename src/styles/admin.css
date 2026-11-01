@@ -777,3 +777,14 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .mine-meta { font-size: 0.88rem; color: var(--muted); }
 /* The menu: a small dot before the tastings I host */
 .side-list a.mine::before { content: '●'; color: var(--amber); font-size: 0.6rem; margin-right: 0.45rem; vertical-align: 0.15em; }
+
+/* A tasting's details, read-only (edited in the side panel) */
+.admin-page .details-view { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.55rem 1.25rem; margin: 0.5rem 0 1.25rem; max-width: 46rem; }
+.admin-page .details-view dt { color: var(--muted); font-size: 0.9rem; }
+.admin-page .details-view dd { margin: 0; }
+.admin-page .details-view .v-intro { white-space: pre-line; }
+.admin-page .ov-hosts-head { margin-top: 1.75rem; }
+@media (max-width: 30rem) {
+  .admin-page .details-view { grid-template-columns: 1fr; gap: 0.1rem; }
+  .admin-page .details-view dd { margin-bottom: 0.6rem; }
+}

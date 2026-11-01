@@ -731,4 +731,5 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "roles.mineTitle": "Degustacje, których jesteś gospodarzem",
   "roles.mineNone": "Nie jesteś gospodarzem żadnej nadchodzącej degustacji.",
   "roles.othersOnAccount": "+ {n} więcej na koncie – zobacz wszystkie →",
+  "hosts.manage": "Zarządzaj gospodarzami",
 };
