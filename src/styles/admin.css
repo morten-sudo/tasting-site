@@ -797,3 +797,14 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
   .admin-page .guests-head:has(#t-filter:not([hidden])) { flex-wrap: wrap; }
   .admin-page .guests-head #t-filter { order: 2; flex: 1 1 100%; }
 }
+
+/* The invite panel: the guest list, then "+ New guest" */
+.admin-page #g-panel .search { width: 100%; margin: 0.3rem 0 0.6rem; }
+.admin-page #g-panel .picker-list { max-height: none; }
+.admin-page .new-guest-btn {
+  display: block; width: 100%; text-align: left; margin-top: 0.4rem; padding: 0.75rem 0; background: none; border: 0;
+  border-top: 1px solid var(--lodge-3); font: inherit; color: var(--amber); font-weight: 500; cursor: pointer;
+}
+.admin-page .new-guest-btn:hover { text-decoration: underline; }
+.admin-page .new-guest-btn[hidden] { display: none; }
+.admin-page #g-panel .add-form { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--lodge-3); }

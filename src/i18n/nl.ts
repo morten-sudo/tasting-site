@@ -733,4 +733,11 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "roles.othersOnAccount": "+ {n} meer in het account – alles bekijken →",
   "hosts.manage": "Gastheren beheren",
   "roles.seeAllMine": "Al je proeverijen bekijken ({n}) →",
+  "adminTasting.inviteGuest": "Gast uitnodigen",
+  "adminTasting.searchOrNew": "Zoek in je gastenlijst – of typ de naam van een nieuwe gast",
+  "adminTasting.nameOrEmail": "Naam of e-mail",
+  "adminTasting.noMatch": "Niemand op je gastenlijst komt overeen.",
+  "adminTasting.newGuest": "+ Nieuwe gast",
+  "adminTasting.newGuestNamed": "+ Nieuwe gast: {name}",
+  "adminTasting.invitedName": "{name} is uitgenodigd.",
 };

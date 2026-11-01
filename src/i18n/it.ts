@@ -733,4 +733,11 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "roles.othersOnAccount": "+ {n} altre nell’account – vedi tutte →",
   "hosts.manage": "Gestisci host",
   "roles.seeAllMine": "Vedi tutte le tue degustazioni ({n}) →",
+  "adminTasting.inviteGuest": "Invita ospite",
+  "adminTasting.searchOrNew": "Cerca nella lista ospiti – o scrivi il nome di un nuovo ospite",
+  "adminTasting.nameOrEmail": "Nome o e-mail",
+  "adminTasting.noMatch": "Nessuno nella lista corrisponde.",
+  "adminTasting.newGuest": "+ Nuovo ospite",
+  "adminTasting.newGuestNamed": "+ Nuovo ospite: {name}",
+  "adminTasting.invitedName": "{name} è invitato.",
 };

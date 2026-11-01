@@ -804,4 +804,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "roles.othersOnAccount": "+ {n} flere på kontoen – se alle →",
   "hosts.manage": "Administrer værter",
   "roles.seeAllMine": "Se alle dine smagninger ({n}) →",
+  "adminTasting.inviteGuest": "Inviter gæst",
+  "adminTasting.searchOrNew": "Søg i gæstelisten – eller skriv navnet på en ny gæst",
+  "adminTasting.nameOrEmail": "Navn eller e-mail",
+  "adminTasting.noMatch": "Ingen på gæstelisten passer.",
+  "adminTasting.newGuest": "+ Ny gæst",
+  "adminTasting.newGuestNamed": "+ Ny gæst: {name}",
+  "adminTasting.invitedName": "{name} er inviteret.",
 };

@@ -803,4 +803,11 @@ export const en = {
   "roles.othersOnAccount": "+ {n} more on the account – see all →",
   "hosts.manage": "Manage hosts",
   "roles.seeAllMine": "See all your tastings ({n}) →",
+  "adminTasting.inviteGuest": "Invite guest",
+  "adminTasting.searchOrNew": "Search your guest list – or type the name of a new guest",
+  "adminTasting.nameOrEmail": "Name or email",
+  "adminTasting.noMatch": "Nobody on your guest list matches.",
+  "adminTasting.newGuest": "+ New guest",
+  "adminTasting.newGuestNamed": "+ New guest: {name}",
+  "adminTasting.invitedName": "{name} is invited.",
 } as const;

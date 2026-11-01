@@ -804,4 +804,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "roles.othersOnAccount": "+ {n} til viðbótar á aðganginum – sjá allar →",
   "hosts.manage": "Stjórna gestgjöfum",
   "roles.seeAllMine": "Sjá allar þínar smakkanir ({n}) →",
+  "adminTasting.inviteGuest": "Bjóða gesti",
+  "adminTasting.searchOrNew": "Leitaðu á gestalistanum – eða skrifaðu nafn nýs gests",
+  "adminTasting.nameOrEmail": "Nafn eða netfang",
+  "adminTasting.noMatch": "Enginn á gestalistanum passar.",
+  "adminTasting.newGuest": "+ Nýr gestur",
+  "adminTasting.newGuestNamed": "+ Nýr gestur: {name}",
+  "adminTasting.invitedName": "{name} hefur verið boðið.",
 };

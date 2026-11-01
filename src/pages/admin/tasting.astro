@@ -160,30 +160,32 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block guests" data-section="guests">
         <div class="guests-head">
           <h2 data-i18n="admin.guests">Guests</h2>
-          <div class="row-actions" style="margin:0">
-            <button id="g-invite-toggle" class="btn small ghost" type="button" data-i18n="adminTasting.invite">Invite</button>
-            <button id="add-toggle" class="btn small ghost" type="button" data-i18n="admin.addGuest">Add guest</button>
-          </div>
+          <button id="g-invite-toggle" class="btn small" type="button" data-i18n="adminTasting.inviteGuest">Invite guest</button>
         </div>
 
-        <div id="g-picker" class="picker" hidden>
-          <label for="g-search" data-i18n="adminTasting.pickGuests">Invite from your guests</label>
-          <input id="g-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+        <!-- Invite: someone from the guest list, or a new guest – one panel -->
+        <dialog id="g-panel" class="sheet" aria-labelledby="g-panel-title">
+          <div class="sheet-head">
+            <h2 id="g-panel-title" data-i18n="adminTasting.inviteGuest">Invite guest</h2>
+            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          </div>
+          <label for="g-search" data-i18n="adminTasting.searchOrNew">Search your guest list – or type the name of a new guest</label>
+          <input id="g-search" class="search" type="search" autocomplete="off" placeholder="Name or email" data-i18n-attr="placeholder=adminTasting.nameOrEmail" />
+          <p id="g-msg" class="message ok" hidden aria-live="polite"></p>
           <ul id="g-picker-list" class="picker-list"></ul>
-          <p id="g-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreGuests">Everyone in your guest list is invited.</p>
-          <button id="g-picker-close" class="text-btn" type="button" data-i18n="admin.close">Close</button>
-        </div>
-
-        <form id="add-p" class="add-form" hidden>
-          <label for="new-name" data-i18n="admin.name">Name</label>
-          <input id="new-name" type="text" autocomplete="off" required />
-          <label for="new-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
-          <input id="new-email" type="email" autocomplete="off" />
-          <div class="row-actions">
-            <button class="btn small" type="submit" data-i18n="admin.add">Add</button>
-            <button id="add-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-          </div>
-        </form>
+          <p id="g-picker-empty" class="hint" hidden></p>
+          <button id="g-new-toggle" class="new-guest-btn" type="button"></button>
+          <form id="add-p" class="add-form" hidden>
+            <label for="new-name" data-i18n="admin.name">Name</label>
+            <input id="new-name" type="text" autocomplete="off" required />
+            <label for="new-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
+            <input id="new-email" type="email" autocomplete="off" />
+            <div class="row-actions">
+              <button class="btn small" type="submit" data-i18n="adminTasting.invite">Invite</button>
+              <button id="add-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            </div>
+          </form>
+        </dialog>
 
         <div class="filters" role="tablist" aria-label="Vis deltagere">
           <button type="button" role="tab" data-filter="all" aria-selected="true"><b data-i18n="admin.fAll">All</b> <span></span></button>
@@ -640,15 +642,23 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderParticipants();
   });
 
-  $('add-toggle').addEventListener('click', () => {
-    $('add-p').hidden = false;
-    $('add-toggle').hidden = true;
-    ($('new-name') as HTMLInputElement).focus();
-  });
-  $('add-cancel').addEventListener('click', () => {
-    $('add-p').hidden = true;
-    $('add-toggle').hidden = false;
-  });
+  // A new guest: the form opens with what was typed in the search (a name, or an email)
+  function showNewGuest(on: boolean) {
+    $('add-p').hidden = !on;
+    $('g-new-toggle').hidden = on;
+    if (!on) return;
+    const q = ($('g-search') as HTMLInputElement).value.trim();
+    const isEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(q);
+    ($('new-name') as HTMLInputElement).value = isEmail ? '' : q;
+    ($('new-email') as HTMLInputElement).value = isEmail ? q : '';
+    (isEmail || !q ? $('new-name') : $('new-email') as HTMLInputElement).focus();
+  }
+  $('g-new-toggle').addEventListener('click', () => showNewGuest(true));
+  $('add-cancel').addEventListener('click', () => showNewGuest(false));
+  function invitedMsg(name: string) {
+    $('g-msg').textContent = t('adminTasting.invitedName', { name });
+    $('g-msg').hidden = false;
+  }
   $('add-p').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nameEl = $('new-name') as HTMLInputElement;
@@ -674,9 +684,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     library = library.filter((g) => g.id !== guestId);
     nameEl.value = '';
     emailEl.value = '';
-    $('add-p').hidden = true;
-    $('add-toggle').hidden = false;
+    ($('g-search') as HTMLInputElement).value = '';
+    showNewGuest(false);
+    invitedMsg(name);
     renderParticipants();
+    renderGuestPicker();
   });
 
   // ---------- Orders ----------
@@ -812,22 +824,29 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           .insert({ name: g.name, email: g.email, tasting_id: tasting!.id, guest_id: g.id }).select().single();
         if (error) { add.disabled = false; alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
         participants.push(data as P);
+        invitedMsg(g.name);
         renderParticipants();
         renderGuestPicker();
       });
       li.append(text, add);
       return li;
     }));
-    $('g-picker-empty').hidden = candidates.length > 0;
+    const empty = $('g-picker-empty');
+    empty.hidden = candidates.length > 0;
+    empty.textContent = q ? t('adminTasting.noMatch') : t('adminTasting.noMoreGuests');
+    const typed = ($('g-search') as HTMLInputElement).value.trim();
+    $('g-new-toggle').textContent = typed ? t('adminTasting.newGuestNamed', { name: typed }) : t('adminTasting.newGuest');
   }
+  const guestPanelInvite = sheetPanel($('g-panel') as HTMLDialogElement);
   $('g-invite-toggle').addEventListener('click', () => {
-    $('g-picker').hidden = false;
-    $('g-invite-toggle').hidden = true;
+    ($('g-search') as HTMLInputElement).value = '';
+    $('g-msg').hidden = true;
+    showNewGuest(false);
     renderGuestPicker();
-    ($('g-search') as HTMLInputElement).focus();
+    guestPanelInvite.open();
+    if (matchMedia('(min-width: 48rem)').matches) ($('g-search') as HTMLInputElement).focus();
   });
-  $('g-picker-close').addEventListener('click', () => { $('g-picker').hidden = true; $('g-invite-toggle').hidden = false; });
-  $('g-search').addEventListener('input', renderGuestPicker);
+  $('g-search').addEventListener('input', () => { $('g-msg').hidden = true; renderGuestPicker(); });
 
   // ---------- Sections: each part of the tasting has its own address /t/<slug>/admin/<section>/ ----------
   function showSection(id: string) {
