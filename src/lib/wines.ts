@@ -81,3 +81,12 @@ export function wineSlugs(wines: Pick<Wine, 'id' | 'name'>[]): Map<number, strin
   }
   return out;
 }
+
+/** "Château Fombrauge 2020" with vintage 2020 → "Château Fombrauge" (the year is shown from the vintage).
+ *  The same as withoutYear in src/server/wine-ai.ts, which cleans names from the label and link readers. */
+export function withoutYear(name: string | null, vintage: string | null): string | null {
+  if (!name || !vintage || !/^\d{4}$/.test(vintage)) return name;
+  const cleaned = name.replace(new RegExp(`(^|[\\s,–—-]+)${vintage}(?=$|[\\s,–—-])`, 'g'), ' ')
+    .replace(/\s{2,}/g, ' ').replace(/^[\s,–—-]+|[\s,–—-]+$/g, '').trim();
+  return cleaned.length >= 2 ? cleaned : name;
+}

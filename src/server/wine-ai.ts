@@ -11,7 +11,7 @@ export const MODEL = '@cf/mistralai/mistral-small-3.1-24b-instruct';
 
 export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified', 'Other'];
 
-export const FIELDS_SPEC = `"name": the wine's name (without the producer, unless it is the only name; drop shop marketing such as "95 points" or "top buy"),
+export const FIELDS_SPEC = `"name": the wine's name (without the producer, unless it is the only name; without the vintage year, which goes in "vintage"; drop shop marketing such as "95 points" or "top buy"),
 "producer": the producer, winery, house or château,
 "vintage": the year as 4 digits, "NV" for a non-vintage wine (e.g. most champagne, tawny or ruby port without a year), an age statement such as "10 years", or null when unknown,
 "style": one of ${JSON.stringify(STYLES)} – "Fortified" for port, sherry, madeira, Rivesaltes and the like, "Sweet" for dessert wines such as Sauternes or Tokaji, "Other" for spirits and anything that is not wine,
@@ -70,6 +70,14 @@ export function yearIn(...texts: (string | null | undefined)[]) {
   return null;
 }
 
+/** "Château Fombrauge 2020" with vintage 2020 → "Château Fombrauge" (the year is shown from the vintage). */
+export function withoutYear(name: string | null, vintage: string | null): string | null {
+  if (!name || !vintage || !/^\d{4}$/.test(vintage)) return name;
+  const cleaned = name.replace(new RegExp(`(^|[\\s,–—-]+)${vintage}(?=$|[\\s,–—-])`, 'g'), ' ')
+    .replace(/\s{2,}/g, ' ').replace(/^[\s,–—-]+|[\s,–—-]+$/g, '').trim();
+  return cleaned.length >= 2 ? cleaned : name;
+}
+
 /** The model's answer → wine fields. `hints` (e.g. the page title) are searched for a year if the model gave none. */
 export function toFields(answer: Record<string, unknown>, hints: string[] = []): WineFields {
   const abv = Number(String(answer.abv ?? '').replace(',', '.').replace('%', ''));
@@ -77,10 +85,11 @@ export function toFields(answer: Record<string, unknown>, hints: string[] = []):
   const name = text(answer.name);
   const v = text(answer.vintage);
   const vintage = v && /^(n\.?\s?v\.?|non[- ]?vintage|sans ann[ée]e|sin añada|uden årgang)$/i.test(v) ? 'NV' : v;
+  const year = vintage ?? yearIn(name, ...hints);
   return {
-    name,
+    name: withoutYear(name, year),
     producer: text(answer.producer),
-    vintage: vintage ?? yearIn(name, ...hints),
+    vintage: year,
     style: style && STYLES.includes(style) ? style : null,
     abv: Number.isFinite(abv) && abv > 0 && abv < 80 ? abv : null,
     appellation: str(answer.appellation),

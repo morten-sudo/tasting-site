@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
 import { wineMap } from './wine-map';
+import { withoutYear } from './wines';
 import { forgetGuesses } from './overview-map';
 import { WINE_COUNTRIES, countryName, loadAppellations, matchAppellation, normOrigin, originLine, type Appellation } from './origin';
 
@@ -458,7 +459,8 @@ export function initWineAdmin(hostId: string, tenantId: string) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = field<HTMLInputElement>('wf-name').value.trim();
+    // The year belongs in Vintage, not in the name ("Château Fombrauge 2020" → "Château Fombrauge")
+    const name = withoutYear(field<HTMLInputElement>('wf-name').value.trim(), field<HTMLInputElement>('wf-vintage').value.trim()) ?? '';
     if (!name) { showMsg(t('admin.wineNameMissing')); return; }
 
     const save = $<HTMLButtonElement>('wf-save');
