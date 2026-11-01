@@ -732,4 +732,5 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "roles.mineNone": "Du bist bei keiner bevorstehenden Verkostung Gastgeber.",
   "roles.othersOnAccount": "+ {n} weitere im Konto – alle ansehen →",
   "hosts.manage": "Gastgeber verwalten",
+  "roles.seeAllMine": "Alle deine Verkostungen ansehen ({n}) →",
 };

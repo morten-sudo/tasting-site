@@ -802,4 +802,5 @@ export const en = {
   "roles.mineNone": "You are not a host of any upcoming tasting.",
   "roles.othersOnAccount": "+ {n} more on the account – see all →",
   "hosts.manage": "Manage hosts",
+  "roles.seeAllMine": "See all your tastings ({n}) →",
 } as const;

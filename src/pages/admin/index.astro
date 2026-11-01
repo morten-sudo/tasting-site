@@ -152,6 +152,7 @@ import '../../styles/admin.css';
   }
 
   // ---------- The tastings I host ----------
+  const MINE_SHOWN = 2;
   async function showMine() {
     const roles = await tastingRoles();
     if (!roles.length) return;
@@ -162,7 +163,8 @@ import '../../styles/admin.css';
     type R = { id: string; slug: string; title: string; starts_at: string | null; participants: { status: string }[] };
     const cutoff = Date.now() - 24 * 3600 * 1000;
     const upcoming = ((data ?? []) as R[]).filter((x) => !x.starts_at || new Date(x.starts_at).getTime() >= cutoff);
-    $('mine').replaceChildren(...upcoming.map((x) => {
+    // The nearest few, so the card keeps the height of the next-tasting card beside it
+    $('mine').replaceChildren(...upcoming.slice(0, MINE_SHOWN).map((x) => {
       const li = mk('li');
       const a = mk('a', 'mine-item');
       a.href = adminUrl(x.slug);
@@ -174,10 +176,11 @@ import '../../styles/admin.css';
       return li;
     }));
     $('mine-none').hidden = upcoming.length > 0;
-    // When the account has tastings others host: say so, with the way to all of them
+    // More of my own than shown → all of mine; otherwise, tastings others host on the account
     const others = roles.length - hosting.size;
-    $('mine-all').hidden = others === 0;
-    $('mine-all').textContent = t('roles.othersOnAccount', { n: others });
+    const more = upcoming.length > MINE_SHOWN;
+    $('mine-all').hidden = !more && others === 0;
+    $('mine-all').textContent = more ? t('roles.seeAllMine', { n: upcoming.length }) : t('roles.othersOnAccount', { n: others });
     $('mine-card').hidden = false;
   }
 
