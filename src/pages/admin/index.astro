@@ -23,17 +23,18 @@ import '../../styles/admin.css';
       </div>
 
       <div class="dash-grid">
-        <!-- The tastings I host myself (the account may have many more) -->
-        <section id="mine-card" class="dash-card dash-wide mine-card" hidden>
-          <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
-          <ul id="mine" class="mine-list"></ul>
-          <p id="mine-none" class="hint" hidden data-i18n="roles.mineNone">You are not a host of any upcoming tasting.</p>
-          <a id="mine-all" class="text-btn" href="/admin/tastings/" hidden></a>
-        </section>
         <!-- Next tasting -->
         <section class="dash-card">
           <h2 data-i18n="dash.next">Next tasting</h2>
           <div id="next"></div>
+        </section>
+
+        <!-- The tastings I host myself (the account may have many more) -->
+        <section id="mine-card" class="dash-card mine-card" hidden>
+          <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
+          <ul id="mine" class="mine-list"></ul>
+          <p id="mine-none" class="hint" hidden data-i18n="roles.mineNone">You are not a host of any upcoming tasting.</p>
+          <a id="mine-all" class="text-btn" href="/admin/tastings/" hidden></a>
         </section>
 
         <!-- Needs paying -->
