@@ -67,7 +67,7 @@ import '../../styles/admin.css';
   async function load() {
     const { data } = await supabase.from('guests')
       .select('id, name, email, participants(status, tastings(slug, title))')
-      .eq('host_id', host!.id).order('name');
+      .eq('tenant_id', host!.tenant_id).order('name');
     guests = (data ?? []) as unknown as G[];
     render();
   }

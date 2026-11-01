@@ -132,7 +132,7 @@ import '../../styles/admin.css';
   const host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
-    await initWineAdmin(host.id).load();
+    await initWineAdmin(host.id, host.tenant_id).load();
     // Search the list
     $('wine-search').addEventListener('input', (e) => {
       const q = (e.target as HTMLInputElement).value.trim().toLowerCase();

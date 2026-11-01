@@ -41,6 +41,22 @@ insert into chat_messages (tasting_id, participant_id, author, body) values
 insert into tasting_hosts (tasting_id, email, host_id) values
   ('00000000-0000-4000-b000-00000000000a', 'host-c@selftest.invalid', '00000000-0000-4000-a000-00000000000c');
 
+-- Host D is a host on host A's account (each of A, B and C got an account of their own)
+insert into hosts (id, email, name, tenant_id) values
+  ('00000000-0000-4000-f000-00000000000d', 'host-d@selftest.invalid', 'Host D',
+   (select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a'));
+do $$
+declare failed boolean;
+begin
+  assert (select count(distinct tenant_id) from hosts where email like 'host-_@selftest.invalid') = 3, 'hosts did not get their accounts';
+  assert (select tenant_id from wines where id = -1004) = (select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a'), 'a wine is not on its host''s account';
+  -- The owner of an account cannot be deleted, nor moved off it
+  failed := false; begin delete from hosts where id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
+  assert failed, 'the owner of an account can be deleted';
+  failed := false; begin update hosts set tenant_id = null where id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
+  assert failed, 'the owner can be moved off the account';
+end $$;
+
 -- ---------- Host A, signed in ----------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
 set local role authenticated;
@@ -105,8 +121,70 @@ begin
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
   assert (host_dashboard() ->> 'guests')::int = (select count(*) from guests), 'overview counts other hosts'' guests';
+  -- The account: A owns it, D is on it; B's account is not visible
+  assert is_tenant_owner(), 'host A does not own the account';
+  select count(*) into n from tenant_members();                                                             assert n = 2, 'host A does not see the account''s hosts';
+  select count(*) into n from tenants;                                                                      assert n = 1, 'host A sees other accounts';
+  failed := false; begin perform remove_tenant_member('host-a@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the owner can remove themselves from the account';
+  perform remove_tenant_member('host-b@selftest.invalid');
+  assert (select count(*) from tenant_members()) = 2, 'removing someone from another account changes this one';
+  failed := false; begin perform set_tenant_name('x'); exception when others then failed := true; end;
+  assert not failed, 'the owner cannot name the account';
 end $$;
 reset role;
+
+-- ---------- Host D, a host on A's account ----------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000d","email":"host-d@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare n int; failed boolean;
+begin
+  assert current_host_id() = '00000000-0000-4000-f000-00000000000d', 'host D is not recognised';
+  -- Everything on the account, nothing of B
+  select count(*) into n from tastings where slug like 'selftest-%';                                        assert n = 1, 'host D sees the wrong tastings';
+  select count(*) into n from wines where id in (-1001, -1002, -1004);                                      assert n = 2, 'host D does not see the account''s wines (or sees B''s)';
+  select count(*) into n from guests where id::text like '00000000-0000-4000-c000-%';                       assert n = 1, 'host D sees the wrong guests';
+  select count(*) into n from participants where id::text like '00000000-0000-4000-d000-%';                 assert n = 1, 'host D sees the wrong participants';
+  update wines set name = 'Wine A (by D)' where id = -1004; get diagnostics n = row_count;                  assert n = 1, 'host D cannot edit the account''s wine';
+  update tastings set title = 'Test A (by D)' where slug = 'selftest-a'; get diagnostics n = row_count;     assert n = 1, 'host D cannot edit the account''s tasting';
+  update wines set name = 'hacked' where id = -1002; get diagnostics n = row_count;                         assert n = 0, 'host D can edit host B''s wine';
+  insert into guests (host_id, name) values ('00000000-0000-4000-f000-00000000000d', 'Guest by D');
+  select count(*) into n from guests where name = 'Guest by D' and tenant_id = my_tenant();                 assert n = 1, 'host D''s guest is not on the account';
+  failed := false; begin update wines set tenant_id = (select tenant_id from tastings where slug = 'selftest-a') where id = -1002; exception when others then failed := true; end;
+  select count(*) into n from wines where id = -1002;                                                       assert n = 0, 'host D can take over host B''s wine';
+  -- Only the owner manages the account
+  assert not is_tenant_owner(), 'host D counts as owner';
+  select count(*) into n from tenant_members();                                                             assert n = 2, 'host D does not see the account''s hosts';
+  failed := false; begin perform remove_tenant_member('host-a@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'host D can remove the owner';
+  failed := false; begin perform set_tenant_name('hacked'); exception when others then failed := true; end;
+  assert failed, 'host D can rename the account';
+  failed := false; begin update hosts set tenant_id = null where id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
+  select count(*) into n from hosts where id = '00000000-0000-4000-a000-00000000000a' and tenant_id is not null;
+  assert n = 1, 'host D can move the owner off the account';
+  assert not is_tasting_owner('00000000-0000-4000-b000-00000000000a'), 'host D can manage the hosts of A''s tasting';
+end $$;
+reset role;
+
+-- ---------- Host A removes D from the account; D loses it all ----------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin perform remove_tenant_member('host-d@selftest.invalid'); end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000d","email":"host-d@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare n int;
+begin
+  select count(*) into n from tastings where slug like 'selftest-%';                                        assert n = 0, 'a removed host still sees the tastings';
+  select count(*) into n from wines where id in (-1001, -1004);                                             assert n = 0, 'a removed host still sees the wines';
+  select count(*) into n from guests where name = 'Guest by D';                                             assert n = 0, 'a removed host still sees the guests';
+end $$;
+reset role;
+do $$ begin
+  assert (select count(*) from guests where name = 'Guest by D') = 1, 'what a removed host made left the account';
+end $$;
 
 -- ---------- Host C, co-host of host A's tasting ----------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000c","email":"host-c@selftest.invalid","role":"authenticated"}', true);
@@ -238,6 +316,11 @@ begin
   assert failed, 'anyone can read a host overview';
   failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
   assert failed, 'anyone can list tenants';
+  begin select count(*) into n from tenants; exception when others then n := 0; end;                         assert n = 0, 'anyone can read accounts';
+  failed := false; begin perform * from tenant_members(); exception when others then failed := true; end;
+  assert failed, 'anyone can list an account''s hosts';
+  failed := false; begin perform remove_tenant_member('host-d@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can remove a host from an account';
   -- …while a guest's own chat works
   perform post_chat('selftestaa', 'hi from A');
   select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';

@@ -3,7 +3,9 @@ import { supabase } from './supabase';
 import { i18nReady, t } from '../i18n';
 import { initSide } from './admin-side';
 
-export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null };
+/** The signed-in host, with their account (tenant) and whether they own it */
+export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null;
+  tenant_id: string; tenant_owner: boolean };
 
 export const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 
@@ -37,13 +39,18 @@ export async function requireHost(): Promise<Host | null> {
   await supabase.rpc('link_me');
   const { data: hostId } = await supabase.rpc('current_host_id');
   if (!hostId) { $('not-host').hidden = false; return null; }
-  const { data: host } = await supabase.from('hosts').select('id, email, name, language, mobilepay').eq('id', hostId).single();
-  if (!host) { $('not-host').hidden = false; return null; }
+  // A host removed from an account gets a new account of their own here
+  const [{ data: host }, { data: tenantId }] = await Promise.all([
+    supabase.from('hosts').select('id, email, name, language, mobilepay').eq('id', hostId).single(),
+    supabase.rpc('ensure_my_tenant'),
+  ]);
+  if (!host || !tenantId) { $('not-host').hidden = false; return null; }
+  const { data: tenant } = await supabase.from('tenants').select('owner_id').eq('id', tenantId).maybeSingle();
 
   $('me').textContent = data.session.user.email ?? '';
   initSide(host.id);
   enableImageZoom(t('admin.close'));
-  return host as Host;
+  return { ...host, tenant_id: tenantId as string, tenant_owner: (tenant as { owner_id: string } | null)?.owner_id === host.id } as Host;
 }
 
 export const toNumber = (v: string) => {

@@ -307,7 +307,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const { data } = await supabase.from('tastings').select('*').eq('slug', slug).maybeSingle();
     tasting = (data ?? null) as T | null;
     if (!tasting) return;
-    initHosts(tasting.id, slug, tasting.host_id === host.id);
+    // Hosts are managed by whoever created the tasting and by the account's owner
+    initHosts(tasting.id, slug, tasting.host_id === host.id || (host.tenant_owner && tasting.tenant_id === host.tenant_id));
     document.title = `${tasting.title} – Winetastr`;
     $('ta-title').textContent = tasting.title;
     ($('t-guestpage') as HTMLAnchorElement).href = tastingUrl(slug);
@@ -591,7 +592,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // The new guest goes into the guest library too (or reuses the one with the same email)
     let guestId: string | null = null;
     if (email) {
-      const { data: found } = await supabase.from('guests').select('id').eq('host_id', host!.id).ilike('email', email).maybeSingle();
+      const { data: found } = await supabase.from('guests').select('id').eq('tenant_id', host!.tenant_id).ilike('email', email).maybeSingle();
       guestId = found?.id ?? null;
     }
     if (!guestId) {
@@ -833,14 +834,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const [p, o, g, q] = await Promise.all([
       supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id').eq('tasting_id', tasting.id),
       supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting.id),
-      supabase.from('guests').select('id, name, email').eq('host_id', host!.id).order('name'),
+      supabase.from('guests').select('id, name, email').eq('tenant_id', host!.tenant_id).order('name'),
       supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id),
     ]);
     participants = (p.data ?? []) as P[];
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
     quizTotal = q.count || 1;
-    await initTastingWines(tasting.id, host!.id, (list) => { wines = list; renderOrders(); }).load();
+    await initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); }).load();
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; }).load();
     renderParticipants();

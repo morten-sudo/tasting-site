@@ -1,0 +1,128 @@
+---
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav active="account">
+    <div id="admin-main" hidden>
+      <h1 class="title" data-i18n="account.title">Account</h1>
+      <p class="hint" data-i18n="account.intro">Everyone on the account sees and edits all its tastings, wines and guests.</p>
+
+      <!-- The account's name -->
+      <section class="block">
+        <div class="guests-head">
+          <h2 data-i18n="account.nameTitle">Name</h2>
+          <button id="name-edit" class="text-btn" type="button" hidden data-i18n="admin.edit">Edit</button>
+        </div>
+        <p id="acc-name" class="acc-name"></p>
+        <p id="acc-name-empty" class="hint" hidden data-i18n="account.noName">No name yet – e.g. your wine club or your shop.</p>
+      </section>
+
+      <!-- The account's hosts: the owner first; only the owner removes others -->
+      <section class="block">
+        <h2 data-i18n="account.hostsTitle">Hosts on the account</h2>
+        <ul id="members" class="hosts-list"></ul>
+        <p class="hint" data-i18n="account.addHint">New hosts join the account when you add them as co-host of a tasting (Settings → Hosts in the tasting).</p>
+        <p id="m-msg" class="message error" hidden></p>
+      </section>
+
+      <dialog id="name-panel" class="sheet" aria-labelledby="name-panel-title">
+        <div class="sheet-head">
+          <h2 id="name-panel-title" data-i18n="account.nameTitle">Name</h2>
+          <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+        </div>
+        <form id="name-form" class="add-form" novalidate>
+          <label for="name-input" data-i18n="account.nameLabel">The account's name</label>
+          <input id="name-input" type="text" maxlength="80" autocomplete="organization" placeholder="E.g. Holte Wine Club" data-i18n-attr="placeholder=account.namePlaceholder" />
+          <p class="hint" data-i18n="account.nameHint">E.g. your wine club, your shop or your group of friends.</p>
+          <p id="name-msg" class="message error" hidden></p>
+          <div class="row-actions">
+            <button class="btn small" type="submit" data-i18n="common.save">Save</button>
+            <button id="name-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+          </div>
+        </form>
+      </dialog>
+    </div>
+    </AdminNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { requireHost, $, mk, sheetPanel } from '../../lib/admin-common';
+  import { t } from '../../i18n';
+
+  type Member = { email: string; name: string | null; owner: boolean; me: boolean };
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    await Promise.all([loadName(), loadMembers()]);
+  }
+
+  // ---------- Name ----------
+  let name = '';
+  async function loadName() {
+    const { data } = await supabase.from('tenants').select('name').eq('id', host!.tenant_id).maybeSingle();
+    name = (data as { name: string | null } | null)?.name ?? '';
+    $('acc-name').textContent = name;
+    $('acc-name').hidden = !name;
+    $('acc-name-empty').hidden = !!name;
+    $('name-edit').hidden = !host!.tenant_owner;
+  }
+  const panel = sheetPanel($<HTMLDialogElement>('name-panel'));
+  $('name-edit').addEventListener('click', () => {
+    $<HTMLInputElement>('name-input').value = name;
+    $('name-msg').hidden = true;
+    panel.open();
+    if (matchMedia('(min-width: 48rem)').matches) $<HTMLInputElement>('name-input').focus();
+  });
+  $('name-cancel').addEventListener('click', () => panel.close());
+  $('name-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { error } = await supabase.rpc('set_tenant_name', { n: $<HTMLInputElement>('name-input').value });
+    if (error) { $('name-msg').textContent = t('admin.changeNotSaved'); $('name-msg').hidden = false; return; }
+    panel.close();
+    await loadName();
+  });
+
+  // ---------- Hosts ----------
+  async function loadMembers() {
+    const { data } = await supabase.rpc('tenant_members');
+    const rows = (data ?? []) as Member[];
+    $('members').replaceChildren(...rows.map((r) => {
+      const li = mk('li', 'host-row');
+      const who = mk('div', 'host-who');
+      const n = mk('span', 'host-name', r.name || r.email);
+      if (r.me) n.append(mk('span', 'host-me', ` (${t('hosts.you')})`));
+      who.append(n);
+      if (r.name) who.append(mk('span', 'host-email', r.email));
+      li.append(who, mk('span', 'host-tag' + (r.owner ? ' owner' : ''), r.owner ? t('account.owner') : t('account.host')));
+      // The owner can remove other hosts; the owner can never be removed
+      if (host!.tenant_owner && !r.owner) {
+        const del = mk('button', 'text-btn danger', t('hosts.remove'));
+        del.type = 'button';
+        del.addEventListener('click', async () => {
+          if (!del.dataset.armed) {
+            del.dataset.armed = '1';
+            del.textContent = t('account.removeConfirm');
+            setTimeout(() => { delete del.dataset.armed; del.textContent = t('hosts.remove'); }, 4000);
+            return;
+          }
+          const { error } = await supabase.rpc('remove_tenant_member', { e: r.email });
+          $('m-msg').hidden = !error;
+          if (error) { $('m-msg').textContent = t('hosts.failed'); return; }
+          loadMembers();
+        });
+        li.append(del);
+      }
+      return li;
+    }));
+  }
+</script>
+
+<style>
+  .acc-name { font-family: var(--display); font-size: 1.8rem; margin: 0.2rem 0 0; }
+</style>

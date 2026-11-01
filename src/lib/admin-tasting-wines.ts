@@ -13,7 +13,7 @@ type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orde
 type Tier = { qty: number; price: number };
 export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number };
 
-export function initTastingWines(tastingId: string, hostId: string, onChange: (wines: TastingWine[]) => void) {
+export function initTastingWines(tastingId: string, tenantId: string, onChange: (wines: TastingWine[]) => void) {
   let rows: Row[] = [];
   let library: LibWine[] = [];
   let ratings = new Map<number, { average: number; votes: number }>();
@@ -234,7 +234,7 @@ export function initTastingWines(tastingId: string, hostId: string, onChange: (w
     const [tw, lib, r] = await Promise.all([
       supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, price_tiers, orderable, revealed, wines(${cols})`)
         .eq('tasting_id', tastingId).order('sort_order'),
-      supabase.from('wines').select(cols).eq('host_id', hostId).order('name'),
+      supabase.from('wines').select(cols).eq('tenant_id', tenantId).order('name'),
       supabase.rpc('tasting_wine_ratings', { t_id: tastingId }),
     ]);
     rows = (tw.data ?? []) as unknown as Row[];

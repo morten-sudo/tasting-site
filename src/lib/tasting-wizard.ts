@@ -223,8 +223,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
 
   async function loadLibraries() {
     const [w, g, tw, p] = await Promise.all([
-      supabase.from('wines').select('id, name, producer, vintage, image_url, retail_price_dkk, offer_price_dkk, offer_quantity').eq('host_id', host.id).order('name'),
-      supabase.from('guests').select('id, name, email').eq('host_id', host.id).order('name'),
+      supabase.from('wines').select('id, name, producer, vintage, image_url, retail_price_dkk, offer_price_dkk, offer_quantity').eq('tenant_id', host.tenant_id).order('name'),
+      supabase.from('guests').select('id, name, email').eq('tenant_id', host.tenant_id).order('name'),
       tasting ? supabase.from('tasting_wines').select('wine_id').eq('tasting_id', tasting.id) : Promise.resolve({ data: [] }),
       tasting ? supabase.from('participants').select('guest_id').eq('tasting_id', tasting.id) : Promise.resolve({ data: [] }),
     ]);

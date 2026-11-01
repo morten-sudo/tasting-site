@@ -92,7 +92,7 @@ async function locateAppellation(appellation: string | null, region: string | nu
   } catch { /* the wine is saved; the map falls back to the country */ }
 }
 
-export function initWineAdmin(hostId: string) {
+export function initWineAdmin(hostId: string, tenantId: string) {
   let wines: AdminWine[] = [];
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
@@ -400,7 +400,7 @@ export function initWineAdmin(hostId: string) {
   }
 
   async function load() {
-    const { data } = await supabase.from('wines').select(COLUMNS).eq('host_id', hostId).order('name');
+    const { data } = await supabase.from('wines').select(COLUMNS).eq('tenant_id', tenantId).order('name');
     wines = (data ?? []) as AdminWine[];
     render();
   }
