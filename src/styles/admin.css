@@ -776,8 +776,8 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .mine-item:hover { border-color: var(--amber); }
 .admin-page .mine-title { font-family: var(--display); font-size: 1.4rem; line-height: 1.1; }
 .admin-page .mine-meta { font-size: 0.88rem; color: var(--muted); }
-/* The menu: a small dot before the tastings I host */
-.side-list a.mine::before { content: '●'; color: var(--amber); font-size: 0.6rem; margin-right: 0.45rem; vertical-align: 0.15em; }
+/* The menu: a small dot after the tastings I host */
+.side-list a.mine::after { content: '●'; color: var(--amber); font-size: 0.6rem; margin-left: 0.45rem; vertical-align: 0.15em; }
 
 /* A tasting's details, read-only (edited in the side panel) */
 .admin-page .details-view { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.55rem 1.25rem; margin: 0.5rem 0 1.25rem; max-width: 46rem; }
