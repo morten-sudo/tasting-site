@@ -692,4 +692,11 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "super.guessesNone": "Nog geen.",
   "super.guessShow": "Toon op kaart",
   "super.guessDelete": "Verwijderen",
+  "wineMap.area": "Geplaatst bij de herkomstbenaming op de regiokaart.",
+  "wineMap.region": "De hele regio is gemarkeerd – kies een herkomstbenaming uit de lijst om hem preciezer te plaatsen.",
+  "wineMap.appellation": "Geplaatst bij de herkomstbenaming.",
+  "wineMap.guess": "Geplaatst door Cloudflare AI op basis van de herkomstbenaming.",
+  "wineMap.country": "Midden in het land geplaatst – voeg een herkomstbenaming toe om hem preciezer te plaatsen.",
+  "wineMap.pending": "Voorlopig midden in het land – de herkomstbenaming wordt opgezocht bij het opslaan.",
+  "wineMap.regionWide": "De herkomstbenaming beslaat de hele regio.",
 };

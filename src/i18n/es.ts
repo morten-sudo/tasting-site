@@ -692,4 +692,11 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "super.guessesNone": "Ninguno todavía.",
   "super.guessShow": "Ver en el mapa",
   "super.guessDelete": "Eliminar",
+  "wineMap.area": "Situado en la denominación, en el mapa de la región.",
+  "wineMap.region": "Está marcada toda la región – elige una denominación de la lista para situarlo con más precisión.",
+  "wineMap.appellation": "Situado en la denominación.",
+  "wineMap.guess": "Situado por Cloudflare AI a partir de la denominación.",
+  "wineMap.country": "Situado en el centro del país – añade una denominación para situarlo con más precisión.",
+  "wineMap.pending": "Por ahora en el centro del país – la denominación se busca al guardar.",
+  "wineMap.regionWide": "La denominación abarca toda la región.",
 };

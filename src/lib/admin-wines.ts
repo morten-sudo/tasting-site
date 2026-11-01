@@ -3,6 +3,8 @@
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
+import { wineMap } from './wine-map';
+import { forgetGuesses } from './overview-map';
 import { WINE_COUNTRIES, countryName, loadAppellations, matchAppellation, normOrigin, originLine, type Appellation } from './origin';
 
 export type AdminWine = {
@@ -83,7 +85,10 @@ async function locateAppellation(appellation: string | null, region: string | nu
       body: JSON.stringify({ appellation, region, country }),
     });
     const r = (await res.json()) as { found?: boolean; lat?: number; lon?: number };
-    if (r.found) await supabase.rpc('save_place_guess', { name: appellation, country, lat: r.lat, lon: r.lon });
+    if (r.found) {
+      await supabase.rpc('save_place_guess', { name: appellation, country, lat: r.lat, lon: r.lon });
+      forgetGuesses();
+    }
   } catch { /* the wine is saved; the map falls back to the country */ }
 }
 
@@ -140,9 +145,32 @@ export function initWineAdmin(hostId: string) {
     }
     regionInput.readOnly = !!known;
     countrySelect.disabled = !!known;
+    showOriginMap();
+  }
+
+  // The wine's map, updated as the origin is typed (the newest typing wins)
+  let mapTurn = 0;
+  let mapTimer: ReturnType<typeof setTimeout> | undefined;
+  function showOriginMap() {
+    clearTimeout(mapTimer);
+    mapTimer = setTimeout(async () => {
+      const turn = ++mapTurn;
+      const origin = { appellation: appInput.value.trim() || null, region: regionInput.value.trim() || null, country: countrySelect.value || null };
+      const m = await wineMap(origin);
+      if (turn !== mapTurn) return;
+      const box = $('wf-map');
+      box.hidden = !m;
+      if (!m) return;
+      $('wf-map-svg').innerHTML = m.svg;
+      // How the wine was placed; an unknown appellation is looked up when the wine is saved
+      const pending = m.how === 'country' && !!origin.appellation;
+      $('wf-map-note').textContent = t(pending ? 'wineMap.pending' : `wineMap.${m.how}`);
+    }, 250);
   }
   appInput.addEventListener('input', syncOrigin);
   appInput.addEventListener('change', syncOrigin);
+  regionInput.addEventListener('input', showOriginMap);
+  countrySelect.addEventListener('change', showOriginMap);
 
   function showMsg(text: string, ok = false) {
     const m = $('wf-msg');

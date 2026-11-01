@@ -715,4 +715,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "super.guessesNone": "Ingen endnu.",
   "super.guessShow": "Vis på kort",
   "super.guessDelete": "Slet",
+  "wineMap.area": "Placeret ved appellationen på egnens kort.",
+  "wineMap.region": "Hele egnen er markeret – vælg en appellation fra listen for at placere den mere præcist.",
+  "wineMap.appellation": "Placeret ved appellationen.",
+  "wineMap.guess": "Placeret af Cloudflare AI ud fra appellationen.",
+  "wineMap.country": "Placeret midt i landet – tilføj en appellation for at placere den mere præcist.",
+  "wineMap.pending": "Indtil videre midt i landet – appellationen slås op, når du gemmer.",
+  "wineMap.regionWide": "Appellationen dækker hele egnen.",
 };

@@ -18,10 +18,13 @@ export const loadOverview = (id: 'europe' | 'world') => {
   return overviews.get(id)!;
 };
 export const loadCountries = once(async () => (await getJson<Record<string, Country>>('/maps/countries.json')) ?? {});
-export const loadGuesses = once(async () => {
+let guesses: Promise<Map<string, Guess>> | null = null;
+export const loadGuesses = () => (guesses ??= (async () => {
   const { data } = await supabase.from('appellation_guesses').select('key, name, country, lat, lon');
   return new Map(((data ?? []) as Guess[]).map((g) => [g.key, g]));
-});
+})());
+/** After a new place has been saved: read the places again next time. */
+export const forgetGuesses = () => { guesses = null; };
 
 type OriginWine = { appellation?: string | null; appellation_id?: string | null; region?: string | null; country?: string | null };
 

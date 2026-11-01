@@ -692,4 +692,11 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "super.guessesNone": "Jeszcze brak.",
   "super.guessShow": "Pokaż na mapie",
   "super.guessDelete": "Usuń",
+  "wineMap.area": "Umieszczone przy apelacji na mapie regionu.",
+  "wineMap.region": "Zaznaczono cały region – wybierz apelację z listy, aby umieścić je dokładniej.",
+  "wineMap.appellation": "Umieszczone przy apelacji.",
+  "wineMap.guess": "Umieszczone przez Cloudflare AI na podstawie apelacji.",
+  "wineMap.country": "Umieszczone na środku kraju – dodaj apelację, aby umieścić je dokładniej.",
+  "wineMap.pending": "Na razie na środku kraju – apelacja zostanie wyszukana przy zapisie.",
+  "wineMap.regionWide": "Apelacja obejmuje cały region.",
 };

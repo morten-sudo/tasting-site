@@ -715,4 +715,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "super.guessesNone": "Engir enn.",
   "super.guessShow": "Sýna á korti",
   "super.guessDelete": "Eyða",
+  "wineMap.area": "Staðsett við upprunaheitið á korti svæðisins.",
+  "wineMap.region": "Allt svæðið er merkt – veldu upprunaheiti af listanum til að staðsetja nánar.",
+  "wineMap.appellation": "Staðsett við upprunaheitið.",
+  "wineMap.guess": "Staðsett af Cloudflare AI út frá upprunaheitinu.",
+  "wineMap.country": "Staðsett í miðju landsins – bættu við upprunaheiti til að staðsetja nánar.",
+  "wineMap.pending": "Í bili í miðju landsins – upprunaheitið er flett upp þegar þú vistar.",
+  "wineMap.regionWide": "Upprunaheitið nær yfir allt svæðið.",
 };

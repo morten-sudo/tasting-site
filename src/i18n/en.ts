@@ -714,4 +714,11 @@ export const en = {
   "super.guessesNone": "None yet.",
   "super.guessShow": "Show on map",
   "super.guessDelete": "Delete",
+  "wineMap.area": "Placed at the appellation on the region map.",
+  "wineMap.region": "The whole region is marked – choose an appellation from the list to place it more precisely.",
+  "wineMap.appellation": "Placed at the appellation.",
+  "wineMap.guess": "Placed by Cloudflare AI from the appellation.",
+  "wineMap.country": "Placed in the middle of the country – add an appellation to place it more precisely.",
+  "wineMap.pending": "For now in the middle of the country – the appellation is looked up when you save.",
+  "wineMap.regionWide": "The appellation covers the whole region.",
 } as const;

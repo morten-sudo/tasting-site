@@ -66,8 +66,7 @@ import Base from '../../layouts/Base.astro';
   import { getCart, addToCart, cartCount } from '../../lib/cart';
   import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
-  import { loadMap, mapIdFor, drawMap } from '../../lib/region-map';
-  import { placeOf, loadOverview, overviewFor, focusFor, drawOverview } from '../../lib/overview-map';
+  import { wineMap } from '../../lib/wine-map';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -96,18 +95,9 @@ import Base from '../../layouts/Base.astro';
 
   async function showMiniMap(w: Wine) {
     const box = $('mini-map');
-    const mapId = mapIdFor(w.region);
-    const map = mapId ? await loadMap(mapId) : null;
-    if (map) {
-      const inMap = !!(w.appellation_id && map.areas[w.appellation_id]);
-      box.innerHTML = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[w.appellation_id!, 1]]) : new Map(), wholeRegion: !inMap });
-    } else {
-      const place = await placeOf(w);
-      if (!place) return;
-      const [overview, focus] = await Promise.all([loadOverview(overviewFor([place])), focusFor([place], true)]);
-      if (!overview) return;
-      box.innerHTML = drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini');
-    }
+    const m = await wineMap(w);
+    if (!m) return;
+    box.innerHTML = m.svg;
     box.title = originFull(w) ?? '';
     box.hidden = false;
   }
