@@ -2,6 +2,7 @@
 import { supabase } from './supabase';
 import { i18nReady, t } from '../i18n';
 import { initSide } from './admin-side';
+import { linkMe, takeCohostWelcome } from './link-me';
 
 /** The signed-in host, with their account (tenant) and whether they own it */
 export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null;
@@ -36,7 +37,7 @@ export async function requireHost(): Promise<Host | null> {
   $('side-logout')?.addEventListener('click', signOut);
 
   // Turns a co-host invitation for this email into a host account (first sign-in)
-  await supabase.rpc('link_me');
+  await linkMe();
   const { data: hostId } = await supabase.rpc('current_host_id');
   if (!hostId) { $('not-host').hidden = false; return null; }
   // A host removed from an account gets a new account of their own here
@@ -50,6 +51,7 @@ export async function requireHost(): Promise<Host | null> {
   $('me').textContent = data.session.user.email ?? '';
   initSide(host.id);
   enableImageZoom(t('admin.close'));
+  showCohostWelcome();
   return { ...host, tenant_id: tenantId as string, tenant_owner: (tenant as { owner_id: string } | null)?.owner_id === host.id } as Host;
 }
 
@@ -103,4 +105,32 @@ export function sheetPanel(dialog: HTMLDialogElement, onClose?: () => void) {
     open() { dialog.showModal(); dialog.scrollTop = 0; },
     close() { if (dialog.open) dialog.close(); },
   };
+}
+
+/** One time, right after the sign-in that made me co-host: "You are now co-host of Portvin 2026." */
+function showCohostWelcome() {
+  const rows = takeCohostWelcome();
+  if (!rows.length) return;
+  const here = location.pathname.match(/^\/t\/([a-z0-9-]+)\/admin\//)?.[1];
+  const dlg = document.createElement('dialog');
+  dlg.className = 'welcome-modal';
+  dlg.setAttribute('aria-labelledby', 'welcome-title');
+  dlg.append(mk('p', 'welcome-icon', '🍷'), Object.assign(mk('h2', '', t('cohost.welcomeTitle')), { id: 'welcome-title' }));
+  for (const r of rows) dlg.append(mk('p', 'welcome-text', t('cohost.welcomeText', { tasting: r.title })));
+  const actions = mk('div', 'row-actions');
+  const other = rows.find((r) => r.slug !== here);
+  if (rows.length === 1 && other) {
+    const go = mk('a', 'btn small', t('cohost.goTo'));
+    go.href = `/t/${other.slug}/admin/`;
+    actions.append(go);
+  }
+  const ok = mk('button', rows.length === 1 && other ? 'text-btn' : 'btn small', t('cohost.ok'));
+  ok.type = 'button';
+  ok.addEventListener('click', () => dlg.close());
+  actions.append(ok);
+  dlg.append(actions);
+  dlg.addEventListener('close', () => dlg.remove());
+  dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  document.body.append(dlg);
+  dlg.showModal();
 }

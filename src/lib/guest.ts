@@ -1,6 +1,7 @@
 // Guest session: which tasting a page belongs to, and the guest's invite code for it.
 // A guest can be invited to several tastings, so codes are stored per tasting slug.
 // Codes come from an invite link (?k=CODE) or, after an email sign-in, from my_tastings().
+import { linkMe } from './link-me';
 import { supabase } from './supabase';
 import { SUPABASE_URL } from './config';
 
@@ -122,7 +123,7 @@ export async function loadMe(): Promise<Me | null> {
   const { data } = await supabase.auth.getSession();
   if (data.session) {
     // Link my invitations to my account first (keeps them after an email change)
-    await supabase.rpc('link_me');
+    await linkMe();
     const { data: p } = await supabase.rpc('my_profile');
     const prof = (p ?? {}) as { name?: string | null; email?: string; is_host?: boolean };
     const email = data.session.user.email ?? prof.email ?? null;

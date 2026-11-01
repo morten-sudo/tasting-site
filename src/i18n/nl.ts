@@ -721,4 +721,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "account.owner": "Eigenaar",
   "account.host": "Gastheer",
   "account.removeConfirm": "Druk nogmaals om uit het account te verwijderen",
+  "cohost.welcomeTitle": "Welkom als medegastheer",
+  "cohost.welcomeText": "Je bent nu als medegastheer gekoppeld aan {tasting}.",
+  "cohost.goTo": "Naar de proeverij",
+  "cohost.ok": "OK",
 };

@@ -791,4 +791,8 @@ export const en = {
   "ev.login.host": "{host} signed in",
   "ev.admin.gdpr_delete": "Personal data deleted: {person}",
   "ev.admin.plan_changed": "Plan changed to {plan}",
+  "cohost.welcomeTitle": "Welcome as co-host",
+  "cohost.welcomeText": "You are now linked to {tasting} as co-host.",
+  "cohost.goTo": "Go to the tasting",
+  "cohost.ok": "OK",
 } as const;

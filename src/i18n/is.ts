@@ -792,4 +792,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "ev.login.host": "{host} skráði sig inn",
   "ev.admin.gdpr_delete": "Persónuupplýsingum eytt: {person}",
   "ev.admin.plan_changed": "Áskrift breytt í {plan}",
+  "cohost.welcomeTitle": "Velkomin(n) sem meðgestgjafi",
+  "cohost.welcomeText": "Þú ert nú tengd(ur) {tasting} sem meðgestgjafi.",
+  "cohost.goTo": "Fara í smökkunina",
+  "cohost.ok": "Í lagi",
 };

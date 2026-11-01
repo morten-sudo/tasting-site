@@ -332,6 +332,8 @@ begin
   assert failed, 'anyone can list an account''s hosts';
   failed := false; begin perform remove_tenant_member('host-d@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'anyone can remove a host from an account';
+  failed := false; begin perform * from link_me_tastings(); exception when others then failed := true; end;
+  assert failed, 'anyone can call link_me_tastings';
   -- …while a guest's own chat works
   perform post_chat('selftestaa', 'hi from A');
   select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';

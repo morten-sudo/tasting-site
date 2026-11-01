@@ -721,4 +721,8 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "account.owner": "Proprietario",
   "account.host": "Host",
   "account.removeConfirm": "Premi di nuovo per rimuovere dall’account",
+  "cohost.welcomeTitle": "Benvenuto come co-host",
+  "cohost.welcomeText": "Ora sei collegato a {tasting} come co-host.",
+  "cohost.goTo": "Vai alla degustazione",
+  "cohost.ok": "OK",
 };

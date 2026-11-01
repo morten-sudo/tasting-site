@@ -792,4 +792,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "ev.login.host": "{host} loggede ind",
   "ev.admin.gdpr_delete": "Persondata slettet: {person}",
   "ev.admin.plan_changed": "Plan ændret til {plan}",
+  "cohost.welcomeTitle": "Velkommen som medvært",
+  "cohost.welcomeText": "Du er nu koblet på {tasting} som medvært.",
+  "cohost.goTo": "Gå til smagningen",
+  "cohost.ok": "OK",
 };
