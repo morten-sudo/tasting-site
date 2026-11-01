@@ -6,6 +6,17 @@ import TastingWizard from '../../components/TastingWizard.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
 import ChatBox from '../../components/ChatBox.astro';
 import '../../styles/admin.css';
+import { en } from '../../i18n/en';
+// The parts of a tasting's admin (as SECTIONS in src/lib/admin-side.ts), shown as the page's sub-menu
+const TABS: { id: string; path: string; key: keyof typeof en }[] = [
+  { id: 'overview', path: '', key: 'section.overview' },
+  { id: 'wines', path: 'wines/', key: 'page.wines' },
+  { id: 'guests', path: 'guests/', key: 'admin.guests' },
+  { id: 'orders', path: 'orders/', key: 'admin.orders' },
+  { id: 'quiz', path: 'quiz/', key: 'page.quiz' },
+  { id: 'chat', path: 'chat/', key: 'page.chat' },
+  { id: 'settings', path: 'settings/', key: 'section.settings' },
+];
 ---
 <Base title="page.admin" adminTasting>
   <section class="wrap admin-page">
@@ -13,6 +24,16 @@ import '../../styles/admin.css';
     <p id="not-found" class="message error" hidden><span data-i18n="adminTasting.notFound">This tasting was not found.</span> <a href="/admin/tastings/" data-i18n="adminTasting.back">All tastings</a></p>
 
     <div id="admin-main" hidden>
+      <!-- The tasting's name, the way to its guest page, and its sub-menu -->
+      <header class="ta-head">
+        <div class="ta-top">
+          <h1 id="ta-title" class="title"></h1>
+          <a id="t-guestpage" class="ta-guest" href="/home/" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span> ↗</a>
+        </div>
+        <nav id="admin-tabs" class="ta-tabs" aria-label="Tasting admin" data-i18n-attr="aria-label=adminBar.label">
+          {TABS.map((tab) => <a href="/admin/" data-apath={tab.path} data-section={tab.id} data-i18n={tab.key}>{en[tab.key]}</a>)}
+        </nav>
+      </header>
       <div id="tasting-panel">
       <!-- Tasting details -->
       <section class="block" data-section="overview">
@@ -272,6 +293,9 @@ import '../../styles/admin.css';
     if (!tasting) return;
     initHosts(tasting.id, slug, tasting.host_id === host.id);
     document.title = `${tasting.title} – Winetastr`;
+    $('ta-title').textContent = tasting.title;
+    ($('t-guestpage') as HTMLAnchorElement).href = tastingUrl(slug);
+    document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a[data-apath]').forEach((a) => { a.href = `/t/${slug}/admin/${a.dataset.apath}`; });
 
     ($('d-title') as HTMLInputElement).value = tasting.title;
     writeWhen('d', tasting.starts_at);
@@ -306,6 +330,7 @@ import '../../styles/admin.css';
     msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
     if (!error) {
       Object.assign(tasting, patch);
+      $('ta-title').textContent = title;
       setTimeout(() => (msg.textContent = ''), 2000);
     }
   });
@@ -724,7 +749,7 @@ import '../../styles/admin.css';
   // ---------- Sections: each part of the tasting has its own address /t/<slug>/admin/<section>/ ----------
   function showSection(id: string) {
     document.querySelectorAll<HTMLElement>('#tasting-panel [data-section]').forEach((el) => { el.hidden = el.dataset.section !== id; });
-    // The tabs in the tasting bar at the top
+    // The page's sub-menu
     document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a').forEach((a) => {
       const on = a.dataset.section === id;
       a.classList.toggle('current', on);
