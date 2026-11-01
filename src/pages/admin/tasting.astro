@@ -54,7 +54,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <dt data-i18n="admin.title">Title</dt><dd id="v-title"></dd>
           <dt data-i18n="admin.when">Date and time</dt><dd id="v-when"></dd>
           <dt data-i18n="admin.place">Place</dt><dd id="v-place"></dd>
-          <dt data-i18n="admin.guestLanguage">Language for guests</dt><dd id="v-language"></dd>
           <dt data-i18n="admin.intro">Introduction</dt><dd id="v-intro" class="v-intro"></dd>
         </dl>
 
@@ -77,8 +76,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <textarea id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
           <DateTimeFields prefix="d" />
           <AddressFields prefix="d" />
-          <label for="d-language" data-i18n="admin.guestLanguage">Language for guests</label>
-          <select id="d-language"><option value="da">Dansk</option><option value="en">English</option><option value="is">Íslenska</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="it">Italiano</option><option value="es">Español</option><option value="nl">Nederlands</option><option value="pl">Polski</option></select>
           <div class="row-actions">
             <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="d-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
@@ -291,7 +288,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initWizard } from '../../lib/tasting-wizard';
   import { initWhen, readWhen, writeWhen } from '../../lib/datetime';
   import { initChat, type ChatMessage } from '../../lib/chat';
-  import { i18nReady, t, lang, locale, money, formatWhen, LANGS, type Key } from '../../i18n';
+  import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
 
   await i18nReady;
 
@@ -358,7 +355,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     writeWhen('d', tasting.starts_at as string | null);
     writeAddress('d', tasting as Record<string, string | null>);
     ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
-    ($('d-language') as HTMLSelectElement).value = (tasting.language as string) ?? 'da';
   }
   function renderDetails() {
     if (!tasting) return;
@@ -366,7 +362,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('v-title').textContent = tasting.title;
     $('v-when').textContent = tasting.starts_at ? formatWhen(tasting.starts_at as string, { year: true }) : dash;
     $('v-place').textContent = (tasting.place as string) || dash;
-    $('v-language').textContent = LANGS.find((l) => l.code === tasting!.language)?.name ?? dash;
     $('v-intro').textContent = (tasting.intro as string) || dash;
   }
   const detailsPanel = sheetPanel($('details-panel') as HTMLDialogElement);
@@ -411,7 +406,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       starts_at: readWhen('d'),
       intro: ($('d-intro') as HTMLTextAreaElement).value.trim() || null,
       ...readAddress('d'),
-      language: ($('d-language') as HTMLSelectElement).value,
     };
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
     msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');

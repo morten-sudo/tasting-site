@@ -88,24 +88,9 @@ export function applyI18n(root: ParentNode = document) {
   document.documentElement.lang = current;
 }
 
-/**
- * Settles the language before pages render:
- * the user's own choice → the tasting's language (on tasting pages) → the browser's language.
- */
+/** Settles the language before pages render: the user's own choice → the browser's language. */
 async function resolveLang(): Promise<Lang> {
-  const chosen = chosenLang();
-  if (chosen) return chosen;
-  // Guest pages follow the tasting's language; the host's admin does not
-  const m = location.pathname.match(/^\/t\/([a-z0-9-]+)(\/|$)/);
-  if (m && !location.pathname.includes('/admin/')) {
-    try {
-      const { supabase } = await import('../lib/supabase');
-      const { data } = await supabase.rpc('get_tasting', { slug: m[1] });
-      const tl = (data as { language?: string } | null)?.language;
-      if (isLang(tl)) return tl;
-    } catch {}
-  }
-  return browserLang();
+  return chosenLang() ?? browserLang();
 }
 
 export const i18nReady: Promise<Lang> = resolveLang().then((l) => {

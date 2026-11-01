@@ -1,7 +1,7 @@
 // Create or set up a tasting in four steps: details, wines, guests, payment & setup.
 // Step 1 creates the tasting; every later step saves straight away, so the host can stop at any point.
 import { supabase } from './supabase';
-import { t, lang, isLang, type Key } from '../i18n';
+import { t, type Key } from '../i18n';
 import { $, mk, toNumber, type Host } from './admin-common';
 import { initAddress, readAddress, writeAddress } from './address';
 import { initWhen, readWhen, writeWhen } from './datetime';
@@ -56,8 +56,6 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     writeWhen('wz', tasting?.starts_at);
     $<HTMLTextAreaElement>('wz-intro').value = (tasting?.intro as string) ?? '';
     writeAddress('wz', (tasting ?? {}) as Record<string, string | null>);
-    const l = (tasting?.language as string) ?? host.language;
-    $<HTMLSelectElement>('wz-language').value = isLang(l) ? l : lang();
   }
 
   async function saveDetails(): Promise<boolean> {
@@ -65,7 +63,6 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     if (!title) { msg(t('admin.titleMissing')); $('wz-title-input').focus(); return false; }
     const fields = {
       starts_at: readWhen('wz'),
-      language: $<HTMLSelectElement>('wz-language').value,
       ...readAddress('wz'),
     };
     const intro = $<HTMLTextAreaElement>('wz-intro').value.trim() || null;

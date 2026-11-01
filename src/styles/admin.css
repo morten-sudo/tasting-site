@@ -415,8 +415,8 @@ a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
 /* Tasting cards */
 .admin-page .tasting-cards { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.75rem; max-width: 40rem; }
 .admin-page .tasting-card {
-  display: grid; gap: 0.3rem; padding: 1rem 1.1rem; color: var(--paper); text-decoration: none;
-  border: 1px solid var(--lodge-3); border-radius: 0.6rem; transition: border-color 0.2s;
+  position: relative; display: grid; gap: 0.3rem; padding: 1rem 1.1rem; color: var(--paper); text-decoration: none;
+  background: #fff; border: 1px solid var(--lodge-3); border-radius: 0.6rem; transition: border-color 0.2s;
 }
 .admin-page .tasting-card:hover { border-color: var(--amber); color: var(--paper); }
 .admin-page .tasting-card .card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
@@ -768,10 +768,11 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
   align-self: flex-start; flex: none; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
   padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--amber); color: #fff; white-space: nowrap;
 }
-.admin-page .tasting-card.is-mine { border-color: var(--amber); box-shadow: inset 3px 0 0 var(--amber); }
-.admin-page .mine-card { border-color: var(--amber); }
+/* The badge sits in the top right corner; the title keeps clear of it */
+.admin-page .tasting-card .host-badge { position: absolute; top: 0.9rem; right: 1rem; }
+.admin-page .tasting-card.is-mine .card-title { padding-right: 7.5rem; }
 .admin-page .mine-list { list-style: none; margin: 0 0 0.4rem; padding: 0; display: grid; gap: 0.5rem; }
-.admin-page .mine-item { display: grid; gap: 0.2rem; padding: 0.7rem 0.8rem; border-radius: 0.6rem; background: var(--lodge); color: var(--paper); text-decoration: none; border: 1px solid var(--lodge-3); }
+.admin-page .mine-item { display: grid; gap: 0.2rem; padding: 0.7rem 0.8rem; border-radius: 0.6rem; background: #fff; color: var(--paper); text-decoration: none; border: 1px solid var(--lodge-3); }
 .admin-page .mine-item:hover { border-color: var(--amber); }
 .admin-page .mine-title { font-family: var(--display); font-size: 1.4rem; line-height: 1.1; }
 .admin-page .mine-meta { font-size: 0.88rem; color: var(--muted); }
@@ -787,4 +788,9 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 @media (max-width: 30rem) {
   .admin-page .details-view { grid-template-columns: 1fr; gap: 0.1rem; }
   .admin-page .details-view dd { margin-bottom: 0.6rem; }
+}
+/* Phones: the "I host / All" filter on its own row under the button */
+@media (max-width: 40rem) {
+  .admin-page .guests-head:has(#t-filter:not([hidden])) { flex-wrap: wrap; }
+  .admin-page .guests-head #t-filter { order: 2; flex: 1 1 100%; }
 }
