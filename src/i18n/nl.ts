@@ -707,4 +707,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "hosts.alreadyHost": "{email} is al gastheer van deze proeverij.",
   "hosts.isGuest": "{email} is al gast als {name}. Wil je {name} ook medegastheer van deze proeverij maken?",
   "hosts.makeCohost": "Ja, maak {name} medegastheer",
+  "super.cohosted": "+ {n} als medegastheer",
 };

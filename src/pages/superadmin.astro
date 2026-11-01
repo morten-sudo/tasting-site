@@ -97,7 +97,7 @@ import '../styles/admin.css';
   import { countryName } from '../lib/origin';
 
   type Tenant = { id: string; name: string | null; email: string; plan: string; created_at: string;
-    tastings: number; upcoming: number; wines: number; guests: number; invited: number; coming: number;
+    tastings: number; upcoming: number; cohosted: number; wines: number; guests: number; invited: number; coming: number;
     orders: number; order_amount: number; ratings: number; chat_messages: number; last_activity: string };
 
   await i18nReady;
@@ -115,7 +115,7 @@ import '../styles/admin.css';
     $('denied').hidden = false;
   } else {
     tenants = (data as Tenant[]).map((x) => ({ ...x,
-      tastings: Number(x.tastings), upcoming: Number(x.upcoming), wines: Number(x.wines), guests: Number(x.guests),
+      tastings: Number(x.tastings), upcoming: Number(x.upcoming), cohosted: Number(x.cohosted) || 0, wines: Number(x.wines), guests: Number(x.guests),
       invited: Number(x.invited), coming: Number(x.coming), orders: Number(x.orders), order_amount: Number(x.order_amount),
       ratings: Number(x.ratings), chat_messages: Number(x.chat_messages) }));
     $('main').hidden = false;
@@ -151,6 +151,20 @@ import '../styles/admin.css';
     return td;
   }
 
+  // Own tastings (upcoming in brackets), and the ones the host helps with as co-host underneath
+  function tastingsCell(x: Tenant) {
+    const td = document.createElement('td');
+    td.className = 'num';
+    td.textContent = x.upcoming ? `${x.tastings} (${x.upcoming})` : String(x.tastings);
+    if (x.cohosted) {
+      const sub = document.createElement('span');
+      sub.className = 'super-sub';
+      sub.textContent = t('super.cohosted', { n: x.cohosted });
+      td.append(document.createElement('br'), sub);
+    }
+    return td;
+  }
+
   function render() {
     const q = ($('search') as HTMLInputElement).value.trim().toLowerCase();
     const rows = tenants
@@ -172,7 +186,7 @@ import '../styles/admin.css';
       who.append(name, document.createElement('br'), mail);
       tr.append(who,
         cell(date.format(new Date(x.created_at))),
-        cell(x.upcoming ? `${x.tastings} (${x.upcoming})` : String(x.tastings), 'num'),
+        tastingsCell(x),
         cell(String(x.wines), 'num'),
         cell(String(x.guests), 'num'),
         cell(x.invited ? `${x.invited} (${x.coming})` : '0', 'num'),
@@ -304,4 +318,5 @@ import '../styles/admin.css';
   .map-missing { color: var(--muted); }
   .guess-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
   .guess-list li { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; font-size: 0.92rem; }
+  .super-sub { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
 </style>

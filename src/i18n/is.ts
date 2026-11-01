@@ -730,4 +730,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "hosts.alreadyHost": "{email} er þegar gestgjafi þessarar smökkunar.",
   "hosts.isGuest": "{email} er þegar gestur sem {name}. Viltu líka gera {name} að meðgestgjafa þessarar smökkunar?",
   "hosts.makeCohost": "Já, gera {name} að meðgestgjafa",
+  "super.cohosted": "+ {n} sem meðgestgjafi",
 };

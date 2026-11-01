@@ -729,4 +729,5 @@ export const en = {
   "hosts.alreadyHost": "{email} is already a host of this tasting.",
   "hosts.isGuest": "{email} is already a guest as {name}. Do you also want to make {name} a co-host of this tasting?",
   "hosts.makeCohost": "Yes, make {name} co-host",
+  "super.cohosted": "+ {n} as co-host",
 } as const;
