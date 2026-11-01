@@ -34,7 +34,7 @@ function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: stri
   return e;
 }
 
-function setOpen(on: boolean) {
+export function setOpen(on: boolean) {
   $('admin-side').classList.toggle('open', on);
   $('side-backdrop').hidden = !on;
   $('side-open').setAttribute('aria-expanded', String(on));
@@ -73,9 +73,6 @@ export async function initSide(hostId: string) {
   $('side-close').addEventListener('click', () => setOpen(false));
   $('side-backdrop').addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
-
-  // Winetastr administrators also get the superadmin page
-  supabase.rpc('is_admin').then(({ data: admin }) => { $('side-super').hidden = admin !== true; });
 
   const ids = (await hostedTastings()).map((x) => x.tasting_id);
   const { data } = await supabase.from('tastings').select('slug, title, starts_at')

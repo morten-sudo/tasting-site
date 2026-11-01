@@ -727,3 +727,37 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .host-confirm { margin-top: 0.75rem; padding: 0.9rem 1rem; border: 1px solid var(--amber); border-radius: 0.6rem; background: var(--lodge-2); }
 .admin-page .host-confirm p { margin: 0 0 0.6rem; }
 .admin-page .host-confirm .row-actions { margin: 0; }
+
+/* Superadmin */
+.super-shell .super-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 2rem; }
+  .super-shell .stat { display: grid; gap: 0.1rem; padding: 0.9rem 1rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; }
+  .super-shell th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
+  .super-shell th[aria-sort='ascending']::after { content: ' ▲'; font-size: 0.7em; }
+  .super-shell th[aria-sort='descending']::after { content: ' ▼'; font-size: 0.7em; }
+  .super-shell .super-table td { vertical-align: top; white-space: nowrap; }
+  .super-shell .super-mail { font-size: 0.85rem; color: var(--muted); }
+  .super-shell .table-wrap { overflow-x: auto; }
+  .super-shell .gdpr { margin-top: 3rem; max-width: 40rem; }
+  .super-shell .gdpr .inline-form { display: flex; gap: 0.5rem; }
+  .super-shell .gdpr input { flex: 1; min-width: 0; font: inherit; padding: 0.6rem 0.75rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); }
+  .super-shell .gdpr-list { margin: 1rem 0; padding-left: 1.2rem; }
+  .super-shell .danger-btn { background: var(--error); border-color: var(--error); color: #fff; }
+  .maps-block h3 { font-family: var(--body); font-size: 1rem; margin: 1.5rem 0 0.3rem; }
+  .map-ok, .map-need, .map-missing { white-space: nowrap; }
+  .map-ok { color: var(--ok); }
+  .map-need { color: var(--amber); font-weight: 600; }
+  .map-missing { color: var(--muted); }
+  .guess-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
+  .guess-list li { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; font-size: 0.92rem; }
+.super-shell .side-back { color: var(--muted); }
+.super-shell .row-link { color: inherit; text-decoration: none; }
+.super-shell .row-link:hover strong { color: var(--amber); }
+.super-shell .ev-kind { font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); white-space: nowrap; }
+.super-shell .ev-kind.k-guest { color: var(--ok); }
+.super-shell .ev-kind.k-login { color: var(--muted); }
+.super-shell .ev-kind.k-admin { color: var(--error); border-color: var(--error); }
+.super-shell .ev-kind.k-host { color: var(--amber); border-color: var(--amber); }
+.super-shell .tenant-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1.25rem; color: var(--muted); margin: -0.4rem 0 1.5rem; }
+.super-shell .tn-plan { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; font-weight: 400; color: var(--muted); }
+.super-shell .tn-plan select { width: auto; margin: 0; padding: 0.3rem 0.5rem; min-height: 0; font-size: 0.9rem; }
+.super-shell .wine-mini { width: 2rem; height: 2.6rem; object-fit: contain; background: #fff; border-radius: 0.3rem; }

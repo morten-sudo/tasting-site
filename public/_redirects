@@ -18,3 +18,8 @@
 /t/:slug/admin/           /admin/tasting/           200
 /t/:slug/admin/:section   /t/:slug/admin/:section/  301
 /t/:slug/admin/:section/  /admin/tasting/           200
+# Superadmin: one tenant and its parts, /superadmin/tenants/<id>/<section>/
+/superadmin/tenants/:id            /superadmin/tenants/:id/            301
+/superadmin/tenants/:id/           /superadmin/tenant/                 200
+/superadmin/tenants/:id/:section   /superadmin/tenants/:id/:section/   301
+/superadmin/tenants/:id/:section/  /superadmin/tenant/                 200

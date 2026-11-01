@@ -1,0 +1,113 @@
+---
+import Base from '../../layouts/Base.astro';
+import SuperNav from '../../components/SuperNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.superadmin">
+  <section class="wrap admin-page">
+    <SuperNav active="gdpr">
+      <h1 class="title" data-i18n="super.gdprTitle">Delete personal data</h1>
+      <!-- GDPR: see and delete everything stored about one person -->
+      <section class="block gdpr">
+                <p class="hint" data-i18n="super.gdprHint">When someone asks to be forgotten: look up their email, check what is stored, then delete it all – invitations with answers, ratings, orders and chat messages, guest-list entries, a host account with everything in it, and the sign-in account. This cannot be undone.</p>
+        <form id="gdpr-form" class="inline-form" novalidate>
+          <input id="gdpr-email" type="email" autocomplete="off" placeholder="name@example.com" aria-label="Email" data-i18n-attr="aria-label=common.email" />
+          <button class="btn small ghost" type="submit" data-i18n="super.gdprLookup">Look up</button>
+        </form>
+        <div id="gdpr-result" hidden>
+          <ul id="gdpr-list" class="gdpr-list"></ul>
+          <button id="gdpr-delete" class="btn small danger-btn" type="button" data-i18n="super.gdprDelete">Delete everything</button>
+        </div>
+        <p id="gdpr-msg" class="message" hidden></p>
+      </section>
+
+      <section class="block">
+        <h2 data-i18n="super.actionsTitle">Superadmin actions</h2>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th data-i18n="super.logWhen">When</th><th data-i18n="super.logWhat">What</th><th data-i18n="super.tenant">Account</th><th data-i18n="super.logWho">By</th></tr></thead>
+            <tbody id="actions"></tbody>
+          </table>
+        </div>
+        <p id="actions-none" class="hint" hidden data-i18n="super.logNone">Nothing yet.</p>
+      </section>
+
+    </SuperNav>
+  </section>
+</Base>
+
+<script>
+
+  import { supabase } from '../../lib/supabase';
+  import { t } from '../../i18n';
+  import { requireAdmin, $, mk, cell, timeFmt } from '../../lib/super-common';
+  import { eventText } from '../../lib/super-events';
+
+  if (await requireAdmin()) loadActions();
+
+  async function loadActions() {
+    const { data } = await supabase.rpc('admin_actions', { lim: 100 });
+    type A = { at: string; kind: string; actor: string | null; tenant: string | null; detail: Record<string, unknown> };
+    const rows = (data ?? []) as A[];
+    $('actions-none').hidden = rows.length > 0;
+    const time = timeFmt();
+    $('actions').replaceChildren(...rows.map((r) => {
+      const tr = mk('tr');
+      tr.append(cell(time.format(new Date(r.at))), cell(eventText(r.kind, r.detail)), cell(r.tenant ?? '—'), cell(r.actor ?? ''));
+      return tr;
+    }));
+  }
+
+  // ---------- GDPR ----------
+  type Summary = { email: string; host: { name: string | null; tastings: number; wines: number; guests: number } | null;
+    tenant_owner: boolean; invitations: number; orders: number; ratings: number; chat_messages: number; library_entries: number; account: boolean; is_admin: boolean };
+  let gdprEmail = '';
+  const gdprMsg = (text: string, ok: boolean) => { const m = $('gdpr-msg'); m.textContent = text; m.className = 'message ' + (ok ? 'ok' : 'error'); m.hidden = !text; };
+
+  $('gdpr-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    gdprMsg('', true);
+    $('gdpr-result').hidden = true;
+    gdprEmail = ($('gdpr-email') as HTMLInputElement).value.trim().toLowerCase();
+    if (!gdprEmail) return;
+    const { data, error } = await supabase.rpc('admin_person_summary', { e: gdprEmail });
+    if (error || !data) { gdprMsg(t('admin.couldNotSave'), false); return; }
+    const sum = data as Summary;
+    const rows: string[] = [];
+    if (sum.host) rows.push(t('super.gdprHost', { tastings: sum.host.tastings, wines: sum.host.wines, guests: sum.host.guests }));
+    if (sum.invitations) rows.push(t('super.gdprInvites', { n: sum.invitations, orders: sum.orders, ratings: sum.ratings, chat: sum.chat_messages }));
+    if (sum.library_entries) rows.push(t('super.gdprLibrary', { n: sum.library_entries }));
+    if (sum.account) rows.push(t('super.gdprAccount'));
+    if (!rows.length) { gdprMsg(t('super.gdprNothing'), true); return; }
+    $('gdpr-list').replaceChildren(...rows.map((r) => { const li = document.createElement('li'); li.textContent = r; return li; }));
+    const del = $('gdpr-delete') as HTMLButtonElement;
+    // Administrators and account owners cannot be deleted
+    del.hidden = sum.is_admin || sum.tenant_owner;
+    del.textContent = t('super.gdprDelete');
+    delete del.dataset.armed;
+    if (sum.is_admin) gdprMsg(t('super.gdprAdmin'), false);
+    else if (sum.tenant_owner) gdprMsg(t('super.gdprOwner'), false);
+    $('gdpr-result').hidden = false;
+  });
+
+  $('gdpr-delete').addEventListener('click', async () => {
+    const del = $('gdpr-delete') as HTMLButtonElement;
+    if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = t('super.gdprConfirm', { email: gdprEmail }); return; }
+    del.disabled = true;
+    const { error } = await supabase.rpc('admin_delete_person', { e: gdprEmail });
+    del.disabled = false;
+    if (error) { gdprMsg(t('admin.couldNotSave'), false); return; }
+    $('gdpr-result').hidden = true;
+    gdprMsg(t('super.gdprDone', { email: gdprEmail }), true);
+    loadActions();
+  });
+  document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort as keyof Tenant;
+      if (k === sortKey) desc = !desc; else { sortKey = k; desc = k !== 'name'; }
+      render();
+    });
+  });
+
+
+</script>

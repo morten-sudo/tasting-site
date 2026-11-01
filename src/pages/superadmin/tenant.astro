@@ -1,0 +1,240 @@
+---
+// One tenant: /superadmin/tenants/<id>/<section>/ (rewritten to this page in public/_redirects).
+// The parts (hosts, tastings, guests, wines, payments, log) are chosen in the menu on the left.
+import Base from '../../layouts/Base.astro';
+import SuperNav from '../../components/SuperNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.superadmin">
+  <section class="wrap admin-page">
+    <SuperNav active="tenants">
+      <p id="not-found" class="message error" hidden data-i18n="super.notFound">This tenant was not found.</p>
+      <div id="tenant" hidden>
+        <h1 id="tn-name" class="title"></h1>
+        <div class="tenant-meta">
+          <span id="tn-owner"></span>
+          <span id="tn-created"></span>
+          <label class="tn-plan"><span data-i18n="super.plan">Plan</span>
+            <select id="tn-plan"><option value="free">Free</option><option value="pro">Pro</option><option value="commercial">Commercial</option></select>
+          </label>
+        </div>
+
+        <h2 id="sec-title"></h2>
+
+        <section data-sec="hosts" hidden>
+          <ul id="hosts" class="hosts-list"></ul>
+        </section>
+
+        <section data-sec="tastings" hidden>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th data-i18n="admin.title">Title</th><th data-i18n="super.when">When</th><th data-i18n="super.createdBy">Created by</th>
+              <th class="num" data-i18n="super.coHosts">Co-hosts</th><th class="num" data-i18n="super.invited">Invited</th>
+              <th class="num" data-i18n="adminNav.wines">Wines</th><th class="num" data-i18n="admin.orders">Orders</th></tr></thead>
+            <tbody id="tastings"></tbody>
+          </table></div>
+        </section>
+
+        <section data-sec="guests" hidden>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th data-i18n="admin.name">Name</th><th data-i18n="common.email">Email</th>
+              <th class="num" data-i18n="super.invitations">Invitations</th><th class="num" data-i18n="admin.fYes">Coming</th>
+              <th class="num" data-i18n="admin.orders">Orders</th><th data-i18n="super.created">Created</th></tr></thead>
+            <tbody id="guests"></tbody>
+          </table></div>
+        </section>
+
+        <section data-sec="wines" hidden>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th></th><th data-i18n="admin.name">Name</th><th data-i18n="admin.producer">Producer</th><th data-i18n="origin.region">Region</th>
+              <th class="num" data-i18n="admin.retail">Regular price</th><th class="num" data-i18n="super.used">Used</th>
+              <th class="num" data-i18n="super.ratings">Ratings</th></tr></thead>
+            <tbody id="wines"></tbody>
+          </table></div>
+        </section>
+
+        <section data-sec="payments" hidden>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th data-i18n="super.when">When</th><th data-i18n="super.kind">Type</th><th data-i18n="page.tasting">Tasting</th>
+              <th data-i18n="admin.name">Name</th><th class="num" data-i18n="super.amount">Amount</th><th data-i18n="super.paid">Paid</th></tr></thead>
+            <tbody id="payments"></tbody>
+          </table></div>
+        </section>
+
+        <section data-sec="log" hidden>
+          <div id="log-filters" class="filters" role="tablist">
+            <button type="button" role="tab" data-kind="" aria-selected="true"><b data-i18n="super.logFilterAll">All</b></button>
+            <button type="button" role="tab" data-kind="host"><b data-i18n="super.logFilterHost">Hosts</b></button>
+            <button type="button" role="tab" data-kind="guest"><b data-i18n="super.logFilterGuest">Guests</b></button>
+            <button type="button" role="tab" data-kind="login"><b data-i18n="super.logFilterLogin">Sign-ins</b></button>
+            <button type="button" role="tab" data-kind="admin"><b data-i18n="super.logFilterAdmin">Superadmin</b></button>
+          </div>
+          <div class="table-wrap"><table class="table">
+            <thead><tr><th data-i18n="super.logWhen">When</th><th></th><th data-i18n="super.logWhat">What</th><th data-i18n="super.logWho">By</th></tr></thead>
+            <tbody id="log"></tbody>
+          </table></div>
+        </section>
+        <p id="none" class="hint" hidden data-i18n="super.noRows">None.</p>
+      </div>
+    </SuperNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { t, money, type Key } from '../../i18n';
+  import { requireAdmin, $, mk, cell, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
+  import { eventText, eventGroup } from '../../lib/super-events';
+  import { styleName } from '../../lib/wines';
+
+  const m = location.pathname.match(/^\/superadmin\/tenants\/([0-9a-f-]{36})\/(?:([a-z]+)\/?)?$/);
+  const id = m?.[1] ?? '';
+  const date = dateFmt();
+  const time = timeFmt();
+  const loaded = new Set<string>();
+  type Ev = { at: string; kind: string; actor: string | null; detail: Record<string, unknown> };
+  let events: Ev[] = [];
+  let logKind = '';
+
+  // Switching part without reloading (the menu on the left)
+  document.addEventListener('click', (e) => {
+    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('#side-tenant a[data-section]');
+    if (!a || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    history.pushState(null, '', a.pathname);
+    show(a.dataset.section!);
+    window.scrollTo({ top: 0 });
+  });
+  window.addEventListener('popstate', () => {
+    const s = location.pathname.match(/\/tenants\/[0-9a-f-]{36}\/([a-z]+)\//)?.[1] ?? 'hosts';
+    show(s);
+  });
+
+  async function show(section: string) {
+    const s = TENANT_SECTIONS.find((x) => x.id === section) ?? TENANT_SECTIONS[0];
+    $('sec-title').textContent = t(s.label);
+    document.querySelectorAll<HTMLElement>('[data-sec]').forEach((el) => { el.hidden = el.dataset.sec !== s.id; });
+    markTenantSection(s.id);
+    $('none').hidden = true;
+    if (!loaded.has(s.id)) { loaded.add(s.id); await LOADERS[s.id](); }
+    else $('none').hidden = $(s.id).children.length > 0;
+  }
+
+  const none = (list: HTMLElement) => { $('none').hidden = list.children.length > 0; };
+
+  const LOADERS: Record<string, () => Promise<void>> = {
+    async hosts() {
+      const { data } = await supabase.rpc('admin_tenant_members', { tn: id });
+      const rows = (data ?? []) as { email: string; name: string | null; owner: boolean; created_at: string }[];
+      $('hosts').replaceChildren(...rows.map((r) => {
+        const li = mk('li', 'host-row');
+        const who = mk('div', 'host-who');
+        who.append(mk('span', 'host-name', r.name || r.email), mk('span', 'host-email', [r.email, r.created_at ? date.format(new Date(r.created_at)) : ''].filter(Boolean).join(' · ')));
+        li.append(who, mk('span', 'host-tag' + (r.owner ? ' owner' : ''), r.owner ? t('account.owner') : t('account.host')));
+        return li;
+      }));
+      none($('hosts'));
+    },
+    async tastings() {
+      const { data } = await supabase.rpc('admin_tenant_tastings', { tn: id });
+      type R = { slug: string; title: string; starts_at: string | null; created_by: string | null; cohosts: number; invited: number; coming: number; wines: number; orders: number; order_amount: number };
+      $('tastings').replaceChildren(...((data ?? []) as R[]).map((r) => {
+        const tr = mk('tr');
+        const title = mk('td');
+        const a = mk('a', '', r.title);
+        a.href = `/t/${r.slug}/admin/`;
+        title.append(a);
+        tr.append(title, cell(r.starts_at ? date.format(new Date(r.starts_at)) : '—'), cell(r.created_by ?? '—'),
+          cell(String(r.cohosts), 'num'), cell(`${r.invited} (${r.coming})`, 'num'), cell(String(r.wines), 'num'),
+          cell(Number(r.orders) ? `${r.orders} · ${money(Number(r.order_amount))}` : '0', 'num'));
+        return tr;
+      }));
+      none($('tastings'));
+    },
+    async guests() {
+      const { data } = await supabase.rpc('admin_tenant_guests', { tn: id });
+      type R = { name: string; email: string | null; created_at: string; invitations: number; coming: number; orders: number };
+      $('guests').replaceChildren(...((data ?? []) as R[]).map((r) => {
+        const tr = mk('tr');
+        tr.append(cell(r.name), cell(r.email ?? '—'), cell(String(r.invitations), 'num'), cell(String(r.coming), 'num'),
+          cell(String(r.orders), 'num'), cell(date.format(new Date(r.created_at))));
+        return tr;
+      }));
+      none($('guests'));
+    },
+    async wines() {
+      const { data } = await supabase.rpc('admin_tenant_wines', { tn: id });
+      type R = { name: string; producer: string | null; vintage: string | null; style: string | null; region: string | null; image_url: string | null; retail_price_dkk: number | null; tastings: number; ratings: number };
+      $('wines').replaceChildren(...((data ?? []) as R[]).map((r) => {
+        const tr = mk('tr');
+        const pic = mk('td');
+        if (r.image_url) { const img = mk('img', 'wine-mini'); img.src = r.image_url; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; pic.append(img); }
+        const name = [r.name, r.vintage].filter(Boolean).join(' ');
+        tr.append(pic, cell(r.style ? `${name} · ${styleName(r.style)}` : name), cell(r.producer ?? '—'), cell(r.region ?? '—'),
+          cell(r.retail_price_dkk != null ? money(Number(r.retail_price_dkk)) : '—', 'num'), cell(String(r.tastings), 'num'), cell(String(r.ratings), 'num'));
+        return tr;
+      }));
+      none($('wines'));
+    },
+    async payments() {
+      const { data } = await supabase.rpc('admin_tenant_payments', { tn: id });
+      type R = { kind: string; at: string; tasting: string; guest: string; bottles: number; amount: number; paid: boolean };
+      $('payments').replaceChildren(...((data ?? []) as R[]).map((r) => {
+        const tr = mk('tr');
+        const what = r.kind === 'order' ? `${t('super.order')} · ${r.bottles} fl.` : t('super.fee');
+        const paid = cell(r.paid ? t('super.paid') : t('super.unpaid'), r.paid ? 'map-ok' : 'map-need');
+        tr.append(cell(date.format(new Date(r.at))), cell(what), cell(r.tasting), cell(r.guest), cell(money(Number(r.amount)), 'num'), paid);
+        return tr;
+      }));
+      none($('payments'));
+    },
+    async log() {
+      const { data } = await supabase.rpc('admin_tenant_events', { tn: id, lim: 500 });
+      events = (data ?? []) as Ev[];
+      renderLog();
+    },
+  };
+
+  function renderLog() {
+    const rows = events.filter((e) => !logKind || eventGroup(e.kind) === logKind);
+    $('log').replaceChildren(...rows.map((e) => {
+      const tr = mk('tr');
+      const g = eventGroup(e.kind);
+      const tag = mk('td');
+      tag.append(mk('span', `ev-kind k-${g}`, t(({ host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' } as Record<string, Key>)[g] ?? 'super.log')));
+      tr.append(cell(time.format(new Date(e.at))), tag, cell(eventText(e.kind, e.detail)), cell(e.actor ?? ''));
+      return tr;
+    }));
+    none($('log'));
+  }
+  document.querySelectorAll<HTMLButtonElement>('#log-filters button').forEach((b) => {
+    b.addEventListener('click', () => {
+      logKind = b.dataset.kind ?? '';
+      document.querySelectorAll('#log-filters button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+      renderLog();
+    });
+  });
+
+
+  // Start once everything above is defined
+  if (await requireAdmin()) {
+    const { data } = id ? await supabase.rpc('admin_tenant', { tn: id }) : { data: null };
+    if (!data) $('not-found').hidden = false;
+    else {
+      const tn = data as { name: string; plan: string; created_at: string; owner_name: string | null; owner_email: string };
+      $('tenant').hidden = false;
+      $('tn-name').textContent = tn.name;
+      document.title = `${tn.name} – Superadmin`;
+      $('tn-owner').textContent = `${t('super.owner')}: ${tn.owner_name ?? ''} <${tn.owner_email}>`;
+      $('tn-created').textContent = `${t('super.created')} ${date.format(new Date(tn.created_at))}`;
+      const plan = $<HTMLSelectElement>('tn-plan');
+      plan.value = tn.plan;
+      plan.addEventListener('change', async () => {
+        const { error } = await supabase.rpc('admin_set_plan', { tn: id, p: plan.value });
+        if (error) plan.value = tn.plan; else { tn.plan = plan.value; loaded.delete('log'); }
+      });
+      const section = TENANT_SECTIONS.some((s) => s.id === m?.[2]) ? m![2] : 'hosts';
+      showTenantInMenu(id, tn.name, section);
+      show(section);
+    }
+  }
+</script>

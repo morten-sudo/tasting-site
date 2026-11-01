@@ -115,6 +115,14 @@ begin
   -- The superadmin list is closed to hosts
   failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
   assert failed, 'a host can list all tenants';
+  -- The event log and the superadmin's views of an account are closed to hosts
+  begin select count(*) into n from events; exception when others then n := 0; end;                           assert n = 0, 'a host can read the event log';
+  failed := false; begin perform admin_tenant(my_tenant()); exception when others then failed := true; end;
+  assert failed, 'a host can use the superadmin view of an account';
+  failed := false; begin perform * from admin_tenant_events(my_tenant()); exception when others then failed := true; end;
+  assert failed, 'a host can read the account''s log';
+  failed := false; begin perform admin_set_plan(my_tenant(), 'commercial'); exception when others then failed := true; end;
+  assert failed, 'a host can change the plan';
   failed := false; begin perform admin_delete_person('guest-b@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'a host can delete a person';
   -- The admin overview only counts A's own data
@@ -316,6 +324,9 @@ begin
   assert failed, 'anyone can read a host overview';
   failed := false; begin perform * from admin_tenants(); exception when others then failed := true; end;
   assert failed, 'anyone can list tenants';
+  begin select count(*) into n from events; exception when others then n := 0; end;                           assert n = 0, 'anyone can read the event log';
+  failed := false; begin perform * from admin_tenant_payments('00000000-0000-0000-0000-000000000000'); exception when others then failed := true; end;
+  assert failed, 'anyone can read an account''s payments';
   begin select count(*) into n from tenants; exception when others then n := 0; end;                         assert n = 0, 'anyone can read accounts';
   failed := false; begin perform * from tenant_members(); exception when others then failed := true; end;
   assert failed, 'anyone can list an account''s hosts';
