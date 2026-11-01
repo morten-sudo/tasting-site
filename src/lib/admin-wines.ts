@@ -3,7 +3,7 @@
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
-import { WINE_COUNTRIES, countryName, loadAppellations, matchAppellation, originLine, type Appellation } from './origin';
+import { WINE_COUNTRIES, countryName, loadAppellations, matchAppellation, normOrigin, originLine, type Appellation } from './origin';
 
 export type AdminWine = {
   id: number; host_id: string; name: string; producer: string | null;
@@ -66,6 +66,26 @@ const toNumber = (v: string) => {
   return v.trim() === '' || Number.isNaN(n) ? null : n;
 };
 const toText = (v: string) => v.trim() || null;
+
+/** Asks Cloudflare AI where an unknown appellation lies and saves it (checked against the country in the database). */
+async function locateAppellation(appellation: string | null, region: string | null, country: string | null) {
+  if (!appellation || !country) return;
+  const list = await loadAppellations();
+  if (matchAppellation(list, appellation)) return;
+  const key = `${normOrigin(appellation)}|${country}`;
+  const { data: known } = await supabase.from('appellation_guesses').select('key').eq('key', key).maybeSingle();
+  if (known) return;
+  try {
+    const { data: s } = await supabase.auth.getSession();
+    const res = await fetch('/api/locate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+      body: JSON.stringify({ appellation, region, country }),
+    });
+    const r = (await res.json()) as { found?: boolean; lat?: number; lon?: number };
+    if (r.found) await supabase.rpc('save_place_guess', { name: appellation, country, lat: r.lat, lon: r.lon });
+  } catch { /* the wine is saved; the map falls back to the country */ }
+}
 
 export function initWineAdmin(hostId: string) {
   let wines: AdminWine[] = [];
@@ -462,6 +482,8 @@ export function initWineAdmin(hostId: string) {
     save.disabled = false;
     save.textContent = t('common.save');
     if (error) { showMsg(t('admin.wineNotSaved')); return; }
+    // An appellation that is not on our list: find its place for the overview map (in the background)
+    locateAppellation(row.appellation, row.region, row.country);
     closeForm();
     await load();
   });

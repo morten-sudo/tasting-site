@@ -222,6 +222,13 @@ begin
   select count(*) into n from appellations where id = 'porto';                                              assert n = 1, 'the appellation list is not readable';
   failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
   assert failed, 'anyone can add to the appellation list';
+  -- Places for the overview map: readable, written only by hosts through the checked function
+  failed := false; begin perform save_place_guess('X', 'FR', 46, 2); exception when others then failed := true; end;
+  assert failed, 'anyone can save a place';
+  failed := false; begin insert into appellation_guesses (key, name, country, lat, lon) values ('x|FR', 'x', 'FR', 46, 2); exception when others then failed := true; end;
+  assert failed, 'anyone can insert a place directly';
+  failed := false; begin perform * from admin_map_demand(); exception when others then failed := true; end;
+  assert failed, 'anyone can read the map demand';
   -- Host functions are closed
   failed := false; begin perform add_cohost('00000000-0000-4000-b000-00000000000a', 'x@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'anyone can add a host';

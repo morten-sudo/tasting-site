@@ -67,6 +67,7 @@ import Base from '../../layouts/Base.astro';
   import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
   import { loadMap, mapIdFor, drawMap } from '../../lib/region-map';
+  import { placeOf, loadOverview, overviewFor, focusFor, drawOverview } from '../../lib/overview-map';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -91,6 +92,24 @@ import Base from '../../layouts/Base.astro';
     $('basket').hidden = bottles === 0;
     $('basket-count').textContent = plural(bottles, 'wines.bottlesOne', 'wines.bottlesMany') + ', ';
     $('basket-total').textContent = kr.format(total);
+  }
+
+  async function showMiniMap(w: Wine) {
+    const box = $('mini-map');
+    const mapId = mapIdFor(w.region);
+    const map = mapId ? await loadMap(mapId) : null;
+    if (map) {
+      const inMap = !!(w.appellation_id && map.areas[w.appellation_id]);
+      box.innerHTML = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[w.appellation_id!, 1]]) : new Map(), wholeRegion: !inMap });
+    } else {
+      const place = await placeOf(w);
+      if (!place) return;
+      const [overview, focus] = await Promise.all([loadOverview(overviewFor([place])), focusFor([place], true)]);
+      if (!overview) return;
+      box.innerHTML = drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini');
+    }
+    box.title = originFull(w) ?? '';
+    box.hidden = false;
   }
 
   function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {
@@ -152,18 +171,9 @@ import Base from '../../layouts/Base.astro';
       $('origin').textContent = origin;
       $('origin').hidden = false;
     }
-    // Small map of the region with the wine's appellation filled in
-    const mapId = mapIdFor(w.region);
-    if (mapId) {
-      loadMap(mapId).then((map) => {
-        if (!map) return;
-        const inMap = !!(w.appellation_id && map.areas[w.appellation_id]);
-        const box = $('mini-map');
-        box.innerHTML = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[w.appellation_id!, 1]]) : new Map(), wholeRegion: !inMap });
-        box.title = originFull(w) ?? '';
-        box.hidden = false;
-      });
-    }
+    // Small map: the detailed region map with the appellation filled in, or else the overview map
+    // with a pin at the appellation (or in the middle of the country)
+    showMiniMap(w);
 
     const price = $('price');
     if (w.price_dkk != null) {

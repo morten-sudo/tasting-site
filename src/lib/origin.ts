@@ -4,7 +4,7 @@
 import { supabase } from './supabase';
 import { lang } from '../i18n';
 
-export type Appellation = { id: string; name: string; region: string; country: string; aliases: string[] };
+export type Appellation = { id: string; name: string; region: string; country: string; aliases: string[]; lat?: number | null; lon?: number | null };
 
 // Countries offered in the wine form (ISO 3166-1 alpha-2); names come from the browser in the page's language
 export const WINE_COUNTRIES = ['FR', 'IT', 'ES', 'PT', 'DE', 'AT', 'CH', 'HU', 'GR', 'SI', 'HR', 'RO', 'BG', 'GE',
@@ -24,7 +24,7 @@ export function normOrigin(t: string | null | undefined): string {
 
 let cache: Promise<Appellation[]> | null = null;
 export function loadAppellations(): Promise<Appellation[]> {
-  cache ??= Promise.resolve(supabase.from('appellations').select('id, name, region, country, aliases').order('name'))
+  cache ??= Promise.resolve(supabase.from('appellations').select('id, name, region, country, aliases, lat, lon').order('name'))
     .then(({ data }) => (data ?? []) as Appellation[]);
   return cache;
 }

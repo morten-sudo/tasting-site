@@ -138,6 +138,8 @@ import Base from '../../layouts/Base.astro';
   import { payBox, setPayee } from '../../lib/pay';
   import { i18nReady, t, formatWhen, lang } from '../../i18n';
   import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from '../../lib/region-map';
+  import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from '../../lib/overview-map';
+  import { countryName } from '../../lib/origin';
 
   await i18nReady;
 
@@ -226,12 +228,11 @@ import Base from '../../layouts/Base.astro';
   }
 
   // ---------- Where the wines come from ----------
-  type MapWine = { id: number; sort_order: number; name: string; region: string | null; appellation: string | null; appellation_id: string | null };
+  type MapWine = { id: number; sort_order: number; name: string; region: string | null; appellation: string | null; appellation_id: string | null; country: string | null };
   async function showOrigins(wines: MapWine[]) {
     const region = mainRegion(wines);
-    if (!region) return;
-    const map = await loadMap(region);
-    if (!map) return;
+    const map = region ? await loadMap(region) : null;
+    if (!map) { await showOverviewOrigins(wines); return; }
     const groups = await groupWines(map, wines);
     const counts = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.count]));
     const titles = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.title]));
@@ -246,25 +247,74 @@ import Base from '../../layouts/Base.astro';
     if (matchMedia('(max-width: 40rem)').matches) fitToAreas(box.querySelector('svg')!, map);
     // The legend: number of wines per appellation, with their numbers in the evening
     const no = new Map(wines.map((w, i) => [w.id, i + 1]));
-    $('origin-legend').replaceChildren(...groups.map((g) => {
-      const li = document.createElement('li');
-      li.className = g.inMap ? 'in-map' : g.whole ? 'whole' : 'other';
-      const n = document.createElement('span');
-      n.className = 'n';
-      n.textContent = String(g.count);
-      const text = document.createElement('span');
-      const title = document.createElement('b');
-      title.textContent = g.title;
-      const sub = document.createElement('span');
-      sub.className = 'sub';
+    const byId = new Map(wines.map((w) => [w.id, w]));
+    $('origin-legend').replaceChildren(...await Promise.all(groups.map(async (g) => {
       const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((id) => no.get(id) ?? 0)) });
-      sub.textContent = g.inMap ? nums : g.whole ? `${t('map.wholeRegion', { region: map.name })} · ${nums}` : `${t('map.otherRegion')} · ${nums}`;
-      text.append(title, sub);
-      li.append(n, text);
+      const li = legendItem(g.inMap ? 'in-map' : g.whole ? 'whole' : 'other', g.count, g.title,
+        g.inMap ? nums : g.whole ? `${t('map.wholeRegion', { region: map.name })} · ${nums}` : `${t('map.otherRegion')} · ${nums}`);
+      // Wines from another region: a small map of their country with the place marked
+      if (!g.inMap && !g.whole) {
+        const places = (await Promise.all(g.wines.map((id) => placeOf(byId.get(id)!)))).filter((p): p is Place => !!p);
+        if (places.length) {
+          const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
+          if (ov) {
+            const inset = document.createElement('span');
+            inset.className = 'inset';
+            inset.innerHTML = drawOverview(ov, places.map((p) => ({ lon: p.lon, lat: p.lat })), focus, 'inset');
+            li.querySelector('.txt')!.append(inset);
+          }
+        }
+      }
       return li;
-    }));
+    })));
     $('map-source').textContent = t('map.source', { sources: map.sources });
     $('origin-block').hidden = false;
+  }
+
+  // No detailed map for these wines: the overview map with a numbered pin per place
+  async function showOverviewOrigins(wines: MapWine[]) {
+    const placed = (await Promise.all(wines.map(async (w) => ({ w, p: await placeOf(w) })))).filter((x) => x.p) as { w: MapWine; p: Place }[];
+    if (!placed.length) return;
+    const groups = new Map<string, { p: Place; wines: MapWine[] }>();
+    for (const { w, p } of placed) {
+      const key = `${p.lon.toFixed(2)},${p.lat.toFixed(2)}`;
+      const g = groups.get(key) ?? { p, wines: [] };
+      g.wines.push(w);
+      groups.set(key, g);
+    }
+    const list = [...groups.values()].sort((a, b) => b.wines.length - a.wines.length);
+    const places = list.map((g) => g.p);
+    const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
+    if (!ov) return;
+    const pins = list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.wines.length, label: g.p.label }));
+    $('origin-map').innerHTML = drawOverview(ov, pins, focus, 'full');
+    $('hero-map').innerHTML = '';
+    const no = new Map(wines.map((w, i) => [w.id, i + 1]));
+    $('origin-legend').replaceChildren(...list.map((g) => {
+      const where = [g.wines[0].region, countryName(g.p.country)].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
+      const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((w) => no.get(w.id) ?? 0)) });
+      return legendItem('in-map', g.wines.length, g.p.label, [where, nums].filter(Boolean).join(' · '));
+    }));
+    $('map-source').textContent = t('map.source', { sources: 'Natural Earth' });
+    $('origin-block').hidden = false;
+  }
+
+  function legendItem(kind: string, count: number, titleText: string, subText: string) {
+    const li = document.createElement('li');
+    li.className = kind;
+    const n = document.createElement('span');
+    n.className = 'n';
+    n.textContent = String(count);
+    const text = document.createElement('span');
+    text.className = 'txt';
+    const title = document.createElement('b');
+    title.textContent = titleText;
+    const sub = document.createElement('span');
+    sub.className = 'sub';
+    sub.textContent = subText;
+    text.append(title, sub);
+    li.append(n, text);
+    return li;
   }
 
   function setComing(n: unknown) {
@@ -493,6 +543,8 @@ import Base from '../../layouts/Base.astro';
   .origin-legend :global(li.whole .n) { background: #b07a85; }
   .origin-legend :global(li.other .n) { background: transparent; color: var(--amber); box-shadow: inset 0 0 0 1.5px var(--amber); }
   .origin-legend :global(b) { display: block; font-weight: 600; font-size: 0.95rem; }
+  .origin-legend :global(.inset) { display: block; width: 9rem; margin-top: 0.4rem; border: 1px solid var(--lodge-3); border-radius: 0.5rem; overflow: hidden; }
+  .origin-legend :global(.inset svg) { display: block; }
   .origin-legend :global(.sub) { display: block; font-size: 0.82rem; color: var(--muted); }
   .map-source { margin: 0.6rem 0 0; font-size: 0.72rem; color: var(--muted); }
   .h-count {
