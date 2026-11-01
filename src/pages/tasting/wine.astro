@@ -64,7 +64,7 @@ import Base from '../../layouts/Base.astro';
 
   await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
-  import { type Wine, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
+  import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
   import { loadMap, mapIdFor, drawMap } from '../../lib/region-map';
 
@@ -76,10 +76,12 @@ import Base from '../../layouts/Base.astro';
     return e;
   };
 
-  const id = Number(location.pathname.match(/\/wines\/(\d+)/)?.[1] ?? new URLSearchParams(location.search).get('id'));
+  // The wine from the address: its name (/wines/rivesaltes-ambre-1966/) or, on old links, its number
+  const part = decodeURIComponent(location.pathname.match(/\/wines\/([^/]+)/)?.[1] ?? new URLSearchParams(location.search).get('id') ?? '');
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
   let wines: Wine[] = [];
+  let slugs = new Map<number, string>();
 
   function renderBasket() {
     const cart = getCart();
@@ -93,7 +95,7 @@ import Base from '../../layouts/Base.astro';
 
   function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {
     if (!w) return;
-    a.href = tastingUrl(slug, `wines/${w.id}/`);
+    a.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
     a.append(el('span', 'dir', label), el('span', 'to', w.name));
     a.hidden = false;
   }
@@ -111,9 +113,15 @@ import Base from '../../layouts/Base.astro';
     $('loading').hidden = true;
     wines = (winesRes.data ?? []) as Wine[];
     if (!winesRes.error && !wines.length) { $('need-login').hidden = false; return; }
-    const index = wines.findIndex((w) => w.id === id);
+    slugs = wineSlugs(wines);
+    const index = /^\d+$/.test(part)
+      ? wines.findIndex((w) => w.id === Number(part))
+      : wines.findIndex((w) => slugs.get(w.id) === part || wineSlug(w.name) === wineSlug(part));
     if (winesRes.error || index < 0) { $('load-error').hidden = false; return; }
     const w = wines[index];
+    // Old links with a number (or another spelling) show the name in the address
+    const canonical = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
+    if (location.pathname !== canonical) history.replaceState(null, '', canonical + location.search);
 
     document.title = `${w.name} – Winetastr`;
 

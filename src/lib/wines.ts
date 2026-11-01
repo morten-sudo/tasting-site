@@ -66,3 +66,23 @@ export function nextTierLabel(w: Pick<Wine, 'price_tiers'>, n: number) {
   const next = tiersOf(w).find((x) => x.qty > n);
   return next ? t('price.bulk', { n: next.qty, price: money(Number(next.price)) }) : null;
 }
+
+/** A wine's name as an address part: "Rivesaltes Ambré 1966" → "rivesaltes-ambre-1966" */
+export function wineSlug(name: string): string {
+  return name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/ø/g, 'o').replace(/æ/g, 'ae').replace(/å/g, 'a').replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'wine';
+}
+
+/** The address part of each wine in a tasting; two wines with the same name get -2, -3 … */
+export function wineSlugs(wines: Pick<Wine, 'id' | 'name'>[]): Map<number, string> {
+  const used = new Map<string, number>();
+  const out = new Map<number, string>();
+  for (const w of wines) {
+    const base = wineSlug(w.name);
+    const n = (used.get(base) ?? 0) + 1;
+    used.set(base, n);
+    out.set(w.id, n === 1 ? base : `${base}-${n}`);
+  }
+  return out;
+}
