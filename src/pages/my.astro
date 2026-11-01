@@ -247,8 +247,8 @@ import Base from '../layouts/Base.astro';
     background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; color: var(--paper); text-decoration: none;
   }
   .book-wine:hover { border-color: var(--amber); color: var(--paper); }
-  .bw-pic { width: 3.4rem; height: 4.4rem; border-radius: 0.45rem; background: linear-gradient(160deg, #a3213a, #b8742e); overflow: hidden; display: grid; place-items: center; }
-  .bw-pic img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
+  .bw-pic { width: 3.4rem; height: 4.4rem; border-radius: 0.45rem; background: linear-gradient(160deg, #a3213a, #b8742e); overflow: hidden; display: flex; }
+  .bw-pic img { display: block; flex: 1; min-width: 0; height: 100%; object-fit: contain; background: #fff; }
   .bw-body { display: grid; gap: 0.12rem; min-width: 0; }
   .bw-name { font-family: var(--display); font-size: 1.3rem; line-height: 1.15; }
   .bw-meta { font-size: 0.86rem; color: var(--muted); }
@@ -260,8 +260,8 @@ import Base from '../layouts/Base.astro';
   #orders-sum { margin: 0 0 1rem; }
   @media (max-width: 30rem) {
     .book-stats b { font-size: 1.6rem; }
-    .book-wine { grid-template-columns: 2.8rem 1fr; }
-    .bw-pic { width: 2.8rem; height: 3.6rem; }
+    .book-wine { grid-template-columns: 3.2rem 1fr; align-items: start; }
+    .bw-pic { width: 3.2rem; height: 4.6rem; }
     .bw-side { grid-column: 2; justify-items: start; grid-auto-flow: column; justify-content: start; }
   }
 </style>
