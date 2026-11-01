@@ -70,11 +70,15 @@ export function wineSlug(name: string): string {
 }
 
 /** The address part of each wine in a tasting; two wines with the same name get -2, -3 … */
-export function wineSlugs(wines: Pick<Wine, 'id' | 'name'>[]): Map<number, string> {
+export function wineSlugs(wines: (Pick<Wine, 'id' | 'name'> & { vintage?: string | null })[]): Map<number, string> {
+  // Wines with the same name (e.g. two vintages of one wine) get the vintage added, then a number
+  const count = new Map<string, number>();
+  for (const w of wines) count.set(wineSlug(w.name), (count.get(wineSlug(w.name)) ?? 0) + 1);
   const used = new Map<string, number>();
   const out = new Map<number, string>();
   for (const w of wines) {
-    const base = wineSlug(w.name);
+    let base = wineSlug(w.name);
+    if ((count.get(base) ?? 0) > 1 && w.vintage) base = wineSlug(`${w.name} ${w.vintage}`);
     const n = (used.get(base) ?? 0) + 1;
     used.set(base, n);
     out.set(w.id, n === 1 ? base : `${base}-${n}`);
