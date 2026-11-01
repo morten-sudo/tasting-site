@@ -74,21 +74,22 @@ import '../../styles/admin.css';
               </div>
             </div>
           </div>
-          <!-- Origin: a known appellation fills in region and country -->
-          <label for="wf-appellation"><span data-i18n="origin.appellation">Appellation</span> <span class="hint" data-i18n="origin.appellationHint">(e.g. Saint-Émilion Grand Cru, Porto, Barolo)</span></label>
-          <input id="wf-appellation" type="text" list="wf-appellations" autocomplete="off" />
-          <datalist id="wf-appellations"></datalist>
-          <p id="wf-app-status" class="app-status" hidden aria-live="polite"></p>
+          <!-- Origin: country → region → appellation; each list narrows the next, and a known appellation fills in the rest -->
           <div class="wf-pair">
-            <div>
-              <label for="wf-region" data-i18n="origin.region">Region</label>
-              <input id="wf-region" type="text" />
-            </div>
             <div>
               <label for="wf-country" data-i18n="origin.country">Country</label>
               <select id="wf-country"></select>
             </div>
+            <div>
+              <label for="wf-region" data-i18n="origin.region">Region</label>
+              <input id="wf-region" type="text" list="wf-regions" autocomplete="off" />
+              <datalist id="wf-regions"></datalist>
+            </div>
           </div>
+          <label for="wf-appellation"><span data-i18n="origin.appellation">Appellation</span> <span class="hint" data-i18n="origin.appellationHint">(e.g. Saint-Émilion Grand Cru, Porto, Barolo)</span></label>
+          <input id="wf-appellation" type="text" list="wf-appellations" autocomplete="off" />
+          <datalist id="wf-appellations"></datalist>
+          <p id="wf-app-status" class="app-status" hidden aria-live="polite"></p>
           <div id="wf-map" class="wf-map" hidden>
             <div id="wf-map-svg" class="wf-map-svg"></div>
             <p id="wf-map-note" class="hint"></p>

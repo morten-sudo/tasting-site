@@ -815,4 +815,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.wineAdded": "{name} hefur verið bætt við.",
   "style.Other": "Annað",
   "start.photoTextUpload": "Hladdu upp mynd – við lesum miðann",
+  "wineMap.regionCentre": "Staðsett í miðju svæðisins – veldu upprunaheiti til að staðsetja nánar.",
 };

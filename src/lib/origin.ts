@@ -4,7 +4,8 @@
 import { supabase } from './supabase';
 import { lang } from '../i18n';
 
-export type Appellation = { id: string; name: string; region: string; country: string; aliases: string[]; lat?: number | null; lon?: number | null };
+export type Appellation = { id: string; name: string; region: string; country: string; subregion?: string | null; aliases: string[]; lat?: number | null; lon?: number | null };
+export type WineRegion = { id: string; name: string; country: string; aliases: string[]; lat: number | null; lon: number | null };
 
 // Countries offered in the wine form (ISO 3166-1 alpha-2); names come from the browser in the page's language
 export const WINE_COUNTRIES = ['FR', 'IT', 'ES', 'PT', 'DE', 'AT', 'CH', 'HU', 'GR', 'SI', 'HR', 'RO', 'BG', 'GE',
@@ -24,9 +25,25 @@ export function normOrigin(t: string | null | undefined): string {
 
 let cache: Promise<Appellation[]> | null = null;
 export function loadAppellations(): Promise<Appellation[]> {
-  cache ??= Promise.resolve(supabase.from('appellations').select('id, name, region, country, aliases, lat, lon').order('name'))
+  cache ??= Promise.resolve(supabase.from('appellations').select('*').order('name'))
     .then(({ data }) => (data ?? []) as Appellation[]);
   return cache;
+}
+
+let regionCache: Promise<WineRegion[]> | null = null;
+/** The wine regions of each country (with a centre for the maps). */
+export function loadRegions(): Promise<WineRegion[]> {
+  regionCache ??= Promise.resolve(supabase.from('wine_regions').select('id, name, country, aliases, lat, lon').order('name'))
+    .then(({ data }) => (data ?? []) as WineRegion[]);
+  return regionCache;
+}
+
+/** The known region a piece of text names (its name or an alias), optionally within one country. */
+export function matchRegion(list: WineRegion[], text: string | null | undefined, country?: string | null): WineRegion | null {
+  const n = normOrigin(text);
+  if (!n) return null;
+  return list.find((r) => (!country || r.country === country)
+    && [r.name, ...r.aliases].some((x) => normOrigin(x) === n)) ?? null;
 }
 
 /** The known appellation in a piece of text: the longest name or alias it contains. */

@@ -814,4 +814,5 @@ export const en = {
   "adminTasting.wineAdded": "{name} is added.",
   "style.Other": "Other",
   "start.photoTextUpload": "Upload a picture – we read the label",
+  "wineMap.regionCentre": "Placed in the middle of the region – choose an appellation to place it more precisely.",
 } as const;

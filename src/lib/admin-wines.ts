@@ -6,7 +6,7 @@ import { t, lang, locale } from '../i18n';
 import { wineMap } from './wine-map';
 import { withoutYear } from './wines';
 import { forgetGuesses } from './overview-map';
-import { WINE_COUNTRIES, countryName, loadAppellations, matchAppellation, normOrigin, originLine, type Appellation } from './origin';
+import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
 export type AdminWine = {
   id: number; host_id: string; name: string; producer: string | null;
@@ -119,40 +119,83 @@ export function initWineAdmin(hostId: string, tenantId: string) {
   styleSelect.replaceChildren(new Option(t('admin.choose'), ''));
   for (const key of STYLES) styleSelect.append(new Option(styleName(key), key));
 
-  // ---------- Origin: appellation (known list), region and country ----------
+  // ---------- Origin: country → region → appellation ----------
+  // Each choice narrows the next list; a known appellation fills in region and country.
   const countrySelect = field<HTMLSelectElement>('wf-country');
   countrySelect.replaceChildren(new Option(t('admin.choose'), ''),
     ...WINE_COUNTRIES.map((c) => new Option(countryName(c) ?? c, c))
       .sort((a, b) => a.text.localeCompare(b.text, lang())));
-  let appellations: Appellation[] = [];
-  loadAppellations().then((list) => {
-    appellations = list;
-    $('wf-appellations').replaceChildren(...list.map((a) => new Option(`${a.region} · ${countryName(a.country)}`, a.name)));
-    syncOrigin();
-  });
   const appInput = field<HTMLInputElement>('wf-appellation');
   const regionInput = field<HTMLInputElement>('wf-region');
-  /** A known appellation decides region and country (the database does the same when saving). */
+  let appellations: Appellation[] = [];
+  let regions: WineRegion[] = [];
+  Promise.all([loadAppellations(), loadRegions()]).then(([apps, regs]) => {
+    appellations = apps;
+    regions = regs;
+    syncOrigin();
+  });
+  const knownApp = () => (appInput.value.trim() ? matchAppellation(appellations, appInput.value) : null);
+  /** The region as a known one (in the chosen country), so "Burgundy" counts as Bourgogne. */
+  const knownRegion = () => matchRegion(regions, regionInput.value, countrySelect.value || null);
+  const sameRegion = (a: Appellation, region: string) => normOrigin(a.region) === normOrigin(region)
+    || normOrigin(knownRegion()?.name) === normOrigin(a.region);
+
+  /** The region and appellation suggestions for what is chosen so far. */
+  function fillLists() {
+    const country = countrySelect.value;
+    const where = (c: string) => (country ? '' : ` · ${countryName(c)}`);
+    const regs = regions.filter((r) => !country || r.country === country);
+    // Regions on the appellation list that are not in wine_regions (keeps old data selectable)
+    for (const a of appellations) {
+      if ((!country || a.country === country) && !regs.some((r) => r.country === a.country && normOrigin(r.name) === normOrigin(a.region))) {
+        regs.push({ id: `${a.country}-${a.region}`, name: a.region, country: a.country, aliases: [], lat: null, lon: null });
+      }
+    }
+    $('wf-regions').replaceChildren(...regs.sort((a, b) => a.name.localeCompare(b.name, lang()))
+      .map((r) => new Option(country ? '' : countryName(r.country) ?? r.country, r.name)));
+    const region = regionInput.value.trim();
+    const apps = appellations.filter((a) => (!country || a.country === country) && (!region || sameRegion(a, region)));
+    // An unknown region narrows nothing: show the whole country instead of an empty list
+    const shown = apps.length ? apps : appellations.filter((a) => !country || a.country === country);
+    $('wf-appellations').replaceChildren(...shown.map((a) =>
+      new Option([a.subregion, a.region].filter(Boolean).join(' · ') + where(a.country), a.name)));
+  }
+
+  /** A known appellation fills in region and country (the database does the same when saving). */
   function syncOrigin() {
     const text = appInput.value.trim();
-    const known = text ? matchAppellation(appellations, text) : null;
+    const known = knownApp();
     const status = $('wf-app-status');
     status.hidden = !text || !appellations.length;
     status.classList.toggle('known', !!known);
     status.textContent = known
-      ? '✓ ' + t('origin.known', { name: known.name, where: `${known.region}, ${countryName(known.country)}` })
+      ? '✓ ' + t('origin.known', { name: known.name, where: [known.subregion, known.region, countryName(known.country)].filter(Boolean).join(', ') })
       : t('origin.unknown');
     if (known) {
       regionInput.value = known.region;
       countrySelect.value = known.country;
-    } else if (regionInput.readOnly) {
-      // Region and country came from an appellation that no longer applies
-      regionInput.value = '';
-      countrySelect.value = '';
     }
-    regionInput.readOnly = !!known;
-    countrySelect.disabled = !!known;
+    fillLists();
     showOriginMap();
+  }
+  /** A new country: drop a region and appellation that belong to another country. */
+  function countryChanged() {
+    const country = countrySelect.value;
+    const app = knownApp();
+    if (app && country && app.country !== country) appInput.value = '';
+    const reg = matchRegion(regions, regionInput.value);
+    if (country && reg && !matchRegion(regions, regionInput.value, country)) regionInput.value = '';
+    syncOrigin();
+  }
+  /** A new region: drop an appellation from another region. */
+  function regionChanged() {
+    const app = knownApp();
+    const region = regionInput.value.trim();
+    if (app && region && !sameRegion(app, region)) appInput.value = '';
+    // A known region is written its usual way ("Burgundy" → Bourgogne) and tells the country
+    const reg = matchRegion(regions, region, countrySelect.value || null);
+    if (reg) { regionInput.value = reg.name; countrySelect.value = reg.country; }
+    syncOrigin();
   }
 
   // The wine's map, updated as the origin is typed (the newest typing wins)
@@ -170,14 +213,16 @@ export function initWineAdmin(hostId: string, tenantId: string) {
       if (!m) return;
       $('wf-map-svg').innerHTML = m.svg;
       // How the wine was placed; an unknown appellation is looked up when the wine is saved
-      const pending = m.how === 'country' && !!origin.appellation;
+      const pending = (m.how === 'country' || m.how === 'regionCentre') && !!origin.appellation && !knownApp();
       $('wf-map-note').textContent = t(pending ? 'wineMap.pending' : `wineMap.${m.how}`);
     }, 250);
   }
   appInput.addEventListener('input', syncOrigin);
   appInput.addEventListener('change', syncOrigin);
-  regionInput.addEventListener('input', showOriginMap);
-  countrySelect.addEventListener('change', showOriginMap);
+  // The region is checked when it is chosen or left, not on every letter
+  regionInput.addEventListener('input', () => { fillLists(); showOriginMap(); });
+  regionInput.addEventListener('change', regionChanged);
+  countrySelect.addEventListener('change', countryChanged);
 
   function showMsg(text: string, ok = false) {
     const m = $('wf-msg');

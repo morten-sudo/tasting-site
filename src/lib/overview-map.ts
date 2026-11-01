@@ -1,14 +1,14 @@
 // Overview maps: every wine on a map, also where there is no detailed region map.
 // A wine is placed at its appellation (fixed coordinates on the appellation list), at a place
-// Cloudflare AI found for an appellation not on the list (checked against the country), or in the
-// middle of its country. Land and borders come from Natural Earth (scripts/build-overview.py).
+// Cloudflare AI found for an appellation not on the list (checked against the country), in the
+// middle of its region (wine_regions) or in the middle of its country. Land and borders come from Natural Earth (scripts/build-overview.py).
 import { supabase } from './supabase';
-import { loadAppellations, normOrigin, countryName } from './origin';
+import { loadAppellations, loadRegions, matchRegion, normOrigin, countryName } from './origin';
 
 export type OverviewMap = { id: string; w: number; h: number; proj: { lon0: number; lat1: number; k: number; s: number }; land: string; border: string };
 type Country = { box: [number, number, number, number]; centre: [number, number] };
 type Guess = { key: string; name: string; country: string; lat: number; lon: number };
-export type Place = { lon: number; lat: number; how: 'appellation' | 'guess' | 'country'; label: string; country: string | null };
+export type Place = { lon: number; lat: number; how: 'appellation' | 'guess' | 'regionCentre' | 'country'; label: string; country: string | null };
 
 const once = <T,>(f: () => Promise<T>) => { let p: Promise<T> | null = null; return () => (p ??= f()); };
 const getJson = <T,>(url: string) => fetch(url).then((r) => (r.ok ? (r.json() as Promise<T>) : null)).catch(() => null);
@@ -30,13 +30,15 @@ type OriginWine = { appellation?: string | null; appellation_id?: string | null;
 
 /** Where a wine goes on an overview map, or null when not even the country is known. */
 export async function placeOf(w: OriginWine): Promise<Place | null> {
-  const [apps, guesses, countries] = await Promise.all([loadAppellations(), loadGuesses(), loadCountries()]);
+  const [apps, guesses, countries, regions] = await Promise.all([loadAppellations(), loadGuesses(), loadCountries(), loadRegions()]);
   const a = w.appellation_id ? apps.find((x) => x.id === w.appellation_id) : null;
   if (a?.lat != null && a?.lon != null) return { lon: a.lon, lat: a.lat, how: 'appellation', label: a.name, country: a.country };
   if (w.appellation && w.country) {
     const g = guesses.get(`${normOrigin(w.appellation)}|${w.country}`);
     if (g) return { lon: g.lon, lat: g.lat, how: 'guess', label: g.name, country: g.country };
   }
+  const r = w.country ? matchRegion(regions, w.region, w.country) : null;
+  if (r?.lat != null && r?.lon != null) return { lon: r.lon, lat: r.lat, how: 'regionCentre', label: r.name, country: r.country };
   const c = w.country ? countries[w.country] : null;
   if (c) return { lon: c.centre[0], lat: c.centre[1], how: 'country', label: w.region || countryName(w.country) || w.country!, country: w.country! };
   return null;

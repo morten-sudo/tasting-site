@@ -17,7 +17,7 @@ export const FIELDS_SPEC = `"name": the wine's name (without the producer, unles
 "style": one of ${JSON.stringify(STYLES)} – "Fortified" for port, sherry, madeira, Rivesaltes and the like, "Sweet" for dessert wines such as Sauternes or Tokaji, "Other" for spirits and anything that is not wine,
 "abv": alcohol percentage as a number, or null,
 "appellation": the protected designation of origin as stated (e.g. "Saint-Émilion Grand Cru", "Pauillac", "Porto", "Rioja", "Barolo", "Chablis"), without classification words such as "Cru Classé" unless they are part of the name, or null,
-"region": the wine region the appellation belongs to (e.g. "Bordeaux", "Douro", "Bourgogne", "Piemonte", "Toscana"), or null,
+"region": the wine region the appellation belongs to (e.g. "Bordeaux", "Douro", "Bourgogne", "Piemonte", "Toscana", "Mosel"; in the USA and Australia the state, e.g. "California", "South Australia"), or null,
 "country": the country as a two-letter ISO 3166 code (e.g. "FR", "PT", "IT", "ES", "DE", "US"), or null,
 "grapes": grape varieties as a comma-separated string, or null`;
 
