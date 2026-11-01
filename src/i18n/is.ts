@@ -813,4 +813,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.invitedName": "{name} hefur verið boðið.",
   "adminTasting.addWine": "Bæta við víni",
   "adminTasting.wineAdded": "{name} hefur verið bætt við.",
+  "style.Other": "Annað",
 };

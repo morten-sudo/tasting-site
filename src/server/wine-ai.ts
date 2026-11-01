@@ -9,13 +9,12 @@ export interface AiEnv {
 // Mistral Small 3.1: Apache 2.0 licence, reads text and images
 export const MODEL = '@cf/mistralai/mistral-small-3.1-24b-instruct';
 
-export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified',
-  'Vintage', 'Tawny', 'White', 'Rivesaltes', 'Aguardente'];
+export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified', 'Other'];
 
 export const FIELDS_SPEC = `"name": the wine's name (without the producer, unless it is the only name; drop shop marketing such as "95 points" or "top buy"),
 "producer": the producer, winery, house or château,
 "vintage": the year as 4 digits, "NV" for a non-vintage wine (e.g. most champagne, tawny or ruby port without a year), an age statement such as "10 years", or null when unknown,
-"style": one of ${JSON.stringify(STYLES)} – use "Vintage", "Tawny", "White" (white port), "Rivesaltes" or "Aguardente" only for those fortified styles; otherwise "Red", "WhiteWine", "Rose", "Orange", "Sparkling", "Sweet" or "Fortified",
+"style": one of ${JSON.stringify(STYLES)} – "Fortified" for port, sherry, madeira, Rivesaltes and the like, "Sweet" for dessert wines such as Sauternes or Tokaji, "Other" for spirits and anything that is not wine,
 "abv": alcohol percentage as a number, or null,
 "appellation": the protected designation of origin as stated (e.g. "Saint-Émilion Grand Cru", "Pauillac", "Porto", "Rioja", "Barolo", "Chablis"), without classification words such as "Cru Classé" unless they are part of the name, or null,
 "region": the wine region the appellation belongs to (e.g. "Bordeaux", "Douro", "Bourgogne", "Piemonte", "Toscana"), or null,

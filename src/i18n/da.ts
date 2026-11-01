@@ -813,4 +813,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.invitedName": "{name} er inviteret.",
   "adminTasting.addWine": "Tilføj vin",
   "adminTasting.wineAdded": "{name} er tilføjet.",
+  "style.Other": "Andet",
 };

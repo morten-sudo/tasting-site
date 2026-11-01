@@ -742,4 +742,5 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.invitedName": "{name} został zaproszony.",
   "adminTasting.addWine": "Dodaj wino",
   "adminTasting.wineAdded": "Dodano {name}.",
+  "style.Other": "Inne",
 };

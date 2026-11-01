@@ -812,4 +812,5 @@ export const en = {
   "adminTasting.invitedName": "{name} is invited.",
   "adminTasting.addWine": "Add wine",
   "adminTasting.wineAdded": "{name} is added.",
+  "style.Other": "Other",
 } as const;

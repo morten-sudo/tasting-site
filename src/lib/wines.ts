@@ -12,25 +12,20 @@ export type Wine = {
 import { t, money, type Key } from '../i18n';
 
 // Wine styles; the label comes from the dictionaries (style.<key>)
-export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified',
-  'Vintage', 'Tawny', 'White', 'Rivesaltes', 'Aguardente'] as const;
+export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified', 'Other'] as const;
 export const styleName = (key: string) =>
   (STYLES as readonly string[]).includes(key) ? t(`style.${key}` as Key) : key;
 
 // Style badge colour
 export const STYLE_TONES: Record<string, string> = {
-  Vintage: '#a3213a',
-  Tawny: '#b8742e',
-  Rivesaltes: '#9c4a2c',
-  White: '#e0c27a',
-  Aguardente: '#dba65a',
   Red: '#861530',
   WhiteWine: '#e0c27a',
   Rose: '#d98a8a',
   Orange: '#d08a3a',
   Sparkling: '#e8d9a0',
   Sweet: '#c9a66b',
-  Fortified: '#9c4a2c',
+  Fortified: '#7a1a2c',
+  Other: '#9a8a7a',
 };
 
 export const styleLabel = (w: Wine) => (w.style ? styleName(w.style) : '');
