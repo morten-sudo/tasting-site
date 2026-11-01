@@ -727,4 +727,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "hosts.mailFailed": "Invitationsmailen kunne ikke sendes.",
   "guestLib.confirmDeleteOne": "Tryk igen for at slette – også fra 1 smagning",
   "guestLib.confirmDeleteMany": "Tryk igen for at slette – også fra {n} smagninger",
+  "hosts.alreadyHost": "{email} er allerede vært for denne smagning.",
+  "hosts.isGuest": "{email} er allerede gæst som {name}. Vil du også gøre {name} til medvært på denne smagning?",
+  "hosts.makeCohost": "Ja, gør {name} til medvært",
 };

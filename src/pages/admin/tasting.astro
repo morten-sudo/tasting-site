@@ -86,6 +86,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <input id="host-email" type="email" inputmode="email" autocomplete="off" placeholder="Email" aria-label="Email of the new host" data-i18n-attr="placeholder=common.email;aria-label=hosts.emailLabel" />
           <button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button>
         </form>
+        <div id="host-confirm" class="host-confirm" role="alertdialog" aria-live="polite" hidden></div>
         <p id="host-msg" class="message" hidden></p>
         <div id="host-link" class="host-link" hidden>
           <p id="host-link-text" class="hint"></p>

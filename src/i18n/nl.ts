@@ -704,4 +704,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "hosts.mailFailed": "De uitnodigingsmail kon niet worden verstuurd.",
   "guestLib.confirmDeleteOne": "Druk nogmaals om te verwijderen – ook uit 1 proeverij",
   "guestLib.confirmDeleteMany": "Druk nogmaals om te verwijderen – ook uit {n} proeverijen",
+  "hosts.alreadyHost": "{email} is al gastheer van deze proeverij.",
+  "hosts.isGuest": "{email} is al gast als {name}. Wil je {name} ook medegastheer van deze proeverij maken?",
+  "hosts.makeCohost": "Ja, maak {name} medegastheer",
 };

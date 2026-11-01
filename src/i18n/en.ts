@@ -726,4 +726,7 @@ export const en = {
   "hosts.mailFailed": "The invitation email could not be sent.",
   "guestLib.confirmDeleteOne": "Press again to delete – also from 1 tasting",
   "guestLib.confirmDeleteMany": "Press again to delete – also from {n} tastings",
+  "hosts.alreadyHost": "{email} is already a host of this tasting.",
+  "hosts.isGuest": "{email} is already a guest as {name}. Do you also want to make {name} a co-host of this tasting?",
+  "hosts.makeCohost": "Yes, make {name} co-host",
 } as const;

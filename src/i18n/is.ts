@@ -727,4 +727,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "hosts.mailFailed": "Ekki tókst að senda boðspóstinn.",
   "guestLib.confirmDeleteOne": "Ýttu aftur til að eyða – líka úr 1 smökkun",
   "guestLib.confirmDeleteMany": "Ýttu aftur til að eyða – líka úr {n} smökkunum",
+  "hosts.alreadyHost": "{email} er þegar gestgjafi þessarar smökkunar.",
+  "hosts.isGuest": "{email} er þegar gestur sem {name}. Viltu líka gera {name} að meðgestgjafa þessarar smökkunar?",
+  "hosts.makeCohost": "Já, gera {name} að meðgestgjafa",
 };

@@ -33,9 +33,12 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     setTimeout(() => ($('host-link-copy').textContent = t('hosts.copy')), 1500);
   });
 
+  let hosts: HostRow[] = [];
+
   async function load() {
     const { data } = await supabase.rpc('tasting_cohosts', { t_id: tastingId });
     const rows = (data ?? []) as HostRow[];
+    hosts = rows;
     list.replaceChildren(...rows.map((r) => {
       const li = mk('li', 'host-row');
       const who = mk('div', 'host-who');
@@ -78,10 +81,21 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     } catch { return false; }
   }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = input.value.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say(t('guest.emailBad')); input.focus(); return; }
+  /** The name this email already has as a guest – of this tasting or in the host's guest list. */
+  async function existingGuest(email: string): Promise<string | null> {
+    const [p, g] = await Promise.all([
+      supabase.from('participants').select('name').eq('tasting_id', tastingId).eq('email', email).limit(1),
+      supabase.from('guests').select('name').eq('email', email).limit(1),
+    ]);
+    const row = ((p.data ?? [])[0] ?? (g.data ?? [])[0]) as { name: string } | undefined;
+    return row?.name ?? null;
+  }
+
+  const confirmBox = $('host-confirm');
+  function closeConfirm() { confirmBox.hidden = true; confirmBox.replaceChildren(); }
+
+  /** Adds the co-host and emails the invitation (or shows the link when the mail cannot be sent). */
+  async function addHost(email: string, name: string) {
     const btn = $<HTMLButtonElement>('host-add-btn');
     btn.disabled = true;
     const { data, error } = await supabase.rpc('add_cohost', { t_id: tastingId, e: email });
@@ -91,20 +105,44 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
         : error.message.includes('too_many') ? t('hosts.tooMany') : t('hosts.failed'));
       return;
     }
-    const nameInput = $<HTMLInputElement>('host-name');
-    const name = nameInput.value.trim();
     input.value = '';
-    nameInput.value = '';
+    $<HTMLInputElement>('host-name').value = '';
     const added = data === 'active' ? t('hosts.addedActive', { email }) : t('hosts.addedPending', { email });
     $('host-link').hidden = true;
     say(added, true);
     load();
-    // The invitation by email; if it cannot be sent, the link to send yourself
     btn.disabled = true;
     const sent = await sendInvite(email, name);
     btn.disabled = false;
     if (sent) say(`${added} ${t('hosts.mailSent', { email })}`, true);
     else { say(`${added} ${t('hosts.mailFailed')}`, true); showLink(email); }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    closeConfirm();
+    const email = input.value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say(t('guest.emailBad')); input.focus(); return; }
+    // Already a host here: no new invitation
+    const host = hosts.find((h) => h.email === email);
+    if (host) { say(host.owner ? t('hosts.isOwner') : t('hosts.alreadyHost', { email })); return; }
+    const typed = $<HTMLInputElement>('host-name').value.trim();
+    say('');
+    // Already a guest: ask whether that guest should also be a co-host (under the name they already have)
+    const guestName = await existingGuest(email);
+    if (!guestName) { await addHost(email, typed); return; }
+    confirmBox.append(mk('p', '', t('hosts.isGuest', { email, name: guestName })));
+    const row = mk('div', 'row-actions');
+    const yes = mk('button', 'btn small', t('hosts.makeCohost', { name: guestName })) as HTMLButtonElement;
+    yes.type = 'button';
+    yes.addEventListener('click', async () => { closeConfirm(); await addHost(email, guestName); });
+    const no = mk('button', 'text-btn', t('common.cancel')) as HTMLButtonElement;
+    no.type = 'button';
+    no.addEventListener('click', closeConfirm);
+    row.append(yes, no);
+    confirmBox.append(row);
+    confirmBox.hidden = false;
+    yes.focus();
   });
 
   load();

@@ -704,4 +704,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "hosts.mailFailed": "No se pudo enviar el correo de invitación.",
   "guestLib.confirmDeleteOne": "Pulsa de nuevo para eliminar – también de 1 cata",
   "guestLib.confirmDeleteMany": "Pulsa de nuevo para eliminar – también de {n} catas",
+  "hosts.alreadyHost": "{email} ya es anfitrión de esta cata.",
+  "hosts.isGuest": "{email} ya es invitado como {name}. ¿Quieres hacer también a {name} coanfitrión de esta cata?",
+  "hosts.makeCohost": "Sí, hacer a {name} coanfitrión",
 };

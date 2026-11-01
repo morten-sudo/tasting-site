@@ -704,4 +704,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "hosts.mailFailed": "Die Einladungs-E-Mail konnte nicht gesendet werden.",
   "guestLib.confirmDeleteOne": "Nochmals drücken zum Löschen – auch aus 1 Verkostung",
   "guestLib.confirmDeleteMany": "Nochmals drücken zum Löschen – auch aus {n} Verkostungen",
+  "hosts.alreadyHost": "{email} ist bereits Gastgeber dieser Verkostung.",
+  "hosts.isGuest": "{email} ist bereits Gast als {name}. Möchtest du {name} auch zum Mitgastgeber dieser Verkostung machen?",
+  "hosts.makeCohost": "Ja, {name} zum Mitgastgeber machen",
 };
