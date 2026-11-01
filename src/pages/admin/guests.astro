@@ -133,13 +133,21 @@ import '../../styles/admin.css';
     await load();
   });
 
-  // Delete in two steps; only guests who are not invited to any tasting
+  // Delete in two steps; a guest who is invited is removed from those tastings too
+  // (with their answers, orders and ratings there – the database removes those with the invitation)
   $('gf-delete').addEventListener('click', async () => {
     const btn = $<HTMLButtonElement>('gf-delete');
     if (!editing) return;
-    if (editing.participants.length) { showMsg(t('guestLib.stillInvited')); return; }
-    if (!btn.dataset.armed) { btn.dataset.armed = '1'; btn.textContent = t('admin.confirmDelete'); return; }
-    const { error } = await supabase.from('guests').delete().eq('id', editing.id);
+    const n = editing.participants.length;
+    if (!btn.dataset.armed) {
+      btn.dataset.armed = '1';
+      btn.textContent = n ? t(n === 1 ? 'guestLib.confirmDeleteOne' : 'guestLib.confirmDeleteMany', { n }) : t('admin.confirmDelete');
+      return;
+    }
+    btn.disabled = true;
+    const removed = n ? await supabase.from('participants').delete().eq('guest_id', editing.id) : { error: null };
+    const { error } = removed.error ? removed : await supabase.from('guests').delete().eq('id', editing.id);
+    btn.disabled = false;
     if (error) { showMsg(t('admin.changeNotSaved')); return; }
     closeForm();
     await load();

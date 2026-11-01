@@ -404,7 +404,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "guestLib.empty": "Noch keine Gäste. Fügen Sie den ersten hinzu.",
   "guestLib.notInvited": "Noch nicht eingeladen",
   "guestLib.emailTaken": "Ein anderer Gast hat diese E-Mail bereits.",
-  "guestLib.stillInvited": "Der Gast ist zu einer Verkostung eingeladen. Entfernen Sie ihn zuerst aus der Verkostung.",
   "payments.intro": "Wie Ihre Gäste Bestellungen und den Beitrag bezahlen. Das gilt für alle Ihre Verkostungen.",
   "payments.mpHint": "Gäste erhalten eine Schaltfläche, die MobilePay mit Betrag und Nachricht öffnet. Leer lassen, um MobilePay auszublenden.",
   "payments.moreTitle": "Weitere Zahlungsarten",
@@ -703,4 +702,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "hosts.namePlaceholder": "Name (optional)",
   "hosts.mailSent": "Wir haben eine Einladung per E-Mail an {email} geschickt.",
   "hosts.mailFailed": "Die Einladungs-E-Mail konnte nicht gesendet werden.",
+  "guestLib.confirmDeleteOne": "Nochmals drücken zum Löschen – auch aus 1 Verkostung",
+  "guestLib.confirmDeleteMany": "Nochmals drücken zum Löschen – auch aus {n} Verkostungen",
 };

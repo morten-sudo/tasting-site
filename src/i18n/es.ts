@@ -404,7 +404,6 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "guestLib.empty": "Aún no hay invitados. Añade el primero.",
   "guestLib.notInvited": "Aún no invitado",
   "guestLib.emailTaken": "Otro invitado ya tiene ese correo.",
-  "guestLib.stillInvited": "El invitado está invitado a una cata. Quítalo primero de la cata.",
   "payments.intro": "Cómo pagan tus invitados los pedidos y el precio de la cata. Vale para todas tus catas.",
   "payments.mpHint": "Los invitados reciben un botón que abre MobilePay con el importe y un mensaje ya rellenos. Déjalo vacío para ocultar MobilePay.",
   "payments.moreTitle": "Más métodos de pago",
@@ -703,4 +702,6 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "hosts.namePlaceholder": "Nombre (opcional)",
   "hosts.mailSent": "Hemos enviado una invitación por correo a {email}.",
   "hosts.mailFailed": "No se pudo enviar el correo de invitación.",
+  "guestLib.confirmDeleteOne": "Pulsa de nuevo para eliminar – también de 1 cata",
+  "guestLib.confirmDeleteMany": "Pulsa de nuevo para eliminar – también de {n} catas",
 };

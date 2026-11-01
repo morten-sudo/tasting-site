@@ -404,7 +404,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "guestLib.empty": "Ingen gæster endnu. Tilføj den første.",
   "guestLib.notInvited": "Ikke inviteret endnu",
   "guestLib.emailTaken": "En anden gæst har allerede den e-mail.",
-  "guestLib.stillInvited": "Gæsten er inviteret til en smagning. Fjern gæsten fra smagningen først.",
   "payments.intro": "Sådan betaler dine gæster for bestillinger og for smagningen. Det gælder alle dine smagninger.",
   "payments.mpHint": "Gæsterne får en knap, der åbner MobilePay med beløb og besked udfyldt. Lad feltet stå tomt for at skjule MobilePay.",
   "payments.moreTitle": "Flere betalingsformer",
@@ -726,4 +725,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "hosts.namePlaceholder": "Navn (valgfrit)",
   "hosts.mailSent": "Vi har sendt en invitation på mail til {email}.",
   "hosts.mailFailed": "Invitationsmailen kunne ikke sendes.",
+  "guestLib.confirmDeleteOne": "Tryk igen for at slette – også fra 1 smagning",
+  "guestLib.confirmDeleteMany": "Tryk igen for at slette – også fra {n} smagninger",
 };

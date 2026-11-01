@@ -404,7 +404,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "guestLib.empty": "Nog geen gasten. Voeg de eerste toe.",
   "guestLib.notInvited": "Nog niet uitgenodigd",
   "guestLib.emailTaken": "Een andere gast heeft dat e-mailadres al.",
-  "guestLib.stillInvited": "De gast is uitgenodigd voor een proeverij. Haal hem eerst uit de proeverij.",
   "payments.intro": "Hoe je gasten bestellingen en de bijdrage betalen. Dit geldt voor al je proeverijen.",
   "payments.mpHint": "Gasten krijgen een knop die MobilePay opent met het bedrag en een bericht ingevuld. Laat leeg om MobilePay te verbergen.",
   "payments.moreTitle": "Meer betaalmethoden",
@@ -703,4 +702,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "hosts.namePlaceholder": "Naam (optioneel)",
   "hosts.mailSent": "We hebben een uitnodiging gemaild naar {email}.",
   "hosts.mailFailed": "De uitnodigingsmail kon niet worden verstuurd.",
+  "guestLib.confirmDeleteOne": "Druk nogmaals om te verwijderen – ook uit 1 proeverij",
+  "guestLib.confirmDeleteMany": "Druk nogmaals om te verwijderen – ook uit {n} proeverijen",
 };

@@ -403,7 +403,6 @@ export const en = {
   "guestLib.empty": "No guests yet. Add the first one.",
   "guestLib.notInvited": "Not invited yet",
   "guestLib.emailTaken": "Another guest already has that email.",
-  "guestLib.stillInvited": "The guest is invited to a tasting. Remove them from the tasting first.",
   "payments.intro": "How your guests pay for orders and the tasting fee. It applies to all your tastings.",
   "payments.mpHint": "Guests get a button that opens MobilePay with the amount and a message filled in. Leave it empty to hide MobilePay.",
   "payments.moreTitle": "More payment methods",
@@ -725,4 +724,6 @@ export const en = {
   "hosts.namePlaceholder": "Name (optional)",
   "hosts.mailSent": "We have emailed an invitation to {email}.",
   "hosts.mailFailed": "The invitation email could not be sent.",
+  "guestLib.confirmDeleteOne": "Press again to delete – also from 1 tasting",
+  "guestLib.confirmDeleteMany": "Press again to delete – also from {n} tastings",
 } as const;
