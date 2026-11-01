@@ -798,7 +798,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "cohost.ok": "OK",
   "roles.youHost": "Du er vært",
   "roles.mine": "Jeg er vært",
-  "roles.all": "Alle på kontoen",
+  "roles.all": "Alle",
   "roles.mineTitle": "Smagninger du er vært for",
   "roles.mineNone": "Du er ikke vært for nogen kommende smagning.",
   "roles.othersOnAccount": "+ {n} flere på kontoen – se alle →",

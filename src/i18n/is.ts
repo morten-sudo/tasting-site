@@ -798,7 +798,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "cohost.ok": "Í lagi",
   "roles.youHost": "Þú ert gestgjafi",
   "roles.mine": "Ég er gestgjafi",
-  "roles.all": "Allt á aðganginum",
+  "roles.all": "Allar",
   "roles.mineTitle": "Smakkanir sem þú stýrir",
   "roles.mineNone": "Þú ert ekki gestgjafi neinnar væntanlegrar smökkunar.",
   "roles.othersOnAccount": "+ {n} til viðbótar á aðganginum – sjá allar →",

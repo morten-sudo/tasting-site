@@ -797,7 +797,7 @@ export const en = {
   "cohost.ok": "OK",
   "roles.youHost": "You host",
   "roles.mine": "I host",
-  "roles.all": "All on the account",
+  "roles.all": "All",
   "roles.mineTitle": "Tastings you host",
   "roles.mineNone": "You are not a host of any upcoming tasting.",
   "roles.othersOnAccount": "+ {n} more on the account – see all →",
