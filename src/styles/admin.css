@@ -687,7 +687,8 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .host-tag.owner { color: var(--amber); border-color: var(--amber); }
 .admin-page .host-tag.pending { font-style: italic; }
 .admin-page .host-row .text-btn { flex: none; }
-.admin-page .host-add input { flex: 1; min-width: 0; }
+.admin-page .host-add { flex-wrap: wrap; }
+.admin-page .host-add input { flex: 1 1 12rem; min-width: 0; }
 .admin-page .host-link { margin-top: 0.6rem; }
 .admin-page .host-link input { flex: 1; min-width: 0; font-size: 0.85rem; }
 .admin-page .tasting-card .cohost-tag { color: var(--amber); }

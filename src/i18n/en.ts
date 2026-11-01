@@ -721,4 +721,8 @@ export const en = {
   "wineMap.country": "Placed in the middle of the country – add an appellation to place it more precisely.",
   "wineMap.pending": "For now in the middle of the country – the appellation is looked up when you save.",
   "wineMap.regionWide": "The appellation covers the whole region.",
+  "hosts.nameLabel": "Name of the new host (optional)",
+  "hosts.namePlaceholder": "Name (optional)",
+  "hosts.mailSent": "We have emailed an invitation to {email}.",
+  "hosts.mailFailed": "The invitation email could not be sent.",
 } as const;

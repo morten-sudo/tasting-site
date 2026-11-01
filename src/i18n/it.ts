@@ -699,4 +699,8 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "wineMap.country": "Posizionato al centro del paese – aggiungi una denominazione per posizionarlo meglio.",
   "wineMap.pending": "Per ora al centro del paese – la denominazione viene cercata al salvataggio.",
   "wineMap.regionWide": "La denominazione copre tutta la regione.",
+  "hosts.nameLabel": "Nome del nuovo host (facoltativo)",
+  "hosts.namePlaceholder": "Nome (facoltativo)",
+  "hosts.mailSent": "Abbiamo inviato un invito via e-mail a {email}.",
+  "hosts.mailFailed": "Non è stato possibile inviare l’e-mail di invito.",
 };

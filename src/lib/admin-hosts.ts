@@ -2,7 +2,7 @@
 // co-hosts see the list. Everything goes through security-definer functions in the database.
 import { supabase } from './supabase';
 import { $, mk } from './admin-common';
-import { t } from '../i18n';
+import { t, lang } from '../i18n';
 
 type HostRow = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
 
@@ -66,6 +66,18 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     }));
   }
 
+  async function sendInvite(email: string, name: string) {
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      const res = await fetch('/api/invite-host', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ tasting_id: tastingId, email, name: name || null, lang: lang() }),
+      });
+      return res.ok && ((await res.json()) as { sent?: boolean }).sent === true;
+    } catch { return false; }
+  }
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = input.value.trim().toLowerCase();
@@ -79,10 +91,20 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
         : error.message.includes('too_many') ? t('hosts.tooMany') : t('hosts.failed'));
       return;
     }
+    const nameInput = $<HTMLInputElement>('host-name');
+    const name = nameInput.value.trim();
     input.value = '';
-    say(data === 'active' ? t('hosts.addedActive', { email }) : t('hosts.addedPending', { email }), true);
-    showLink(email);
+    nameInput.value = '';
+    const added = data === 'active' ? t('hosts.addedActive', { email }) : t('hosts.addedPending', { email });
+    $('host-link').hidden = true;
+    say(added, true);
     load();
+    // The invitation by email; if it cannot be sent, the link to send yourself
+    btn.disabled = true;
+    const sent = await sendInvite(email, name);
+    btn.disabled = false;
+    if (sent) say(`${added} ${t('hosts.mailSent', { email })}`, true);
+    else { say(`${added} ${t('hosts.mailFailed')}`, true); showLink(email); }
   });
 
   load();

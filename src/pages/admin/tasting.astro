@@ -82,6 +82,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
         <ul id="hosts-list" class="hosts-list"></ul>
         <form id="host-add" class="inline-form host-add" novalidate hidden>
+          <input id="host-name" type="text" autocomplete="off" maxlength="80" placeholder="Name (optional)" aria-label="Name of the new host (optional)" data-i18n-attr="placeholder=hosts.namePlaceholder;aria-label=hosts.nameLabel" />
           <input id="host-email" type="email" inputmode="email" autocomplete="off" placeholder="Email" aria-label="Email of the new host" data-i18n-attr="placeholder=common.email;aria-label=hosts.emailLabel" />
           <button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button>
         </form>

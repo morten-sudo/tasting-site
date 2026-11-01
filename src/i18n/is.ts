@@ -722,4 +722,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineMap.country": "Staðsett í miðju landsins – bættu við upprunaheiti til að staðsetja nánar.",
   "wineMap.pending": "Í bili í miðju landsins – upprunaheitið er flett upp þegar þú vistar.",
   "wineMap.regionWide": "Upprunaheitið nær yfir allt svæðið.",
+  "hosts.nameLabel": "Nafn nýja gestgjafans (valfrjálst)",
+  "hosts.namePlaceholder": "Nafn (valfrjálst)",
+  "hosts.mailSent": "Við höfum sent boð í tölvupósti til {email}.",
+  "hosts.mailFailed": "Ekki tókst að senda boðspóstinn.",
 };

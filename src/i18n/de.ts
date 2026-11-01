@@ -699,4 +699,8 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "wineMap.country": "In der Landesmitte platziert – fügen Sie eine Appellation hinzu, um ihn genauer zu platzieren.",
   "wineMap.pending": "Vorerst in der Landesmitte – die Appellation wird beim Speichern gesucht.",
   "wineMap.regionWide": "Die Appellation umfasst die ganze Region.",
+  "hosts.nameLabel": "Name des neuen Gastgebers (optional)",
+  "hosts.namePlaceholder": "Name (optional)",
+  "hosts.mailSent": "Wir haben eine Einladung per E-Mail an {email} geschickt.",
+  "hosts.mailFailed": "Die Einladungs-E-Mail konnte nicht gesendet werden.",
 };

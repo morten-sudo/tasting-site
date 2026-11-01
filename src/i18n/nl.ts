@@ -699,4 +699,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "wineMap.country": "Midden in het land geplaatst – voeg een herkomstbenaming toe om hem preciezer te plaatsen.",
   "wineMap.pending": "Voorlopig midden in het land – de herkomstbenaming wordt opgezocht bij het opslaan.",
   "wineMap.regionWide": "De herkomstbenaming beslaat de hele regio.",
+  "hosts.nameLabel": "Naam van de nieuwe gastheer (optioneel)",
+  "hosts.namePlaceholder": "Naam (optioneel)",
+  "hosts.mailSent": "We hebben een uitnodiging gemaild naar {email}.",
+  "hosts.mailFailed": "De uitnodigingsmail kon niet worden verstuurd.",
 };

@@ -722,4 +722,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineMap.country": "Placeret midt i landet – tilføj en appellation for at placere den mere præcist.",
   "wineMap.pending": "Indtil videre midt i landet – appellationen slås op, når du gemmer.",
   "wineMap.regionWide": "Appellationen dækker hele egnen.",
+  "hosts.nameLabel": "Navn på den nye vært (valgfrit)",
+  "hosts.namePlaceholder": "Navn (valgfrit)",
+  "hosts.mailSent": "Vi har sendt en invitation på mail til {email}.",
+  "hosts.mailFailed": "Invitationsmailen kunne ikke sendes.",
 };
