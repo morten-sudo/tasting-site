@@ -172,6 +172,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
 
         <ul id="guest-list" class="guest-list"></ul>
+        <!-- Edit one guest of the tasting: side panel -->
+        <dialog id="p-panel" class="sheet" aria-labelledby="p-panel-title">
+          <div class="sheet-head">
+            <h2 id="p-panel-title"></h2>
+            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          </div>
+          <div id="p-panel-body"></div>
+        </dialog>
         <p id="guest-empty" class="hint" hidden data-i18n="admin.noMatch">No guests match.</p>
       </section>
 
@@ -204,8 +212,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </div>
         <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
 
-        <form id="q-form" class="add-form quiz-form" novalidate hidden>
-          <h3 id="qf-title" data-i18n="aq.newQuestion">New question</h3>
+        <!-- New / edit question: side panel -->
+        <dialog id="q-panel" class="sheet wide" aria-labelledby="qf-title">
+        <div class="sheet-head">
+          <h2 id="qf-title" data-i18n="aq.newQuestion">New question</h2>
+          <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+        </div>
+        <form id="q-form" class="add-form quiz-form" novalidate>
           <label for="qf-question" data-i18n="aq.question">Question</label>
           <textarea id="qf-question" rows="2" maxlength="500"></textarea>
           <fieldset class="qf-fieldset">
@@ -222,6 +235,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <button id="qf-delete" class="text-btn danger" type="button" hidden data-i18n="aq.deleteQuestion">Delete question</button>
           </div>
         </form>
+        </dialog>
 
         <ol id="q-admin-list" class="q-admin-list"></ol>
         <p id="q-empty" class="hint" hidden data-i18n="aq.empty">No questions yet. Add the first one.</p>
@@ -243,7 +257,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initHosts } from '../../lib/admin-hosts';
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
-  import { requireHost, mk as mkEl, type Host } from '../../lib/admin-common';
+  import { requireHost, mk as mkEl, sheetPanel, type Host } from '../../lib/admin-common';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
@@ -393,7 +407,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const STATUS_ORDER: Record<string, number> = { yes: 0, invited: 1, no: 2 };
   let guestFilter = 'all';
   let guestQuery = '';
-  let editingId: string | null = null;
+  // Editing a guest of the tasting happens in a side panel
+  const guestPanel = sheetPanel($('p-panel') as HTMLDialogElement);
+  function openGuestPanel(p: P) {
+    $('p-panel-title').textContent = p.name;
+    $('p-panel-body').replaceChildren(editPanel(p));
+    guestPanel.open();
+  }
 
   function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
     const e = document.createElement(tag);
@@ -447,17 +467,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       catch { prompt(t('admin.copyLinkPrompt'), url); }
       setTimeout(() => (copy.textContent = t('admin.copyLink')), 1500);
     });
-    const edit = mk('button', 'text-btn', editingId === p.id ? t('admin.close') : t('admin.edit'));
+    const edit = mk('button', 'text-btn', t('admin.edit'));
     edit.type = 'button';
-    edit.setAttribute('aria-expanded', String(editingId === p.id));
-    edit.addEventListener('click', () => {
-      editingId = editingId === p.id ? null : p.id;
-      renderParticipants();
-    });
+    edit.addEventListener('click', () => openGuestPanel(p));
     actions.append(copy, edit);
     li.append(actions);
-
-    if (editingId === p.id) li.append(editPanel(p));
     return li;
   }
 
@@ -494,7 +508,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     save.type = 'submit';
     const cancel = mk('button', 'text-btn', t('common.cancel'));
     cancel.type = 'button';
-    cancel.addEventListener('click', () => { editingId = null; renderParticipants(); });
+    cancel.addEventListener('click', () => guestPanel.close());
 
     // Remove from this tasting (the guest stays in the guest list). Two taps; not when they have orders.
     const remove = mk('button', 'text-btn danger', t('adminTasting.removeGuest'));
@@ -505,7 +519,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       const { error } = await supabase.from('participants').delete().eq('id', p.id);
       if (error) { alert(t('admin.changeNotSaved')); return; }
       participants = participants.filter((x) => x.id !== p.id);
-      editingId = null;
+      guestPanel.close();
       renderParticipants();
       renderFee();
     });
@@ -517,10 +531,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       const email = em.value.trim().toLowerCase() || null;
       if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert(t('guest.emailBad')); return; }
       save.disabled = true;
-      if (await saveGuest(p, { status, email })) { editingId = null; renderParticipants(); }
+      if (await saveGuest(p, { status, email })) { guestPanel.close(); renderParticipants(); }
       save.disabled = false;
     });
-    setTimeout(() => em.focus(), 0);
     return form;
   }
 

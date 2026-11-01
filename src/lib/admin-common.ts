@@ -82,3 +82,18 @@ export function enableImageZoom(closeLabel: string) {
     dialog!.showModal();
   });
 }
+
+/**
+ * A side panel (<dialog class="sheet">): editing always happens here – from the right on larger
+ * screens, from the bottom on phones. Closes with its × button, Escape or a click beside it.
+ */
+export function sheetPanel(dialog: HTMLDialogElement, onClose?: () => void) {
+  dialog.querySelector('.sheet-close')?.addEventListener('click', () => dialog.close());
+  // A click on the backdrop lands on the dialog element itself
+  dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
+  dialog.addEventListener('close', () => onClose?.());
+  return {
+    open() { dialog.showModal(); dialog.scrollTop = 0; },
+    close() { if (dialog.open) dialog.close(); },
+  };
+}

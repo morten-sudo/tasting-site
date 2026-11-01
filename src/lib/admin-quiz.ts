@@ -1,6 +1,7 @@
 // Admin: the host writes the tasting's quiz – questions, 2–6 answers, the right answer and an explanation.
 import { supabase } from './supabase';
 import { t } from '../i18n';
+import { sheetPanel } from './admin-common';
 
 export type AdminQuestion = {
   id: number; tasting_id: string; sort_order: number; question: string;
@@ -26,6 +27,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   let editing: AdminQuestion | null = null;
 
   const form = $<HTMLFormElement>('q-form');
+  const panel = sheetPanel($<HTMLDialogElement>('q-panel'), () => { editing = null; });
   const list = $<HTMLOListElement>('q-admin-list');
   const optionsBox = $('qf-options');
 
@@ -82,16 +84,12 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     optionsBox.replaceChildren();
     const opts = q?.options?.length ? q.options : [{ key: 'a', text: '' }, { key: 'b', text: '' }, { key: 'c', text: '' }];
     for (const o of opts) optionRow(o.text, q?.correct_key === o.key);
-    form.hidden = false;
-    $('q-add-toggle').hidden = true;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    $<HTMLTextAreaElement>('qf-question').focus({ preventScroll: true });
+    panel.open();
+    if (matchMedia('(min-width: 48rem)').matches) $<HTMLTextAreaElement>('qf-question').focus({ preventScroll: true });
   }
 
   function closeForm() {
-    editing = null;
-    form.hidden = true;
-    $('q-add-toggle').hidden = false;
+    panel.close();
   }
 
   function render() {

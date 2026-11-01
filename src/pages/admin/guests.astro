@@ -16,8 +16,13 @@ import '../../styles/admin.css';
           <button id="add-toggle" class="btn small ghost" type="button" data-i18n="admin.addGuest">Add guest</button>
         </div>
 
-        <form id="guest-form" class="add-form" novalidate hidden>
-          <h3 id="gf-title" data-i18n="guestLib.newGuest">New guest</h3>
+        <!-- New / edit guest: side panel on larger screens, bottom sheet on phones -->
+        <dialog id="guest-panel" class="sheet" aria-labelledby="gf-title">
+        <div class="sheet-head">
+          <h2 id="gf-title" data-i18n="guestLib.newGuest">New guest</h2>
+          <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+        </div>
+        <form id="guest-form" class="add-form" novalidate>
           <label for="gf-name" data-i18n="admin.name">Name</label>
           <input id="gf-name" type="text" autocomplete="off" required />
           <label for="gf-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
@@ -29,6 +34,7 @@ import '../../styles/admin.css';
             <button id="gf-delete" class="text-btn danger" type="button" hidden data-i18n="guestLib.delete">Delete guest</button>
           </div>
         </form>
+        </dialog>
 
         <ul id="guest-list" class="lib-list"></ul>
         <p id="guest-empty" class="hint" hidden data-i18n="guestLib.empty">No guests yet. Add the first one.</p>
@@ -40,7 +46,7 @@ import '../../styles/admin.css';
 
 <script>
   import { supabase } from '../../lib/supabase';
-  import { requireHost, $, mk } from '../../lib/admin-common';
+  import { requireHost, $, mk, sheetPanel } from '../../lib/admin-common';
   import { t, type Key } from '../../i18n';
 
   type Invite = { status: string; tastings: { slug: string; title: string } | null };
@@ -50,6 +56,7 @@ import '../../styles/admin.css';
   const STATUS: Record<string, Key> = { yes: 'status.yes', no: 'status.no', invited: 'status.invited' };
   let guests: G[] = [];
   let editing: G | null = null;
+  const panel = sheetPanel($<HTMLDialogElement>('guest-panel'), () => { editing = null; });
 
   const host = await requireHost();
   if (host) {
@@ -103,15 +110,12 @@ import '../../styles/admin.css';
     del.hidden = !g;
     del.textContent = t('guestLib.delete');
     delete del.dataset.armed;
-    form.hidden = false;
-    $('add-toggle').hidden = true;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    $<HTMLInputElement>('gf-name').focus({ preventScroll: true });
+    panel.open();
+    // On phones the keyboard would cover the panel, so only focus a field on larger screens
+    if (matchMedia('(min-width: 48rem)').matches) $<HTMLInputElement>('gf-name').focus({ preventScroll: true });
   }
   function closeForm() {
-    editing = null;
-    $('guest-form').hidden = true;
-    $('add-toggle').hidden = false;
+    panel.close();
   }
   const showMsg = (text: string) => { $('gf-msg').textContent = text; $('gf-msg').hidden = false; };
 

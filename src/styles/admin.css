@@ -722,3 +722,5 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 @media (max-width: 40rem) {
   .ta-tabs { gap: 1.25rem; margin-left: calc(-1 * var(--gutter)); margin-right: calc(-1 * var(--gutter)); padding: 0 var(--gutter); }
 }
+/* The guest form inside the side panel: no card of its own */
+.admin-page dialog.sheet .edit-panel { margin: 0; padding: 0; background: none; max-width: none; gap: 0.5rem; }
