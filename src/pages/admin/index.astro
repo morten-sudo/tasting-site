@@ -23,6 +23,13 @@ import '../../styles/admin.css';
       </div>
 
       <div class="dash-grid">
+        <!-- The tastings I host myself (the account may have many more) -->
+        <section id="mine-card" class="dash-card dash-wide mine-card" hidden>
+          <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
+          <ul id="mine" class="mine-list"></ul>
+          <p id="mine-none" class="hint" hidden data-i18n="roles.mineNone">You are not a host of any upcoming tasting.</p>
+          <a id="mine-all" class="text-btn" href="/admin/tastings/" hidden></a>
+        </section>
         <!-- Next tasting -->
         <section class="dash-card">
           <h2 data-i18n="dash.next">Next tasting</h2>
@@ -52,6 +59,7 @@ import '../../styles/admin.css';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, money, locale, formatWhen, type Key } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
+  import { tastingRoles } from '../../lib/admin-side';
 
   type Dash = {
     tastings: number; upcoming: number; guests: number; wines: number;
@@ -142,6 +150,36 @@ import '../../styles/admin.css';
       : activity('★', 'dash.latestRating', t('dash.none'), '', null));
   }
 
+  // ---------- The tastings I host ----------
+  async function showMine() {
+    const roles = await tastingRoles();
+    if (!roles.length) return;
+    const hosting = new Set(roles.filter((x) => x.hosting).map((x) => x.tasting_id));
+    const { data } = await supabase.from('tastings')
+      .select('id, slug, title, starts_at, participants(status)')
+      .in('id', [...hosting]).order('starts_at', { ascending: true, nullsFirst: false });
+    type R = { id: string; slug: string; title: string; starts_at: string | null; participants: { status: string }[] };
+    const cutoff = Date.now() - 24 * 3600 * 1000;
+    const upcoming = ((data ?? []) as R[]).filter((x) => !x.starts_at || new Date(x.starts_at).getTime() >= cutoff);
+    $('mine').replaceChildren(...upcoming.map((x) => {
+      const li = mk('li');
+      const a = mk('a', 'mine-item');
+      a.href = adminUrl(x.slug);
+      a.append(mk('span', 'mine-title', x.title));
+      const coming = x.participants.filter((p) => p.status === 'yes').length;
+      const meta = [x.starts_at ? formatWhen(x.starts_at, { year: true }) : null, t('tastingsAdmin.guests', { coming, n: x.participants.length })].filter(Boolean).join(' · ');
+      a.append(mk('span', 'mine-meta', meta));
+      li.append(a);
+      return li;
+    }));
+    $('mine-none').hidden = upcoming.length > 0;
+    // When the account has tastings others host: say so, with the way to all of them
+    const others = roles.length - hosting.size;
+    $('mine-all').hidden = others === 0;
+    $('mine-all').textContent = t('roles.othersOnAccount', { n: others });
+    $('mine-card').hidden = false;
+  }
+
   // ---------- Startup ----------
   const host = await requireHost();
   if (host) {
@@ -149,6 +187,7 @@ import '../../styles/admin.css';
     const wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
     $('new-toggle').addEventListener('click', () => wizard.openNew());
     document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
+    showMine();
     const { data } = await supabase.rpc('host_dashboard');
     if (data && typeof data === 'object' && 'tastings' in data) render(data as Dash);
   }

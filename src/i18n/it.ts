@@ -725,4 +725,10 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "cohost.welcomeText": "Ora sei collegato a {tasting} come co-host.",
   "cohost.goTo": "Vai alla degustazione",
   "cohost.ok": "OK",
+  "roles.youHost": "Sei host",
+  "roles.mine": "Sono host",
+  "roles.all": "Tutte nell’account",
+  "roles.mineTitle": "Degustazioni di cui sei host",
+  "roles.mineNone": "Non sei host di nessuna degustazione in arrivo.",
+  "roles.othersOnAccount": "+ {n} altre nell’account – vedi tutte →",
 };

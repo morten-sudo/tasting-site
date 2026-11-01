@@ -761,3 +761,19 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .super-shell .tn-plan { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; font-weight: 400; color: var(--muted); }
 .super-shell .tn-plan select { width: auto; margin: 0; padding: 0.3rem 0.5rem; min-height: 0; font-size: 0.9rem; }
 .super-shell .wine-mini { width: 2rem; height: 2.6rem; object-fit: contain; background: #fff; border-radius: 0.3rem; }
+
+/* "You host": the tastings the signed-in host hosts themselves */
+.admin-page .host-badge {
+  justify-self: start;
+  align-self: flex-start; flex: none; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--amber); color: #fff; white-space: nowrap;
+}
+.admin-page .tasting-card.is-mine { border-color: var(--amber); box-shadow: inset 3px 0 0 var(--amber); }
+.admin-page .mine-card { border-color: var(--amber); }
+.admin-page .mine-list { list-style: none; margin: 0 0 0.4rem; padding: 0; display: grid; gap: 0.5rem; }
+.admin-page .mine-item { display: grid; gap: 0.2rem; padding: 0.7rem 0.8rem; border-radius: 0.6rem; background: var(--lodge); color: var(--paper); text-decoration: none; border: 1px solid var(--lodge-3); }
+.admin-page .mine-item:hover { border-color: var(--amber); }
+.admin-page .mine-title { font-family: var(--display); font-size: 1.4rem; line-height: 1.1; }
+.admin-page .mine-meta { font-size: 0.88rem; color: var(--muted); }
+/* The menu: a small dot before the tastings I host */
+.side-list a.mine::before { content: '●'; color: var(--amber); font-size: 0.6rem; margin-right: 0.45rem; vertical-align: 0.15em; }

@@ -725,4 +725,10 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "cohost.welcomeText": "Je bent nu als medegastheer gekoppeld aan {tasting}.",
   "cohost.goTo": "Naar de proeverij",
   "cohost.ok": "OK",
+  "roles.youHost": "Jij bent gastheer",
+  "roles.mine": "Ik ben gastheer",
+  "roles.all": "Alles in het account",
+  "roles.mineTitle": "Proeverijen waarvan je gastheer bent",
+  "roles.mineNone": "Je bent geen gastheer van een komende proeverij.",
+  "roles.othersOnAccount": "+ {n} meer in het account – alles bekijken →",
 };

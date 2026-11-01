@@ -12,7 +12,12 @@ import '../../styles/admin.css';
       <h1 class="title" data-i18n="adminNav.tastings">Tastings</h1>
       <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
 
-      <div class="guests-head" style="justify-content:flex-end">
+      <div class="guests-head">
+        <!-- Mine: the tastings I host myself; All: everything on the account -->
+        <div id="t-filter" class="filters" role="tablist" hidden>
+          <button type="button" role="tab" data-f="mine" aria-selected="true"><b data-i18n="roles.mine">I host</b> <span id="n-mine"></span></button>
+          <button type="button" role="tab" data-f="all" aria-selected="false"><b data-i18n="roles.all">All on the account</b> <span id="n-all"></span></button>
+        </div>
         <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
       </div>
 
@@ -35,13 +40,15 @@ import '../../styles/admin.css';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, formatWhen } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
-  import { hostedTastings } from '../../lib/admin-side';
+  import { tastingRoles } from '../../lib/admin-side';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
     participants: { status: string }[]; tasting_wines: { count: number }[] };
 
   let host: Awaited<ReturnType<typeof requireHost>> = null;
-  let cohosted = new Set<string>();
+  let hosting = new Set<string>();
+  let rows: Row[] = [];
+  let filter: 'mine' | 'all' = 'mine';
 
   const adminUrl = (slug: string) => `/t/${slug}/admin/`;
 
@@ -58,29 +65,47 @@ import '../../styles/admin.css';
       mk('span', '', t('tastingsAdmin.guests', { coming, n: r.participants.length })),
       mk('span', '', t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })),
     );
-    if (cohosted.has(r.id)) stats.append(mk('span', 'cohost-tag', t('hosts.cohost')));
+    if (hosting.has(r.id)) a.prepend(mk('span', 'host-badge', t('roles.youHost')));
+    a.classList.toggle('is-mine', hosting.has(r.id));
     a.append(stats);
     li.append(a);
     return li;
   }
 
   async function load() {
-    const hosted = await hostedTastings();
-    cohosted = new Set(hosted.filter((x) => !x.owner).map((x) => x.tasting_id));
+    const roles = await tastingRoles();
+    hosting = new Set(roles.filter((x) => x.hosting).map((x) => x.tasting_id));
     const { data } = await supabase.from('tastings')
       .select('id, slug, title, starts_at, place, participants(status), tasting_wines(count)')
-      .in('id', hosted.map((x) => x.tasting_id))
+      .in('id', roles.map((x) => x.tasting_id))
       .order('starts_at', { ascending: true, nullsFirst: false });
-    const rows = (data ?? []) as Row[];
+    rows = (data ?? []) as Row[];
+    // The filter only matters when the account has tastings I do not host
+    const mine = rows.filter((r) => hosting.has(r.id)).length;
+    $('n-mine').textContent = String(mine);
+    $('n-all').textContent = String(rows.length);
+    $('t-filter').hidden = mine === rows.length;
+    filter = mine > 0 ? 'mine' : 'all';
+    render();
+  }
+
+  function render() {
+    document.querySelectorAll<HTMLButtonElement>('#t-filter button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.f === filter)));
+    const shown = rows.filter((r) => filter === 'all' || hosting.has(r.id));
     const cutoff = Date.now() - 24 * 3600 * 1000;
-    const upcoming = rows.filter((r) => !r.starts_at || new Date(r.starts_at).getTime() >= cutoff);
-    const past = rows.filter((r) => r.starts_at && new Date(r.starts_at).getTime() < cutoff).reverse();
+    const upcoming = shown.filter((r) => !r.starts_at || new Date(r.starts_at).getTime() >= cutoff);
+    const past = shown.filter((r) => r.starts_at && new Date(r.starts_at).getTime() < cutoff).reverse();
     $('upcoming').replaceChildren(...upcoming.map(card));
     $('past').replaceChildren(...past.map(card));
     $('upcoming-h').hidden = upcoming.length === 0 || past.length === 0;
     $('past-h').hidden = past.length === 0;
     $('intro').hidden = rows.length > 0;
   }
+
+  document.querySelectorAll<HTMLButtonElement>('#t-filter button').forEach((b) => b.addEventListener('click', () => {
+    filter = b.dataset.f as 'mine' | 'all';
+    render();
+  }));
 
   // ---------- New tasting: the four-step guide ----------
   let wizard: ReturnType<typeof initWizard> | null = null;

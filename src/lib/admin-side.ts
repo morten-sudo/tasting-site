@@ -24,7 +24,8 @@ export function currentAdmin() {
   return { slug: m[1], section: section.id };
 }
 
-type Row = { slug: string; title: string; starts_at: string | null };
+type Row = { id: string; slug: string; title: string; starts_at: string | null };
+export type TastingRole = { tasting_id: string; hosting: boolean; can_manage: boolean };
 
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: string) {
@@ -50,9 +51,14 @@ export function markSection(section: string) {
   setOpen(false);
 }
 
-function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>) {
+function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>, hosting: Set<string>) {
   const li = mk('li');
   const a = mk('a', '', r.title);
+  // The tastings I host myself are marked (the account may have many)
+  if (hosting.has(r.id)) {
+    a.classList.add('mine');
+    a.title = t('roles.youHost');
+  }
   a.href = adminUrl(r.slug);
   li.append(a);
   // The tasting's sections are tabs in the bar at the top; here it is only marked
@@ -74,25 +80,28 @@ export async function initSide(hostId: string) {
   $('side-backdrop').addEventListener('click', () => setOpen(false));
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
 
-  const ids = (await hostedTastings()).map((x) => x.tasting_id);
-  const { data } = await supabase.from('tastings').select('slug, title, starts_at')
+  const roles = await tastingRoles();
+  const ids = roles.map((x) => x.tasting_id);
+  const hosting = new Set(roles.filter((x) => x.hosting).map((x) => x.tasting_id));
+  const { data } = await supabase.from('tastings').select('id, slug, title, starts_at')
     .in('id', ids).order('starts_at', { ascending: true, nullsFirst: false });
   const rows = (data ?? []) as Row[];
   const cutoff = Date.now() - 24 * 3600 * 1000;
   const isPast = (r: Row) => !!r.starts_at && new Date(r.starts_at).getTime() < cutoff;
   const current = currentAdmin();
-  $('side-tastings').replaceChildren(...rows.filter((r) => !isPast(r)).map((r) => tastingItem(r, current)));
+  $('side-tastings').replaceChildren(...rows.filter((r) => !isPast(r)).map((r) => tastingItem(r, current, hosting)));
   const past = rows.filter(isPast).reverse();
   $('side-past').hidden = past.length === 0;
-  $('side-past-list').replaceChildren(...past.map((r) => tastingItem(r, current)));
+  $('side-past-list').replaceChildren(...past.map((r) => tastingItem(r, current, hosting)));
   if (current && past.some((r) => r.slug === current.slug)) ($('side-past') as HTMLDetailsElement).open = true;
 
   if (current) markSection(current.section);
 
 }
 
-/** The tastings I host – my own and those I co-host (not every tenant's, even for an administrator). */
-export async function hostedTastings(): Promise<{ tasting_id: string; owner: boolean }[]> {
-  const { data } = await supabase.rpc('my_hosted_tastings');
-  return (data ?? []) as { tasting_id: string; owner: boolean }[];
+/** The account's tastings (and those I co-host on other accounts), with my part in each. */
+let rolesOnce: Promise<TastingRole[]> | null = null;
+export function tastingRoles(): Promise<TastingRole[]> {
+  return (rolesOnce ??= supabase.rpc('my_tasting_roles').then(({ data }) =>
+    ((data ?? []) as TastingRole[]).map((x) => ({ ...x, hosting: !!x.hosting, can_manage: !!x.can_manage }))));
 }

@@ -139,6 +139,7 @@ begin
   assert (select count(*) from tenant_members()) = 2, 'removing someone from another account changes this one';
   failed := false; begin perform set_tenant_name('x'); exception when others then failed := true; end;
   assert not failed, 'the owner cannot name the account';
+  select count(*) into n from my_tasting_roles() where hosting and can_manage;                              assert n = 1, 'host A''s roles are wrong';
 end $$;
 reset role;
 
@@ -172,6 +173,7 @@ begin
   select count(*) into n from hosts where id = '00000000-0000-4000-a000-00000000000a' and tenant_id is not null;
   assert n = 1, 'host D can move the owner off the account';
   assert not is_tasting_owner('00000000-0000-4000-b000-00000000000a'), 'host D can manage the hosts of A''s tasting';
+  select count(*) into n from my_tasting_roles() where not hosting and not can_manage;                      assert n = 1, 'host D''s roles are wrong';
 end $$;
 reset role;
 
@@ -232,6 +234,7 @@ begin
   select count(*) into n from tasting_cohosts('00000000-0000-4000-b000-00000000000a');                     assert n = 2, 'the co-host cannot see the hosts';
   failed := false; begin perform count(*) from tasting_hosts; exception when others then failed := true; end;
   assert failed, 'tasting_hosts is readable directly';
+  select count(*) into n from my_tasting_roles() where hosting and not can_manage;                          assert n = 1, 'the co-host''s roles are wrong';
 end $$;
 reset role;
 
@@ -334,6 +337,8 @@ begin
   assert failed, 'anyone can remove a host from an account';
   failed := false; begin perform * from link_me_tastings(); exception when others then failed := true; end;
   assert failed, 'anyone can call link_me_tastings';
+  failed := false; begin perform * from my_tasting_roles(); exception when others then failed := true; end;
+  assert failed, 'anyone can call my_tasting_roles';
   -- …while a guest's own chat works
   perform post_chat('selftestaa', 'hi from A');
   select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';

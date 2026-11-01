@@ -795,4 +795,10 @@ export const en = {
   "cohost.welcomeText": "You are now linked to {tasting} as co-host.",
   "cohost.goTo": "Go to the tasting",
   "cohost.ok": "OK",
+  "roles.youHost": "You host",
+  "roles.mine": "I host",
+  "roles.all": "All on the account",
+  "roles.mineTitle": "Tastings you host",
+  "roles.mineNone": "You are not a host of any upcoming tasting.",
+  "roles.othersOnAccount": "+ {n} more on the account – see all →",
 } as const;

@@ -796,4 +796,10 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "cohost.welcomeText": "Du er nu koblet på {tasting} som medvært.",
   "cohost.goTo": "Gå til smagningen",
   "cohost.ok": "OK",
+  "roles.youHost": "Du er vært",
+  "roles.mine": "Jeg er vært",
+  "roles.all": "Alle på kontoen",
+  "roles.mineTitle": "Smagninger du er vært for",
+  "roles.mineNone": "Du er ikke vært for nogen kommende smagning.",
+  "roles.othersOnAccount": "+ {n} flere på kontoen – se alle →",
 };
