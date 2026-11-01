@@ -88,7 +88,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         <div class="ctx">
           <!-- Tasting context: which tasting (with a switcher), its tabs, and the way between guest page and admin -->
           <div class="ctx-bar">
-            {adminTasting && <span class="t-crumb"><a href="/admin/">Admin</a><span aria-hidden="true">›</span></span>}
             <button id="t-switch" type="button" class="t-switch" aria-haspopup="true" aria-expanded="false" aria-controls="t-menu" disabled>
               <span id="t-title" class="t-title"></span>
               <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
@@ -309,11 +308,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           const { data: one } = await supabase.from('tastings').select('title').eq('slug', slug).maybeSingle();
           if (one) document.getElementById('t-title')!.textContent = (one as { title: string }).title;
         }
-        // Switching keeps the current section
-        fillSwitcher(rows, (s) => {
-          const cur = document.querySelector<HTMLAnchorElement>('#admin-tabs a.current')?.dataset.apath ?? '';
-          return `/t/${s}/admin/${cur}`;
-        });
+        // Switching tasting is done in the admin menu on the left, so the name here is not a switcher
       }
       if (inAdmin) initAdminBar();
 
@@ -485,9 +480,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   .t-switch:disabled { opacity: 1; }
   .t-switch .chev { display: none; }
   .t-switch.can-switch { cursor: pointer; }
-  .t-crumb { flex: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-right: -0.9rem; font-size: 0.95rem; color: var(--muted); }
-  .t-crumb a { color: var(--muted); text-decoration: none; }
-  .t-crumb a:hover { color: var(--amber); }
   .t-switch.can-switch .chev { display: block; color: var(--muted); }
   .t-switch.can-switch:hover .chev, .t-switch[aria-expanded='true'] .chev { color: var(--amber); }
   .t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; }
@@ -519,7 +511,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     /* Two rows: the tasting (and Admin) on top, the tabs below – scrolling sideways if they do not fit */
     .ctx-bar { flex-wrap: wrap; gap: 0 0.75rem; overflow: visible; }
     .t-switch { flex: 1 1 0; padding: 0.55rem 0 0.15rem; }
-    .t-crumb { margin-right: -0.35rem; padding-top: 0.4rem; }
     .t-title { max-width: none; }
     .t-admin { margin-top: 0.4rem; }
     nav {

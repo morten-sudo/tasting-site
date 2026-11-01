@@ -1,12 +1,11 @@
 ---
 // Admin shell shared by all host pages: the menu on the left (a drawer on phones),
 // the signed-in line and the "not a host" notice. Page content goes in the slot.
-// tasting: a tasting's admin page – its navigation is the bar at the top, so no menu on the left
-interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'payments' | 'super'; tasting?: boolean }
-const { active, tasting = false } = Astro.props;
+interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'payments' | 'super' }
+const { active } = Astro.props;
 const cur = (key: string) => (active === key ? 'page' : undefined);
 ---
-<div class:list={['admin-shell', { 'in-tasting': tasting }]}>
+<div class="admin-shell">
   <p id="not-host" class="message error" hidden>
     <span data-i18n-html="admin.notHost">You are signed in but not registered as a host. <a href="/signup/">Become a host</a></span> ·
     <button id="logout2" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
