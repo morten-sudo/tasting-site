@@ -808,3 +808,6 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .new-guest-btn:hover { text-decoration: underline; }
 .admin-page .new-guest-btn[hidden] { display: none; }
 .admin-page #g-panel .add-form { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--lodge-3); }
+.admin-page #tw-panel .search { width: 100%; margin: 0.3rem 0 0.6rem; }
+.admin-page #tw-panel .picker-list { max-height: none; }
+.admin-page #tw-panel .tw-new { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--lodge-3); }

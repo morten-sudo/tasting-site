@@ -1,7 +1,7 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
 // and whether guests can see and order them. Ratings from the guests are shown per wine.
 import { supabase } from './supabase';
-import { $, mk, toNumber } from './admin-common';
+import { $, mk, toNumber, sheetPanel } from './admin-common';
 import { styleName } from './wines';
 import { t, locale } from '../i18n';
 
@@ -210,6 +210,8 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
         const { error } = await supabase.from('tasting_wines').insert(row);
         if (error) { add.disabled = false; alert(t('admin.changeNotSaved')); return; }
         rows.push({ ...row, orderable: true, revealed: true, wines: w });
+        $('tw-msg').textContent = t('adminTasting.wineAdded', { name: w.name });
+        $('tw-msg').hidden = false;
         render();
       });
       li.append(text, add);
@@ -218,16 +220,16 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
     $('tw-picker-empty').hidden = candidates.length > 0;
   }
 
+  // The panel stays open, so several wines can be added in a row
+  const panel = sheetPanel($<HTMLDialogElement>('tw-panel'));
   $('tw-add-toggle').addEventListener('click', () => {
-    $('tw-picker').hidden = false;
-    $('tw-add-toggle').hidden = true;
-    $<HTMLInputElement>('tw-search').focus();
+    $<HTMLInputElement>('tw-search').value = '';
+    $('tw-msg').hidden = true;
+    renderPicker();
+    panel.open();
+    if (matchMedia('(min-width: 48rem)').matches) $<HTMLInputElement>('tw-search').focus();
   });
-  $('tw-picker-close').addEventListener('click', () => {
-    $('tw-picker').hidden = true;
-    $('tw-add-toggle').hidden = false;
-  });
-  $('tw-search').addEventListener('input', renderPicker);
+  $('tw-search').addEventListener('input', () => { $('tw-msg').hidden = true; renderPicker(); });
 
   async function load() {
     const cols = 'id, name, producer, style, vintage, image_url, retail_price_dkk, offer_price_dkk, offer_quantity';

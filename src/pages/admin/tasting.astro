@@ -142,16 +142,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block wines-admin" data-section="wines">
         <div class="guests-head">
           <h2 data-i18n="page.wines">Wines</h2>
-          <button id="tw-add-toggle" class="btn small ghost" type="button" data-i18n="adminTasting.addWines">Add wines</button>
+          <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWine">Add wine</button>
         </div>
-        <div id="tw-picker" class="picker" hidden>
+        <!-- Add wines from the account's wine list: side panel -->
+        <dialog id="tw-panel" class="sheet" aria-labelledby="tw-panel-title">
+          <div class="sheet-head">
+            <h2 id="tw-panel-title" data-i18n="adminTasting.addWine">Add wine</h2>
+            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          </div>
           <label for="tw-search" data-i18n="adminTasting.pickWines">Choose from your wines</label>
           <input id="tw-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+          <p id="tw-msg" class="message ok" hidden aria-live="polite"></p>
           <ul id="tw-picker-list" class="picker-list"></ul>
           <p id="tw-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreWines">No other wines in your library.</p>
-          <p class="hint" data-i18n-html="adminTasting.newWineHint">A new wine? Create it under <a href="/admin/wines/">Wines</a> first.</p>
-          <button id="tw-picker-close" class="text-btn" type="button" data-i18n="admin.close">Close</button>
-        </div>
+          <p class="hint tw-new" data-i18n-html="adminTasting.newWineHint">A new wine? Create it under <a href="/admin/wines/">Wines</a> first.</p>
+        </dialog>
         <ul id="tw-list" class="lib-list"></ul>
         <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
       </section>

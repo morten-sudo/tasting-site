@@ -810,4 +810,6 @@ export const en = {
   "adminTasting.newGuest": "+ New guest",
   "adminTasting.newGuestNamed": "+ New guest: {name}",
   "adminTasting.invitedName": "{name} is invited.",
+  "adminTasting.addWine": "Add wine",
+  "adminTasting.wineAdded": "{name} is added.",
 } as const;
