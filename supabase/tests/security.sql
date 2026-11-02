@@ -87,6 +87,14 @@ begin
   failed := false; begin update wines set producer_website = 'javascript:alert(1)' where id = -1001; exception when others then failed := true; end;
   assert failed, 'a wine can link to something that is not a web address';
   update wines set producer_website = 'https://www.example.com/', producer_lat = 45.1, producer_lon = -0.7 where id = -1001; get diagnostics n = row_count; assert n = 1, 'host A cannot save the producer''s place';
+  -- LWIN: a host can search and read, never load or count
+  select count(*) into n from search_lwin('lynch bages');                                                    assert n > 0, 'host A cannot search LWIN';
+  select count(*) into n from (select 1 from lwin_wines limit 1) x;                                          assert n = 1, 'host A cannot read LWIN';
+  failed := false; begin perform admin_lwin_import('[[1, "x", "x", "x", null, null, null, null, null, null]]'::jsonb); exception when others then failed := true; end;
+  assert failed, 'host A can load LWIN';
+  assert admin_lwin_count() is null, 'host A gets the LWIN count';
+  failed := false; begin update wines set classification = repeat('x', 81) where id = -1001; exception when others then failed := true; end;
+  assert failed, 'a wine can have an over-long classification';
   delete from participants where id = '00000000-0000-4000-d000-00000000000b'; get diagnostics n = row_count; assert n = 0, 'host A can delete host B''s guest';
   update orders set paid = true where id = -2002; get diagnostics n = row_count;                            assert n = 0, 'host A can change host B''s order';
   -- Creating rows in B's name is refused
@@ -265,6 +273,8 @@ begin
   select count(*) into n from participants where id::text like '00000000-0000-4000-d000-%';                 assert n = 0, 'a guest can read participants directly';
   select count(*) into n from orders where id in (-2001, -2002);                                            assert n = 0, 'a guest can read orders directly';
   assert host_dashboard() is null, 'a guest gets a host overview';
+  select count(*) into n from lwin_wines;                                                                     assert n = 0, 'a guest can read LWIN';
+  select count(*) into n from search_lwin('lynch bages');                                                    assert n = 0, 'a guest can search LWIN';
 end $$;
 reset role;
 
@@ -279,6 +289,10 @@ begin
   select count(*) into n from guests where id::text like '00000000-0000-4000-c000-%';                       assert n = 0, 'anyone can read guests';
   select count(*) into n from wines where id in (-1001, -1002);                                             assert n = 0, 'anyone can read wines';
   select count(*) into n from hosts where id::text like '00000000-0000-4000-a000-%';                        assert n = 0, 'anyone can read hosts';
+  failed := false; begin select count(*) into n from lwin_wines; exception when others then failed := true; end;
+  assert failed or n = 0, 'anyone can read LWIN';
+  failed := false; begin perform search_lwin('lynch bages'); exception when others then failed := true; end;
+  assert failed, 'anyone can search LWIN';
   -- The code decides the tasting
   j := get_tasting('selftestaa', null);
   assert j ->> 'id' = '00000000-0000-4000-b000-00000000000a', 'code A does not give tasting A';
