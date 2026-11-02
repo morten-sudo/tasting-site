@@ -54,13 +54,29 @@ import '../../styles/admin.css';
         </div>
 
         <!-- New / edit wine: side panel on larger screens, bottom sheet on phones -->
+        <!-- One dialog, two ways: a new wine is a guide in four steps (class "wizard", one step at a time);
+             editing a wine is the side panel from the right (class "sheet wide", every step below the other). -->
         <dialog id="wine-panel" class="sheet wide" aria-labelledby="wf-title">
-        <div class="sheet-head">
-          <h2 id="wf-title" data-i18n="admin.newWine">New wine</h2>
-          <button id="wf-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+        <div class="wf-head">
+          <div class="sheet-head">
+            <h2 id="wf-title" data-i18n="admin.newWine">New wine</h2>
+            <button id="wf-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          </div>
+          <ol id="wf-steps" class="wz-steps" hidden>
+            {[['wineWizard.source', 'Source'], ['wineWizard.wine', 'The wine'], ['wineWizard.origin', 'Origin'], ['wineWizard.price', 'Price & description']].map(([key, text], i) => (
+              <li>
+                <button type="button" class="wz-step" data-step={i}>
+                  <span class="wz-num">{i + 1}</span>
+                  <span class="wz-label"><b data-i18n={key}>{text}</b></span>
+                </button>
+              </li>
+            ))}
+          </ol>
         </div>
         <form id="wine-form" class="add-form wine-form" novalidate>
-          <!-- Two ways to fill in the form automatically (new wines) -->
+        <div class="wf-body">
+          <!-- 1. Source: a photo of the label, a link, or by hand (new wines); a link (editing) -->
+          <section class="wf-step" data-step="0">
           <div id="wf-start" class="wf-start">
             <div class="start-tiles">
               <label class="start-tile" for="wf-camera">
@@ -74,9 +90,13 @@ import '../../styles/admin.css';
                 <b data-i18n="start.link">Link to the wine</b>
                 <span data-i18n="start.linkText">Paste a link from a web shop</span>
               </button>
+              <button id="wf-start-manual" class="start-tile" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z" /><path d="M13.5 6.5l4 4" /></svg>
+                <b data-i18n="wineWizard.manual">Fill in yourself</b>
+                <span data-i18n="wineWizard.manualText">Type in what you know</span>
+              </button>
             </div>
             <p id="wf-start-status" class="label-status" hidden aria-live="polite"></p>
-            <p class="hint start-or" data-i18n="start.orManual">… or fill in the fields yourself.</p>
           </div>
           <div id="wf-link-box" class="wf-link-box">
           <label for="wf-link"><span data-i18n="link.label">Link to the wine</span> <span class="hint" data-i18n="link.hint">(e.g. from a web shop – fills in the form)</span></label>
@@ -86,6 +106,10 @@ import '../../styles/admin.css';
           </div>
           <p id="wf-link-status" class="label-status" hidden aria-live="polite"></p>
           </div>
+          </section>
+
+          <!-- 2. The wine -->
+          <section class="wf-step" data-step="1">
           <!-- Where the wine's data came from, with a button that fetches it again -->
           <div id="wf-source" class="wf-source" hidden>
             <div class="wf-source-row">
@@ -107,12 +131,6 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input id="wf-producer" type="text" />
-          <!-- The producer's website and address: found as soon as the producer is known (link, label or typed), or typed here -->
-          <label for="wf-producer-website"><span data-i18n="producer.website">Producer's website</span> <span class="hint" data-i18n="producer.websiteHint">(found automatically from the producer)</span></label>
-          <input id="wf-producer-website" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
-          <p id="wf-producer-status" class="producer-status" hidden aria-live="polite"></p>
-          <label for="wf-producer-address" data-i18n="producer.address">Producer's address</label>
-          <input id="wf-producer-address" type="text" autocomplete="off" />
           <div class="wf-pair">
             <div>
               <label for="wf-style" data-i18n="admin.style">Type</label>
@@ -126,6 +144,12 @@ import '../../styles/admin.css';
               </div>
             </div>
           </div>
+          <label for="wf-abv" data-i18n="admin.abv">Alcohol (%)</label>
+          <input id="wf-abv" type="text" inputmode="decimal" class="short" />
+          </section>
+
+          <!-- 3. Origin and the producer -->
+          <section class="wf-step" data-step="2">
           <!-- Origin: country → region → appellation; each list narrows the next, and a known appellation fills in the rest -->
           <div class="wf-pair">
             <div>
@@ -146,6 +170,16 @@ import '../../styles/admin.css';
             <div id="wf-map-svg" class="wf-map-svg"></div>
             <p id="wf-map-note" class="hint"></p>
           </div>
+          <!-- The producer's website and address: found as soon as the producer is known (link, label or typed), or typed here -->
+          <label for="wf-producer-website"><span data-i18n="producer.website">Producer's website</span> <span class="hint" data-i18n="producer.websiteHint">(found automatically from the producer)</span></label>
+          <input id="wf-producer-website" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
+          <p id="wf-producer-status" class="producer-status" hidden aria-live="polite"></p>
+          <label for="wf-producer-address" data-i18n="producer.address">Producer's address</label>
+          <input id="wf-producer-address" type="text" autocomplete="off" />
+          </section>
+
+          <!-- 4. Price and description; a new wine can go straight into a tasting -->
+          <section class="wf-step" data-step="3">
           <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
           <input id="wf-retail" type="text" inputmode="decimal" />
           <label for="wf-offer-price"><span data-i18n="wineLib.offer">Shop offer</span> <span class="hint" data-i18n="wineLib.offerHint">(optional – becomes the quantity price when you add the wine to a tasting)</span></label>
@@ -155,18 +189,36 @@ import '../../styles/admin.css';
             <input id="wf-offer-qty" type="text" inputmode="numeric" placeholder="6" aria-label="Number of bottles" data-i18n-attr="aria-label=adminTasting.bulkQty" />
             <span data-i18n="adminTasting.bulkBottles">bottles</span>
           </div>
-          <label for="wf-abv" data-i18n="admin.abv">Alcohol (%)</label>
-          <input id="wf-abv" type="text" inputmode="decimal" class="short" />
           <label for="wf-description" data-i18n="admin.description">Description</label>
           <textarea id="wf-description" rows="3"></textarea>
           <label for="wf-details"><span data-i18n="admin.details">More about the wine</span> <span class="hint" data-i18n="admin.detailsHint">(one line per item, e.g. "Grapes: Touriga Nacional")</span></label>
           <textarea id="wf-details" rows="3"></textarea>
+          <div id="wf-finish" class="wf-finish" hidden>
+            <p class="wz-sub" data-i18n="wineWizard.summary">Your wine</p>
+            <div id="wf-summary" class="wf-summary"></div>
+            <div id="wf-into-box">
+              <label for="wf-into"><span data-i18n="wineWizard.tasting">Add it to a tasting</span> <span class="hint" data-i18n="wineWizard.tastingHint">(you set the guest price under the tasting's wines)</span></label>
+              <select id="wf-into"></select>
+            </div>
+          </div>
+          </section>
+        </div>
+        <div class="wf-foot">
           <p id="wf-msg" class="message error" hidden></p>
-          <div class="row-actions">
+          <div id="wf-discard" class="wf-discard" hidden>
+            <span data-i18n="wineWizard.discard">Discard the new wine?</span>
+            <button id="wf-discard-yes" class="btn small" type="button" data-i18n="wineWizard.discardYes">Discard</button>
+            <button id="wf-discard-no" class="text-btn" type="button" data-i18n="wineWizard.discardNo">Keep going</button>
+          </div>
+          <div id="wf-actions" class="row-actions wf-actions">
+            <button id="wf-back" class="text-btn" type="button" hidden data-i18n="wizard.back">Back</button>
+            <span class="wz-spacer"></span>
+            <button id="wf-next" class="btn small ghost" type="button" hidden data-i18n="wineWizard.next">Next</button>
             <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
             <button id="wf-delete" class="text-btn danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
           </div>
+        </div>
         </form>
         </dialog>
 

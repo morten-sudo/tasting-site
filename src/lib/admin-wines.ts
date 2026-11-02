@@ -2,7 +2,7 @@
 // filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
-import { t, lang, locale } from '../i18n';
+import { t, lang, locale, formatWhen } from '../i18n';
 import { wineMap } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
@@ -119,8 +119,15 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   const form = $<HTMLFormElement>('wine-form');
   const panel = $<HTMLDialogElement>('wine-panel');
-  $('wf-close').addEventListener('click', () => closeForm());
+  // A new wine is a guide in steps (dialog.wizard); editing is the side panel (dialog.sheet)
+  let step = 0;
+  let intoDefault: string | null = null; // the tasting the guide was opened from, chosen in the last step
+  const guide = () => panel.classList.contains('wizard');
+  $('wf-close').addEventListener('click', () => requestClose());
   panel.addEventListener('close', () => { editing = null; });
+  // Esc and a click beside the guide ask before throwing away what was typed
+  panel.addEventListener('cancel', (e) => { if (guide() && dirty()) { e.preventDefault(); askDiscard(); } });
+  panel.addEventListener('click', (e) => { if (e.target === panel && guide()) requestClose(); });
   const list = $<HTMLUListElement>('wine-admin-list');
   const field = <E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id: string) => $<E>(id);
 
@@ -287,6 +294,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       });
       if (!res.ok) throw new Error(String(res.status));
       const r = (await res.json()) as LabelResult;
+      // The guide moves on to the wine, where the result is shown under the picture
+      if (guide() && step === 0) { statusTarget = 'wf-label-status'; goStep(1); }
       fillStatus(fillFromLabel(r), t('label.filled', { n: '{n}' }), t('label.nothing'));
       fillProducer();
     } catch {
@@ -396,6 +405,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       sourceUrl = r.source_url;
       showSource();
       statusTarget = 'wf-source-status';
+      if (guide() && step === 0) goStep(1);
       const offer = r.offer
         ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: kr.format(r.offer.price), n: r.offer.quantity })
         : '';
@@ -432,6 +442,13 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
     showMsg('');
     $('wf-title').textContent = w ? t('admin.editWine') : t('admin.newWine');
+    // New wine: the guide; editing: the side panel
+    panel.className = w ? 'sheet wide' : 'wizard';
+    $('wf-steps').hidden = !!w;
+    $('wf-finish').hidden = !!w;
+    $('wf-cancel').hidden = !w;
+    $('wf-discard').hidden = true;
+    $('wf-actions').hidden = false;
     $('wf-delete').hidden = !w;
     $('wf-delete').textContent = t('admin.deleteWine');
     delete $('wf-delete').dataset.armed;
@@ -457,11 +474,107 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     // A wine fetched from a link shows where from (with Update) instead of an empty link field
     showSource();
     showLinkBox(!!w && !sourceUrl);
+    if (!w) { loadTastings(); goStep(0); }
+    else { $('wf-back').hidden = true; $('wf-next').hidden = true; $('wf-save').hidden = false; $('wf-save').textContent = t('common.save'); }
     panel.showModal();
     panel.scrollTop = 0;
     // On phones the keyboard would cover the sheet, so only focus a field on larger screens
-    if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
+    if (w && matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
     else (document.activeElement as HTMLElement | null)?.blur();
+  }
+
+  // ---------- The guide (new wine) ----------
+  const STEPS = 4;
+  function goStep(n: number) {
+    step = Math.max(0, Math.min(STEPS - 1, n));
+    form.querySelectorAll<HTMLElement>('.wf-step').forEach((s) => s.classList.toggle('current', Number(s.dataset.step) === step));
+    panel.querySelectorAll<HTMLButtonElement>('#wf-steps .wz-step').forEach((b) => {
+      const i = Number(b.dataset.step);
+      b.classList.toggle('current', i === step);
+      b.classList.toggle('done', i < step);
+      if (i === step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+    $('wf-back').hidden = step === 0;
+    $('wf-next').hidden = step === STEPS - 1;
+    $('wf-save').hidden = step === 0;
+    $('wf-save').textContent = t('wineWizard.save');
+    $('wf-save').className = step === STEPS - 1 ? 'btn small' : 'btn small ghost';
+    $('wf-next').className = step === STEPS - 1 ? 'btn small ghost' : 'btn small';
+    showMsg('');
+    if (step === STEPS - 1) renderSummary();
+    const body = form.querySelector<HTMLElement>('.wf-body');
+    if (body) body.scrollTop = 0;
+    if (step === 1 && matchMedia('(min-width: 48rem)').matches && !field<HTMLInputElement>('wf-name').value) {
+      field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
+    }
+  }
+  panel.querySelectorAll<HTMLButtonElement>('#wf-steps .wz-step').forEach((b) => b.addEventListener('click', () => goStep(Number(b.dataset.step))));
+  $('wf-next').addEventListener('click', () => goStep(step + 1));
+  $('wf-back').addEventListener('click', () => goStep(step - 1));
+  $('wf-start-manual').addEventListener('click', () => goStep(1));
+
+  /** Has anything been put into the new wine? */
+  function dirty() {
+    if (pendingImage || sourceUrl || linkImage) return true;
+    return ['wf-name', 'wf-producer', 'wf-link', 'wf-vintage', 'wf-retail', 'wf-description', 'wf-details', 'wf-appellation', 'wf-region']
+      .some((id) => field<HTMLInputElement>(id).value.trim());
+  }
+  function askDiscard() {
+    $('wf-discard').hidden = false;
+    $('wf-actions').hidden = true;
+    $('wf-discard-no').focus();
+  }
+  function requestClose() {
+    if (guide() && dirty()) askDiscard(); else closeForm();
+  }
+  $('wf-discard-yes').addEventListener('click', () => closeForm());
+  $('wf-discard-no').addEventListener('click', () => { $('wf-discard').hidden = true; $('wf-actions').hidden = false; });
+
+  /** The tastings a new wine can go straight into: coming ones and those without a date. */
+  async function loadTastings() {
+    const select = field<HTMLSelectElement>('wf-into');
+    const { data } = await supabase.from('tastings').select('id, title, starts_at').order('starts_at', { ascending: true, nullsFirst: false });
+    const since = Date.now() - 24 * 3600 * 1000;
+    const rows = ((data ?? []) as { id: string; title: string; starts_at: string | null }[])
+      .filter((x) => !x.starts_at || new Date(x.starts_at).getTime() >= since);
+    select.replaceChildren(new Option(t('wineWizard.noTasting'), ''),
+      ...rows.map((x) => new Option(x.starts_at ? `${x.title} · ${formatWhen(x.starts_at, { year: true })}` : x.title, x.id)));
+    select.value = intoDefault && rows.some((x) => x.id === intoDefault) ? intoDefault : '';
+    $('wf-into-box').hidden = !rows.length;
+  }
+
+  /** The wine as it will be saved: picture, name and the main facts. */
+  function renderSummary() {
+    const box = $('wf-summary');
+    box.replaceChildren();
+    const preview = $<HTMLImageElement>('wf-preview');
+    if (!preview.hidden && preview.src) {
+      const img = mk('img');
+      img.src = preview.src;
+      img.alt = '';
+      box.append(img);
+    }
+    const text = mk('div');
+    const name = withoutYear(field<HTMLInputElement>('wf-name').value.trim(), field<HTMLInputElement>('wf-vintage').value.trim());
+    text.append(mk('b', '', name || t('admin.wineNameMissing')));
+    const meta = [styleSelect.value ? styleName(styleSelect.value) : null, field<HTMLInputElement>('wf-vintage').value.trim() || null,
+      field<HTMLInputElement>('wf-producer').value.trim() || null].filter(Boolean).join(' · ');
+    if (meta) text.append(mk('small', '', meta));
+    const origin = originLine({ appellation: toText(appInput.value), region: toText(regionInput.value), country: countrySelect.value || null });
+    if (origin) text.append(mk('small', '', origin));
+    box.append(text);
+  }
+
+  /** Puts a newly saved wine in a tasting, last, with the shop's prices as a start (as the tasting's wine list does). */
+  async function addToTasting(tastingId: string, wineId: number, retail: number | null, offer: number | null, qty: number | null) {
+    const { data } = await supabase.from('tasting_wines').select('sort_order').eq('tasting_id', tastingId)
+      .order('sort_order', { ascending: false }).limit(1);
+    const sort = ((data?.[0] as { sort_order: number } | undefined)?.sort_order ?? 0) + 1;
+    const fromOffer = qty != null && qty >= 2 && offer != null;
+    await supabase.from('tasting_wines').insert({
+      tasting_id: tastingId, wine_id: wineId, sort_order: sort, price_dkk: retail,
+      price_tiers: fromOffer ? [{ qty, price: Number(offer) }] : [],
+    });
   }
 
   function closeForm() {
@@ -532,7 +645,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
 
   // ---------- Events ----------
-  $('wine-add-toggle').addEventListener('click', () => openForm(null));
+  /** Opens the guide for a new wine; from a tasting, that tasting is chosen in the last step. */
+  function create(opts: { tastingId?: string } = {}) {
+    intoDefault = opts.tastingId ?? null;
+    openForm(null);
+  }
+  $('wine-add-toggle').addEventListener('click', () => create());
   $('wf-cancel').addEventListener('click', closeForm);
 
   async function useImage(input: HTMLInputElement, status: StatusId) {
@@ -598,7 +716,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     e.preventDefault();
     // The year belongs in Vintage, not in the name ("Château Fombrauge 2020" → "Château Fombrauge")
     const name = withoutYear(field<HTMLInputElement>('wf-name').value.trim(), field<HTMLInputElement>('wf-vintage').value.trim()) ?? '';
-    if (!name) { showMsg(t('admin.wineNameMissing')); return; }
+    if (!name) {
+      if (guide()) goStep(1);
+      showMsg(t('admin.wineNameMissing'));
+      return;
+    }
+    const into = guide() ? field<HTMLSelectElement>('wf-into').value || null : null;
 
     const save = $<HTMLButtonElement>('wf-save');
     save.disabled = true;
@@ -611,7 +734,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const url = await uploadImage(pendingImage);
       if (!url) {
         save.disabled = false;
-        save.textContent = t('common.save');
+        save.textContent = guide() ? t('wineWizard.save') : t('common.save');
         showMsg(t('admin.imageFailed'));
         return;
       }
@@ -656,8 +779,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       : await supabase.from('wines').insert({ ...row, ...place, host_id: hostId }).select('id').single();
 
     save.disabled = false;
-    save.textContent = t('common.save');
+    save.textContent = guide() ? t('wineWizard.save') : t('common.save');
     if (error) { showMsg(t('admin.wineNotSaved')); return; }
+    const newId = (saved as { id: number } | null)?.id;
+    if (into && newId) await addToTasting(into, newId, row.retail_price_dkk, row.offer_price_dkk, row.offer_quantity);
     // An appellation that is not on our list: find its place for the overview map (in the background)
     locateAppellation(row.appellation, row.region, row.country);
     closeForm();
@@ -768,5 +893,5 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   /** Every wine's own address (see admin-wine-page.ts). */
   function paths() { return winePaths(wines); }
 
-  return { load, edit, paths };
+  return { load, edit, paths, create };
 }

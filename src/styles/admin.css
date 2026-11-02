@@ -866,3 +866,36 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .producer-status { margin: -0.3rem 0 0.2rem; font-size: 0.85rem; color: var(--muted); }
 .admin-page .producer-status.busy::before { content: ''; display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.45em; vertical-align: -0.05em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
 .admin-page .producer-status.ok { color: var(--ok); }
+
+/* The wine dialog: steps laid out like the form's grid; a guide (dialog.wizard) for a new wine, the side panel for editing */
+.admin-page .wine-form .wf-body, .admin-page .wine-form .wf-step { display: grid; gap: 0.4rem; min-width: 0; }
+.admin-page .wine-form .wf-body { gap: 0; }
+.admin-page dialog.sheet .wine-form .wf-step + .wf-step { margin-top: 0.4rem; }
+.admin-page .wine-form .wf-foot .row-actions { flex-wrap: wrap; }
+.admin-page .wine-form .wf-actions .wz-spacer { display: none; }
+.admin-page .wine-form .wf-actions [hidden] { display: none; }
+.admin-page .wf-discard { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin: 0 0 0.6rem; font-weight: 600; }
+.admin-page .wf-discard[hidden] { display: none; }
+.admin-page .wf-finish { display: grid; gap: 0.4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--lodge-3); }
+.admin-page .wf-finish[hidden] { display: none; }
+.admin-page .wf-finish .wz-sub { margin: 0; }
+.admin-page .wf-summary { display: flex; gap: 0.9rem; align-items: center; padding: 0.75rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.6rem; }
+.admin-page .wf-summary img { width: 3rem; height: 4rem; object-fit: contain; flex-shrink: 0; }
+.admin-page .wf-summary div { display: grid; gap: 0.15rem; min-width: 0; }
+.admin-page .wf-summary b { font-weight: 600; }
+.admin-page .wf-summary small { color: var(--muted); font-size: 0.85rem; }
+.admin-page #wf-into { width: 100%; }
+.admin-page .start-tiles:has(#wf-start-manual) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 34rem) { .admin-page .start-tiles:has(#wf-start-manual) { grid-template-columns: 1fr; } }
+dialog.sheet #wf-start-manual { display: none; }
+
+dialog.wizard .wf-head { padding: 1.1rem var(--gutter) 0; border-bottom: 1px solid var(--lodge-3); flex-shrink: 0; }
+dialog.wizard .wf-head .sheet-head { position: static; margin: 0; padding: 0; }
+.admin-page dialog.wizard .wine-form { display: flex; flex-direction: column; flex: 1; min-height: 0; max-width: none; margin: 0; padding: 0; background: none; border-radius: 0; gap: 0; }
+dialog.wizard .wf-body { flex: 1; overflow-y: auto; padding: 1.25rem var(--gutter) 1.5rem; align-content: start; }
+dialog.wizard .wf-step:not(.current) { display: none; }
+dialog.wizard .wf-foot { flex-shrink: 0; padding: 0.8rem var(--gutter) calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--lodge-3); background: var(--lodge); }
+dialog.wizard .wf-foot .message { margin: 0 0 0.6rem; }
+.admin-page dialog.wizard .wf-actions { margin: 0; gap: 0.6rem; }
+.admin-page dialog.wizard .wf-actions .wz-spacer { display: block; flex: 1; }
+@media (min-width: 48rem) { dialog.wizard .wf-head, dialog.wizard .wf-body, dialog.wizard .wf-foot { padding-left: 2rem; padding-right: 2rem; } }
