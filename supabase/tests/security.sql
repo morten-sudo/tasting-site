@@ -55,6 +55,14 @@ begin
   assert failed, 'the owner of an account can be deleted';
   failed := false; begin update hosts set tenant_id = null where id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
   assert failed, 'the owner can be moved off the account';
+  -- An invitation is linked to the guest card with the same email on the tasting's account – never another account's
+  insert into guests (id, host_id, name, email) values ('00000000-0000-4000-c000-00000000000e', '00000000-0000-4000-a000-00000000000a', 'Guest E', 'guest-e@selftest.invalid');
+  insert into participants (tasting_id, name, email, invite_code) values ('00000000-0000-4000-b000-00000000000a', 'E', 'Guest-E@selftest.invalid', 'selftestlk');
+  assert (select guest_id from participants where invite_code = 'selftestlk') = '00000000-0000-4000-c000-00000000000e', 'an invitation is not linked to the guest card with the same email';
+  insert into participants (tasting_id, name, email, invite_code) values ('00000000-0000-4000-b000-00000000000a', 'B in A', 'guest-b@selftest.invalid', 'selftestlx');
+  assert (select guest_id from participants where invite_code = 'selftestlx') is null, 'an invitation is linked to another account''s guest';
+  delete from participants where invite_code in ('selftestlk', 'selftestlx');
+  delete from guests where id = '00000000-0000-4000-c000-00000000000e';
 end $$;
 
 -- ---------- Host A, signed in ----------
@@ -108,6 +116,8 @@ begin
   failed := false; begin insert into wine_regions (id, country, name) values ('selftest', 'XX', 'x'); exception when others then failed := true; end;
   assert failed, 'a host can add to the wine regions';
   update wine_regions set name = 'hacked' where id = 'pt-douro'; get diagnostics n = row_count;           assert n = 0, 'a host can change the wine regions';
+  failed := false; begin perform link_participant_guest(); exception when others then failed := true; end;
+  assert failed, 'a host can call the linking trigger function';
   -- The guest page of another host's tasting stays closed
   assert host_guest_code('selftest-b') is null, 'host A gets a guest code for host B''s tasting';
   -- Hosts are managed only by the owner of the tasting
