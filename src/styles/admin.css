@@ -1073,15 +1073,15 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 
 /* Wine library: filters under the search – country → region, type, tasting */
 .admin-page .wine-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 0.9rem; }
-.admin-page .wine-filters select {
-  flex: 0 1 11rem; min-width: 0; max-width: 100%; padding: 0.4rem 0.6rem; font: inherit; font-size: 0.9rem;
-  border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); color: inherit;
-}
-.admin-page .wine-filters select.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+.admin-page .wine-filters .filter-dd-menu { left: 0; right: auto; max-height: min(60vh, 26rem); overflow-y: auto; }
+.admin-page .wine-filters .filter-dd-btn { max-width: 16rem; }
 .admin-page .wine-filters .wl-count { color: var(--muted); font-size: 0.9rem; }
 .admin-page .wine-filters .wl-count:empty { display: none; }
 @media (max-width: 40rem) {
-  .admin-page .wine-filters select { flex: 1 1 calc(50% - 0.5rem); }
+  .admin-page .wine-filters .filter-dd { flex: 1 1 calc(50% - 0.5rem); min-width: 0; }
+  .admin-page .wine-filters .filter-dd-btn { width: 100%; max-width: none; justify-content: space-between; }
+  .admin-page .wine-filters .filter-dd:nth-child(even) .filter-dd-menu { left: auto; right: 0; }
+  .admin-page .wine-filters .filter-dd-menu { min-width: min(15rem, calc(100vw - 2rem)); }
 }
 
 /* New wine: wines in the library with a name like the one typed */
@@ -1572,8 +1572,13 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .filter-dd { position: relative; }
 .admin-page .filter-dd-btn { display: inline-flex; align-items: center; gap: 0.45rem; white-space: nowrap; max-width: 22rem; }
 .admin-page .filter-dd-btn span { overflow: hidden; text-overflow: ellipsis; }
-.admin-page .filter-dd-btn svg { width: 1.05rem; height: 1.05rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
-.admin-page .filter-dd-btn.on { background: var(--lodge-2); border-color: var(--paper); color: var(--paper); }
+.admin-page .filter-dd-btn svg { width: 1.05rem; height: 1.05rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.admin-page .filter-dd-btn .filter-dd-chev { margin-right: -0.2rem; opacity: 0.75; transition: transform 0.15s; }
+.admin-page .filter-dd-btn[aria-expanded='true'] .filter-dd-chev { transform: rotate(180deg); }
+/* Quiet like a field (it is a choice, not an action); filled in when it narrows the list */
+.admin-page .btn.filter-dd-btn, .admin-page .btn.filter-dd-btn:hover { background: #fff; border-color: var(--lodge-3); color: var(--paper); font-weight: 400; }
+.admin-page .btn.filter-dd-btn:hover { border-color: var(--muted); }
+.admin-page .btn.filter-dd-btn.on { background: var(--lodge-2); border-color: var(--paper); color: var(--paper); font-weight: 500; }
 .admin-page .filter-dd-menu {
   position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 15rem; padding: 0.4rem;
   background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);

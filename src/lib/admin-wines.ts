@@ -11,6 +11,7 @@ import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
 import { fieldError } from './field-error';
 import { combo, type ComboOption } from './combo';
+import { filterDropdown, type DdOption } from './filter-dd';
 import { SUPABASE_URL, SUPABASE_KEY } from './config';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
@@ -462,22 +463,26 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
 
   // Filters on the list: country → region (a region belongs to its country), type, tasting – and the search box.
-  // Kept in the address (?country=FR&region=…&style=…&tasting=<slug>|none) so a link or "back" keeps them.
+  // Each is the admin's one drop-down with checkboxes (filter-dd.ts); several values in one filter mean "any of them".
+  // Kept in the address (?country=FR,IT&region=…&style=…&tasting=<slug>,none) so a link or "back" keeps them.
   const filterBox = document.getElementById('wine-filters');
-  const filter = { country: '', region: '', style: '', tasting: '', q: '' };
+  type FKey = 'country' | 'region' | 'style' | 'tasting';
+  const FKEYS: FKey[] = ['country', 'region', 'style', 'tasting'];
+  const filter: Record<FKey, Set<string>> & { q: string } = { country: new Set(), region: new Set(), style: new Set(), tasting: new Set(), q: '' };
   {
     const p = new URLSearchParams(location.search);
-    for (const k of ['country', 'region', 'style', 'tasting'] as const) filter[k] = p.get(k) ?? '';
+    for (const k of FKEYS) filter[k] = new Set((p.get(k) ?? '').split(',').filter(Boolean));
   }
   const regionKey = (w: AdminWine) => (w.region ? normOrigin(w.region) : '');
   const tastingsOf = (w: AdminWine) => (w.tasting_wines ?? []).map((x) => x.tastings).filter(Boolean) as { slug: string; title: string }[];
-  function matches(w: AdminWine, skip?: keyof typeof filter) {
-    if (skip !== 'country' && filter.country && w.country !== filter.country) return false;
-    if (skip !== 'region' && filter.region && regionKey(w) !== filter.region) return false;
-    if (skip !== 'style' && filter.style && w.style !== filter.style) return false;
-    if (skip !== 'tasting' && filter.tasting) {
+  const anyFilter = () => FKEYS.some((k) => filter[k].size > 0);
+  function matches(w: AdminWine, skip?: FKey) {
+    if (skip !== 'country' && filter.country.size && !filter.country.has(w.country ?? '')) return false;
+    if (skip !== 'region' && filter.region.size && !filter.region.has(regionKey(w))) return false;
+    if (skip !== 'style' && filter.style.size && !filter.style.has(w.style ?? '')) return false;
+    if (skip !== 'tasting' && filter.tasting.size) {
       const ts = tastingsOf(w);
-      if (filter.tasting === 'none' ? ts.length > 0 : !ts.some((x) => x.slug === filter.tasting)) return false;
+      if (!(ts.length ? ts.some((x) => filter.tasting.has(x.slug)) : filter.tasting.has('none'))) return false;
     }
     if (filter.q) {
       const text = [w.name, w.producer, w.vintage, w.region, w.appellation, w.grapes, countryName(w.country),
@@ -486,73 +491,66 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     }
     return true;
   }
-  /** One select: "All …" first, then the values found among the wines that the other filters let through, with a count. */
-  function fill(sel: HTMLSelectElement, all: string, opts: { value: string; label: string; n: number }[], current: string) {
-    const sorted = opts.sort((a, b) => a.label.localeCompare(b.label, locale()));
-    // A chosen value that no wine has any more stays, so the choice is visible and can be undone
-    if (current && !sorted.some((o) => o.value === current)) sorted.unshift({ value: current, label: current, n: 0 });
-    sel.replaceChildren(new Option(all, ''), ...sorted.map((o) => new Option(`${o.label} (${o.n})`, o.value)));
-    sel.value = current;
-    sel.classList.toggle('on', !!current);
-  }
   function count<K>(rows: AdminWine[], key: (w: AdminWine) => K[]) {
     const m = new Map<K, number>();
     for (const w of rows) for (const k of new Set(key(w))) m.set(k, (m.get(k) ?? 0) + 1);
     return m;
   }
+  const byLabel = (opts: DdOption[]) => opts.sort((a, b) => a.label.localeCompare(b.label, locale()));
+  const dds = filterBox ? {
+    country: filterDropdown({ name: t('wineLib.country'), allLabel: t('wineLib.allCountries'), onChange: (v) => setFilter('country', v) }),
+    region: filterDropdown({ name: t('wineLib.region'), allLabel: t('wineLib.allRegions'), onChange: (v) => setFilter('region', v) }),
+    style: filterDropdown({ name: t('wineLib.type'), allLabel: t('wineLib.allStyles'), onChange: (v) => setFilter('style', v) }),
+    tasting: filterDropdown({ name: t('wineLib.tasting'), allLabel: t('wineLib.allTastings'), onChange: (v) => setFilter('tasting', v) }),
+  } : null;
+  if (filterBox && dds) filterBox.prepend(...FKEYS.map((k) => dds[k].el));
   function renderFilters(shown: number) {
-    if (!filterBox) return;
+    if (!filterBox || !dds) return;
     filterBox.hidden = wines.length < 2;
-    const sel = (id: string) => $<HTMLSelectElement>(id);
-    const c = count(wines.filter((w) => matches(w, 'country')), (w) => (w.country ? [w.country] : []));
-    fill(sel('wl-country'), t('wineLib.allCountries'), [...c].map(([v, n]) => ({ value: v, label: countryName(v) ?? v, n })), filter.country);
-    // Regions: those of the chosen country, or all with their country after the name
-    const rRows = wines.filter((w) => matches(w, 'region') && w.region);
+    // Each list: the values among the wines the other filters let through, with a count
+    const cRows = wines.filter((w) => matches(w, 'country'));
+    const c = count(cRows, (w) => (w.country ? [w.country] : []));
+    dds.country.render(byLabel([...c].map(([v, n]) => ({ value: v, label: countryName(v) ?? v, n }))), filter.country, cRows.length);
+    // Regions: those of the chosen countries, with their country after the name when several countries are shown
+    const rRows = wines.filter((w) => matches(w, 'region'));
     const rNames = new Map<string, string>();
-    for (const w of rRows) if (!rNames.has(regionKey(w))) rNames.set(regionKey(w), w.region! + (filter.country || !w.country ? '' : ` · ${countryName(w.country)}`));
-    const r = count(rRows, (w) => [regionKey(w)]);
-    fill(sel('wl-region'), t('wineLib.allRegions'), [...r].map(([v, n]) => ({ value: v, label: rNames.get(v) ?? v, n })), filter.region);
-    const s = count(wines.filter((w) => matches(w, 'style')), (w) => (w.style ? [w.style] : []));
-    fill(sel('wl-style'), t('wineLib.allStyles'), [...s].map(([v, n]) => ({ value: v, label: styleName(v), n })), filter.style);
+    const oneCountry = new Set(rRows.map((w) => w.country)).size <= 1;
+    for (const w of rRows) if (w.region && !rNames.has(regionKey(w))) rNames.set(regionKey(w), w.region + (oneCountry || !w.country ? '' : ` · ${countryName(w.country)}`));
+    const r = count(rRows.filter((w) => w.region), (w) => [regionKey(w)]);
+    dds.region.render(byLabel([...r].map(([v, n]) => ({ value: v, label: rNames.get(v) ?? v, n }))), filter.region, rRows.length);
+    const sRows = wines.filter((w) => matches(w, 'style'));
+    const s = count(sRows, (w) => (w.style ? [w.style] : []));
+    dds.style.render(byLabel([...s].map(([v, n]) => ({ value: v, label: styleName(v), n }))), filter.style, sRows.length);
     const tRows = wines.filter((w) => matches(w, 'tasting'));
     const titles = new Map(wines.flatMap(tastingsOf).map((x) => [x.slug, x.title]));
     const tc = count(tRows, (w) => { const ts = tastingsOf(w); return ts.length ? ts.map((x) => x.slug) : ['none']; });
-    fill(sel('wl-tasting'), t('wineLib.allTastings'),
-      [...tc].filter(([v]) => v !== 'none').map(([v, n]) => ({ value: v, label: titles.get(v) ?? v, n })), filter.tasting);
-    // "Not in a tasting" last, after the tastings
+    const tOpts = byLabel([...tc].filter(([v]) => v !== 'none').map(([v, n]) => ({ value: v, label: titles.get(v) ?? v, n })));
+    // "Not in a tasting" last, after a line
     const none = tc.get('none') ?? 0;
-    if (none || filter.tasting === 'none') {
-      sel('wl-tasting').append(new Option(`${t('wineLib.unused')} (${none})`, 'none'));
-      sel('wl-tasting').value = filter.tasting;
-    }
-    const any = !!(filter.country || filter.region || filter.style || filter.tasting || filter.q);
+    if (none || filter.tasting.has('none')) tOpts.push({ value: 'none', label: t('wineLib.unused'), n: none, sep: tOpts.length > 0 });
+    dds.tasting.render(tOpts, filter.tasting, tRows.length);
+    const any = anyFilter() || !!filter.q;
     $('wl-count').textContent = any ? t('wineLib.showing', { n: shown, total: wines.length }) : '';
-    $('wl-clear').hidden = !(filter.country || filter.region || filter.style || filter.tasting);
+    $('wl-clear').hidden = !anyFilter();
   }
   function saveFilter() {
     const p = new URLSearchParams(location.search);
-    for (const k of ['country', 'region', 'style', 'tasting'] as const) { if (filter[k]) p.set(k, filter[k]); else p.delete(k); }
+    for (const k of FKEYS) { if (filter[k].size) p.set(k, [...filter[k]].join(',')); else p.delete(k); }
     const q = p.toString();
     history.replaceState(history.state, '', location.pathname + (q ? `?${q}` : '') + location.hash);
   }
+  function setFilter(k: FKey, v: Set<string>) {
+    filter[k] = v;
+    // Regions that do not belong to the chosen countries no longer fit
+    if (k === 'country' && filter.region.size && filter.country.size) {
+      filter.region = new Set([...filter.region].filter((r) => wines.some((w) => regionKey(w) === r && filter.country.has(w.country ?? ''))));
+    }
+    saveFilter();
+    render();
+  }
   if (filterBox) {
-    const on = (id: string, k: 'country' | 'region' | 'style' | 'tasting') => $<HTMLSelectElement>(id).addEventListener('change', (e) => {
-      filter[k] = (e.target as HTMLSelectElement).value;
-      if (k === 'country') {
-        // A region from another country no longer fits
-        if (filter.region && !wines.some((w) => regionKey(w) === filter.region && (!filter.country || w.country === filter.country))) filter.region = '';
-      }
-      if (k === 'region' && filter.region && !filter.country) {
-        // Choosing a region chooses its country too
-        const w = wines.find((x) => regionKey(x) === filter.region && x.country);
-        if (w) filter.country = w.country!;
-      }
-      saveFilter();
-      render();
-    });
-    on('wl-country', 'country'); on('wl-region', 'region'); on('wl-style', 'style'); on('wl-tasting', 'tasting');
     $('wl-clear').addEventListener('click', () => {
-      filter.country = filter.region = filter.style = filter.tasting = '';
+      for (const k of FKEYS) filter[k] = new Set();
       saveFilter();
       render();
     });

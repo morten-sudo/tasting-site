@@ -309,11 +309,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div class="guests-head">
           <h2 data-i18n="admin.guests">Guests</h2>
           <div class="head-actions">
-            <!-- Show: a drop-down with checkboxes (statuses together; "Missing email" narrows them) -->
+            <!-- Show: the admin's filter drop-down (same look as src/lib/filter-dd.ts; statuses together, "Missing email" narrows them) -->
             <div class="filter-dd" id="g-filter-dd">
               <button id="g-filter-btn" class="btn small ghost filter-dd-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="g-filter-menu">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
                 <span id="g-filter-label"></span>
+                <svg class="filter-dd-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
               </button>
               <div id="g-filter-menu" class="filter-dd-menu" hidden>
                 <label class="filter-all"><input type="checkbox" value="all" /> <span data-i18n="admin.fAll">All</span> <small></small></label>
