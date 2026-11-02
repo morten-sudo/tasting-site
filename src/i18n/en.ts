@@ -927,4 +927,6 @@ export const en = {
   "login.otherInvite": "This invitation is for another email than the one you are signed in with.",
   "login.otherSignOut": "Sign out and open the invitation",
   "login.otherStay": "Stay signed in",
+  "guest.notInvited": "You are not invited to this tasting with the email you are signed in with.",
+  "guest.toMyTastings": "My tastings",
 } as const;

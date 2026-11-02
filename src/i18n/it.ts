@@ -856,4 +856,6 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "login.otherInvite": "Questo invito è per un’altra email rispetto a quella con cui hai effettuato l’accesso.",
   "login.otherSignOut": "Esci e apri l’invito",
   "login.otherStay": "Resta connesso",
+  "guest.notInvited": "Non sei invitato a questa degustazione con l’email con cui hai effettuato l’accesso.",
+  "guest.toMyTastings": "Le mie degustazioni",
 };

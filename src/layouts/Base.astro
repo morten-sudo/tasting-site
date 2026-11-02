@@ -304,7 +304,23 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         const me = loadMe();
         if (inTasting && slug) {
           const code = await resolveGuestCode();
-          if (!code) { userIn.hidden = true; userOut.hidden = false; return; }
+          if (!code) {
+            // Signed in, but not invited to this tasting: say so instead of "sign in"
+            const who = await me;
+            if (who?.signedIn) {
+              showName(who.name);
+              document.querySelectorAll<HTMLElement>('.need-login, #no-code').forEach((box) => {
+                box.innerHTML = '';
+                const p = document.createElement('p');
+                p.append(Object.assign(document.createElement('strong'), { textContent: t('guest.notInvited') }));
+                const a = Object.assign(document.createElement('a'), { className: 'btn', href: '/home/', textContent: t('guest.toMyTastings') });
+                box.append(p, a);
+              });
+              showRoles(true, who.isHost);
+              return;
+            }
+            userIn.hidden = true; userOut.hidden = false; return;
+          }
           const { data } = await supabase.rpc('get_invite', { code });
           const row = Array.isArray(data) ? data[0] : null;
           if (!row) { userIn.hidden = true; userOut.hidden = false; return; }

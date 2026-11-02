@@ -928,4 +928,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "login.otherInvite": "Invitationen er til en anden e-mail end den, du er logget ind med.",
   "login.otherSignOut": "Log ud og åbn invitationen",
   "login.otherStay": "Bliv logget ind",
+  "guest.notInvited": "Du er ikke inviteret til denne smagning med den e-mail, du er logget ind med.",
+  "guest.toMyTastings": "Mine smagninger",
 };

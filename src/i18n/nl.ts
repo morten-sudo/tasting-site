@@ -856,4 +856,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "login.otherInvite": "Deze uitnodiging is voor een ander e-mailadres dan waarmee je bent ingelogd.",
   "login.otherSignOut": "Uitloggen en de uitnodiging openen",
   "login.otherStay": "Ingelogd blijven",
+  "guest.notInvited": "Je bent niet uitgenodigd voor deze proeverij met het e-mailadres waarmee je bent ingelogd.",
+  "guest.toMyTastings": "Mijn proeverijen",
 };
