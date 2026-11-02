@@ -961,4 +961,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "aiQuiz.more": "Fleiri tillögur",
   "aiQuiz.failed": "Engar tillögur núna. Reyndu aftur eftir smá stund.",
   "aiQuiz.noWines": "Bættu fyrst vínum við smökkunina – spurningarnar eru gerðar út frá þeim.",
+  "aiQuiz.warn": "Gervigreind getur haft rangt fyrir sér – sérstaklega á Sérfræðingur. Athugaðu alltaf merkta svarið áður en þú ýtir á Bæta við.",
 };

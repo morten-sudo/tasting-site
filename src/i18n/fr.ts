@@ -889,4 +889,5 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "aiQuiz.more": "Plus de suggestions",
   "aiQuiz.failed": "Pas de suggestions pour le moment. Réessayez dans un instant.",
   "aiQuiz.noWines": "Ajoutez d’abord des vins – les questions sont faites à partir d’eux.",
+  "aiQuiz.warn": "L’IA peut se tromper – surtout en Expert. Vérifiez toujours la réponse marquée avant d’appuyer sur Ajouter.",
 };

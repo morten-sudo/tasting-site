@@ -237,6 +237,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
       }
       aiList.append(...out.questions.map(suggestionCard));
       aiList.hidden = false;
+      $('q-ai-warn').hidden = false;
       $('q-ai-more').hidden = false;
       status.textContent = t('aiQuiz.pick');
     } catch {
@@ -275,10 +276,10 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
       });
       if (error) { add.disabled = false; alert(t('aq.notSaved')); return; }
       li.remove();
-      if (!aiList.children.length) aiList.hidden = true;
+      if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; }
       await load();
     });
-    skip.addEventListener('click', () => { li.remove(); if (!aiList.children.length) aiList.hidden = true; });
+    skip.addEventListener('click', () => { li.remove(); if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; } });
     row.append(add, skip);
     li.append(row);
     return li;

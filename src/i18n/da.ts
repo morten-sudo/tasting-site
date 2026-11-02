@@ -961,4 +961,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "aiQuiz.more": "Flere forslag",
   "aiQuiz.failed": "Ingen forslag lige nu. Prøv igen om lidt.",
   "aiQuiz.noWines": "Tilføj vine til smagningen først – spørgsmålene laves ud fra dem.",
+  "aiQuiz.warn": "AI kan tage fejl – især på Ekspert. Tjek altid det markerede svar, før du trykker Tilføj.",
 };

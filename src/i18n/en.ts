@@ -960,4 +960,5 @@ export const en = {
   "aiQuiz.more": "More suggestions",
   "aiQuiz.failed": "No suggestions right now. Try again in a moment.",
   "aiQuiz.noWines": "Add wines to the tasting first – the questions are made from them.",
+  "aiQuiz.warn": "AI can be wrong – especially on Expert. Always check the marked answer before you press Add.",
 } as const;

@@ -889,4 +889,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "aiQuiz.more": "Meer suggesties",
   "aiQuiz.failed": "Nu geen suggesties. Probeer het zo opnieuw.",
   "aiQuiz.noWines": "Voeg eerst wijnen toe – de vragen worden daarop gebaseerd.",
+  "aiQuiz.warn": "AI kan zich vergissen – vooral bij Expert. Controleer altijd het gemarkeerde antwoord voordat je op Toevoegen drukt.",
 };
