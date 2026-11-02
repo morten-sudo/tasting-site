@@ -16,7 +16,7 @@ export const HELP: HelpSection[] = [
       da: `<p>Sådan går du fra tom konto til en smagning med inviterede gæster:</p>
 <ol>
 <li><b>Læg vinene ind.</b> Gå til <a href="/admin/wines/?open=wine-add-toggle">Vine → Ny vin</a>. Tag et billede af etiketten eller indsæt et link til butikken, så udfyldes det meste af sig selv. Se <a href="#wines">Vine</a>.</li>
-<li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>. Giv den en titel, dato, tid og sted. Guiden <i>Fortsæt opsætning</i> viser, hvad der mangler.</li>
+<li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>. Giv den en titel, dato, start- og evt. sluttid, sted og evt. et maks. antal gæster. Kun titlen skal udfyldes. Når du trykker <i>Næste</i>, gemmes smagningen som kladde (der står <i>Gemt som kladde</i> øverst) – gæsterne ser intet, før du inviterer dem. Undervejs kan du oprette en ny vin direkte fra vintrinnet og vælge alle gæster på én gang.</li>
 <li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Vælg fra biblioteket</a> tilføjer du vine fra dit bibliotek, sætter rækkefølgen og gæsteprisen.</li>
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
@@ -25,7 +25,7 @@ export const HELP: HelpSection[] = [
       en: `<p>From an empty account to a tasting with invited guests:</p>
 <ol>
 <li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a>. Take a photo of the label or paste a link to the shop, and most of it fills itself in. See <a href="#wines">Wines</a>.</li>
-<li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a>. Give it a title, date, time and place. The <i>Continue set-up</i> guide shows what is missing.</li>
+<li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a>. Give it a title, date, start and optional end time, place and optionally a maximum number of guests. Only the title is needed. When you press <i>Next</i>, the tasting is saved as a draft (it says <i>Saved as a draft</i> at the top) – guests see nothing until you invite them. On the way you can create a new wine straight from the wine step and select all guests at once.</li>
 <li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Choose from library</a>, add wines from your library, set their order and the guest price.</li>
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>
@@ -42,6 +42,8 @@ export const HELP: HelpSection[] = [
 <p>Under <a href="t:">Overblik → Rediger</a>: titel, dato og tid, sted (adressen slås op, mens du skriver), en introduktion til gæsterne og smagningens sprog. Sproget bestemmer bl.a. sproget i invitationsmails.</p>
 <h4 id="ai-intro">Introduktion skrevet med AI</h4>
 <p>Tryk <i>Skriv et udkast med AI</i> under introduktionen. Cloudflares AI skriver et udkast ud fra smagningens vine – fx en rejse gennem én region, en tur på tværs af lande eller en drue som tema – og blinde vine bliver ikke afsløret. Udkastet vises <b>under</b> din egen tekst: <i>Brug udkastet</i> sætter det ind i feltet (med <i>Fortryd</i>, der henter din tekst tilbage), <i>Prøv igen</i> giver et nyt, og <i>Kassér</i> fjerner det. Intet gemmes, før du trykker <i>Gem</i>. Et udkast tager op til ca. 20 sekunder. Tjek altid teksten – AI kan finde på ting.</p>
+<h4 id="delete-tasting">Slet en smagning</h4>
+<p>Nederst under <a href="t:settings/#delete-tasting">Indstillinger → Slet smagningen</a>. Kun den, der oprettede smagningen, og kontoens ejer kan slette den. Gæsteliste, svar, bestillinger, quiz og chat forsvinder; vinene bliver i biblioteket.</p>
 <h4 id="controls"><a href="t:settings/#controls">Kontakter</a></h4>
 <ul>
 <li><b>Tilmelding åben</b> – gæsterne kan svare ja eller nej.</li>
@@ -60,6 +62,8 @@ export const HELP: HelpSection[] = [
 <p>Under <a href="t:">Overview → Edit</a>: title, date and time, place (the address is looked up as you type), an introduction for the guests and the tasting's language. The language decides, among other things, the language of the invitation emails.</p>
 <h4 id="ai-intro">Introduction written with AI</h4>
 <p>Press <i>Write a draft with AI</i> under the introduction. Cloudflare's AI writes a draft from the tasting's wines – e.g. a journey through one region, a tour across countries or a grape as the theme – and blind wines are not given away. The draft is shown <b>below</b> your own text: <i>Use the draft</i> puts it in the field (with <i>Undo</i>, which brings your text back), <i>Try again</i> gives a new one, and <i>Discard</i> removes it. Nothing is saved until you press <i>Save</i>. A draft takes up to about 20 seconds. Always check the text – AI can make things up.</p>
+<h4 id="delete-tasting">Deleting a tasting</h4>
+<p>At the bottom of <a href="t:settings/#delete-tasting">Settings → Delete the tasting</a>. Only the one who created the tasting and the account's owner can delete it. Guest list, replies, orders, quiz and chat go; the wines stay in the library.</p>
 <h4 id="controls"><a href="t:settings/#controls">Controls</a></h4>
 <ul>
 <li><b>Sign-up open</b> – guests can reply yes or no.</li>

@@ -13,6 +13,8 @@ const steps = [
   <header class="wz-head">
     <div class="wz-top">
       <h2 id="wz-title" data-i18n="admin.newTasting">New tasting</h2>
+      <!-- After step 1 the tasting exists: say so, so nobody thinks closing throws it away -->
+      <span id="wz-saved" class="wz-saved" hidden><span aria-hidden="true">✓</span> <span data-i18n="wizard.savedBadge">Saved as a draft</span></span>
       <button id="wz-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
     </div>
     <ol class="wz-steps">
@@ -31,9 +33,12 @@ const steps = [
     <!-- 1. Details -->
     <section class="wz-pane add-form tasting-form" data-pane="0">
       <p class="wz-note" data-i18n="wizard.onlyStep1">Only step 1 is needed. Save when you like and add wines, guests and payment later.</p>
-      <label for="wz-title-input" data-i18n="admin.title">Title</label>
-      <input id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required />
+      <p id="wz-draft-note" class="wz-draft-note" data-i18n="wizard.draftNote">When you go on, the tasting is saved as a draft. Guests see nothing until you invite them.</p>
+      <label for="wz-title-input"><span data-i18n="admin.title">Title</span> <span class="req" aria-hidden="true">*</span></label>
+      <input id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required aria-required="true" />
       <DateTimeFields prefix="wz" />
+      <label for="wz-max"><span data-i18n="wizard.maxGuests">Max. number of guests</span> <span class="hint" data-i18n="dt.optional">(optional)</span></label>
+      <div class="with-unit"><input id="wz-max" class="short" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="wizard.maxHint">guests – more who say yes go on a waiting list</span></div>
       <AddressFields prefix="wz" />
       <label for="wz-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
       <textarea id="wz-intro" rows="4" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
@@ -44,13 +49,16 @@ const steps = [
       <p class="wz-note" data-i18n="wizard.winesNote">Choose the wines from your library. You set the guest price under Wines in the tasting.</p>
       <input id="wz-wine-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
       <ul id="wz-wines" class="wz-list"></ul>
-      <p id="wz-wines-empty" class="hint" hidden data-i18n-html="wizard.noWines">Your wine library is empty. <a href="/admin/wines/">Add wines</a> – you can choose them here afterwards.</p>
+      <p id="wz-wines-empty" class="hint" hidden data-i18n="wizard.noWinesYet">Your wine library is empty.</p>
+      <!-- A wine that is not in the library: the wine guide puts it in both and comes back here -->
+      <p class="wz-new-wine"><a id="wz-new-wine" class="btn small ghost" href="/admin/wines/" data-i18n="adminTasting.newWine">+ Create new wine</a></p>
     </section>
 
     <!-- 3. Guests -->
     <section class="wz-pane" data-pane="2" hidden>
       <p class="wz-note" data-i18n="wizard.guestsNote">Choose who to invite. Each guest gets a personal link you can send afterwards.</p>
       <input id="wz-guest-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
+      <label id="wz-all-box" class="wz-all" hidden><input id="wz-all" type="checkbox" /> <span data-i18n="wizard.selectAll">Select all</span></label>
       <ul id="wz-guests" class="wz-list"></ul>
       <form id="wz-new-guest" class="wz-new-guest" novalidate>
         <p class="wz-sub" data-i18n="wizard.newGuest">New guest</p>
@@ -74,7 +82,7 @@ const steps = [
         </div>
         <div id="wz-fee-box" hidden>
           <label for="wz-fee" data-i18n="wizard.feeAmount">Amount per person</label>
-          <div class="wz-money"><input id="wz-fee" type="text" inputmode="decimal" /><span data-i18n="wizard.krPerPerson">kr. per person</span></div>
+          <div class="wz-money"><input id="wz-fee" type="text" inputmode="decimal" autocomplete="off" /><span data-i18n="wizard.krPerPerson">kr. per person</span></div>
           <p class="hint" data-i18n="wizard.feeHint">(optional – you can also work it out after the tasting)</p>
           <label class="wz-switch"><input id="wz-fee-open" type="checkbox" role="switch" />
             <span><b data-i18n="wizard.feeShowTitle">Show the fee to the guests</b><small data-i18n="wizard.feeShowHint">Guests who are coming see the amount and can pay with MobilePay.</small></span></label>
@@ -103,7 +111,14 @@ const steps = [
 
   <footer class="wz-foot">
     <p id="wz-msg" class="message error" hidden></p>
-    <div class="wz-actions">
+    <!-- Closing with changes on this step that are not saved -->
+    <div id="wz-leave" class="wz-leave" hidden>
+      <span data-i18n="wizard.leaveQ">Save what you changed on this step?</span>
+      <button id="wz-leave-save" class="btn small" type="button" data-i18n="wizard.saveClose">Save and close</button>
+      <button id="wz-leave-drop" class="text-btn" type="button" data-i18n="wizard.leaveDrop">Close without saving</button>
+      <button id="wz-leave-stay" class="text-btn" type="button" data-i18n="wineWizard.discardNo">Keep going</button>
+    </div>
+    <div id="wz-actions" class="wz-actions">
       <button id="wz-back" class="text-btn" type="button" data-i18n="wizard.back">Back</button>
       <span class="wz-spacer"></span>
       <button id="wz-save" class="btn small ghost" type="button" data-i18n="wizard.saveClose">Save and close</button>

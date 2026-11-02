@@ -191,9 +191,10 @@ import Base from '../../layouts/Base.astro';
     const starts = typeof info.starts_at === 'string' ? info.starts_at : null;
     const place = typeof info.place === 'string' && info.place ? info.place : null;
     if (starts) {
-      $('h-when').textContent = formatWhen(starts, { year: new Date(starts).getFullYear() !== new Date().getFullYear() });
+      const ends = typeof info.ends_at === 'string' ? info.ends_at : null;
+      $('h-when').textContent = formatWhen(starts, { year: new Date(starts).getFullYear() !== new Date().getFullYear(), end: ends });
       $('f-when').hidden = false;
-      $('h-ics').onclick = () => downloadIcs(title, starts, place);
+      $('h-ics').onclick = () => downloadIcs(title, starts, place, ends);
       const count = countdown(starts);
       $('h-count').textContent = count ?? '';
       $('h-count').hidden = !count;
@@ -345,11 +346,12 @@ import Base from '../../layouts/Base.astro';
   }
 
   // A calendar file (.ics) the phone or computer can open in its calendar
-  function downloadIcs(title: string, startsAt: string, place: string | null) {
+  function downloadIcs(title: string, startsAt: string, place: string | null, endsAt: string | null = null) {
     const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
     const esc = (v: string) => v.replace(/[\\;,]/g, (c) => '\\' + c).replace(/\n/g, '\\n');
     const start = new Date(startsAt);
-    const end = new Date(start.getTime() + 4 * 3600 * 1000);
+    // Without an end time the calendar gets four hours
+    const end = endsAt ? new Date(endsAt) : new Date(start.getTime() + 4 * 3600 * 1000);
     const lines = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Winetastr//EN', 'BEGIN:VEVENT',
       `UID:${slug}@winetastr`, `DTSTAMP:${stamp(new Date())}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,

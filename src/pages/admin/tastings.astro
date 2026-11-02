@@ -40,6 +40,7 @@ import '../../styles/admin.css';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, formatWhen } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
+  import { toast } from '../../lib/toast';
   import { tastingRoles } from '../../lib/admin-side';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
@@ -122,5 +123,8 @@ import '../../styles/admin.css';
     await load();
     // "+ New tasting" in the menu links here with ?new=1
     if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', '/admin/tastings/'); }
+    // Just deleted on its own page: say so here
+    const deleted = new URLSearchParams(location.search).get('deleted');
+    if (deleted) { history.replaceState(null, '', '/admin/tastings/'); toast(t('tastingDelete.done', { title: deleted }), { kind: 'ok' }); }
   }
 </script>

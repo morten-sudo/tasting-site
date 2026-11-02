@@ -1,10 +1,12 @@
 // Create or set up a tasting in four steps: details, wines, guests, payment & setup.
 // Step 1 creates the tasting; every later step saves straight away, so the host can stop at any point.
 import { supabase } from './supabase';
-import { t, type Key } from '../i18n';
+import { t, locale, type Key } from '../i18n';
+import { amountText } from './wine-validate';
 import { $, mk, toNumber, type Host } from './admin-common';
 import { initAddress, readAddress, writeAddress } from './address';
-import { initWhen, readWhen, writeWhen, futureOnly, isPast } from './datetime';
+import { initWhen, readWhen, readEnd, writeWhen, futureOnly, checkWhen } from './datetime';
+import { fieldError, focusField } from './field-error';
 
 type Tasting = { id: string; slug: string } & Record<string, unknown>;
 type LibWine = { id: number; name: string; producer: string | null; vintage: string | null; image_url: string | null;
@@ -29,7 +31,20 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   initWhen('wz');
   const val = (id: string) => $<HTMLInputElement>(id).value;
 
+  // The footer message is for what is not about one field (e.g. "could not be saved"); it goes when anything is changed
   function msg(text = '') { $('wz-msg').textContent = text; $('wz-msg').hidden = !text; }
+  dialog.addEventListener('input', () => msg());
+  dialog.addEventListener('change', () => msg());
+
+  // What each step looked like when shown, to know whether closing would lose something
+  const paneValues = (i: number) => JSON.stringify([...dialog.querySelectorAll<HTMLInputElement>(`.wz-pane[data-pane="${i}"] input:not([type=search]), .wz-pane[data-pane="${i}"] textarea`)]
+    .filter((x) => !x.closest('#wz-new-guest')).map((x) => (x.type === 'checkbox' || x.type === 'radio' ? x.checked : x.value)));
+  let shownAs = '';
+  const changed = () => paneValues(step) !== shownAs || (step === 1 && pickedWines.size > 0) || (step === 2 && pickedGuests.size > 0);
+  function showSaved() {
+    $('wz-saved').hidden = !tasting;
+    $('wz-draft-note').hidden = !!tasting;
+  }
 
   function show(i: number) {
     step = i;
@@ -46,6 +61,9 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     $('wz-save').textContent = t(!tasting && i === 0 ? 'wizard.createClose' : 'wizard.saveClose');
     $('wz-save').hidden = i === 3;
     msg();
+    showSaved();
+    leaving(false);
+    shownAs = paneValues(i);
     dialog.querySelector('.wz-body')!.scrollTop = 0;
     dialog.querySelector('.wz-steps .current')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
@@ -53,27 +71,43 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   // ---------- Step 1: details ----------
   function fillDetails() {
     $<HTMLInputElement>('wz-title-input').value = (tasting?.title as string) ?? '';
-    writeWhen('wz', tasting?.starts_at);
+    writeWhen('wz', tasting?.starts_at, tasting?.ends_at);
     futureOnly('wz', !tasting);
+    $<HTMLInputElement>('wz-max').value = tasting?.max_guests ? String(tasting.max_guests) : '';
+    for (const id of ['wz-title-input', 'wz-date-show', 'wz-time', 'wz-end', 'wz-max', 'wz-fee']) fieldError($(id), null);
     $<HTMLTextAreaElement>('wz-intro').value = (tasting?.intro as string) ?? '';
     writeAddress('wz', (tasting ?? {}) as Record<string, string | null>);
   }
 
   async function saveDetails(): Promise<boolean> {
     const title = val('wz-title-input').trim();
-    if (!title) { msg(t('admin.titleMissing')); $('wz-title-input').focus(); return false; }
+    // Errors under the fields; the first one gets the focus
+    if (!title) fieldError($('wz-title-input'), t('admin.titleMissing'));
     // A new tasting is held from now on
-    if (!tasting && isPast('wz')) { msg(t('admin.dateInPast')); $('wz-date').focus(); return false; }
+    const whenOk = checkWhen('wz', !tasting);
+    const maxText = val('wz-max').trim();
+    const max = maxText ? Number(maxText) : null;
+    const maxOk = max == null || (Number.isInteger(max) && max >= 1 && max <= 10000);
+    if (!maxOk) fieldError($('wz-max'), t('wizard.maxBad'));
+    if (!title || !whenOk || !maxOk) {
+      const bad = dialog.querySelector<HTMLElement>('.wz-pane[data-pane="0"] [aria-invalid]');
+      if (bad) focusField(bad);
+      return false;
+    }
     const fields = {
       starts_at: readWhen('wz'),
+      ends_at: readEnd('wz'),
+      max_guests: max,
       ...readAddress('wz'),
     };
     const intro = $<HTMLTextAreaElement>('wz-intro').value.trim() || null;
     if (!tasting) {
-      const { data, error } = await supabase.rpc('create_tasting', { title, place: null, mobilepay: null, ...fields });
+      const { ends_at: _e, max_guests: _m, ...create } = fields;
+      const { data, error } = await supabase.rpc('create_tasting', { title, place: null, mobilepay: null, ...create });
       if (error || !data) { msg(t('admin.createFailed')); return false; }
       tasting = data as Tasting;
-      if (intro) await supabase.from('tastings').update({ intro }).eq('id', tasting.id);
+      const extra = { ...(intro ? { intro } : {}), ...(fields.ends_at ? { ends_at: fields.ends_at } : {}), ...(max ? { max_guests: max } : {}) };
+      if (Object.keys(extra).length) await supabase.from('tastings').update(extra).eq('id', tasting.id);
       $('wz-title').textContent = title;
     } else {
       const { error } = await supabase.from('tastings').update({ title, intro, ...fields }).eq('id', tasting.id);
@@ -128,11 +162,28 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   }
 
   // ---------- Step 3: guests ----------
-  function renderGuests() {
+  /** The guests the search shows. */
+  const visibleGuests = () => {
     const q = val('wz-guest-search').trim().toLowerCase();
+    return guests.filter((g) => !q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q));
+  };
+  function syncAll() {
+    const open = visibleGuests().filter((g) => !guestsIn.has(g.id));
+    const all = $<HTMLInputElement>('wz-all');
+    $('wz-all-box').hidden = open.length < 2;
+    all.checked = open.length > 0 && open.every((g) => pickedGuests.has(g.id));
+    all.indeterminate = !all.checked && open.some((g) => pickedGuests.has(g.id));
+  }
+  // "Select all": the guests shown by the search who are not invited yet
+  $('wz-all').addEventListener('change', () => {
+    const on = $<HTMLInputElement>('wz-all').checked;
+    for (const g of visibleGuests()) if (!guestsIn.has(g.id)) { if (on) pickedGuests.add(g.id); else pickedGuests.delete(g.id); }
+    renderGuests();
+  });
+  function renderGuests() {
     $('wz-guest-search').hidden = guests.length < 6;
-    $('wz-guests').replaceChildren(...guests
-      .filter((g) => !q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q))
+    syncAll();
+    $('wz-guests').replaceChildren(...visibleGuests()
       .map((g) => {
         const li = mk('li');
         const label = mk('label', 'wz-item');
@@ -140,7 +191,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
         box.type = 'checkbox';
         box.checked = guestsIn.has(g.id) || pickedGuests.has(g.id);
         box.disabled = guestsIn.has(g.id);
-        box.addEventListener('change', () => { if (box.checked) pickedGuests.add(g.id); else pickedGuests.delete(g.id); });
+        box.addEventListener('change', () => { if (box.checked) pickedGuests.add(g.id); else pickedGuests.delete(g.id); syncAll(); });
         const text = mk('span', 'wz-text');
         text.append(mk('b', '', g.name));
         const meta = [g.email, guestsIn.has(g.id) ? t('wizard.alreadyInvited') : ''].filter(Boolean).join(' · ');
@@ -168,13 +219,13 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     const email = val('wz-guest-email').trim().toLowerCase() || null;
     const m = $('wz-guest-msg');
     m.hidden = true;
-    if (!name) { $('wz-guest-name').focus(); return; }
-    if (email && !EMAIL_RE.test(email)) { m.textContent = t('guest.emailBad'); m.hidden = false; return; }
+    if (!name) { fieldError($('wz-guest-name'), t('wizard.guestNameMissing'), $('wz-new-guest').querySelector('.wz-pair')!); focusField($('wz-guest-name')); return; }
+    if (email && !EMAIL_RE.test(email)) { fieldError($('wz-guest-email'), t('guest.emailBad'), $('wz-new-guest').querySelector('.wz-pair')!); focusField($('wz-guest-email')); return; }
     const existing = email ? guests.find((g) => g.email?.toLowerCase() === email) : null;
     let g = existing ?? null;
     if (!g) {
       const { data, error } = await supabase.from('guests').insert({ host_id: host.id, name, email }).select('id, name, email').single();
-      if (error || !data) { m.textContent = error?.code === '23505' ? t('guestLib.emailTaken') : t('admin.guestNotAdded'); m.hidden = false; return; }
+      if (error || !data) { m.textContent = error?.code === '23505' ? t('guestLib.emailTaken') : t('admin.guestNotAdded'); m.hidden = false; m.scrollIntoView({ block: 'center' }); return; }
       g = data as LibGuest;
       guests.push(g);
       guests.sort((a, b) => a.name.localeCompare(b.name));
@@ -199,7 +250,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
 
   function fillSetup() {
     const fee = Number(tasting?.tasting_fee) || 0;
-    $<HTMLInputElement>('wz-fee').value = fee ? String(fee).replace('.', ',') : '';
+    $<HTMLInputElement>('wz-fee').value = fee ? amountText(fee, locale()) : '';
     showFee(fee > 0 || tasting?.tasting_fee_open === true);
     $<HTMLInputElement>('wz-fee-open').checked = tasting?.tasting_fee_open === true;
     $<HTMLInputElement>('wz-signup').checked = tasting?.signup_open !== false;
@@ -215,8 +266,13 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
 
   async function saveSetup(): Promise<boolean> {
     const paying = !$('wz-fee-box').hidden;
-    const fee = paying ? toNumber(val('wz-fee')) : 0;
-    if (fee != null && fee < 0) { msg(t('admin.changesNotSaved')); return false; }
+    const feeText = val('wz-fee').trim();
+    const fee = paying ? toNumber(feeText) : 0;
+    if (paying && feeText && (fee == null || fee < 0 || fee > 100000)) {
+      fieldError($('wz-fee'), t('wizard.feeBad'));
+      focusField($('wz-fee'));
+      return false;
+    }
     const patch = {
       tasting_fee: fee ?? 0,
       tasting_fee_open: paying && $<HTMLInputElement>('wz-fee-open').checked,
@@ -258,6 +314,20 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   function close() {
     if (dialog.open) dialog.close();
   }
+  /** The question in the footer when closing would lose what was changed on this step. */
+  function leaving(on: boolean) {
+    $('wz-leave').hidden = !on;
+    $('wz-actions').hidden = on;
+    if (on) $('wz-leave-stay').focus();
+  }
+  function requestClose() {
+    if (!$('wz-leave').hidden) { close(); return; } // asked already: a second Esc closes
+    if (changed()) leaving(true); else close();
+  }
+  dialog.addEventListener('cancel', (e) => { e.preventDefault(); requestClose(); });
+  $('wz-leave-save').addEventListener('click', (e) => { leaving(false); go('close', e.currentTarget as HTMLButtonElement); });
+  $('wz-leave-drop').addEventListener('click', () => close());
+  $('wz-leave-stay').addEventListener('click', () => leaving(false));
   dialog.addEventListener('close', () => onClose(tasting?.slug ?? null));
 
   // Save the current step, then go to another (or close)
@@ -270,7 +340,14 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   $('wz-next').addEventListener('click', (e) => go(step + 1, e.currentTarget as HTMLButtonElement));
   $('wz-save').addEventListener('click', (e) => go('close', e.currentTarget as HTMLButtonElement));
   $('wz-back').addEventListener('click', (e) => go(step - 1, e.currentTarget as HTMLButtonElement));
-  $('wz-close').addEventListener('click', close);
+  $('wz-close').addEventListener('click', requestClose);
+  // A new wine from the wine step: the wine guide puts it in the library and the tasting, then comes back here
+  $('wz-new-wine').addEventListener('click', async (e) => {
+    e.preventDefault();
+    if (!tasting || !(await saveWines())) return;
+    const back = `/t/${tasting.slug}/admin/?wizard=1`;
+    location.href = `/admin/wines/?new=${tasting.id}&back=${encodeURIComponent(back)}`;
+  });
   dialog.querySelectorAll<HTMLButtonElement>('.wz-step').forEach((b) =>
     b.addEventListener('click', () => { const to = Number(b.dataset.step); if (to !== step) go(to, b); }));
   $('wz-wine-search').addEventListener('input', renderWines);

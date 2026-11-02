@@ -116,12 +116,14 @@ export async function setLang(l: Lang) {
 export const money = (amount: number) =>
   new Intl.NumberFormat(locale(), { style: 'currency', currency: 'DKK' }).format(amount);
 
-export function formatWhen(iso: string, opts: { year?: boolean } = {}) {
+export function formatWhen(iso: string, opts: { year?: boolean; end?: string | null } = {}) {
   const d = new Date(iso);
   const day = new Intl.DateTimeFormat(locale(), {
     weekday: 'long', day: 'numeric', month: 'long', ...(opts.year ? { year: 'numeric' } : {}),
     timeZone: 'Europe/Copenhagen',
   }).format(d);
-  const time = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' }).format(d);
+  const hm = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' });
+  // With an end: "19:00–23:00"
+  const time = hm.format(d) + (opts.end ? `–${hm.format(new Date(opts.end))}` : '');
   return t('when.at', { day: day[0].toUpperCase() + day.slice(1), time });
 }

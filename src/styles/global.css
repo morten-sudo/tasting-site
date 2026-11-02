@@ -133,7 +133,7 @@ textarea, input[type='text'], input[type='email'], input[type='password'] {
   border-radius: var(--radius);
   padding: 0.75rem 0.85rem;
 }
-textarea:focus, input:focus { outline: none; border-color: var(--amber); }
+textarea:focus, input:focus { outline: none; border-color: var(--paper); box-shadow: 0 0 0 3px rgba(36, 28, 27, 0.14); }
 textarea { min-height: 5rem; resize: vertical; }
 
 .hint { color: var(--muted); font-size: 0.95rem; }

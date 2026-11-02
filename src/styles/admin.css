@@ -1075,7 +1075,7 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .wz-setup .wz-bulk label { display: flex; gap: 0.6rem; align-items: flex-start; cursor: pointer; font-weight: 400; margin: 0; }
 .wz-setup .wz-bulk label > span { display: flex; flex-direction: column; gap: 0.1rem; }
 .wz-setup .wz-bulk small { color: var(--muted); font-size: 0.82rem; }
-.wz-setup .wz-bulk input { margin-top: 0.2rem; accent-color: var(--amber); }
+.wz-setup .wz-bulk input { margin: 0.2rem 0 0; accent-color: var(--amber); width: 1.1rem !important; height: 1.1rem; flex: none; padding: 0; }
 
 /* Wine library: filters under the search – country → region, type, tasting */
 .admin-page .wine-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 0.9rem; }
@@ -1150,3 +1150,24 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .combo-option small { color: var(--muted); font-size: 0.8rem; text-align: right; }
 .admin-page .combo-option:hover, .admin-page .combo-option[aria-selected="true"] { background: var(--lodge); }
 .admin-page .combo-group { padding: 0.55rem 0.8rem 0.2rem; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+/* Tasting guide: "Saved as a draft" once step 1 has created it, the closing question, select all, new wine */
+.wz-top { flex-wrap: wrap; }
+.wz-saved { font-size: 0.82rem; font-weight: 600; color: var(--ok); background: #e8f1ea; border-radius: 999px; padding: 0.2rem 0.65rem; margin-right: auto; margin-left: 0.6rem; }
+.wz-saved[hidden] { display: none; }
+.wz-draft-note { font-size: 0.88rem; color: var(--muted); margin: -0.2rem 0 0.6rem; }
+.wz-draft-note[hidden] { display: none; }
+.wz-leave { display: flex; align-items: center; gap: 0.6rem 0.9rem; flex-wrap: wrap; font-weight: 600; }
+.wz-leave[hidden] { display: none; }
+.wz-all { display: flex; align-items: center; gap: 0.6rem; margin: 0.2rem 0 0.4rem; padding: 0 0.75rem; font-weight: 600; cursor: pointer; }
+.wz-all input { width: 1.1rem; height: 1.1rem; flex: none; accent-color: var(--amber); }
+.wz-all[hidden] { display: none; }
+.wz-new-wine { margin: 0.9rem 0 0; }
+dialog.wizard .wz-body { overflow-x: hidden; }
+
+/* Delete a tasting: last under Settings, set apart */
+.admin-page .danger-zone { border: 1px solid #ecc9c6; }
+.admin-page .danger-zone h2 { color: var(--error); }
+.admin-page .danger-zone .btn.ghost.danger { margin-left: 0; }
+.admin-page .td-confirm { margin-top: 0.6rem; padding: 0.75rem 0.9rem; border-radius: var(--radius); background: #fbeeed; }
+.admin-page .td-q { margin: 0 0 0.5rem; font-weight: 600; }

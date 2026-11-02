@@ -1,20 +1,70 @@
 ---
-// Date (calendar picker) and time (time picker) side by side. `prefix` makes the ids unique (e.g. "wz" → wz-date).
+// Date (our own calendar, see datetime.ts), start and end time, with quick picks for the start.
+// `prefix` makes the ids unique (e.g. "wz" → wz-date).
 const { prefix } = Astro.props as { prefix: string };
+const quick = ['18:00', '18:30', '19:00', '19:30', '20:00'];
 ---
 <div class="dt-row">
-  <div>
-    <label for={`${prefix}-date`} data-i18n="admin.date">Date</label>
-    <input id={`${prefix}-date`} type="date" />
+  <div class="dt-date">
+    <label for={`${prefix}-date-show`} data-i18n="admin.date">Date</label>
+    <button id={`${prefix}-date-show`} class="dt-field empty" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls={`${prefix}-cal`}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
+      <span data-i18n="dt.choose">Choose a date</span>
+    </button>
+    <input id={`${prefix}-date`} type="hidden" />
+    <div id={`${prefix}-cal`} class="dt-cal" role="dialog" aria-label="Calendar" data-i18n-attr="aria-label=dt.calendar" hidden></div>
   </div>
-  <div>
-    <label for={`${prefix}-time`} data-i18n="admin.time">Time</label>
-    <input id={`${prefix}-time`} type="time" step="300" />
+  <div class="dt-times">
+    <div>
+      <label for={`${prefix}-time`} data-i18n="dt.start">Starts</label>
+      <input id={`${prefix}-time`} class="dt-time" type="text" inputmode="numeric" placeholder="19:00" autocomplete="off" maxlength="5" />
+    </div>
+    <div>
+      <label for={`${prefix}-end`}><span data-i18n="dt.end">Ends</span> <span class="hint" data-i18n="dt.optional">(optional)</span></label>
+      <input id={`${prefix}-end`} class="dt-time" type="text" inputmode="numeric" placeholder="23:00" autocomplete="off" maxlength="5" />
+    </div>
   </div>
 </div>
+<div id={`${prefix}-quick`} class="dt-quick" aria-label="Start time" data-i18n-attr="aria-label=dt.start">
+  {quick.map((q) => <button type="button" class="chip" data-time={q}>{q}</button>)}
+</div>
 
-<style>
-  .dt-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 0.75rem; }
+<style is:global>
+  .dt-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 0.75rem; align-items: start; }
   .dt-row > div { min-width: 0; display: flex; flex-direction: column; }
-  .dt-row input { width: 100%; min-width: 0; box-sizing: border-box; }
+  .dt-date { position: relative; }
+  .dt-times { display: grid !important; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .dt-times > div { display: flex; flex-direction: column; min-width: 0; }
+  .dt-times input { width: 100%; min-width: 0; box-sizing: border-box; }
+  .dt-field {
+    display: flex; align-items: center; gap: 0.5rem; width: 100%; text-align: left; font: inherit; color: var(--paper);
+    background: var(--lodge); border: 1px solid var(--lodge-3); border-radius: 0.5rem; padding: 0.6rem 0.75rem; cursor: pointer;
+  }
+  .dt-field svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.6; }
+  .dt-field.empty span { color: var(--muted); }
+  .dt-field:focus-visible, .dt-field[aria-expanded="true"] { outline: none; border-color: var(--paper); box-shadow: 0 0 0 3px rgba(36, 28, 27, 0.14); }
+  .dt-field[aria-invalid] { border-color: var(--error); }
+  .dt-cal {
+    position: absolute; z-index: 30; top: calc(100% + 0.3rem); left: 0; width: min(19rem, calc(100vw - 2.5rem));
+    padding: 0.75rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+  }
+  .dt-cal[hidden] { display: none; }
+  .dt-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+  .dt-cal-head b { font-weight: 600; }
+  .dt-nav { width: 2.25rem; height: 2.25rem; border-radius: 50%; border: 1px solid var(--lodge-3); background: none; font-size: 1.2rem; cursor: pointer; color: var(--paper); }
+  .dt-nav:disabled { opacity: 0.3; cursor: default; }
+  .dt-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.15rem; text-align: center; }
+  .dt-wd { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 0.25rem 0; }
+  .dt-day { aspect-ratio: 1; min-height: 2.25rem; border: 0; border-radius: 50%; background: none; font: inherit; font-size: 0.92rem; color: var(--paper); cursor: pointer; }
+  .dt-day.weekend { color: var(--amber); }
+  .dt-day:hover:not(:disabled) { background: var(--lodge); }
+  .dt-day.today { box-shadow: inset 0 0 0 1px var(--lodge-3); font-weight: 600; }
+  .dt-day.chosen { background: var(--amber); color: #fff; font-weight: 600; }
+  .dt-day:disabled { color: var(--lodge-3); cursor: default; }
+  .dt-day:focus-visible { outline: 2px solid var(--paper); outline-offset: 1px; }
+  .dt-quick { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.45rem 0 0.2rem; }
+  .dt-quick .chip { font: inherit; font-size: 0.85rem; padding: 0.3rem 0.65rem; border-radius: 999px; border: 1px solid var(--lodge-3); background: var(--lodge-2); color: var(--paper); cursor: pointer; min-height: 2rem; }
+  .dt-quick .chip:hover { border-color: var(--paper); }
+  @media (max-width: 34rem) { .dt-row { grid-template-columns: 1fr; } }
 </style>

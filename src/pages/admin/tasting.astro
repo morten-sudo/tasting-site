@@ -168,6 +168,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <p id="fee-summary" class="hint fee-summary"></p>
       </section>
 
+      <!-- Delete the tasting: last under settings, for whoever may manage it (not co-hosts) -->
+      <section id="delete-tasting" class="block danger-zone" data-section="settings" hidden>
+        <h2 data-i18n="tastingDelete.title">Delete the tasting</h2>
+        <p class="hint" data-i18n="tastingDelete.hint">Removes the tasting with its guest list, answers, orders, quiz and chat. The wines stay in your library. It cannot be undone.</p>
+        <button id="td-ask" class="btn small ghost danger" type="button" data-i18n="tastingDelete.button">Delete tasting …</button>
+        <div id="td-confirm" class="td-confirm" hidden>
+          <p id="td-q" class="td-q"></p>
+          <div class="row-actions">
+            <button id="td-yes" class="btn small danger" type="button" data-i18n="tastingDelete.yes">Yes, delete it</button>
+            <button id="td-no" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+          </div>
+          <p id="td-msg" class="message error" hidden></p>
+        </div>
+      </section>
+
       <!-- Wines in this tasting (from the wine library) -->
       <section class="block wines-admin" data-section="wines">
         <div class="guests-head">
@@ -352,7 +367,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
   import { initWizard } from '../../lib/tasting-wizard';
-  import { initWhen, readWhen, writeWhen } from '../../lib/datetime';
+  import { initWhen, readWhen, readEnd, writeWhen, checkWhen } from '../../lib/datetime';
+  import { fieldError, focusField } from '../../lib/field-error';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
 
@@ -396,8 +412,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const { data } = await supabase.from('tastings').select('*').eq('slug', slug).maybeSingle();
     tasting = (data ?? null) as T | null;
     if (!tasting) return;
-    // Hosts are managed by whoever created the tasting and by the account's owner
-    initHosts(tasting.id, slug, tasting.host_id === host.id || (host.tenant_owner && tasting.tenant_id === host.tenant_id));
+    // Hosts are managed by whoever created the tasting and by the account's owner – who can also delete it
+    const manages = tasting.host_id === host.id || (host.tenant_owner && tasting.tenant_id === host.tenant_id);
+    initHosts(tasting.id, slug, manages);
+    $('delete-tasting').hidden = !manages;
     document.title = `${tasting.title} – Winetastr`;
     $('ta-title').textContent = tasting.title;
     ($('t-guestpage') as HTMLAnchorElement).href = tastingUrl(slug);
@@ -418,7 +436,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   function fillDetailsForm() {
     if (!tasting) return;
     ($('d-title') as HTMLInputElement).value = tasting.title;
-    writeWhen('d', tasting.starts_at as string | null);
+    writeWhen('d', tasting.starts_at as string | null, tasting.ends_at as string | null);
     writeAddress('d', tasting as Record<string, string | null>);
     ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
     resetAiIntro();
@@ -488,7 +506,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) return;
     const dash = '—';
     $('v-title').textContent = tasting.title;
-    $('v-when').textContent = tasting.starts_at ? formatWhen(tasting.starts_at as string, { year: true }) : dash;
+    $('v-when').textContent = tasting.starts_at ? formatWhen(tasting.starts_at as string, { year: true, end: tasting.ends_at as string | null }) : dash;
     $('v-place').textContent = (tasting.place as string) || dash;
     $('v-intro').textContent = (tasting.intro as string) || dash;
   }
@@ -528,10 +546,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) return;
     const msg = $('d-msg');
     const title = ($('d-title') as HTMLInputElement).value.trim();
-    if (!title) { msg.textContent = t('admin.titleEmpty'); return; }
+    if (!title) { fieldError($('d-title'), t('admin.titleEmpty')); focusField($('d-title')); return; }
+    if (!checkWhen('d', false)) { const bad = document.querySelector<HTMLElement>('#details [aria-invalid]'); if (bad) focusField(bad); return; }
     const patch = {
       title,
       starts_at: readWhen('d'),
+      ends_at: readEnd('d'),
       intro: ($('d-intro') as HTMLTextAreaElement).value.trim() || null,
       ...readAddress('d'),
     };
@@ -1144,6 +1164,26 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     }));
   }
 
+  // ---------- Delete the tasting ----------
+  $('td-ask').addEventListener('click', () => {
+    if (!tasting) return;
+    const n = participants.length;
+    $('td-q').textContent = t(n ? 'tastingDelete.qGuests' : 'tastingDelete.q', { title: tasting.title, n });
+    $('td-confirm').hidden = false;
+    $('td-ask').hidden = true;
+    $('td-no').focus();
+  });
+  $('td-no').addEventListener('click', () => { $('td-confirm').hidden = true; $('td-ask').hidden = false; $('td-ask').focus(); });
+  $('td-yes').addEventListener('click', async () => {
+    if (!tasting) return;
+    const btn = $('td-yes') as HTMLButtonElement;
+    btn.disabled = true;
+    const { error, count } = await supabase.from('tastings').delete({ count: 'exact' }).eq('id', tasting.id);
+    btn.disabled = false;
+    if (error || !count) { $('td-msg').textContent = t('tastingDelete.failed'); $('td-msg').hidden = false; return; }
+    location.href = `/admin/tastings/?deleted=${encodeURIComponent(tasting.title)}`;
+  });
+
   // ---------- Startup ----------
   let host: Host | null = null;
 
@@ -1186,6 +1226,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   if (host) {
     wizard = initWizard(host, () => location.reload());
     await loadAll();
+    // Back from making a new wine in the guide's wine step: the guide opens again at that step
+    const wz = new URLSearchParams(location.search).get('wizard');
+    if (wz && tasting) {
+      history.replaceState(null, '', location.pathname);
+      wizard.openFor(tasting as Parameters<typeof wizard.openFor>[0], Number(wz) || 1);
+    }
     if (currentAdmin()?.section === 'chat') startChat();
     setInterval(async () => {
       if (!tasting) return;
