@@ -65,6 +65,45 @@ async function imageSize(url: string): Promise<{ w: number; h: number } | null> 
 }
 
 /** A bottle shot is tall and narrow (a whole bottle standing); scenes, glasses, vineyards and cases are wider. */
+/** The shop system's own product pictures for a product page (the page itself often loads them by script):
+ *  Magento (GraphQL by url key), Shopify (/products/<handle>.json) and WooCommerce (Store API by slug). */
+async function shopPictures(pageUrl: string, html: string): Promise<{ urls: string[]; via: string } | null> {
+  const u = new URL(pageUrl);
+  const slug = u.pathname.split('/').filter(Boolean).pop()?.replace(/\.html?$/, '') ?? '';
+  if (!slug) return null;
+  const urls = (list: unknown[]) => list.map((x) => (typeof x === 'string' ? x : (x as { url?: string; src?: string })?.url ?? (x as { src?: string })?.src))
+    .filter((x): x is string => !!x && /^https?:/.test(x) && !/placeholder/i.test(x));
+  try {
+    if (/\/products\//.test(u.pathname)) { // Shopify
+      const r = await fetch(`${u.origin}/products/${slug}.json`, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(5000) });
+      if (r.ok) {
+        const p = ((await r.json()) as { product?: { images?: { src: string }[] } }).product;
+        const list = urls(p?.images ?? []);
+        if (list.length) return { urls: list, via: 'Shopify' };
+      }
+    }
+    // Magento: its marks in the page (also written JSON-escaped, \u002Fmedia\u002Fcatalog), or a product address ending in .html
+    if (/media.{0,6}catalog|mage-|magento|static.{0,6}version|graphql/i.test(html) || /\.html?$/.test(u.pathname)) { // Magento
+      const query = `{products(filter:{url_key:{eq:${JSON.stringify(slug)}}}){items{name image{url} small_image{url} media_gallery{url}}}}`;
+      const r = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query }), signal: AbortSignal.timeout(6000) });
+      if (r.ok) {
+        const it = ((await r.json()) as { data?: { products?: { items?: { image?: { url: string }; small_image?: { url: string }; media_gallery?: { url: string }[] }[] } } }).data?.products?.items?.[0];
+        const list = urls([...(it?.media_gallery ?? []), it?.image, it?.small_image].filter(Boolean) as unknown[]);
+        if (list.length) return { urls: [...new Set(list)], via: 'Magento' };
+      }
+    }
+    if (/wp-content|woocommerce/i.test(html)) { // WooCommerce
+      const r = await fetch(`${u.origin}/wp-json/wc/store/v1/products?slug=${encodeURIComponent(slug)}`, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(5000) });
+      if (r.ok) {
+        const p = ((await r.json()) as { images?: { src: string }[] }[])[0];
+        const list = urls(p?.images ?? []);
+        if (list.length) return { urls: list, via: 'WooCommerce' };
+      }
+    }
+  } catch {}
+  return null;
+}
+
 const sizes: string[] = []; // what was measured (for checking)
 async function isBottleShot(url: string): Promise<boolean> {
   const s = await imageSize(url);
@@ -168,6 +207,16 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     const got = await get(page);
     if (!got) continue;
     const p = { ...got, url: page };
+    // The shop's own pictures of this product: the surest source
+    const shop = await shopPictures(page, got.html);
+    if (shop) {
+      seen.push(`${page}: ${shop.urls.length} pictures from ${shop.via}`);
+      for (const [i, url] of shop.urls.entries()) {
+        const key = url.replace(/[?#].*$/, '');
+        const score = 20 - i - pages.indexOf(page) + (NOT_BOTTLE.test(fileWords(url)) ? -15 : 0);
+        if (!images.has(key) || images.get(key)!.score < score) images.set(key, { url, page, score });
+      }
+    }
     const og = p.html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)/i)?.[1]
       ?? p.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image/i)?.[1];
     const ogUrl = og && abs(og, p.url);
