@@ -3,9 +3,8 @@
 --
 -- How it works: triggers put each event in an outbox (notifications) and ask the site (/api/notify) to send.
 -- The site fetches the waiting events with claim_notifications(secret), which also marks them sent, and emails
--- them grouped per host and tasting. The secret is set by the owner of the site, in two places, never in code:
---   Cloudflare Pages: environment variable NOTIFY_SECRET
---   Supabase:         select vault.create_secret('<the same secret>', 'notify_secret');
+-- them grouped per host and tasting. (The shared secret first planned here was replaced by a one-time token
+-- per batch – see 20261102_host_notifications_token.sql; nothing has to be set up.)
 create extension if not exists pg_net with schema extensions;
 
 alter table hosts add column if not exists notify_yes boolean not null default false;
