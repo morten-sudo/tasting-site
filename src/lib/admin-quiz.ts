@@ -22,7 +22,9 @@ function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 }
 
-export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQuestion[]) => void) {
+type Suggestion = { question: string; options: string[]; correct: number; explanation: string | null };
+
+export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQuestion[]) => void, quizLang: () => string = () => 'da') {
   let questions: AdminQuestion[] = [];
   let editing: AdminQuestion | null = null;
 
@@ -208,6 +210,81 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     closeForm();
     await load();
   });
+
+  // ---------- Suggestions from AI ----------
+  // Shown under the quiz; nothing is added before the host presses Add on a suggestion.
+  const aiList = $<HTMLOListElement>('q-ai-list');
+  async function suggest() {
+    const status = $('q-ai-status');
+    const level = document.querySelector<HTMLInputElement>('input[name="q-ai-level"]:checked')?.value ?? 'medium';
+    status.textContent = t('aiQuiz.writing');
+    status.hidden = false;
+    $<HTMLButtonElement>('q-ai').disabled = true;
+    $<HTMLButtonElement>('q-ai-more').disabled = true;
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      // Neither the quiz nor the suggestions already shown are asked again
+      const shown = [...aiList.querySelectorAll<HTMLElement>('.ai-q')].map((x) => x.textContent ?? '');
+      const res = await fetch('/api/suggest-quiz', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ tasting_id: tastingId, lang: quizLang(), level, existing: [...questions.map((q) => q.question), ...shown] }),
+      });
+      const out = (await res.json().catch(() => ({}))) as { questions?: Suggestion[]; error?: string };
+      if (!res.ok || !out.questions?.length) {
+        status.textContent = t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed');
+        return;
+      }
+      aiList.append(...out.questions.map(suggestionCard));
+      aiList.hidden = false;
+      $('q-ai-more').hidden = false;
+      status.textContent = t('aiQuiz.pick');
+    } catch {
+      status.textContent = t('aiQuiz.failed');
+    } finally {
+      $<HTMLButtonElement>('q-ai').disabled = false;
+      $<HTMLButtonElement>('q-ai-more').disabled = false;
+    }
+  }
+
+  function suggestionCard(sg: Suggestion) {
+    const li = mk('li', 'ai-suggestion');
+    li.append(mk('p', 'ai-q', sg.question));
+    const ul = mk('ul', 'q-options');
+    sg.options.forEach((o, i) => {
+      const item = mk('li', i === sg.correct ? 'correct' : '', o);
+      if (i === sg.correct) item.setAttribute('aria-label', `${o} – ${t('aq.correct')}`);
+      ul.append(item);
+    });
+    li.append(ul);
+    if (sg.explanation) li.append(mk('p', 'q-explain', sg.explanation));
+    const row = mk('div', 'row-actions');
+    const add = mk('button', 'btn small', t('aiQuiz.add'));
+    add.type = 'button';
+    const skip = mk('button', 'text-btn', t('aiQuiz.skip'));
+    skip.type = 'button';
+    add.addEventListener('click', async () => {
+      add.disabled = true;
+      const { error } = await supabase.from('quiz_questions').insert({
+        tasting_id: tastingId,
+        sort_order: questions.reduce((m, q) => Math.max(m, q.sort_order), 0) + 1,
+        question: sg.question,
+        options: sg.options.map((text, i) => ({ key: KEYS[i], text })),
+        correct_key: KEYS[sg.correct],
+        explanation: sg.explanation,
+      });
+      if (error) { add.disabled = false; alert(t('aq.notSaved')); return; }
+      li.remove();
+      if (!aiList.children.length) aiList.hidden = true;
+      await load();
+    });
+    skip.addEventListener('click', () => { li.remove(); if (!aiList.children.length) aiList.hidden = true; });
+    row.append(add, skip);
+    li.append(row);
+    return li;
+  }
+  $('q-ai').addEventListener('click', suggest);
+  $('q-ai-more').addEventListener('click', suggest);
 
   return { load };
 }

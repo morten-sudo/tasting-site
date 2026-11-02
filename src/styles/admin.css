@@ -992,3 +992,14 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .ai-draft { margin-top: 0.6rem; padding: 0.85rem 1rem; border: 1px dashed var(--amber); border-radius: 10px; background: #fffaf2; }
 .admin-page .ai-draft-label { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; }
 .admin-page .ai-text p { margin: 0 0 0.6rem; line-height: 1.5; }
+/* Quiz suggestions from AI */
+.admin-page .ai-quiz { margin: 0.75rem 0 1.25rem; }
+.admin-page .ai-quiz-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.admin-page .ai-quiz .segmented label { display: inline-flex; align-items: center; padding: 0.3rem 0.8rem; border-radius: 999px; cursor: pointer; font-size: 0.88rem; }
+.admin-page .ai-quiz .segmented input { position: absolute; opacity: 0; pointer-events: none; }
+.admin-page .ai-quiz .segmented label:has(input:checked) { background: var(--amber); color: var(--lodge); font-weight: 600; }
+.admin-page .ai-quiz .segmented label:has(input:focus-visible) { outline: 2px solid var(--amber); outline-offset: 2px; }
+.admin-page .ai-suggestions { list-style: none; margin: 0.75rem 0 0.5rem; padding: 0; display: grid; gap: 0.6rem; }
+.admin-page .ai-suggestion { padding: 0.85rem 1rem; border: 1px dashed var(--amber); border-radius: 10px; background: #fffaf2; }
+.admin-page .ai-suggestion .ai-q { margin: 0; font-weight: 500; }
+.admin-page .q-explain { margin: 0.4rem 0 0.5rem; color: var(--muted); font-size: 0.88rem; font-style: italic; }

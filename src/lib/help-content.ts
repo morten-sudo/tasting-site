@@ -158,12 +158,14 @@ export const HELP: HelpSection[] = [
       da: `<ul>
 <li><b><a href="g:wines/">Vinene</a></b> – gæsterne bladrer gennem vinene på telefonen, med billede, kort, druer, mad og servering, og giver hver vin stjerner og noter.</li>
 <li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">lav spørgsmål</a> med svarmuligheder under fanen <a href="t:quiz/">Quiz</a>. Slå <a href="t:settings/#controls">Quiz åben</a> til, når gæsterne skal svare, og <i>Quiz afsluttet</i>, når de rigtige svar og stillingen skal vises.</li>
+<li><b>Quiz-forslag fra AI</b> – vælg sværhedsgrad (<i>Let, Mellem, Ekspert</i>) og tryk <a href="t:quiz/#q-ai">Forslag fra AI</a>. Du får 5 spørgsmål ud fra vinene – om land og region, druer, alder, fremstilling, begreber og "hvilken passer ikke ind". Til blinde vine laves gættespørgsmål. Forslagene tilføjes kun, når du trykker <i>Tilføj</i>; tjek de rigtige svar, og ret spørgsmålet bagefter som alle andre. <i>Flere forslag</i> giver nye uden gentagelser.</li>
 <li><b><a href="t:chat/">Chat</a></b> – en fælles chat for aftenen, som både du og gæsterne kan skrive i.</li>
 <li><b>Blinde vine</b> – afslør dem undervejs, se <a href="#blind">Blindsmagning</a>.</li>
 </ul>`,
       en: `<ul>
 <li><b><a href="g:wines/">The wines</a></b> – guests browse the wines on their phone, with picture, map, grapes, food and serving, and give each wine stars and notes.</li>
 <li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">make questions</a> with answer options on the <a href="t:quiz/">Quiz</a> tab. Turn on <a href="t:settings/#controls">Quiz open</a> when the guests should answer, and <i>Quiz finished</i> when the right answers and the standings should be shown.</li>
+<li><b>Quiz suggestions from AI</b> – choose a difficulty (<i>Easy, Medium, Expert</i>) and press <a href="t:quiz/#q-ai">Suggestions from AI</a>. You get 5 questions from the wines – about country and region, grapes, age, how it is made, terms and "odd one out". Blind wines get guessing questions. Suggestions are only added when you press <i>Add</i>; check the right answers, and edit the question afterwards like any other. <i>More suggestions</i> gives new ones without repeats.</li>
 <li><b><a href="t:chat/">Chat</a></b> – a shared chat for the evening that you and the guests can write in.</li>
 <li><b>Blind wines</b> – reveal them as you go, see <a href="#blind">Blind tasting</a>.</li>
 </ul>`,
@@ -279,6 +281,9 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
   'ai-intro': { more: 'ai-intro', text: {
     da: 'AI skriver et udkast ud fra vinene. Det vises under din tekst – intet overskrives, før du vælger <i>Brug udkastet</i>, og <i>Fortryd</i> henter din tekst tilbage.',
     en: 'AI writes a draft from the wines. It is shown below your text – nothing is replaced until you choose <i>Use the draft</i>, and <i>Undo</i> brings your text back.' } },
+  'ai-quiz': { more: 'evening', text: {
+    da: 'AI foreslår 5 spørgsmål ud fra vinene i den valgte sværhedsgrad. Intet kommer i quizzen, før du trykker <i>Tilføj</i> – tjek det rigtige svar først.',
+    en: 'AI suggests 5 questions from the wines at the chosen difficulty. Nothing goes into the quiz until you press <i>Add</i> – check the right answer first.' } },
   'account-hosts': { more: 'account', text: {
     da: 'Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Kun ejeren kan tilføje og fjerne værter.',
     en: 'Every host on the account sees and edits all tastings, wines and guests. Only the owner can add and remove hosts.' } },

@@ -271,6 +271,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </div>
         <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
 
+        <!-- Suggestions from AI: shown here, added one by one only when the host chooses -->
+        <div class="ai-quiz" data-help="ai-quiz">
+          <div class="ai-quiz-bar">
+            <div class="segmented" role="radiogroup" aria-label="Difficulty" data-i18n-attr="aria-label=aiQuiz.level">
+              <label><input type="radio" name="q-ai-level" value="easy" /> <span data-i18n="aiQuiz.easy">Easy</span></label>
+              <label><input type="radio" name="q-ai-level" value="medium" checked /> <span data-i18n="aiQuiz.medium">Medium</span></label>
+              <label><input type="radio" name="q-ai-level" value="expert" /> <span data-i18n="aiQuiz.expert">Expert</span></label>
+            </div>
+            <button id="q-ai" class="btn small ghost" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.suggest">Suggestions from AI</span></button>
+          </div>
+          <p id="q-ai-status" class="hint" aria-live="polite" hidden></p>
+          <ol id="q-ai-list" class="ai-suggestions" hidden></ol>
+          <button id="q-ai-more" class="text-btn" type="button" hidden data-i18n="aiQuiz.more">More suggestions</button>
+        </div>
+
         <!-- New / edit question: side panel -->
         <dialog id="q-panel" class="sheet wide" aria-labelledby="qf-title">
         <div class="sheet-head">
@@ -1113,7 +1128,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); });
     await tastingWines.load();
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
-    await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; }).load();
+    await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; },
+      () => (tasting?.language as string | null) ?? lang()).load();
     renderParticipants();
     renderOrders();
     loadSettings();
