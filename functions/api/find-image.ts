@@ -1,0 +1,100 @@
+// Official pictures of a wine from its producer's own website (hosts only). The host picks the right one in the form.
+// 1. Pages about the wine: links on the home page and URLs in the sitemap whose words match the wine's name.
+// 2. Their pictures: the page's share picture, the product picture in its data, and <img> whose file name or alt text
+//    names the wine. Bottle shots count in favour; logos, icons, cases and gift boxes against.
+import { isHost, json } from '../../src/server/wine-ai';
+import { cleanUrl, htmlToText, NOT_BOTTLE, BOTTLE } from './read-link';
+
+const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
+const plain = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss');
+const wordsOf = (s: string) => plain(s).split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+const STOP = new Set(['the', 'and', 'des', 'les', 'del', 'della', 'chateau', 'domaine', 'wine', 'wines', 'vin', 'vino', 'red', 'white', 'rouge', 'blanc']);
+
+async function get(url: string, ms = 7000): Promise<{ url: string; html: string } | null> {
+  const u = cleanUrl(url);
+  if (!u) return null;
+  try {
+    const res = await fetch(u.href, { headers: { 'user-agent': UA, accept: 'text/html,application/xml', 'accept-language': 'en,fr;q=0.8' }, redirect: 'follow', signal: AbortSignal.timeout(ms) });
+    if (!res.ok) return null;
+    return { url: res.url || u.href, html: (await res.text()).slice(0, 1_500_000) };
+  } catch { return null; }
+}
+
+const abs = (src: string, base: string) => { try { const u = new URL(src.replace(/&amp;/g, '&'), base); if (u.protocol === 'http:') u.protocol = 'https:'; return u.href; } catch { return null; } };
+const fileWords = (url: string) => { try { return plain(decodeURIComponent(new URL(url).pathname)).replace(/[^a-z0-9]+/g, ' '); } catch { return ''; } };
+
+export const onRequestPost = async ({ request }: { request: Request }) => {
+  if (!(await isHost(request))) return json({ error: 'not_host' }, 403);
+  let body: { name?: string; producer?: string; vintage?: string; website?: string };
+  try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
+  const site = cleanUrl(String(body.website ?? ''));
+  if (!site) return json({ error: 'no_website' }, 400);
+  const producerWords = new Set(wordsOf(String(body.producer ?? '')));
+  // The words that tell this wine from the producer's others, e.g. "Mâcon-Villages" → macon, villages
+  const key = wordsOf(String(body.name ?? '')).filter((w) => !producerWords.has(w) && !STOP.has(w) && !/^\d{4}$/.test(w));
+  const all = key.length ? key : wordsOf(String(body.name ?? '')).filter((w) => !STOP.has(w));
+  if (!all.length) return json({ images: [], pages: [] });
+  const fits = (s: string) => { const t = ' ' + plain(s).replace(/[^a-z0-9]+/g, ' ') + ' '; return all.filter((w) => t.includes(` ${w} `)).length; };
+
+  // 1. Pages about the wine: links on the home page, then URLs in the sitemap
+  const home = await get(site.href);
+  if (!home) return json({ images: [], pages: [], error: 'unreachable' });
+  const host = new URL(home.url).hostname;
+  const found = new Map<string, number>();
+  const note = (href: string, text: string) => {
+    const u = abs(href, home.url);
+    if (!u || new URL(u).hostname !== host || /\.(jpe?g|png|webp|gif|pdf|svg)$/i.test(u)) return;
+    const n = fits(text + ' ' + decodeURIComponent(new URL(u).pathname));
+    if (n) found.set(u.split('#')[0], Math.max(found.get(u.split('#')[0]) ?? 0, n));
+  };
+  for (const m of home.html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)) note(m[1], htmlToText(m[2]));
+  if (found.size < 3) {
+    const maps = [new URL('/sitemap.xml', home.url).href, new URL('/sitemap_index.xml', home.url).href, new URL('/wp-sitemap.xml', home.url).href];
+    for (const sm of maps) {
+      const x = await get(sm, 5000);
+      if (!x || !/<(urlset|sitemapindex)/i.test(x.html)) continue;
+      const locs = [...x.html.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
+      // A sitemap of sitemaps: the ones about products or wines first
+      const subs = locs.filter((l) => /\.xml/i.test(l)).sort((a, b) => Number(/product|wine|vin|vini|wein/i.test(b)) - Number(/product|wine|vin|vini|wein/i.test(a))).slice(0, 4);
+      const pages = locs.filter((l) => !/\.xml/i.test(l));
+      for (const s of subs) {
+        const y = await get(s, 5000);
+        if (y) pages.push(...[...y.html.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]).filter((l) => !/\.xml/i.test(l)));
+      }
+      for (const p of pages) note(p, '');
+      break;
+    }
+  }
+  const pages = [...found.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([u]) => u);
+
+  // 2. The pictures on those pages, best first
+  const images = new Map<string, { url: string; page: string; score: number }>();
+  const add = (src: string | undefined, page: string, alt: string, base: number) => {
+    if (!src) return;
+    const u = abs(src.trim().split(/\s+/)[0], page);
+    if (!u || /\.svg(\?|$)/i.test(u) || /(logo|icon|sprite|favicon|placeholder|loader|flag|banner|header|background)/i.test(fileWords(u))) return;
+    const name = fileWords(u) + ' ' + plain(alt);
+    let score = base + fits(name) * 3 + (BOTTLE.test(name) ? 2 : 0) - (NOT_BOTTLE.test(name) ? 6 : 0);
+    if (/(\d{2,4})x(\d{2,4})/.test(u)) { const [, w] = u.match(/(\d{2,4})x(\d{2,4})/)!; if (Number(w) < 150) score -= 4; }
+    const prev = images.get(u);
+    if (!prev || prev.score < score) images.set(u, { url: u, page, score });
+  };
+  for (const page of pages) {
+    const p = await get(page);
+    if (!p) continue;
+    const og = p.html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)/i)?.[1]
+      ?? p.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image/i)?.[1];
+    add(og, p.url, '', 2);
+    for (const m of p.html.matchAll(/"image"\s*:\s*(?:\[\s*)?"([^"]+)"/g)) add(m[1].replace(/\\\//g, '/'), p.url, '', 2);
+    for (const m of p.html.matchAll(/<img\b[^>]*>/gi)) {
+      const tag = m[0];
+      const src = tag.match(/\b(?:data-src|data-lazy-src|src)=["']([^"']+)/i)?.[1];
+      const set = tag.match(/\b(?:data-srcset|srcset)=["']([^"']+)/i)?.[1];
+      const biggest = set?.split(',').map((x) => x.trim().split(/\s+/)).sort((a, b) => parseInt(b[1] ?? '0') - parseInt(a[1] ?? '0'))[0]?.[0];
+      const alt = tag.match(/\balt=["']([^"']*)/i)?.[1] ?? '';
+      add(biggest ?? src, p.url, alt, 0);
+    }
+  }
+  const list = [...images.values()].filter((i) => i.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages });
+};

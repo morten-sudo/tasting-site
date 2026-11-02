@@ -72,8 +72,8 @@ const first = (v: unknown): unknown => (Array.isArray(v) ? v[0] : v);
 
 // Shops often show the wine's case, gift box or a set next to the bottle (Supervin: …_kasse_….jpg).
 // The first picture that does not look like one of those wins; failing that, the first picture.
-const NOT_BOTTLE = /(^|[^a-z])(kasse|kasser|box|boks|case|cases|karton|carton|gave|gift|geschenk|coffret|caisse|kiste|aeske|æske|pack|bundle|set|etui|tube|glas|glass|label|etiket)([^a-z]|$)/i;
-const BOTTLE = /(^|[^a-z])(flaske|bottle|bouteille|flasche|bottiglia|botella|fles|packshot)([^a-z]|$)/i;
+export const NOT_BOTTLE = /(^|[^a-z])(kasse|kasser|box|boks|case|cases|karton|carton|gave|gift|geschenk|coffret|caisse|kiste|aeske|æske|pack|bundle|set|etui|tube|glas|glass|label|etiket)([^a-z]|$)/i;
+export const BOTTLE = /(^|[^a-z])(flaske|bottle|bouteille|flasche|bottiglia|botella|fles|packshot)([^a-z]|$)/i;
 function pickImage(urls: string[]): string | null {
   const seen = [...new Set(urls)];
   const name = (u: string) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() ?? ''); } catch { return u; } };
