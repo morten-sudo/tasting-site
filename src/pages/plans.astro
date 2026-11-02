@@ -1,0 +1,30 @@
+---
+// Features and plans – also for signed-in hosts (the sign-up page sends them on to their admin).
+import Base from '../layouts/Base.astro';
+import PlansAndFeatures from '../components/PlansAndFeatures.astro';
+---
+<Base title="page.plans">
+  <section class="wrap plans-page">
+    <h1 class="su-title" data-i18n="plans.title">Features and plans</h1>
+    <p class="su-lead" data-i18n="plans.lead">Everything Winetastr can do today, and what is coming.</p>
+    <PlansAndFeatures cta="/signup/" />
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../lib/supabase';
+  import { i18nReady, t } from '../i18n';
+  await i18nReady;
+  // Signed in: "Get started" goes to your own pages instead of the sign-up
+  const { data } = await supabase.auth.getSession();
+  if (data.session) {
+    const a = document.getElementById('plan-free-cta') as HTMLAnchorElement | null;
+    if (a) { a.href = '/home/'; delete a.dataset.i18n; a.textContent = t('landing.goHome') + ' →'; }
+  }
+</script>
+
+<style>
+  .plans-page { padding-top: 2.5rem; padding-bottom: 4rem; }
+  .su-title { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 8vw, 4rem); line-height: 1; margin: 0.4rem 0 1rem; }
+  .su-lead { font-size: 1.12rem; line-height: 1.6; max-width: 36rem; margin: 0; }
+</style>

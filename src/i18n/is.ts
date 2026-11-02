@@ -1089,4 +1089,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wine.readMore": "Lesa meira",
   "wine.readLess": "Sýna minna",
   "wine.moreAbout": "Meira um vínið og framleiðandann",
+  "page.plans": "Eiginleikar og áskriftir",
+  "plans.title": "Eiginleikar og áskriftir",
+  "plans.lead": "Allt sem Winetastr getur í dag – og það sem er á leiðinni.",
 };

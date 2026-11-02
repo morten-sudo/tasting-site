@@ -1088,4 +1088,7 @@ export const en = {
   "wine.readMore": "Read more",
   "wine.readLess": "Show less",
   "wine.moreAbout": "More about the wine and the producer",
+  "page.plans": "Features and plans",
+  "plans.title": "Features and plans",
+  "plans.lead": "Everything Winetastr can do today, and what is coming.",
 } as const;

@@ -73,16 +73,19 @@ import Base from '../layouts/Base.astro';
         <div><h3 data-i18n="signup.f6Title">In your guests' language</h3><p data-i18n="signup.f6Text">Nine languages. Each tasting has its own, and every guest can switch for themselves.</p></div>
       </li>
     </ul>
-    <p class="ld-more"><a href="/signup/" data-i18n="landing.more">All features and plans →</a></p>
+    <p class="ld-more"><a href="/plans/" data-i18n="landing.more">All features and plans →</a></p>
   </section>
 
   <!-- Closing call to action -->
   <section class="wrap ld-final">
     <h2 class="ld-h2" data-i18n="signup.finalTitle">Ready for your next tasting?</h2>
     <p data-i18n="landing.finalText">It takes two minutes to create an account and your first tasting.</p>
-    <div class="ld-final-ctas">
+    <div id="final-out" class="ld-final-ctas">
       <a class="btn" href="/signup/" data-i18n="signup.formTitle">Create your free account</a>
       <a class="ld-link" href="/login/" data-i18n="landing.haveAccount">I already have an account</a>
+    </div>
+    <div id="final-in" class="ld-final-ctas" hidden>
+      <a class="btn" href="/home/"><span data-i18n="landing.goHome">Go to your home</span> →</a>
     </div>
   </section>
 </Base>
@@ -99,6 +102,8 @@ import Base from '../layouts/Base.astro';
     document.getElementById('cta-out')!.hidden = true;
     document.getElementById('cta-in')!.hidden = false;
     document.getElementById('invited-note')!.hidden = true;
+    document.getElementById('final-out')!.hidden = true;
+    document.getElementById('final-in')!.hidden = false;
   }
 </script>
 
@@ -143,6 +148,7 @@ import Base from '../layouts/Base.astro';
   }
   .ld-final .ld-h2 { margin-bottom: 0.6rem; }
   .ld-final p { color: var(--muted); margin: 0 auto 1.4rem; max-width: 34rem; }
+  .ld-final-ctas[hidden] { display: none; }
   .ld-final-ctas { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; justify-content: center; align-items: center; }
   .ld-link { color: var(--amber); }
 </style>

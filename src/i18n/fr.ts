@@ -1016,4 +1016,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "wine.readMore": "Lire la suite",
   "wine.readLess": "Afficher moins",
   "wine.moreAbout": "Plus sur le vin et le producteur",
+  "page.plans": "Fonctions et formules",
+  "plans.title": "Fonctions et formules",
+  "plans.lead": "Tout ce que Winetastr sait faire aujourd’hui, et ce qui arrive.",
 };
