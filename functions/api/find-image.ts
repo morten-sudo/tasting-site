@@ -100,7 +100,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
           const r2 = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q2 }), signal: AbortSignal.timeout(6000) });
           const items = r2.ok ? ((await r2.json()) as { data?: { products?: { items?: Item[] } } }).data?.products?.items ?? [] : [];
           it = items.find((x) => fits(x.name ?? '') >= need);
-          shopNotes.push(`search "${wineName}": ${items.length} products${it ? `, chose ${it.name}` : ''}`);
+          shopNotes.push(`search "${wineName}": ${items.map((x) => x.name).join(' | ')}${it ? ` → chose ${it.name}` : ''}`);
         }
         const list = urls([...(it?.media_gallery ?? []), it?.image, it?.small_image].filter(Boolean) as unknown[]);
         if (list.length) return { urls: [...new Set(list)], via: 'Magento' };
