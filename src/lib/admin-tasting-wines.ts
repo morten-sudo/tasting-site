@@ -15,7 +15,7 @@ type LibWine = { id: number; name: string; producer: string | null; style: strin
 type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean; blind: boolean;
   price_tiers: Tier[]; wines: LibWine };
 type Tier = { qty: number; price: number };
-export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number };
+export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number; tiers: Tier[] };
 
 export function initTastingWines(tastingId: string, tenantId: string, onChange: (wines: TastingWine[]) => void) {
   let rows: Row[] = [];
@@ -263,7 +263,7 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
   });
 
   function emit() {
-    onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order })));
+    onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order, tiers: r.price_tiers ?? [] })));
   }
 
   // ---------- Picker: add wines from the library ----------

@@ -1194,4 +1194,11 @@ export const en = {
   "set.feeNone": "The guests do not pay for the tasting itself.",
   "hosts.removeQ": "Remove {name} as host of this tasting?",
   "hosts.removed": "{name} is no longer a host.",
+  "bulk.question": "{n} wines have a quantity price. Who counts towards it?",
+  "bulk.question#one": "{n} wine has a quantity price. Who counts towards it?",
+  "bulk.segGuest": "Each guest",
+  "bulk.segPooled": "All guests together",
+  "bulk.exGuest": "A guest must order {n} bottles of a wine themselves to get the quantity price.",
+  "bulk.exPooled": "The guests’ bottles of a wine count together – e.g. Anna 4 + Bo 2 = 6, and both get the quantity price. Prices are provisional until you close ordering.",
+  "bulk.exNone": "Choose one before you open for orders.",
 } as const;

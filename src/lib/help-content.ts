@@ -195,20 +195,20 @@ export const HELP: HelpSection[] = [
     body: {
       da: `<p>Når <a href="t:settings/#controls">Bestilling åben</a> er slået til, kan gæsterne lægge de vine i kurven, der kan bestilles, og sende bestillingen. Mængdepriser gælder automatisk.</p>
 <h4 id="bulk">Mængderabat – hver gæst eller alle samlet</h4>
-<p>Har en vin en mængdepris (fx "fra 6 flasker 359,95 kr."), vælger du under <a href="t:settings/#bulk-mode">Indstillinger → Mængderabat tæller …</a>, hvad der tæller med. Du skal vælge, før du kan åbne for bestillinger:</p>
+<p>Har en vin en mængdepris (fx "fra 6 flasker 359,95 kr."), vælger du under <a href="t:settings/#bulk-mode">Indstillinger → Bestille vin</a>, hvem der tæller med – valget vises kun, når en vin i smagningen har mængdepris. Du skal vælge, før du kan åbne for bestillinger:</p>
 <ul>
-<li><b>Hver gæsts egne flasker</b> – en gæst, der bestiller 6 (også fordelt på flere bestillinger), får mængdeprisen.</li>
-<li><b>Alle gæsternes flasker samlet</b> – god til vinklubber og fællesindkøb: når gæsterne tilsammen bestiller 6, får alle mængdeprisen. Gæsterne ser "Sammen har I bestilt 4 af 6 – 2 flasker mere …". Priserne er foreløbige, indtil du lukker for bestillinger, og gæsterne bliver bedt om at vente med at betale til da.</li>
+<li><b>Hver gæst for sig</b> – en gæst, der bestiller 6 (også fordelt på flere bestillinger), får mængdeprisen.</li>
+<li><b>Alle gæster sammen</b> – god til vinklubber og fællesindkøb: når gæsterne tilsammen bestiller 6, får alle mængdeprisen. Gæsterne ser "Sammen har I bestilt 4 af 6 – 2 flasker mere …". Priserne er foreløbige, indtil du lukker for bestillinger, og gæsterne bliver bedt om at vente med at betale til da.</li>
 </ul>
 <p>Når grænsen er nået, gælder den billige pris for alle flasker – også dem ud over 6. Betalte bestillinger beholder deres pris.</p>
 <p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger, markerer dem betalt og kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
 <p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne får så en knap, der åbner MobilePay med beløb og besked udfyldt – både til bestillinger og deltagergebyr.</p>`,
       en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. Quantity prices apply automatically.</p>
 <h4 id="bulk">Quantity prices – each guest or everyone together</h4>
-<p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:settings/#bulk-mode">Settings → Quantity prices count …</a> what counts. You must choose before you can open ordering:</p>
+<p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:settings/#bulk-mode">Settings → Order wine</a> who counts – the choice only shows when a wine in the tasting has a quantity price. You must choose before you can open ordering:</p>
 <ul>
-<li><b>Each guest's own bottles</b> – a guest who orders 6 (also over several orders) gets the quantity price.</li>
-<li><b>All the guests' bottles together</b> – good for wine clubs and joint orders: when the guests together order 6, everyone gets the quantity price. Guests see "Together you have ordered 4 of 6 – 2 more …". Prices are provisional until you close ordering, and guests are asked to wait with paying until then.</li>
+<li><b>Each guest</b> – a guest who orders 6 (also over several orders) gets the quantity price.</li>
+<li><b>All guests together</b> – good for wine clubs and joint orders: when the guests together order 6, everyone gets the quantity price. Guests see "Together you have ordered 4 of 6 – 2 more …". Prices are provisional until you close ordering, and guests are asked to wait with paying until then.</li>
 </ul>
 <p>Once the quantity is reached, the lower price applies to every bottle – also those beyond 6. Paid orders keep their price.</p>
 <p>On the <a href="t:orders/">Orders</a> tab you see all orders, mark them paid and can <a href="t:orders/#csv">download them as CSV</a> for the supplier.</p>

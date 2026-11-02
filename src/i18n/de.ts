@@ -1081,4 +1081,11 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "set.feeNone": "Die Gäste zahlen nicht für die Verkostung selbst.",
   "hosts.removeQ": "{name} als Gastgeber entfernen?",
   "hosts.removed": "{name} ist kein Gastgeber mehr.",
+  "bulk.question": "{n} Weine haben einen Mengenpreis. Wer zählt mit?",
+  "bulk.question#one": "{n} Wein hat einen Mengenpreis. Wer zählt mit?",
+  "bulk.segGuest": "Jeder Gast",
+  "bulk.segPooled": "Alle zusammen",
+  "bulk.exGuest": "Ein Gast muss selbst {n} Flaschen eines Weins bestellen, um den Mengenpreis zu bekommen.",
+  "bulk.exPooled": "Die Flaschen der Gäste zählen zusammen – z. B. Anna 4 + Bo 2 = 6, und beide bekommen den Mengenpreis. Preise vorläufig bis Bestellschluss.",
+  "bulk.exNone": "Wählen Sie, bevor Sie Bestellungen öffnen.",
 };

@@ -1329,3 +1329,17 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page #hosts .host-row { border: 0; border-top: 1px solid var(--lodge-3); border-radius: 0; background: none; padding: 0.75rem 0; }
 .admin-page #hosts .host-row .text-btn.danger { min-height: 2.25rem; padding: 0.35rem 0.5rem; }
 .admin-page .set-switch.tab-switch { border-top: 0; }
+
+/* Quantity prices under "Order wine": a two-way choice with an example that follows it (only when a wine has one) */
+.admin-page .bulk-choice { margin: -0.3rem 0 0.9rem; padding: 0.1rem 0 0.2rem 0.9rem; border-left: 2px solid var(--lodge-3); }
+.admin-page .bulk-choice[hidden] { display: none; }
+.admin-page .bulk-q { margin: 0 0 0.45rem; font-weight: 500; }
+.admin-page .bulk-q [data-help] { white-space: nowrap; }
+.admin-page .bulk-seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--lodge-3); border-radius: 999px; padding: 3px; background: var(--lodge-2); }
+.admin-page .bulk-seg label { display: inline-flex; align-items: center; padding: 0.35rem 0.95rem; border-radius: 999px; cursor: pointer; font-size: 0.9rem; margin: 0; text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--paper); min-height: 2.1rem; }
+.admin-page .bulk-seg input { position: absolute; opacity: 0; pointer-events: none; }
+.admin-page .bulk-seg label:has(input:checked) { background: var(--amber); color: #fff; font-weight: 600; }
+.admin-page .bulk-seg label:has(input:focus-visible) { outline: 2px solid var(--paper); outline-offset: 2px; }
+.admin-page .bulk-example { margin: 0.5rem 0 0; font-size: 0.88rem; color: var(--muted); max-width: 38rem; }
+.admin-page .bulk-example.needed { color: var(--tawny); font-weight: 500; }
+.admin-page #bulk-msg:empty { display: none; }

@@ -1195,4 +1195,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "set.feeNone": "Gæsterne betaler ikke for selve smagningen.",
   "hosts.removeQ": "Fjern {name} som vært for smagningen?",
   "hosts.removed": "{name} er ikke længere vært.",
+  "bulk.question": "{n} vine har mængdepris. Hvem tæller med?",
+  "bulk.question#one": "{n} vin har mængdepris. Hvem tæller med?",
+  "bulk.segGuest": "Hver gæst for sig",
+  "bulk.segPooled": "Alle gæster sammen",
+  "bulk.exGuest": "En gæst skal selv bestille {n} flasker af en vin for at få mængdeprisen.",
+  "bulk.exPooled": "Gæsternes flasker af en vin tæller sammen – fx Anna 4 + Bo 2 = 6, og begge får mængdeprisen. Priserne er foreløbige, til du lukker for bestillinger.",
+  "bulk.exNone": "Vælg en af dem, før du åbner for bestillinger.",
 };

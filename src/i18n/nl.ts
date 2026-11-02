@@ -1081,4 +1081,11 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "set.feeNone": "De gasten betalen niet voor de proeverij zelf.",
   "hosts.removeQ": "{name} als gastheer verwijderen?",
   "hosts.removed": "{name} is geen gastheer meer.",
+  "bulk.question": "{n} wijnen hebben een kwantumprijs. Wie telt mee?",
+  "bulk.question#one": "{n} wijn heeft een kwantumprijs. Wie telt mee?",
+  "bulk.segGuest": "Elke gast apart",
+  "bulk.segPooled": "Alle gasten samen",
+  "bulk.exGuest": "Een gast moet zelf {n} flessen van een wijn bestellen voor de kwantumprijs.",
+  "bulk.exPooled": "De flessen van de gasten tellen samen – bv. Anna 4 + Bo 2 = 6, en beiden krijgen de kwantumprijs. Prijzen voorlopig tot je bestellen sluit.",
+  "bulk.exNone": "Kies voordat je bestellen opent.",
 };

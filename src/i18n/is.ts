@@ -1195,4 +1195,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "set.feeNone": "Gestir greiða ekki fyrir smökkunina sjálfa.",
   "hosts.removeQ": "Fjarlægja {name} sem gestgjafa?",
   "hosts.removed": "{name} er ekki lengur gestgjafi.",
+  "bulk.question": "{n} vín hafa magnverð. Hver telur með?",
+  "bulk.question#one": "{n} vín hefur magnverð. Hver telur með?",
+  "bulk.segGuest": "Hver gestur",
+  "bulk.segPooled": "Allir gestir saman",
+  "bulk.exGuest": "Gestur þarf sjálfur að panta {n} flöskur til að fá magnverðið.",
+  "bulk.exPooled": "Flöskur gestanna telja saman – t.d. Anna 4 + Bo 2 = 6 og bæði fá magnverðið. Verðin eru bráðabirgða þar til þú lokar.",
+  "bulk.exNone": "Veldu annað áður en þú opnar fyrir pantanir.",
 };
