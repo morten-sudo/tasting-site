@@ -29,7 +29,9 @@ const WINE_WORDS = ['wine', 'wines', 'winery', 'vineyard', 'vineyards', 'vintage
   'nebbiolo', 'barbera', 'sangiovese', 'merlot', 'cabernet', 'chardonnay', 'pinot', 'syrah', 'shiraz', 'grenache', 'garnacha', 'riesling',
   'tempranillo', 'malbec', 'sauvignon', 'moscato', 'muscat', 'touriga', 'gruner', 'zinfandel', 'semillon', 'chenin', 'viognier', 'carmenere',
   // an age check in front of the site: only drinks producers have one
-  'alcohol', 'alcool', 'alcol', 'alkohol', 'maggiorenne', 'drinking', 'majeur', 'majeure', 'vollendet', 'mayor de edad'];
+  'alcohol', 'alcool', 'alcol', 'alkohol', 'maggiorenne', 'drinking', 'majeur', 'majeure', 'vollendet', 'mayor de edad',
+  'quando sei nato', 'data di nascita', 'date of birth', 'when were you born', 'date de naissance', 'geburtsdatum',
+  'fecha de nacimiento', 'data de nascimento', 'legal drinking age'];
 
 /** Domains to try, built from the name: kopke.com, chateau-belgrave.com, belgrave.fr, champagne-bollinger.com … */
 function guessDomains(producer: string, country: string | null, region: string | null) {
@@ -61,7 +63,7 @@ function scorePage(page: { url: string; html: string }, words: string[], origin:
   // The whole name as the domain (neirano.com, bertranddemonceny.com) is a strong sign in itself
   const domain = host.replace(/^www\./, '').split('.')[0].replace(/-/g, '');
   const ownDomain = words.length > 0 && words.every((w) => domain.includes(w));
-  const why = (named: boolean, wine: number) => `name ${named ? 'yes' : 'no'}${ownDomain ? ' (own domain)' : ''}, wine words ${wine}, ${text.length} chars${wine ? '' : ` [${text.slice(0, 160).trim()} … ${text.slice(-160).trim()}]`}`;
+  const why = (named: boolean, wine: number) => `name ${named ? 'yes' : 'no'}${ownDomain ? ' (own domain)' : ''}, wine words ${wine}, ${text.length} chars`;
   if (!words.length || !(words.every(has) || ownDomain)) return { score: null, why: why(false, 0) }; // does not name the producer
   const inOrigin = origin.some((o) => text.includes(` ${o} `));
   // About wine: wine words or grapes, and the wine's region or appellation counts as two
