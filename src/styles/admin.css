@@ -827,7 +827,9 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 /* One wine: /admin/wines/<id>/ */
 .admin-page .wd-back { display: inline-block; margin-bottom: 1rem; color: var(--muted); text-decoration: none; font-size: 0.92rem; }
 .admin-page .wd-back:hover { color: var(--paper); }
-.admin-page .wd-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; }
+.admin-page .wd-head { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.5rem; }
+.admin-page .wd-head-text { flex: 1 1 16rem; min-width: 0; }
+.admin-page .wd-pic { flex: none; }
 .admin-page .wd-pic { width: 7.5rem; height: 11rem; display: grid; place-items: center; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
 .admin-page .wd-pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .admin-page .wd-head .title { margin: 0 0 0.35rem; overflow-wrap: anywhere; }
@@ -854,9 +856,8 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .wd-map { background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
 .admin-page .wd-map svg { display: block; width: 100%; height: auto; }
 @media (max-width: 40rem) {
-  .admin-page .wd-head { grid-template-columns: auto minmax(0, 1fr); }
   .admin-page .wd-pic { width: 5.5rem; height: 8rem; }
-  .admin-page .wd-head #wd-edit { grid-column: 1 / -1; justify-self: start; }
+  .admin-page .wd-head #wd-edit { order: 3; }
 }
 .admin-page #wd-edit { white-space: nowrap; }
 .admin-page .wd-head .title { font-size: clamp(2.2rem, 6vw, 3.4rem); }
