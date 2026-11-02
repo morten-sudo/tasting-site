@@ -3,7 +3,7 @@ import Base from '../../layouts/Base.astro';
 ---
 <Base title="page.tasting" tasting>
   <section class="wrap page">
-    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
 
     <div id="invalid" class="message error" hidden>
       <p><strong data-i18n="guest.notSignedIn">You are not signed in.</strong></p>

@@ -13,7 +13,7 @@ import Base from '../../layouts/Base.astro';
       <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
       <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
     </div>
-    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
     <p id="no-wines" class="message" hidden data-i18n="wines.none">The host has not shown any wines yet.</p>
     <p id="load-error" class="message error" hidden data-i18n="wines.loadError">
       The wines could not be loaded. Check your connection and reload the page.

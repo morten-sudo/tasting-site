@@ -160,6 +160,8 @@ textarea { min-height: 5rem; resize: vertical; }
   background: url(/img/glass-spinner.svg) center / contain no-repeat;
 }
 .glass-spinner-white { background-image: url(/img/glass-spinner-white.svg); }
+.loading-line { display: flex; align-items: center; gap: 0.6rem; }
+.loading-line .glass-spinner { width: 1.8rem; height: 1.8rem; }
 
 /* Leaderboard (quiz page and big-screen page) */
 .board {

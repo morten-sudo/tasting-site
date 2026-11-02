@@ -33,7 +33,7 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
   </aside>
 
   <div class="admin-content">
-    <p id="loading" class="hint" data-i18n="common.loading">Loading …</p>
+    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
     <p id="denied" class="message error" hidden data-i18n="super.denied">This page is only for Winetastr administrators.</p>
     <div id="super-main" hidden>
       <slot />
