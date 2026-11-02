@@ -131,7 +131,10 @@ import Base from '../layouts/Base.astro';
 
   // ---------- Wines ----------
   function showWines(all: BookWine[]) {
-    stat('st-wines', new Set(all.map((w) => w.wine_id)).size, 'book.statWines');
+    // Tasted: rated, or from a tasting that has begun – not wines of a tasting still to come
+    const now = Date.now();
+    const tasted = all.filter((w) => w.rating != null || (w.starts_at != null && new Date(w.starts_at).getTime() <= now));
+    stat('st-wines', new Set(tasted.map((w) => w.wine_id)).size, 'book.statWines');
     $('no-wines').hidden = all.length > 0;
     $('w-search').parentElement!.hidden = all.length < 4;
     const render = () => {
@@ -204,7 +207,8 @@ import Base from '../layouts/Base.astro';
 
   // ---------- Tastings ----------
   function showTastings({ upcoming, past, all }: Awaited<ReturnType<typeof loadAllMyTastings>>) {
-    stat('st-tastings', past.filter((x) => x.status === 'yes').length || all.length, 'book.statTastings');
+    // The same number as the tastings listed below
+    stat('st-tastings', all.length, 'book.statTastings');
     $('up-list').replaceChildren(...upcoming.map(tastingCard));
     $('past-list').replaceChildren(...past.map(tastingCard));
     $('up-h').hidden = !upcoming.length || !past.length;

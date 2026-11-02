@@ -32,6 +32,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
           <p id="start-msg" class="message" hidden></p>
           <button class="btn" type="submit" id="start-btn" data-i18n="login.sendCode">Send code</button>
           <p class="hint su-fine" data-i18n="signup.noPassword">We send you a code by email – no password needed.</p>
+          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
         </form>
 
         <!-- Step 2: code from the email -->
@@ -42,6 +43,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
                  pattern="[0-9]*" maxlength="10" required />
           <p id="otp-msg" class="message" hidden></p>
           <button class="btn" type="submit" id="otp-btn" data-i18n="signup.create">Create my account</button>
+          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
           <p class="hint">
             <button id="back" class="link-btn" type="button" data-i18n="host.back">Change name or email</button>
           </p>

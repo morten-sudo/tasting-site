@@ -216,7 +216,7 @@ import '../../styles/admin.css';
     const others = roles.length - hosting.size;
     const more = upcoming.length > MINE_SHOWN;
     $('mine-all').hidden = !more && others === 0;
-    $('mine-all').textContent = more ? t('roles.seeAllMine', { n: hosting.size }) : t('roles.othersOnAccount', { n: others });
+    $('mine-all').textContent = more ? t('roles.seeAllMine', { n: roles.length }) : t('roles.othersOnAccount', { n: others });
     $('mine-card').hidden = false;
   }
 
