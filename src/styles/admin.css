@@ -1197,4 +1197,86 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 /* The one-step "New tasting" dialog: no steps row, a narrower window */
 @media (min-width: 48rem) { dialog.wizard.wz-single { width: min(38rem, calc(100vw - 4rem)); height: auto; max-height: calc(100vh - 4rem); } }
 .start-card[hidden] { display: none; }
+
+/* ---------- A tasting's wines: a calm list; settings in the side panel ---------- */
+.admin-page .tw-list { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+.admin-page .tw-item {
+  display: grid; grid-template-columns: auto auto 3rem minmax(0, 1fr) auto auto; gap: 0.4rem 0.9rem; align-items: center;
+  padding: 0.85rem 0.25rem; border-bottom: 1px solid var(--lodge-3); background: transparent;
+}
+.admin-page .tw-item:first-child { border-top: 1px solid var(--lodge-3); }
+.admin-page .tw-item.dragging { opacity: 0.5; background: var(--lodge-2); }
+.admin-page .tw-grip { cursor: grab; color: var(--lodge-3); font-size: 1rem; letter-spacing: -0.15em; user-select: none; padding: 0 0.1rem; }
+.admin-page .tw-item:hover .tw-grip { color: var(--muted); }
+.admin-page .tw-no { font-family: var(--display); font-size: 1.5rem; color: var(--muted); min-width: 1.4rem; text-align: right; font-variant-numeric: tabular-nums; }
+.admin-page .tw-item .wine-thumb { width: 3rem; height: 3.6rem; }
+.admin-page .tw-main { min-width: 0; }
+.admin-page .tw-name { font: inherit; font-weight: 500; font-size: 1.02rem; color: var(--paper); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.admin-page .tw-name:hover { color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+.admin-page .tw-main .lib-meta { margin: 0.1rem 0 0; }
+.admin-page .tw-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.admin-page .tw-chip { font-size: 0.78rem; padding: 0.12rem 0.55rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); background: var(--lodge-2); white-space: nowrap; }
+.admin-page .tw-chip.vis-shown { color: var(--ok); border-color: #b9d3be; background: #eef6f0; }
+.admin-page .tw-chip.vis-blind { color: #fff; border-color: var(--paper); background: var(--paper); }
+.admin-page .tw-chip.vis-hidden { border-style: dashed; }
+.admin-page .tw-chip.ord-no { color: var(--muted); }
+.admin-page .tw-price { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; }
+.admin-page .tw-price b { font-weight: 500; }
+.admin-page .tw-price small { color: var(--muted); font-size: 0.82rem; }
+.admin-page .tw-actions { display: flex; gap: 0.4rem; justify-content: flex-end; }
+.admin-page .tw-item.just-saved { animation: just-saved 2.6s ease-out; }
+@media (max-width: 40rem) {
+  .admin-page .tw-item { grid-template-columns: auto 2.6rem minmax(0, 1fr); grid-template-areas: 'no pic main' 'no pic price' 'no pic actions'; row-gap: 0.45rem; }
+  .admin-page .tw-item .wine-thumb { width: 2.6rem; height: 3.2rem; }
+  .admin-page .tw-price { align-items: baseline; flex-direction: row; flex-wrap: wrap; gap: 0 0.6rem; text-align: left; }
+  .admin-page .tw-price small::before { content: '· '; }
+  .admin-page .tw-grip { display: none; }
+  .admin-page .tw-no { grid-area: no; font-size: 1.2rem; align-self: start; }
+  .admin-page .tw-item .wine-thumb { grid-area: pic; align-self: start; }
+  .admin-page .tw-main { grid-area: main; }
+  .admin-page .tw-price { grid-area: price; }
+  .admin-page .tw-actions { grid-area: actions; justify-content: flex-start; }
+}
+
+/* The side panel for one wine */
+.admin-page .twe-form { display: grid; gap: 0.4rem; }
+.admin-page .twe-wine { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.6rem; }
+.admin-page .twe-wine .wine-thumb { width: 3rem; height: 3.6rem; flex: none; }
+.admin-page .twe-wine .lib-meta { margin: 0; }
+.admin-page #twe-retail { margin: 0.1rem 0 0; }
+.admin-page .twe-group { border: 0; border-top: 1px solid var(--lodge-3); margin: 0.9rem 0 0; padding: 0.9rem 0 0; display: grid; gap: 0.45rem; }
+.admin-page .twe-group legend { font-weight: 600; padding: 0; margin-bottom: 0.2rem; display: flex; align-items: center; }
+.admin-page .twe-group > .hint { margin: 0; }
+.admin-page .twe-tiers { display: grid; gap: 0.45rem; }
+.admin-page .twe-tier { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; font-size: 0.95rem; }
+.admin-page .twe-tier input { width: 6.5rem !important; flex: none; }
+.admin-page .twe-tier input.qty { width: 3.5rem !important; }
+.admin-page .twe-tier + .field-error, .admin-page .twe-tier ~ .field-error { margin-top: -0.2rem; }
+.admin-page #twe-add-tier { justify-self: start; }
+.admin-page .twe-choice { display: grid; gap: 0.35rem; }
+.admin-page .twe-choice label { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.55rem 0.7rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); cursor: pointer; font-weight: 400; margin: 0; text-transform: none; letter-spacing: 0; }
+.admin-page .twe-choice label:has(input:checked) { border-color: var(--amber); background: var(--lodge-2); }
+.admin-page .twe-choice input { width: 1.1rem !important; height: 1.1rem; margin: 0.15rem 0 0; flex: none; accent-color: var(--amber); }
+.admin-page .twe-choice label > span { display: flex; flex-direction: column; gap: 0.1rem; }
+.admin-page .twe-choice small { color: var(--muted); font-size: 0.85rem; }
+.admin-page .twe-switch { display: flex; align-items: flex-start; gap: 0.8rem; margin: 0.9rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--lodge-3); cursor: pointer; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.admin-page .twe-switch > span { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+.admin-page .twe-switch small { color: var(--muted); font-size: 0.85rem; }
+.admin-page .twe-switch input {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 0.1rem 0 0; padding: 0 !important;
+  width: 2.6rem !important; height: 1.5rem; border-radius: 999px; background: var(--lodge-3); position: relative; cursor: pointer; border: 0;
+}
+.admin-page .twe-switch input::after {
+  content: ''; position: absolute; top: 0.15rem; left: 0.15rem; width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 0.15s;
+}
+.admin-page .twe-switch input:checked { background: var(--amber); }
+.admin-page .twe-switch input:checked::after { transform: translateX(1.1rem); }
+.admin-page .twe-switch input:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+.admin-page .twe-pos { margin-top: 0.1rem; max-width: 12rem; }
+.admin-page label[for="twe-pos"] { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--lodge-3); }
+.admin-page .twe-form .row-actions { margin-top: 1rem; }
+.admin-page .twe-danger { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--lodge-3); }
+.admin-page .twe-danger .btn { margin-left: 0 !important; }
+.admin-page .twe-danger .hint { margin: 0.35rem 0 0; }
 .admin-page .danger-zone:not(:has(#delete-tasting:not([hidden]))) { display: none; }

@@ -223,8 +223,58 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <p id="tw-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreWines">No other wines in your library.</p>
           <p class="hint tw-new"><span data-i18n="adminTasting.newWineQ">A wine that is not in your library?</span> <a id="tw-new-wine-2" href="/admin/wines/" data-i18n="adminTasting.newWineLink">Create it here</a></p>
         </dialog>
-        <ul id="tw-list" class="lib-list"></ul>
+        <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
+        <ol id="tw-list" class="tw-list"></ol>
         <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
+
+        <dialog id="tw-edit" class="sheet" aria-labelledby="twe-title">
+          <div class="sheet-head">
+            <h2 id="twe-title"></h2>
+            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          </div>
+          <form id="twe-form" class="add-form twe-form" novalidate>
+            <div class="twe-wine">
+              <div id="twe-thumb" class="wine-thumb"></div>
+              <p id="twe-meta" class="lib-meta"></p>
+            </div>
+
+            <label for="twe-price" data-i18n="adminTasting.guestPrice">Guest price</label>
+            <div class="with-unit"><input id="twe-price" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="twe.perBottle">kr. per bottle</span></div>
+            <p id="twe-retail" class="hint"></p>
+
+            <fieldset class="twe-group">
+              <legend data-i18n="twe.tiersTitle">Quantity prices</legend>
+              <p class="hint" data-i18n="twe.tiersHint">A lower price per bottle when a guest buys several.</p>
+              <div id="twe-tiers" class="twe-tiers"></div>
+              <button id="twe-add-tier" class="text-btn" type="button" data-i18n="twe.addTier">+ Add quantity price</button>
+            </fieldset>
+
+            <fieldset class="twe-group">
+              <legend><span data-i18n="blind.guestsSee">Guests see</span><span data-help="guests-see"></span></legend>
+              <div class="twe-choice">
+                <label><input type="radio" name="twe-vis" value="shown" /> <span><b data-i18n="blind.shown">The wine</b><small data-i18n="twe.shownHint">Name, picture, price and description.</small></span></label>
+                <label><input type="radio" name="twe-vis" value="blind" /> <span><b data-i18n="blind.blind">Blind</b><small data-i18n="twe.blindHint">Only the number and colour, until you reveal it.</small></span></label>
+                <label><input type="radio" name="twe-vis" value="hidden" /> <span><b data-i18n="twe.hidden">Hidden</b><small data-i18n="twe.hiddenHint">Not shown to the guests yet.</small></span></label>
+              </div>
+            </fieldset>
+
+            <label class="wz-switch twe-switch"><input id="twe-orderable" type="checkbox" role="switch" />
+              <span><b data-i18n="admin.orderable">Can be ordered</b><small data-i18n="twe.orderableHint">Guests can put it in the cart when ordering is open.</small></span></label>
+
+            <label for="twe-pos" data-i18n="twe.position">Place in the order</label>
+            <select id="twe-pos" class="twe-pos"></select>
+
+            <p id="twe-msg" class="message error" hidden></p>
+            <div class="row-actions">
+              <button id="twe-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
+              <button id="twe-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+            </div>
+            <div class="twe-danger">
+              <button id="twe-remove" class="btn small ghost danger" type="button" data-i18n="twe.remove">Remove from the tasting</button>
+              <p class="hint" data-i18n="twe.removeHint">The wine stays in your library.</p>
+            </div>
+          </form>
+        </dialog>
       </section>
 
       <!-- Guests -->

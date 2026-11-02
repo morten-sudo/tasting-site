@@ -103,7 +103,7 @@ export const HELP: HelpSection[] = [
 <p>Træk et billede ind, vælg en fil – eller tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h4 id="tasting-wines">Vinene i en smagning</h4>
 <p>En vin, der ikke er i biblioteket endnu, opretter du direkte fra smagningen med <a href="t:wines/#tw-new-wine">Vine → Opret ny vin</a>: guiden lægger den både i biblioteket og i smagningen og sender dig tilbage bagefter.</p>
-<p>På smagningens fane <a href="t:wines/">Vine</a> sætter du for hver vin: rækkefølgen (↑ ↓), gæsteprisen, mængdepriser (fx "fra 6 flasker 80 kr."), om den kan bestilles, og hvad gæsterne ser: <i>Vinen</i>, <i>Blind</i> eller <i>Intet (skjult)</i>. Gæsternes gennemsnitlige karakter vises ved hver vin.</p>`,
+<p>På smagningens fane <a href="t:wines/">Vine</a> står vinene i den rækkefølge, de skænkes, med pris, hvad gæsterne ser (<i>Synlig</i>, <i>Blind</i> eller <i>Skjult</i>), om de kan bestilles, og gæsternes gennemsnitlige karakter. Træk i ⋮⋮ for at ændre rækkefølgen. Tryk <i>Rediger</i> ved en vin for at sætte gæsteprisen, mængdepriser (fx "fra 6 flasker 249,95 kr. pr. stk."), hvad gæsterne ser, om den kan bestilles, og dens plads – eller for at fjerne den fra smagningen (med Fortryd). En blind vin har sin egen <i>Afslør</i>-knap i listen.</p>`,
       en: `<p>Your wine library under <a href="/admin/wines/">Wines</a> is shared by all hosts on the account, and a wine can be used in many tastings.</p>
 <h4 id="filter-wines">Finding your wines</h4>
 <p>Above the list you can <a href="/admin/wines/">filter</a> by <b>country</b>, <b>region</b>, <b>type</b> and <b>tasting</b> – and search in free text. The regions follow the country: choose a country and only its regions are shown; choose a region and its country is chosen too. Under tasting you can also choose <i>Not in any tasting</i>. The number in brackets is the number of wines, and <i>Clear filters</i> shows them all again. The filters are kept in the address, so they are still there when you go back from a wine.</p>
@@ -124,7 +124,7 @@ export const HELP: HelpSection[] = [
 <p>Drag a picture in, choose a file – or press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h4 id="tasting-wines">The wines in a tasting</h4>
 <p>A wine that is not in the library yet can be created straight from the tasting with <a href="t:wines/#tw-new-wine">Wines → Create new wine</a>: the guide puts it in both the library and the tasting and brings you back afterwards.</p>
-<p>On the tasting's <a href="t:wines/">Wines</a> tab you set for each wine: the order (↑ ↓), the guest price, quantity prices (e.g. "from 6 bottles 80 kr."), whether it can be ordered, and what the guests see: <i>The wine</i>, <i>Blind</i> or <i>Nothing (hidden)</i>. The guests' average rating is shown by each wine.</p>`,
+<p>On the tasting's <a href="t:wines/">Wines</a> tab the wines are listed in the order they are poured, with price, what the guests see (<i>Shown</i>, <i>Blind</i> or <i>Hidden</i>), whether they can be ordered, and the guests' average rating. Drag ⋮⋮ to change the order. Press <i>Edit</i> by a wine to set the guest price, quantity prices (e.g. "from 6 bottles 249.95 kr. each"), what the guests see, whether it can be ordered and its place – or to remove it from the tasting (with Undo). A blind wine has its own <i>Reveal</i> button in the list.</p>`,
     },
   },
   {
@@ -134,13 +134,13 @@ export const HELP: HelpSection[] = [
       da: `<p>En blind vin vises for gæsterne som "Vin 3" med en flaskesilhuet i vinens farve (rød, hvid, rosé, mousserende …). Navn, producent, årgang, oprindelse, billede, pris og noter vises ikke – de sendes slet ikke til gæsternes telefoner. Gæsterne kan give karakter og skrive noter, men ikke bestille vinen.</p>
 <ul>
 <li><b>Hele smagningen:</b> slå <a href="t:settings/#controls">Blindsmagning</a> til under kontakterne. Alle vine bliver blinde, og vine du tilføjer senere starter blinde.</li>
-<li><b>Enkelte vine:</b> sæt <i>Gæsterne ser</i> til <i>Blind</i> ved vinen under <a href="t:wines/">Vine</a>.</li>
+<li><b>Enkelte vine:</b> tryk <i>Rediger</i> ved vinen under <a href="t:wines/">Vine</a>, og vælg <i>Blind</i> under <i>Gæsterne ser</i>.</li>
 <li><b>Afslør:</b> tryk <i>Afslør</i> ved vinen under <a href="t:wines/">Vine</a> – i den rækkefølge, der passer aftenen. Gæsternes skærme skifter selv til den rigtige vin inden for ca. 15 sekunder.</li>
 </ul>`,
       en: `<p>Guests see a blind wine as "Wine 3" with a bottle silhouette in the wine's colour (red, white, rosé, sparkling …). Name, producer, vintage, origin, picture, price and notes are not shown – they are not even sent to the guests' phones. Guests can rate it and write notes, but cannot order it.</p>
 <ul>
 <li><b>The whole tasting:</b> turn on <a href="t:settings/#controls">Blind tasting</a> under the controls. All wines become blind, and wines you add later start blind.</li>
-<li><b>Single wines:</b> set <i>Guests see</i> to <i>Blind</i> on the wine under <a href="t:wines/">Wines</a>.</li>
+<li><b>Single wines:</b> press <i>Edit</i> by the wine under <a href="t:wines/">Wines</a> and choose <i>Blind</i> under <i>Guests see</i>.</li>
 <li><b>Reveal:</b> press <i>Reveal</i> on the wine under <a href="t:wines/">Wines</a> – in whatever order suits the evening. The guests' screens switch to the real wine by themselves within about 15 seconds.</li>
 </ul>`,
     },
