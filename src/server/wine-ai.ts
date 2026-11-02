@@ -100,7 +100,7 @@ export function toFields(answer: Record<string, unknown>, hints: string[] = []):
 }
 
 // ---------- Usage: every AI call and every email is counted for the superadmin's Usage page ----------
-export type UsageFeature = 'label' | 'link' | 'producer' | 'producer-address' | 'locate' | 'intro' | 'quiz'
+export type UsageFeature = 'label' | 'link' | 'name' | 'producer' | 'producer-address' | 'locate' | 'intro' | 'quiz'
   | 'login' | 'invite' | 'notify' | 'host-invite';
 
 /** Writes one row through log_usage(); never fails the request it belongs to. */

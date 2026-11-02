@@ -1613,3 +1613,9 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 /* Orders tab: who counts towards quantity prices, under the "Order wine" switch and as wide as it */
 .admin-page [data-section='orders'] .bulk-choice { max-width: 46rem; box-sizing: border-box; margin: 0 0 1.5rem; }
 .admin-page a.tw-name { text-decoration: none; display: inline-block; }
+/* A wine with only a name: a way forward on its page */
+.admin-page .wd-empty { margin: 1rem 0 1.5rem; padding: 1rem 1.1rem; max-width: 40rem; background: #fff; border: 1px solid var(--lodge-3); border-radius: 10px; }
+.admin-page .wd-empty[hidden] { display: none; }
+.admin-page .wd-empty p { margin: 0 0 0.8rem; }
+.admin-page .wd-empty b { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+.admin-page .wd-empty span { color: var(--muted); }

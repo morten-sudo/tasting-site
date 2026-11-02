@@ -22,6 +22,15 @@ import '../../styles/admin.css';
             </div>
             <button id="wd-edit" class="btn small ghost" type="button" data-i18n="admin.edit">Edit</button>
           </div>
+          <!-- A wine with only a name: a way forward -->
+          <div id="wd-empty" class="wd-empty" hidden>
+            <p><b data-i18n="wineAdmin.emptyTitle">There is only a name on this wine so far.</b>
+              <span data-i18n="wineAdmin.emptyText">Fetch the rest from a link to a wine shop or a photo of the label – or fill it in yourself.</span></p>
+            <div class="row-actions">
+              <button id="wd-empty-fill" class="btn small" type="button" data-i18n="wineAdmin.emptyFill">Fetch from a link or photo</button>
+              <button id="wd-empty-edit" class="text-btn" type="button" data-i18n="wineAdmin.emptyEdit">Fill in yourself</button>
+            </div>
+          </div>
           <div class="wd-grid">
             <div>
               <p id="wd-description" class="wd-description" hidden></p>
@@ -249,7 +258,9 @@ import '../../styles/admin.css';
       // The address follows the wine (also after a rename or an old numeric link)
       const path = admin.paths().get(wineId!);
       if (path && path !== location.pathname) history.replaceState(null, '', path);
-      await showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true) });
+      await showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true),
+        // The panel opens at the link field (a photo can be chosen right under it)
+        fill: () => { admin.edit(wineId!); document.getElementById('wf-link')?.focus(); } });
     };
     const admin = initWineAdmin(host.id, host.tenant_id, onWinePage()
       ? { onSaved: () => { show(); }, onDeleted: (id) => { location.href = `/admin/wines/?deleted=${id}`; } } : {});

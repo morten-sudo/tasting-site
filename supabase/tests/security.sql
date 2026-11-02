@@ -410,6 +410,7 @@ begin
   assert failed, 'anyone can reprice a tasting''s orders';
   -- Usage: anyone may add a count, nobody but the superadmin may read them
   perform log_usage('login');
+  perform log_usage('name');
   begin select count(*) into n from usage_log; failed := false; exception when others then failed := true; end;
   assert failed, 'anyone can read the usage log';
   failed := false; begin perform admin_usage(); exception when others then failed := true; end;

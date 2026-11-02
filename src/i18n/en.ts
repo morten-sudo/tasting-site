@@ -1297,4 +1297,8 @@ export const en = {
   "twe.removeQ": "Remove “{name}” from the tasting?",
   "twe.removeFailed": "“{name}” could not be removed – guests may have ordered it.",
   "twe.winePage": "The wine’s page – origin, map and description",
+  "wineAdmin.emptyTitle": "There is only a name on this wine so far.",
+  "wineAdmin.emptyText": "Fetch the rest from a link to a wine shop or a photo of the label – or fill it in yourself.",
+  "wineAdmin.emptyFill": "Fetch from a link or photo",
+  "wineAdmin.emptyEdit": "Fill in yourself",
 } as const;

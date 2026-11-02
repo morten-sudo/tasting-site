@@ -89,7 +89,7 @@ export const HELP: HelpSection[] = [
 <h4 id="new-wine">Ny vin</h4>
 <p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> (under Vine eller på Overblik). Øverst i listen glider en ny række ind, hvor du kan:</p>
 <ul>
-<li><b>Skrive navnet</b> – mens du skriver, vises vine i dit bibliotek med samme navn, så du ikke laver en kopi. Tryk <i>Tilføj</i> for at oprette en ny med det navn.</li>
+<li><b>Skrive navnet</b> – mens du skriver, vises vine i dit bibliotek med samme navn, så du ikke laver en kopi. Tryk <i>Tilføj</i> for at oprette en ny med det navn; et årstal i navnet bliver vinens årgang. Vinens side tilbyder bagefter at hente resten fra et link eller et billede.</li>
 <li><b>Indsætte et link til en butik</b> – navn, type, årgang, oprindelse, beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden.</li>
 <li><b>Vælge et billede af etiketten</b> (eller trække det ind eller indsætte det) – navn, producent, årgang, type m.m. læses fra billedet.</li>
 </ul>
@@ -110,7 +110,7 @@ export const HELP: HelpSection[] = [
 <h4 id="new-wine">New wine</h4>
 <p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> (under Wines or on the Overview). A new row slides in at the top of the list, where you can:</p>
 <ul>
-<li><b>Type the name</b> – as you type, wines in your library with the same name are shown, so you do not make a copy. Press <i>Add</i> to create a new one with that name.</li>
+<li><b>Type the name</b> – as you type, wines in your library with the same name are shown, so you do not make a copy. Press <i>Add</i> to create a new one with that name; a year in the name becomes the vintage. The wine’s page then offers to fetch the rest from a link or a photo.</li>
 <li><b>Paste a link to a shop</b> – name, type, vintage, origin, description, prices, grapes, "goes with", serving and picture are fetched from the page.</li>
 <li><b>Choose a photo of the label</b> (or drag it in or paste it) – name, producer, vintage, type and more are read from the photo.</li>
 </ul>

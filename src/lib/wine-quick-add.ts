@@ -46,10 +46,13 @@ export function asLink(text: string): string | null {
     return u.hostname.includes('.') ? u.href : null;
   } catch { return null; }
 }
-/** "Barolo San Giovanni 2019" → name and vintage; a name without a year at the end has no vintage. */
+/** "Barolo San Giovanni 2019" → name and vintage; a name without a year has no vintage. */
 export function splitYear(text: string): { name: string; vintage: string | null } {
-  const m = text.trim().match(/^(.*?)[\s,–—-]+((?:19|20)\d{2})$/);
-  return m && m[1].trim().length >= 2 ? { name: m[1].trim(), vintage: m[2] } : { name: text.trim(), vintage: null };
+  // A year standing on its own anywhere in the name ("… Vigna Rocche 2013 Magnum") is the vintage
+  const m = text.trim().match(/(^|[\s,–—-])((?:19|20)\d{2})(?=$|[\s,–—-])/);
+  if (!m) return { name: text.trim(), vintage: null };
+  const name = text.replace(m[0], m[1] ? ' ' : '').replace(/\s{2,}/g, ' ').replace(/^[\s,–—-]+|[\s,–—-]+$/g, '').trim();
+  return name.length >= 2 ? { name, vintage: m[2] } : { name: text.trim(), vintage: null };
 }
 const site = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
 

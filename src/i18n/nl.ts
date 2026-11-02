@@ -1184,4 +1184,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "twe.removeQ": "“{name}” uit de proeverij verwijderen?",
   "twe.removeFailed": "“{name}” kon niet worden verwijderd – misschien hebben gasten hem besteld.",
   "twe.winePage": "Pagina van de wijn – herkomst, kaart en beschrijving",
+  "wineAdmin.emptyTitle": "Deze wijn heeft nog alleen een naam.",
+  "wineAdmin.emptyText": "Haal de rest op via een link naar een wijnwinkel of een foto van het etiket – of vul het zelf in.",
+  "wineAdmin.emptyFill": "Ophalen uit link of foto",
+  "wineAdmin.emptyEdit": "Zelf invullen",
 };

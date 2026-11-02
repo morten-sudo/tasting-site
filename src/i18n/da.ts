@@ -1298,4 +1298,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "twe.removeQ": "Fjern “{name}” fra smagningen?",
   "twe.removeFailed": "“{name}” kunne ikke fjernes – måske har gæster bestilt den.",
   "twe.winePage": "Vinens side – oprindelse, kort og beskrivelse",
+  "wineAdmin.emptyTitle": "Der er kun et navn på vinen endnu.",
+  "wineAdmin.emptyText": "Hent resten fra et link til en vinbutik eller et billede af etiketten – eller udfyld selv.",
+  "wineAdmin.emptyFill": "Hent fra link eller billede",
+  "wineAdmin.emptyEdit": "Udfyld selv",
 };

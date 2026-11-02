@@ -29,7 +29,7 @@ export function wineIdFromPath(paths: Map<number, string>, path = location.pathn
 /** True on any address below /admin/wines/ (a wine's page, found or not). */
 export const onWinePage = (path = location.pathname) => path.replace(/\/?$/, '/') !== '/admin/wines/';
 
-export async function showWinePage(id: number, actions: { edit: () => void; refresh: () => void }) {
+export async function showWinePage(id: number, actions: { edit: () => void; refresh: () => void; fill?: () => void }) {
   const { data } = await supabase.from('wines')
     .select('*, tasting_wines(price_dkk, tastings(id, slug, title, starts_at))').eq('id', id).maybeSingle();
   const w = data as Detail | null;
@@ -116,6 +116,12 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   $('wd-map').innerHTML = map?.svg ?? '';
   $('wd-map').hidden = !map;
   showMapCredit($('wd-map'), map?.how);
+
+  // Only a name so far: say so, with a way to fill in the rest (a shop link or a label photo – or by hand)
+  const empty = !w.image_url && !facts.length && !w.description && !strip && !where.length && !w.producer && !w.style;
+  $('wd-empty').hidden = !empty;
+  $('wd-empty-fill').onclick = actions.fill ?? actions.edit;
+  $('wd-empty-edit').onclick = actions.edit;
 
   // Tastings, newest first, with the guest price and the guests' ratings there
   const rows = (w.tasting_wines ?? []).filter((x) => x.tastings)
