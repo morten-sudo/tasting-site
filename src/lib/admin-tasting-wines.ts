@@ -8,6 +8,7 @@ import { t, locale, money } from '../i18n';
 import { amountText, parseAmount } from './wine-validate';
 import { fieldError } from './field-error';
 import { toast } from './toast';
+import { confirmModal } from './confirm';
 import { initQuickAdd } from './wine-quick-add';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
@@ -105,7 +106,11 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const editBtn = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
       editBtn.dataset.tip = t('admin.edit');
       editBtn.addEventListener('click', () => edit(r));
-      actions.append(editBtn);
+      // Remove from the tasting (not from the library): a quiet trash icon, asked first, with Undo
+      const del = iconButton('trash', `${t('twe.remove')}: ${w.name}`, { quiet: true });
+      del.dataset.tip = t('twe.remove');
+      del.addEventListener('click', () => removeWine(r));
+      actions.append(editBtn, del);
 
       li.append(grip, no, thumb(w), main, price, actions);
       wireDrag(li);
@@ -248,13 +253,11 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     list.querySelector<HTMLElement>(`[data-wine="${r.wine_id}"]`)?.classList.add('just-saved');
   });
 
-  // Remove from the tasting – with Undo (the wine stays in the library)
-  $('twe-remove').addEventListener('click', async () => {
-    const r = editing;
-    if (!r) return;
+  // Remove from the tasting – asked first, then with Undo (the wine stays in the library)
+  async function removeWine(r: Row): Promise<boolean> {
+    if (!(await confirmModal(t('twe.removeQ', { name: r.wines.name }), t('twe.remove'), t('twe.removeHint')))) return false;
     const { error } = await supabase.from('tasting_wines').delete().eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
-    if (error) { $('twe-msg').textContent = t('admin.changeNotSaved'); $('twe-msg').hidden = false; return; }
-    editPanel.close();
+    if (error) { toast(t('twe.removeFailed', { name: r.wines.name }), { kind: 'error', ms: 8000 }); return false; }
     const index = rows.indexOf(r);
     rows = rows.filter((x) => x !== r);
     render();
@@ -269,6 +272,10 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
         render();
       } },
     });
+    return true;
+  }
+  $('twe-remove').addEventListener('click', async () => {
+    if (editing && await removeWine(editing)) editPanel.close();
   });
 
   function emit() {

@@ -1295,4 +1295,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guestFilter.showAll": "Sýna alla",
   "guestFilter.none": "Engir",
   "guestFilter.chosen": "{n} valin",
+  "twe.removeQ": "Fjarlægja „{name}“ úr smökkuninni?",
+  "twe.removeFailed": "Ekki tókst að fjarlægja „{name}“ – kannski hafa gestir pantað það.",
 };

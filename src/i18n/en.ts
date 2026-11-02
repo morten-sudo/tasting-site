@@ -1294,4 +1294,6 @@ export const en = {
   "guestFilter.showAll": "Show all",
   "guestFilter.none": "None",
   "guestFilter.chosen": "{n} chosen",
+  "twe.removeQ": "Remove “{name}” from the tasting?",
+  "twe.removeFailed": "“{name}” could not be removed – guests may have ordered it.",
 } as const;

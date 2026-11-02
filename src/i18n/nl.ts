@@ -1181,4 +1181,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "guestFilter.showAll": "Alles tonen",
   "guestFilter.none": "Geen",
   "guestFilter.chosen": "{n} gekozen",
+  "twe.removeQ": "“{name}” uit de proeverij verwijderen?",
+  "twe.removeFailed": "“{name}” kon niet worden verwijderd – misschien hebben gasten hem besteld.",
 };
