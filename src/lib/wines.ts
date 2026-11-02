@@ -73,18 +73,18 @@ export function wineSlug(name: string): string {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'wine';
 }
 
-/** The address part of each wine in a tasting; two wines with the same name get -2, -3 … */
+/** The address part of each wine in a tasting: its name and, when it has one, its year ("kopke-vintage-2024"), so two
+ *  vintages of a wine never share an address; anything still the same gets -2, -3 … */
 export function wineSlugs(wines: (Pick<Wine, 'id' | 'name'> & { vintage?: string | null; blind?: boolean })[]): Map<number, string> {
-  // Wines with the same name (e.g. two vintages of one wine) get the vintage added, then a number
-  const count = new Map<string, number>();
-  for (const w of wines) count.set(wineSlug(w.name), (count.get(wineSlug(w.name)) ?? 0) + 1);
   const used = new Map<string, number>();
   const out = new Map<number, string>();
   for (const w of wines) {
     // A blind wine is addressed by its number in the database, so the address still works once it is revealed
     if (w.blind) { out.set(w.id, String(w.id)); continue; }
+    // The year is part of the address (not ages like "10 år", which are in the name); not twice if the name has it
+    const year = w.vintage && /^\d{4}$/.test(w.vintage.trim()) ? w.vintage.trim() : null;
     let base = wineSlug(w.name);
-    if ((count.get(base) ?? 0) > 1 && w.vintage) base = wineSlug(`${w.name} ${w.vintage}`);
+    if (year && !base.endsWith(`-${year}`)) base = `${base}-${year}`;
     const n = (used.get(base) ?? 0) + 1;
     used.set(base, n);
     out.set(w.id, n === 1 ? base : `${base}-${n}`);
