@@ -8,6 +8,7 @@ Sources (downloaded into a data folder given as the first argument):
 - Champagne municipalities from the same repository, departments 51, 10, 02, 52 and 77, saved as communes-<dep>.geojson,
   plus the Marne file as of commit cd65fc6 (2017, before Blancs-Coteaux) saved as communes-51-2017.geojson
 - Roussillon municipalities from the same repository, departments 66 and 11, saved as communes-66.geojson and communes-11.geojson
+- Rhône valley municipalities from the same repository, departments 69, 42, 07, 26, 84 and 30, saved as communes-<dep>.geojson
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
@@ -581,7 +582,94 @@ ROUSSILLON = {
               ('Saint-Paul-de-Fenouillet', 2.5050, 42.8100, 'small'), ('Argelès-sur-Mer', 3.0236, 42.5461, 'small')],
 }
 
+# ---------- Rhône ----------
+def rhone():
+    """Municipalities of Rhône (69), Loire (42), Ardèche (07), Drôme (26), Vaucluse (84) and Gard (30), named as in
+    Bourgogne ('Lemps (07)', 'Comps (30)', 'Rochegude (26)' when a name is found in more than one of them)."""
+    out, seen = {}, {}
+    for dep in ('69', '42', '07', '26', '84', '30'):
+        for f in load(f'communes-{dep}.geojson')['features']:
+            name = f['properties']['nom']
+            g = shape(f['geometry'])
+            out[f'{name} ({dep})'] = g
+            seen.setdefault(name, []).append(g)
+    out.update({n: gs[0] for n, gs in seen.items() if len(gs) == 1})
+    return out
+
+# Côtes du Rhône Villages (cahier des charges, IV 1° a): 95 municipalities in Ardèche, Drôme, Gard and Vaucluse
+CDR_VILLAGES_RHONE = [
+    # Ardèche
+    'Bourg-Saint-Andéol', "Saint-Just-d'Ardèche", "Saint-Marcel-d'Ardèche", "Saint-Martin-d'Ardèche",
+    # Drôme
+    'Bouchet', 'Mérindol-les-Oliviers', 'Mirabel-aux-Baronnies', 'Mollans-sur-Ouvèze', 'Montbrison-sur-Lez', 'Nyons',
+    'Pègue', 'Piégon', 'Rochegude (26)', 'Rousset-les-Vignes', 'Saint-Maurice-sur-Eygues', 'Saint-Pantaléon-les-Vignes',
+    'Suze-la-Rousse', 'Taulignan', 'Tulette', 'Venterol', 'Vinsobres',
+    # Gard
+    'Aiguèze', 'Bagnols-sur-Cèze', 'Castillon-du-Gard', 'Cavillargues', 'Chusclan', 'Codolet', 'Comps (30)', 'Cornillon',
+    'Domazan', 'Estézargues', 'Fournès', 'Gaujac', 'Laudun-l\'Ardoise', 'Montfrin', 'Orsan', 'Pont-Saint-Esprit',
+    'Pujaut', 'Rochefort-du-Gard', 'Sabran', 'Saint-Alexandre', 'Saint-Étienne-des-Sorts', 'Saint-Gervais',
+    "Saint-Hilaire-d'Ozilhan", 'Saint-Marcel-de-Careiret', "Saint-Michel-d'Euzet", 'Saint-Nazaire', 'Saint-Pons-la-Calm',
+    'Saint-Victor-la-Coste', 'Sauveterre', 'Saze', 'Tresques', 'Valliguières', 'Vénéjan',
+    # Vaucluse
+    'Beaumes-de-Venise', 'Bédarrides', 'Bollène', 'Buisson', 'Cairanne', 'Camaret-sur-Aigues', 'Caumont-sur-Durance',
+    'Châteauneuf-de-Gadagne', 'Courthézon', 'Faucon', 'Grillon', 'Jonquières', 'Roque-Alric', 'Lafare',
+    'Lagarde-Paréol', 'Mondragon', 'Morières-lès-Avignon', 'Orange', 'Piolenc', 'Puyméras', 'Rasteau', 'Richerenches',
+    'Roaix', 'Sablet', 'Saint-Marcellin-lès-Vaison', 'Saint-Romain-en-Viennois', 'Saint-Roman-de-Malegarde',
+    'Saint-Saturnin-lès-Avignon', 'Sainte-Cécile-les-Vignes', 'Séguret', 'Sérignan-du-Comtat', 'Sorgues', 'Suzette',
+    'Travaillan', 'Uchaux', 'Vaison-la-Romaine', 'Valréas', 'Vedène', 'Villedieu', 'Violès', 'Visan']
+
+RHONE = {
+    'id': 'rhone', 'name': 'Rhône',
+    # From Vienne to Avignon: the northern Rhône (Côte-Rôtie to Saint-Péray) and the southern Rhône (Vinsobres to
+    # Tavel) about 60 km apart, with room on both sides of the river so the map is not too narrow
+    'bounds': (4.05, 43.79, 5.62, 45.58),
+    # The Isère, Drôme and Ardèche are not in Natural Earth (10m)
+    'rivers': ['Rhône', 'Durance', 'Isère', 'Drôme', 'Ardèche'],
+    'municipalities': rhone,
+    # Côtes du Rhône (the generic appellation of the whole valley) lights the whole map
+    'whole': ['cotes-du-rhone'],
+    'sources': 'Natural Earth; IGN Admin Express',
+    # The Villages badge on the Plan de Dieu, in the middle of the southern Villages, not by the Gard or Ardèche edge
+    'label_at': {'cotes-du-rhone-villages': (4.93, 44.20)},
+    # The areas by the municipalities INAO lists in the cahiers des charges, with Admin Express names (articles dropped:
+    # 'Pègue', 'Roque-Alric', 'Roche-de-Glun'). Municipalities that are only partly in an appellation are drawn whole.
+    # Drawn in this order: Côtes du Rhône Villages (which also covers the municipalities of Cairanne, Rasteau and
+    # Beaumes-de-Venise), then the crus from north to south, the wider ones before those they share municipalities with.
+    'areas': {
+        'cotes-du-rhone-villages': CDR_VILLAGES_RHONE,
+        # North
+        # Saint-Joseph (26 municipalities) before Condrieu, which shares Chavanay, Malleval, Saint-Pierre-de-Bœuf and Limony
+        'saint-joseph': [
+            'Andance', 'Ardoix', 'Arras-sur-Rhône', 'Champagne', 'Charnas', 'Châteaubourg', 'Félines', 'Glun',
+            'Guilherand-Granges', 'Lemps (07)', 'Limony', 'Mauves', 'Ozon', 'Peyraud', 'Saint-Désirat', 'Saint-Étienne-de-Valoux',
+            'Saint-Jean-de-Muzols', 'Sarras', 'Sécheras', 'Serrières', 'Talencieux', 'Tournon-sur-Rhône', 'Vion',
+            'Chavanay', 'Malleval', 'Saint-Pierre-de-Bœuf'],
+        'cote-rotie': ['Ampuis', 'Saint-Cyr-sur-le-Rhône', 'Tupin-et-Semons'],
+        'condrieu': ['Condrieu', 'Saint-Michel-sur-Rhône', 'Vérin', 'Chavanay', 'Malleval', 'Saint-Pierre-de-Bœuf', 'Limony'],
+        'chateau-grillet': ['Saint-Michel-sur-Rhône', 'Vérin'],
+        'crozes-hermitage': ['Beaumont-Monteux', 'Chanos-Curson', 'Crozes-Hermitage', 'Érôme', 'Gervans', 'Larnage',
+                             'Mercurol-Veaunes', "Pont-de-l'Isère", 'Roche-de-Glun', 'Serves-sur-Rhône', "Tain-l'Hermitage"],
+        'hermitage': ["Tain-l'Hermitage", 'Crozes-Hermitage', 'Larnage'],
+        'cornas': ['Cornas'],
+        'saint-peray': ['Saint-Péray', 'Toulaud'],
+        # South
+        'vinsobres': ['Vinsobres'],
+        'cairanne': ['Cairanne'],
+        'rasteau': ['Rasteau'],
+        'gigondas': ['Gigondas'],
+        'vacqueyras': ['Vacqueyras', 'Sarrians'],
+        'beaumes-de-venise': ['Beaumes-de-Venise', 'Lafare', 'Roque-Alric', 'Suzette'],
+        'chateauneuf-du-pape': ['Châteauneuf-du-Pape', 'Orange', 'Courthézon', 'Bédarrides', 'Sorgues'],
+        'lirac': ['Lirac', 'Roquemaure', 'Saint-Geniès-de-Comolas', 'Saint-Laurent-des-Arbres'],
+        'tavel': ['Tavel'],
+    },
+    'towns': [('Vienne', 4.8742, 45.5253, 'mid'), ('Ampuis', 4.8108, 45.4894, 'small'), ("Tain-l'Hermitage", 4.8456, 45.0700, 'small'),
+              ('Tournon-sur-Rhône', 4.8331, 45.0672, 'small'), ('Valence', 4.8917, 44.9334, 'big'), ('Montélimar', 4.7507, 44.5581, 'mid'),
+              ('Orange', 4.8089, 44.1381, 'mid'), ('Avignon', 4.8055, 43.9493, 'big'), ('Châteauneuf-du-Pape', 4.8322, 44.0567, 'small'),
+              ('Gigondas', 5.0047, 44.1636, 'small'), ('Nyons', 5.1400, 44.3606, 'small'), ('Condrieu', 4.7667, 45.4631, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON):
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE):
         build(r)
