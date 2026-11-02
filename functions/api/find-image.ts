@@ -44,8 +44,13 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   const note = (href: string, text: string) => {
     const u = abs(href, home.url);
     if (!u || new URL(u).hostname !== host || /\.(jpe?g|png|webp|gif|pdf|svg)$/i.test(u)) return;
-    const n = fits(text + ' ' + decodeURIComponent(new URL(u).pathname));
-    if (n) found.set(u.split('#')[0], Math.max(found.get(u.split('#')[0]) ?? 0, n));
+    // Every word of the wine must be there: "Beaujolais-Villages" is not the page of a "Mâcon-Villages"
+    const n = fits(text + ' ' + decodeURIComponent(new URL(u).pathname).replace(/[-_/.]+/g, ' '));
+    if (n === all.length) {
+      const k = u.split('#')[0];
+      // the shorter address first: …/macon-villages.html rather than …/macon-villages-magnum.html
+      found.set(k, Math.max(found.get(k) ?? 0, 100 - k.length / 10));
+    }
   };
   const linksOf = (html: string) => [...html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)].map((m) => ({ href: m[1], text: htmlToText(m[2]) }));
   const homeLinks = linksOf(home.html);
@@ -85,7 +90,9 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     const u = abs(src.trim().split(/\s+/)[0], page);
     if (!u || /\.svg(\?|$)/i.test(u) || /(logo|icon|sprite|favicon|placeholder|loader|flag|banner|header|background)/i.test(fileWords(u))) return;
     const name = fileWords(u) + ' ' + plain(alt);
-    let score = base + fits(name) * 3 + (BOTTLE.test(name) ? 2 : 0) - (NOT_BOTTLE.test(name) ? 6 : 0);
+    const named = fits(name);
+    if (!named && base < 2) return; // another wine's picture on the page
+    let score = base + named * 3 + (BOTTLE.test(name) ? 2 : 0) - (NOT_BOTTLE.test(name) ? 6 : 0);
     if (/(\d{2,4})x(\d{2,4})/.test(u)) { const [, w] = u.match(/(\d{2,4})x(\d{2,4})/)!; if (Number(w) < 150) score -= 4; }
     const prev = images.get(u);
     if (!prev || prev.score < score) images.set(u, { url: u, page, score });
@@ -96,7 +103,8 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     const og = p.html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)/i)?.[1]
       ?? p.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image/i)?.[1];
     add(og, p.url, '', 2);
-    for (const m of p.html.matchAll(/"image"\s*:\s*(?:\[\s*)?"([^"]+)"/g)) add(m[1].replace(/\\\//g, '/'), p.url, '', 2);
+    const unjson = (v: string) => { try { return JSON.parse(`"${v}"`) as string; } catch { return v.replace(/\\\//g, '/'); } };
+    for (const m of p.html.matchAll(/"image"\s*:\s*(?:\[\s*)?"([^"]+)"/g)) add(unjson(m[1]), p.url, '', 2);
     for (const m of p.html.matchAll(/<img\b[^>]*>/gi)) {
       const tag = m[0];
       const src = tag.match(/\b(?:data-src|data-lazy-src|src)=["']([^"']+)/i)?.[1];
