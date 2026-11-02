@@ -48,7 +48,8 @@ export const WINE_RULES: Record<string, Rule> = {
   },
   'wf-offer-qty': (v, form) => {
     if (!v) return value(form, 'wf-offer-price') ? 'wineCheck.offerQtyMissing' : null;
-    return /^\d+$/.test(v) && Number(v) >= 2 && Number(v) <= 99 ? null : 'wineCheck.offerQty';
+    // 1 is allowed: a lower price on a single bottle
+    return /^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 99 ? null : 'wineCheck.offerQtyOne';
   },
 };
 // The offer's two fields share one line, so they share one message (under the line)

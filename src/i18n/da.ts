@@ -1304,4 +1304,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.emptyEdit": "Udfyld selv",
   "producer.websiteBad": "Det ligner ikke en webadresse, fx parusso.com",
   "producer.websiteSet": "Hjemmesiden er sat – den gemmes, når du trykker Gem.",
+  "wineCheck.offerQtyOne": "Antal flasker skal være et helt tal fra 1 til 99.",
 };

@@ -1303,4 +1303,5 @@ export const en = {
   "wineAdmin.emptyEdit": "Fill in yourself",
   "producer.websiteBad": "That does not look like a web address, e.g. parusso.com",
   "producer.websiteSet": "The website is set – it is saved when you press Save.",
+  "wineCheck.offerQtyOne": "The number of bottles must be a whole number from 1 to 99.",
 } as const;

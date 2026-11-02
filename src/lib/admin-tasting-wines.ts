@@ -287,13 +287,15 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   }
 
   // ---------- Adding: the line above the list (wine-quick-add.ts) ----------
+  /** The guest price a wine starts with: the shop's offer when it is on a single bottle, else the regular price */
+  const startPrice = (w: LibWine) => (w.offer_quantity === 1 && w.offer_price_dkk != null ? Number(w.offer_price_dkk) : w.retail_price_dkk);
   /** Puts a library wine last in the tasting, with the shop's prices as a start. */
   async function addWine(w: LibWine) {
     const sort = rows.reduce((mx, r) => Math.max(mx, r.sort_order), 0) + 1;
     // Start from the regular price, and the shop's offer as quantity price when it is for several bottles
     const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
     const row = {
-      tasting_id: tastingId, wine_id: w.id, sort_order: sort, price_dkk: w.retail_price_dkk,
+      tasting_id: tastingId, wine_id: w.id, sort_order: sort, price_dkk: startPrice(w),
       price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [],
     };
     // (a blind tasting makes the new wine blind; the answer says so)
@@ -329,7 +331,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       library.push(w);
       const sort = rows.reduce((mx, r) => Math.max(mx, r.sort_order), 0) + 1;
       const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
-      await supabase.from('tasting_wines').insert({ tasting_id: tastingId, wine_id: id, sort_order: sort, price_dkk: w.retail_price_dkk,
+      await supabase.from('tasting_wines').insert({ tasting_id: tastingId, wine_id: id, sort_order: sort, price_dkk: startPrice(w),
         price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [] });
     },
     done: async (id, name) => {
