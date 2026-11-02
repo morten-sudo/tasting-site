@@ -790,6 +790,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "ev.guest.order_paid": "Pöntun frá {guest} merkt greidd – {tasting}",
   "ev.guest.order_paid_undone": "Pöntun frá {guest} merkt ógreidd – {tasting}",
   "ev.login.host": "{host} skráði sig inn",
+  "ev.login.guest": "{guest} skráði sig inn (gestur)",
   "ev.admin.gdpr_delete": "Persónuupplýsingum eytt: {person}",
   "ev.admin.plan_changed": "Áskrift breytt í {plan}",
   "cohost.welcomeTitle": "Velkomin(n) sem meðgestgjafi",

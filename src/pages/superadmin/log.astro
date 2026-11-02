@@ -1,0 +1,68 @@
+---
+// The log for all accounts in one list: hosts, guests, sign-ins and the superadmin's own actions.
+import Base from '../../layouts/Base.astro';
+import SuperNav from '../../components/SuperNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="super.log">
+  <section class="wrap admin-page">
+    <SuperNav active="log">
+      <h1 class="title" data-i18n="super.log">Log</h1>
+      <div id="log-filters" class="filters" role="tablist">
+        <button type="button" role="tab" data-kind="" aria-selected="true"><b data-i18n="super.logFilterAll">All</b></button>
+        <button type="button" role="tab" data-kind="host"><b data-i18n="super.logFilterHost">Hosts</b></button>
+        <button type="button" role="tab" data-kind="guest"><b data-i18n="super.logFilterGuest">Guests</b></button>
+        <button type="button" role="tab" data-kind="login"><b data-i18n="super.logFilterLogin">Sign-ins</b></button>
+        <button type="button" role="tab" data-kind="admin"><b data-i18n="super.logFilterAdmin">Superadmin</b></button>
+      </div>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th data-i18n="super.logWhen">When</th><th></th><th data-i18n="super.logWhat">What</th>
+          <th data-i18n="super.tenant">Account</th><th data-i18n="super.logWho">By</th></tr></thead>
+        <tbody id="log"></tbody>
+      </table></div>
+      <p id="log-none" class="hint" hidden data-i18n="super.logNone">Nothing yet.</p>
+    </SuperNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { t, type Key } from '../../i18n';
+  import { requireAdmin, $, mk, cell, timeFmt, tenantUrl } from '../../lib/super-common';
+  import { eventText, eventGroup } from '../../lib/super-events';
+
+  type Ev = { at: string; kind: string; actor: string | null; tenant_id: string | null; tenant: string | null; detail: Record<string, unknown> };
+  const GROUP: Record<string, Key> = { host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' };
+  const time = timeFmt();
+  let kind = '';
+
+  async function load() {
+    const { data } = await supabase.rpc('admin_events', { lim: 1000, grp: kind || null });
+    const rows = (data ?? []) as Ev[];
+    $('log-none').hidden = rows.length > 0;
+    $('log').replaceChildren(...rows.map((e) => {
+      const tr = mk('tr');
+      const g = eventGroup(e.kind);
+      const tag = mk('td');
+      tag.append(mk('span', `ev-kind k-${g}`, t(GROUP[g] ?? 'super.log')));
+      const acc = mk('td');
+      if (e.tenant_id && e.tenant) {
+        const a = mk('a', '', e.tenant) as HTMLAnchorElement;
+        a.href = tenantUrl(e.tenant_id, 'log');
+        acc.append(a);
+      } else acc.textContent = '—';
+      tr.append(cell(time.format(new Date(e.at))), tag, cell(eventText(e.kind, e.detail)), acc, cell(e.actor ?? ''));
+      return tr;
+    }));
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('#log-filters button').forEach((b) => {
+    b.addEventListener('click', () => {
+      kind = b.dataset.kind ?? '';
+      document.querySelectorAll('#log-filters button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+      load();
+    });
+  });
+
+  if (await requireAdmin()) load();
+</script>

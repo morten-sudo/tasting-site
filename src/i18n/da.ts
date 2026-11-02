@@ -790,6 +790,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "ev.guest.order_paid": "Bestilling fra {guest} markeret betalt – {tasting}",
   "ev.guest.order_paid_undone": "Bestilling fra {guest} markeret ikke betalt – {tasting}",
   "ev.login.host": "{host} loggede ind",
+  "ev.login.guest": "{guest} loggede ind (gæst)",
   "ev.admin.gdpr_delete": "Persondata slettet: {person}",
   "ev.admin.plan_changed": "Plan ændret til {plan}",
   "cohost.welcomeTitle": "Velkommen som medvært",

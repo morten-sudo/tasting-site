@@ -789,6 +789,7 @@ export const en = {
   "ev.guest.order_paid": "Order from {guest} marked paid – {tasting}",
   "ev.guest.order_paid_undone": "Order from {guest} marked not paid – {tasting}",
   "ev.login.host": "{host} signed in",
+  "ev.login.guest": "{guest} signed in (guest)",
   "ev.admin.gdpr_delete": "Personal data deleted: {person}",
   "ev.admin.plan_changed": "Plan changed to {plan}",
   "cohost.welcomeTitle": "Welcome as co-host",
