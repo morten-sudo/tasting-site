@@ -149,7 +149,7 @@ function mapPlaces(html: string): string[] {
 }
 
 /** Pages likely to hold the address or a map: contact, visit, find us … */
-function contactLinks(html: string, base: string) {
+function contactLinks(html: string, base: string, country: string | null = null) {
   const host = new URL(base).hostname;
   const contact: string[] = [], visit: string[] = [];
   for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,160}?)<\/a>/gi)) {
@@ -164,7 +164,12 @@ function contactLinks(html: string, base: string) {
     } catch {}
   }
   // The usual addresses of a contact page, in case the menu is built by script
-  const guesses = ['contact', 'contact/', 'contact-us', 'kontakt', 'contatti', 'contacto', 'en/contact', 'fr/contact']
+  // (the country's own words first: an Italian site has /contatti, not /contact)
+  const own: Record<string, string[]> = {
+    IT: ['contatti', 'azienda', 'chi-siamo', 'cantina'], ES: ['contacto', 'bodega', 'nosotros'], PT: ['contactos', 'contacto', 'quinta'],
+    DE: ['kontakt', 'weingut', 'impressum'], AT: ['kontakt', 'weingut', 'impressum'], FR: ['contact', 'domaine', 'nous-contacter'],
+  };
+  const guesses = [...(own[country ?? ''] ?? []), 'contact', 'contact-us', 'about', 'kontakt', 'contatti', 'contacto', 'en/contact']
     .map((p) => new URL('/' + p, base).href);
   return [...new Set([...contact.slice(0, 3), ...visit.slice(0, 2), ...guesses])].slice(0, 8);
 }
@@ -208,7 +213,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     // The producer's own domain, but a home page with little to read (an age check, a picture): read its contact or
     // about page too before deciding – the domain alone is not enough (bollinger.com is not the Champagne house)
     if (score == null && why.includes('own domain') && why.includes('wine words 0')) {
-      const links = contactLinks(page.html, page.url).slice(0, 4);
+      const links = contactLinks(page.html, page.url, country).slice(0, 4);
       const extra = (await Promise.all(links.map((u) => get(u, 6000)))).filter(Boolean) as { url: string; html: string }[];
       if (extra.length) ({ score, why } = scorePage({ url: page.url, html: page.html + extra.map((e) => e.html).join('') }, words, origin, wineWords));
       why += ` (with ${extra.length} of ${links.map((l) => new URL(l).pathname).join(' ')})`;
@@ -219,7 +224,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
 
   // 3. The place: home page first, then contact/visit pages
-  const more = (await Promise.all(contactLinks(site.html, site.url).map((u) => get(u, 5000))))
+  const more = (await Promise.all(contactLinks(site.html, site.url, country).map((u) => get(u, 5000))))
     .filter((p): p is { url: string; html: string } => !!p && p.html !== site!.html);
   const pages = [site, ...more.filter((p, i) => more.findIndex((q) => q.url === p.url || q.html === p.html) === i)];
   let location: { lat: number; lon: number; source: string; page: string } | null = null;
