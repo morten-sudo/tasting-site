@@ -419,4 +419,5 @@ def main():
     print('wrote', path, len(regions), 'regions,', len(apps), 'appellations')
 
 
-main()
+if __name__ == '__main__':
+    main()

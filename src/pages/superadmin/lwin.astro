@@ -1,0 +1,82 @@
+---
+import Base from '../../layouts/Base.astro';
+import SuperNav from '../../components/SuperNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="page.superadmin">
+  <section class="wrap admin-page">
+    <SuperNav active="lwin">
+      <h1 class="title">LWIN</h1>
+      <!-- The LWIN wine list behind "Search wine": loaded from /lwin/ (scripts/lwin.py) -->
+      <section class="block">
+        <p class="hint" data-i18n="lwin.hint">The wine list hosts search when they add a wine. It comes from the LWIN database (Liv-ex, CC BY): run scripts/lwin.py on a new download, publish, and load it here.</p>
+        <dl class="details-view">
+          <dt data-i18n="lwin.inDb">In the database</dt><dd id="lw-db">–</dd>
+          <dt data-i18n="lwin.inFiles">In the published files</dt><dd id="lw-files">–</dd>
+        </dl>
+        <div class="row-actions">
+          <button id="lw-load" class="btn small" type="button" data-i18n="lwin.load">Load into the database</button>
+        </div>
+        <p id="lw-status" class="label-status" hidden aria-live="polite"></p>
+        <progress id="lw-progress" max="1" value="0" hidden style="width:100%"></progress>
+      </section>
+    </SuperNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { t } from '../../i18n';
+  import { requireAdmin, $ } from '../../lib/super-common';
+
+  type Index = { parts: number; wines: number; columns: string[]; source: string };
+  const nf = new Intl.NumberFormat();
+  let index: Index | null = null;
+
+  async function refresh() {
+    const [{ data: count }, idx] = await Promise.all([
+      supabase.rpc('admin_lwin_count'),
+      fetch('/lwin/index.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]);
+    index = idx as Index | null;
+    $('lw-db').textContent = nf.format(Number(count ?? 0));
+    $('lw-files').textContent = index ? nf.format(index.wines) : t('lwin.noFiles');
+    ($('lw-load') as HTMLButtonElement).disabled = !index;
+  }
+
+  if (await requireAdmin()) {
+    await refresh();
+    $('lw-load').addEventListener('click', async () => {
+      if (!index) return;
+      const btn = $('lw-load') as HTMLButtonElement;
+      const status = $('lw-status');
+      const bar = $('lw-progress') as HTMLProgressElement;
+      btn.disabled = true;
+      bar.hidden = false;
+      bar.max = index.wines;
+      bar.value = 0;
+      status.hidden = false;
+      status.className = 'label-status busy';
+      let done = 0;
+      try {
+        for (let p = 1; p <= index.parts; p++) {
+          const rows = (await fetch(`/lwin/part-${String(p).padStart(2, '0')}.json`).then((r) => r.json())) as unknown[];
+          for (let i = 0; i < rows.length; i += 2000) {
+            const { error } = await supabase.rpc('admin_lwin_import', { rows: rows.slice(i, i + 2000) });
+            if (error) throw error;
+            done += Math.min(2000, rows.length - i);
+            bar.value = done;
+            status.textContent = t('lwin.loading', { done: nf.format(done), total: nf.format(index.wines) });
+          }
+        }
+        status.className = 'label-status ok';
+        status.textContent = t('lwin.loaded', { n: nf.format(done) });
+      } catch {
+        status.className = 'label-status error';
+        status.textContent = t('lwin.failed', { done: nf.format(done) });
+      }
+      btn.disabled = false;
+      await refresh();
+    });
+  }
+</script>

@@ -852,4 +852,12 @@ export const en = {
   "producer.websiteShort": "Website",
   "producer.addressShort": "Address",
   "wineMap.producer": "Pinned at the producer (from its website).",
+  "lwin.hint": "The wine list hosts search when they add a wine. It comes from the LWIN database (Liv-ex, CC BY): run scripts/lwin.py on a new download, publish, and load it here.",
+  "lwin.inDb": "In the database",
+  "lwin.inFiles": "In the published files",
+  "lwin.noFiles": "No files published",
+  "lwin.load": "Load into the database",
+  "lwin.loading": "Loading … {done} of {total}",
+  "lwin.loaded": "{n} wines loaded.",
+  "lwin.failed": "Loading stopped after {done} wines – try again (already loaded wines are just updated).",
 } as const;

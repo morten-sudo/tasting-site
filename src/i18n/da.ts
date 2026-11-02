@@ -853,4 +853,12 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteShort": "Hjemmeside",
   "producer.addressShort": "Adresse",
   "wineMap.producer": "Nålen står ved producenten (fra producentens hjemmeside).",
+  "lwin.hint": "Vinlisten, værterne søger i, når de opretter en vin. Den kommer fra LWIN-databasen (Liv-ex, CC BY): kør scripts/lwin.py på en ny fil, udgiv, og indlæs den her.",
+  "lwin.inDb": "I databasen",
+  "lwin.inFiles": "I de udgivne filer",
+  "lwin.noFiles": "Ingen filer udgivet",
+  "lwin.load": "Indlæs i databasen",
+  "lwin.loading": "Indlæser … {done} af {total}",
+  "lwin.loaded": "{n} vine indlæst.",
+  "lwin.failed": "Indlæsningen stoppede efter {done} vine – prøv igen (allerede indlæste vine bliver bare opdateret).",
 };
