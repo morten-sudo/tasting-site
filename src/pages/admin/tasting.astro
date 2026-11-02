@@ -321,20 +321,30 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block guests" data-section="guests">
         <div class="guests-head">
           <h2 data-i18n="admin.guests">Guests</h2>
-          <button id="g-invite-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
+          <div class="head-actions">
+            <!-- Show: a drop-down with checkboxes (statuses together; "Missing email" narrows them) -->
+            <div class="filter-dd" id="g-filter-dd">
+              <button id="g-filter-btn" class="btn small ghost filter-dd-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="g-filter-menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4" /></svg>
+                <span id="g-filter-label"></span>
+              </button>
+              <div id="g-filter-menu" class="filter-dd-menu" hidden>
+                <label><input type="checkbox" value="yes" /> <span data-i18n="admin.fYes">Coming</span> <small></small></label>
+                <label><input type="checkbox" value="waitlist" /> <span data-i18n="status.waitlist">Waiting list</span> <small></small></label>
+                <label><input type="checkbox" value="invited" /> <span data-i18n="status.invited">No reply yet</span> <small></small></label>
+                <label><input type="checkbox" value="no" /> <span data-i18n="status.no">Not attending</span> <small></small></label>
+                <hr />
+                <label><input type="checkbox" value="noemail" /> <span data-i18n="admin.fNoEmail">Missing email</span> <small></small></label>
+                <button id="g-filter-clear" class="text-btn" type="button" data-i18n="guestFilter.showAll">Show all</button>
+              </div>
+            </div>
+            <button id="g-invite-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
+          </div>
         </div>
         <!-- Guests are invited to wines: at least one wine in the tasting first -->
         <p id="g-needs-wine" class="message" hidden><span data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</span> <a href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></p>
 
 
-        <div class="filters" role="tablist" aria-label="Vis deltagere">
-          <button type="button" role="tab" data-filter="all" aria-selected="true"><b data-i18n="admin.fAll">All</b> <span></span></button>
-          <button type="button" role="tab" data-filter="yes"><b data-i18n="admin.fYes">Coming</b> <span></span></button>
-          <button type="button" role="tab" data-filter="waitlist"><b data-i18n="status.waitlist">Waiting list</b> <span></span></button>
-          <button type="button" role="tab" data-filter="invited"><b data-i18n="status.invited">No reply yet</b> <span></span></button>
-          <button type="button" role="tab" data-filter="no"><b data-i18n="status.no">Not attending</b> <span></span></button>
-          <button type="button" role="tab" data-filter="noemail"><b data-i18n="admin.fNoEmail">Missing email</b> <span></span></button>
-        </div>
         <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
         <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
 
@@ -855,7 +865,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   // ---------- Guests ----------
   const STATUS_ORDER: Record<string, number> = { yes: 0, waitlist: 1, invited: 2, no: 3 };
-  let guestFilter = 'all';
+  // Which guests are shown: statuses (any of them; none = all) and, if ticked, only those missing an email
+  const guestStatuses = new Set<string>();
+  let onlyNoEmail = false;
   let guestQuery = '';
   // Editing a guest of the tasting happens in a side panel
   const guestPanel = sheetPanel($('p-panel') as HTMLDialogElement);
@@ -874,9 +886,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   function matches(p: P) {
     if (guestQuery && !p.name.toLowerCase().includes(guestQuery)) return false;
-    if (guestFilter === 'all') return true;
-    if (guestFilter === 'noemail') return !p.email;
-    return p.status === guestFilter;
+    return matchesFilter(p);
+  }
+  function matchesFilter(p: P) {
+    if (onlyNoEmail && p.email) return false;
+    return !guestStatuses.size || guestStatuses.has(p.status);
   }
 
   async function saveGuest(p: P, patch: Partial<P>) {
@@ -1131,16 +1145,35 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       no: participants.filter((p) => p.status === 'no').length,
       noemail: participants.filter((p) => !p.email).length,
     };
-    document.querySelectorAll<HTMLButtonElement>('.filters button').forEach((b) => {
-      b.querySelector('span')!.textContent = String(count[b.dataset.filter!]);
-      b.setAttribute('aria-selected', String(b.dataset.filter === guestFilter));
+    document.querySelectorAll<HTMLInputElement>('#g-filter-menu input').forEach((x) => {
+      x.closest('label')!.querySelector('small')!.textContent = String(count[x.value]);
+      x.checked = x.value === 'noemail' ? onlyNoEmail : guestStatuses.has(x.value);
     });
+    // The button says what is shown: "All 22", or the chosen ones with how many
+    const names = [...guestStatuses].map((v) => STATUS[v]);
+    if (onlyNoEmail) names.push(t('admin.fNoEmail'));
+    const shown = participants.filter(matchesFilter).length;
+    $('g-filter-label').textContent = names.length ? `${names.join(', ')} · ${shown}` : `${t('admin.fAll')} · ${count.all}`;
+    $('g-filter-btn').classList.toggle('on', names.length > 0);
+    $('g-filter-clear').hidden = !names.length;
     renderFee();
   }
 
-  document.querySelectorAll<HTMLButtonElement>('.filters button').forEach((b) => {
-    b.addEventListener('click', () => { guestFilter = b.dataset.filter!; renderParticipants(); });
-  });
+  // The drop-down: opens under its button, closes on a click outside or Escape
+  const fBtn = $('g-filter-btn'), fMenu = $('g-filter-menu');
+  function filterMenu(open: boolean) {
+    fMenu.hidden = !open;
+    fBtn.setAttribute('aria-expanded', String(open));
+  }
+  fBtn.addEventListener('click', () => filterMenu(fMenu.hidden));
+  document.addEventListener('click', (e) => { if (!fMenu.hidden && !$('g-filter-dd').contains(e.target as Node)) filterMenu(false); });
+  fMenu.addEventListener('keydown', (e) => { if (e.key === 'Escape') { filterMenu(false); fBtn.focus(); } });
+  fMenu.querySelectorAll<HTMLInputElement>('input').forEach((x) => x.addEventListener('change', () => {
+    if (x.value === 'noemail') onlyNoEmail = x.checked;
+    else if (x.checked) guestStatuses.add(x.value); else guestStatuses.delete(x.value);
+    renderParticipants();
+  }));
+  $('g-filter-clear').addEventListener('click', () => { guestStatuses.clear(); onlyNoEmail = false; renderParticipants(); });
   $('guest-search').addEventListener('input', (e) => {
     guestQuery = (e.target as HTMLInputElement).value.trim().toLowerCase();
     renderParticipants();
@@ -1405,7 +1438,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     giEmail.value = '';
     syncInviteLabels();
     // Show the new guest: the filter that hides them is reset
-    if (!matches(p)) { guestFilter = 'all'; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
+    if (!matches(p)) { guestStatuses.clear(); onlyNoEmail = false; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
     renderParticipants();
     const li = document.querySelector<HTMLElement>(`[data-guest="${p.id}"]`);
     if (li) { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }

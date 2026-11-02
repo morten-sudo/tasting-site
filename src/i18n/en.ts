@@ -1291,4 +1291,5 @@ export const en = {
   "guestLib.deleted": "{name} is deleted.",
   "guestLib.deleteFailed": "{name} could not be deleted – maybe the guest has orders. Remove the orders first.",
   "guestRow.restored": "{name} is back.",
+  "guestFilter.showAll": "Show all",
 } as const;
