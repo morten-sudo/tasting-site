@@ -907,4 +907,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "blind.hidden": "Ekkert (falið)",
   "blind.reveal": "Afhjúpa",
   "blind.tasting": "Blindsmökkun (öll vín blind þar til þú afhjúpar þau)",
+  "inviteMail.sendOnInvite": "Senda boðið í tölvupósti (til gesta með netfang)",
+  "inviteMail.send": "Senda boð",
+  "inviteMail.again": "Senda aftur",
+  "inviteMail.sentAt": "Boð sent í tölvupósti {when}",
+  "inviteMail.sentTo": "Boðið var sent í tölvupósti til {name}.",
+  "inviteMail.failed": "{name} er boðið en ekki tókst að senda tölvupóstinn. Reyndu „Senda boð“ hjá gestinum eða afritaðu hlekkinn.",
+  "inviteMail.failedShort": "Ekki sent – reyndu aftur",
 };

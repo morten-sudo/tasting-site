@@ -906,4 +906,11 @@ export const en = {
   "blind.hidden": "Nothing (hidden)",
   "blind.reveal": "Reveal",
   "blind.tasting": "Blind tasting (all wines blind until you reveal them)",
+  "inviteMail.sendOnInvite": "Send the invitation by email (to guests with an email)",
+  "inviteMail.send": "Send invitation",
+  "inviteMail.again": "Send again",
+  "inviteMail.sentAt": "Invitation emailed {when}",
+  "inviteMail.sentTo": "The invitation was emailed to {name}.",
+  "inviteMail.failed": "{name} is invited, but the email could not be sent. Try \"Send invitation\" on the guest, or copy the link.",
+  "inviteMail.failedShort": "Not sent – try again",
 } as const;

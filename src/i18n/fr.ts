@@ -835,4 +835,11 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "blind.hidden": "Rien (masqué)",
   "blind.reveal": "Révéler",
   "blind.tasting": "Dégustation à l’aveugle (tous les vins à l’aveugle jusqu’à ce que vous les révéliez)",
+  "inviteMail.sendOnInvite": "Envoyer l’invitation par e-mail (aux invités ayant un e-mail)",
+  "inviteMail.send": "Envoyer l’invitation",
+  "inviteMail.again": "Renvoyer",
+  "inviteMail.sentAt": "Invitation envoyée par e-mail {when}",
+  "inviteMail.sentTo": "L’invitation a été envoyée par e-mail à {name}.",
+  "inviteMail.failed": "{name} est invité, mais l’e-mail n’a pas pu être envoyé. Essayez « Envoyer l’invitation » sur l’invité, ou copiez le lien.",
+  "inviteMail.failedShort": "Non envoyé – réessayer",
 };

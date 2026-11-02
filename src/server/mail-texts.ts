@@ -33,3 +33,44 @@ export function inviteHostMail(lang: string, v: { name: string | null; tasting: 
 </body></html>`;
   return { subject: fill(x.subject), text, html };
 }
+
+type GuestText = { subject: string; subjectFrom: string; hi: string; hiName: string; body: string; when: string; where: string; button: string; reply: string };
+// {name}, {tasting}, {inviter}: filled in below
+const INVITE_GUEST: Record<string, GuestText> = {
+  da: { subject: 'Invitation: {tasting}', subjectFrom: '{inviter} inviterer dig til {tasting}', hi: 'Hej', hiName: 'Hej {name}', body: 'du er inviteret til {tasting}.', when: 'Hvornår', where: 'Hvor', button: 'Se invitationen og svar', reply: 'Linket er personligt – det er din adgang til smagningen.' },
+  en: { subject: 'Invitation: {tasting}', subjectFrom: '{inviter} invites you to {tasting}', hi: 'Hi', hiName: 'Hi {name}', body: 'you are invited to {tasting}.', when: 'When', where: 'Where', button: 'See the invitation and reply', reply: 'The link is personal – it is your access to the tasting.' },
+  is: { subject: 'Boð: {tasting}', subjectFrom: '{inviter} býður þér á {tasting}', hi: 'Hæ', hiName: 'Hæ {name}', body: 'þér er boðið á {tasting}.', when: 'Hvenær', where: 'Hvar', button: 'Sjá boðið og svara', reply: 'Hlekkurinn er persónulegur – hann er aðgangur þinn að smökkuninni.' },
+  fr: { subject: 'Invitation : {tasting}', subjectFrom: '{inviter} vous invite à {tasting}', hi: 'Bonjour', hiName: 'Bonjour {name}', body: 'vous êtes invité à {tasting}.', when: 'Quand', where: 'Où', button: 'Voir l’invitation et répondre', reply: 'Ce lien est personnel – c’est votre accès à la dégustation.' },
+  de: { subject: 'Einladung: {tasting}', subjectFrom: '{inviter} lädt dich zu {tasting} ein', hi: 'Hallo', hiName: 'Hallo {name}', body: 'du bist zu {tasting} eingeladen.', when: 'Wann', where: 'Wo', button: 'Einladung ansehen und antworten', reply: 'Der Link ist persönlich – er ist dein Zugang zur Verkostung.' },
+  it: { subject: 'Invito: {tasting}', subjectFrom: '{inviter} ti invita a {tasting}', hi: 'Ciao', hiName: 'Ciao {name}', body: 'sei invitato a {tasting}.', when: 'Quando', where: 'Dove', button: 'Vedi l’invito e rispondi', reply: 'Il link è personale – è il tuo accesso alla degustazione.' },
+  es: { subject: 'Invitación: {tasting}', subjectFrom: '{inviter} te invita a {tasting}', hi: 'Hola', hiName: 'Hola {name}', body: 'estás invitado a {tasting}.', when: 'Cuándo', where: 'Dónde', button: 'Ver la invitación y responder', reply: 'El enlace es personal: es tu acceso a la cata.' },
+  nl: { subject: 'Uitnodiging: {tasting}', subjectFrom: '{inviter} nodigt je uit voor {tasting}', hi: 'Hoi', hiName: 'Hoi {name}', body: 'je bent uitgenodigd voor {tasting}.', when: 'Wanneer', where: 'Waar', button: 'Bekijk de uitnodiging en antwoord', reply: 'De link is persoonlijk – het is je toegang tot de proeverij.' },
+  pl: { subject: 'Zaproszenie: {tasting}', subjectFrom: '{inviter} zaprasza Cię na {tasting}', hi: 'Cześć', hiName: 'Cześć {name}', body: 'zapraszamy Cię na {tasting}.', when: 'Kiedy', where: 'Gdzie', button: 'Zobacz zaproszenie i odpowiedz', reply: 'Link jest osobisty – to Twój dostęp do degustacji.' },
+};
+export const INVITE_LANGS = Object.keys(INVITE_GUEST);
+
+/** "Hej Anna, du er inviteret til Portvin 2026." – with when, where and a button to the guest's own invitation */
+export function inviteGuestMail(lang: string, v: { name: string | null; tasting: string; link: string; inviter: string | null; when: string | null; where: string | null }) {
+  const x = INVITE_GUEST[lang] ?? INVITE_GUEST.en;
+  const fill = (s: string, html = false) => s
+    .replace('{name}', html ? esc(v.name ?? '') : v.name ?? '')
+    .replace('{inviter}', html ? esc(v.inviter ?? '') : v.inviter ?? '')
+    .replace('{tasting}', html ? `<b>${esc(v.tasting)}</b>` : v.tasting);
+  const hi = v.name ? x.hiName : x.hi;
+  const facts: [string, string][] = [];
+  if (v.when) facts.push([x.when, v.when]);
+  if (v.where) facts.push([x.where, v.where]);
+  const text = `${fill(hi)}, ${fill(x.body)}\n\n${facts.map(([k, val]) => `${k}: ${val}`).join('\n')}${facts.length ? '\n\n' : ''}`
+    + `${x.button}: ${v.link}\n\n${x.reply}\n`;
+  const rows = facts.map(([k, val]) => `<tr><td style="padding:2px 14px 2px 0;color:#8a7d75;vertical-align:top">${esc(k)}</td><td style="padding:2px 0">${esc(val)}</td></tr>`).join('');
+  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f8f5f1;font-family:Helvetica,Arial,sans-serif;color:#231a17">
+<div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e6ddd5;border-radius:12px;padding:28px">
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">${fill(hi, true)}, ${fill(x.body, true)}</p>
+${rows ? `<table style="margin:0 0 20px;font-size:15px;line-height:1.5;border-collapse:collapse">${rows}</table>` : ''}
+<p style="margin:0 0 18px"><a href="${esc(v.link)}" style="display:inline-block;background:#6e0f1f;color:#fff;text-decoration:none;padding:11px 18px;border-radius:8px;font-size:15px">${esc(x.button)}</a></p>
+<p style="margin:0;font-size:13px;color:#8a7d75">${esc(x.reply)}</p>
+</div>
+<p style="max-width:520px;margin:12px auto 0;font-size:12px;color:#8a7d75;text-align:center">Winetastr</p>
+</body></html>`;
+  return { subject: fill(v.inviter ? x.subjectFrom : x.subject), text, html };
+}

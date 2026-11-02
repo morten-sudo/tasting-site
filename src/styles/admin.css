@@ -951,3 +951,6 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .pill-waitlist { color: var(--tawny); box-shadow: inset 0 0 0 1px var(--tawny); }
 /* Blind tasting: a blind wine in the tasting's wine list */
 .admin-page .pill-blind { color: var(--paper); background: var(--lodge-3); font-size: 0.72rem; vertical-align: middle; }
+/* Invitation by email: the choice in the invite panel and when it was sent */
+.admin-page .send-mail { margin: 0.25rem 0 0.75rem; }
+.admin-page .guest-mailed { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.85rem; }

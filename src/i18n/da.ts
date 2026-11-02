@@ -907,4 +907,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "blind.hidden": "Intet (skjult)",
   "blind.reveal": "Afslør",
   "blind.tasting": "Blindsmagning (alle vine er blinde, til du afslører dem)",
+  "inviteMail.sendOnInvite": "Send invitationen på mail (til gæster med e-mail)",
+  "inviteMail.send": "Send invitation",
+  "inviteMail.again": "Send igen",
+  "inviteMail.sentAt": "Invitation sendt på mail {when}",
+  "inviteMail.sentTo": "Invitationen er sendt på mail til {name}.",
+  "inviteMail.failed": "{name} er inviteret, men mailen kunne ikke sendes. Prøv \"Send invitation\" ved gæsten, eller kopier linket.",
+  "inviteMail.failedShort": "Ikke sendt – prøv igen",
 };

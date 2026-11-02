@@ -835,4 +835,11 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "blind.hidden": "Niets (verborgen)",
   "blind.reveal": "Onthullen",
   "blind.tasting": "Blindproeverij (alle wijnen blind tot je ze onthult)",
+  "inviteMail.sendOnInvite": "Uitnodiging per e-mail sturen (naar gasten met e-mail)",
+  "inviteMail.send": "Uitnodiging sturen",
+  "inviteMail.again": "Opnieuw sturen",
+  "inviteMail.sentAt": "Uitnodiging gemaild {when}",
+  "inviteMail.sentTo": "De uitnodiging is naar {name} gemaild.",
+  "inviteMail.failed": "{name} is uitgenodigd, maar de e-mail kon niet worden verstuurd. Probeer „Uitnodiging sturen” bij de gast of kopieer de link.",
+  "inviteMail.failedShort": "Niet verstuurd – opnieuw",
 };

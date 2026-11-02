@@ -185,6 +185,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <label for="g-search" data-i18n="adminTasting.searchOrNew">Search your guest list – or type the name of a new guest</label>
           <input id="g-search" class="search" type="search" autocomplete="off" placeholder="Name or email" data-i18n-attr="placeholder=adminTasting.nameOrEmail" />
+          <label class="toggle send-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
           <p id="g-msg" class="message ok" hidden aria-live="polite"></p>
           <ul id="g-picker-list" class="picker-list"></ul>
           <p id="g-picker-empty" class="hint" hidden></p>
@@ -314,7 +315,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const kr = { format: money };
   const STATUS: Record<string, string> = { yes: t('admin.fYes'), waitlist: t('status.waitlist'), no: t('status.no'), invited: t('status.invited') };
 
-  type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean; waitlisted_at?: string | null };
+  type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean; waitlisted_at?: string | null; invite_mailed_at?: string | null };
   type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
   type OLine = { wine_id: number; quantity: number; unit_price: number };
   type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
@@ -440,7 +441,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   /** The guest list again (someone may have moved up from the waiting list). */
   async function reloadParticipants() {
     if (!tasting) return;
-    const { data } = await supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id, waitlisted_at').eq('tasting_id', tasting.id);
+    const { data } = await supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id, waitlisted_at, invite_mailed_at').eq('tasting_id', tasting.id);
     if (data) participants = data as P[];
     renderParticipants();
     renderFee();
@@ -586,7 +587,24 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const edit = mk('button', 'text-btn', t('admin.edit'));
     edit.type = 'button';
     edit.addEventListener('click', () => openGuestPanel(p));
+    // Email the invitation (again)
+    if (p.email) {
+      const send = mk('button', 'text-btn', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
+      send.type = 'button';
+      send.addEventListener('click', async () => {
+        send.disabled = true;
+        send.textContent = t('common.sending');
+        const ok = await mailInvite(p);
+        if (ok) renderParticipants();
+        else { send.disabled = false; send.textContent = t('inviteMail.failedShort'); }
+      });
+      actions.append(send);
+    }
     actions.append(copy, edit);
+    if (p.invite_mailed_at) {
+      li.append(mk('p', 'guest-mailed', t('inviteMail.sentAt', {
+        when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })));
+    }
     li.append(actions);
     return li;
   }
@@ -707,6 +725,31 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('g-msg').textContent = t('adminTasting.invitedName', { name });
     $('g-msg').hidden = false;
   }
+
+  // ---------- Invitation by email ----------
+  /** Emails the guest their invitation; true when it was sent */
+  async function mailInvite(p: P): Promise<boolean> {
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      const res = await fetch('/api/invite-guest', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ participant_id: p.id, lang: lang() }),
+      });
+      const out = (await res.json().catch(() => ({}))) as { sent?: boolean; at?: string };
+      if (res.ok && out.sent) { p.invite_mailed_at = out.at ?? new Date().toISOString(); return true; }
+    } catch { /* below */ }
+    return false;
+  }
+  /** Right after inviting: mail it when the host chose so and the guest has an email */
+  async function mailIfChosen(p: P) {
+    if (!p.email || !($('g-send-mail') as HTMLInputElement).checked) return;
+    const ok = await mailInvite(p);
+    $('g-msg').textContent = t(ok ? 'inviteMail.sentTo' : 'inviteMail.failed', { name: p.name });
+    $('g-msg').className = 'message ' + (ok ? 'ok' : 'error');
+    $('g-msg').hidden = false;
+    renderParticipants();
+  }
   $('add-p').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nameEl = $('new-name') as HTMLInputElement;
@@ -730,6 +773,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (error) { alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
     participants.push(data as P);
     library = library.filter((g) => g.id !== guestId);
+    void mailIfChosen(data as P);
     nameEl.value = '';
     emailEl.value = '';
     ($('g-search') as HTMLInputElement).value = '';
@@ -875,6 +919,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         invitedMsg(g.name);
         renderParticipants();
         renderGuestPicker();
+        void mailIfChosen(data as P);
       });
       li.append(text, add);
       return li;
@@ -966,7 +1011,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) { $('not-found').hidden = false; return; }
     $('admin-main').hidden = false;
     const [p, o, g, q] = await Promise.all([
-      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id, waitlisted_at').eq('tasting_id', tasting.id),
+      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id, waitlisted_at, invite_mailed_at').eq('tasting_id', tasting.id),
       supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting.id),
       supabase.from('guests').select('id, name, email').eq('tenant_id', host!.tenant_id).order('name'),
       supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id),
