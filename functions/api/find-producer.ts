@@ -1,6 +1,8 @@
 // Finds a wine producer's own website and, from it, where the producer is (hosts; the browser saves the result on the wine).
-// 1. Candidate sites: Cloudflare AI's suggestions plus domains built from the producer's name.
-// 2. A candidate counts only when the page itself names the producer.
+// 1. Candidate sites: Cloudflare AI's suggestions plus domains built from the producer's name (also the usual
+//    forms such as champagne-bollinger.com, chateau-x.com, weingut-x.de).
+// 2. Every candidate is checked and scored: it must name the producer and be about wine; the producer's name in
+//    the domain or title, its region or appellation and the wine's name on the page count in its favour. The best wins.
 // 3. The place: coordinates in the page's data, in an embedded map link, or the postal address as text.
 import { MODEL, isHost, json, parseAnswer, str, type AiEnv } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText } from './read-link';
@@ -18,13 +20,44 @@ const plain = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g
 const keyWords = (name: string) => plain(name.replace(PREFIXES, '')).split(/[^a-z0-9]+/)
   .filter((w) => w.length > 2 && !['des', 'del', 'les', 'and', 'the', 'wines', 'winery', 'vineyards', 'estate', 'family'].includes(w));
 
-/** Domains to try, built from the name: kopke.com, chateau-belgrave.com, belgrave.fr … */
-function guessDomains(producer: string, country: string | null) {
+/** Words that put a page among wine producers' sites, in the wine countries' languages. */
+const WINE_WORDS = ['wine', 'wines', 'winery', 'vineyard', 'vineyards', 'vintage', 'cellar', 'grape', 'grapes', 'harvest', 'tasting',
+  'vin', 'vins', 'vignoble', 'vignobles', 'vigneron', 'vignerons', 'vendange', 'vendanges', 'cuvee', 'cuvees', 'millesime', 'domaine', 'chateau', 'champagne', 'degustation',
+  'vino', 'vini', 'vigneto', 'vigneti', 'cantina', 'vendemmia', 'degustazione', 'bodega', 'bodegas', 'vinedo', 'vinedos', 'uva', 'cosecha',
+  'wein', 'weine', 'weingut', 'weinberg', 'weinberge', 'rebsorte', 'jahrgang', 'quinta', 'vinho', 'vinhos', 'porto', 'vinha', 'vinhas'];
+
+/** Domains to try, built from the name: kopke.com, chateau-belgrave.com, belgrave.fr, champagne-bollinger.com … */
+function guessDomains(producer: string, country: string | null, region: string | null) {
   const full = plain(producer).replace(/[^a-z0-9]+/g, ' ').trim().split(' ');
   const core = plain(producer.replace(PREFIXES, '')).replace(/[^a-z0-9]+/g, ' ').trim().split(' ');
   const stems = new Set([core.join(''), core.join('-'), full.join('-'), full.join('')].filter((s) => s.length > 2));
+  // The usual forms of a producer's domain in its country or region, when the name does not already have them
+  const kinds = [
+    ...(/champagne/i.test(region ?? '') ? ['champagne'] : []),
+    ...({ FR: ['chateau', 'domaine'], DE: ['weingut'], AT: ['weingut'], ES: ['bodegas'], IT: ['tenuta', 'cantina'], PT: ['quinta'] }[country ?? ''] ?? []),
+  ];
+  const c = core.join('');
+  if (c.length > 2 && full.length === core.length) {
+    for (const k of kinds) { stems.add(`${k}-${core.join('-')}`); stems.add(`${k}${c}`); }
+    if (kinds.includes('champagne')) stems.add(`${core.join('-')}-champagne`);
+  }
   const tlds = ['com', ...(TLDS[country ?? ''] ?? [])];
   return [...stems].flatMap((s) => tlds.map((t) => `https://www.${s}.${t}/`));
+}
+
+/** How well a page fits the producer: null when it is not the producer's (does not name it or is not about wine). */
+function scorePage(page: { url: string; html: string }, words: string[], origin: string[], wineWords: string[]) {
+  const title = plain(htmlToText((page.html.match(/<title[^>]*>([\s\S]{0,300}?)<\/title>/i)?.[1] ?? '') + ' '
+    + (page.html.match(/property=["']og:site_name["'][^>]*content=["']([^"']{0,200})/i)?.[1] ?? '')));
+  const text = ' ' + plain(htmlToText(page.html.slice(0, 300_000)).slice(0, 30_000) + ' ' + title).replace(/[^a-z0-9]+/g, ' ') + ' ';
+  const has = (w: string) => text.includes(` ${w} `) || text.includes(` ${w}`);
+  let host = '';
+  try { host = plain(new URL(page.url).hostname); } catch {}
+  if (!words.length || !words.every(has)) return null;
+  const wine = WINE_WORDS.filter((w) => text.includes(` ${w} `)).length;
+  if (wine < 2) return null; // a page about something else that shares the name (bollinger.com is not the Champagne house)
+  return (words.some((w) => host.includes(w)) ? 3 : 0) + (words.every((w) => title.includes(w)) ? 2 : 0)
+    + Math.min(wine, 6) / 2 + (origin.some((o) => text.includes(` ${o} `)) ? 3 : 0) + (wineWords.some((w) => has(w)) ? 1 : 0);
 }
 
 async function get(url: string, ms = 7000): Promise<{ url: string; html: string } | null> {
@@ -147,19 +180,22 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     const a = parseAnswer(out.response);
     suggested = (Array.isArray(a?.websites) ? a!.websites : []).map(str).filter(Boolean) as string[];
   } catch {}
-  const candidates = given ? [given] : [...new Set([...suggested, ...guessDomains(producer, country)])].slice(0, 12);
+  const candidates = given ? [given] : [...new Set([...suggested, ...guessDomains(producer, country, String(body.region ?? ''))])].slice(0, 16);
 
-  // 2. The first candidate whose page names the producer
+  // 2. Every candidate checked at once; the best page that names the producer and is about wine wins
+  const origin = [body.appellation, body.region].map((x) => plain(String(x ?? '')).replace(/[^a-z0-9]+/g, ' ').trim()).filter((x) => x.length > 3);
+  const wineWords = plain(String(body.wine ?? '')).split(/[^a-z0-9]+/).filter((w) => w.length > 4 && !words.includes(w));
   const tried: { url: string; result: string }[] = [];
-  let site: { url: string; html: string } | null = null;
-  for (const url of candidates) {
-    const page = await get(url);
-    if (!page) { tried.push({ url, result: 'unreachable' }); continue; }
-    const head = plain(htmlToText(page.html.slice(0, 200_000)).slice(0, 20_000) + ' ' + page.url);
-    const hits = words.filter((w) => head.includes(w)).length;
-    if (given || (words.length && hits >= Math.min(words.length, 2))) { site = page; tried.push({ url, result: 'match' }); break; }
-    tried.push({ url, result: 'does not name the producer' });
-  }
+  const fetched = await Promise.all(candidates.map((u) => get(u)));
+  let site = null as { url: string; html: string } | null;
+  let best = -1;
+  fetched.forEach((page, i) => {
+    if (!page) { tried.push({ url: candidates[i], result: 'unreachable' }); return; }
+    if (given) { site = page; tried.push({ url: candidates[i], result: 'given' }); return; }
+    const score = scorePage(page, words, origin, wineWords);
+    tried.push({ url: candidates[i], result: score == null ? 'not the producer (name or wine missing)' : `score ${score}` });
+    if (score != null && score > best) { best = score; site = page; }
+  });
   if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
 
   // 3. The place: home page first, then contact/visit pages
