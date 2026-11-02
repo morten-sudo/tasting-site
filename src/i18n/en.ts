@@ -896,4 +896,5 @@ export const en = {
   "wineFields.grapesHint": "(e.g. 85 % Merlot, 15 % Cabernet Franc)",
   "wineFields.foodHint": "(e.g. grilled fish, salads, cheese)",
   "wineFields.servingHint": "(e.g. 14–16 °C, decant an hour before)",
+  "login.remember": "Remember me on this device",
 } as const;

@@ -897,4 +897,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineFields.grapesHint": "(fx 85 % Merlot, 15 % Cabernet Franc)",
   "wineFields.foodHint": "(fx grillet fisk, salater, ost)",
   "wineFields.servingHint": "(fx 14–16 °C, dekanteres en time før)",
+  "login.remember": "Husk mig på denne enhed",
 };

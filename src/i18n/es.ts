@@ -826,4 +826,5 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "wineFields.grapesHint": "(p. ej. 85 % Merlot, 15 % Cabernet Franc)",
   "wineFields.foodHint": "(p. ej. pescado a la parrilla, ensaladas, queso)",
   "wineFields.servingHint": "(p. ej. 14–16 °C, decantar una hora antes)",
+  "login.remember": "Recordarme en este dispositivo",
 };

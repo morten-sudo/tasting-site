@@ -54,6 +54,8 @@ import Base from '../layouts/Base.astro';
             <p class="lead" id="mail-lead" data-i18n="login.mailLead">Enter your email and we will send you a code.</p>
             <label for="email" data-i18n="common.email">Email</label>
             <input id="email" type="email" autocomplete="email" inputmode="email" required />
+            <!-- Remember me: stay signed in on this device and fill in the email next time -->
+            <label class="remember"><input id="remember" type="checkbox" checked /> <span data-i18n="login.remember">Remember me on this device</span></label>
             <p id="mail-msg" class="message" hidden></p>
             <button class="btn" type="submit" id="mail-btn" data-i18n="login.sendCode">Send code</button>
             <p class="hint lp-fine" data-i18n="loginx.noPassword">No password needed – we email you a one-time code.</p>
@@ -128,7 +130,7 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <script>
-  import { supabase } from '../lib/supabase';
+  import { supabase, setRememberMe, rememberMe, lastEmail } from '../lib/supabase';
   import { fetchMyTastings, setCode, tastingUrl } from '../lib/guest';
   import { landingUrl } from '../lib/landing';
   import { i18nReady, lang, t } from '../i18n';
@@ -136,6 +138,9 @@ import Base from '../layouts/Base.astro';
   await i18nReady;
   const $ = (id: string) => document.getElementById(id)!;
   const params = new URLSearchParams(location.search);
+  // Remember me: the choice from last time, and the email when it was remembered
+  ($('remember') as HTMLInputElement).checked = rememberMe();
+  { const last = lastEmail(); const el = $('email') as HTMLInputElement; if (last && !el.value) el.value = last; }
   // Only internal paths are allowed as the post-login target
   const rawNext = params.get('next') ?? '';
   const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
@@ -230,6 +235,8 @@ import Base from '../layouts/Base.astro';
     $('mail-msg').hidden = true;
     email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('mail-msg'), t('common.invalidEmail'), false); return; }
+    // Chosen before signing in, so the session is kept where the guest wants it
+    setRememberMe(($('remember') as HTMLInputElement).checked, email);
 
     const btn = $('mail-btn') as HTMLButtonElement;
     btn.disabled = true;
