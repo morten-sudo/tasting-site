@@ -39,7 +39,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
   const texts = inviteHostMail(lang, { name: givenName || invited.name, tasting: tasting.title, link, inviter: me.name });
   try {
     const sent = await sendMail(env, (hostname, port) => connect({ hostname, port }, { secureTransport: 'on', allowHalfOpen: false }), {
-      to: email, fromName: me.name ? `${me.name} via ${SITE_NAME}` : SITE_NAME, replyTo: me.email, ...texts,
+      to: email, fromName: me.name ? `${me.name} · ${SITE_NAME}` : SITE_NAME, replyTo: me.email, ...texts,
     });
     return sent ? json({ sent: true }) : json({ error: 'mail_not_set_up' }, 503);
   } catch (e) {
