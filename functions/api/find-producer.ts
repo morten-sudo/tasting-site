@@ -170,12 +170,13 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   }
   // The postal address: from the site's structured data, else as written on the site (read by the model)
   let address: string | null = pages.map((p) => schemaAddress(p.html)).find(Boolean) ?? null;
+  let hints: string[] = [];
   if (!address) try {
     // Addresses sit in the header, the footer or the middle of a contact page: give the model the start and end of each page,
     // and first the lines that look like an address (a postcode and a town) and the place names in map links
     // Contact pages before the home page, so they are not cut off
     const texts = [...pages.slice(1), pages[0]].map((p) => htmlToText(p.html));
-    const hints = [...new Set([
+    hints = [...new Set([
       ...texts.flatMap((t) => t.split(/\n|\s{3,}|\|/).map((l) => l.trim())
         .filter((l) => l.length > 6 && l.length < 160 && /\b(\d{4,5}|\d{3}\s?\d{2}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2})\b/.test(l) && /[a-zà-ÿ]{3,}/i.test(l))),
       ...pages.flatMap((p) => mapPlaces(p.html)),
@@ -188,5 +189,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     });
     address = str(parseAnswer(out.response)?.address);
   } catch {}
-  return json({ producer, website: new URL(site.url).origin + '/', location, address, tried, suggested });
+  // pages_read and hints show what the lookup saw (for checking why something was not found)
+  return json({ producer, website: new URL(site.url).origin + '/', location, address, tried, suggested,
+    pages_read: pages.map((p) => ({ url: p.url, chars: p.html.length })), hints });
 };
