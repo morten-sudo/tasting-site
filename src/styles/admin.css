@@ -1262,12 +1262,12 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .twe-tier input.qty { width: 3.5rem !important; }
 .admin-page .twe-tier + .field-error, .admin-page .twe-tier ~ .field-error { margin-top: -0.2rem; }
 .admin-page #twe-add-tier { justify-self: start; }
-.admin-page .twe-choice { display: grid; gap: 0.35rem; }
-.admin-page .twe-choice label { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.55rem 0.7rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); cursor: pointer; font-weight: 400; margin: 0; text-transform: none; letter-spacing: 0; }
-.admin-page .twe-choice label:has(input:checked) { border-color: var(--amber); background: var(--lodge-2); }
-.admin-page .twe-choice input { width: 1.1rem !important; height: 1.1rem; margin: 0.15rem 0 0; flex: none; accent-color: var(--amber); }
-.admin-page .twe-choice label > span { display: flex; flex-direction: column; gap: 0.1rem; }
-.admin-page .twe-choice small { color: var(--muted); font-size: 0.85rem; }
+.admin-page :is(.twe-choice, .choice-cards) { display: grid; gap: 0.35rem; }
+.admin-page :is(.twe-choice, .choice-cards) label { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.55rem 0.7rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); cursor: pointer; font-weight: 400; margin: 0; text-transform: none; letter-spacing: 0; }
+.admin-page :is(.twe-choice, .choice-cards) label:has(input:checked) { border-color: var(--amber); background: var(--lodge-2); }
+.admin-page :is(.twe-choice, .choice-cards) input { width: 1.1rem !important; height: 1.1rem; margin: 0.15rem 0 0; flex: none; accent-color: var(--amber); }
+.admin-page :is(.twe-choice, .choice-cards) label > span { display: flex; flex-direction: column; gap: 0.1rem; }
+.admin-page :is(.twe-choice, .choice-cards) small { color: var(--muted); font-size: 0.85rem; }
 .admin-page .twe-switch { display: flex; align-items: flex-start; gap: 0.8rem; margin: 0.9rem 0 0; padding-top: 0.9rem; border-top: 1px solid var(--lodge-3); cursor: pointer; font-weight: 400; text-transform: none; letter-spacing: 0; }
 .admin-page .twe-switch > span { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
 .admin-page .twe-switch small { color: var(--muted); font-size: 0.85rem; }

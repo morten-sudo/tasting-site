@@ -1277,4 +1277,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "twe.shopPriceHint": "Butiksprisen gemmes på vinen i dit bibliotek, så den følger vinen med til andre smagninger.",
   "chat.deleteQ": "Fjern beskeden fra chatten?",
   "account.removeQ": "Fjern {name} som vært på kontoen?",
+  "guestStatus.yesHint": "Har sagt ja.",
+  "guestStatus.waitlistHint": "Får plads, hvis nogen melder fra.",
+  "guestStatus.invitedHint": "Har ikke svaret på invitationen.",
+  "guestStatus.noHint": "Har sagt nej.",
 };

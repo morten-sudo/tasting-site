@@ -134,9 +134,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <!-- Quantity prices: only when a wine in the tasting has one – who counts towards it (the host decides) -->
         <div id="bulk-mode" class="bulk-choice" hidden>
           <p id="bulk-q" class="bulk-q"></p>
-          <div class="bulk-seg" role="radiogroup" aria-labelledby="bulk-q">
-            <label><input type="radio" name="bulk-mode" value="guest" /> <span data-i18n="bulk.segGuest">Each guest</span></label>
-            <label><input type="radio" name="bulk-mode" value="pooled" /> <span data-i18n="bulk.segPooled">All guests together</span></label>
+          <!-- The same choice cards as everywhere else (radio, name, what it means) -->
+          <div class="choice-cards" role="radiogroup" aria-labelledby="bulk-q">
+            <label><input type="radio" name="bulk-mode" value="guest" /> <span><b data-i18n="bulk.segGuest">Each guest</b><small id="bulk-ex-guest"></small></span></label>
+            <label><input type="radio" name="bulk-mode" value="pooled" /> <span><b data-i18n="bulk.segPooled">All guests together</b><small id="bulk-ex-pooled"></small></span></label>
           </div>
           <p id="bulk-example" class="bulk-example"></p>
           <p id="bulk-msg" class="hint" aria-live="polite"></p>
@@ -784,8 +785,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('bulk-q').textContent = t('bulk.question', { n: withTiers.length });
     const n = Math.min(...withTiers.flatMap((w) => w.tiers.map((x) => x.qty)));
     const mode = tasting.bulk_mode as string | null;
-    $('bulk-example').innerHTML = '';
-    $('bulk-example').append(mode === 'pooled' ? t('bulk.exPooled', { n }) : mode === 'guest' ? t('bulk.exGuest', { n }) : t('bulk.exNone'));
+    // Each choice says what it means; nothing chosen yet: say that a choice is needed
+    $('bulk-ex-guest').textContent = t('bulk.exGuest', { n });
+    $('bulk-ex-pooled').textContent = t('bulk.exPooled', { n });
+    $('bulk-example').textContent = mode ? '' : t('bulk.exNone');
+    $('bulk-example').hidden = !!mode;
     $('bulk-example').classList.toggle('needed', !mode);
   }
   // Quantity prices: guest or pooled (saved right away; prices of unpaid orders follow in the database)
@@ -979,20 +983,27 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     inv.append(copy);
     form.append(inv);
 
-    form.append(mk('p', 'edit-label', t('admin.status')));
-    const seg = mk('div', 'segmented');
-    for (const [v, label] of Object.entries(STATUS)) {
-      const b = mk('button', '', label);
-      b.type = 'button';
-      b.setAttribute('aria-pressed', String(v === status));
-      b.addEventListener('click', () => {
-        status = v;
-        seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-        paidBox.hidden = !(feeAmount > 0 && status === 'yes');
-      });
-      seg.append(b);
+    // Status: the same choice cards as elsewhere (radio, name, what it means)
+    const statusHead = mk('p', 'edit-label', t('admin.status'));
+    statusHead.id = `st-h-${p.id}`;
+    form.append(statusHead);
+    const cards = mk('div', 'choice-cards');
+    cards.setAttribute('role', 'radiogroup');
+    cards.setAttribute('aria-labelledby', statusHead.id);
+    for (const v of ['yes', 'waitlist', 'invited', 'no']) {
+      const lab = mk('label');
+      const r = mk('input');
+      r.type = 'radio';
+      r.name = `st-${p.id}`;
+      r.value = v;
+      r.checked = v === status;
+      r.addEventListener('change', () => { status = v; paidBox.hidden = !(feeAmount > 0 && status === 'yes'); });
+      const text = mk('span');
+      text.append(mk('b', '', STATUS[v]), mk('small', '', t(`guestStatus.${v}Hint` as Key)));
+      lab.append(r, text);
+      cards.append(lab);
     }
-    form.append(seg);
+    form.append(cards);
 
     // The fee: paid or not (only for guests who come, when there is a fee)
     const paidBox = mk('label', 'set-switch guest-paid');

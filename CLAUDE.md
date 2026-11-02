@@ -9,6 +9,9 @@
   an "Edit" button); every setting – also ones that save straight away – lives in the side panel from the right
   (`<dialog class="sheet">`, bottom sheet on phones, `sheetPanel()` from `src/lib/admin-common.ts`). No form fields inside lists.
   Feedback: errors under the field (`fieldError()`), a toast after saving or deleting (`toast()`), deleting with Undo.
+- One pattern per kind of control: one choice among a few = choice cards (`.choice-cards`: radio, name, one line on
+  what it means); on/off = a switch (`.set-switch`); a row's actions = icons with a tip (`iconButton()`), removing an
+  item = a quiet trash icon, asked about first; adding to a list = a new row that slides in at the top of the list.
 - **Good UX only – nothing else gets through.** Every change to a page passes this gate before it is shown to Morten
   or pushed to `main`:
   1. Screenshot the whole page (not only the new part) with realistic data – 10+ wines, 20+ guests – on a phone and

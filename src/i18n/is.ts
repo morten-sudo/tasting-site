@@ -1277,4 +1277,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "twe.shopPriceHint": "Búðarverðið er vistað á víninu í safninu og fylgir því í aðrar smakkanir.",
   "chat.deleteQ": "Fjarlægja skilaboðin úr spjallinu?",
   "account.removeQ": "Fjarlægja {name} sem gestgjafa á reikningnum?",
+  "guestStatus.yesHint": "Hefur sagt já.",
+  "guestStatus.waitlistHint": "Fær pláss ef einhver hættir við.",
+  "guestStatus.invitedHint": "Hefur ekki svarað boðinu.",
+  "guestStatus.noHint": "Hefur sagt nei.",
 };

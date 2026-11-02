@@ -1276,4 +1276,8 @@ export const en = {
   "twe.shopPriceHint": "The shop’s price is saved on the wine in your library, so it follows the wine into other tastings.",
   "chat.deleteQ": "Remove the message from the chat?",
   "account.removeQ": "Remove {name} as host on the account?",
+  "guestStatus.yesHint": "Has said yes.",
+  "guestStatus.waitlistHint": "Gets a place if someone cancels.",
+  "guestStatus.invitedHint": "Has not replied to the invitation.",
+  "guestStatus.noHint": "Has said no.",
 } as const;

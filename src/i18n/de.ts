@@ -1163,4 +1163,8 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "twe.shopPriceHint": "Der Ladenpreis wird beim Wein in Ihrer Bibliothek gespeichert und gilt auch in anderen Verkostungen.",
   "chat.deleteQ": "Nachricht aus dem Chat entfernen?",
   "account.removeQ": "{name} als Gastgeber des Kontos entfernen?",
+  "guestStatus.yesHint": "Hat zugesagt.",
+  "guestStatus.waitlistHint": "Bekommt einen Platz, wenn jemand absagt.",
+  "guestStatus.invitedHint": "Hat auf die Einladung nicht geantwortet.",
+  "guestStatus.noHint": "Hat abgesagt.",
 };

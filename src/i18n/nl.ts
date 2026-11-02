@@ -1163,4 +1163,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "twe.shopPriceHint": "De winkelprijs wordt bij de wijn in je bibliotheek bewaard en gaat mee naar andere proeverijen.",
   "chat.deleteQ": "Bericht uit de chat verwijderen?",
   "account.removeQ": "{name} als host van het account verwijderen?",
+  "guestStatus.yesHint": "Heeft ja gezegd.",
+  "guestStatus.waitlistHint": "Krijgt een plek als iemand afzegt.",
+  "guestStatus.invitedHint": "Heeft niet op de uitnodiging gereageerd.",
+  "guestStatus.noHint": "Heeft nee gezegd.",
 };
