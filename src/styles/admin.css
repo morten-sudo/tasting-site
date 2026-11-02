@@ -949,3 +949,5 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .max-guests { display: grid; gap: 0.3rem; margin: 0.25rem 0 0.75rem; max-width: 30rem; }
 .admin-page .max-guests .inline-form { align-items: center; }
 .admin-page .pill-waitlist { color: var(--tawny); box-shadow: inset 0 0 0 1px var(--tawny); }
+/* Blind tasting: a blind wine in the tasting's wine list */
+.admin-page .pill-blind { color: var(--paper); background: var(--lodge-3); font-size: 0.72rem; vertical-align: middle; }

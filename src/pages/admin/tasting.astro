@@ -95,6 +95,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <label class="toggle"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
+          <label class="toggle"><input type="checkbox" data-key="blind" /> <span data-i18n="blind.tasting">Blind tasting (all wines blind until you reveal them)</span></label>
         </div>
         <!-- Max number of guests: when it is reached, a yes puts the guest on the waiting list -->
         <div class="max-guests">
@@ -297,6 +298,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initHosts } from '../../lib/admin-hosts';
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
+  let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, mk as mkEl, sheetPanel, type Host } from '../../lib/admin-common';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
@@ -476,6 +478,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         .update({ [box.dataset.key!]: box.checked }).eq('id', tasting.id);
       if (error) { box.checked = !box.checked; alert(t('admin.changeNotSaved')); return; }
       tasting[box.dataset.key!] = box.checked;
+      // Blind tasting changes every wine in it: show them again
+      if (box.dataset.key === 'blind') await tastingWines?.load();
     });
   });
 
@@ -971,7 +975,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
     quizTotal = q.count || 1;
-    await initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); }).load();
+    tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); });
+    await tastingWines.load();
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; }).load();
     renderParticipants();

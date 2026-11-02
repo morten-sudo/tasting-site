@@ -898,4 +898,12 @@ export const en = {
   "wineFields.foodHint": "(e.g. grilled fish, salads, cheese)",
   "wineFields.servingHint": "(e.g. 14–16 °C, decant an hour before)",
   "login.remember": "Remember me on this device",
+  "blind.name": "Wine {n}",
+  "blind.hint": "Blind – revealed later",
+  "blind.guestsSee": "Guests see",
+  "blind.shown": "The wine",
+  "blind.blind": "Blind",
+  "blind.hidden": "Nothing (hidden)",
+  "blind.reveal": "Reveal",
+  "blind.tasting": "Blind tasting (all wines blind until you reveal them)",
 } as const;

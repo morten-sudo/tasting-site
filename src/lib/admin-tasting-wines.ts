@@ -1,5 +1,5 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
-// and whether guests can see and order them. Ratings from the guests are shown per wine.
+// and whether guests can see (fully, or blind) and order them. Ratings from the guests are shown per wine.
 import { supabase } from './supabase';
 import { $, mk, toNumber, sheetPanel } from './admin-common';
 import { styleName } from './wines';
@@ -8,7 +8,7 @@ import { t, locale } from '../i18n';
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   image_url: string | null; retail_price_dkk: number | null;
   offer_price_dkk: number | null; offer_quantity: number | null };
-type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean;
+type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean; blind: boolean;
   price_tiers: Tier[]; wines: LibWine };
 type Tier = { qty: number; price: number };
 export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number };
@@ -33,7 +33,7 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
     return box;
   }
 
-  async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'sort_order' | 'price_tiers'>>) {
+  async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'blind' | 'sort_order' | 'price_tiers'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)
       .eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
     if (error) { alert(t('admin.changeNotSaved')); return false; }
@@ -49,7 +49,9 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
       const w = r.wines;
       const li = mk('li', 'tw-row');
       const body = mk('div');
-      body.append(mk('p', 'lib-name', w.name));
+      const nameP = mk('p', 'lib-name', w.name);
+      if (r.revealed && r.blind) nameP.append(' ', mk('span', 'pill pill-blind', t('blind.blind')));
+      body.append(nameP);
       const m = meta(w);
       if (m) body.append(mk('p', 'lib-meta', m));
       const rating = ratings.get(r.wine_id);
@@ -125,12 +127,22 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
         if (tiers.length < 5) tiersBox.append(add);
       };
       drawTiers();
+      // What the guests see: nothing, a blind bottle, or the whole wine
       const vis = mk('label');
-      const visCb = mk('input');
-      visCb.type = 'checkbox';
-      visCb.checked = r.revealed;
-      visCb.addEventListener('change', async () => { if (!(await update(r, { revealed: visCb.checked }))) visCb.checked = !visCb.checked; });
-      vis.append(visCb, mk('span', '', t('admin.revealed')));
+      const visSel = mk('select');
+      const state = () => (!r.revealed ? 'hidden' : r.blind ? 'blind' : 'shown');
+      for (const [v, key] of [['shown', 'blind.shown'], ['blind', 'blind.blind'], ['hidden', 'blind.hidden']] as const) {
+        const o = mk('option', '', t(key));
+        o.value = v;
+        visSel.append(o);
+      }
+      visSel.value = state();
+      visSel.addEventListener('change', async () => {
+        const v = visSel.value;
+        if (await update(r, { revealed: v !== 'hidden', blind: v === 'blind' })) render();
+        else visSel.value = state();
+      });
+      vis.append(mk('span', '', t('blind.guestsSee')), visSel);
       const ord = mk('label');
       const ordCb = mk('input');
       ordCb.type = 'checkbox';
@@ -161,6 +173,17 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
         render();
       });
       actions.append(up, down, remove);
+      // Reveal a blind wine with one click, in whatever order suits the evening
+      if (r.revealed && r.blind) {
+        const reveal = mk('button', 'btn small', t('blind.reveal'));
+        reveal.type = 'button';
+        reveal.addEventListener('click', async () => {
+          reveal.disabled = true;
+          if (await update(r, { blind: false })) render();
+          else reveal.disabled = false;
+        });
+        actions.prepend(reveal);
+      }
 
       li.append(thumb(w), body, actions);
       list.append(li);
@@ -207,9 +230,10 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
           tasting_id: tastingId, wine_id: w.id, sort_order: sort, price_dkk: w.retail_price_dkk,
           price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [],
         };
-        const { error } = await supabase.from('tasting_wines').insert(row);
-        if (error) { add.disabled = false; alert(t('admin.changeNotSaved')); return; }
-        rows.push({ ...row, orderable: true, revealed: true, wines: w });
+        // (a blind tasting makes the new wine blind; the answer says so)
+        const { data: saved, error } = await supabase.from('tasting_wines').insert(row).select('orderable, revealed, blind').single();
+        if (error || !saved) { add.disabled = false; alert(t('admin.changeNotSaved')); return; }
+        rows.push({ ...row, ...(saved as { orderable: boolean; revealed: boolean; blind: boolean }), wines: w });
         $('tw-msg').textContent = t('adminTasting.wineAdded', { name: w.name });
         $('tw-msg').hidden = false;
         render();
@@ -234,7 +258,7 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
   async function load() {
     const cols = 'id, name, producer, style, vintage, image_url, retail_price_dkk, offer_price_dkk, offer_quantity';
     const [tw, lib, r] = await Promise.all([
-      supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, price_tiers, orderable, revealed, wines(${cols})`)
+      supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, price_tiers, orderable, revealed, blind, wines(${cols})`)
         .eq('tasting_id', tastingId).order('sort_order'),
       supabase.from('wines').select(cols).eq('tenant_id', tenantId).order('name'),
       supabase.rpc('tasting_wine_ratings', { t_id: tastingId }),

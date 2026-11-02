@@ -827,4 +827,12 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "wineFields.foodHint": "(bijv. gegrilde vis, salades, kaas)",
   "wineFields.servingHint": "(bijv. 14–16 °C, een uur van tevoren decanteren)",
   "login.remember": "Onthoud mij op dit apparaat",
+  "blind.name": "Wijn {n}",
+  "blind.hint": "Blind – later onthuld",
+  "blind.guestsSee": "Gasten zien",
+  "blind.shown": "De wijn",
+  "blind.blind": "Blind",
+  "blind.hidden": "Niets (verborgen)",
+  "blind.reveal": "Onthullen",
+  "blind.tasting": "Blindproeverij (alle wijnen blind tot je ze onthult)",
 };

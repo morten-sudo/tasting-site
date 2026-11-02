@@ -383,5 +383,22 @@ begin
 end $$;
 reset role;
 
+-- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
+update tastings set blind = true where slug = 'selftest-a';
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare w record; failed boolean;
+begin
+  select * into w from get_wines('selftestaa') x where x.id = -1001;
+  assert w.blind and w.name is null and w.producer is null and w.vintage is null and w.image_url is null
+    and w.region is null and w.producer_lat is null and w.price_dkk is null and w.description is null
+    and w.grapes is null and not w.orderable, 'a blind wine shows more than its number and style';
+  failed := false; begin perform place_order('selftestaa', '[{"wine_id":-1001,"qty":1}]'); exception when others then failed := true; end;
+  assert failed, 'a blind wine can be ordered';
+  assert not exists (select 1 from my_wine_book(array['selftestaa']) b where b.wine_id = -1001), 'the wine book shows a blind wine';
+end $$;
+reset role;
+
 select 'security test passed' as result;
 rollback;

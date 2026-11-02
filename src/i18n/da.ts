@@ -899,4 +899,12 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineFields.foodHint": "(fx grillet fisk, salater, ost)",
   "wineFields.servingHint": "(fx 14–16 °C, dekanteres en time før)",
   "login.remember": "Husk mig på denne enhed",
+  "blind.name": "Vin {n}",
+  "blind.hint": "Blind – afsløres senere",
+  "blind.guestsSee": "Gæsterne ser",
+  "blind.shown": "Vinen",
+  "blind.blind": "Blind",
+  "blind.hidden": "Intet (skjult)",
+  "blind.reveal": "Afslør",
+  "blind.tasting": "Blindsmagning (alle vine er blinde, til du afslører dem)",
 };

@@ -53,7 +53,7 @@ import Base from '../../layouts/Base.astro';
   await i18nReady;
   import { getCart, cartCount } from '../../lib/cart';
 
-  import { type Wine, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
+  import { type Wine, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, nameBlind, blindBottle, watchBlind } from '../../lib/wines';
   import { originLine } from '../../lib/origin';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -94,7 +94,10 @@ import Base from '../../layouts/Base.astro';
     link.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
 
     const pic = el('div', 'pic');
-    if (w.image_url) {
+    if (w.blind) {
+      pic.classList.add('blind');
+      pic.insertAdjacentHTML('beforeend', blindBottle(w.style));
+    } else if (w.image_url) {
       const img = el('img');
       img.src = w.image_url;
       img.alt = '';
@@ -116,6 +119,7 @@ import Base from '../../layouts/Base.astro';
     tag.style.setProperty('--tone', styleTone(w));
     info.append(tag);
     info.append(el('h3', 'name', w.name));
+    if (w.blind) info.append(el('p', 'meta blind-hint', t('blind.hint')));
     const vin = vintageLabel(w);
     if (vin) info.append(el('p', 'meta', vin));
     const origin = originLine(w);
@@ -194,11 +198,14 @@ import Base from '../../layouts/Base.astro';
       });
     }, { passive: true });
 
-    list.addEventListener('keydown', (e) => {
-      if (e.target !== list) return;
-      if (e.key === 'ArrowRight') { e.preventDefault(); scrollToCard(current + 1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); scrollToCard(current - 1); }
-    });
+    if (!list.dataset.keys) {
+      list.dataset.keys = '1';
+      list.addEventListener('keydown', (e) => {
+        if (e.target !== list) return;
+        if (e.key === 'ArrowRight') { e.preventDefault(); scrollToCard(current + 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); scrollToCard(current - 1); }
+      });
+    }
 
     setCurrent(0);
     renderBasket();
@@ -206,6 +213,24 @@ import Base from '../../layouts/Base.astro';
 
   $('prev').addEventListener('click', () => scrollToCard(current - 1));
   $('next').addEventListener('click', () => scrollToCard(current + 1));
+
+  const fetchWines = async () => {
+    const { data, error } = await supabase.rpc('get_wines', { code: code! });
+    if (error) throw error;
+    return (data ?? []) as Wine[];
+  };
+
+  // A wine was revealed: draw the list again on the same wine
+  async function refresh() {
+    const at = current;
+    wines = nameBlind(await fetchWines());
+    slugs = wineSlugs(wines);
+    render();
+    const track = $('wine-list').querySelector('.track') as HTMLElement;
+    const card = cards[Math.min(at, cards.length - 1)];
+    if (track && card) track.scrollLeft = card.offsetLeft - track.offsetLeft - (parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0);
+    if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, refresh);
+  }
 
   async function load() {
     if (!code) {
@@ -222,8 +247,10 @@ import Base from '../../layouts/Base.astro';
     $('loading').hidden = true;
     if (winesRes.error) { $('load-error').hidden = false; return; }
     if (!winesRes.data?.length) { $('need-login').hidden = false; return; }
-    wines = winesRes.data as Wine[];
+    wines = nameBlind(winesRes.data as Wine[]);
     slugs = wineSlugs(wines);
+    // While a wine is blind, the list follows the host revealing it
+    if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, refresh);
 
     const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
     const status = $('order-status');
@@ -309,6 +336,9 @@ import Base from '../../layouts/Base.astro';
   .carousel .pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .carousel .pic.empty { background: linear-gradient(180deg, var(--ruby), var(--tawny)); }
   .carousel .pic.empty img { display: none; }
+  .carousel .pic.blind { background: var(--lodge-2); }
+  .blind-bottle { height: 100%; width: auto; max-height: 15rem; }
+  .blind-hint { font-style: italic; }
   .carousel .no {
     position: absolute;
     top: 0.6rem;

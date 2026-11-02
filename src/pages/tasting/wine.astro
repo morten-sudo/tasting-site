@@ -65,7 +65,7 @@ import Base from '../../layouts/Base.astro';
 
   await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
-  import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, wineFacts } from '../../lib/wines';
+  import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, wineFacts, nameBlind, blindBottle, watchBlind } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
   import { wineMap, showMapCredit } from '../../lib/wine-map';
 
@@ -122,7 +122,7 @@ import Base from '../../layouts/Base.astro';
       supabase.rpc('get_tasting', { code }),
     ]);
     $('loading').hidden = true;
-    wines = (winesRes.data ?? []) as Wine[];
+    wines = nameBlind((winesRes.data ?? []) as Wine[]);
     if (!winesRes.error && !wines.length) { $('need-login').hidden = false; return; }
     slugs = wineSlugs(wines);
     const index = /^\d+$/.test(part)
@@ -135,6 +135,32 @@ import Base from '../../layouts/Base.astro';
     if (location.pathname !== canonical) history.replaceState(null, '', canonical + location.search);
 
     document.title = `${w.name} – Winetastr`;
+
+    // A blind wine: its number, style colour and the guest's own rating – the rest comes when the host reveals it
+    if (w.blind) {
+      $('pic').classList.add('blind');
+      $('pic').insertAdjacentHTML('afterbegin', blindBottle(w.style));
+      $('no').textContent = String(index + 1).padStart(2, '0');
+      const tag = $('style-tag');
+      tag.textContent = styleLabel(w);
+      tag.style.setProperty('--tone', styleTone(w));
+      $('name').textContent = w.name;
+      $('meta').textContent = t('blind.hint');
+      document.querySelector('.buy')?.setAttribute('hidden', '');
+      $('desc').hidden = true;
+      pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], t('wine.prev'));
+      pagerLink($('next') as HTMLAnchorElement, wines[index + 1], t('wine.next'));
+      const mine = await fetchMyRatings(code);
+      $('my-rating').replaceChildren(ratingBox(code, w.id, mine.get(w.id)));
+      $('wine').hidden = false;
+      // Revealed by the host: show the whole wine
+      watchBlind(async () => {
+        const { data, error } = await supabase.rpc('get_wines', { code });
+        if (error) throw error;
+        return ((data ?? []) as Wine[]).filter((x) => x.id === w.id);
+      }, [w], () => location.reload());
+      return;
+    }
 
     const pic = $('pic');
     if (w.image_url) {
@@ -310,6 +336,8 @@ import Base from '../../layouts/Base.astro';
   .wine-page .pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .wine-page .pic.empty { background: linear-gradient(180deg, var(--ruby), var(--tawny)); }
   .wine-page .pic.empty img { display: none; }
+  .wine-page .pic.blind { background: var(--lodge-2); }
+  .wine-page .blind-bottle { height: 80%; width: auto; max-height: 24rem; }
   .wine-page .no {
     position: absolute;
     top: 0.7rem;

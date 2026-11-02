@@ -9,6 +9,8 @@ export type Wine = {
   country?: string | null; region?: string | null; appellation?: string | null; appellation_id?: string | null;
   producer_website?: string | null; producer_address?: string | null; producer_lat?: number | null; producer_lon?: number | null;
   grapes?: string | null; food_pairing?: string | null; serving?: string | null;
+  /** Blind: the guests see only its number and style until the host reveals it */
+  blind?: boolean;
 };
 
 import { t, money, type Key } from '../i18n';
@@ -72,13 +74,15 @@ export function wineSlug(name: string): string {
 }
 
 /** The address part of each wine in a tasting; two wines with the same name get -2, -3 … */
-export function wineSlugs(wines: (Pick<Wine, 'id' | 'name'> & { vintage?: string | null })[]): Map<number, string> {
+export function wineSlugs(wines: (Pick<Wine, 'id' | 'name'> & { vintage?: string | null; blind?: boolean })[]): Map<number, string> {
   // Wines with the same name (e.g. two vintages of one wine) get the vintage added, then a number
   const count = new Map<string, number>();
   for (const w of wines) count.set(wineSlug(w.name), (count.get(wineSlug(w.name)) ?? 0) + 1);
   const used = new Map<string, number>();
   const out = new Map<number, string>();
   for (const w of wines) {
+    // A blind wine is addressed by its number in the database, so the address still works once it is revealed
+    if (w.blind) { out.set(w.id, String(w.id)); continue; }
     let base = wineSlug(w.name);
     if ((count.get(base) ?? 0) > 1 && w.vintage) base = wineSlug(`${w.name} ${w.vintage}`);
     const n = (used.get(base) ?? 0) + 1;
@@ -122,4 +126,33 @@ export function wineFacts(w: { grapes?: string | null; food_pairing?: string | n
     ul.append(li);
   }
   return ul;
+}
+
+/** Blind wines get "Wine 3" (their place in the evening) as name; the rest is not sent by the database. */
+export function nameBlind<T extends Pick<Wine, 'name' | 'blind'>>(wines: T[]): T[] {
+  wines.forEach((w, i) => { if (w.blind) w.name = t('blind.name', { n: i + 1 }); });
+  return wines;
+}
+
+/** A bottle silhouette in the colour of the wine's style, for a blind wine. Sparkling wine gets a foil top. */
+export function blindBottle(style: string | null): string {
+  const tone = STYLE_TONES[style ?? ''] ?? '#9a8a7a';
+  const foil = style === 'Sparkling' ? '<path d="M26 4h12v22H26z" fill="#c9b27a"/>' : '';
+  return `<svg class="blind-bottle" viewBox="0 0 64 200" aria-hidden="true">`
+    + `<path d="M27 4h10v38c0 9 15 16 15 34v114c0 4-3 6-6 6H18c-3 0-6-2-6-6V76c0-18 15-25 15-34z" fill="${tone}"/>`
+    + `${foil}<path d="M18 108h28v44H18z" fill="#fff" opacity=".22"/>`
+    + `<text x="32" y="138" text-anchor="middle" font-size="22" fill="#fff" opacity=".9" font-family="Georgia, serif">?</text></svg>`;
+}
+
+/** Calls back when the host reveals (or blinds) a wine: checks every 15 seconds while the page is open. */
+export function watchBlind(load: () => Promise<{ id: number; blind?: boolean }[]>, current: { id: number; blind?: boolean }[], changed: () => void) {
+  const sig = (list: { id: number; blind?: boolean }[]) => list.map((w) => `${w.id}${w.blind ? 'b' : ''}`).join(',');
+  let last = sig(current);
+  const timer = setInterval(async () => {
+    if (document.hidden) return;
+    try {
+      const now = sig(await load());
+      if (now !== last) { last = now; clearInterval(timer); changed(); }
+    } catch { /* offline for a moment: try again next time */ }
+  }, 15000);
 }

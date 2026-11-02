@@ -899,4 +899,12 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineFields.foodHint": "(t.d. grillaður fiskur, salöt, ostur)",
   "wineFields.servingHint": "(t.d. 14–16 °C, umhellt klukkustund áður)",
   "login.remember": "Muna eftir mér á þessu tæki",
+  "blind.name": "Vín {n}",
+  "blind.hint": "Blint – afhjúpað síðar",
+  "blind.guestsSee": "Gestir sjá",
+  "blind.shown": "Vínið",
+  "blind.blind": "Blint",
+  "blind.hidden": "Ekkert (falið)",
+  "blind.reveal": "Afhjúpa",
+  "blind.tasting": "Blindsmökkun (öll vín blind þar til þú afhjúpar þau)",
 };

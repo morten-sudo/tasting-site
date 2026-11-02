@@ -827,4 +827,12 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "wineFields.foodHint": "(np. grillowana ryba, sałatki, ser)",
   "wineFields.servingHint": "(np. 14–16 °C, zdekantować godzinę wcześniej)",
   "login.remember": "Zapamiętaj mnie na tym urządzeniu",
+  "blind.name": "Wino {n}",
+  "blind.hint": "W ciemno – zostanie odkryte później",
+  "blind.guestsSee": "Goście widzą",
+  "blind.shown": "Wino",
+  "blind.blind": "W ciemno",
+  "blind.hidden": "Nic (ukryte)",
+  "blind.reveal": "Odkryj",
+  "blind.tasting": "Degustacja w ciemno (wszystkie wina w ciemno, dopóki ich nie odkryjesz)",
 };
