@@ -218,6 +218,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     const status = $('q-ai-status');
     const level = document.querySelector<HTMLInputElement>('input[name="q-ai-level"]:checked')?.value ?? 'medium';
     status.textContent = t('aiQuiz.writing');
+    status.classList.add('ai-busy');
     status.hidden = false;
     $<HTMLButtonElement>('q-ai').disabled = true;
     $<HTMLButtonElement>('q-ai-more').disabled = true;
@@ -243,6 +244,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     } catch {
       status.textContent = t('aiQuiz.failed');
     } finally {
+      status.classList.remove('ai-busy');
       $<HTMLButtonElement>('q-ai').disabled = false;
       $<HTMLButtonElement>('q-ai-more').disabled = false;
     }

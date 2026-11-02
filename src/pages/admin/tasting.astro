@@ -430,6 +430,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) return;
     const status = $('ai-status');
     status.textContent = t('aiIntro.writing');
+    status.classList.add('ai-busy');
     status.hidden = false;
     ($('ai-write') as HTMLButtonElement).disabled = true;
     ($('ai-again') as HTMLButtonElement).disabled = true;
@@ -452,6 +453,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     } catch {
       status.textContent = t('aiIntro.failed');
     } finally {
+      status.classList.remove('ai-busy');
       ($('ai-write') as HTMLButtonElement).disabled = false;
       ($('ai-again') as HTMLButtonElement).disabled = false;
     }
