@@ -18,7 +18,7 @@ type Row = { blind: boolean; revealed: boolean; wines: Wine };
 const LEVELS: Record<string, string> = {
   easy: 'EASY – for guests who simply enjoy wine: well-known countries, regions and grapes, colours and styles, simple terms. The right answer should be guessable from the evening; wrong options clearly different.',
   medium: 'MEDIUM – for interested guests: appellations within regions, main grapes of a blend, how a style is made, common classifications. Wrong options close enough to need some knowledge.',
-  expert: 'EXPERT – for wine nerds: specific appellations and their neighbours, grape proportions, ageing rules and classifications, production details, vintages. Wrong options very close to the right one – but still exactly one right answer.',
+  expert: 'EXPERT – for wine nerds: hard because the options are close (neighbouring appellations, related grapes, nearby ages and vintages), not because of obscure facts. Every fact must come from the list or be textbook-certain; no questions about which areas border each other, legal minimums or percentages unless the list states them. Do not put the answer in the options as a wine name (e.g. "Wine 9 – … 20 Years")',
 };
 export type Suggestion = { question: string; options: string[]; correct: number; explanation: string | null };
 
