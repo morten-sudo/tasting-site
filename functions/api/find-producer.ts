@@ -87,6 +87,19 @@ function schemaAddress(html: string): string | null {
   return null;
 }
 
+/** Place names written in map links, e.g. maps.google.com/?q=Château+Lynch-Bages,+33250+Pauillac */
+function mapPlaces(html: string): string[] {
+  const out: string[] = [];
+  for (const m of html.matchAll(/(?:google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.apple\.com)[^"'\s<>]*?[?&](?:q|query|daddr|destination|address)=([^&"'<>]+)/gi)) {
+    let v = m[1].replace(/\+/g, ' ');
+    try { v = decodeURIComponent(v); } catch {}
+    v = v.replace(/&amp;/g, '&').trim();
+    if (v.length > 6 && v.length < 200 && !/^-?\d+\.\d+\s*,\s*-?\d+\.\d+$/.test(v)) out.push(v);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
+
 /** Pages likely to hold the address or a map: contact, visit, find us … */
 function contactLinks(html: string, base: string) {
   const out = new Set<string>();
@@ -150,11 +163,18 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   // The postal address: from the site's structured data, else as written on the site (read by the model)
   let address: string | null = pages.map((p) => schemaAddress(p.html)).find(Boolean) ?? null;
   if (!address) try {
-    // Addresses sit in the header, the footer or the middle of a contact page: give the model the start and end of each page
-    const text = pages.map((p) => { const t = htmlToText(p.html); return t.length > 6000 ? t.slice(0, 2500) + '\n…\n' + t.slice(-3500) : t; })
-      .join('\n---\n').slice(0, 14000);
+    // Addresses sit in the header, the footer or the middle of a contact page: give the model the start and end of each page,
+    // and first the lines that look like an address (a postcode and a town) and the place names in map links
+    const texts = pages.map((p) => htmlToText(p.html));
+    const hints = [...new Set([
+      ...texts.flatMap((t) => t.split(/\n|\s{3,}|\|/).map((l) => l.trim())
+        .filter((l) => l.length > 6 && l.length < 160 && /\b(\d{4,5}|\d{3}\s?\d{2}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2})\b/.test(l) && /[a-zà-ÿ]{3,}/i.test(l))),
+      ...pages.flatMap((p) => mapPlaces(p.html)),
+    ])].slice(0, 25);
+    const text = (hints.length ? 'Lines that may be the address:\n' + hints.join('\n') + '\n\n' : '')
+      + texts.map((t) => (t.length > 6000 ? t.slice(0, 2500) + '\n…\n' + t.slice(-3500) : t)).join('\n---\n').slice(0, 14000);
     const out = await env.AI.run(MODEL, {
-      messages: [{ role: 'user', content: `Below is text from the website of the wine producer "${producer}". Return ONLY JSON {"address": the producer's postal address (street, postcode, town, country) exactly as written, or null}.\n\n${text}` }],
+      messages: [{ role: 'user', content: `Below is text from the website of the wine producer "${producer}". Return ONLY JSON {"address": the producer's own postal address as written on the site – street if given, postcode, town, country – or null if the site does not give one}. Many estates have no street: "Château X, 33250 Pauillac, France" is a full address.\n\n${text}` }],
       max_tokens: 120, temperature: 0,
     });
     address = str(parseAnswer(out.response)?.address);
