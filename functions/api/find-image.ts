@@ -2,7 +2,7 @@
 // 1. Pages about the wine: links on the home page and URLs in the sitemap whose words match the wine's name.
 // 2. Their pictures: the page's share picture, the product picture in its data, and <img> whose file name or alt text
 //    names the wine. Bottle shots count in favour; logos, icons, cases and gift boxes against.
-import { isHost, json } from '../../src/server/wine-ai';
+import { MODEL, isHost, json, type AiEnv } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText, NOT_BOTTLE, BOTTLE } from './read-link';
 
 const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
@@ -20,10 +20,31 @@ async function get(url: string, ms = 7000): Promise<{ url: string; html: string 
   } catch { return null; }
 }
 
+/** Is the picture a product photo of one wine bottle (not a vineyard, a glass, people or a case)? Cloudflare AI decides. */
+async function isBottleShot(env: AiEnv, url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(6000) });
+    const type = res.headers.get('content-type') ?? '';
+    if (!res.ok || !type.startsWith('image/')) return false;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.length < 3000 || bytes.length > 1_500_000) return false;
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const out = await env.AI.run(MODEL, {
+      messages: [{ role: 'user', content: [
+        { type: 'text', text: 'Is this picture a product photo of one wine bottle – the whole bottle, standing, on a plain, white or transparent background? Answer only yes or no.' },
+        { type: 'image_url', image_url: { url: `data:${type.split(';')[0]};base64,${btoa(bin)}` } },
+      ] }],
+      max_tokens: 5, temperature: 0,
+    });
+    return /^\s*yes/i.test(String(out.response ?? ''));
+  } catch { return false; }
+}
+
 const abs = (src: string, base: string) => { try { const u = new URL(src.replace(/&amp;/g, '&'), base); if (u.protocol === 'http:') u.protocol = 'https:'; return u.href; } catch { return null; } };
 const fileWords = (url: string) => { try { return plain(decodeURIComponent(new URL(url).pathname)).replace(/[^a-z0-9]+/g, ' '); } catch { return ''; } };
 
-export const onRequestPost = async ({ request }: { request: Request }) => {
+export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
   if (!(await isHost(request))) return json({ error: 'not_host' }, 403);
   let body: { name?: string; producer?: string; vintage?: string; website?: string };
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
@@ -134,7 +155,9 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     // A picture on several of the wine's pages belongs to the site, not to the wine
     const on = (u: string) => new Set(unnamed.filter((x) => x.url === u).map((x) => x.page)).size;
     const own = unnamed.filter((x, i) => unnamed.findIndex((y) => y.url === x.url) === i && (pages.length < 2 || on(x.url) === 1));
-    list = own.sort((a, b) => b.score - a.score).slice(0, 8);
+    // Cloudflare AI looks at each one: only a product photo of a single bottle is kept
+    const checked = await Promise.all(own.sort((a, b) => b.score - a.score).slice(0, 10).map(async (x) => ((await isBottleShot(env, x.url)) ? x : null)));
+    list = checked.filter(Boolean).slice(0, 6) as typeof list;
   }
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
   // pages and seen show where the pictures came from (and why there are none)
