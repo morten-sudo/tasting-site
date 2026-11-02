@@ -904,4 +904,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "wizard.blindTitle": "Cata a ciegas",
   "wizard.blindHint": "Los invitados solo ven el número y el color de cada vino hasta que lo reveles.",
   "wizard.laterAll": "Puedes cambiarlo todo más tarde en Ajustes, y preparar el quiz en Quiz.",
+  "adminTasting.newWine": "Vino nuevo",
+  "adminTasting.newWineQ": "¿Un vino que no está en tu biblioteca?",
+  "adminTasting.newWineLink": "Créalo aquí: irá a ambos sitios",
 };

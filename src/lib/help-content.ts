@@ -93,6 +93,7 @@ export const HELP: HelpSection[] = [
 <h4>Billede</h4>
 <p>Træk et billede ind, vælg en fil – eller tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h4 id="tasting-wines">Vinene i en smagning</h4>
+<p>En vin, der ikke er i biblioteket endnu, opretter du direkte fra smagningen med <a href="t:wines/#tw-new-wine">Vine → Ny vin</a>: guiden lægger den både i biblioteket og i smagningen og sender dig tilbage bagefter.</p>
 <p>På smagningens fane <a href="t:wines/">Vine</a> sætter du for hver vin: rækkefølgen (↑ ↓), gæsteprisen, mængdepriser (fx "fra 6 flasker 80 kr."), om den kan bestilles, og hvad gæsterne ser: <i>Vinen</i>, <i>Blind</i> eller <i>Intet (skjult)</i>. Gæsternes gennemsnitlige karakter vises ved hver vin.</p>`,
       en: `<p>Your wine library under <a href="/admin/wines/">Wines</a> is shared by all hosts on the account, and a wine can be used in many tastings.</p>
 <h4 id="new-wine">New wine</h4>
@@ -108,6 +109,7 @@ export const HELP: HelpSection[] = [
 <h4>Picture</h4>
 <p>Drag a picture in, choose a file – or press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h4 id="tasting-wines">The wines in a tasting</h4>
+<p>A wine that is not in the library yet can be created straight from the tasting with <a href="t:wines/#tw-new-wine">Wines → New wine</a>: the guide puts it in both the library and the tasting and brings you back afterwards.</p>
 <p>On the tasting's <a href="t:wines/">Wines</a> tab you set for each wine: the order (↑ ↓), the guest price, quantity prices (e.g. "from 6 bottles 80 kr."), whether it can be ordered, and what the guests see: <i>The wine</i>, <i>Blind</i> or <i>Nothing (hidden)</i>. The guests' average rating is shown by each wine.</p>`,
     },
   },

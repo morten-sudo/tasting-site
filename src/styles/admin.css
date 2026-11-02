@@ -1036,3 +1036,4 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .wz-setup .wz-switch input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .setup-steps a { color: inherit; text-decoration: underline; text-decoration-color: var(--lodge-3); text-underline-offset: 3px; }
 .setup-steps a:hover { color: var(--amber); }
+.admin-page .head-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }

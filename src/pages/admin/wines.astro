@@ -276,6 +276,18 @@ import '../../styles/admin.css';
       ? { onSaved: () => { show(); }, onDeleted: () => { location.href = '/admin/wines/'; } } : {});
     await admin.load();
     followHelpLink();
+    // From a tasting: ?new=<tasting id>&back=<its wines tab> opens the guide with that tasting chosen, and
+    // saving or closing goes back there
+    const params = new URLSearchParams(location.search);
+    const into = params.get('new');
+    const back = params.get('back') ?? '';
+    if (into !== null) {
+      history.replaceState(null, '', location.pathname);
+      admin.create(/^[0-9a-f-]{36}$/i.test(into) ? { tastingId: into } : {});
+      if (/^\/t\/[a-z0-9-]+\/admin\//.test(back)) {
+        $('wine-panel').addEventListener('close', () => { location.href = back; }, { once: true });
+      }
+    }
     if (onWinePage()) {
       wineId = wineIdFromPath(admin.paths());
       await show();

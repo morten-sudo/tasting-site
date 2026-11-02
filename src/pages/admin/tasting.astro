@@ -165,7 +165,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block wines-admin" data-section="wines">
         <div class="guests-head">
           <h2 data-i18n="page.wines">Wines</h2>
-          <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWine">Add wine</button>
+          <div class="head-actions">
+            <a id="tw-new-wine" class="btn small ghost" href="/admin/wines/" data-i18n="adminTasting.newWine">New wine</a>
+            <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWine">Add wine</button>
+          </div>
         </div>
         <!-- Add wines from the account's wine list: side panel -->
         <dialog id="tw-panel" class="sheet" aria-labelledby="tw-panel-title">
@@ -178,7 +181,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <p id="tw-msg" class="message ok" hidden aria-live="polite"></p>
           <ul id="tw-picker-list" class="picker-list"></ul>
           <p id="tw-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreWines">No other wines in your library.</p>
-          <p class="hint tw-new" data-i18n-html="adminTasting.newWineHint">A new wine? Create it under <a href="/admin/wines/">Wines</a> first.</p>
+          <p class="hint tw-new"><span data-i18n="adminTasting.newWineQ">A wine that is not in your library?</span> <a id="tw-new-wine-2" href="/admin/wines/" data-i18n="adminTasting.newWineLink">Create it here</a></p>
         </dialog>
         <ul id="tw-list" class="lib-list"></ul>
         <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
@@ -1131,6 +1134,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     library = (g.data ?? []) as G[];
     quizTotal = q.count || 1;
     tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); });
+    // A new wine from here: the wine guide goes into the library and this tasting, then comes back
+    const newWine = `/admin/wines/?new=${tasting.id}&back=${encodeURIComponent(`/t/${tasting.slug}/admin/wines/`)}`;
+    ($('tw-new-wine') as HTMLAnchorElement).href = newWine;
+    ($('tw-new-wine-2') as HTMLAnchorElement).href = newWine;
     await tastingWines.load();
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; },

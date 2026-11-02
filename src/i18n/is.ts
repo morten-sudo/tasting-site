@@ -976,4 +976,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wizard.blindTitle": "Blindsmökkun",
   "wizard.blindHint": "Gestir sjá aðeins númer og lit hvers víns þar til þú afhjúpar það.",
   "wizard.laterAll": "Þú getur breytt þessu öllu síðar undir Stillingar – og sett upp spurningakeppnina undir Quiz.",
+  "adminTasting.newWine": "Nýtt vín",
+  "adminTasting.newWineQ": "Vín sem er ekki í safninu þínu?",
+  "adminTasting.newWineLink": "Búðu það til hér – það fer á báða staði",
 };

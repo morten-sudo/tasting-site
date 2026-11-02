@@ -904,4 +904,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "wizard.blindTitle": "Blindproeverij",
   "wizard.blindHint": "Gasten zien alleen het nummer en de kleur van elke wijn tot je hem onthult.",
   "wizard.laterAll": "Je kunt alles later wijzigen onder Instellingen – en de quiz maken onder Quiz.",
+  "adminTasting.newWine": "Nieuwe wijn",
+  "adminTasting.newWineQ": "Een wijn die niet in je bibliotheek staat?",
+  "adminTasting.newWineLink": "Maak hem hier – hij komt op beide plekken",
 };

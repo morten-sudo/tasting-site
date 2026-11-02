@@ -975,4 +975,7 @@ export const en = {
   "wizard.blindTitle": "Blind tasting",
   "wizard.blindHint": "Guests see only the number and colour of each wine until you reveal it.",
   "wizard.laterAll": "You can change all of this later under Settings – and set up the quiz under Quiz.",
+  "adminTasting.newWine": "New wine",
+  "adminTasting.newWineQ": "A wine that is not in your library?",
+  "adminTasting.newWineLink": "Create it here – it goes into both",
 } as const;

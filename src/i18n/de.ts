@@ -904,4 +904,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "wizard.blindTitle": "Blindverkostung",
   "wizard.blindHint": "Gäste sehen nur Nummer und Farbe jedes Weins, bis Sie ihn enthüllen.",
   "wizard.laterAll": "Sie können alles später unter Einstellungen ändern – und das Quiz unter Quiz einrichten.",
+  "adminTasting.newWine": "Neuer Wein",
+  "adminTasting.newWineQ": "Ein Wein, der nicht in Ihrer Bibliothek ist?",
+  "adminTasting.newWineLink": "Hier anlegen – er kommt an beide Stellen",
 };
