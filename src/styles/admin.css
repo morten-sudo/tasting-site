@@ -1551,3 +1551,4 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .icon-act.chat-del { padding: 0; width: 2rem; height: 2rem; font-size: inherit; }
 .admin-page .icon-act.chat-del svg { width: 1.05rem; height: 1.05rem; }
 .admin-page .icon-space { width: 2.4rem; flex: none; }
+.admin-page #add-toggle { white-space: nowrap; flex: none; }

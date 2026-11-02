@@ -492,6 +492,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { fieldError, focusField } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
   import { confirmModal } from '../../lib/confirm';
+  import { SUPABASE_URL, SUPABASE_KEY } from '../../lib/config';
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
@@ -957,10 +958,51 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
     edit.dataset.tip = t('admin.edit');
     edit.addEventListener('click', () => openGuestPanel(p));
-    actions.append(edit);
+    // Remove from the tasting: a quiet trash icon, asked about first, with Undo
+    const del = iconButton('trash', `${t('adminTasting.removeGuest')}: ${p.name}`, { quiet: true });
+    del.dataset.tip = t('adminTasting.removeGuest');
+    del.addEventListener('click', () => removeGuest(p));
+    actions.append(edit, del);
     li.append(actions);
     return li;
   }
+
+  // Removing a guest from the tasting (the guest stays in the guest list): asked about first, then gone from the
+  // list with "Undo" for a while – removed in the database when the message goes (or the page is left)
+  const pendingRemove = new Map<string, { p: P; token: string }>();
+  async function removeGuest(p: P): Promise<boolean> {
+    if (orders.some((o) => o.participant_id === p.id)) { toast(t('adminTasting.guestHasOrders'), { kind: 'error', ms: 7000 }); return false; }
+    if (!(await confirmModal(t('guestRow.removeQ', { name: p.name }), t('adminTasting.removeGuest'), t('guestRow.removeNote')))) return false;
+    const { data: sess } = await supabase.auth.getSession();
+    pendingRemove.set(p.id, { p, token: sess.session?.access_token ?? '' });
+    participants = participants.filter((x) => x.id !== p.id);
+    renderParticipants();
+    renderFee();
+    toast(t('guestRow.removed', { name: p.name }), {
+      ms: 8000,
+      action: { label: t('wineLib.undo'), run: () => {
+        pendingRemove.delete(p.id);
+        participants.push(p);
+        renderParticipants();
+        renderFee();
+        toast(t('guestRow.restored', { name: p.name }), { kind: 'ok' });
+      } },
+      onTimeout: async () => {
+        if (!pendingRemove.has(p.id)) return;
+        pendingRemove.delete(p.id);
+        const { error } = await supabase.from('participants').delete().eq('id', p.id);
+        if (error) { participants.push(p); renderParticipants(); renderFee(); toast(t('admin.changeNotSaved'), { kind: 'error', ms: 7000 }); }
+      },
+    });
+    return true;
+  }
+  addEventListener('pagehide', () => {
+    for (const [id, { token }] of pendingRemove) {
+      fetch(`${SUPABASE_URL}/rest/v1/participants?id=eq.${id}`, { method: 'DELETE', keepalive: true,
+        headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}` } });
+    }
+    pendingRemove.clear();
+  });
 
   // The side panel for one guest: the invitation, status, fee paid, email – and removing them from the tasting
   function editPanel(p: P) {
@@ -1040,17 +1082,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const quiet = mk('div', 'guest-remove');
     const remove = mk('button', 'text-btn danger', t('adminTasting.removeGuest'));
     remove.type = 'button';
-    remove.addEventListener('click', async () => {
-      if (orders.some((o) => o.participant_id === p.id)) { toast(t('adminTasting.guestHasOrders'), { kind: 'error', ms: 7000 }); return; }
-      if (!(await confirmModal(t('guestRow.removeQ', { name: p.name }), t('adminTasting.removeGuest'), t('guestRow.removeNote')))) return;
-      const { error } = await supabase.from('participants').delete().eq('id', p.id);
-      if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return; }
-      participants = participants.filter((x) => x.id !== p.id);
-      guestPanel.close();
-      await reloadParticipants();
-      renderFee();
-      toast(t('guestRow.removed', { name: p.name }), { kind: 'ok' });
-    });
+    remove.addEventListener('click', async () => { if (await removeGuest(p)) guestPanel.close(); });
     quiet.append(remove);
     form.append(quiet);
 
