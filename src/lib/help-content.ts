@@ -89,7 +89,7 @@ export const HELP: HelpSection[] = [
 <li><b>Link til en butik</b> – beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden. Er billedet forkert (fx bagetiketten), vises sidens andre billeder, så du kan vælge det rigtige. Under vinen står <i>Hentet fra … (dato)</i>, og du kan hente igen med opdater-ikonet.</li>
 <li><b>Udfyld selv</b>.</li>
 </ul>
-<p>Tjek altid felterne – det automatiske er et godt udgangspunkt, ikke en garanti.</p>
+<p>Tjek altid felterne – det automatiske er et godt udgangspunkt, ikke en garanti. Kun <b>navnet</b> (markeret med <span class="req">*</span>) skal udfyldes; resten kan du tilføje senere. Er noget skrevet forkert, fx en årgang uden tal eller en pris, der ikke er et tal, står det med rødt lige under feltet. Priser og alkohol må skrives med komma eller punktum.</p>
 <h4>Producent og kort</h4>
 <p>Producentens hjemmeside og adresse findes automatisk, mens du skriver. Adressen placeres som en nål på kortet, når den kan findes præcist. Oprindelse (land, region, appellation) farver regionen på kortet – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, Rhône, Toscana, Piemonte, Rioja og Mosel på et detaljeret kort.</p>
 <h4>Billede</h4>
@@ -107,7 +107,7 @@ export const HELP: HelpSection[] = [
 <li><b>Link to a shop</b> – description, prices, grapes, "goes with", serving and picture are fetched from the page. If the picture is wrong (e.g. the back label), the page's other pictures are shown so you can pick the right one. Below the wine it says <i>Fetched from … (date)</i>, and the refresh icon fetches it again.</li>
 <li><b>Fill it in yourself</b>.</li>
 </ul>
-<p>Always check the fields – the automatic part is a good start, not a guarantee.</p>
+<p>Always check the fields – the automatic part is a good start, not a guarantee. Only the <b>name</b> (marked <span class="req">*</span>) is needed; the rest you can add later. If something is written wrong, e.g. a vintage without a number or a price that is not a number, it says so in red right under the field. Prices and alcohol can be written with a comma or a point.</p>
 <h4>Producer and map</h4>
 <p>The producer's website and address are found automatically as you type. The address is placed as a pin on the map when it can be found exactly. The origin (country, region, appellation) colours the region on the map – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, the Rhône, Tuscany, Piedmont, Rioja and the Mosel on a detailed map.</p>
 <h4>Picture</h4>

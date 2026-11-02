@@ -7,6 +7,7 @@ import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
 import { forgetGuesses } from './overview-map';
+import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
 export type AdminWine = {
@@ -78,10 +79,6 @@ type LinkResult = LabelResult & {
   offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
 };
 
-const toNumber = (v: string) => {
-  const n = Number(v.replace(',', '.').trim());
-  return v.trim() === '' || Number.isNaN(n) ? null : n;
-};
 type GeoHit = { lat: number; lon: number; source: string };
 const toText = (v: string) => v.trim() || null;
 /** "2 Nov 2026, 12:31" – when a wine's link was read. */
@@ -134,9 +131,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   $('wf-close').addEventListener('click', () => requestClose());
   panel.addEventListener('close', () => { editing = null; });
   // Esc and a click beside the guide ask before throwing away what was typed
-  panel.addEventListener('cancel', (e) => { if (guide() && dirty()) { e.preventDefault(); askDiscard(); } });
+  // A second Esc (with the question showing) closes.
+  panel.addEventListener('cancel', (e) => { if (guide() && dirty() && $('wf-discard').hidden) { e.preventDefault(); askDiscard(); } });
   panel.addEventListener('click', (e) => { if (e.target === panel && guide()) requestClose(); });
   const list = $<HTMLUListElement>('wine-admin-list');
+  const checks = wineChecks(form);
+  const AMOUNTS = ['wf-abv', 'wf-retail', 'wf-offer-price'];
   const field = <E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id: string) => $<E>(id);
 
   // On a computer the photo tile uploads a picture; on a phone it opens the camera
@@ -343,7 +343,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const put = (id: string, value: string | number | null | undefined) => {
       if (value == null || value === '') return;
       const el = field<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id);
-      const v = String(value).replace('.', id === 'wf-abv' ? ',' : '.');
+      const v = typeof value === 'number' && AMOUNTS.includes(id) ? amountText(value, locale())
+        : AMOUNTS.includes(id) && parseAmount(String(value)) != null && !Number.isNaN(parseAmount(String(value))) ? amountText(parseAmount(String(value)), locale())
+        : String(value);
       if (!el.value.trim()) { set(el, v); filled++; }
       else if (!same(el.value, v)) changes.push({ id, apply: () => set(el, v) });
     };
@@ -455,6 +457,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   function openForm(w: AdminWine | null) {
     editing = w;
+    checks.clear();
     pendingImage = null;
     removeImage = false;
     linkImage = null;
@@ -487,9 +490,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     field<HTMLInputElement>('wf-producer-address').value = w?.producer_address ?? '';
     styleSelect.value = w?.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
     field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
-    field<HTMLInputElement>('wf-abv').value = w?.abv != null ? String(w.abv).replace('.', ',') : '';
-    field<HTMLInputElement>('wf-retail').value = w?.retail_price_dkk != null ? String(w.retail_price_dkk) : '';
-    field<HTMLInputElement>('wf-offer-price').value = w?.offer_price_dkk != null ? String(w.offer_price_dkk) : '';
+    field<HTMLInputElement>('wf-abv').value = amountText(w?.abv, locale());
+    field<HTMLInputElement>('wf-retail').value = amountText(w?.retail_price_dkk, locale());
+    field<HTMLInputElement>('wf-offer-price').value = amountText(w?.offer_price_dkk, locale());
     field<HTMLInputElement>('wf-offer-qty').value = w?.offer_quantity != null ? String(w.offer_quantity) : '';
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
@@ -519,7 +522,16 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   // ---------- The guide (new wine) ----------
   const STEPS = 4;
-  function goStep(n: number) {
+  /** The guide's step that holds an element. */
+  const stepOf = (el: Element) => Number(el.closest<HTMLElement>('.wf-step')?.dataset.step ?? 0);
+  function goStep(n: number, checked = true) {
+    // Forward only when the fields of the steps passed are fine (each says what is wrong under it)
+    if (checked && n > step) {
+      for (let i = step; i < n; i++) {
+        const section = form.querySelector<HTMLElement>(`.wf-step[data-step="${i}"]`);
+        if (section && !checks.checkWithin(section)) { if (i !== step) goStep(i, false); section.querySelector<HTMLElement>('[aria-invalid]')?.focus(); return; }
+      }
+    }
     step = Math.max(0, Math.min(STEPS - 1, n));
     form.querySelectorAll<HTMLElement>('.wf-step').forEach((s) => s.classList.toggle('current', Number(s.dataset.step) === step));
     panel.querySelectorAll<HTMLButtonElement>('#wf-steps .wz-step').forEach((b) => {
@@ -968,9 +980,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     e.preventDefault();
     // The year belongs in Vintage, not in the name ("Château Fombrauge 2020" → "Château Fombrauge")
     const name = withoutYear(field<HTMLInputElement>('wf-name').value.trim(), field<HTMLInputElement>('wf-vintage').value.trim()) ?? '';
-    if (!name) {
-      if (guide()) goStep(1);
-      showMsg(t('admin.wineNameMissing'));
+    // Every field checked; the guide goes to the step with the first error
+    if (!checks.checkWithin(form) || !name) {
+      if (!name) checks.check('wf-name');
+      const bad = form.querySelector<HTMLElement>('[aria-invalid]');
+      if (bad && guide()) { goStep(stepOf(bad), false); bad.focus(); }
+      showMsg(t('wineCheck.fix'));
       return;
     }
     const into = guide() ? field<HTMLSelectElement>('wf-into').value || null : null;
@@ -998,9 +1013,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       producer: toText(field<HTMLInputElement>('wf-producer').value),
       style: styleSelect.value || null,
       vintage: toText(field<HTMLInputElement>('wf-vintage').value),
-      abv: toNumber(field<HTMLInputElement>('wf-abv').value),
-      retail_price_dkk: toNumber(field<HTMLInputElement>('wf-retail').value),
-      offer_price_dkk: toNumber(field<HTMLInputElement>('wf-offer-price').value),
+      abv: parseAmount(field<HTMLInputElement>('wf-abv').value),
+      retail_price_dkk: parseAmount(field<HTMLInputElement>('wf-retail').value),
+      offer_price_dkk: parseAmount(field<HTMLInputElement>('wf-offer-price').value),
       offer_quantity: (() => {
         const n = Math.round(Number(field<HTMLInputElement>('wf-offer-qty').value.trim()));
         return n >= 1 && n <= 99 && field<HTMLInputElement>('wf-offer-price').value.trim() ? n : null;

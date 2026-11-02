@@ -220,8 +220,22 @@
   border-radius: 0.5rem; padding: 0.6rem 0.75rem; color-scheme: dark;
 }
 .admin-page .add-form input:focus, .admin-page .add-form textarea:focus, .admin-page .add-form select:focus {
-  outline: none; border-color: var(--amber);
+  /* Neutral: the red border is kept for errors */
+  outline: none; border-color: var(--paper); box-shadow: 0 0 0 3px rgba(36, 28, 27, 0.14);
 }
+/* A field with an error: red border and the message right under it */
+.admin-page .add-form [aria-invalid] { border-color: var(--error); }
+.admin-page .add-form [aria-invalid]:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.16); }
+.admin-page .field-error { color: var(--error); font-size: 0.88rem; margin: 0.3rem 0 0; }
+.admin-page .field-error::before { content: '⚠ '; }
+.admin-page .field-error[hidden] { display: none; }
+.admin-page .req { color: var(--error); font-weight: 600; }
+.admin-page .wf-required-note { margin: 0 0 0.6rem; font-size: 0.88rem; }
+/* A number with its unit after the box: "13,5 %" */
+.admin-page .with-unit { display: flex; align-items: center; gap: 0.45rem; }
+.admin-page .with-unit input.short { width: 7rem; max-width: 7rem; flex: none; }
+.admin-page .add-form [aria-invalid].from-label { border-color: var(--error) !important; }
+.admin-page .with-unit .unit { color: var(--muted); }
 .admin-page .add-form .toggle {
   display: flex; align-items: center; gap: 0.6rem; margin-top: 0.4rem;
   text-transform: none; letter-spacing: 0; font-size: 0.95rem; color: var(--paper);
