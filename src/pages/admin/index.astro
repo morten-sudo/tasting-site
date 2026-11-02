@@ -101,6 +101,38 @@ import '../../styles/admin.css';
     return li;
   }
 
+  /** Awaiting payment, one line per tasting, each going straight to that tasting's orders or guests. */
+  async function showUnpaidByTasting() {
+    type O = { tasting_id: string; tastings: { slug: string; title: string } | null; order_lines: { quantity: number; unit_price: number }[] };
+    type P = { tasting_id: string; tastings: { slug: string; title: string; tasting_fee: number; tasting_fee_open: boolean } | null };
+    const [o, p] = await Promise.all([
+      supabase.from('orders').select('tasting_id, tastings(slug, title), order_lines(quantity, unit_price)').eq('paid', false),
+      supabase.from('participants').select('tasting_id, tastings(slug, title, tasting_fee, tasting_fee_open)').eq('status', 'yes').eq('tasting_paid', false),
+    ]);
+    if (o.error || p.error) return; // the totals above stay
+    const rows: HTMLElement[] = [];
+    const orders = new Map<string, { slug: string; title: string; n: number; amount: number }>();
+    for (const x of (o.data ?? []) as unknown as O[]) {
+      if (!x.tastings) continue;
+      const g = orders.get(x.tasting_id) ?? { ...x.tastings, n: 0, amount: 0 };
+      g.n++;
+      g.amount += x.order_lines.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
+      orders.set(x.tasting_id, g);
+    }
+    for (const g of orders.values()) rows.push(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: g.n, amount: money(g.amount) }), g.title, adminUrl(g.slug, 'orders/')));
+    const fees = new Map<string, { slug: string; title: string; n: number; amount: number }>();
+    for (const x of (p.data ?? []) as unknown as P[]) {
+      const tt = x.tastings;
+      if (!tt || !tt.tasting_fee_open || !(Number(tt.tasting_fee) > 0)) continue;
+      const g = fees.get(x.tasting_id) ?? { slug: tt.slug, title: tt.title, n: 0, amount: 0 };
+      g.n++;
+      g.amount += Number(tt.tasting_fee);
+      fees.set(x.tasting_id, g);
+    }
+    for (const g of fees.values()) rows.push(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: g.n, amount: money(g.amount) }), g.title, adminUrl(g.slug, 'guests/')));
+    if (rows.length) $('unpaid').replaceChildren(...rows);
+  }
+
   function render(d: Dash) {
     $('s-tastings').textContent = String(d.tastings);
     $('s-upcoming').textContent = t('dash.upcoming', { n: d.upcoming });
@@ -133,6 +165,7 @@ import '../../styles/admin.css';
     if (d.unpaid_orders?.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: money(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
     if (d.unpaid_fees?.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: money(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
     $('unpaid-card').hidden = !unpaid.children.length;
+    if (unpaid.children.length) showUnpaidByTasting();
 
     // Latest sign-up, order and rating
     const list = $('activity');
