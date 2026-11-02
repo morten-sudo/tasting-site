@@ -880,4 +880,10 @@ export const en = {
   "image.choose": "Choose a picture",
   "image.dropHint": "or drop it here – a photo of the label fills in the form",
   "image.change": "Change picture",
+  "image.findOfficial": "Find an official picture",
+  "image.searching": "Looking on the producer's website …",
+  "image.pick": "Click the right picture:",
+  "image.chosen": "Picture chosen – save the wine to keep it.",
+  "image.noneFound": "No picture of this wine on the producer's website.",
+  "image.needWebsite": "The producer's website is needed – it is under Origin.",
 } as const;

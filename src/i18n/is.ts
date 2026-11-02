@@ -881,4 +881,10 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "image.choose": "Veldu mynd",
   "image.dropHint": "eða dragðu hana hingað – mynd af miðanum fyllir út formið",
   "image.change": "Skipta um mynd",
+  "image.findOfficial": "Finna opinbera mynd",
+  "image.searching": "Leita á vefsíðu framleiðandans …",
+  "image.pick": "Smelltu á réttu myndina:",
+  "image.chosen": "Mynd valin – vistaðu vínið til að halda henni.",
+  "image.noneFound": "Engin mynd af þessu víni á vefsíðu framleiðandans.",
+  "image.needWebsite": "Vefsíða framleiðandans þarf að vera þekkt – hún er undir Uppruna.",
 };

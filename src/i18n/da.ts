@@ -881,4 +881,10 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "image.choose": "Vælg et billede",
   "image.dropHint": "eller træk det hertil – et foto af etiketten udfylder formularen",
   "image.change": "Skift billede",
+  "image.findOfficial": "Find et officielt billede",
+  "image.searching": "Leder på producentens hjemmeside …",
+  "image.pick": "Klik på det rigtige billede:",
+  "image.chosen": "Billedet er valgt – gem vinen for at beholde det.",
+  "image.noneFound": "Intet billede af denne vin på producentens hjemmeside.",
+  "image.needWebsite": "Producentens hjemmeside skal kendes – den står under Oprindelse.",
 };

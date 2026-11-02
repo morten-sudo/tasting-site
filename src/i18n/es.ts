@@ -810,4 +810,10 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "image.choose": "Elegir una imagen",
   "image.dropHint": "o arrástrala aquí – una foto de la etiqueta rellena el formulario",
   "image.change": "Cambiar imagen",
+  "image.findOfficial": "Buscar una imagen oficial",
+  "image.searching": "Buscando en la web del productor …",
+  "image.pick": "Haz clic en la imagen correcta:",
+  "image.chosen": "Imagen elegida – guarda el vino para conservarla.",
+  "image.noneFound": "No hay imagen de este vino en la web del productor.",
+  "image.needWebsite": "Hace falta la web del productor – está en Origen.",
 };

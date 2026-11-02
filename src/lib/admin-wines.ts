@@ -454,6 +454,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     producerTurn++;
     producerStatus('');
     producerStatus('', '', 'wf-address-status');
+    producerStatus('', '', 'wf-image-status');
+    $('wf-image-options').hidden = true;
     form.reset();
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
@@ -717,6 +719,54 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!editing) readLabel(status);
   }
   field<HTMLInputElement>('wf-image').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-label-status'));
+  // An official picture from the producer's website (find-image): the best candidates, the host picks one
+  $('wf-find-image').addEventListener('click', async () => {
+    const btn = $<HTMLButtonElement>('wf-find-image');
+    const box = $('wf-image-options');
+    const website = webUrl(field<HTMLInputElement>('wf-producer-website').value);
+    const name = field<HTMLInputElement>('wf-name').value.trim();
+    box.hidden = true;
+    if (!website) { producerStatus(t('image.needWebsite'), '', 'wf-image-status'); return; }
+    if (!name) { producerStatus(t('admin.wineNameMissing'), '', 'wf-image-status'); return; }
+    btn.disabled = true;
+    producerStatus(t('image.searching'), 'busy', 'wf-image-status');
+    let images: { url: string; page: string }[] = [];
+    try {
+      const { data } = await supabase.auth.getSession();
+      const res = await fetch('/api/find-image', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ name, producer: field<HTMLInputElement>('wf-producer').value.trim(), vintage: field<HTMLInputElement>('wf-vintage').value.trim(), website }),
+      });
+      if (res.ok) images = ((await res.json()) as { images: typeof images }).images ?? [];
+    } catch {}
+    btn.disabled = false;
+    if (!images.length) { producerStatus(t('image.noneFound'), '', 'wf-image-status'); return; }
+    producerStatus(t('image.pick'), '', 'wf-image-status');
+    box.replaceChildren(...images.map((im) => {
+      const b = mk('button', 'image-option');
+      b.type = 'button';
+      b.title = im.page;
+      const img = mk('img');
+      img.src = im.url;
+      img.alt = '';
+      img.loading = 'lazy';
+      // A picture that does not load is left out
+      img.addEventListener('error', () => b.remove());
+      b.append(img);
+      b.addEventListener('click', () => {
+        pendingImage = null;
+        removeImage = false;
+        linkImage = im.url;
+        setPreview(im.url);
+        box.hidden = true;
+        producerStatus(t('image.chosen'), 'ok', 'wf-image-status');
+      });
+      return b;
+    }));
+    box.hidden = false;
+  });
+
   // Drop a picture on the image field (or on the picture shown)
   const imageBox = $('wf-image-box');
   imageBox.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); imageBox.classList.add('dragging'); } });

@@ -932,3 +932,14 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .wf-image.dragging .image-shown img { outline: 2px dashed var(--amber); outline-offset: 3px; }
 .admin-page .image-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
 .admin-page .image-actions label.btn { margin: 0; cursor: pointer; }
+
+/* Official pictures to pick from */
+.admin-page .find-image { justify-self: start; font-size: 0.9rem; }
+.admin-page .image-options { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.admin-page .image-options[hidden] { display: none; }
+.admin-page .image-option {
+  width: 5.5rem; height: 7.5rem; padding: 0.3rem; background: var(--lodge-2); cursor: pointer;
+  border: 1px solid var(--lodge-3); border-radius: 0.5rem; display: grid; place-items: center;
+}
+.admin-page .image-option:hover, .admin-page .image-option:focus-visible { border-color: var(--amber); }
+.admin-page .image-option img { max-width: 100%; max-height: 100%; object-fit: contain; }
