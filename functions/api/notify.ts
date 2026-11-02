@@ -1,23 +1,26 @@
-// Cloudflare Pages Function: POST /api/notify – asked by the database (pg_net) when something hosts may want an
-// email about has happened. Fetches the waiting events with the shared secret (NOTIFY_SECRET, the same as the
-// database's vault secret 'notify_secret') and emails each host what they chose, one email per tasting.
+// Cloudflare Pages Function: POST /api/notify { token } – asked by the database (pg_net) when something hosts may
+// want an email about has happened. The token is a random one-time code the database gave those events; with it
+// the events are fetched (and marked sent), and each host gets what they chose, one email per tasting.
+// Without the right token nothing comes back, so calling this from anywhere else sends nothing.
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
 import { json } from '../../src/server/wine-ai';
 import { sendMail, type MailEnv } from '../../src/server/smtp';
 import { updatesMail } from '../../src/server/mail-texts';
 
-type Env = MailEnv & { NOTIFY_SECRET?: string };
+type Env = MailEnv;
 type Batch = { to: string; name: string | null; lang: string; title: string; slug: string;
   items: { kind: string; guest: string | null; at: string; detail: Record<string, unknown> }[] };
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: Env }) => {
-  const secret = env.NOTIFY_SECRET;
-  if (!secret || request.headers.get('x-notify-secret') !== secret) return json({ error: 'forbidden' }, 403);
+  let body: { token?: unknown };
+  try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
+  const token = typeof body.token === 'string' && /^[0-9a-f-]{36}$/i.test(body.token) ? body.token : null;
+  if (!token) return json({ error: 'bad_request' }, 400);
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/claim_notifications`, {
     method: 'POST',
     headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${SUPABASE_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ secret }),
+    body: JSON.stringify({ tok: token }),
   });
   if (!res.ok) return json({ error: 'claim_failed' }, 502);
   const batches = (await res.json()) as Batch[];
