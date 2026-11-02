@@ -1557,3 +1557,19 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   opacity: 1; cursor: default; background: var(--lodge-2); border-color: var(--lodge-3); color: var(--muted);
 }
 .admin-page #gi-go { min-width: 9.25rem; } /* the label changes (Add / Add and invite) without the fields jumping */
+/* The new row's soft background reaches a little beyond the list, so its content lines up with the rows below
+   and still has room to the edge */
+.admin-page .qa-guest .qa-item, .admin-page .qa-lead .qa-item { margin-inline: -0.6rem; padding-inline: 0.85rem; }
+.admin-page .qa-guest .qa-slide-in, .admin-page .qa-lead .qa-slide-in { margin-inline: -0.6rem; padding-inline: 0.6rem; }
+/* …but its top line stays as wide as the list's lines */
+.admin-page .qa-guest .qa-item, .admin-page .qa-lead .qa-item {
+  border-top: 0;
+  background-image: linear-gradient(var(--qa-line), var(--qa-line));
+  background-size: calc(100% - 1.2rem) 1px; background-position: top center; background-repeat: no-repeat;
+}
+.admin-page .qa .qa-slide-in { margin-inline: -0.6rem; padding-inline: 0.6rem; }
+.admin-page .qa .qa-new {
+  border-top: 0;
+  background-image: linear-gradient(var(--qa-line), var(--qa-line));
+  background-size: calc(100% - 1.2rem) 1px; background-position: top center; background-repeat: no-repeat;
+}
