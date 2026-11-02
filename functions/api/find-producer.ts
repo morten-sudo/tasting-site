@@ -49,6 +49,8 @@ function findCoords(html: string): { lat: number; lon: number; how: string } | n
     [/<meta[^>]+name=["']geo\.position["'][^>]+content=["'](-?\d+\.\d+)\s*[;,]\s*(-?\d+\.\d+)/i, 'meta'],
     [/<meta[^>]+name=["']ICBM["'][^>]+content=["'](-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/i, 'meta'],
     [/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, 'map link'],
+    // An embedded Google map ("Share → Embed"): centred on the place, longitude (!2d) before latitude (!3d)
+    [/google\.[a-z.]+\/maps\/embed\?pb=[^"'\s<>]*?!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)/i, 'map embed'],
     [/google\.[a-z.]+\/maps[^"'\s<>]*@(-?\d+\.\d+),(-?\d+\.\d+)/i, 'map link'],
     [/maps[^"'\s<>]*[?&](?:q|ll|center|daddr|destination|query)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i, 'map link'],
     [/data-lat(?:itude)?=["'](-?\d+\.\d+)["'][^>]*data-(?:lng|lon|longitude)=["'](-?\d+\.\d+)/i, 'map data'],
@@ -56,7 +58,7 @@ function findCoords(html: string): { lat: number; lon: number; how: string } | n
   ];
   for (const [re, how] of tries) {
     const m = html.match(re);
-    const c = m && ok(m[1], m[2], how);
+    const c = m && (how === 'map embed' ? ok(m[2], m[1], how) : ok(m[1], m[2], how));
     if (c) return c;
   }
   return null;
@@ -202,5 +204,5 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   }
   // pages_read and hints show what the lookup saw (for checking why something was not found)
   return json({ producer, website: new URL(site.url).origin + '/', location, address, tried, suggested,
-    pages_read: pages.map((p) => ({ url: p.url, chars: p.html.length })), hints });
+    pages_read: pages.map((p) => ({ url: p.url, chars: p.html.length, maps: (p.html.match(/google\.[a-z.]+\/maps[^"'\s<>]{0,80}/gi) ?? []).slice(0, 2) })), hints });
 };
