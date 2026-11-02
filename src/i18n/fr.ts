@@ -1161,4 +1161,6 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.emailPh": "E-mail (facultatif)",
   "twe.shopPriceLabel": "Prix boutique",
   "twe.shopPriceHint": "Le prix boutique est enregistré sur le vin dans votre cave et le suit dans d’autres dégustations.",
+  "chat.deleteQ": "Retirer le message du chat ?",
+  "account.removeQ": "Retirer {name} comme hôte du compte ?",
 };

@@ -1,7 +1,7 @@
 // Admin: the host writes the tasting's quiz – questions, 2–6 answers, the right answer and an explanation.
 import { supabase } from './supabase';
 import { t } from '../i18n';
-import { sheetPanel } from './admin-common';
+import { sheetPanel, iconButton } from './admin-common';
 
 export type AdminQuestion = {
   id: number; tasting_id: string; sort_order: number; question: string;
@@ -52,9 +52,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     input.value = text;
     input.maxLength = 300;
     input.placeholder = t('aq.answerPlaceholder');
-    const remove = mk('button', 'icon-only', '×');
-    remove.type = 'button';
-    remove.setAttribute('aria-label', t('aq.removeAnswer'));
+    const remove = iconButton('trash', t('aq.removeAnswer'), { quiet: true });
     remove.addEventListener('click', () => {
       if (optionsBox.children.length <= MIN_OPTIONS) return;
       row.remove();

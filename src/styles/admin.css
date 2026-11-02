@@ -1548,3 +1548,6 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   .admin-page .twe-tier span { white-space: nowrap; }
   .admin-page .twe-tier .icon-act { flex: none; width: 2.2rem; height: 2.2rem; }
 }
+.admin-page .icon-act.chat-del { padding: 0; width: 2rem; height: 2rem; font-size: inherit; }
+.admin-page .icon-act.chat-del svg { width: 1.05rem; height: 1.05rem; }
+.admin-page .icon-space { width: 2.4rem; flex: none; }

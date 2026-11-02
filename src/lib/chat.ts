@@ -1,6 +1,8 @@
 // Event chat: renders the conversation, polls for new messages every few seconds while the page
 // is visible, and sends new ones. The same code serves guests (invite code) and the host.
 import { t, locale } from '../i18n';
+import { iconButton } from './icons';
+import { confirmModal } from './confirm';
 
 export type ChatMessage = { id: number; author: string; body: string; created_at: string; from_host: boolean; mine: boolean };
 
@@ -45,12 +47,11 @@ export function initChat({ prefix, load, send, remove }: Options) {
     time.textContent = timeFmt.format(new Date(m.created_at));
     li.append(bubble, time);
     if (remove) {
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'chat-del';
-      del.textContent = t('chat.delete');
+      // Remove a message: a quiet icon, asked about first
+      const del = iconButton('trash', t('chat.delete'), { quiet: true });
+      del.classList.add('chat-del');
       del.addEventListener('click', async () => {
-        if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = t('admin.confirmDelete'); return; }
+        if (!(await confirmModal(t('chat.deleteQ'), t('chat.delete')))) return;
         if (await remove(m.id)) li.remove();
       });
       li.append(del);

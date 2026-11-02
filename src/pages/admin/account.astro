@@ -25,7 +25,6 @@ import '../../styles/admin.css';
         <h2><span data-i18n="account.hostsTitle">Hosts on the account</span><span data-help="account-hosts"></span></h2>
         <ul id="members" class="hosts-list"></ul>
         <p class="hint" data-i18n="account.addHint">New hosts join the account when you add them as co-host of a tasting (Settings → Hosts in the tasting).</p>
-        <p id="m-msg" class="message error" hidden></p>
       </section>
 
       <dialog id="name-panel" class="sheet" aria-labelledby="name-panel-title">
@@ -53,7 +52,9 @@ import '../../styles/admin.css';
   import { initHelpTips, followHelpLink } from '../../lib/help-tip';
   initHelpTips();
   import { supabase } from '../../lib/supabase';
-  import { requireHost, $, mk, sheetPanel } from '../../lib/admin-common';
+  import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
+  import { confirmModal } from '../../lib/confirm';
+  import { toast } from '../../lib/toast';
   import { t } from '../../i18n';
 
   type Member = { email: string; name: string | null; owner: boolean; me: boolean };
@@ -105,22 +106,18 @@ import '../../styles/admin.css';
       li.append(who, mk('span', 'host-tag' + (r.owner ? ' owner' : ''), r.owner ? t('account.owner') : t('account.host')));
       // The owner can remove other hosts; the owner can never be removed
       if (host!.tenant_owner && !r.owner) {
-        const del = mk('button', 'text-btn danger', t('hosts.remove'));
-        del.type = 'button';
+        // Remove a host: a quiet icon, asked about first in a small window
+        const del = iconButton('trash', `${t('hosts.remove')}: ${r.name || r.email}`, { quiet: true });
+        del.dataset.tip = t('hosts.remove');
         del.addEventListener('click', async () => {
-          if (!del.dataset.armed) {
-            del.dataset.armed = '1';
-            del.textContent = t('account.removeConfirm');
-            setTimeout(() => { delete del.dataset.armed; del.textContent = t('hosts.remove'); }, 4000);
-            return;
-          }
+          if (!(await confirmModal(t('account.removeQ', { name: r.name || r.email }), t('hosts.remove')))) return;
           const { error } = await supabase.rpc('remove_tenant_member', { e: r.email });
-          $('m-msg').hidden = !error;
-          if (error) { $('m-msg').textContent = t('hosts.failed'); return; }
+          if (error) { toast(t('hosts.failed'), { kind: 'error' }); return; }
+          toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' });
           loadMembers();
         });
         li.append(del);
-      }
+      } else if (host!.tenant_owner) li.append(mk('span', 'icon-space')); // keeps the tags in line
       return li;
     }));
   }

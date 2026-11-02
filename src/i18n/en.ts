@@ -1274,4 +1274,6 @@ export const en = {
   "guestInvite.emailPh": "Email (optional)",
   "twe.shopPriceLabel": "Shop price",
   "twe.shopPriceHint": "The shop’s price is saved on the wine in your library, so it follows the wine into other tastings.",
+  "chat.deleteQ": "Remove the message from the chat?",
+  "account.removeQ": "Remove {name} as host on the account?",
 } as const;

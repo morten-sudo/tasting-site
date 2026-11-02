@@ -1275,4 +1275,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.emailPh": "Netfang (valfrjálst)",
   "twe.shopPriceLabel": "Búðarverð",
   "twe.shopPriceHint": "Búðarverðið er vistað á víninu í safninu og fylgir því í aðrar smakkanir.",
+  "chat.deleteQ": "Fjarlægja skilaboðin úr spjallinu?",
+  "account.removeQ": "Fjarlægja {name} sem gestgjafa á reikningnum?",
 };

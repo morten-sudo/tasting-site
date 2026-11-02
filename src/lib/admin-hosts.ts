@@ -1,7 +1,7 @@
 // Admin, one tasting: its hosts. The owner adds co-hosts by email and removes them;
 // co-hosts see the list. Everything goes through security-definer functions in the database.
 import { supabase } from './supabase';
-import { $, mk, sheetPanel } from './admin-common';
+import { $, mk, sheetPanel, iconButton } from './admin-common';
 import { confirmModal } from './confirm';
 import { toast } from './toast';
 import { t, lang } from '../i18n';
@@ -61,8 +61,8 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
       const tag = r.owner ? t('hosts.owner') : r.pending ? t('hosts.pending') : t('hosts.cohost');
       li.append(mk('span', 'host-tag' + (r.pending ? ' pending' : r.owner ? ' owner' : ''), tag));
       if (isOwner && !r.owner) {
-        const del = mk('button', 'text-btn danger', t('hosts.remove')) as HTMLButtonElement;
-        del.type = 'button';
+        const del = iconButton('trash', `${t('hosts.remove')}: ${r.name || r.email}`, { quiet: true });
+        del.dataset.tip = t('hosts.remove');
         // Asked first, in a small window
         del.addEventListener('click', async () => {
           if (!(await confirmModal(t('hosts.removeQ', { name: r.name || r.email }), t('hosts.remove')))) return;
@@ -71,7 +71,7 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
           else { toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' }); load(); }
         });
         li.append(del);
-      }
+      } else if (isOwner) li.append(mk('span', 'icon-space')); // keeps the tags in line
       return li;
     }));
   }
