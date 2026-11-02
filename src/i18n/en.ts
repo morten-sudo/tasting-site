@@ -253,7 +253,7 @@ export const en = {
   "admin.abv": "Alcohol (%)",
   "admin.description": "Description",
   "admin.details": "More about the wine",
-  "admin.detailsHint": "(one line per item, e.g. \"Grapes: Touriga Nacional\")",
+  "admin.detailsHint": "(one line per item, e.g. \"Ageing: 18 months in oak\")",
   "admin.orderable": "Can be ordered",
   "admin.revealed": "Show to guests",
   "admin.deleteWine": "Delete wine",

@@ -254,7 +254,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "admin.abv": "Alcohol (%)",
   "admin.description": "Descripción",
   "admin.details": "Más sobre el vino",
-  "admin.detailsHint": "(una línea por dato, p. ej. «Uvas: Touriga Nacional»)",
+  "admin.detailsHint": "(una línea por punto, p. ej. \"Crianza: 18 meses en barrica\")",
   "admin.orderable": "Se puede pedir",
   "admin.revealed": "Mostrar a los invitados",
   "admin.deleteWine": "Eliminar vino",

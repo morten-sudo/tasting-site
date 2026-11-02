@@ -254,7 +254,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "admin.abv": "Alcohol (%)",
   "admin.description": "Beschrijving",
   "admin.details": "Meer over de wijn",
-  "admin.detailsHint": "(één regel per punt, bijv. ‘Druiven: Touriga Nacional’)",
+  "admin.detailsHint": "(één regel per punt, bijv. \"Rijping: 18 maanden op eik\")",
   "admin.orderable": "Te bestellen",
   "admin.revealed": "Tonen aan gasten",
   "admin.deleteWine": "Wijn verwijderen",

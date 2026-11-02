@@ -254,7 +254,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "admin.abv": "Áfengi (%)",
   "admin.description": "Lýsing",
   "admin.details": "Meira um vínið",
-  "admin.detailsHint": "(ein lína á atriði, t.d. „Þrúgur: Touriga Nacional“)",
+  "admin.detailsHint": "(ein lína á atriði, t.d. \"Þroskun: 18 mánuðir í eik\")",
   "admin.orderable": "Hægt að panta",
   "admin.revealed": "Sýna gestum",
   "admin.deleteWine": "Eyða víni",

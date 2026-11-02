@@ -254,7 +254,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "admin.abv": "Alkohol (%)",
   "admin.description": "Opis",
   "admin.details": "Więcej o winie",
-  "admin.detailsHint": "(jedna linia na pozycję, np. „Szczepy: Touriga Nacional”)",
+  "admin.detailsHint": "(jedna linia na punkt, np. \"Dojrzewanie: 18 miesięcy w dębie\")",
   "admin.orderable": "Można zamówić",
   "admin.revealed": "Pokaż gościom",
   "admin.deleteWine": "Usuń wino",
