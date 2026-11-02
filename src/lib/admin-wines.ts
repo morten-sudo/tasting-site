@@ -879,6 +879,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     save.textContent = t('common.save');
     if (error) { showMsg(t('admin.wineNotSaved')); return; }
     const newId = (saved as { id: number } | null)?.id;
+    // A wine that came into a tasting before it had a price gets the price there now (an offer on 1 bottle first)
+    const start = row.offer_quantity === 1 && row.offer_price_dkk != null ? row.offer_price_dkk : row.retail_price_dkk;
+    if (before && start != null) await supabase.from('tasting_wines').update({ price_dkk: start }).eq('wine_id', before.id).is('price_dkk', null);
     // An appellation that is not on our list: find its place for the overview map (in the background)
     locateAppellation(row.appellation, row.region, row.country);
     closeForm();

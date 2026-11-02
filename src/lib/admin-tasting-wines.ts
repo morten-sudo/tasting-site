@@ -183,7 +183,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     $('twe-thumb').replaceWith(Object.assign(thumb(w), { id: 'twe-thumb' }));
     $('twe-meta').textContent = meta(w);
     const price = $<HTMLInputElement>('twe-price');
-    price.value = amountText(r.price_dkk, locale());
+    // No guest price yet: start from the shop's price (an offer on 1 bottle first) – saved when the host presses Save
+    price.value = amountText(r.price_dkk ?? startPrice(w), locale());
     const retail = $<HTMLInputElement>('twe-retail-in');
     retail.value = amountText(w.retail_price_dkk, locale());
     $('twe-tiers').replaceChildren();
