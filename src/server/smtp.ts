@@ -104,7 +104,8 @@ export type Open = (hostname: string, port: number) => Conn;
 /** Sends one email with the site's account. Returns false when mail is not set up (no secrets). */
 export async function sendMail(env: MailEnv, open: Open, mail: Mail): Promise<boolean> {
   if (!env.SMTP_USER || !env.SMTP_PASS) return false;
-  const from = env.SMTP_FROM || env.SMTP_USER;
+  // The sender: SMTP_FROM, or the login when that is an address (One.com); services like Resend log in with a plain user name
+  const from = env.SMTP_FROM || (env.SMTP_USER.includes('@') ? env.SMTP_USER : 'noreply@winetastr.com');
   const conn = open(env.SMTP_HOST || 'send.one.com', Number(env.SMTP_PORT || 465));
   await smtpSend(conn, { user: env.SMTP_USER, pass: env.SMTP_PASS, from, to: mail.to, message: buildMessage(mail, from) });
   return true;

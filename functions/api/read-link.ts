@@ -91,7 +91,7 @@ type Shopify = { title?: string; vendor?: string; body_html?: string; product_ty
 async function fetchText(url: string, accept: string) {
   const res = await fetch(url, {
     headers: {
-      'user-agent': 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.krusesoendergaard.dk)',
+      'user-agent': 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)',
       accept, 'accept-language': 'da,en;q=0.8',
     },
     redirect: 'follow',
