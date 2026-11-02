@@ -99,8 +99,10 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     const name = fileWords(u) + ' ' + plain(alt);
     const named = fits(name);
     if (!named) {
-      // Only from the best page; a transparent PNG is most often the bottle shot
-      if (page === pages[0] && !NOT_BOTTLE.test(name) && !unnamed.some((x) => x.url === u)) unnamed.push({ url: u, page, score: /\.png(\?|$)/i.test(u) ? 2 : /\.webp(\?|$)/i.test(u) ? 1 : 0 });
+      // A transparent PNG or a shop's product picture is most often the bottle shot
+      if (!NOT_BOTTLE.test(name) && !unnamed.some((x) => x.url === u && x.page === page)) {
+        unnamed.push({ url: u, page, score: (/\.png(\?|$)/i.test(u) ? 2 : /\.webp(\?|$)/i.test(u) ? 1 : 0) + (/\/(catalog\/product|products?|wp-content\/uploads)\//i.test(u) ? 3 : 0) - pages.indexOf(page) * 0.5 });
+      }
       return;
     }
     let score = named * 3 + (BOTTLE.test(name) ? 2 : 0) - (NOT_BOTTLE.test(name) ? 6 : 0);
@@ -128,7 +130,12 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     for (const m of p.html.matchAll(/((?:https?:)?(?:\\?\/){2}[^"'\s()<>]+?|(?:\\?\/)[^"'\s()<>:]+?)\.(?:png|jpe?g|webp)(?:\?[^"'\s()<>]*)?/gi)) add(m[0], p.url, '');
   }
   let list = [...images.values()].filter((i) => i.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
-  if (!list.length) list = [...unnamed].sort((a, b) => b.score - a.score).slice(0, 8);
+  if (!list.length) {
+    // A picture on several of the wine's pages belongs to the site, not to the wine
+    const on = (u: string) => new Set(unnamed.filter((x) => x.url === u).map((x) => x.page)).size;
+    const own = unnamed.filter((x, i) => unnamed.findIndex((y) => y.url === x.url) === i && (pages.length < 2 || on(x.url) === 1));
+    list = own.sort((a, b) => b.score - a.score).slice(0, 8);
+  }
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
   // pages and seen show where the pictures came from (and why there are none)
   return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15) });
