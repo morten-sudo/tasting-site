@@ -525,10 +525,10 @@ import Base from '../../layouts/Base.astro';
   .t-home { overflow-x: clip; }
   .t-hero { position: relative; isolation: isolate; margin-bottom: 2rem; }
   .hero-map {
-    position: absolute; z-index: -1; right: -2rem; top: -3rem; width: min(55vw, 34rem); color: var(--amber); opacity: 0.12;
-    pointer-events: none; -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent); mask-image: radial-gradient(closest-side, #000 55%, transparent);
+    position: absolute; z-index: -1; right: -2rem; top: -3rem; width: min(60vw, 38rem); color: var(--amber); opacity: 0.3;
+    pointer-events: none; -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent); mask-image: radial-gradient(closest-side, #000 70%, transparent);
   }
-  @media (max-width: 40rem) { .hero-map { width: 120vw; right: -40vw; top: -1rem; opacity: 0.09; } }
+  @media (max-width: 40rem) { .hero-map { width: 120vw; right: -40vw; top: -1rem; opacity: 0.22; } }
   .origin-map :global(svg) { display: block; }
   .origin-map { border: 1px solid var(--lodge-3); border-radius: 0.9rem; overflow: hidden; background: #fbf6ee; }
   /* Larger screens: the map at half width with the legend beside it */
@@ -574,7 +574,7 @@ import Base from '../../layouts/Base.astro';
   .t-main { display: grid; gap: 2.25rem; align-content: start; }
   .sec-h { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.9rem; }
 
-  .rsvp-card { background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.9rem; padding: 1.2rem 1.25rem; }
+  .rsvp-card { position: relative; z-index: 1; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.9rem; padding: 1.2rem 1.25rem; }
   .rsvp-card h2 { font-family: var(--body); font-size: 1rem; font-weight: 600; margin: 0 0 0.75rem; }
   .rsvp-card .status { margin-bottom: 0.4rem; }
   .coming { margin: 0 0 0.6rem; font-size: 0.88rem; color: var(--muted); }

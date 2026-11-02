@@ -346,7 +346,8 @@ dialog.sheet .sheet-head { position: sticky; top: -1.25rem; z-index: 1; backgrou
 /* Faint, behind a heading */
 .region-map.background .rm-sea { fill: transparent; }
 .region-map.background .rm-land { fill: transparent; }
-.region-map.background .rm-area { stroke: currentColor; stroke-dasharray: none; stroke-width: 0.8; }
+.region-map.background .rm-area { stroke: currentColor; stroke-dasharray: none; stroke-width: 1.1; }
+.region-map.background .rm-area.on { fill: currentColor; }
 .region-map.background .rm-river, .region-map.background .rm-coast, .region-map.background .rm-border { stroke: currentColor; }
 /* Small locator on a wine */
 .region-map.mini .rm-area { stroke-width: 0.5; stroke-dasharray: 2 2; }
