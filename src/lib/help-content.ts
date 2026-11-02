@@ -16,8 +16,8 @@ export const HELP: HelpSection[] = [
       da: `<p>Sådan går du fra tom konto til en smagning med inviterede gæster:</p>
 <ol>
 <li><b>Læg vinene ind.</b> Gå til <a href="/admin/wines/?open=wine-add-toggle">Vine → Ny vin</a>. Tag et billede af etiketten eller indsæt et link til butikken, så udfyldes det meste af sig selv. Se <a href="#wines">Vine</a>.</li>
-<li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>. Giv den en titel, dato, start- og evt. sluttid, sted og evt. et maks. antal gæster. Kun titlen skal udfyldes. Når du trykker <i>Næste</i>, gemmes smagningen som kladde (der står <i>Gemt som kladde</i> øverst) – gæsterne ser intet, før du inviterer dem. Undervejs kan du oprette en ny vin direkte fra vintrinnet og vælge alle gæster på én gang.</li>
-<li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Vælg fra biblioteket</a> tilføjer du vine fra dit bibliotek, sætter rækkefølgen og gæsteprisen.</li>
+<li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>, og udfyld titel, dato, start- og evt. sluttid, maks. antal gæster, sted og introduktion – kun titlen skal udfyldes. Tryk <i>Opret smagning</i>, så kommer du til smagningens side, hvor kortet <i>Kom i gang</i> har en knap til hvert af de næste skridt.</li>
+<li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Vælg fra biblioteket</a> tilføjer du vine fra dit bibliotek (eller opretter en ny), sætter rækkefølgen og gæsteprisen.</li>
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
 <li><b>På aftenen</b> åbner du for quiz og bestillinger under <a href="t:settings/#controls">Kontakter</a>, når det passer – og afslører vinene, hvis det er en blindsmagning.</li>
@@ -25,8 +25,8 @@ export const HELP: HelpSection[] = [
       en: `<p>From an empty account to a tasting with invited guests:</p>
 <ol>
 <li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a>. Take a photo of the label or paste a link to the shop, and most of it fills itself in. See <a href="#wines">Wines</a>.</li>
-<li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a>. Give it a title, date, start and optional end time, place and optionally a maximum number of guests. Only the title is needed. When you press <i>Next</i>, the tasting is saved as a draft (it says <i>Saved as a draft</i> at the top) – guests see nothing until you invite them. On the way you can create a new wine straight from the wine step and select all guests at once.</li>
-<li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Choose from library</a>, add wines from your library, set their order and the guest price.</li>
+<li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a> and fill in the title, date, start and optional end time, max number of guests, place and introduction – only the title is needed. Press <i>Create tasting</i> and you come to the tasting's page, where the <i>Get started</i> card has a button for each of the next steps.</li>
+<li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Choose from library</a>, add wines from your library (or create a new one), set their order and the guest price.</li>
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>
 <li><b>On the evening</b>, open the quiz and ordering under <a href="t:settings/#controls">Controls</a> when it suits you – and reveal the wines if it is a blind tasting.</li>

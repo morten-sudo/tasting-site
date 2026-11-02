@@ -2,7 +2,6 @@
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
-import TastingWizard from '../../components/TastingWizard.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
 import ChatBox from '../../components/ChatBox.astro';
 import '../../styles/admin.css';
@@ -37,12 +36,29 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <div id="tasting-panel">
       <!-- Tasting details -->
       <section class="block" data-section="overview">
-        <!-- Set-up status: the four steps of the guide, with a way back into it -->
-        <div id="setup-card" class="setup-card" hidden>
-          <div>
-            <p class="setup-title" data-i18n="wizard.continueTitle">Finish setting up the tasting</p>
-            <ol id="setup-steps" class="setup-steps"></ol>
+        <!-- Get started: wines, guests, payment – each with the button that does it. Gone when wines and guests are in. -->
+        <div id="setup-card" class="setup-card start-card" hidden>
+          <div class="start-head">
+            <p class="setup-title" data-i18n="getStarted.title">Get started</p>
+            <button id="start-hide" class="text-btn" type="button" data-i18n="getStarted.hide">Hide</button>
           </div>
+          <ol class="start-steps">
+            <li id="start-wines">
+              <span class="start-label"><b data-i18n="getStarted.wines">Add the wines</b><small id="start-wines-info"></small></span>
+              <span class="start-actions">
+                <button class="btn small" type="button" data-go="wines" data-open="tw-add-toggle" data-i18n="adminTasting.addWine">Choose from library</button>
+                <a id="start-new-wine" class="btn small ghost" href="/admin/wines/" data-i18n="adminTasting.newWine">+ Create new wine</a>
+              </span>
+            </li>
+            <li id="start-guests">
+              <span class="start-label"><b data-i18n="getStarted.guests">Invite the guests</b><small id="start-guests-info"></small></span>
+              <span class="start-actions"><button class="btn small" type="button" data-go="guests" data-open="g-invite-toggle" data-i18n="getStarted.invite">Invite guests</button></span>
+            </li>
+            <li id="start-setup">
+              <span class="start-label"><b data-i18n="getStarted.setup">Payment and ordering</b><small data-i18n="getStarted.optional">optional</small></span>
+              <span class="start-actions"><button class="btn small ghost" type="button" data-go="settings" data-i18n="getStarted.settings">Settings</button></span>
+            </li>
+          </ol>
         </div>
         <div class="guests-head">
           <h2 data-i18n="section.details">Details</h2>
@@ -356,7 +372,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </div>
 
     </div>
-      <TastingWizard />
     </AdminNav>
   </section>
 </Base>
@@ -374,7 +389,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
-  import { initWizard } from '../../lib/tasting-wizard';
   import { initWhen, readWhen, readEnd, writeWhen, checkWhen } from '../../lib/datetime';
   import { fieldError, focusField } from '../../lib/field-error';
   import { initChat, type ChatMessage } from '../../lib/chat';
@@ -846,6 +860,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('guest-empty').hidden = sorted.length > 0;
     // No guests at all is not "none match": say how to start
     $('guest-empty').textContent = t(participants.length ? 'admin.noMatch' : 'admin.noGuestsYet');
+    renderSetup();
     renderSummary();
   }
 
@@ -1160,26 +1175,34 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   showSection(currentAdmin()?.section ?? 'overview');
 
   // ---------- Set-up status (the same four steps as the guide for a new tasting) ----------
-  let wizard: ReturnType<typeof initWizard> | null = null;
+  /** "Get started": what is done is ticked; the card goes when wines and guests are in, or when hidden. */
+  const hideKey = () => `wt-start-hidden-${tasting?.id}`;
   function renderSetup() {
     if (!tasting) return;
-    // Each step leads to its tab (the host finishes the tasting there, not through the guide)
-    const steps: { label: Key; done: boolean; info: string; section: string }[] = [
-      { label: 'wizard.details', done: true, info: '', section: 'overview' },
-      { label: 'wizard.wines', done: wines.length > 0, info: wines.length ? String(wines.length) : '', section: 'wines' },
-      { label: 'wizard.guests', done: participants.length > 0, info: participants.length ? String(participants.length) : '', section: 'guests' },
-      { label: 'wizard.setup', done: Number(tasting.tasting_fee) > 0 || tasting.orders_open === true, info: '', section: 'settings' },
-    ];
-    $('setup-card').hidden = steps[1].done && steps[2].done;
-    $('setup-steps').replaceChildren(...steps.map((s) => {
-      const li = mkEl('li', s.done ? 'done' : '');
-      const a = mkEl('a', '', t(s.label) + (s.info ? ` (${s.info})` : ''));
-      a.href = s.section === 'overview' ? './' : `${s.section}/`;
-      a.dataset.section = s.section;
-      li.append(a);
-      return li;
-    }));
+    const done = { wines: wines.length > 0, guests: participants.length > 0,
+      setup: Number(tasting.tasting_fee) > 0 || tasting.orders_open === true };
+    let hidden = false;
+    try { hidden = localStorage.getItem(hideKey()) === '1'; } catch {}
+    $('setup-card').hidden = hidden || (done.wines && done.guests);
+    $('start-wines').classList.toggle('done', done.wines);
+    $('start-guests').classList.toggle('done', done.guests);
+    $('start-setup').classList.toggle('done', done.setup);
+    $('start-wines-info').textContent = done.wines ? t('tastingsAdmin.wines', { n: wines.length }) : '';
+    $('start-guests-info').textContent = done.guests ? t('getStarted.guestsInfo', { n: participants.length }) : '';
   }
+  $('start-hide').addEventListener('click', () => {
+    try { localStorage.setItem(hideKey(), '1'); } catch {}
+    $('setup-card').hidden = true;
+  });
+  // A step's button: to its tab, and open the panel there
+  document.querySelectorAll<HTMLButtonElement>('#setup-card [data-go]').forEach((b) => b.addEventListener('click', () => {
+    if (!tasting) return;
+    const path = `/t/${tasting.slug}/admin/${b.dataset.go}/`;
+    if (location.pathname !== path) history.pushState(null, '', path);
+    showSection(b.dataset.go!);
+    window.scrollTo({ top: 0 });
+    if (b.dataset.open) requestAnimationFrame(() => document.getElementById(b.dataset.open!)?.click());
+  }));
 
   // ---------- Delete the tasting ----------
   $('td-ask').addEventListener('click', () => {
@@ -1218,11 +1241,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
     quizTotal = q.count || 1;
-    tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); });
+    tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); renderSetup(); });
     // A new wine from here: the wine guide goes into the library and this tasting, then comes back
     const newWine = `/admin/wines/?new=${tasting.id}&back=${encodeURIComponent(`/t/${tasting.slug}/admin/wines/`)}`;
     ($('tw-new-wine') as HTMLAnchorElement).href = newWine;
     ($('tw-new-wine-2') as HTMLAnchorElement).href = newWine;
+    ($('start-new-wine') as HTMLAnchorElement).href = newWine;
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     // The wines and the quiz at the same time, not one after the other
     await Promise.all([
@@ -1241,14 +1265,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   host = await requireHost();
   if (host) {
-    wizard = initWizard(host, () => location.reload());
     await loadAll();
-    // Back from making a new wine in the guide's wine step: the guide opens again at that step
-    const wz = new URLSearchParams(location.search).get('wizard');
-    if (wz && tasting) {
-      history.replaceState(null, '', location.pathname);
-      wizard.openFor(tasting as Parameters<typeof wizard.openFor>[0], Number(wz) || 1);
-    }
     if (currentAdmin()?.section === 'chat') startChat();
     setInterval(async () => {
       if (!tasting) return;

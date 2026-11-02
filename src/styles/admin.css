@@ -1180,3 +1180,20 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .tab-switch { margin: 0 0 0.8rem; }
 .admin-page .tab-switches { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
 .admin-page #orders-total[hidden] { display: none; }
+
+/* "Get started" on a new tasting's overview: one row per step, with the button that does it */
+.start-card { display: block; }
+.start-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.start-steps { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.2rem; }
+.start-steps li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap; padding: 0.55rem 0; border-top: 1px solid var(--lodge-3); }
+.start-steps li:first-child { border-top: 0; }
+.start-label { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.start-label::before { content: '○'; color: var(--muted); }
+.start-steps li.done .start-label::before { content: '✓'; color: var(--ok); font-weight: 700; }
+.start-steps li.done .start-label b { color: var(--muted); font-weight: 500; }
+.start-label small { color: var(--muted); font-size: 0.85rem; }
+.start-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.start-actions .btn { margin: 0; }
+/* The one-step "New tasting" dialog: no steps row, a narrower window */
+@media (min-width: 48rem) { dialog.wizard.wz-single { width: min(38rem, calc(100vw - 4rem)); height: auto; max-height: calc(100vh - 4rem); } }
+.start-card[hidden] { display: none; }
