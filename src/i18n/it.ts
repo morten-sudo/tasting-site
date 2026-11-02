@@ -858,4 +858,11 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "login.otherStay": "Resta connesso",
   "guest.notInvited": "Non sei invitato a questa degustazione con l’email con cui hai effettuato l’accesso.",
   "guest.toMyTastings": "Le mie degustazioni",
+  "notify.title": "Inviami un’email quando un ospite …",
+  "notify.yes": "dice sì (o va in lista d’attesa)",
+  "notify.no": "dice no",
+  "notify.note": "scrive una nota o una dieta",
+  "notify.chat": "scrive nella chat",
+  "notify.order": "ordina vino",
+  "notify.hint": "Per tutte le degustazioni che organizzi. Più cose insieme arrivano in un’unica email per degustazione.",
 };

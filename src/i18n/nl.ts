@@ -858,4 +858,11 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "login.otherStay": "Ingelogd blijven",
   "guest.notInvited": "Je bent niet uitgenodigd voor deze proeverij met het e-mailadres waarmee je bent ingelogd.",
   "guest.toMyTastings": "Mijn proeverijen",
+  "notify.title": "Mail mij wanneer een gast …",
+  "notify.yes": "ja zegt (of op de wachtlijst komt)",
+  "notify.no": "nee zegt",
+  "notify.note": "een notitie of dieetwens schrijft",
+  "notify.chat": "in de chat schrijft",
+  "notify.order": "wijn bestelt",
+  "notify.hint": "Voor alle proeverijen die je host. Meerdere dingen tegelijk komen in één mail per proeverij.",
 };

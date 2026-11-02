@@ -930,4 +930,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "login.otherStay": "Vera áfram innskráð/ur",
   "guest.notInvited": "Þér er ekki boðið á þessa smökkun með netfanginu sem þú ert skráð/ur inn með.",
   "guest.toMyTastings": "Smakkanir mínar",
+  "notify.title": "Sendu mér tölvupóst þegar gestur …",
+  "notify.yes": "segir já (eða fer á biðlista)",
+  "notify.no": "segir nei",
+  "notify.note": "skrifar athugasemd eða mataræði",
+  "notify.chat": "skrifar í spjallið",
+  "notify.order": "pantar vín",
+  "notify.hint": "Gildir um allar smakkanir sem þú heldur. Margt í einu kemur í einum pósti á smökkun.",
 };

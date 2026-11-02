@@ -930,4 +930,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "login.otherStay": "Bliv logget ind",
   "guest.notInvited": "Du er ikke inviteret til denne smagning med den e-mail, du er logget ind med.",
   "guest.toMyTastings": "Mine smagninger",
+  "notify.title": "Mail til mig, når en gæst …",
+  "notify.yes": "siger ja (eller kommer på venteliste)",
+  "notify.no": "siger nej",
+  "notify.note": "skriver en note eller et kost-hensyn",
+  "notify.chat": "skriver i chatten",
+  "notify.order": "bestiller vin",
+  "notify.hint": "Gælder alle smagninger, du er vært for. Flere ting på én gang kommer i én mail pr. smagning.",
 };

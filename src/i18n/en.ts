@@ -929,4 +929,11 @@ export const en = {
   "login.otherStay": "Stay signed in",
   "guest.notInvited": "You are not invited to this tasting with the email you are signed in with.",
   "guest.toMyTastings": "My tastings",
+  "notify.title": "Email me when a guest …",
+  "notify.yes": "says yes (or goes on the waiting list)",
+  "notify.no": "says no",
+  "notify.note": "writes a note or a diet",
+  "notify.chat": "writes in the chat",
+  "notify.order": "orders wine",
+  "notify.hint": "For all tastings you host. Several things at once come in one email per tasting.",
 } as const;

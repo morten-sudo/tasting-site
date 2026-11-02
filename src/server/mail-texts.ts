@@ -74,3 +74,51 @@ ${rows ? `<table style="margin:0 0 20px;font-size:15px;line-height:1.5;border-co
 </body></html>`;
   return { subject: fill(v.inviter ? x.subjectFrom : x.subject), text, html };
 }
+
+// ---------- Updates to hosts (what they chose under Profile) ----------
+type Item = { kind: string; guest: string | null; detail: Record<string, unknown> };
+type UpdateText = {
+  subject: string; intro: string; button: string; footer: string; settings: string;
+  yes: string; waitlist: string; promoted: string; no: string; note: string; diet: string; chat: string; order: string; someone: string;
+};
+const UPDATES: Record<string, UpdateText> = {
+  da: { subject: 'Nyt fra {tasting}', intro: 'Det her er sket i {tasting}:', button: 'Åbn smagningen', footer: 'Du får denne mail, fordi du har valgt det i din profil.', settings: 'Ret hvad du får mail om',
+    yes: '{guest} kommer', waitlist: '{guest} er på ventelisten', promoted: '{guest} er rykket op fra ventelisten og kommer', no: '{guest} kommer ikke',
+    note: '{guest} skrev', diet: 'Kost', chat: '{guest} i chatten', order: '{guest} bestilte', someone: 'En gæst' },
+  en: { subject: 'News from {tasting}', intro: 'This happened in {tasting}:', button: 'Open the tasting', footer: 'You get this email because you chose it in your profile.', settings: 'Change what you get emails about',
+    yes: '{guest} is coming', waitlist: '{guest} is on the waiting list', promoted: '{guest} moved up from the waiting list and is coming', no: '{guest} is not coming',
+    note: '{guest} wrote', diet: 'Diet', chat: '{guest} in the chat', order: '{guest} ordered', someone: 'A guest' },
+};
+
+/** One email to a host about what happened in one tasting: answers, notes, chat messages and orders */
+export function updatesMail(lang: string, v: { tasting: string; items: Item[]; link: string; settings: string; money: (n: number) => string }) {
+  const x = UPDATES[lang] ?? UPDATES.en;
+  const lines = v.items.map((it) => {
+    const who = it.guest || x.someone;
+    const d = it.detail ?? {};
+    const say = (s: string) => s.replace('{guest}', who);
+    switch (it.kind) {
+      case 'yes': return say(d.status === 'waitlist' ? x.waitlist : d.from === 'waitlist' ? x.promoted : x.yes);
+      case 'no': return say(x.no);
+      case 'note': return [d.note ? `${say(x.note)}: “${d.note}”` : '', d.diet ? `${d.note ? '' : who + ' – '}${x.diet}: ${d.diet}` : ''].filter(Boolean).join(' · ');
+      case 'chat': return `${say(x.chat)}: “${d.body}”`;
+      case 'order': {
+        const ls = (d.lines as { qty: number; wine: string; price: number }[] | undefined) ?? [];
+        const total = ls.reduce((s, l) => s + l.qty * Number(l.price), 0);
+        return `${say(x.order)}: ${ls.map((l) => `${l.qty} × ${l.wine}`).join(', ')}${total ? ` (${v.money(total)})` : ''}`;
+      }
+      default: return '';
+    }
+  }).filter(Boolean);
+  const fill = (s: string, html = false) => s.replace('{tasting}', html ? `<b>${esc(v.tasting)}</b>` : v.tasting);
+  const text = `${fill(x.intro)}\n\n${lines.map((l) => `• ${l}`).join('\n')}\n\n${x.button}: ${v.link}\n\n${x.footer} ${x.settings}: ${v.settings}\n`;
+  const html = `<!doctype html><html><body style="margin:0;padding:24px;background:#f8f5f1;font-family:Helvetica,Arial,sans-serif;color:#231a17">
+<div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e6ddd5;border-radius:12px;padding:28px">
+<p style="margin:0 0 12px;font-size:16px;line-height:1.5">${fill(x.intro, true)}</p>
+<ul style="margin:0 0 20px;padding-left:20px;font-size:15px;line-height:1.55">${lines.map((l) => `<li style="margin:4px 0">${esc(l)}</li>`).join('')}</ul>
+<p style="margin:0"><a href="${esc(v.link)}" style="display:inline-block;background:#6e0f1f;color:#fff;text-decoration:none;padding:11px 18px;border-radius:8px;font-size:15px">${esc(x.button)}</a></p>
+</div>
+<p style="max-width:520px;margin:12px auto 0;font-size:12px;color:#8a7d75;text-align:center">${esc(x.footer)} <a href="${esc(v.settings)}" style="color:#8a7d75">${esc(x.settings)}</a></p>
+</body></html>`;
+  return { subject: fill(x.subject), text, html };
+}
