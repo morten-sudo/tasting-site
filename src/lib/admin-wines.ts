@@ -476,6 +476,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     showSource();
     showLinkBox(!!w && !sourceUrl);
     if (!w) { loadTastings(); goStep(0); }
+    // A wine saved before the producer lookup existed (or never looked up): look it up now
+    else if (w.producer && !w.producer_checked_at && (!w.producer_website || !w.producer_address)) fillProducer();
     else { $('wf-back').hidden = true; $('wf-next').hidden = true; $('wf-save').hidden = false; $('wf-save').textContent = t('common.save'); }
     panel.showModal();
     panel.scrollTop = 0;
