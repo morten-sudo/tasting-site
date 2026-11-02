@@ -5,6 +5,8 @@ Sources (downloaded into a data folder given as the first argument):
 - Natural Earth 10m land, coastline, rivers and country borders (public domain) – github.com/nvkelso/natural-earth-vector
 - Gironde municipalities (IGN Admin Express, Licence ouverte) – github.com/gregoiredavid/france-geojson- Burgundy municipalities from the same repository: departements/{21-cote-d-or,71-saone-et-loire,89-yonne}/
   communes-<dep>-<name>.geojson, saved as communes-21.geojson, communes-71.geojson and communes-89.geojson
+- Champagne municipalities from the same repository, departments 51, 10, 02, 52 and 77, saved as communes-<dep>.geojson,
+  plus the Marne file as of commit cd65fc6 (2017, before Blancs-Coteaux) saved as communes-51-2017.geojson
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
@@ -117,6 +119,8 @@ def build(region):
             continue
         g = p.geom(unary_union(geoms).intersection(land_ll))
         areas[aid] = {'d': d_of(g, 0.8), 'label': label_point(g)}
+        if aid in region.get('label_at', {}):  # a chosen place (lon, lat) for the badge, e.g. in an area of several parts
+            areas[aid]['label'] = [round(v) for v in p.xy(*region['label_at'][aid])]
         if aid in region.get('titles', {}):
             areas[aid]['title'] = region['titles'][aid]
     towns = [{'name': n, 'x': round(p.xy(lon, lat)[0]), 'y': round(p.xy(lon, lat)[1]), 'size': s} for n, lon, lat, s in region['towns']]
@@ -317,7 +321,162 @@ BOURGOGNE = {
               ('Meursault', 4.7703, 46.9786, 'small'), ('Tournus', 4.9087, 46.5626, 'small'), ('Cluny', 4.6590, 46.4344, 'small')],
 }
 
+# ---------- Champagne ----------
+def champagne():
+    """Municipalities of Marne (51), Aube (10), Aisne (02), Haute-Marne (52) and Seine-et-Marne (77), named as in Bourgogne
+    ('Bligny (10)' when a name is found in more than one of them). Two Marne municipalities are both called 'Breuil' in
+    Admin Express; the one by Dormans (51085, Le Breuil) is in the Champagne area. Oger, Vertus and Voipreux were merged
+    into Blancs-Coteaux in 2018; they are taken from the 2017 file of the same repository (commit cd65fc6, saved as
+    communes-51-2017.geojson), so that the Grand Cru Oger is not drawn over Vertus."""
+    out, seen = {}, {}
+    for dep in ('51', '10', '02', '52', '77'):
+        for f in load(f'communes-{dep}.geojson')['features']:
+            pr = f['properties']
+            name = 'Le Breuil' if pr['code'] == '51085' else pr['nom']
+            g = shape(f['geometry'])
+            out[f'{name} ({dep})'] = g
+            seen.setdefault(name, []).append(g)
+    out.update({n: gs[0] for n, gs in seen.items() if len(gs) == 1})
+    for f in load('communes-51-2017.geojson')['features']:
+        if f['properties']['code'] in ('51411', '51612', '51651'):  # Oger, Vertus, Voipreux
+            out[f['properties']['nom']] = shape(f['geometry'])
+    return out
+
+# The 319 municipalities of the Champagne area (INAO; the list for the AOC Champagne and Coteaux Champenois as published in
+# OpenWineMap's def_aop/Champagne_data, which follows the INAO list of municipalities), with Admin Express names: articles
+# dropped ('Riceys', 'Mesnil-sur-Oger') and merged municipalities drawn whole: Aÿ-Champagne (Ay, Bisseuil, Mareuil-sur-Ay),
+# Val de Livre (Louvois, Tauxières-Mutry) and Vallées en Champagne (Baulne-en-Brie, La Chapelle-Monthodon, Saint-Agnan).
+CHAMPAGNE_ZONE = {
+    '51': [
+        "Saint-Martin-d'Ablois", 'Allemant (51)', 'Ambonnay', 'Arcis-le-Ponsart', 'Aubilly', "Avenay-Val-d'Or",
+        'Avize', 'Aÿ-Champagne', 'Barbonne-Fayel', 'Baslieux-sous-Châtillon', 'Bassu', 'Bassuet', 'Baye',
+        'Beaumont-sur-Vesle', 'Beaunay', 'Belval-sous-Châtillon', 'Bergères-lès-Vertus', 'Bergères-sous-Montmirail',
+        'Berru', 'Bethon', 'Bezannes', 'Billy-le-Grand', 'Binson-et-Orquigny', 'Bligny (51)', 'Bouilly (51)',
+        'Bouleuse', 'Boursault', 'Bouzy', 'Branscourt', 'Le Breuil', 'Brimont', 'Brouillet', 'Broussy-le-Grand',
+        'Broyes', 'Brugny-Vaudancourt', 'Cauroy-lès-Hermonville', 'Celle-sous-Chantemerle', 'Cernay-lès-Reims',
+        'Châlons-sur-Vesle', 'Chambrecy', 'Chamery', 'Champillon', 'Champlat-et-Boujacourt', 'Champvoisy', 'Changy',
+        'Chantemerle', 'Châtillon-sur-Marne', 'Chaumuzy', 'Chavot-Courcourt', 'Chenay', 'Chigny-les-Roses', 'Chouilly',
+        'Coizard-Joches', 'Val-des-Marais', 'Congy', 'Cormicy', 'Cormontreuil', 'Cormoyeux', 'Coulommes-la-Montagne',
+        'Courcelles-Sapicourt', 'Courjeonnet', 'Courmas', 'Courtagnon', 'Courthiézy', 'Courville', 'Couvrot',
+        'Cramant', 'Crugny', 'Cuchery', 'Cuis', 'Cuisles', 'Cumières', 'Damery', 'Dizy', 'Dormans', 'Val-de-Vière',
+        'Écueil', 'Épernay', 'Étoges', 'Étréchy', 'Faverolles-et-Coëmy', 'Fèrebrianges', 'Festigny',
+        'Fleury-la-Rivière', 'Fontaine-Denis-Nuisy', 'Fontaine-sur-Ay', 'Germaine (51)', 'Germigny', 'Givry-lès-Loisy',
+        'Glannes', 'Grauves', 'Gueux', 'Hautvillers', 'Hermonville', 'Hourges', 'Igny-Comblizy', 'Janvry',
+        'Jonchery-sur-Vesle', 'Jonquery', 'Jouy-lès-Reims', 'Lagery', 'Leuvrigny', 'Lhéry', 'Lisse-en-Champagne',
+        'Loisy-en-Brie', 'Loisy-sur-Marne', 'Val de Livre', 'Ludes', 'Mailly-Champagne', 'Mancy', 'Mardeuil',
+        'Mareuil-le-Port', 'Marfaux', 'Merfy', 'Merlaut', 'Méry-Prémecy', 'Mesneux', 'Mesnil-sur-Oger',
+        'Mondement-Montgivroux', 'Montbré', 'Montgenost', 'Monthelon', 'Montigny-sur-Vesle', 'Morangis', 'Moslins',
+        'Moussy', 'Mutigny', 'Nanteuil-la-Forêt', 'Nesle-le-Repons', 'Neuville-aux-Larris', "Nogent-l'Abbesse",
+        'Œuilly (51)', 'Oger', 'Oiry', 'Olizy', "Orbais-l'Abbaye", 'Ormes (51)', 'Oyes', 'Pargny-lès-Reims',
+        'Passy-Grigny', 'Pévy', 'Pierry', 'Poilly', 'Pontfaverger-Moronvilliers', 'Pouillon', 'Pourcy', 'Prouilly',
+        'Puisieulx', 'Reims', 'Reuil', 'Rilly-la-Montagne', 'Romery (51)', 'Romigny', 'Rosnay', 'Sacy',
+        'Saint-Amand-sur-Fion', 'Saint-Euphraise-et-Clairizet', 'Sainte-Gemme', 'Saint-Gilles',
+        'Saint-Lumier-en-Champagne', 'Saint-Thierry', 'Sarcy', 'Saudoy', 'Savigny-sur-Ardres', 'Selles', 'Sermiers',
+        'Serzy-et-Prin', 'Sézanne', 'Sillery', 'Soulières', 'Taissy', 'Talus-Saint-Prix', 'Thil (51)',
+        'Tours-sur-Marne', 'Tramery', 'Trépail', 'Treslon', 'Trigny', 'Trois-Puits', 'Troissy', 'Unchair',
+        'Vanault-le-Châtel', 'Vandeuil', 'Vandières', 'Vauciennes', 'Vaudemange', 'Vavray-le-Grand', 'Vavray-le-Petit',
+        'Venteuil', 'Verneuil', 'Vert-Toulon', 'Vertus', 'Verzenay', 'Verzy', 'Ville-Dommange', 'Ville-en-Tardenois',
+        'Villeneuve-Renneville-Chevigny', 'Villers-Allerand', 'Villers-aux-Nœuds', 'Villers-Franqueux',
+        'Villers-Marmery', 'Villers-sous-Châtillon', 'Villevenard', 'Vinay', 'Vincelles', 'Vindey',
+        'Vitry-en-Perthois', 'Voipreux', 'Vrigny'],
+    '02': [
+        'Azy-sur-Marne', 'Barzy-sur-Marne', 'Vallées en Champagne', 'Bézu-le-Guéry', 'Blesmes', 'Bonneil', 'Brasles',
+        'Celles-lès-Condé', 'Charly-sur-Marne', 'Chartèves', 'Château-Thierry', 'Chézy-sur-Marne', 'Chierry',
+        'Connigis', 'Courtemont-Varennes', 'Crézancy', 'Crouttes-sur-Marne', 'Domptin', 'Essômes-sur-Marne',
+        'Étampes-sur-Marne', 'Fossoy', 'Gland', 'Jaulgonne', 'Mézy-Moulins', 'Monthurel', 'Montreuil-aux-Lions',
+        'Mont-Saint-Père', 'Nesles-la-Montagne', 'Nogentel', "Nogent-l'Artaud", 'Passy-sur-Marne', 'Pavant',
+        'Reuilly-Sauvigny', 'Romeny-sur-Marne', 'Saulchery', 'Trélou-sur-Marne', 'Villiers-Saint-Denis'],
+    '77': [
+        'Citry', 'Nanteuil-sur-Marne', 'Saâcy-sur-Marne'],
+    '10': [
+        'Ailleville', 'Arconville', 'Argançon', 'Arrentières', 'Arsonval', 'Avirey-Lingey', 'Bagneux-la-Fosse',
+        'Balnot-sur-Laignes', 'Baroville', 'Bar-sur-Aube', 'Bar-sur-Seine', 'Bergères', 'Bertignolles', 'Bligny (10)',
+        'Bragelogne-Beauvoir', 'Buxeuil', 'Buxières-sur-Arce', 'Celles-sur-Ource', 'Chacenay',
+        'Champignol-lez-Mondeville', 'Channes', 'Chervey', 'Colombé-la-Fosse', 'Colombé-le-Sec', 'Courteron',
+        'Couvignon', 'Cunfin', 'Dolancourt', 'Éguilly-sous-Bois', 'Engente', 'Essoyes', 'Fontaine', 'Fontette',
+        'Fravaux', 'Gyé-sur-Seine', 'Jaucourt', 'Landreville', 'Lignol-le-Château', 'Loches-sur-Ource',
+        'Merrey-sur-Arce', 'Meurville', 'Montgueux', "Montier-en-l'Isle", 'Mussy-sur-Seine', 'Neuville-sur-Seine',
+        'Noé-les-Mallets', 'Plaines-Saint-Lange', 'Polisot', 'Polisy', 'Proverville', 'Riceys', 'Rouvres-les-Vignes',
+        'Saint-Usage', 'Saulcy', 'Spoy', 'Trannes', 'Urville', 'Verpillières-sur-Ource', 'Villenauxe-la-Grande',
+        'Ville-sur-Arce', 'Vitry-le-Croisé', 'Viviers-sur-Artaut', 'Voigny'],
+    '52': [
+        'Colombey les Deux Églises', 'Rizaucourt-Buchey'],
+}
+
+CHAMPAGNE = {
+    'id': 'champagne', 'name': 'Champagne',
+    'bounds': (3.05, 47.84, 5.12, 49.48),
+    'rivers': ['Marne', 'Aube', 'Seine'],
+    'municipalities': champagne,
+    # Champagne (and its Grand Cru / Premier Cru aliases) lights the whole map
+    'whole': ['champagne'],
+    'sources': 'Natural Earth; IGN Admin Express',
+    'titles': {'montagne-de-reims': 'Montagne de Reims', 'vallee-de-la-marne': 'Vallée de la Marne', 'cote-des-blancs': 'Côte des Blancs',
+               'cote-de-sezanne': 'Côte de Sézanne', 'cote-des-bar': 'Côte des Bar'},
+    # The badge for the whole area in the middle of the Vallée de la Marne (by Dormans), not in the Aube
+    'label_at': {'coteaux-champenois': (3.70, 49.08)},
+    # Drawn in this order: the whole area (Coteaux Champenois has the same area as Champagne), the sub-regions, the 17 Grand
+    # Cru villages and Rosé des Riceys. The sub-regions follow the CIVC's division in their core: the Montagne de Reims is the
+    # Grande and Petite Montagne (not the Saint-Thierry massif or the Ardre valley), the Vallée de la Marne runs from the
+    # Grande Vallée by Aÿ and the slopes south of Épernay to Château-Thierry and Seine-et-Marne, and the Côte des Bar is the
+    # Aube vineyard but Montgueux and Villenauxe-la-Grande (Côte de Sézanne). Municipalities that are in none of them (the
+    # Vitryat, Val du Petit Morin, Ardre valley and Saint-Thierry massif) are part of the whole area only.
+    'areas': {
+        'coteaux-champenois': [n for dep in CHAMPAGNE_ZONE.values() for n in dep],
+        'montagne-de-reims': [
+            'Verzenay', 'Verzy', 'Mailly-Champagne', 'Sillery', 'Puisieulx', 'Beaumont-sur-Vesle', 'Villers-Marmery',
+            'Trépail', 'Ambonnay', 'Bouzy', 'Val de Livre', 'Vaudemange', 'Billy-le-Grand', 'Ludes',
+            'Chigny-les-Roses', 'Rilly-la-Montagne', 'Villers-Allerand', 'Montbré', 'Taissy', 'Trois-Puits',
+            'Cormontreuil', "Nogent-l'Abbesse", 'Berru', 'Cernay-lès-Reims', 'Villers-aux-Nœuds', 'Sermiers',
+            'Chamery', 'Écueil', 'Sacy', 'Ville-Dommange', 'Jouy-lès-Reims', 'Pargny-lès-Reims',
+            'Coulommes-la-Montagne', 'Vrigny', 'Mesneux', 'Ormes (51)', 'Bezannes', 'Gueux', 'Courmas', 'Bouilly (51)',
+            'Saint-Euphraise-et-Clairizet', 'Courtagnon', 'Nanteuil-la-Forêt'],
+        'vallee-de-la-marne': [
+            'Aÿ-Champagne', 'Dizy', 'Hautvillers', 'Cumières', 'Mutigny', "Avenay-Val-d'Or", 'Champillon',
+            'Fontaine-sur-Ay', 'Tours-sur-Marne', 'Épernay', 'Mardeuil', 'Damery', 'Venteuil', 'Romery (51)',
+            'Cormoyeux', 'Fleury-la-Rivière', 'Reuil', 'Binson-et-Orquigny', 'Villers-sous-Châtillon',
+            'Châtillon-sur-Marne', 'Belval-sous-Châtillon', 'Baslieux-sous-Châtillon', 'Cuchery', 'Cuisles',
+            'Jonquery', 'Vandières', 'Verneuil', 'Vincelles', 'Passy-Grigny', 'Sainte-Gemme', 'Olizy', 'Champvoisy',
+            'Leuvrigny', 'Mareuil-le-Port', 'Œuilly (51)', 'Troissy', 'Dormans', 'Courthiézy', 'Festigny',
+            'Nesle-le-Repons', 'Igny-Comblizy', 'Le Breuil', 'Boursault', 'Vauciennes', 'Moussy', 'Pierry',
+            'Chavot-Courcourt', 'Mancy', 'Monthelon', 'Brugny-Vaudancourt', "Saint-Martin-d'Ablois", 'Morangis',
+            'Moslins', 'Vinay'] + CHAMPAGNE_ZONE['02'] + CHAMPAGNE_ZONE['77'],
+        'cote-des-blancs': [
+            'Chouilly', 'Oiry', 'Cramant', 'Avize', 'Oger', 'Mesnil-sur-Oger', 'Vertus', 'Bergères-lès-Vertus',
+            'Voipreux', 'Villeneuve-Renneville-Chevigny', 'Cuis', 'Grauves', 'Val-des-Marais', 'Étréchy'],
+        'cote-de-sezanne': [
+            'Sézanne', 'Allemant (51)', 'Barbonne-Fayel', 'Bethon', 'Broyes', 'Celle-sous-Chantemerle', 'Chantemerle',
+            'Fontaine-Denis-Nuisy', 'Mondement-Montgivroux', 'Montgenost', 'Saudoy', 'Vindey', 'Villenauxe-la-Grande'],
+        'cote-des-bar': [n for n in CHAMPAGNE_ZONE['10'] if n not in ('Montgueux', 'Villenauxe-la-Grande')] + CHAMPAGNE_ZONE['52'],
+    },
+    'towns': [('Reims', 4.0317, 49.2583, 'big'), ('Épernay', 3.9563, 49.0402, 'mid'), ('Châlons-en-Champagne', 4.3653, 48.9566, 'mid'),
+              ('Troyes', 4.0744, 48.2973, 'mid'), ('Bar-sur-Seine', 4.3747, 48.1127, 'small'), ('Bar-sur-Aube', 4.7086, 48.2331, 'small'),
+              ('Château-Thierry', 3.4028, 49.0464, 'small'), ('Sézanne', 3.7225, 48.7208, 'small'), ('Vertus', 4.0017, 48.9064, 'small'),
+              ('Les Riceys', 4.3700, 47.9947, 'small')],
+}
+# Grand Cru villages (INAO: Ambonnay, Avize, Ay, Beaumont-sur-Vesle, Bouzy, Chouilly, Cramant, Louvois, Mailly-Champagne,
+# Le Mesnil-sur-Oger, Oger, Oiry, Puisieulx, Sillery, Tours-sur-Marne, Verzenay, Verzy). Ay and Louvois are drawn with the
+# municipalities they now belong to (Aÿ-Champagne with Bisseuil and Mareuil-sur-Ay, Val de Livre with Tauxières-Mutry).
+CHAMPAGNE['areas']['ambonnay'] = ['Ambonnay']
+CHAMPAGNE['areas']['avize'] = ['Avize']
+CHAMPAGNE['areas']['ay'] = ['Aÿ-Champagne']
+CHAMPAGNE['areas']['beaumont-sur-vesle'] = ['Beaumont-sur-Vesle']
+CHAMPAGNE['areas']['bouzy'] = ['Bouzy']
+CHAMPAGNE['areas']['chouilly'] = ['Chouilly']
+CHAMPAGNE['areas']['cramant'] = ['Cramant']
+CHAMPAGNE['areas']['louvois'] = ['Val de Livre']
+CHAMPAGNE['areas']['mailly-champagne'] = ['Mailly-Champagne']
+CHAMPAGNE['areas']['le-mesnil-sur-oger'] = ['Mesnil-sur-Oger']
+CHAMPAGNE['areas']['oger'] = ['Oger']
+CHAMPAGNE['areas']['oiry'] = ['Oiry']
+CHAMPAGNE['areas']['puisieulx'] = ['Puisieulx']
+CHAMPAGNE['areas']['sillery'] = ['Sillery']
+CHAMPAGNE['areas']['tours-sur-marne'] = ['Tours-sur-Marne']
+CHAMPAGNE['areas']['verzenay'] = ['Verzenay']
+CHAMPAGNE['areas']['verzy'] = ['Verzy']
+CHAMPAGNE['areas']['rose-des-riceys'] = ['Riceys']
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE):
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE):
         build(r)
