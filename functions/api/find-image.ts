@@ -102,6 +102,17 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
           it = items.find((x) => fits(x.name ?? '') >= need);
           shopNotes.push(`search "${wineName}": ${items.map((x) => x.name).join(' | ')}${it ? ` → chose ${it.name}` : ''}`);
         }
+        // "Our wines" pages are often categories: the category's own picture
+        if (!it) {
+          const q3 = `{categories(filters:{url_key:{eq:${JSON.stringify(slug)}}}){items{name image}}}`;
+          const r3 = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q3 }), signal: AbortSignal.timeout(6000) });
+          const cat = r3.ok ? ((await r3.json()) as { data?: { categories?: { items?: { name?: string; image?: string | null }[] } } }).data?.categories?.items?.find((c) => c.image && fits(c.name ?? '') >= need) : undefined;
+          shopNotes.push(`category ${slug}: ${cat ? `${cat.name} ${cat.image}` : 'none'}`);
+          if (cat?.image) {
+            const img = /^https?:/.test(cat.image) ? cat.image : new URL(cat.image.startsWith('/') ? cat.image : `/media/catalog/category/${cat.image}`, u.origin).href;
+            return { urls: [img], via: 'Magento category' };
+          }
+        }
         const list = urls([...(it?.media_gallery ?? []), it?.image, it?.small_image].filter(Boolean) as unknown[]);
         if (list.length) return { urls: [...new Set(list)], via: 'Magento' };
       }
