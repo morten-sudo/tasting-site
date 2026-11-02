@@ -68,7 +68,7 @@ async function imageSize(url: string): Promise<{ w: number; h: number } | null> 
 /** The shop system's own product pictures for a product page (the page itself often loads them by script):
  *  Magento (GraphQL by url key), Shopify (/products/<handle>.json) and WooCommerce (Store API by slug). */
 const shopNotes: string[] = []; // what the shop systems answered (for checking)
-async function shopPictures(pageUrl: string, html: string): Promise<{ urls: string[]; via: string } | null> {
+async function shopPictures(pageUrl: string, html: string, wineName = '', fits: (s: string) => number = () => 0, need = 1): Promise<{ urls: string[]; via: string } | null> {
   const u = new URL(pageUrl);
   const slug = u.pathname.split('/').filter(Boolean).pop()?.replace(/\.html?$/, '') ?? '';
   if (!slug) return null;
@@ -92,7 +92,16 @@ async function shopPictures(pageUrl: string, html: string): Promise<{ urls: stri
       const peek = await r.clone().text().catch(() => '');
       shopNotes.push(`${slug}: graphql ${r.status} ${peek.slice(0, 120).replace(/\s+/g, ' ')}`);
       if (r.ok) {
-        const it = ((await r.json()) as { data?: { products?: { items?: { image?: { url: string }; small_image?: { url: string }; media_gallery?: { url: string }[] }[] } } }).data?.products?.items?.[0];
+        type Item = { name?: string; image?: { url: string }; small_image?: { url: string }; media_gallery?: { url: string }[] };
+        let it = ((await r.json()) as { data?: { products?: { items?: Item[] } } }).data?.products?.items?.[0];
+        // Not found by its address: search the shop by the wine's name, and take a product named like the wine
+        if (!it && wineName) {
+          const q2 = `{products(search:${JSON.stringify(wineName)},pageSize:10){items{name image{url} small_image{url} media_gallery{url}}}}`;
+          const r2 = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q2 }), signal: AbortSignal.timeout(6000) });
+          const items = r2.ok ? ((await r2.json()) as { data?: { products?: { items?: Item[] } } }).data?.products?.items ?? [] : [];
+          it = items.find((x) => fits(x.name ?? '') >= need);
+          shopNotes.push(`search "${wineName}": ${items.length} products${it ? `, chose ${it.name}` : ''}`);
+        }
         const list = urls([...(it?.media_gallery ?? []), it?.image, it?.small_image].filter(Boolean) as unknown[]);
         if (list.length) return { urls: [...new Set(list)], via: 'Magento' };
       }
@@ -213,7 +222,7 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     if (!got) continue;
     const p = { ...got, url: page };
     // The shop's own pictures of this product: the surest source
-    const shop = await shopPictures(page, got.html);
+    const shop = await shopPictures(page, got.html, String(body.name ?? ''), fits, all.length);
     if (shop) {
       seen.push(`${page}: ${shop.urls.length} pictures from ${shop.via}`);
       for (const [i, url] of shop.urls.entries()) {
