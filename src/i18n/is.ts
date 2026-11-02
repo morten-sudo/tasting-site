@@ -1302,4 +1302,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.emptyText": "Sæktu restina úr tengli í vínbúð eða mynd af miðanum – eða fylltu út sjálf(ur).",
   "wineAdmin.emptyFill": "Sækja úr tengli eða mynd",
   "wineAdmin.emptyEdit": "Fylla út sjálf(ur)",
+  "producer.websiteBad": "Þetta lítur ekki út eins og vefslóð, t.d. parusso.com",
+  "producer.websiteSet": "Vefsíðan er skráð – hún vistast þegar þú ýtir á Vista.",
 };

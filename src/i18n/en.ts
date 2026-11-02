@@ -1301,4 +1301,6 @@ export const en = {
   "wineAdmin.emptyText": "Fetch the rest from a link to a wine shop or a photo of the label – or fill it in yourself.",
   "wineAdmin.emptyFill": "Fetch from a link or photo",
   "wineAdmin.emptyEdit": "Fill in yourself",
+  "producer.websiteBad": "That does not look like a web address, e.g. parusso.com",
+  "producer.websiteSet": "The website is set – it is saved when you press Save.",
 } as const;

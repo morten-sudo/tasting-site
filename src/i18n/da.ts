@@ -1302,4 +1302,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.emptyText": "Hent resten fra et link til en vinbutik eller et billede af etiketten – eller udfyld selv.",
   "wineAdmin.emptyFill": "Hent fra link eller billede",
   "wineAdmin.emptyEdit": "Udfyld selv",
+  "producer.websiteBad": "Det ligner ikke en webadresse, fx parusso.com",
+  "producer.websiteSet": "Hjemmesiden er sat – den gemmes, når du trykker Gem.",
 };

@@ -1188,4 +1188,6 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.emptyText": "Récupérez le reste depuis un lien de boutique ou une photo de l’étiquette – ou remplissez vous-même.",
   "wineAdmin.emptyFill": "Récupérer depuis un lien ou une photo",
   "wineAdmin.emptyEdit": "Remplir moi-même",
+  "producer.websiteBad": "Cela ne ressemble pas à une adresse web, ex. parusso.com",
+  "producer.websiteSet": "Le site est défini – il est enregistré quand vous appuyez sur Enregistrer.",
 };

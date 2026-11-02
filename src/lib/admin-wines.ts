@@ -979,6 +979,38 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
   field<HTMLInputElement>('wf-producer').addEventListener('change', () => fillProducer());
 
+  // The producer's website typed by hand: the old message goes as soon as it changes; when it is left, it is
+  // checked, written as https://…, and – if the address is still empty – used to find the address
+  const siteEl = field<HTMLInputElement>('wf-producer-website');
+  siteEl.addEventListener('input', () => { producerStatus(''); fieldError(siteEl, null); });
+  siteEl.addEventListener('change', async () => {
+    const typed = siteEl.value.trim();
+    if (!typed) return;
+    const url = webUrl(typed);
+    if (!url) { fieldError(siteEl, t('producer.websiteBad')); return; }
+    siteEl.value = url;
+    siteEl.classList.remove('from-label');
+    const addressEl = field<HTMLInputElement>('wf-producer-address');
+    const producer = field<HTMLInputElement>('wf-producer').value.trim();
+    if (addressEl.value.trim() || !producer) { producerStatus('✓ ' + t('producer.websiteSet'), 'ok'); return; }
+    // Look for the address from this website
+    const turn = ++producerTurn;
+    producerStatus(t('producer.websiteSet'), 'ok');
+    producerStatus(t('producer.searchingAddress'), 'busy', 'wf-address-status');
+    const found = await lookupProducer({ name: field<HTMLInputElement>('wf-name').value.trim(), producer,
+      appellation: toText(appInput.value), region: toText(regionInput.value), country: countrySelect.value || null,
+      producer_website: url }, editing?.id);
+    if (turn !== producerTurn || siteEl.value !== url) return;
+    producerStatus('✓ ' + t('producer.websiteSet'), 'ok');
+    if (found) foundPlace = { ...found, website: url, producer };
+    if (found?.address && !addressEl.value.trim()) {
+      addressEl.value = found.address;
+      addressEl.classList.add('from-label');
+      producerStatus(t('producer.addressFound') + (found.lat == null ? ' ' + t('producer.notPrecise') : ''), found.lat != null ? 'ok' : '', 'wf-address-status');
+    } else producerStatus(t('producer.addressNotFound'), '', 'wf-address-status');
+    showOriginMap();
+  });
+
   /** Wines in the library with a name like the one typed – to open instead of making a second copy. */
   function showSimilar() {
     const box = $('wf-similar');
