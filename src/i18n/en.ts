@@ -961,4 +961,5 @@ export const en = {
   "aiQuiz.failed": "No suggestions right now. Try again in a moment.",
   "aiQuiz.noWines": "Add wines to the tasting first – the questions are made from them.",
   "aiQuiz.warn": "AI can be wrong – especially on Expert. Always check the marked answer before you press Add.",
+  "admin.dateInPast": "Choose a date and time from now on – a new tasting cannot be in the past.",
 } as const;

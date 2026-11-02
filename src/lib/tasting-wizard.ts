@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import { t, type Key } from '../i18n';
 import { $, mk, toNumber, type Host } from './admin-common';
 import { initAddress, readAddress, writeAddress } from './address';
-import { initWhen, readWhen, writeWhen } from './datetime';
+import { initWhen, readWhen, writeWhen, futureOnly, isPast } from './datetime';
 
 type Tasting = { id: string; slug: string } & Record<string, unknown>;
 type LibWine = { id: number; name: string; producer: string | null; vintage: string | null; image_url: string | null;
@@ -54,6 +54,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   function fillDetails() {
     $<HTMLInputElement>('wz-title-input').value = (tasting?.title as string) ?? '';
     writeWhen('wz', tasting?.starts_at);
+    futureOnly('wz', !tasting);
     $<HTMLTextAreaElement>('wz-intro').value = (tasting?.intro as string) ?? '';
     writeAddress('wz', (tasting ?? {}) as Record<string, string | null>);
   }
@@ -61,6 +62,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   async function saveDetails(): Promise<boolean> {
     const title = val('wz-title-input').trim();
     if (!title) { msg(t('admin.titleMissing')); $('wz-title-input').focus(); return false; }
+    // A new tasting is held from now on
+    if (!tasting && isPast('wz')) { msg(t('admin.dateInPast')); $('wz-date').focus(); return false; }
     const fields = {
       starts_at: readWhen('wz'),
       ...readAddress('wz'),

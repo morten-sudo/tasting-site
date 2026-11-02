@@ -890,4 +890,5 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "aiQuiz.failed": "Brak propozycji teraz. Spróbuj ponownie za chwilę.",
   "aiQuiz.noWines": "Najpierw dodaj wina – pytania powstają na ich podstawie.",
   "aiQuiz.warn": "AI może się mylić – zwłaszcza na poziomie Ekspert. Zawsze sprawdź zaznaczoną odpowiedź, zanim klikniesz Dodaj.",
+  "admin.dateInPast": "Wybierz datę i godzinę od teraz – nowa degustacja nie może być w przeszłości.",
 };

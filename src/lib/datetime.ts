@@ -22,3 +22,15 @@ export function readWhen(prefix: string): string | null {
   const time = field(prefix, 'time').value || '19:00';
   return new Date(`${date}T${time}`).toISOString();
 }
+
+/** A new tasting cannot be in the past: the calendar starts today (an existing one keeps any date). */
+export function futureOnly(prefix: string, on: boolean) {
+  const d = new Date();
+  field(prefix, 'date').min = on ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` : '';
+}
+
+/** True when the date and time typed are before now (a time earlier today counts as past). */
+export function isPast(prefix: string): boolean {
+  const iso = readWhen(prefix);
+  return !!iso && new Date(iso).getTime() < Date.now();
+}
