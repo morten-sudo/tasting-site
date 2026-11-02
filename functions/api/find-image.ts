@@ -87,11 +87,13 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   //    the page's share picture is the fallback (on many shops it shows another wine of the range).
   const images = new Map<string, { url: string; page: string; score: number }>();
   const shares: { url: string; page: string }[] = [];
+  const looked: string[] = []; // every picture address seen (for checking why none was chosen)
   const unjson = (v: string) => { try { return JSON.parse(`"${v}"`) as string; } catch { return v.replace(/\\\//g, '/'); } };
   const add = (src: string | undefined, page: string, alt: string) => {
     if (!src) return;
     const u = abs(unjson(src.trim()).split(/\s+/)[0], page);
     if (!u || /\.svg(\?|$)/i.test(u) || /(logo|icon|sprite|favicon|placeholder|loader|flag|banner|header|background)/i.test(fileWords(u))) return;
+    if (looked.length < 40 && !looked.includes(u)) looked.push(alt ? `${u} [${alt.slice(0, 60)}]` : u);
     const name = fileWords(u) + ' ' + plain(alt);
     const named = fits(name);
     if (!named) return; // a picture of something else on the page
@@ -121,5 +123,5 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   let list = [...images.values()].filter((i) => i.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
   // pages and seen show where the pictures came from (and why there are none)
-  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all });
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked });
 };
