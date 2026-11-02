@@ -321,7 +321,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block guests" data-section="guests">
         <div class="guests-head">
           <h2 data-i18n="admin.guests">Guests</h2>
-          <button id="g-invite-toggle" class="btn small" type="button" data-i18n="adminTasting.inviteGuest">Invite guest</button>
+          <button id="g-invite-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
         </div>
         <!-- Guests are invited to wines: at least one wine in the tasting first -->
         <p id="g-needs-wine" class="message" hidden><span data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</span> <a href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></p>
@@ -359,7 +359,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
                   <ul id="gi-hits" class="qa-hits" hidden></ul>
                 </div>
                 <div class="qa-actions">
-                  <button id="gi-go" class="btn small" type="button" data-i18n="adminTasting.invite">Invite</button>
+                  <button id="gi-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
                   <button id="gi-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
                 </div>
               </div>
@@ -1340,7 +1340,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       body.append(mkEl('p', 'wine-meta', g.email ?? t('admin.noEmail')));
       li.append(av, body);
       // The same button either way: disabled ("✓ Invited") when the guest is already in the tasting
-      const b = mkEl('button', 'btn small ghost', invited.has(g.id) ? '✓ ' + t('guestInvite.already') : t('adminTasting.invite'));
+      const b = mkEl('button', 'btn small ghost', invited.has(g.id) ? '✓ ' + t('guestInvite.already') : addLabel(!!g.email));
       b.type = 'button';
       if (invited.has(g.id)) b.disabled = true;
       else b.addEventListener('click', () => inviteGuest(g, b));
@@ -1357,6 +1357,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     });
   }
   $('gi-go').addEventListener('click', () => submitInvite());
+  // The button says what happens: "Add and invite" when the invitation is mailed (the box is ticked and there is an
+  // email), else "Add"
+  const mailOn = () => ($('g-send-mail') as HTMLInputElement).checked;
+  const addLabel = (hasEmail: boolean) => t(mailOn() && hasEmail ? 'guestInvite.addInvite' : 'admin.add');
+  function syncInviteLabels() {
+    $('gi-go').textContent = addLabel(!!giEmail.value.trim());
+    renderGuestHits();
+  }
+  $('g-send-mail').addEventListener('change', syncInviteLabels);
+  giEmail.addEventListener('input', () => { $('gi-go').textContent = addLabel(!!giEmail.value.trim()); });
 
   async function submitInvite() {
     const { name, email } = typedGuest();
@@ -1393,7 +1403,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     participants.push(p);
     giInput.value = '';
     giEmail.value = '';
-    renderGuestHits();
+    syncInviteLabels();
     // Show the new guest: the filter that hides them is reset
     if (!matches(p)) { guestFilter = 'all'; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
     renderParticipants();

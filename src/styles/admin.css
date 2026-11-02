@@ -1556,3 +1556,4 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .btn:disabled:not(.loading), .admin-page .btn:disabled:not(.loading):hover {
   opacity: 1; cursor: default; background: var(--lodge-2); border-color: var(--lodge-3); color: var(--muted);
 }
+.admin-page #gi-go { min-width: 9.25rem; } /* the label changes (Add / Add and invite) without the fields jumping */
