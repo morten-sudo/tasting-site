@@ -1096,3 +1096,25 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .wf-similar p { margin: 0 0 0.2rem; color: var(--muted); }
 .admin-page .wf-similar ul { margin: 0; padding-left: 1.1rem; }
 .admin-page .wf-similar[hidden] { display: none; }
+
+/* Delete: a red-outlined button, and a red one in the question */
+.admin-page .btn.ghost.danger { color: var(--error); border-color: var(--error); background: transparent; margin-left: auto; }
+.admin-page .btn.danger:not(.ghost) { background: var(--error); border-color: var(--error); color: #fff; }
+
+/* A wine just saved: shown briefly in the list */
+.admin-page .wine-row.just-saved { animation: just-saved 2.6s ease-out; border-radius: var(--radius); }
+@keyframes just-saved { 0%, 40% { background: #f6ead2; } 100% { background: transparent; } }
+
+/* Toast: a short message at the bottom after saving or deleting, sometimes with "Undo" */
+.toast {
+  position: fixed; left: 50%; bottom: max(1.25rem, env(safe-area-inset-bottom)); z-index: 1000;
+  transform: translate(-50%, 1rem); opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  display: flex; align-items: center; gap: 0.9rem; max-width: min(34rem, calc(100vw - 2rem));
+  padding: 0.7rem 0.6rem 0.7rem 1rem; border-radius: var(--radius); background: var(--paper); color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22); font-size: 0.95rem;
+}
+.toast.shown { opacity: 1; transform: translate(-50%, 0); }
+.toast.error { background: var(--error); }
+.toast .toast-action { color: #f3d9a4; font-weight: 600; background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0.3rem 0.4rem; text-decoration: underline; white-space: nowrap; }
+.toast .toast-close { background: none; border: 0; color: rgba(255, 255, 255, 0.75); font-size: 1.2rem; cursor: pointer; padding: 0.2rem 0.5rem; min-width: 2rem; min-height: 2rem; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } .admin-page .wine-row.just-saved { animation: none; background: #f6ead2; } }

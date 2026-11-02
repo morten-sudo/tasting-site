@@ -258,13 +258,18 @@ import '../../styles/admin.css';
             <button id="wf-discard-yes" class="btn small" type="button" data-i18n="wineWizard.discardYes">Discard</button>
             <button id="wf-discard-no" class="text-btn" type="button" data-i18n="wineWizard.discardNo">Keep going</button>
           </div>
+          <div id="wf-delete-confirm" class="wf-discard wf-delete-confirm" hidden>
+            <span id="wf-delete-q"></span>
+            <button id="wf-delete-yes" class="btn small danger" type="button" data-i18n="admin.deleteWine">Delete wine</button>
+            <button id="wf-delete-no" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
+          </div>
           <div id="wf-actions" class="row-actions wf-actions">
             <button id="wf-back" class="text-btn" type="button" hidden data-i18n="wizard.back">Back</button>
             <span class="wz-spacer"></span>
             <button id="wf-next" class="btn small ghost" type="button" hidden data-i18n="wineWizard.next">Next</button>
             <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-            <button id="wf-delete" class="text-btn danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
+            <button id="wf-delete" class="btn small ghost danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
           </div>
         </div>
         </form>
@@ -293,12 +298,19 @@ import '../../styles/admin.css';
       await showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true) });
     };
     const admin = initWineAdmin(host.id, host.tenant_id, onWinePage()
-      ? { onSaved: () => { show(); }, onDeleted: () => { location.href = '/admin/wines/'; } } : {});
+      ? { onSaved: () => { show(); }, onDeleted: (id) => { location.href = `/admin/wines/?deleted=${id}`; } } : {});
     await admin.load();
     followHelpLink();
     // From a tasting: ?new=<tasting id>&back=<its wines tab> opens the guide with that tasting chosen, and
     // saving or closing goes back there
     const params = new URLSearchParams(location.search);
+    // Deleted on the wine's own page: hidden here with "Undo" before it is deleted for real
+    const deleted = Number(params.get('deleted'));
+    if (deleted) {
+      params.delete('deleted');
+      history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : ''));
+      admin.deleteLater(deleted);
+    }
     const into = params.get('new');
     const back = params.get('back') ?? '';
     if (into !== null) {

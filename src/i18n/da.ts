@@ -1021,4 +1021,13 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "producer.foundStep3": "Fandt producentens hjemmeside eller adresse – se trin 3, Oprindelse.",
   "wineLib.pricesNote": "Butikkens priser – hvad vinen koster at købe. Når du sætter vinen i en smagning, bliver de til gæsteprisen og mængdeprisen, som du kan ændre under smagningens vine.",
   "wineLib.newWineBtn": "+ Ny vin",
+  "wineLib.createdToast": "“{name}” er gemt i dit bibliotek.",
+  "wineLib.addedToast": "“{name}” er gemt i biblioteket og sat i smagningen.",
+  "wineLib.savedToast": "“{name}” er gemt.",
+  "wineLib.open": "Åbn",
+  "wineLib.deleteQ": "Slet “{name}”?",
+  "wineLib.deleteQIn": "Slet “{name}”? Den fjernes også fra {n} smagning(er).",
+  "wineLib.deletedToast": "“{name}” er slettet.",
+  "wineLib.undo": "Fortryd",
+  "wineLib.restoredToast": "Vinen er tilbage.",
 };

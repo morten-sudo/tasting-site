@@ -948,4 +948,13 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "producer.foundStep3": "Trovato sito o indirizzo del produttore – vedi passo 3, Origine.",
   "wineLib.pricesNote": "I prezzi del negozio – quanto costa il vino. Quando aggiungi il vino a una degustazione diventano il prezzo per gli ospiti e il prezzo quantità, modificabili tra i vini della degustazione.",
   "wineLib.newWineBtn": "+ Nuovo vino",
+  "wineLib.createdToast": "“{name}” è salvato nella tua cantina.",
+  "wineLib.addedToast": "“{name}” è salvato e aggiunto alla degustazione.",
+  "wineLib.savedToast": "“{name}” è salvato.",
+  "wineLib.open": "Apri",
+  "wineLib.deleteQ": "Eliminare “{name}”?",
+  "wineLib.deleteQIn": "Eliminare “{name}”? Viene tolto anche da {n} degustazione/i.",
+  "wineLib.deletedToast": "“{name}” è eliminato.",
+  "wineLib.undo": "Annulla",
+  "wineLib.restoredToast": "Il vino è tornato.",
 };

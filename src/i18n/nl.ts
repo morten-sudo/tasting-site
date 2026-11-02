@@ -948,4 +948,13 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "producer.foundStep3": "Website of adres van de producent gevonden – zie stap 3, Herkomst.",
   "wineLib.pricesNote": "De prijzen van de winkel – wat de wijn kost. Als je de wijn aan een proeverij toevoegt, worden ze de gastprijs en kwantumprijs, die je bij de wijnen van de proeverij kunt aanpassen.",
   "wineLib.newWineBtn": "+ Nieuwe wijn",
+  "wineLib.createdToast": "“{name}” is opgeslagen in je bibliotheek.",
+  "wineLib.addedToast": "“{name}” is opgeslagen en aan de proeverij toegevoegd.",
+  "wineLib.savedToast": "“{name}” is opgeslagen.",
+  "wineLib.open": "Openen",
+  "wineLib.deleteQ": "“{name}” verwijderen?",
+  "wineLib.deleteQIn": "“{name}” verwijderen? Hij wordt ook uit {n} proeverij(en) gehaald.",
+  "wineLib.deletedToast": "“{name}” is verwijderd.",
+  "wineLib.undo": "Ongedaan maken",
+  "wineLib.restoredToast": "De wijn is terug.",
 };

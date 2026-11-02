@@ -1021,4 +1021,13 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "producer.foundStep3": "Fann vefsíðu eða heimilisfang framleiðanda – sjá skref 3, Uppruni.",
   "wineLib.pricesNote": "Verð búðarinnar – hvað vínið kostar. Þegar þú setur vínið í smökkun verða þau gestaverð og magnverð, sem þú getur breytt undir vínum smökkunarinnar.",
   "wineLib.newWineBtn": "+ Nýtt vín",
+  "wineLib.createdToast": "„{name}“ er vistað í safninu þínu.",
+  "wineLib.addedToast": "„{name}“ er vistað í safninu og bætt í smökkunina.",
+  "wineLib.savedToast": "„{name}“ er vistað.",
+  "wineLib.open": "Opna",
+  "wineLib.deleteQ": "Eyða „{name}“?",
+  "wineLib.deleteQIn": "Eyða „{name}“? Það er líka fjarlægt úr {n} smökkun(um).",
+  "wineLib.deletedToast": "„{name}“ er eytt.",
+  "wineLib.undo": "Afturkalla",
+  "wineLib.restoredToast": "Vínið er komið aftur.",
 };

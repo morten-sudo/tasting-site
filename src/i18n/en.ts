@@ -1020,4 +1020,13 @@ export const en = {
   "producer.foundStep3": "Found the producer's website or address – see step 3, Origin.",
   "wineLib.pricesNote": "The shop's prices – what the wine costs to buy. When you put the wine in a tasting, they become the guest price and the quantity price, which you can change under the tasting's wines.",
   "wineLib.newWineBtn": "+ New wine",
+  "wineLib.createdToast": "“{name}” is saved in your library.",
+  "wineLib.addedToast": "“{name}” is saved in your library and added to the tasting.",
+  "wineLib.savedToast": "“{name}” is saved.",
+  "wineLib.open": "Open",
+  "wineLib.deleteQ": "Delete “{name}”?",
+  "wineLib.deleteQIn": "Delete “{name}”? It is also removed from {n} tasting(s).",
+  "wineLib.deletedToast": "“{name}” is deleted.",
+  "wineLib.undo": "Undo",
+  "wineLib.restoredToast": "The wine is back.",
 } as const;

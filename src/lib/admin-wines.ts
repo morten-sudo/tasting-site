@@ -8,6 +8,8 @@ import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
 import { forgetGuesses } from './overview-map';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
+import { toast } from './toast';
+import { SUPABASE_URL, SUPABASE_KEY } from './config';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
 export type AdminWine = {
@@ -109,8 +111,10 @@ async function locateAppellation(appellation: string | null, region: string | nu
   } catch { /* the wine is saved; the map falls back to the country */ }
 }
 
-export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved?: () => void; onDeleted?: () => void } = {}) {
+export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved?: () => void; onDeleted?: (id: number) => void } = {}) {
   let wines: AdminWine[] = [];
+  // Wines deleted with "Undo" still possible: hidden from the list, deleted for real when the toast goes
+  const pendingDelete = new Map<number, string>(); // id → access token
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
   let linkImage: string | null = null; // product image found via a shop link
@@ -488,8 +492,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     $('wf-discard').hidden = true;
     $('wf-actions').hidden = false;
     $('wf-delete').hidden = !w;
-    $('wf-delete').textContent = t('admin.deleteWine');
-    delete $('wf-delete').dataset.armed;
+    $('wf-delete-confirm').hidden = true;
     field<HTMLInputElement>('wf-name').value = w?.name ?? '';
     field<HTMLInputElement>('wf-producer').value = w?.producer ?? '';
     field<HTMLInputElement>('wf-producer-website').value = w?.producer_website ?? '';
@@ -547,7 +550,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       if (i === step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
     });
     $('wf-back').hidden = step === 0;
-    $('wf-next').hidden = step === STEPS - 1;
+    // Step 1 has its own three ways forward (photo, link, by hand), so no "Next" there
+    $('wf-next').hidden = step === 0 || step === STEPS - 1;
     $('wf-save').hidden = step === 0;
     $('wf-save').textContent = t('wineWizard.save');
     $('wf-save').className = step === STEPS - 1 ? 'btn small' : 'btn small ghost';
@@ -738,12 +742,13 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function render() {
     list.replaceChildren();
     $('wine-empty').hidden = wines.length > 0;
-    const shown = wines.filter((w) => matches(w));
+    const shown = wines.filter((w) => !pendingDelete.has(w.id) && matches(w));
     renderFilters(shown.length);
     const noMatch = document.getElementById('wine-no-match');
     if (noMatch) noMatch.hidden = !wines.length || shown.length > 0;
     shown.forEach((w, i) => {
       const li = mk('li', 'wine-row');
+      li.dataset.id = String(w.id);
       const thumb = mk('div', 'wine-thumb');
       if (w.image_url) {
         const img = mk('img');
@@ -1065,6 +1070,18 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     closeForm();
     await load();
     hooks.onSaved?.();
+    // Say so, and show the wine in the list (it may be far down)
+    const shownName = [name, row.vintage].filter(Boolean).join(' ');
+    const li = newId ? list.querySelector<HTMLElement>(`li[data-id="${newId}"]`) : null;
+    if (li) {
+      li.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      li.classList.add('just-saved');
+      setTimeout(() => li.classList.remove('just-saved'), 2600);
+    }
+    toast(t(before ? 'wineLib.savedToast' : into ? 'wineLib.addedToast' : 'wineLib.createdToast', { name: shownName }), {
+      kind: 'ok',
+      action: !before && newId && !li ? { label: t('wineLib.open'), href: paths().get(newId) ?? `/admin/wines/${newId}/` } : undefined,
+    });
     // The producer's website, address and place (in the background; the page updates when found)
     const id = (saved as { id: number } | null)?.id;
     if (id && row.producer && !fresh && (changed || !before?.producer_checked_at)) {
@@ -1225,25 +1242,52 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     return !error;
   }
 
-  // Delete in two steps instead of a browser dialog
-  $('wf-delete').addEventListener('click', async () => {
-    const btn = $<HTMLButtonElement>('wf-delete');
+  // Delete: a clear question in the panel's foot, then the wine leaves the list with "Undo" for a while
+  $('wf-delete').addEventListener('click', () => {
     if (!editing) return;
-    if (!btn.dataset.armed) {
-      btn.dataset.armed = '1';
-      btn.textContent = t('admin.confirmDelete');
-      return;
-    }
-    const { error } = await supabase.from('wines').delete().eq('id', editing.id);
-    if (error) {
-      showMsg(t('admin.wineOrdered'));
-      delete btn.dataset.armed;
-      btn.textContent = t('admin.deleteWine');
-      return;
-    }
+    const n = tastingsOf(editing).length;
+    $('wf-delete-q').textContent = t(n ? 'wineLib.deleteQIn' : 'wineLib.deleteQ', { name: editing.name, n });
+    $('wf-delete-confirm').hidden = false;
+    $('wf-actions').hidden = true;
+    $('wf-delete-no').focus();
+  });
+  $('wf-delete-no').addEventListener('click', () => { $('wf-delete-confirm').hidden = true; $('wf-actions').hidden = false; });
+  $('wf-delete-yes').addEventListener('click', () => {
+    if (!editing) return;
+    const id = editing.id;
     closeForm();
-    if (hooks.onDeleted) { hooks.onDeleted(); return; }
+    // On a wine's own page: back to the list, which deletes it (with Undo)
+    if (hooks.onDeleted) { hooks.onDeleted(id); return; }
+    deleteLater(id);
+  });
+
+  /** Hides a wine and deletes it when the toast goes – unless "Undo" is pressed. */
+  async function deleteLater(id: number) {
+    const w = wines.find((x) => x.id === id);
+    if (!w) return;
+    const { data } = await supabase.auth.getSession();
+    pendingDelete.set(id, data.session?.access_token ?? '');
+    render();
+    toast(t('wineLib.deletedToast', { name: [w.name, w.vintage].filter(Boolean).join(' ') }), {
+      ms: 8000,
+      action: { label: t('wineLib.undo'), run: () => { pendingDelete.delete(id); render(); toast(t('wineLib.restoredToast'), { kind: 'ok' }); } },
+      onTimeout: () => deleteNow(id),
+    });
+  }
+  async function deleteNow(id: number) {
+    if (!pendingDelete.has(id)) return;
+    const { error } = await supabase.from('wines').delete().eq('id', id);
+    pendingDelete.delete(id);
+    if (error) { render(); toast(t('admin.wineOrdered'), { kind: 'error', ms: 9000 }); return; }
     await load();
+  }
+  // Leaving the page before the toast is gone: delete now (keepalive, so it is sent after the page closes)
+  addEventListener('pagehide', () => {
+    for (const [id, token] of pendingDelete) {
+      fetch(`${SUPABASE_URL}/rest/v1/wines?id=eq.${id}`, { method: 'DELETE', keepalive: true,
+        headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}` } });
+    }
+    pendingDelete.clear();
   });
 
   /** Opens the panel for a wine on the list; with refresh it fetches its link again straight away. */
@@ -1257,5 +1301,5 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   /** Every wine's own address (see admin-wine-page.ts). */
   function paths() { return winePaths(wines); }
 
-  return { load, edit, paths, create };
+  return { load, edit, paths, create, deleteLater };
 }

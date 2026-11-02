@@ -90,6 +90,9 @@ export const HELP: HelpSection[] = [
 <li><b>Udfyld selv</b>.</li>
 </ul>
 <p>Tjek altid felterne – det automatiske er et godt udgangspunkt, ikke en garanti. Kun <b>navnet</b> (markeret med <span class="req">*</span>) skal udfyldes; resten kan du tilføje senere. Er noget skrevet forkert, fx en årgang uden tal eller en pris, der ikke er et tal, står det med rødt lige under feltet. Priser og alkohol må skrives med komma eller punktum.</p>
+<p>Når vinen er gemt, står der en kort besked nederst, og vinen lyser op i listen. Ligner navnet en vin, du allerede har, vises den under navnefeltet, så du kan åbne den i stedet for at lave en kopi.</p>
+<h4 id="delete-wine">Slet en vin</h4>
+<p>Åbn vinen, tryk <i>Rediger</i> og så <i>Slet vin</i> nederst. Du bliver spurgt først, og bagefter kan du trykke <i>Fortryd</i> i nogle sekunder. En vin, som gæster har bestilt, kan ikke slettes – fjern den fra smagningen i stedet.</p>
 <h4>Producent og kort</h4>
 <p>Producentens hjemmeside og adresse findes automatisk, mens du skriver. Adressen placeres som en nål på kortet, når den kan findes præcist. Oprindelse (land, region, appellation) farver regionen på kortet – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, Rhône, Toscana, Piemonte, Rioja og Mosel på et detaljeret kort.</p>
 <h4>Billede</h4>
@@ -108,6 +111,9 @@ export const HELP: HelpSection[] = [
 <li><b>Fill it in yourself</b>.</li>
 </ul>
 <p>Always check the fields – the automatic part is a good start, not a guarantee. Only the <b>name</b> (marked <span class="req">*</span>) is needed; the rest you can add later. If something is written wrong, e.g. a vintage without a number or a price that is not a number, it says so in red right under the field. Prices and alcohol can be written with a comma or a point.</p>
+<p>When the wine is saved, a short message shows at the bottom and the wine lights up in the list. If the name looks like a wine you already have, it is shown under the name field, so you can open it instead of making a copy.</p>
+<h4 id="delete-wine">Deleting a wine</h4>
+<p>Open the wine, press <i>Edit</i> and then <i>Delete wine</i> at the bottom. You are asked first, and afterwards you can press <i>Undo</i> for a few seconds. A wine that guests have ordered cannot be deleted – remove it from the tasting instead.</p>
 <h4>Producer and map</h4>
 <p>The producer's website and address are found automatically as you type. The address is placed as a pin on the map when it can be found exactly. The origin (country, region, appellation) colours the region on the map – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, the Rhône, Tuscany, Piedmont, Rioja and the Mosel on a detailed map.</p>
 <h4>Picture</h4>

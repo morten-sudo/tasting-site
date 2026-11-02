@@ -948,4 +948,13 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "producer.foundStep3": "Znaleziono stronę lub adres producenta – zobacz krok 3, Pochodzenie.",
   "wineLib.pricesNote": "Ceny sklepu – ile kosztuje wino. Gdy dodasz wino do degustacji, stają się ceną dla gości i ceną ilościową, które zmienisz przy winach degustacji.",
   "wineLib.newWineBtn": "+ Nowe wino",
+  "wineLib.createdToast": "„{name}” zapisano w bibliotece.",
+  "wineLib.addedToast": "„{name}” zapisano i dodano do degustacji.",
+  "wineLib.savedToast": "„{name}” zapisano.",
+  "wineLib.open": "Otwórz",
+  "wineLib.deleteQ": "Usunąć „{name}”?",
+  "wineLib.deleteQIn": "Usunąć „{name}”? Zostanie też usunięte z {n} degustacji.",
+  "wineLib.deletedToast": "„{name}” usunięto.",
+  "wineLib.undo": "Cofnij",
+  "wineLib.restoredToast": "Wino wróciło.",
 };
