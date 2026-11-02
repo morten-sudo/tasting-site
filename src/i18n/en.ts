@@ -924,4 +924,7 @@ export const en = {
   "wines.none": "The host has not shown any wines yet.",
   "adminTasting.needsWine": "Add at least one wine to the tasting before you invite guests.",
   "adminTasting.toWines": "Go to Wines",
+  "login.otherInvite": "This invitation is for another email than the one you are signed in with.",
+  "login.otherSignOut": "Sign out and open the invitation",
+  "login.otherStay": "Stay signed in",
 } as const;

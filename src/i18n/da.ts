@@ -925,4 +925,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wines.none": "Værten har ikke vist nogen vine endnu.",
   "adminTasting.needsWine": "Tilføj mindst én vin til smagningen, før du inviterer gæster.",
   "adminTasting.toWines": "Gå til Vine",
+  "login.otherInvite": "Invitationen er til en anden e-mail end den, du er logget ind med.",
+  "login.otherSignOut": "Log ud og åbn invitationen",
+  "login.otherStay": "Bliv logget ind",
 };

@@ -1,7 +1,7 @@
 // The person's tastings (email sign-in and invite links on this device) as cards.
 // Used by the home page, the front page and the profile page.
 import { supabase } from './supabase';
-import { fetchMyTastings, getCodes, tastingUrl, type MyTasting } from './guest';
+import { fetchMyTastings, getCodes, tastingUrl, inviteIsMine, forgetCode, type MyTasting } from './guest';
 import { t, formatWhen, type Key } from '../i18n';
 
 const STATUS: Record<string, [Key, string]> = {
@@ -13,7 +13,9 @@ const STATUS: Record<string, [Key, string]> = {
 // Tastings opened with an invite link on this device (no email sign-in needed)
 async function fromStoredCodes(skip: Set<string>): Promise<MyTasting[]> {
   const entries = Object.entries(getCodes()).filter(([slug]) => !skip.has(slug));
-  const rows = await Promise.all(entries.map(async ([, code]) => {
+  const rows = await Promise.all(entries.map(async ([slug, code]) => {
+    // Signed in: only invitations to that email (others remembered from before are forgotten)
+    if (!(await inviteIsMine(code))) { forgetCode(slug); return null; }
     const [tr, inv] = await Promise.all([
       supabase.rpc('get_tasting', { code }),
       supabase.rpc('get_invite', { code }),

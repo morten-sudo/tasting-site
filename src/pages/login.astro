@@ -40,6 +40,14 @@ import Base from '../layouts/Base.astro';
     <div class="lp-main">
       <div class="lp-card">
         <h1 class="title" data-i18n="login.title">Sign in</h1>
+        <!-- An invitation for another email, opened while signed in -->
+        <div id="other-invite" class="message" hidden>
+          <p data-i18n="login.otherInvite">This invitation is for another email than the one you are signed in with.</p>
+          <div class="row-actions">
+            <button id="other-signout" class="btn small" type="button" data-i18n="login.otherSignOut">Sign out and open the invitation</button>
+            <a id="other-stay" class="text-btn" href="/home/" data-i18n="login.otherStay">Stay signed in</a>
+          </div>
+        </div>
         <p id="checking" class="lp-checking" hidden><span class="spinner" aria-hidden="true"></span><span data-i18n="login.checking">Signing you in …</span></p>
 
         <div id="forms">
@@ -131,7 +139,7 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { supabase, setRememberMe, rememberMe, lastEmail } from '../lib/supabase';
-  import { fetchMyTastings, setCode, tastingUrl } from '../lib/guest';
+  import { fetchMyTastings, setCode, tastingUrl, signOut as guestSignOut } from '../lib/guest';
   import { landingUrl } from '../lib/landing';
   import { i18nReady, lang, t } from '../i18n';
 
@@ -328,7 +336,30 @@ import Base from '../layouts/Base.astro';
     (document.querySelector('.lp-or') as HTMLElement).hidden = true;
   }
 
-  route();
+  // Opened an invitation for someone else while signed in: choose to sign out and open it, or stay
+  async function handleOther(): Promise<boolean> {
+    const code = params.get('other');
+    if (!code) return false;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // Not signed in (any more): the invitation opens as usual
+      const { data: tr } = await supabase.rpc('get_tasting', { code });
+      const slug = (tr as { slug?: string } | null)?.slug;
+      if (slug) { location.replace(`${tastingUrl(slug)}?k=${encodeURIComponent(code)}`); return true; }
+      return false;
+    }
+    $('forms').hidden = true;
+    $('other-invite').hidden = false;
+    $('other-signout').addEventListener('click', async () => {
+      guestSignOut();
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+      const { data: tr } = await supabase.rpc('get_tasting', { code });
+      const slug = (tr as { slug?: string } | null)?.slug;
+      location.replace(slug ? `${tastingUrl(slug)}?k=${encodeURIComponent(code)}` : '/login/');
+    });
+    return true;
+  }
+  if (!(await handleOther())) route();
 </script>
 
 <style>

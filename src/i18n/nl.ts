@@ -853,4 +853,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "wines.none": "De gastheer heeft nog geen wijnen getoond.",
   "adminTasting.needsWine": "Voeg minstens één wijn toe aan de proeverij voordat je gasten uitnodigt.",
   "adminTasting.toWines": "Naar de wijnen",
+  "login.otherInvite": "Deze uitnodiging is voor een ander e-mailadres dan waarmee je bent ingelogd.",
+  "login.otherSignOut": "Uitloggen en de uitnodiging openen",
+  "login.otherStay": "Ingelogd blijven",
 };

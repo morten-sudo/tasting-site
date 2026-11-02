@@ -853,4 +853,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "wines.none": "Der Gastgeber hat noch keine Weine gezeigt.",
   "adminTasting.needsWine": "Fügen Sie der Verkostung mindestens einen Wein hinzu, bevor Sie Gäste einladen.",
   "adminTasting.toWines": "Zu den Weinen",
+  "login.otherInvite": "Diese Einladung ist für eine andere E-Mail als die, mit der Sie angemeldet sind.",
+  "login.otherSignOut": "Abmelden und Einladung öffnen",
+  "login.otherStay": "Angemeldet bleiben",
 };

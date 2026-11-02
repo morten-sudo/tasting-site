@@ -38,6 +38,20 @@ export function setCode(slug: string, code: string) {
   try { localStorage.setItem(CODES_KEY, JSON.stringify(codes)); } catch {}
 }
 
+export function forgetCode(slug: string) {
+  const codes = getCodes();
+  delete codes[slug];
+  try { localStorage.setItem(CODES_KEY, JSON.stringify(codes)); } catch {}
+}
+
+/** Signed in: whether an invitation belongs to the signed-in email (or has none). Not signed in: always. */
+export async function inviteIsMine(code: string): Promise<boolean> {
+  const { data: s } = await supabase.auth.getSession();
+  if (!s.session) return true;
+  const { data } = await supabase.rpc('invite_is_mine', { code });
+  return data !== false;
+}
+
 /** Stored code for a tasting, without any network calls. */
 export function storedCode(slug: string | null = currentSlug()): string | null {
   return slug ? getCodes()[slug] ?? null : null;
@@ -67,6 +81,11 @@ export async function resolveGuestCode(): Promise<string | null> {
     const { data } = await supabase.rpc('get_tasting', { code: fromUrl });
     const realSlug = (data as { slug?: string } | null)?.slug;
     if (realSlug) {
+      // Signed in as someone else than the invitation is for: not opened as theirs
+      if (!(await inviteIsMine(fromUrl))) {
+        location.replace(`/login/?other=${encodeURIComponent(fromUrl)}`);
+        return null;
+      }
       setCode(realSlug, fromUrl);
       if (slug !== realSlug) {
         location.replace(tastingUrl(realSlug));
@@ -77,7 +96,10 @@ export async function resolveGuestCode(): Promise<string | null> {
   }
   if (!slug) return null;
   const stored = storedCode(slug);
-  if (stored) return stored;
+  if (stored) {
+    if (await inviteIsMine(stored)) return stored;
+    forgetCode(slug);   // remembered from before signing in as someone else
+  }
   const mine = await fetchMyTastings();
   const found = mine.find((t) => t.slug === slug)?.code;
   if (found) return found;
