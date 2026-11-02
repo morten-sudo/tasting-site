@@ -73,6 +73,7 @@ type LabelResult = {
 };
 type LinkResult = LabelResult & {
   description: string | null; image: string | null; price: number | null; source_url: string;
+  food?: string | null; serving?: string | null;
   offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
 };
 
@@ -403,6 +404,18 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const r = (await res.json()) as LinkResult;
       const f = fillFromLabel(r);
       f.put('wf-description', r.description);
+      // Food and serving temperature from the shop go under "More about the wine", one line each, unless already there
+      const details = field<HTMLTextAreaElement>('wf-details');
+      const add = (label: string, value: string | null | undefined) => {
+        if (!value || details.value.toLowerCase().includes(value.toLowerCase().slice(0, 12))) return;
+        const line = `${label}: ${value}`;
+        if (details.value.split('\n').some((l) => l.toLowerCase().startsWith(label.toLowerCase() + ':'))) return;
+        details.value = details.value.trim() ? `${details.value.trim()}\n${line}` : line;
+        details.classList.add('from-label');
+        f.bump();
+      };
+      add(t('link.food'), r.food);
+      add(t('link.serving'), r.serving);
       f.put('wf-retail', r.price != null ? String(r.price) : null);
       if (r.offer) {
         f.put('wf-offer-price', String(r.offer.price));

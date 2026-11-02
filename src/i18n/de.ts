@@ -816,4 +816,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "image.chosen": "Bild gewählt – speichern Sie den Wein, um es zu behalten.",
   "image.noneFound": "Kein Bild dieses Weins auf der Website des Erzeugers.",
   "image.needWebsite": "Die Website des Erzeugers wird benötigt – sie steht unter Herkunft.",
+  "link.food": "Speisen",
+  "link.serving": "Serviertemperatur",
 };

@@ -887,4 +887,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "image.chosen": "Mynd valin – vistaðu vínið til að halda henni.",
   "image.noneFound": "Engin mynd af þessu víni á vefsíðu framleiðandans.",
   "image.needWebsite": "Vefsíða framleiðandans þarf að vera þekkt – hún er undir Uppruna.",
+  "link.food": "Matur",
+  "link.serving": "Framreiðsla",
 };

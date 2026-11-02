@@ -816,4 +816,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "image.chosen": "Afbeelding gekozen – sla de wijn op om hem te bewaren.",
   "image.noneFound": "Geen afbeelding van deze wijn op de website van de producent.",
   "image.needWebsite": "De website van de producent is nodig – die staat onder Herkomst.",
+  "link.food": "Eten",
+  "link.serving": "Schenktemperatuur",
 };

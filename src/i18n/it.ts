@@ -816,4 +816,6 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "image.chosen": "Immagine scelta – salva il vino per tenerla.",
   "image.noneFound": "Nessuna immagine di questo vino sul sito del produttore.",
   "image.needWebsite": "Serve il sito del produttore – si trova sotto Origine.",
+  "link.food": "Abbinamenti",
+  "link.serving": "Servizio",
 };

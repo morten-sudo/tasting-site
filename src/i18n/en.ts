@@ -886,4 +886,6 @@ export const en = {
   "image.chosen": "Picture chosen – save the wine to keep it.",
   "image.noneFound": "No picture of this wine on the producer's website.",
   "image.needWebsite": "The producer's website is needed – it is under Origin.",
+  "link.food": "Food",
+  "link.serving": "Serving",
 } as const;

@@ -887,4 +887,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "image.chosen": "Billedet er valgt – gem vinen for at beholde det.",
   "image.noneFound": "Intet billede af denne vin på producentens hjemmeside.",
   "image.needWebsite": "Producentens hjemmeside skal kendes – den står under Oprindelse.",
+  "link.food": "Mad",
+  "link.serving": "Servering",
 };
