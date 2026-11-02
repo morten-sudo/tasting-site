@@ -150,6 +150,17 @@ textarea { min-height: 5rem; resize: vertical; }
 
 [hidden] { display: none !important; }
 
+/* Spinner: a wine glass that is drunk and filled up again (animated SVG) */
+.glass-spinner, .glass-spinner-white {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  flex: none;
+  vertical-align: -0.35em;
+  background: url(/img/glass-spinner.svg) center / contain no-repeat;
+}
+.glass-spinner-white { background-image: url(/img/glass-spinner-white.svg); }
+
 /* Leaderboard (quiz page and big-screen page) */
 .board {
   list-style: none;
