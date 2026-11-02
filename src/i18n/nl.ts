@@ -1179,4 +1179,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "guestLib.deleteFailed": "{name} kon niet worden verwijderd – misschien heeft de gast bestellingen. Verwijder die eerst.",
   "guestRow.restored": "{name} is terug.",
   "guestFilter.showAll": "Alles tonen",
+  "guestFilter.none": "Geen",
+  "guestFilter.chosen": "{n} gekozen",
 };

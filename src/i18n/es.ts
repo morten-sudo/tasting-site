@@ -1179,4 +1179,6 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "guestLib.deleteFailed": "No se pudo eliminar a {name}: quizá tiene pedidos. Quítalos primero.",
   "guestRow.restored": "{name} ha vuelto.",
   "guestFilter.showAll": "Ver todos",
+  "guestFilter.none": "Ninguno",
+  "guestFilter.chosen": "{n} elegidos",
 };

@@ -1293,4 +1293,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "guestLib.deleteFailed": "{name} kunne ikke slettes – måske har gæsten bestillinger. Fjern dem først.",
   "guestRow.restored": "{name} er tilbage.",
   "guestFilter.showAll": "Vis alle",
+  "guestFilter.none": "Ingen",
+  "guestFilter.chosen": "{n} valgt",
 };

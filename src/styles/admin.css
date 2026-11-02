@@ -1603,3 +1603,10 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 @media (max-width: 40rem) {
   .admin-page .qa-lead .qa-item > .qa-hits { grid-column: 3 / -1; }
 }
+.admin-page .filter-dd-menu .filter-all { font-weight: 500; border-bottom: 1px solid var(--lodge-2); border-radius: 6px 6px 0 0; margin-bottom: 0.2rem; }
+@media (max-width: 30rem) {
+  /* Phones: the filter and "+ Add guest" on their own line under the heading, side by side */
+  .admin-page .guests-head:has(#g-filter-dd) { flex-wrap: wrap; gap: 0.6rem; }
+  .admin-page .guests-head:has(#g-filter-dd) .head-actions { width: 100%; flex-wrap: nowrap; justify-content: space-between; }
+  .admin-page #g-filter-dd .filter-dd-menu { left: 0; right: auto; }
+}

@@ -329,13 +329,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
                 <span id="g-filter-label"></span>
               </button>
               <div id="g-filter-menu" class="filter-dd-menu" hidden>
+                <label class="filter-all"><input type="checkbox" value="all" /> <span data-i18n="admin.fAll">All</span> <small></small></label>
                 <label><input type="checkbox" value="yes" /> <span data-i18n="admin.fYes">Coming</span> <small></small></label>
                 <label><input type="checkbox" value="waitlist" /> <span data-i18n="status.waitlist">Waiting list</span> <small></small></label>
                 <label><input type="checkbox" value="invited" /> <span data-i18n="status.invited">No reply yet</span> <small></small></label>
                 <label><input type="checkbox" value="no" /> <span data-i18n="status.no">Not attending</span> <small></small></label>
                 <hr />
                 <label><input type="checkbox" value="noemail" /> <span data-i18n="admin.fNoEmail">Missing email</span> <small></small></label>
-                <button id="g-filter-clear" class="text-btn" type="button" data-i18n="guestFilter.showAll">Show all</button>
               </div>
             </div>
             <button id="g-invite-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
@@ -866,8 +866,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   // ---------- Guests ----------
   const STATUS_ORDER: Record<string, number> = { yes: 0, waitlist: 1, invited: 2, no: 3 };
-  // Which guests are shown: statuses (any of them; none = all) and, if ticked, only those missing an email
-  const guestStatuses = new Set<string>();
+  // Which guests are shown: the ticked statuses ("All" ticks them all) and, if ticked, only those missing an email
+  const ALL_STATUSES = ['yes', 'waitlist', 'invited', 'no'];
+  const guestStatuses = new Set<string>(ALL_STATUSES);
   let onlyNoEmail = false;
   let guestQuery = '';
   // Editing a guest of the tasting happens in a side panel
@@ -891,7 +892,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   }
   function matchesFilter(p: P) {
     if (onlyNoEmail && p.email) return false;
-    return !guestStatuses.size || guestStatuses.has(p.status);
+    return guestStatuses.has(p.status);
   }
 
   async function saveGuest(p: P, patch: Partial<P>) {
@@ -1146,17 +1147,20 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       no: participants.filter((p) => p.status === 'no').length,
       noemail: participants.filter((p) => !p.email).length,
     };
+    const all = ALL_STATUSES.every((v) => guestStatuses.has(v));
     document.querySelectorAll<HTMLInputElement>('#g-filter-menu input').forEach((x) => {
       x.closest('label')!.querySelector('small')!.textContent = String(count[x.value]);
-      x.checked = x.value === 'noemail' ? onlyNoEmail : guestStatuses.has(x.value);
+      x.checked = x.value === 'noemail' ? onlyNoEmail : x.value === 'all' ? all : guestStatuses.has(x.value);
     });
-    // The button says what is shown: "All 22", or the chosen ones with how many
-    const names = [...guestStatuses].map((v) => STATUS[v]);
+    // The button says what is shown: "All · 22", or the chosen ones with how many
+    const names = all ? [t('admin.fAll')] : ALL_STATUSES.filter((v) => guestStatuses.has(v)).map((v) => STATUS[v]);
     if (onlyNoEmail) names.push(t('admin.fNoEmail'));
     const shown = participants.filter(matchesFilter).length;
-    $('g-filter-label').textContent = names.length ? `${names.join(', ')} · ${shown}` : `${t('admin.fAll')} · ${count.all}`;
-    $('g-filter-btn').classList.toggle('on', names.length > 0);
-    $('g-filter-clear').hidden = !names.length;
+    // One choice by name; several as "3 chosen" – the count always shows
+    const what = !names.length ? t('guestFilter.none') : names.length === 1 ? names[0] : t('guestFilter.chosen', { n: names.length });
+    $('g-filter-label').textContent = `${what} · ${shown}`;
+    $('g-filter-btn').title = names.join(', ');
+    $('g-filter-btn').classList.toggle('on', !all || onlyNoEmail);
     renderFee();
   }
 
@@ -1170,11 +1174,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   document.addEventListener('click', (e) => { if (!fMenu.hidden && !$('g-filter-dd').contains(e.target as Node)) filterMenu(false); });
   fMenu.addEventListener('keydown', (e) => { if (e.key === 'Escape') { filterMenu(false); fBtn.focus(); } });
   fMenu.querySelectorAll<HTMLInputElement>('input').forEach((x) => x.addEventListener('change', () => {
+    // "All" ticks (or clears) every status; clearing one status clears "All"
     if (x.value === 'noemail') onlyNoEmail = x.checked;
+    else if (x.value === 'all') { guestStatuses.clear(); if (x.checked) ALL_STATUSES.forEach((v) => guestStatuses.add(v)); }
     else if (x.checked) guestStatuses.add(x.value); else guestStatuses.delete(x.value);
     renderParticipants();
   }));
-  $('g-filter-clear').addEventListener('click', () => { guestStatuses.clear(); onlyNoEmail = false; renderParticipants(); });
+
   $('guest-search').addEventListener('input', (e) => {
     guestQuery = (e.target as HTMLInputElement).value.trim().toLowerCase();
     renderParticipants();
@@ -1439,7 +1445,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     giEmail.value = '';
     syncInviteLabels();
     // Show the new guest: the filter that hides them is reset
-    if (!matches(p)) { guestStatuses.clear(); onlyNoEmail = false; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
+    if (!matches(p)) { ALL_STATUSES.forEach((v) => guestStatuses.add(v)); onlyNoEmail = false; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
     renderParticipants();
     const li = document.querySelector<HTMLElement>(`[data-guest="${p.id}"]`);
     if (li) { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }
