@@ -936,11 +936,12 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .image-options { display: flex; flex-wrap: wrap; gap: 0.6rem; }
 .admin-page .image-options[hidden] { display: none; }
 .admin-page .image-option {
-  width: 5.5rem; height: 7.5rem; padding: 0.3rem; background: var(--lodge-2); cursor: pointer;
-  border: 1px solid var(--lodge-3); border-radius: 0.5rem; display: grid; place-items: center;
+  width: 5.5rem; height: 7.5rem; padding: 0.3rem; background: #fff; cursor: pointer; overflow: hidden;
+  border: 1px solid var(--lodge-3); border-radius: 0.5rem; display: block;
 }
 .admin-page .image-option:hover, .admin-page .image-option:focus-visible { border-color: var(--amber); }
-.admin-page .image-option img { max-width: 100%; max-height: 100%; object-fit: contain; }
+/* The picture fits inside its box (a tall bottle shot must not spill out) */
+.admin-page .image-option img { display: block; width: 100%; height: 100%; object-fit: contain; background: none; border-radius: 0; }
 .admin-page .wf-image .image-option img { width: 100%; height: 100%; object-fit: contain; background: none; border-radius: 0; }
 
 /* Max number of guests and the waiting list */
