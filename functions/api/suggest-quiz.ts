@@ -52,6 +52,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   if (!rows.length) return json({ error: 'no_wines' }, 400);
 
   const lang = [str(body.lang), tasting.language].find((l) => l && LANGS[l]) ?? 'da';
+  const blindCount = rows.filter((r) => r.blind).length;
   const level = LEVELS[String(body.level)] ? String(body.level) : 'medium';
   const list = rows.map((r, i) => {
     const w = r.wines;
@@ -68,15 +69,19 @@ ${list}
 ${existing.length ? `\nThe quiz already has these questions – do not repeat them or ask the same thing:\n${existing.map((q) => `- ${q}`).join('\n')}\n` : ''}
 Difficulty: ${LEVELS[level]}
 Write 5 questions in ${LANGS[lang]}, each with 4 answer options of which exactly one is right, and a one-sentence explanation shown after the quiz.
-Mix the kinds of questions, inspired by classic wine quizzes:
-- the country or region a wine (or its appellation) comes from,
-- the wine itself: its grape(s), its age or vintage, its style,
-- how it is made: e.g. how port or other fortified wine is made, ageing in oak or bottle, the traditional method for sparkling wine, what decides sweetness,
+${blindCount === 0
+  ? `This is NOT a blind tasting: the guests can see each wine's name, producer, vintage, region and grapes on their phones. So do not ask what can simply be read off the wine (e.g. "where does wine 1 come from", "how old is wine 4"). Ask about the knowledge AROUND the wines instead, and name the wine (not "wine N"):`
+  : blindCount === rows.length
+  ? `This is a BLIND tasting: the guests know nothing about the wines. Most questions should be guesses about the wines by number (country, region, grape, age, style), the rest general knowledge linked to them:`
+  : `${blindCount} of the wines are BLIND (marked in the list): ask guessing questions about those by number; for the others the guests can see everything, so ask about the knowledge around them, naming the wine:`}
+- the region or appellation: where it lies, its climate, soils or rivers, its neighbours, what it is known for,
+- the grape(s): where else they grow, what they taste like, which blends they are part of,
+- how the wine is made: e.g. how port or other fortified wine is made, ageing in oak or bottle, the traditional method for sparkling wine, what decides sweetness,
 - classifications and wine terms that fit these wines (e.g. Grand Cru, tawny, vintage, AOC/DOC),
-- an "odd one out" among appellations, grapes or regions linked to the evening.
+- history, food pairing, or an "odd one out" among appellations, grapes or regions linked to the evening.
 Rules:
 - Facts about the wines must come from the list. General wine knowledge is fine for how wine is made and for terms, but only well-established facts – nothing you are unsure of.
-- Refer to a wine exactly as in the list ("${WINE_WORD[lang]} N") when that helps. For a BLIND wine ask a guessing question (e.g. its country, grape or age) without giving the answer away in the question.
+- A BLIND wine is referred to only as "${WINE_WORD[lang]} N" and asked about without giving the answer away. Other wines are referred to by name.
 - Wrong options must be plausible and of the same kind as the right one. Questions short and clear.
 - Check every question against the list: exactly ONE option may be right. For "which is NOT …" or "odd one out", make sure every other option really does fit.
 Answer with JSON only, no other text:
