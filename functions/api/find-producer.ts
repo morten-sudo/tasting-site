@@ -74,15 +74,27 @@ function scorePage(page: { url: string; html: string }, words: string[], origin:
     + Math.min(wine, 6) / 2 + (inOrigin ? 3 : 0) + (wineWords.some((w) => has(w)) ? 1 : 0) };
 }
 
+// Why the last fetch of a URL failed (shown in "tried", to see why a site was not read)
+const failed = new Map<string, string>();
+const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
+
+/** A page's HTML. Some sites turn away anything that does not look like a browser: then once more as one. */
 async function get(url: string, ms = 7000): Promise<{ url: string; html: string } | null> {
   const u = cleanUrl(url);
   if (!u) return null;
-  try {
-    const res = await fetch(u.href, { headers: { 'user-agent': UA, accept: 'text/html', 'accept-language': 'en,fr;q=0.8' }, redirect: 'follow', signal: AbortSignal.timeout(ms) });
-    if (!res.ok || !(res.headers.get('content-type') ?? '').includes('html')) return null;
-    const html = (await res.text()).slice(0, 1_500_000);
-    return { url: res.url || u.href, html };
-  } catch { return null; }
+  for (const ua of [UA, BROWSER_UA]) {
+    try {
+      const res = await fetch(u.href, { headers: { 'user-agent': ua, accept: 'text/html,application/xhtml+xml,*/*;q=0.8',
+        'accept-language': 'en,fr;q=0.8,it;q=0.7,de;q=0.6' }, redirect: 'follow', signal: AbortSignal.timeout(ms) });
+      const type = res.headers.get('content-type') ?? '';
+      if (!res.ok) { failed.set(url, `http ${res.status}`); continue; }
+      if (type && !type.includes('html')) { failed.set(url, `type ${type.slice(0, 40)}`); return null; }
+      const html = (await res.text()).slice(0, 1_500_000);
+      failed.delete(url);
+      return { url: res.url || u.href, html };
+    } catch (e) { failed.set(url, `error ${String(e).slice(0, 80)}`); }
+  }
+  return null;
 }
 
 /** Coordinates in the page: schema.org geo, geo meta tags, or map links (Google, Apple, Bing). */
@@ -209,7 +221,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   let site = null as { url: string; html: string } | null;
   let best = -1;
   for (const [i, page] of fetched.entries()) {
-    if (!page) { tried.push({ url: candidates[i], result: 'unreachable' }); continue; }
+    if (!page) { tried.push({ url: candidates[i], result: `unreachable (${failed.get(candidates[i]) ?? '?'})` }); continue; }
     if (given) { site = page; tried.push({ url: candidates[i], result: 'given' }); continue; }
     let { score, why } = scorePage(page, words, origin, wineWords);
     // The producer's own domain, but a home page with little to read (an age check, a picture): read its contact or
