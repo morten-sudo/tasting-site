@@ -48,11 +48,12 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     if (n) found.set(u.split('#')[0], Math.max(found.get(u.split('#')[0]) ?? 0, n));
   };
   for (const m of home.html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)) note(m[1], htmlToText(m[2]));
+  const seen: string[] = [`home ${home.url}: ${(home.html.match(/<a\b/gi) ?? []).length} links, ${home.html.length} chars`];
   if (found.size < 3) {
     const maps = [new URL('/sitemap.xml', home.url).href, new URL('/sitemap_index.xml', home.url).href, new URL('/wp-sitemap.xml', home.url).href];
     for (const sm of maps) {
       const x = await get(sm, 5000);
-      if (!x || !/<(urlset|sitemapindex)/i.test(x.html)) continue;
+      if (!x || !/<(urlset|sitemapindex)/i.test(x.html)) { seen.push(`${sm}: none`); continue; }
       const locs = [...x.html.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]);
       // A sitemap of sitemaps: the ones about products or wines first
       const subs = locs.filter((l) => /\.xml/i.test(l)).sort((a, b) => Number(/product|wine|vin|vini|wein/i.test(b)) - Number(/product|wine|vin|vini|wein/i.test(a))).slice(0, 4);
@@ -62,6 +63,7 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
         if (y) pages.push(...[...y.html.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((m) => m[1]).filter((l) => !/\.xml/i.test(l)));
       }
       for (const p of pages) note(p, '');
+      seen.push(`${sm}: ${pages.length} pages, ${subs.length} sitemaps read`);
       break;
     }
   }
@@ -96,5 +98,6 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     }
   }
   const list = [...images.values()].filter((i) => i.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
-  return json({ images: list.map(({ url, page }) => ({ url, page })), pages });
+  // pages and seen show where the pictures came from (and why there are none)
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all });
 };
