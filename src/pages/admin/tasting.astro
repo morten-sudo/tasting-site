@@ -245,8 +245,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <h2 data-i18n="page.wines">Wines</h2>
           <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWineBtn">+ Add wine</button>
         </div>
-        <!-- Add a wine: one line that pushes the list down – search the library, paste a link or add a photo -->
-        <WineQuickAdd />
+        <!-- Add a wine: a new row that slides in at the top of the list – search the library, paste a link or add a photo -->
+        <WineQuickAdd lead />
         <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
         <ol id="tw-list" class="tw-list"></ol>
         <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>

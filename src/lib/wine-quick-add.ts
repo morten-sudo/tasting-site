@@ -15,10 +15,8 @@ export type QuickWine = { id: number; name: string; producer: string | null; vin
 
 type Opts = {
   hostId: string;
-  /** The "+ New wine" button: it opens the line (and hides while the line is open). */
+  /** The "+ New wine" button: it stays where it is and opens the new row (or goes back to it). */
   toggle: HTMLElement;
-  /** More to hide while the line is open (e.g. the list's own search, which the line replaces). */
-  hide?: HTMLElement[];
   /** The host's wines, for the search. */
   library: () => QuickWine[];
   /** Tasting page: wines already in the tasting, and putting a library wine into it. */
@@ -69,20 +67,27 @@ export function initQuickAdd(o: Opts) {
   const jobs = $<HTMLUListElement>('qa-jobs');
   const attached = $('qa-attached');
   const go = $<HTMLButtonElement>('qa-go');
+  const lead = $('qa').classList.contains('qa-lead');
   // A link or photo that could not be read: kept here while the host types the name
   let carry: Source | null = null;
   // "Create anyway" after a warning that the name is already in the library
   let confirmedName = '';
 
-  const isOpen = () => !bar.hidden;
+  // The new row slides in at the top of the list (.qa-slide.open); closed it is inert, so it cannot be tabbed into
+  const isOpen = () => bar.classList.contains('open');
+  o.toggle.setAttribute('aria-controls', 'qa-bar');
+  o.toggle.setAttribute('aria-expanded', 'false');
   function open(focus = true) {
-    bar.hidden = false;
-    for (const el of [o.toggle, ...(o.hide ?? [])]) el.hidden = true;
-    if (focus && matchMedia('(min-width: 48rem)').matches) input.focus();
+    bar.classList.add('open');
+    bar.inert = false;
+    o.toggle.setAttribute('aria-expanded', 'true');
+    if (focus && matchMedia('(min-width: 48rem)').matches) input.focus({ preventScroll: true });
+    if (focus) bar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
   function close() {
-    bar.hidden = true;
-    for (const el of [o.toggle, ...(o.hide ?? [])]) el.hidden = false;
+    bar.classList.remove('open');
+    bar.inert = true;
+    o.toggle.setAttribute('aria-expanded', 'false');
     input.value = '';
     setCarry(null);
     fieldError(input, null);
@@ -243,7 +248,9 @@ export function initQuickAdd(o: Opts) {
 
   // ---------- The card: what comes in ----------
   function card(src: Source, name?: string): HTMLLIElement {
-    const li = mk('li', 'qa-job');
+    const li = mk('li', 'qa-item qa-job');
+    // The tasting's list has a grip and a number first: keep the columns (empty here)
+    if (lead) li.append(Object.assign(mk('span', 'tw-grip qa-ghost', '⋮⋮'), { ariaHidden: 'true' }), mk('span', 'tw-no qa-plus'));
     const pic = thumb(src.kind === 'photo' ? src.preview : null);
     const body = mk('div', 'wine-body');
     const title = mk('p', 'wine-name');
@@ -254,7 +261,7 @@ export function initQuickAdd(o: Opts) {
     const facts = mk('div', 'qa-facts');
     const status = mk('p', 'label-status');
     status.setAttribute('aria-live', 'polite');
-    const actions = mk('div', 'qa-job-actions');
+    const actions = mk('div', 'qa-actions qa-job-actions');
     body.append(title, source, facts, status);
     li.append(pic, body, actions);
     jobs.prepend(li);

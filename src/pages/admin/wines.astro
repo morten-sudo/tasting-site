@@ -55,9 +55,6 @@ import '../../styles/admin.css';
           <button id="wine-add-toggle" class="btn small" type="button" data-i18n="wineLib.newWineBtn">+ New wine</button><span id="wine-add-help" data-help="new-wine"></span>
         </div>
 
-        <!-- New wine: one line that pushes the list down (name, link or photo) -->
-        <WineQuickAdd />
-
         <!-- Filters: country → region (linked), type, tasting; filled from the wines in admin-wines.ts -->
         <div id="wine-filters" class="wine-filters" hidden>
           <select id="wl-country" aria-label="Country" data-i18n-attr="aria-label=wineLib.country"></select>
@@ -68,6 +65,8 @@ import '../../styles/admin.css';
           <button id="wl-clear" class="text-btn" type="button" hidden data-i18n="wineLib.clearFilters">Clear filters</button>
         </div>
 
+        <!-- New wine: a new row that slides in at the top of the list (name, link or photo) -->
+        <WineQuickAdd />
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
         <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
         <p id="wine-no-match" class="hint" hidden data-i18n="wineLib.noMatch">No wines match the filters.</p>
@@ -268,7 +267,6 @@ import '../../styles/admin.css';
     const quick = initQuickAdd({
       hostId: host.id,
       toggle: $('wine-add-toggle'),
-      hide: [$('wine-add-help'), $('wine-search')],
       library: () => admin.wines(),
       href: (w) => admin.paths().get(w.id) ?? `/admin/wines/${w.id}/`,
       done: async (id, name) => {

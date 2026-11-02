@@ -1341,76 +1341,104 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .bulk-example.needed { color: var(--tawny); font-weight: 500; }
 .admin-page #bulk-msg:empty { display: none; }
 
-/* "New wine" in one line above a wine list (WineQuickAdd.astro): name, link or photo */
-.admin-page .qa-bar {
-  margin: 0.9rem 0 0; padding: 0.8rem; border: 1px solid var(--lodge-3); border-radius: var(--radius);
-  background: var(--lodge); animation: wz-in 0.18s ease-out;
+.admin-page #wine-add-toggle, .admin-page #tw-add-toggle { white-space: nowrap; flex: none; }
+
+/* "New wine" as a new row that slides in at the top of a wine list (WineQuickAdd.astro); rows below it show
+   wines being read and saved. Same columns as the list's rows (.wine-row, or .tw-item with .qa-lead). */
+.admin-page .qa { --qa-line: var(--lodge-2); }
+.admin-page .qa-lead { --qa-line: var(--lodge-3); }
+.admin-page .wine-admin-list, .admin-page .tw-list { margin-top: 0; }
+.admin-page .wines-admin > .guests-head + .qa, .admin-page .wine-filters + .qa { margin-top: 0.75rem; }
+.admin-page .qa-slide { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.25s ease-out, opacity 0.2s ease-out; }
+.admin-page .qa-slide.open { grid-template-rows: 1fr; opacity: 1; }
+.admin-page .qa-slide-in { min-height: 0; overflow: hidden; }
+.admin-page .qa-item {
+  display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 0.4rem 0.9rem; align-items: center;
+  padding: 0.85rem 0.25rem; border-top: 1px solid var(--qa-line);
 }
-.admin-page .qa-bar.dragging { outline: 2px dashed var(--amber); outline-offset: 2px; }
-.admin-page .qa-row { display: flex; gap: 0.5rem; align-items: center; }
+.admin-page .qa-lead .qa-item { grid-template-columns: auto auto 3rem minmax(0, 1fr) auto; }
+.admin-page .qa:not(.qa-lead) .qa-item { margin-inline: -0.6rem; padding-inline: 0.6rem; }
+.admin-page .qa-ghost { visibility: hidden; }
+.admin-page .qa-plus { color: var(--amber); grid-area: auto; }
+.admin-page .qa-new .qa-plus, .admin-page .qa-new .qa-ghost { align-self: start; line-height: 3rem; }
+.admin-page .qa-new { align-items: start; }
+.admin-page .qa-new .wine-thumb { height: 3rem; }
+.admin-page .qa-item .wine-thumb { width: 3rem; height: 3.6rem; align-self: start; }
+/* The new row: a soft background says "being filled in"; the picture is an empty bottle outline */
+.admin-page .qa-new { background: var(--lodge-2); }
+.admin-page .qa-new.dragging { box-shadow: inset 0 0 0 2px var(--amber); }
+.admin-page .qa-thumb { display: grid; place-items: center; background: transparent; border: 1px dashed var(--lodge-3); box-sizing: border-box; }
+.admin-page .qa-thumb svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-linejoin: round; }
+.admin-page .qa-body { min-width: 0; }
 .admin-page .qa-field {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.4rem; padding: 0 0.3rem 0 0.75rem;
+  display: flex; align-items: center; gap: 0.4rem; padding: 0 0.3rem 0 0.75rem;
   background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius);
 }
 .admin-page .qa-field:focus-within { border-color: var(--paper); }
 .admin-page .qa-field:has([aria-invalid]) { border-color: var(--error); }
-.admin-page #qa-input {
-  flex: 1; min-width: 0; font: inherit; color: var(--paper); background: transparent; border: 0; outline: 0;
-  padding: 0.65rem 0; margin: 0;
+.admin-page .qa-field #qa-input, .admin-page .qa-field #qa-input:focus {
+  flex: 1; min-width: 0; font: inherit; color: var(--paper); background: transparent; border: 0; outline: 0; box-shadow: none;
+  padding: 0.6rem 0; margin: 0;
 }
 .admin-page .qa-attached {
   flex: none; display: inline-flex; align-items: center; gap: 0.2rem; max-width: 45%; padding: 0.15rem 0.2rem 0.15rem 0.6rem;
-  border-radius: 99px; background: var(--lodge); border: 1px solid var(--lodge-3); font-size: 0.85rem;
+  border-radius: 99px; background: var(--lodge-2); border: 1px solid var(--lodge-3); font-size: 0.85rem;
 }
 .admin-page .qa-attached[hidden] { display: none; }
 .admin-page #qa-attached-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .admin-page .qa-attached button { border: 0; background: none; color: var(--muted); font-size: 1.1rem; line-height: 1; cursor: pointer; padding: 0.1rem 0.3rem; }
+.admin-page .qa-body .field-error { margin-top: 0.35rem; }
+.admin-page .qa-hint { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.84rem; }
+.admin-page .qa-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; justify-content: flex-end; }
+.admin-page .qa-actions:empty { display: none; }
+.admin-page .qa-new .qa-actions { align-self: start; }
 .admin-page .qa-photo { display: inline-flex; align-items: center; gap: 0.4rem; }
 .admin-page .qa-photo svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
-.admin-page .qa-close { flex: none; width: 2.2rem; height: 2.2rem; font-size: 1.2rem; }
-.admin-page .qa-bar .field-error { margin-top: 0.4rem; }
-.admin-page .qa-hint { margin: 0.45rem 0 0; color: var(--muted); font-size: 0.85rem; }
-.admin-page .qa-hits { list-style: none; margin: 0.6rem 0 0; padding: 0; border-top: 1px solid var(--lodge-2); }
-.admin-page .qa-hits-head { padding: 0.6rem 0 0.2rem; color: var(--muted); font-size: 0.82rem; }
+.admin-page .qa-x { border: 0; background: none; color: var(--muted); font-size: 1.3rem; line-height: 1; width: 2.2rem; height: 2.2rem; cursor: pointer; border-radius: 50%; }
+.admin-page .qa-x:hover { background: var(--lodge-3); color: var(--paper); }
+/* Library wines that match the name typed */
+.admin-page .qa-hits { list-style: none; margin: 0.5rem 0 0; padding: 0.15rem 0.75rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .qa-hits-head { padding: 0.5rem 0 0.15rem; color: var(--muted); font-size: 0.82rem; }
 .admin-page .qa-hit { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr) auto; gap: 0.75rem; align-items: center; padding: 0.45rem 0; }
 .admin-page .qa-hit + .qa-hit { border-top: 1px solid var(--lodge-2); }
-.admin-page .qa-hit .wine-thumb { width: 2.2rem; height: 2.8rem; }
+.admin-page .qa-hit .wine-thumb { width: 2.2rem; height: 2.8rem; align-self: center; }
 .admin-page .qa-hit .wine-name { color: var(--paper); text-decoration: none; }
 .admin-page .qa-hit .wine-name:hover { text-decoration: underline; }
-/* The cards: what comes in while a wine is read and saved */
-.admin-page .qa-jobs { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
-.admin-page .qa-jobs:not(:empty) { margin-top: 0.75rem; }
-.admin-page .qa-job {
-  display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 0.9rem; align-items: center;
-  padding: 0.75rem 0.85rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge);
-  animation: wz-in 0.2s ease-out; transition: opacity 0.3s, transform 0.3s;
-}
-.admin-page .qa-job.leaving { opacity: 0; transform: translateY(-0.3rem); }
+/* Rows being read and saved: they slide in under the new row and out again into the list */
+.admin-page .qa-jobs { list-style: none; margin: 0; padding: 0; }
+.admin-page .qa-job { background: #fbf6ee; animation: qa-row-in 0.3s ease-out; transition: opacity 0.3s; }
+.admin-page .qa-job.leaving { opacity: 0; }
+.admin-page .qa-job .wine-name { margin: 0; font-weight: 500; }
 .admin-page .qa-job .qa-facts .wine-meta { animation: wz-in 0.25s ease-out; }
 .admin-page .qa-job .label-status { margin-top: 0.35rem; font-size: 0.86rem; }
 .admin-page .qa-job .label-status.busy::before { width: 1.1rem; height: 1.1rem; }
 .admin-page .qa-job .label-status:empty { display: none; }
-.admin-page .qa-job-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; justify-content: flex-end; }
-.admin-page .qa-job-actions:empty { display: none; }
-.admin-page .qa-x { border: 0; background: none; color: var(--muted); font-size: 1.3rem; line-height: 1; width: 2rem; height: 2rem; cursor: pointer; border-radius: 50%; }
-.admin-page .qa-x:hover { background: var(--lodge-2); color: var(--paper); }
+@keyframes qa-row-in { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 20rem; } }
 .admin-page .qa-ph {
   display: inline-block; width: 12rem; max-width: 100%; height: 0.9em; border-radius: 0.25rem; vertical-align: middle;
   background: linear-gradient(90deg, var(--lodge-2) 25%, var(--lodge-3) 50%, var(--lodge-2) 75%); background-size: 200% 100%;
   animation: qa-shimmer 1.3s linear infinite;
 }
 @keyframes qa-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-@media (prefers-reduced-motion: reduce) { .admin-page .qa-ph { animation: none; } .admin-page .qa-bar, .admin-page .qa-job { animation: none; } }
-@media (max-width: 40rem) {
-  .admin-page .qa-row { flex-wrap: wrap; }
-  .admin-page .qa-field { flex: 1 1 calc(100% - 2.7rem); order: 0; }
-  .admin-page .qa-close { order: 1; }
-  .admin-page .qa-photo, .admin-page #qa-go { order: 2; flex: 1; justify-content: center; }
-  .admin-page .qa-job { grid-template-columns: 2.6rem minmax(0, 1fr); }
-  .admin-page .qa-job .wine-thumb { width: 2.6rem; height: 3.4rem; align-self: start; }
-  .admin-page .qa-job-actions { grid-column: 2; justify-content: flex-start; }
-}
-.admin-page .qa-field #qa-input, .admin-page .qa-field #qa-input:focus { border: 0; box-shadow: none; outline: none; background: transparent; }
 @media (pointer: coarse) { .admin-page .qa-drop { display: none; } }
-.admin-page .qa:has(.qa-bar:not([hidden])), .admin-page .qa:has(.qa-jobs:not(:empty)) { margin-bottom: 0.9rem; }
-.admin-page #wine-add-toggle, .admin-page #tw-add-toggle { white-space: nowrap; flex: none; }
+@media (prefers-reduced-motion: reduce) {
+  .admin-page .qa-slide, .admin-page .qa-job { transition: none; animation: none; }
+  .admin-page .qa-ph { animation: none; }
+}
+@media (max-width: 40rem) {
+  .admin-page .qa-item { grid-template-columns: 2.6rem minmax(0, 1fr); }
+  .admin-page .qa-lead .qa-item { grid-template-columns: auto 2.6rem minmax(0, 1fr); }
+  .admin-page .qa-ghost { display: none; }
+  .admin-page .qa-plus { font-size: 1.2rem; align-self: start; grid-area: auto; }
+  .admin-page .qa-item .wine-thumb { width: 2.6rem; height: 3.2rem; }
+  .admin-page .qa-actions { grid-column: 2; justify-content: flex-start; }
+  .admin-page .qa-lead .qa-actions { grid-column: 3; }
+  .admin-page .qa-hit { grid-template-columns: 2.2rem minmax(0, 1fr); }
+  .admin-page .qa-hit > :last-child:not(.wine-body) { grid-column: 2; justify-self: start; }
+  .admin-page .qa-new .qa-actions .btn { flex: 1; justify-content: center; }
+}
+
+/* The wine library's head: search on the left, "+ New wine" and its ? on the right; the filters below */
+.admin-page .wines-admin #wine-add-toggle { margin-left: auto; }
+.admin-page .wines-admin .guests-head:has(#wine-search) { gap: 0.5rem; }
+.admin-page .wines-admin .guests-head + .wine-filters { margin-top: 0.75rem; }
