@@ -54,10 +54,21 @@ import '../../styles/admin.css';
           <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button><span data-help="new-wine"></span>
         </div>
 
+        <!-- Filters: country → region (linked), type, tasting; filled from the wines in admin-wines.ts -->
+        <div id="wine-filters" class="wine-filters" hidden>
+          <select id="wl-country" aria-label="Country" data-i18n-attr="aria-label=wineLib.country"></select>
+          <select id="wl-region" aria-label="Region" data-i18n-attr="aria-label=wineLib.region"></select>
+          <select id="wl-style" aria-label="Type" data-i18n-attr="aria-label=wineLib.type"></select>
+          <select id="wl-tasting" aria-label="Tasting" data-i18n-attr="aria-label=wineLib.tasting"></select>
+          <span id="wl-count" class="wl-count" aria-live="polite"></span>
+          <button id="wl-clear" class="text-btn" type="button" hidden data-i18n="wineLib.clearFilters">Clear filters</button>
+        </div>
+
         <!-- New / edit wine: side panel on larger screens, bottom sheet on phones -->
 
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
         <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
+        <p id="wine-no-match" class="hint" hidden data-i18n="wineLib.noMatch">No wines match the filters.</p>
       </section>
       </div>
       <!-- Outside the list, so it also opens on a wine's own page (where the list is hidden) -->
@@ -292,12 +303,5 @@ import '../../styles/admin.css';
       wineId = wineIdFromPath(admin.paths());
       await show();
     }
-    // Search the list
-    $('wine-search').addEventListener('input', (e) => {
-      const q = (e.target as HTMLInputElement).value.trim().toLowerCase();
-      document.querySelectorAll<HTMLElement>('#wine-admin-list > li').forEach((li) => {
-        li.hidden = !!q && !li.textContent!.toLowerCase().includes(q);
-      });
-    });
   }
 </script>

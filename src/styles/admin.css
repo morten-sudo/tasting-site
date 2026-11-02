@@ -1061,3 +1061,16 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .wz-setup .wz-bulk label > span { display: flex; flex-direction: column; gap: 0.1rem; }
 .wz-setup .wz-bulk small { color: var(--muted); font-size: 0.82rem; }
 .wz-setup .wz-bulk input { margin-top: 0.2rem; accent-color: var(--amber); }
+
+/* Wine library: filters under the search – country → region, type, tasting */
+.admin-page .wine-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 0.9rem; }
+.admin-page .wine-filters select {
+  flex: 0 1 11rem; min-width: 0; max-width: 100%; padding: 0.4rem 0.6rem; font: inherit; font-size: 0.9rem;
+  border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); color: inherit;
+}
+.admin-page .wine-filters select.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+.admin-page .wine-filters .wl-count { color: var(--muted); font-size: 0.9rem; }
+.admin-page .wine-filters .wl-count:empty { display: none; }
+@media (max-width: 40rem) {
+  .admin-page .wine-filters select { flex: 1 1 calc(50% - 0.5rem); }
+}

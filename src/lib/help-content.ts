@@ -80,6 +80,8 @@ export const HELP: HelpSection[] = [
     title: { da: 'Vine', en: 'Wines' },
     body: {
       da: `<p>Dit vinbibliotek under <a href="/admin/wines/">Vine</a> deles af alle værter på kontoen, og en vin kan bruges i mange smagninger.</p>
+<h4 id="filter-wines">Find dine vine</h4>
+<p>Over listen kan du <a href="/admin/wines/">filtrere</a> på <b>land</b>, <b>region</b>, <b>type</b> og <b>smagning</b> – og søge i fritekst. Regionerne følger landet: vælger du et land, ses kun dets regioner, og vælger du en region, vælges landet med. Under smagning kan du også vælge <i>Ikke i nogen smagning</i>. Tallet i parentes er antallet af vine, og <i>Nulstil filtre</i> viser alle igen. Filtrene står i adressen, så de er der stadig, når du går tilbage fra en vin.</p>
 <h4 id="new-wine">Ny vin</h4>
 <p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> for guiden. Du kan starte på tre måder:</p>
 <ul>
@@ -96,6 +98,8 @@ export const HELP: HelpSection[] = [
 <p>En vin, der ikke er i biblioteket endnu, opretter du direkte fra smagningen med <a href="t:wines/#tw-new-wine">Vine → Ny vin</a>: guiden lægger den både i biblioteket og i smagningen og sender dig tilbage bagefter.</p>
 <p>På smagningens fane <a href="t:wines/">Vine</a> sætter du for hver vin: rækkefølgen (↑ ↓), gæsteprisen, mængdepriser (fx "fra 6 flasker 80 kr."), om den kan bestilles, og hvad gæsterne ser: <i>Vinen</i>, <i>Blind</i> eller <i>Intet (skjult)</i>. Gæsternes gennemsnitlige karakter vises ved hver vin.</p>`,
       en: `<p>Your wine library under <a href="/admin/wines/">Wines</a> is shared by all hosts on the account, and a wine can be used in many tastings.</p>
+<h4 id="filter-wines">Finding your wines</h4>
+<p>Above the list you can <a href="/admin/wines/">filter</a> by <b>country</b>, <b>region</b>, <b>type</b> and <b>tasting</b> – and search in free text. The regions follow the country: choose a country and only its regions are shown; choose a region and its country is chosen too. Under tasting you can also choose <i>Not in any tasting</i>. The number in brackets is the number of wines, and <i>Clear filters</i> shows them all again. The filters are kept in the address, so they are still there when you go back from a wine.</p>
 <h4 id="new-wine">New wine</h4>
 <p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> for the guide. You can start in three ways:</p>
 <ul>
