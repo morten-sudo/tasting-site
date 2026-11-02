@@ -67,6 +67,7 @@ async function imageSize(url: string): Promise<{ w: number; h: number } | null> 
 /** A bottle shot is tall and narrow (a whole bottle standing); scenes, glasses, vineyards and cases are wider. */
 /** The shop system's own product pictures for a product page (the page itself often loads them by script):
  *  Magento (GraphQL by url key), Shopify (/products/<handle>.json) and WooCommerce (Store API by slug). */
+const shopNotes: string[] = []; // what the shop systems answered (for checking)
 async function shopPictures(pageUrl: string, html: string): Promise<{ urls: string[]; via: string } | null> {
   const u = new URL(pageUrl);
   const slug = u.pathname.split('/').filter(Boolean).pop()?.replace(/\.html?$/, '') ?? '';
@@ -85,7 +86,11 @@ async function shopPictures(pageUrl: string, html: string): Promise<{ urls: stri
     // Magento: its marks in the page (also written JSON-escaped, \u002Fmedia\u002Fcatalog), or a product address ending in .html
     if (/media.{0,6}catalog|mage-|magento|static.{0,6}version|graphql/i.test(html) || /\.html?$/.test(u.pathname)) { // Magento
       const query = `{products(filter:{url_key:{eq:${JSON.stringify(slug)}}}){items{name image{url} small_image{url} media_gallery{url}}}}`;
-      const r = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query }), signal: AbortSignal.timeout(6000) });
+      // The store view is often the language in the address (/fr/…)
+      const store = u.pathname.split('/').filter(Boolean)[0];
+      const r = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json', ...(store && store.length <= 5 ? { store } : {}) }, body: JSON.stringify({ query }), signal: AbortSignal.timeout(6000) });
+      const peek = await r.clone().text().catch(() => '');
+      shopNotes.push(`${slug}: graphql ${r.status} ${peek.slice(0, 120).replace(/\s+/g, ' ')}`);
       if (r.ok) {
         const it = ((await r.json()) as { data?: { products?: { items?: { image?: { url: string }; small_image?: { url: string }; media_gallery?: { url: string }[] }[] } } }).data?.products?.items?.[0];
         const list = urls([...(it?.media_gallery ?? []), it?.image, it?.small_image].filter(Boolean) as unknown[]);
@@ -241,5 +246,5 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   }
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
   // pages and seen show where the pictures came from (and why there are none)
-  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15), sizes: sizes.splice(0) });
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15), sizes: sizes.splice(0), shop: shopNotes.splice(0) });
 };
