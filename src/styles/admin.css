@@ -913,3 +913,22 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .icon-btn svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .admin-page .icon-btn.loading svg { animation: spin 0.8s linear infinite; }
 .admin-page .icon-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* The wine's picture: a field to click or drop on; with a picture, the picture and its buttons */
+.admin-page .field-label { margin: 0.3rem 0 0; font-size: 0.85rem; font-weight: 500; color: #3d3433; }
+.admin-page .wf-image { justify-items: stretch; }
+.admin-page .image-drop {
+  display: flex; align-items: center; gap: 0.9rem; margin: 0 !important; padding: 1rem 1.1rem; cursor: pointer;
+  background: var(--lodge-2); border: 1.5px dashed var(--lodge-3); border-radius: var(--radius); color: var(--paper);
+}
+.admin-page .image-drop[hidden], .admin-page .image-shown[hidden] { display: none; }
+.admin-page .image-drop:hover, .admin-page .wf-image.dragging .image-drop, .admin-page #wf-image:focus-visible + .image-drop { border-color: var(--amber); }
+.admin-page .wf-image.dragging .image-drop { background: color-mix(in srgb, var(--amber) 6%, var(--lodge-2)); }
+.admin-page .image-drop svg { width: 2rem; height: 2rem; flex-shrink: 0; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.admin-page .image-drop-text { display: grid; gap: 0.15rem; text-transform: none; letter-spacing: 0; }
+.admin-page .image-drop-text b { font-weight: 600; font-size: 0.95rem; }
+.admin-page .image-drop-text span { font-size: 0.85rem; color: var(--muted); line-height: 1.35; }
+.admin-page .image-shown { display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+.admin-page .wf-image.dragging .image-shown img { outline: 2px dashed var(--amber); outline-offset: 3px; }
+.admin-page .image-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+.admin-page .image-actions label.btn { margin: 0; cursor: pointer; }

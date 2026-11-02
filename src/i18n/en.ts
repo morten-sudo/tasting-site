@@ -877,4 +877,7 @@ export const en = {
   "wineWizard.tasting": "Add it to a tasting",
   "wineWizard.tastingHint": "(you set the guest price under the tasting's wines)",
   "wineWizard.noTasting": "No – only in the wine list",
+  "image.choose": "Choose a picture",
+  "image.dropHint": "or drop it here – a photo of the label fills in the form",
+  "image.change": "Change picture",
 } as const;

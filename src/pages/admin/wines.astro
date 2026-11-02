@@ -127,12 +127,22 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
-          <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>
+          <p class="field-label" data-i18n="admin.image">Image</p>
           <div class="wf-image" id="wf-image-box">
-            <img id="wf-preview" alt="" hidden />
-            <input id="wf-image" type="file" accept="image/*" />
-            <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>
-            <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
+            <!-- Click or drop a picture; with a picture: the picture, "Change" and "Remove" -->
+            <input id="wf-image" class="visually-hidden" type="file" accept="image/*" />
+            <label id="wf-image-drop" class="image-drop" for="wf-image">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>
+              <span class="image-drop-text"><b data-i18n="image.choose">Choose a picture</b><span data-i18n="image.dropHint">or drop it here – a photo of the label fills in the form</span></span>
+            </label>
+            <div id="wf-image-shown" class="image-shown" hidden>
+              <img id="wf-preview" alt="" hidden />
+              <div class="image-actions">
+                <label for="wf-image" class="btn small ghost" data-i18n="image.change">Change picture</label>
+                <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>
+                <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
+              </div>
+            </div>
             <p id="wf-label-status" class="label-status" hidden aria-live="polite"></p>
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>

@@ -878,4 +878,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineWizard.tasting": "Bæta því í smökkun",
   "wineWizard.tastingHint": "(verð fyrir gesti stillir þú undir vínum smökkunarinnar)",
   "wineWizard.noTasting": "Nei – bara í vínlistanum",
+  "image.choose": "Veldu mynd",
+  "image.dropHint": "eða dragðu hana hingað – mynd af miðanum fyllir út formið",
+  "image.change": "Skipta um mynd",
 };

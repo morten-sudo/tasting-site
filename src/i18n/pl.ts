@@ -807,4 +807,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "wineWizard.tasting": "Dodaj do degustacji",
   "wineWizard.tastingHint": "(cenę dla gości ustawisz w winach degustacji)",
   "wineWizard.noTasting": "Nie – tylko na liście win",
+  "image.choose": "Wybierz zdjęcie",
+  "image.dropHint": "lub przeciągnij je tutaj – zdjęcie etykiety wypełni formularz",
+  "image.change": "Zmień zdjęcie",
 };

@@ -437,6 +437,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const img = $<HTMLImageElement>('wf-preview');
     img.hidden = !url;
     if (url) img.src = url;
+    $('wf-image-shown').hidden = !url;
+    $('wf-image-drop').hidden = !!url;
     $('wf-image-remove').hidden = !url;
     $('wf-read-label').hidden = !pendingImage;
   }
@@ -715,6 +717,21 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!editing) readLabel(status);
   }
   field<HTMLInputElement>('wf-image').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-label-status'));
+  // Drop a picture on the image field (or on the picture shown)
+  const imageBox = $('wf-image-box');
+  imageBox.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); imageBox.classList.add('dragging'); } });
+  imageBox.addEventListener('dragleave', (e) => { if (!imageBox.contains(e.relatedTarget as Node)) imageBox.classList.remove('dragging'); });
+  imageBox.addEventListener('drop', (e) => {
+    imageBox.classList.remove('dragging');
+    const file = [...(e.dataTransfer?.files ?? [])].find((f) => f.type.startsWith('image/'));
+    if (!file) return;
+    e.preventDefault();
+    const input = field<HTMLInputElement>('wf-image');
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    useImage(input, 'wf-label-status');
+  });
   field<HTMLInputElement>('wf-camera').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-start-status'));
   // The link tile shows the link field
   $('wf-start-link').addEventListener('click', () => {
