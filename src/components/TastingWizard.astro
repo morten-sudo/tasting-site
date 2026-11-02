@@ -64,15 +64,35 @@ const steps = [
     </section>
 
     <!-- 4. Payment & setup -->
-    <section class="wz-pane add-form tasting-form" data-pane="3" hidden>
-      <label for="wz-fee"><span data-i18n="admin.feePer">Price per person (DKK)</span> <span class="hint" data-i18n="wizard.feeHint">(optional – you can also work it out after the tasting)</span></label>
-      <input id="wz-fee" type="text" inputmode="decimal" class="short" />
-      <label class="toggle"><input id="wz-fee-open" type="checkbox" /> <span data-i18n="admin.feeShow">Show the fee to attending guests</span></label>
-      <p id="wz-mp" class="hint"></p>
-      <p class="wz-sub" data-i18n="admin.controls">Controls</p>
-      <label class="toggle"><input id="wz-signup" type="checkbox" checked /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
-      <label class="toggle"><input id="wz-orders" type="checkbox" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
-      <p class="hint" data-i18n="wizard.quizLater">The quiz is set up under Quiz in the tasting.</p>
+    <section class="wz-pane add-form tasting-form wz-setup" data-pane="3" hidden>
+      <!-- 1. The tasting fee: a yes/no first, the details only for yes -->
+      <div class="wz-card">
+        <h3 class="wz-card-title" data-i18n="wizard.feeQuestion">Should the guests pay to take part?</h3>
+        <div class="wz-choice" role="radiogroup" aria-labelledby="wz-fee-q">
+          <label><input type="radio" name="wz-fee-yes" value="no" /> <span data-i18n="common.no">No</span></label>
+          <label><input type="radio" name="wz-fee-yes" value="yes" /> <span data-i18n="common.yes">Yes</span></label>
+        </div>
+        <div id="wz-fee-box" hidden>
+          <label for="wz-fee" data-i18n="wizard.feeAmount">Amount per person</label>
+          <div class="wz-money"><input id="wz-fee" type="text" inputmode="decimal" /><span data-i18n="wizard.krPerPerson">kr. per person</span></div>
+          <p class="hint" data-i18n="wizard.feeHint">(optional – you can also work it out after the tasting)</p>
+          <label class="wz-switch"><input id="wz-fee-open" type="checkbox" role="switch" />
+            <span><b data-i18n="wizard.feeShowTitle">Show the fee to the guests</b><small data-i18n="wizard.feeShowHint">Guests who are coming see the amount and can pay with MobilePay.</small></span></label>
+          <p id="wz-mp" class="hint"></p>
+        </div>
+      </div>
+
+      <!-- 2. What the guests can do – each with a line on what it means -->
+      <div class="wz-card">
+        <h3 class="wz-card-title" data-i18n="wizard.guestsCan">What the guests can do</h3>
+        <label class="wz-switch"><input id="wz-signup" type="checkbox" role="switch" checked />
+          <span><b data-i18n="wizard.signupTitle">Reply to the invitation</b><small data-i18n="wizard.signupHint">Guests can say yes or no and add a note.</small></span></label>
+        <label class="wz-switch"><input id="wz-orders" type="checkbox" role="switch" />
+          <span><b data-i18n="wizard.ordersTitle">Order wine</b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
+        <label class="wz-switch"><input id="wz-blind" type="checkbox" role="switch" />
+          <span><b data-i18n="wizard.blindTitle">Blind tasting</b><small data-i18n="wizard.blindHint">Guests see only the number and colour of each wine until you reveal it.</small></span></label>
+      </div>
+      <p class="hint" data-i18n="wizard.laterAll">You can change all of this later under Settings – and set up the quiz under Quiz.</p>
     </section>
   </div>
 

@@ -596,7 +596,7 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .setup-card {
   display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
   margin: 0 0 1.75rem; padding: 1rem 1.1rem; max-width: 40rem;
-  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-left: 3px solid var(--amber); border-radius: 0.6rem;
+  background: #fff; border: 1px solid var(--lodge-3); border-radius: 10px;
 }
 .setup-card[hidden] { display: none; }
 .setup-title { margin: 0 0 0.4rem; font-weight: 600; }
@@ -1005,3 +1005,34 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 
 /* The glass spinner while AI writes (introduction draft and quiz suggestions) */
 .admin-page .ai-busy::before { content: ''; display: inline-block; width: 1.3em; height: 1.3em; margin-right: 0.4em; vertical-align: -0.35em; background: url(/img/glass-spinner.svg) center / contain no-repeat; }
+
+/* Tasting guide, step 4: two plain cards (no coloured edge), a yes/no for the fee, switches with a line each */
+.wz-setup .wz-card { background: #fff; border: 1px solid var(--lodge-3); border-radius: 10px; padding: 1rem 1.1rem; margin: 0 0 1rem; }
+.wz-setup .wz-card-title { margin: 0 0 0.7rem; font-size: 1rem; font-weight: 600; font-family: inherit; }
+.wz-setup .wz-choice { display: inline-flex; border: 1px solid var(--lodge-3); border-radius: 999px; padding: 0.2rem; margin-bottom: 0.4rem; }
+.wz-setup .wz-choice label { display: inline-flex; align-items: center; padding: 0.35rem 1.1rem; border-radius: 999px; cursor: pointer; margin: 0; font-weight: 400; }
+.wz-setup .wz-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.wz-setup .wz-choice label:has(input:checked) { background: var(--amber); color: var(--lodge); font-weight: 600; }
+.wz-setup .wz-choice label:has(input:focus-visible) { outline: 2px solid var(--amber); outline-offset: 2px; }
+.wz-setup #wz-fee-box { margin-top: 0.8rem; }
+.wz-setup .wz-money { display: flex; align-items: center; gap: 0.6rem; }
+.wz-setup .wz-money input { width: 8rem; }
+.wz-setup .wz-money span { color: var(--muted); }
+.wz-setup .wz-switch { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.7rem 0; margin: 0; border-top: 1px solid var(--lodge-3); cursor: pointer; font-weight: 400; }
+.wz-setup .wz-card-title + .wz-switch { border-top: 0; padding-top: 0.2rem; }
+.wz-setup .wz-switch > span { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+.wz-setup .wz-switch small { color: var(--muted); font-size: 0.85rem; }
+/* A switch rather than a checkbox */
+.wz-setup .wz-switch input {
+  appearance: none; -webkit-appearance: none; flex: none; margin: 0.1rem 0 0;
+  width: 2.6rem; height: 1.5rem; border-radius: 999px; background: var(--lodge-3); position: relative; cursor: pointer; transition: background 0.15s;
+}
+.wz-setup .wz-switch input::after {
+  content: ''; position: absolute; top: 0.15rem; left: 0.15rem; width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 0.15s;
+}
+.wz-setup .wz-switch input:checked { background: var(--amber); }
+.wz-setup .wz-switch input:checked::after { transform: translateX(1.1rem); }
+.wz-setup .wz-switch input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.setup-steps a { color: inherit; text-decoration: underline; text-decoration-color: var(--lodge-3); text-underline-offset: 3px; }
+.setup-steps a:hover { color: var(--amber); }

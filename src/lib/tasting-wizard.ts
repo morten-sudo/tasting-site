@@ -186,12 +186,22 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   });
 
   // ---------- Step 4: payment & setup ----------
+  // Fee: "No" hides the amount; "Yes" shows it (an amount already set means yes)
+  function showFee(yes: boolean) {
+    $('wz-fee-box').hidden = !yes;
+    dialog.querySelectorAll<HTMLInputElement>('input[name="wz-fee-yes"]').forEach((r) => (r.checked = r.value === (yes ? 'yes' : 'no')));
+  }
+  dialog.querySelectorAll<HTMLInputElement>('input[name="wz-fee-yes"]').forEach((r) =>
+    r.addEventListener('change', () => { showFee(r.value === 'yes'); if (r.value === 'yes') $('wz-fee').focus(); }));
+
   function fillSetup() {
     const fee = Number(tasting?.tasting_fee) || 0;
     $<HTMLInputElement>('wz-fee').value = fee ? String(fee).replace('.', ',') : '';
+    showFee(fee > 0 || tasting?.tasting_fee_open === true);
     $<HTMLInputElement>('wz-fee-open').checked = tasting?.tasting_fee_open === true;
     $<HTMLInputElement>('wz-signup').checked = tasting?.signup_open !== false;
     $<HTMLInputElement>('wz-orders').checked = tasting?.orders_open === true;
+    $<HTMLInputElement>('wz-blind').checked = tasting?.blind === true;
     const mp = $('wz-mp');
     mp.replaceChildren();
     if (host.mobilepay) mp.textContent = t('wizard.mpSet', { number: host.mobilepay.replace(/(\d{2})(?=\d)/g, '$1 ') });
@@ -199,13 +209,15 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   }
 
   async function saveSetup(): Promise<boolean> {
-    const fee = toNumber(val('wz-fee'));
+    const paying = !$('wz-fee-box').hidden;
+    const fee = paying ? toNumber(val('wz-fee')) : 0;
     if (fee != null && fee < 0) { msg(t('admin.changesNotSaved')); return false; }
     const patch = {
       tasting_fee: fee ?? 0,
-      tasting_fee_open: $<HTMLInputElement>('wz-fee-open').checked,
+      tasting_fee_open: paying && $<HTMLInputElement>('wz-fee-open').checked,
       signup_open: $<HTMLInputElement>('wz-signup').checked,
       orders_open: $<HTMLInputElement>('wz-orders').checked,
+      blind: $<HTMLInputElement>('wz-blind').checked,
     };
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting!.id);
     if (error) { msg(t('admin.changesNotSaved')); return false; }

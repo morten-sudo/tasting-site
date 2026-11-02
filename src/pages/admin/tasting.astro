@@ -43,7 +43,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <p class="setup-title" data-i18n="wizard.continueTitle">Finish setting up the tasting</p>
             <ol id="setup-steps" class="setup-steps"></ol>
           </div>
-          <button id="setup-continue" class="btn small" type="button" data-i18n="wizard.continue">Continue set-up</button>
         </div>
         <div class="guests-head">
           <h2 data-i18n="section.details">Details</h2>
@@ -1096,19 +1095,22 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   let wizard: ReturnType<typeof initWizard> | null = null;
   function renderSetup() {
     if (!tasting) return;
-    const steps: { label: Key; done: boolean; info: string }[] = [
-      { label: 'wizard.details', done: true, info: '' },
-      { label: 'wizard.wines', done: wines.length > 0, info: wines.length ? String(wines.length) : '' },
-      { label: 'wizard.guests', done: participants.length > 0, info: participants.length ? String(participants.length) : '' },
-      { label: 'wizard.setup', done: Number(tasting.tasting_fee) > 0 || tasting.orders_open === true, info: '' },
+    // Each step leads to its tab (the host finishes the tasting there, not through the guide)
+    const steps: { label: Key; done: boolean; info: string; section: string }[] = [
+      { label: 'wizard.details', done: true, info: '', section: 'overview' },
+      { label: 'wizard.wines', done: wines.length > 0, info: wines.length ? String(wines.length) : '', section: 'wines' },
+      { label: 'wizard.guests', done: participants.length > 0, info: participants.length ? String(participants.length) : '', section: 'guests' },
+      { label: 'wizard.setup', done: Number(tasting.tasting_fee) > 0 || tasting.orders_open === true, info: '', section: 'settings' },
     ];
-    const next = steps.findIndex((s) => !s.done);
     $('setup-card').hidden = steps[1].done && steps[2].done;
     $('setup-steps').replaceChildren(...steps.map((s) => {
-      const li = mkEl('li', s.done ? 'done' : '', t(s.label) + (s.info ? ` (${s.info})` : ''));
+      const li = mkEl('li', s.done ? 'done' : '');
+      const a = mkEl('a', '', t(s.label) + (s.info ? ` (${s.info})` : ''));
+      a.href = s.section === 'overview' ? './' : `${s.section}/`;
+      a.dataset.section = s.section;
+      li.append(a);
       return li;
     }));
-    $('setup-continue').onclick = () => wizard?.openFor(tasting!, next > 0 ? next : 1);
   }
 
   // ---------- Startup ----------
