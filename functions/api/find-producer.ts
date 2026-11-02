@@ -27,7 +27,9 @@ const WINE_WORDS = ['wine', 'wines', 'winery', 'vineyard', 'vineyards', 'vintage
   'wein', 'weine', 'weingut', 'weinberg', 'weinberge', 'rebsorte', 'jahrgang', 'quinta', 'vinho', 'vinhos', 'porto', 'vinha', 'vinhas',
   // grapes also tell a wine producer's site
   'nebbiolo', 'barbera', 'sangiovese', 'merlot', 'cabernet', 'chardonnay', 'pinot', 'syrah', 'shiraz', 'grenache', 'garnacha', 'riesling',
-  'tempranillo', 'malbec', 'sauvignon', 'moscato', 'muscat', 'touriga', 'gruner', 'zinfandel', 'semillon', 'chenin', 'viognier', 'carmenere'];
+  'tempranillo', 'malbec', 'sauvignon', 'moscato', 'muscat', 'touriga', 'gruner', 'zinfandel', 'semillon', 'chenin', 'viognier', 'carmenere',
+  // an age check in front of the site: only drinks producers have one
+  'alcohol', 'alcool', 'alcol', 'alkohol', 'maggiorenne', 'drinking', 'majeur', 'majeure', 'vollendet', 'mayor de edad'];
 
 /** Domains to try, built from the name: kopke.com, chateau-belgrave.com, belgrave.fr, champagne-bollinger.com … */
 function guessDomains(producer: string, country: string | null, region: string | null) {
@@ -56,11 +58,14 @@ function scorePage(page: { url: string; html: string }, words: string[], origin:
   const has = (w: string) => text.includes(` ${w} `) || text.includes(` ${w}`);
   let host = '';
   try { host = plain(new URL(page.url).hostname); } catch {}
-  if (!words.length || !words.every(has)) return null; // does not name the producer
+  // The whole name as the domain (neirano.com, bertranddemonceny.com) is a strong sign in itself
+  const domain = host.replace(/^www\./, '').split('.')[0].replace(/-/g, '');
+  const ownDomain = words.length > 0 && domain.includes(words.join(''));
+  if (!words.length || !(words.every(has) || ownDomain)) return null; // does not name the producer
   const inOrigin = origin.some((o) => text.includes(` ${o} `));
   // About wine: wine words or grapes, and the wine's region or appellation counts as two
   const wine = WINE_WORDS.filter((w) => text.includes(` ${w} `)).length + (inOrigin ? 2 : 0);
-  if (wine < 2) return null; // a page about something else that shares the name (bollinger.com is not the Champagne house)
+  if (wine < (ownDomain ? 1 : 2)) return null; // a page about something else that shares the name (bollinger.com is not the Champagne house)
   return (words.some((w) => host.includes(w)) ? 3 : 0) + (words.every((w) => title.includes(w)) ? 2 : 0)
     + Math.min(wine, 6) / 2 + (inOrigin ? 3 : 0) + (wineWords.some((w) => has(w)) ? 1 : 0);
 }
