@@ -9,6 +9,7 @@ import { winePaths } from './admin-wine-page';
 import { forgetGuesses } from './overview-map';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
+import { combo, type ComboOption } from './combo';
 import { SUPABASE_URL, SUPABASE_KEY } from './config';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
@@ -162,6 +163,11 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       .sort((a, b) => a.text.localeCompare(b.text, lang())));
   const appInput = field<HTMLInputElement>('wf-appellation');
   const regionInput = field<HTMLInputElement>('wf-region');
+  // Suggestions under the region and appellation fields (filled by fillLists)
+  let regionOptions: ComboOption[] = [];
+  let appOptions: ComboOption[] = [];
+  const regionCombo = combo(regionInput, () => regionOptions);
+  const appCombo = combo(appInput, () => appOptions);
   let appellations: Appellation[] = [];
   let regions: WineRegion[] = [];
   Promise.all([loadAppellations(), loadRegions()]).then(([apps, regs]) => {
@@ -186,14 +192,20 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         regs.push({ id: `${a.country}-${a.region}`, name: a.region, country: a.country, aliases: [], lat: null, lon: null });
       }
     }
-    $('wf-regions').replaceChildren(...regs.sort((a, b) => a.name.localeCompare(b.name, lang()))
-      .map((r) => new Option(country ? '' : countryName(r.country) ?? r.country, r.name)));
+    regionOptions = regs.sort((a, b) => a.name.localeCompare(b.name, lang()))
+      .map((r) => ({ value: r.name, hint: country ? undefined : countryName(r.country) ?? r.country }));
     const region = regionInput.value.trim();
     const apps = appellations.filter((a) => (!country || a.country === country) && (!region || sameRegion(a, region)));
     // An unknown region narrows nothing: show the whole country instead of an empty list
     const shown = apps.length ? apps : appellations.filter((a) => !country || a.country === country);
-    $('wf-appellations').replaceChildren(...shown.map((a) =>
-      new Option([a.subregion, a.region].filter(Boolean).join(' · ') + where(a.country), a.name)));
+    // With a region chosen, the region is not repeated on every line: grouped by subregion (e.g. Médoc, Libournais)
+    const narrowed = !!apps.length && !!region;
+    appOptions = shown
+      .map((a) => ({ value: a.name, group: narrowed ? a.subregion ?? undefined : undefined,
+        hint: narrowed ? undefined : [a.subregion, a.region].filter(Boolean).join(' · ') + where(a.country) }))
+      .sort((a, b) => (a.group ?? '').localeCompare(b.group ?? '', lang()) || a.value.localeCompare(b.value, lang()));
+    regionCombo.refresh();
+    appCombo.refresh();
   }
 
   /** A known appellation fills in region and country (the database does the same when saving). */
