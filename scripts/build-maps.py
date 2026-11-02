@@ -7,6 +7,7 @@ Sources (downloaded into a data folder given as the first argument):
   communes-<dep>-<name>.geojson, saved as communes-21.geojson, communes-71.geojson and communes-89.geojson
 - Champagne municipalities from the same repository, departments 51, 10, 02, 52 and 77, saved as communes-<dep>.geojson,
   plus the Marne file as of commit cd65fc6 (2017, before Blancs-Coteaux) saved as communes-51-2017.geojson
+- Roussillon municipalities from the same repository, departments 66 and 11, saved as communes-66.geojson and communes-11.geojson
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
@@ -476,7 +477,111 @@ CHAMPAGNE['areas']['verzenay'] = ['Verzenay']
 CHAMPAGNE['areas']['verzy'] = ['Verzy']
 CHAMPAGNE['areas']['rose-des-riceys'] = ['Riceys']
 
+# ---------- Roussillon ----------
+def roussillon():
+    """Municipalities of Pyrénées-Orientales (66) and Aude (11), named as in Bourgogne ('Bages (66)' when a name is
+    found in both)."""
+    out, seen = {}, {}
+    for dep in ('66', '11'):
+        for f in load(f'communes-{dep}.geojson')['features']:
+            name = f['properties']['nom']
+            g = shape(f['geometry'])
+            out[f'{name} ({dep})'] = g
+            seen.setdefault(name, []).append(g)
+    out.update({n: gs[0] for n, gs in seen.items() if len(gs) == 1})
+    return out
+
+# The areas by the municipalities INAO lists in the cahiers des charges, with Admin Express names (articles dropped:
+# 'Boulou', 'Soler', 'Cluses', 'Vivier', 'Palme'). Municipalities listed 'en partie' (e.g. Perpignan and Millas only
+# north of the Têt for Côtes du Roussillon Villages) are drawn whole.
+# Rivesaltes (cahier des charges of 14 June 2023): 9 Aude and 86 Pyrénées-Orientales municipalities.
+RIVESALTES = [
+    'Cascastel-des-Corbières', 'Caves', 'Fitou', 'Leucate', 'Palme', 'Paziols', 'Treilles', 'Tuchan', 'Villeneuve-les-Corbières',
+    'Argelès-sur-Mer', 'Bages (66)', 'Baho', 'Baixas', 'Banyuls-dels-Aspres', 'Bélesta', 'Boulou', 'Brouilla', 'Cabestany',
+    'Caixas', 'Calce', 'Camélas', 'Canet-en-Roussillon', 'Canohès', 'Cases-de-Pène', 'Cassagnes', 'Castelnou', 'Céret',
+    'Claira', 'Cluses', 'Corbère', 'Corbère-les-Cabanes', 'Corneilla-del-Vercol', 'Corneilla-la-Rivière', 'Elne',
+    "Espira-de-l'Agly", 'Estagel', 'Fourques', 'Ille-sur-Têt', 'Laroque-des-Albères', 'Latour-Bas-Elne', 'Latour-de-France',
+    'Lesquerde', 'Llauro', 'Llupia', 'Maureillas-las-Illas', 'Maury', 'Millas', 'Montauriol (66)', 'Montescot',
+    'Montesquieu-des-Albères', 'Montner', 'Néfiach', 'Opoul-Périllos', 'Ortaffa', 'Palau-del-Vidre', 'Passa', 'Perpignan',
+    'Peyrestortes', 'Pézilla-la-Rivière', 'Pia', 'Planèzes', 'Pollestres', 'Ponteilla', 'Rasiguères', 'Reynès', 'Rivesaltes',
+    'Saint-André', 'Sainte-Colombe-de-la-Commanderie', 'Saint-Estève', "Saint-Féliu-d'Amont", "Saint-Féliu-d'Avall",
+    'Saint-Génis-des-Fontaines', 'Saint-Hippolyte', 'Saint-Jean-Lasseille', 'Saint-Jean-Pla-de-Corts', 'Saint-Nazaire',
+    'Saint-Paul-de-Fenouillet', 'Saleilles', 'Salses-le-Château', 'Soler', 'Sorède', 'Tautavel', 'Terrats', 'Thuir',
+    'Tordères', 'Toulouges', 'Tresserre', 'Trouillas', 'Villelongue-dels-Monts', 'Villemolaque', 'Villeneuve-de-la-Raho',
+    'Villeneuve-la-Rivière', 'Vingrau', 'Vivès']
+# Banyuls, Banyuls Grand Cru and Collioure: the four municipalities of the Côte Vermeille
+BANYULS = ['Banyuls-sur-Mer', 'Cerbère', 'Collioure', 'Port-Vendres']
+# Côtes du Roussillon Villages (cahier des charges, IV 1° a): 51 municipalities or parts of them
+CDR_VILLAGES = [
+    'Ansignan', 'Bages (66)', 'Baho', 'Baixas', 'Banyuls-dels-Aspres', 'Bélesta', 'Brouilla', 'Calce', 'Caramany',
+    'Cases-de-Pène', 'Cassagnes', 'Corneilla-la-Rivière', 'Elne', "Espira-de-l'Agly", 'Estagel', 'Fourques', 'Lansac',
+    'Latour-de-France', 'Lesquerde', 'Llupia', 'Maury', 'Millas', 'Montalba-le-Château', 'Montauriol (66)', 'Montner',
+    'Opoul-Périllos', 'Ortaffa', 'Passa', 'Perpignan', 'Peyrestortes', 'Pézilla-la-Rivière', 'Planèzes', 'Ponteilla',
+    'Rasiguères', 'Rivesaltes', 'Saint-Arnac', 'Saint-Estève', 'Saint-Jean-Lasseille', 'Sainte-Colombe-de-la-Commanderie',
+    'Saint-Paul-de-Fenouillet', 'Salses-le-Château', 'Tautavel', 'Terrats', 'Thuir', 'Tordères', 'Tresserre', 'Trouillas',
+    'Villemolaque', 'Villeneuve-la-Rivière', 'Vingrau', 'Vivès']
+
+ROUSSILLON = {
+    'id': 'roussillon', 'name': 'Roussillon',
+    'bounds': (2.15, 42.38, 3.25, 43.0),
+    # The Têt, Agly and Tech are not in Natural Earth (10m); the map has no rivers
+    'rivers': ['Têt', 'Agly', 'Tech'],
+    'municipalities': roussillon,
+    'whole': ['roussillon'],
+    'sources': 'Natural Earth; IGN Admin Express',
+    # Badges by the towns the appellations are named after, not in the middle of the large areas
+    'label_at': {'rivesaltes': (2.80, 42.76), 'muscat-de-rivesaltes': (2.86, 42.72), 'grand-roussillon': (2.92, 42.66),
+                 'cotes-du-roussillon': (2.72, 42.58), 'cotes-du-roussillon-villages': (2.66, 42.72)},
+    # Drawn in this order: the large areas first (Côtes du Roussillon, Muscat de Rivesaltes and Grand Roussillon, then
+    # Rivesaltes), the Villages and their five named villages, Maury and the Côte Vermeille.
+    'areas': {
+        # Côtes du Roussillon (cahier des charges of 22 March 2022): Pyrénées-Orientales only; Arboussols, Estoher,
+        # Finestret, Ille-sur-Têt and Vivier only in part
+        'cotes-du-roussillon': [
+            'Ansignan', 'Arboussols', 'Argelès-sur-Mer', 'Bages (66)', 'Baho', 'Baixas', 'Banyuls-dels-Aspres', 'Bélesta',
+            'Boulou', 'Brouilla', 'Cabestany', 'Calce', 'Camélas', 'Canet-en-Roussillon', 'Canohès', 'Caramany',
+            'Cases-de-Pène', 'Cassagnes', 'Castelnou', 'Caudiès-de-Fenouillèdes', 'Céret', 'Claira', 'Corbère',
+            'Corbère-les-Cabanes', 'Corneilla-del-Vercol', 'Corneilla-la-Rivière', 'Elne', 'Espira-de-Conflent',
+            "Espira-de-l'Agly", 'Estagel', 'Estoher', 'Felluns', 'Finestret', 'Fourques', 'Ille-sur-Têt', 'Lansac',
+            'Laroque-des-Albères', 'Latour-de-France', 'Lesquerde', 'Llauro', 'Llupia', 'Maureillas-las-Illas', 'Maury',
+            'Millas', 'Montalba-le-Château', 'Montauriol (66)', 'Montescot', 'Montesquieu-des-Albères', 'Montner',
+            'Néfiach', 'Oms', 'Opoul-Périllos', 'Ortaffa', 'Palau-del-Vidre', 'Passa', 'Perpignan', 'Peyrestortes',
+            'Pézilla-la-Rivière', 'Pia', 'Planèzes', 'Pollestres', 'Ponteilla', 'Prugnanes', 'Rasiguères', 'Rigarda',
+            'Rivesaltes', 'Rodès', 'Saint-André', 'Saint-Arnac', 'Saint-Estève', "Saint-Féliu-d'Amont",
+            "Saint-Féliu-d'Avall", 'Saint-Génis-des-Fontaines', 'Saint-Hippolyte', 'Saint-Jean-Lasseille',
+            'Saint-Jean-Pla-de-Corts', 'Saint-Martin-de-Fenouillet', 'Saint-Nazaire', 'Saint-Paul-de-Fenouillet',
+            'Sainte-Colombe-de-la-Commanderie', 'Saleilles', 'Salses-le-Château', 'Soler', 'Sorède', 'Tarerach', 'Tautavel',
+            'Terrats', 'Thuir', 'Tordères', 'Toulouges', 'Tresserre', 'Trévillach', 'Trilla', 'Trouillas',
+            'Villelongue-dels-Monts', 'Villemolaque', 'Villeneuve-de-la-Raho', 'Villeneuve-la-Rivière', 'Vinça', 'Vingrau',
+            'Vivès', 'Vivier'],
+        # Muscat de Rivesaltes (EU single document): the Rivesaltes area and the Côte Vermeille
+        'muscat-de-rivesaltes': RIVESALTES + BANYULS,
+        # Grand Roussillon: no cahier des charges found online; drawn with the Muscat de Rivesaltes area (the Rivesaltes,
+        # Maury and Banyuls areas together, as it is usually described)
+        'grand-roussillon': RIVESALTES + BANYULS,
+        'rivesaltes': RIVESALTES,
+        'cotes-du-roussillon-villages': CDR_VILLAGES,
+        'les-aspres': [
+            'Bages (66)', 'Banyuls-dels-Aspres', 'Brouilla', 'Elne', 'Fourques', 'Llupia', 'Montauriol (66)', 'Ortaffa',
+            'Passa', 'Ponteilla', 'Saint-Jean-Lasseille', 'Sainte-Colombe-de-la-Commanderie', 'Terrats', 'Thuir', 'Tordères',
+            'Tresserre', 'Trouillas', 'Villemolaque', 'Vivès'],
+        'latour-de-france': ['Cassagnes', 'Estagel', 'Latour-de-France', 'Montner', 'Planèzes'],
+        'caramany': ['Bélesta', 'Caramany', 'Cassagnes'],
+        'lesquerde': ['Lansac', 'Lesquerde', 'Rasiguères'],
+        'tautavel': ['Tautavel', 'Vingrau'],
+        # Maury, doux and sec (INAO product sheets): four municipalities
+        'maury': ['Maury', 'Tautavel', 'Saint-Paul-de-Fenouillet', 'Rasiguères'],
+        'banyuls': BANYULS,
+        'banyuls-grand-cru': BANYULS,
+        'collioure': BANYULS,
+    },
+    'towns': [('Perpignan', 2.8954, 42.6986, 'big'), ('Rivesaltes', 2.8742, 42.7689, 'mid'), ('Banyuls-sur-Mer', 3.1289, 42.4833, 'small'),
+              ('Collioure', 3.0831, 42.5253, 'small'), ('Maury', 2.6081, 42.8086, 'small'), ('Tautavel', 2.7464, 42.8158, 'small'),
+              ('Céret', 2.7481, 42.4856, 'small'), ('Thuir', 2.7556, 42.6322, 'small'), ('Estagel', 2.6967, 42.7728, 'small'),
+              ('Saint-Paul-de-Fenouillet', 2.5050, 42.8100, 'small'), ('Argelès-sur-Mer', 3.0236, 42.5461, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE):
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON):
         build(r)
