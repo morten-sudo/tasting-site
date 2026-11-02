@@ -201,13 +201,20 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   const fetched = await Promise.all(candidates.map((u) => get(u)));
   let site = null as { url: string; html: string } | null;
   let best = -1;
-  fetched.forEach((page, i) => {
-    if (!page) { tried.push({ url: candidates[i], result: 'unreachable' }); return; }
-    if (given) { site = page; tried.push({ url: candidates[i], result: 'given' }); return; }
-    const { score, why } = scorePage(page, words, origin, wineWords);
+  for (const [i, page] of fetched.entries()) {
+    if (!page) { tried.push({ url: candidates[i], result: 'unreachable' }); continue; }
+    if (given) { site = page; tried.push({ url: candidates[i], result: 'given' }); continue; }
+    let { score, why } = scorePage(page, words, origin, wineWords);
+    // The producer's own domain, but a home page with little to read (an age check, a picture): read its contact or
+    // about page too before deciding – the domain alone is not enough (bollinger.com is not the Champagne house)
+    if (score == null && why.includes('own domain') && why.includes('wine words 0')) {
+      const extra = (await Promise.all(contactLinks(page.html, page.url).slice(0, 4).map((u) => get(u, 5000)))).filter(Boolean) as { url: string; html: string }[];
+      if (extra.length) ({ score, why } = scorePage({ url: page.url, html: page.html + extra.map((e) => e.html).join('') }, words, origin, wineWords));
+      why += ` (with ${extra.length} more pages)`;
+    }
     tried.push({ url: candidates[i], result: (score == null ? 'not the producer: ' : `score ${score}: `) + why });
     if (score != null && score > best) { best = score; site = page; }
-  });
+  }
   if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
 
   // 3. The place: home page first, then contact/visit pages
