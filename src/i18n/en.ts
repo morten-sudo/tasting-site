@@ -922,4 +922,6 @@ export const en = {
   "help.what": "What is this?",
   "help.linksTo": "Links to a tasting go to",
   "wines.none": "The host has not shown any wines yet.",
+  "adminTasting.needsWine": "Add at least one wine to the tasting before you invite guests.",
+  "adminTasting.toWines": "Go to Wines",
 } as const;

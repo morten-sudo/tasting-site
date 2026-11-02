@@ -923,4 +923,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "help.what": "Hvað er þetta?",
   "help.linksTo": "Tenglar á smökkun fara á",
   "wines.none": "Gestgjafinn hefur ekki sýnt nein vín enn.",
+  "adminTasting.needsWine": "Bættu að minnsta kosti einu víni við smökkunina áður en þú býður gestum.",
+  "adminTasting.toWines": "Fara í Vín",
 };

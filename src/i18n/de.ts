@@ -851,4 +851,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "help.what": "Was ist das?",
   "help.linksTo": "Links zu einer Verkostung führen zu",
   "wines.none": "Der Gastgeber hat noch keine Weine gezeigt.",
+  "adminTasting.needsWine": "Fügen Sie der Verkostung mindestens einen Wein hinzu, bevor Sie Gäste einladen.",
+  "adminTasting.toWines": "Zu den Weinen",
 };

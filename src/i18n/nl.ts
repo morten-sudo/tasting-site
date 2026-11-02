@@ -851,4 +851,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "help.what": "Wat is dit?",
   "help.linksTo": "Links naar een proeverij gaan naar",
   "wines.none": "De gastheer heeft nog geen wijnen getoond.",
+  "adminTasting.needsWine": "Voeg minstens één wijn toe aan de proeverij voordat je gasten uitnodigt.",
+  "adminTasting.toWines": "Naar de wijnen",
 };

@@ -176,6 +176,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <h2 data-i18n="admin.guests">Guests</h2>
           <button id="g-invite-toggle" class="btn small" type="button" data-i18n="adminTasting.inviteGuest">Invite guest</button>
         </div>
+        <!-- Guests are invited to wines: at least one wine in the tasting first -->
+        <p id="g-needs-wine" class="message" hidden><span data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</span> <a href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></p>
 
         <!-- Invite: someone from the guest list, or a new guest – one panel -->
         <dialog id="g-panel" class="sheet" aria-labelledby="g-panel-title">
@@ -933,7 +935,15 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('g-new-toggle').textContent = typed ? t('adminTasting.newGuestNamed', { name: typed }) : t('adminTasting.newGuest');
   }
   const guestPanelInvite = sheetPanel($('g-panel') as HTMLDialogElement);
+  // No inviting before the tasting has a wine
+  function gateInvite() {
+    const none = wines.length === 0;
+    ($('g-invite-toggle') as HTMLButtonElement).disabled = none;
+    $('g-needs-wine').hidden = !none;
+  }
+
   $('g-invite-toggle').addEventListener('click', () => {
+    if (!wines.length) return;
     ($('g-search') as HTMLInputElement).value = '';
     $('g-msg').hidden = true;
     showNewGuest(false);
@@ -1022,7 +1032,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
     quizTotal = q.count || 1;
-    tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); });
+    tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); });
     await tastingWines.load();
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; }).load();
