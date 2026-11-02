@@ -2,7 +2,7 @@
 // Fetches a shop's product page for a wine, collects what the page states about it
 // (structured data, Open Graph tags, Shopify product data and the page text) and lets
 // the AI model in Workers AI turn it into wine fields. Only signed-in hosts may call it.
-import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv } from '../../src/server/wine-ai';
+import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 
 const MAX_HTML = 2_000_000;
 const MAX_TEXT = 9_000;
@@ -176,7 +176,7 @@ ${text}`;
 
   let answer: Record<string, unknown> | null = null;
   try {
-    const out = await env.AI.run(MODEL, {
+    const out = await meteredAi(env, request, 'link').run(MODEL, {
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 600,
       temperature: 0.1,

@@ -4,7 +4,7 @@
 // asked about by their number (a guessing question), without giving them away in the question.
 // Read as the signed-in host; nothing is saved here – the host adds the suggestions they want.
 import { SUPABASE_URL, SUPABASE_KEY } from '../../src/lib/config';
-import { json, str, parseAnswer, type AiEnv } from '../../src/server/wine-ai';
+import { json, str, parseAnswer, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 
 const MODEL = '@cf/openai/gpt-oss-120b';
 const LANGS: Record<string, string> = {
@@ -90,7 +90,7 @@ Answer with JSON only, no other text:
 
   let answer: Record<string, unknown> | null = null;
   try {
-    const out = await env.AI.run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: 3000, temperature: 0.5 }) as Record<string, unknown>;
+    const out = await meteredAi(env, request, 'quiz').run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: 3000, temperature: 0.5 }) as Record<string, unknown>;
     answer = parseAnswer(answerText(out));
   } catch {
     return json({ error: 'model_failed' }, 502);

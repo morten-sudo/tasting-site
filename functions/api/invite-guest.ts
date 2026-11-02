@@ -4,7 +4,7 @@
 // email already on the invitation. The same invitation is not mailed twice within a minute.
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
-import { json, str } from '../../src/server/wine-ai';
+import { json, str, logUsage } from '../../src/server/wine-ai';
 import { sendMail, type MailEnv } from '../../src/server/smtp';
 import { inviteGuestMail, INVITE_LANGS } from '../../src/server/mail-texts';
 
@@ -43,6 +43,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
       to: guest.email, fromName: me?.name ? `${me.name} · ${SITE_NAME}` : SITE_NAME, replyTo: me?.email ?? null, ...texts,
     });
     if (!sent) return json({ error: 'mail_not_set_up' }, 503);
+    await logUsage(request, 'invite');
   } catch (e) {
     console.log('invite-guest mail failed', String(e).replace(/[A-Za-z0-9+/=]{20,}/g, '…'));
     return json({ error: 'mail_failed' }, 502);

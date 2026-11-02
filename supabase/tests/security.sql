@@ -145,6 +145,8 @@ begin
   assert failed, 'a host can read the log of all accounts';
   failed := false; begin perform admin_set_plan(my_tenant(), 'commercial'); exception when others then failed := true; end;
   assert failed, 'a host can change the plan';
+  failed := false; begin perform admin_usage(); exception when others then failed := true; end;
+  assert failed, 'a host can read the usage page';
   failed := false; begin perform admin_delete_person('guest-b@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'a host can delete a person';
   -- The admin overview only counts A's own data
@@ -406,6 +408,12 @@ begin
   -- Quantity prices: only the database reprices orders
   failed := false; begin perform reprice_tasting('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
   assert failed, 'anyone can reprice a tasting''s orders';
+  -- Usage: anyone may add a count, nobody but the superadmin may read them
+  perform log_usage('login');
+  begin select count(*) into n from usage_log; failed := false; exception when others then failed := true; end;
+  assert failed, 'anyone can read the usage log';
+  failed := false; begin perform admin_usage(); exception when others then failed := true; end;
+  assert failed, 'anyone can read the usage page';
 end $$;
 reset role;
 

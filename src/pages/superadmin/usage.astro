@@ -1,0 +1,204 @@
+---
+// Superadmin → Usage: how much of the free quotas the site uses – Cloudflare AI, mails through Resend, Supabase
+// and Cloudflare's Pages Functions. AI and mails are counted by us (usage_log), Supabase is read from the
+// database, Cloudflare's requests come from its Analytics API when a token is set up.
+import Base from '../../layouts/Base.astro';
+import SuperNav from '../../components/SuperNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="usage.title">
+  <section class="wrap admin-page">
+    <SuperNav active="usage">
+      <h1 class="title" data-i18n="usage.title">Usage</h1>
+      <p class="hint" data-i18n="usage.intro">How much of the free quotas the site uses. Days follow UTC, like the quotas.</p>
+      <p id="u-since" class="hint" hidden></p>
+
+      <div class="usage-grid">
+        <!-- Cloudflare AI -->
+        <section class="block usage-card">
+          <h2 data-i18n="usage.aiTitle">Cloudflare AI</h2>
+          <div id="u-ai-meter"></div>
+          <div id="u-ai-days" class="u-days" aria-hidden="true"></div>
+          <table class="table u-table"><thead><tr><th data-i18n="usage.feature">Feature</th><th class="num" data-i18n="usage.calls">Calls</th><th class="num">Neurons</th></tr></thead><tbody id="u-ai"></tbody></table>
+          <p class="hint" data-i18n="usage.aiNote">Counted by us at each call. Neurons are worked out from Cloudflare's price per model; Cloudflare's own figure is on its dashboard under Workers AI.</p>
+        </section>
+
+        <!-- Resend -->
+        <section class="block usage-card">
+          <h2 data-i18n="usage.mailTitle">Emails (Resend)</h2>
+          <div id="u-mail-meter"></div>
+          <div id="u-mail-month"></div>
+          <table class="table u-table"><thead><tr><th data-i18n="usage.kind">Kind</th><th class="num" data-i18n="usage.last30">Last 30 days</th></tr></thead><tbody id="u-mail"></tbody></table>
+          <p class="hint" data-i18n="usage.mailNote">Free plan: 100 a day and 3,000 a month. Each recipient counts.</p>
+        </section>
+
+        <!-- Supabase -->
+        <section class="block usage-card">
+          <h2>Supabase</h2>
+          <div id="u-db"></div>
+          <div id="u-storage"></div>
+          <div id="u-mau"></div>
+          <p id="u-counts" class="hint"></p>
+          <p class="hint" data-i18n="usage.sbNote">Data traffic (5 GB a month on the free plan) is only shown in Supabase's dashboard.</p>
+        </section>
+
+        <!-- Cloudflare Pages Functions -->
+        <section class="block usage-card">
+          <h2 data-i18n="usage.cfTitle">Cloudflare requests</h2>
+          <div id="u-cf"><p class="hint" data-i18n="common.loading">Loading …</p></div>
+          <div id="u-cf-setup" class="u-setup" hidden>
+            <p data-i18n="usage.cfSetup">Not set up. It needs a read-only key from Cloudflare:</p>
+            <ol>
+              <li data-i18n-html="usage.cfStep1">In Cloudflare: <b>My Profile → API Tokens → Create Token → Custom token</b> with only <b>Account → Account Analytics → Read</b>.</li>
+              <li data-i18n-html="usage.cfStep2">Under <b>Workers &amp; Pages → tasting-site → Settings → Variables and Secrets</b>, add <code>CF_ANALYTICS_TOKEN</code> (the token, as a secret) and <code>CF_ACCOUNT_ID</code> (the account ID from the overview page).</li>
+              <li data-i18n="usage.cfStep3">Deploy again – then the numbers show here.</li>
+            </ol>
+          </div>
+        </section>
+      </div>
+    </SuperNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { t, locale } from '../../i18n';
+  import { requireAdmin, $, mk, cell, dateFmt } from '../../lib/super-common';
+
+  type AiDay = { day: string; feature: string; calls: number; neurons: number; estimated: boolean };
+  type MailDay = { day: string; feature: string; mails: number };
+  type U = { ai_days: AiDay[]; mail_days: MailDay[]; mail_month: number; logged_since: string | null; db_bytes: number;
+    storage_bytes: number; mau: number; users: number; counts: Record<string, number> };
+
+  const nf = () => new Intl.NumberFormat(locale());
+  const today = () => new Date().toISOString().slice(0, 10); // UTC, like the quotas
+  const mb = (b: number) => `${nf().format(Math.round(b / 1e5) / 10)} MB`;
+
+  /** A bar with "used of limit" and the share; amber from 60 %, red from 85 %. */
+  function meter(label: string, used: number, limit: number, text = `${nf().format(used)} / ${nf().format(limit)}`) {
+    const share = limit ? used / limit : 0;
+    const box = mk('div', 'u-meter');
+    const head = mk('div', 'u-meter-head');
+    head.append(mk('span', '', label), mk('b', '', `${text} · ${nf().format(Math.round(share * 1000) / 10)} %`));
+    const bar = mk('div', 'u-bar' + (share >= 0.85 ? ' high' : share >= 0.6 ? ' mid' : ''));
+    const fill = mk('span');
+    fill.style.width = `${Math.min(100, share * 100)}%`;
+    bar.append(fill);
+    bar.setAttribute('role', 'meter');
+    bar.setAttribute('aria-valuenow', String(used));
+    bar.setAttribute('aria-valuemax', String(limit));
+    bar.setAttribute('aria-label', label);
+    box.append(head, bar);
+    return box;
+  }
+
+  /** 30 small columns, one per day (UTC), against the day's limit. */
+  function days(values: Map<string, number>, limit: number) {
+    const box = mk('div', 'u-days-in');
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+      const v = values.get(d) ?? 0;
+      const col = mk('span');
+      col.style.height = `${Math.max(v ? 4 : 0, Math.min(100, (v / limit) * 100))}%`;
+      col.title = `${dateFmt().format(new Date(d))}: ${nf().format(v)}`;
+      box.append(col);
+    }
+    return box;
+  }
+
+  const FEATURES: Record<string, string> = {
+    label: 'usage.fLabel', link: 'usage.fLink', producer: 'usage.fProducer', 'producer-address': 'usage.fProducerAddress',
+    locate: 'usage.fLocate', intro: 'usage.fIntro', quiz: 'usage.fQuiz',
+    login: 'usage.fLogin', invite: 'usage.fInvite', notify: 'usage.fNotify', 'host-invite': 'usage.fHostInvite',
+  };
+  const name = (f: string) => (FEATURES[f] ? t(FEATURES[f] as Parameters<typeof t>[0]) : f);
+
+  async function load() {
+    const { data, error } = await supabase.rpc('admin_usage');
+    if (error || !data) return;
+    const u = data as U;
+    if (u.logged_since) {
+      $('u-since').textContent = t('usage.since', { date: dateFmt().format(new Date(u.logged_since)) });
+      $('u-since').hidden = false;
+    }
+
+    // AI
+    const aiByDay = new Map<string, number>();
+    const aiByFeature = new Map<string, { calls: number; neurons: number }>();
+    for (const r of u.ai_days) {
+      aiByDay.set(r.day, (aiByDay.get(r.day) ?? 0) + Number(r.neurons));
+      const f = aiByFeature.get(r.feature) ?? { calls: 0, neurons: 0 };
+      f.calls += Number(r.calls); f.neurons += Number(r.neurons);
+      aiByFeature.set(r.feature, f);
+    }
+    $('u-ai-meter').replaceChildren(meter(t('usage.today'), Math.round(aiByDay.get(today()) ?? 0), 10000));
+    $('u-ai-days').replaceChildren(days(aiByDay, 10000));
+    $('u-ai').replaceChildren(...[...aiByFeature].sort((a, b) => b[1].neurons - a[1].neurons).map(([f, v]) => {
+      const tr = mk('tr');
+      tr.append(cell(name(f)), cell(nf().format(v.calls), 'num'), cell(nf().format(Math.round(v.neurons)), 'num'));
+      return tr;
+    }));
+    if (!aiByFeature.size) {
+      const tr = mk('tr');
+      const td = cell(t('usage.none'));
+      td.colSpan = 3;
+      tr.append(td);
+      $('u-ai').replaceChildren(tr);
+    }
+
+    // Mails
+    const mailToday = u.mail_days.filter((r) => r.day === today()).reduce((s, r) => s + Number(r.mails), 0);
+    $('u-mail-meter').replaceChildren(meter(t('usage.today'), mailToday, 100));
+    $('u-mail-month').replaceChildren(meter(t('usage.thisMonth'), Number(u.mail_month), 3000));
+    const mailByFeature = new Map<string, number>();
+    for (const r of u.mail_days) mailByFeature.set(r.feature, (mailByFeature.get(r.feature) ?? 0) + Number(r.mails));
+    $('u-mail').replaceChildren(...[...mailByFeature].sort((a, b) => b[1] - a[1]).map(([f, n]) => {
+      const tr = mk('tr');
+      tr.append(cell(name(f)), cell(nf().format(n), 'num'));
+      return tr;
+    }));
+
+    // Supabase
+    $('u-db').replaceChildren(meter(t('usage.db'), u.db_bytes, 500e6, `${mb(u.db_bytes)} / 500 MB`));
+    $('u-storage').replaceChildren(meter(t('usage.storage'), u.storage_bytes, 1e9, `${mb(u.storage_bytes)} / 1 GB`));
+    $('u-mau').replaceChildren(meter(t('usage.mau'), u.mau, 50000));
+    $('u-counts').textContent = t('usage.counts', { users: u.users, tastings: u.counts.tastings, wines: u.counts.wines, guests: u.counts.guests, orders: u.counts.orders });
+  }
+
+  async function loadCloudflare() {
+    const { data: s } = await supabase.auth.getSession();
+    const res = await fetch('/api/usage-cloudflare', { method: 'POST', headers: { authorization: `Bearer ${s.session?.access_token ?? ''}` } })
+      .then((r) => r.json()).catch(() => null) as { setup?: boolean; error?: string; days?: { day: string; requests: number; errors: number }[] } | null;
+    if (!res) { $('u-cf').replaceChildren(mk('p', 'hint', t('usage.cfFailed'))); return; }
+    if (res.setup === false) { $('u-cf').replaceChildren(); $('u-cf-setup').hidden = false; return; }
+    if (res.error) { $('u-cf').replaceChildren(mk('p', 'message error', `${t('usage.cfFailed')} (${res.error})`)); return; }
+    const byDay = new Map((res.days ?? []).map((d) => [d.day, d.requests]));
+    const month = (res.days ?? []).reduce((s, d) => s + d.requests, 0);
+    $('u-cf').replaceChildren(
+      meter(t('usage.today'), byDay.get(today()) ?? 0, 100000),
+      Object.assign(mk('div', 'u-days'), { ariaHidden: 'true' }),
+      mk('p', 'hint', t('usage.cfNote', { n: nf().format(month) })),
+    );
+    $('u-cf').querySelector('.u-days')!.append(days(byDay, 100000));
+  }
+
+  if (await requireAdmin()) { load(); loadCloudflare(); }
+</script>
+
+<style>
+  .usage-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); align-items: start; }
+  .usage-card h2 { margin-top: 0; }
+  :global(.u-meter) { margin: 0.4rem 0 0.9rem; }
+  :global(.u-meter-head) { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.9rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
+  :global(.u-meter-head b) { font-weight: 500; font-variant-numeric: tabular-nums; }
+  :global(.u-bar) { height: 0.6rem; border-radius: 999px; background: var(--lodge); border: 1px solid var(--lodge-3); overflow: hidden; }
+  :global(.u-bar span) { display: block; height: 100%; background: var(--ok); }
+  :global(.u-bar.mid span) { background: var(--tawny); }
+  :global(.u-bar.high span) { background: var(--error); }
+  :global(.u-days) { height: 3rem; margin: 0 0 1rem; }
+  :global(.u-days-in) { display: flex; align-items: flex-end; gap: 2px; height: 100%; border-bottom: 1px solid var(--lodge-3); }
+  :global(.u-days-in span) { flex: 1; background: var(--amber); opacity: 0.75; border-radius: 2px 2px 0 0; min-width: 2px; }
+  .u-table { margin-bottom: 0.6rem; }
+  .u-setup ol { padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+  .u-setup code { font-size: 0.85rem; background: var(--lodge); padding: 0.05rem 0.3rem; border-radius: 4px; }
+</style>

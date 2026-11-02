@@ -4,7 +4,7 @@
 // 2. Every candidate is checked and scored: it must name the producer and be about wine; the producer's name in
 //    the domain or title, its region or appellation and the wine's name on the page count in its favour. The best wins.
 // 3. The place: coordinates in the page's data, in an embedded map link, or the postal address as text.
-import { MODEL, isHost, json, parseAnswer, str, type AiEnv } from '../../src/server/wine-ai';
+import { MODEL, isHost, json, parseAnswer, str, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText } from './read-link';
 import { geocodeAddress } from '../../src/server/geocode';
 
@@ -189,7 +189,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   const given = cleanUrl(String(body.website ?? ''))?.href ?? null;
   let suggested: string[] = [];
   if (!given) try {
-    const out = await env.AI.run(MODEL, {
+    const out = await meteredAi(env, request, 'producer').run(MODEL, {
       messages: [{ role: 'user', content: `What is the official website of this wine producer? Return ONLY JSON {"websites": [up to 3 full URLs, most likely first]} or {"websites": []} if you do not know.
 Producer: ${producer}
 Wine: ${body.wine ?? ''}
@@ -254,7 +254,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     ])].slice(0, 25);
     const text = (hints.length ? 'Lines that may be the address:\n' + hints.join('\n') + '\n\n' : '')
       + texts.map((t) => (t.length > 6000 ? t.slice(0, 2500) + '\n…\n' + t.slice(-3500) : t)).join('\n---\n').slice(0, 14000);
-    const out = await env.AI.run(MODEL, {
+    const out = await meteredAi(env, request, 'producer-address').run(MODEL, {
       messages: [{ role: 'user', content: `Below is text from the website of the wine producer "${producer}". Return ONLY JSON {"address": the producer's own postal address as written on the site – street if given, postcode, town, country – or null if the site does not give one}. Many estates have no street: "Château X, 33250 Pauillac, France" is a full address. The address on the site's own contact page counts even when it is written under the name of the company that owns or sells the wine. Leave out company names and return the address only.\n\n${text}` }],
       max_tokens: 120, temperature: 0,
     });

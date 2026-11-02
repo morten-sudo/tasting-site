@@ -2,7 +2,7 @@
 // Asks the AI model in Workers AI where a wine appellation lies (its main village), for the
 // overview map when the appellation is not on our list. Only signed-in hosts may call it.
 // The browser then saves the place through save_place_guess(), which refuses places outside the country.
-import { MODEL, isHost, json, parseAnswer, str, type AiEnv } from '../../src/server/wine-ai';
+import { MODEL, isHost, json, parseAnswer, str, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
   if (!(await isHost(request))) return json({ error: 'not_host' }, 403);
@@ -18,7 +18,7 @@ Return ONLY a JSON object: {"place": the main village or town of the appellation
 Use decimal degrees. If you do not know the appellation, return {"place": null, "lat": null, "lon": null}. No other text.`;
   let answer: Record<string, unknown> | null = null;
   try {
-    const out = await env.AI.run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: 120, temperature: 0 });
+    const out = await meteredAi(env, request, 'locate').run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: 120, temperature: 0 });
     answer = parseAnswer(out.response);
   } catch {
     return json({ error: 'model_failed' }, 502);

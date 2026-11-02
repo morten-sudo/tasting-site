@@ -4,7 +4,7 @@
 // Without the right token nothing comes back, so calling this from anywhere else sends nothing.
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
-import { json } from '../../src/server/wine-ai';
+import { json, logUsage } from '../../src/server/wine-ai';
 import { sendMail, type MailEnv } from '../../src/server/smtp';
 import { updatesMail } from '../../src/server/mail-texts';
 
@@ -39,5 +39,6 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
       console.log('notify mail failed', String(e).replace(/[A-Za-z0-9+/=]{20,}/g, '…'));
     }
   }
+  if (sent) await logUsage(null, 'notify', { n: sent });
   return json({ sent });
 };

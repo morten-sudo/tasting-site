@@ -129,6 +129,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     });
     if (error?.status === 429) { show($('start-msg'), t('login.tooManyMails'), false); return false; }
     if (error) { show($('start-msg'), t('login.sendFailed'), false); return false; }
+    // Counted for the superadmin's Usage page (the code is sent through Resend)
+    supabase.rpc('log_usage', { feature: 'login' }).then(() => {}, () => {});
     return true;
   }
 

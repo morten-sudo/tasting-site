@@ -2,7 +2,7 @@
 // Writes a draft introduction for a tasting with Cloudflare Workers AI, from the tasting's title and its wines.
 // Read as the signed-in host, so only a host of the tasting gets a draft. The host edits it before saving.
 import { SUPABASE_URL, SUPABASE_KEY } from '../../src/lib/config';
-import { MODEL, json, str, type AiEnv } from '../../src/server/wine-ai';
+import { MODEL, json, str, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 
 const LANGS: Record<string, string> = {
   da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', nl: 'Dutch', pl: 'Polish',
@@ -113,7 +113,7 @@ Write to the guests ("we", "you"). Plain text only: no headings, no bullet point
   try {
     // For trying models side by side: only these
     const model = MODELS.includes(String(body.model)) ? String(body.model) : WRITER;
-    const out = await env.AI.run(model, { messages: [{ role: 'user', content: prompt }], max_tokens: 1200, temperature: 0.4 }) as Record<string, unknown>;
+    const out = await meteredAi(env, request, 'intro').run(model, { messages: [{ role: 'user', content: prompt }], max_tokens: 1200, temperature: 0.4 }) as Record<string, unknown>;
     const text = answerText(out).replace(/\*\*/g, '').trim();
     if (!text) return json({ error: 'empty' }, 502);
     return json({ text, lang, model, usage: out.usage ?? null });

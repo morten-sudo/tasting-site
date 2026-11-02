@@ -1,7 +1,7 @@
 // Cloudflare Pages Function: POST /api/read-label
 // Reads a wine label photo with a vision model in Cloudflare Workers AI and returns
 // suggested fields for the admin wine form. Only signed-in hosts may call it.
-import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, toFields, type AiEnv } from '../../src/server/wine-ai';
+import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, toFields, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 
 const MAX_IMAGE_CHARS = 2_000_000; // base64 data URI, ~1.5 MB image
 
@@ -24,7 +24,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
 
   let answer: Record<string, unknown> | null = null;
   try {
-    const out = await env.AI.run(MODEL, {
+    const out = await meteredAi(env, request, 'label').run(MODEL, {
       messages: [{ role: 'user', content: [
         { type: 'text', text: PROMPT },
         { type: 'image_url', image_url: { url: image } },

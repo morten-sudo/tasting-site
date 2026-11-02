@@ -4,7 +4,7 @@
 // list of hosts (added through add_cohost) – so it cannot be used to send mail to anyone else.
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
-import { json, str } from '../../src/server/wine-ai';
+import { json, str, logUsage } from '../../src/server/wine-ai';
 import { sendMail, type MailEnv } from '../../src/server/smtp';
 import { inviteHostMail } from '../../src/server/mail-texts';
 
@@ -41,6 +41,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
     const sent = await sendMail(env, (hostname, port) => connect({ hostname, port }, { secureTransport: 'on', allowHalfOpen: false }), {
       to: email, fromName: me.name ? `${me.name} · ${SITE_NAME}` : SITE_NAME, replyTo: me.email, ...texts,
     });
+    if (sent) await logUsage(request, 'host-invite');
     return sent ? json({ sent: true }) : json({ error: 'mail_not_set_up' }, 503);
   } catch (e) {
     console.log('invite-host mail failed', String(e).replace(/[A-Za-z0-9+/=]{20,}/g, '…'));

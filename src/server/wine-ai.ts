@@ -98,3 +98,43 @@ export function toFields(answer: Record<string, unknown>, hints: string[] = []):
     grapes: str(answer.grapes),
   };
 }
+
+// ---------- Usage: every AI call and every email is counted for the superadmin's Usage page ----------
+export type UsageFeature = 'label' | 'link' | 'producer' | 'producer-address' | 'locate' | 'intro' | 'quiz'
+  | 'login' | 'invite' | 'notify' | 'host-invite';
+
+/** Writes one row through log_usage(); never fails the request it belongs to. */
+export async function logUsage(request: Request | null, feature: UsageFeature,
+  row: { model?: string; tokens_in?: number; tokens_out?: number; estimated?: boolean; n?: number } = {}) {
+  const token = request?.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || SUPABASE_KEY;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/log_usage`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ feature, model: row.model ?? null, tokens_in: Math.round(row.tokens_in ?? 0),
+        tokens_out: Math.round(row.tokens_out ?? 0), estimated: !!row.estimated, n: row.n ?? 1 }),
+    });
+  } catch { /* counting is not worth a failed request */ }
+}
+
+/** The model's own token count when it gives one; otherwise about 4 characters per token (and ~1500 for a picture). */
+function tokensOf(input: unknown, out: unknown): { tokens_in: number; tokens_out: number; estimated: boolean } {
+  const u = (out as { usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number } } | null)?.usage;
+  const tin = u?.prompt_tokens ?? u?.input_tokens, tout = u?.completion_tokens ?? u?.output_tokens;
+  if (typeof tin === 'number' && typeof tout === 'number') return { tokens_in: tin, tokens_out: tout, estimated: false };
+  const text = JSON.stringify(input) ?? '';
+  const images = (text.match(/data:image\//g) ?? []).length;
+  const plain = text.replace(/data:image\/[^"]+/g, '');
+  return { tokens_in: plain.length / 4 + images * 1500, tokens_out: (JSON.stringify(out) ?? '').length / 4, estimated: true };
+}
+
+/** env.AI with each call counted under a feature. */
+export function meteredAi(env: AiEnv, request: Request, feature: UsageFeature): AiEnv['AI'] {
+  return {
+    run: async (model: string, input: unknown) => {
+      const out = await env.AI.run(model, input);
+      await logUsage(request, feature, { model, ...tokensOf(input, out) });
+      return out;
+    },
+  };
+}
