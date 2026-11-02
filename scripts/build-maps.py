@@ -15,10 +15,13 @@ Sources (downloaded into a data folder given as the first argument):
 - Piedmont comuni from the same repository, geojson/limits_R_1_municipalities.geojson saved as it-piemonte-comuni.geojson
 - Spanish municipalities (municipios), IGN boundaries as TopoJSON from es-atlas 0.6.0 (MIT; npm package es-atlas,
   github.com/martgnz/es-atlas), es/municipalities.json saved as es-municipalities.json
+- German municipalities (Gemeinden), BKG VG250 as of 31 Dec 2018 (© GeoBasis-DE / BKG, dl-de/by-2.0) as GeoJSON from
+  github.com/opendatalab-de/simple-geodata-selector, branch data/2018-12-31, src/data/gemeinden_sim20.geojson (simplified
+  to 20 m) saved as de-gemeinden.geojson
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
 lists closely, but an appellation may in reality cover only part of a municipality.
-Usage: python3 scripts/build-maps.py <data folder> <output folder>
+Usage: python3 scripts/build-maps.py <data folder> <output folder> [region id …]  (all regions when none is given)
 """
 import json, math, sys, os
 from shapely.geometry import shape, mapping, box, LineString, MultiLineString, Polygon, MultiPolygon
@@ -1030,7 +1033,103 @@ RIOJA = {
               ('Elciego', -2.6170, 42.5150, 'small'), ('Briones', -2.7850, 42.5440, 'small')],
 }
 
+# ---------- Mosel ----------
+def gemeinden(states):
+    """German municipalities (Gemeinden) of the given states (Länder, e.g. '07' Rheinland-Pfalz, '10' Saarland), BKG VG250
+    (de-gemeinden.geojson), land areas only (GF 4), by name (GEN: 'Zell (Mosel)', 'Graach an der Mosel'). A name found more
+    than once in those states is only available with its district (Kreis) code: 'Burgen (07137)'. The file is simplified
+    to 20 m, which leaves slivers between neighbours; each Gemeinde is grown by about 30 m so that unions close them."""
+    out, seen = {}, {}
+    for f in load('de-gemeinden.geojson')['features']:
+        pr = f['properties']
+        if pr['SN_L'] not in states or pr['GF'] != 4:
+            continue
+        kreis = pr['SN_L'] + pr['SN_R'] + pr['SN_K']
+        name = pr['GEN']
+        g = shape(f['geometry']).buffer(0.0004, join_style=2)
+        out[f'{name} ({kreis})'] = g
+        seen.setdefault(name, []).append(g)
+    out.update({n: gs[0] for n, gs in seen.items() if len(gs) == 1})
+    return out
+
+# Wehlen is an Ortsbezirk of Bernkastel-Kues, its north-western tail down the river from Graach. It is drawn as the part
+# of the Gemeinde west of 7.05° E and north of 49.925° N, an approximation of the Gemarkung Wehlen.
+WEHLEN = 'Bernkastel-Kues (Wehlen)'
+
+def mosel():
+    """The Gemeinden of Rheinland-Pfalz (07) and the Saarland (10, for Perl in the Moseltor), plus Wehlen."""
+    out = gemeinden(('07', '10'))
+    out[WEHLEN] = out['Bernkastel-Kues'].intersection(box(6.95, 49.925, 7.05, 49.97))
+    return out
+
+# The Bereiche of the Anbaugebiet Mosel by the Gemeinden whose vineyards belong to them (by their Großlagen in the
+# Weinbergsrolle: Burg Cochem – Weinhex, Goldbäumchen, Rosenhang, Grafschaft, Schwarze Katz; Bernkastel – Vom heißen Stein,
+# Schwarzlay, Nacktarsch, Münzlay, Badstube, Kurfürstlay, Michelsberg, St. Michael, Probstberg; Ruwertal – Römerlay; Saar –
+# Scharzberg; Obermosel – Königsberg, Gipfel; Moseltor – Schloß Bübinger). Gemeinden are drawn whole, also the large
+# ones with only a few vineyards (Koblenz, Wittlich). Trier has vineyards in two Bereiche (Römerlay in the Olewig, Avelsbach
+# and Eitelsbach valleys, Probstberg by Ehrang and Pfalzel); it is drawn in the Ruwertal. Konz (Saar and, by Könen, the
+# Mosel) is drawn in the Saar.
+MOSEL = {
+    'id': 'mosel', 'name': 'Mosel',
+    # From Perl at the Luxembourg and French border down the Mosel to Koblenz, with the lower Saar to Serrig
+    'bounds': (6.30, 49.43, 7.66, 50.40),
+    # Natural Earth names the Saar 'Sarre' and has the Rhine (by Koblenz); the Ruwer is not in Natural Earth (10m)
+    'rivers': ['Mosel', 'Saar', 'Ruwer', 'Rhein'],
+    'river_parts': {'Saar': ['Sarre'], 'Rhein': ['Rhine']},
+    'municipalities': mosel,
+    # Mosel (and the old name Mosel-Saar-Ruwer) lights the whole map
+    'whole': ['mosel', 'mosel-saar-ruwer'],
+    'sources': 'Natural Earth; BKG VG250 (© GeoBasis-DE / BKG)',
+    'titles': {'burg-cochem': 'Burg Cochem', 'bereich-bernkastel': 'Bernkastel', 'ruwer': 'Ruwertal', 'saar': 'Saar',
+               'obermosel': 'Obermosel', 'moseltor': 'Moseltor'},
+    # Badges on the river, not in the hills of the large Gemeinden; Bernkastel by the town, apart from Wehlen
+    'label_at': {'burg-cochem': (7.25, 50.13), 'bereich-bernkastel': (6.84, 49.80), 'ruwer': (6.72, 49.75),
+                 'saar': (6.58, 49.63), 'obermosel': (6.47, 49.64), 'moseltor': (6.39, 49.51),
+                 'bernkastel': (7.07, 49.912)},
+    # Drawn in this order: the Bereiche, then the villages on top. Ids match the appellations table ('ruwer', 'saar',
+    # 'bernkastel' for the village, so the Bereich is 'bereich-bernkastel'; 'zeltingen', 'urzig', 'graach').
+    'areas': {
+        'burg-cochem': [
+            'Koblenz', 'Winningen', 'Kobern-Gondorf', 'Dieblich', 'Niederfell', 'Oberfell', 'Lehmen', 'Alken', 'Löf',
+            'Hatzenport', 'Brodenbach', 'Burgen (07137)', 'Moselkern', 'Müden (Mosel)', 'Treis-Karden', 'Pommern', 'Klotten',
+            'Cochem', 'Ernst', 'Valwig', 'Bruttig-Fankel', 'Ellenz-Poltersdorf', 'Beilstein', 'Briedern', 'Mesenich',
+            'Senheim', 'Nehren', 'Ediger-Eller', 'Bremm', 'Neef', 'Sankt Aldegund', 'Alf', 'Bullay', 'Zell (Mosel)'],
+        'bereich-bernkastel': [
+            'Pünderich', 'Reil', 'Briedel', 'Burg (Mosel)', 'Enkirch', 'Starkenburg', 'Traben-Trarbach', 'Kröv', 'Kinheim',
+            'Lösnich', 'Erden', 'Ürzig', 'Zeltingen-Rachtig', 'Graach an der Mosel', 'Bernkastel-Kues', 'Lieser',
+            'Maring-Noviand', 'Mülheim an der Mosel', 'Veldenz', 'Burgen (07231)', 'Brauneberg', 'Kesten', 'Osann-Monzel',
+            'Wintrich', 'Minheim', 'Piesport', 'Neumagen-Dhron', 'Trittenheim', 'Leiwen', 'Köwerich', 'Klüsserath',
+            'Thörnich', 'Ensch', 'Detzem', 'Schleich', 'Pölich', 'Mehring', 'Longen', 'Bekond', 'Föhren', 'Longuich',
+            'Schweich', 'Riol', 'Fell', 'Kenn',
+            # The side valleys of the Alf, Lieser and Salm
+            'Bausendorf', 'Bengel', 'Kinderbeuern', 'Wittlich', 'Platten', 'Klausen', 'Rivenich', 'Hetzerath', 'Sehlem'],
+        'ruwer': ['Trier', 'Kasel', 'Mertesdorf', 'Waldrach', 'Morscheid', 'Riveris', 'Sommerau', 'Korlingen'],
+        'saar': ['Konz', 'Wiltingen', 'Kanzem', 'Wawern (07235)', 'Ayl', 'Ockfen', 'Schoden', 'Saarburg', 'Irsch', 'Serrig',
+                 'Kastel-Staadt', 'Pellingen'],
+        'obermosel': ['Igel', 'Langsur', 'Wasserliesch', 'Oberbillig', 'Temmels', 'Tawern', 'Wellen', 'Onsdorf', 'Nittel',
+                      'Wincheringen', 'Palzem'],
+        # Perl (Saarland) with Nennig, Sehndorf and Besch
+        'moseltor': ['Perl'],
+        'piesport': ['Piesport'],
+        'brauneberg': ['Brauneberg'],
+        'trittenheim': ['Trittenheim'],
+        'bernkastel': ['Bernkastel-Kues'],
+        'wehlen': [WEHLEN],
+        'graach': ['Graach an der Mosel'],
+        'zeltingen': ['Zeltingen-Rachtig'],
+        'urzig': ['Ürzig'],
+        'erden': ['Erden'],
+        'wiltingen': ['Wiltingen'],
+        'ockfen': ['Ockfen'],
+        'kasel': ['Kasel'],
+    },
+    'towns': [('Trier', 6.6413, 49.7499, 'big'), ('Koblenz', 7.5886, 50.3569, 'big'), ('Bernkastel-Kues', 7.0710, 49.9161, 'mid'),
+              ('Cochem', 7.1667, 50.1469, 'mid'), ('Traben-Trarbach', 7.1170, 49.9500, 'small'), ('Piesport', 6.9180, 49.8860, 'small'),
+              ('Saarburg', 6.5490, 49.6080, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA, PIEMONTE, RIOJA):
-        build(r)
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA, PIEMONTE, RIOJA, MOSEL):
+        if len(sys.argv) < 4 or r['id'] in sys.argv[3:]:
+            build(r)
