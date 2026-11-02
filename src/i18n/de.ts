@@ -849,4 +849,5 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "help.noMatch": "Nichts gefunden. Versuchen Sie ein anderes Wort.",
   "help.more": "Mehr dazu →",
   "help.what": "Was ist das?",
+  "wines.none": "Der Gastgeber hat noch keine Weine gezeigt.",
 };

@@ -123,7 +123,7 @@ import Base from '../../layouts/Base.astro';
     ]);
     $('loading').hidden = true;
     wines = nameBlind((winesRes.data ?? []) as Wine[]);
-    if (!winesRes.error && !wines.length) { $('need-login').hidden = false; return; }
+    if (!winesRes.error && !wines.length) { $('load-error').hidden = false; return; }
     slugs = wineSlugs(wines);
     const index = /^\d+$/.test(part)
       ? wines.findIndex((w) => w.id === Number(part))

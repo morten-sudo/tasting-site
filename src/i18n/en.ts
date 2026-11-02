@@ -920,4 +920,5 @@ export const en = {
   "help.noMatch": "Nothing found. Try another word.",
   "help.more": "Read more →",
   "help.what": "What is this?",
+  "wines.none": "The host has not shown any wines yet.",
 } as const;

@@ -921,4 +921,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "help.noMatch": "Ekkert fannst. Prófaðu annað orð.",
   "help.more": "Lesa meira →",
   "help.what": "Hvað er þetta?",
+  "wines.none": "Gestgjafinn hefur ekki sýnt nein vín enn.",
 };
