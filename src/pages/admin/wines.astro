@@ -54,6 +54,12 @@ import '../../styles/admin.css';
         </div>
 
         <!-- New / edit wine: side panel on larger screens, bottom sheet on phones -->
+
+        <ul id="wine-admin-list" class="wine-admin-list"></ul>
+        <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
+      </section>
+      </div>
+      <!-- Outside the list, so it also opens on a wine's own page (where the list is hidden) -->
         <!-- One dialog, two ways: a new wine is a guide in four steps (class "wizard", one step at a time);
              editing a wine is the side panel from the right (class "sheet wide", every step below the other). -->
         <dialog id="wine-panel" class="sheet wide" aria-labelledby="wf-title">
@@ -221,11 +227,6 @@ import '../../styles/admin.css';
         </div>
         </form>
         </dialog>
-
-        <ul id="wine-admin-list" class="wine-admin-list"></ul>
-        <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
-      </section>
-      </div>
     </div>
     </AdminNav>
   </section>
