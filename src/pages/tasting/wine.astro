@@ -33,6 +33,7 @@ import Base from '../../layouts/Base.astro';
       <p id="order-status" class="hint" hidden></p>
 
       <p id="desc" class="desc"></p>
+      <div id="facts"></div>
       <dl id="details" class="details" hidden></dl>
 
       <div id="my-rating"></div>
@@ -64,7 +65,7 @@ import Base from '../../layouts/Base.astro';
 
   await i18nReady;
   import { getCart, addToCart, cartCount } from '../../lib/cart';
-  import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
+  import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, wineFacts } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
   import { wineMap, showMapCredit } from '../../lib/wine-map';
 
@@ -179,6 +180,9 @@ import Base from '../../layouts/Base.astro';
 
     if (w.description) $('desc').textContent = w.description;
     else $('desc').hidden = true;
+    // Grapes, food and serving – each with its icon
+    const facts = wineFacts(w);
+    $('facts').replaceChildren(...(facts ? [facts] : []));
 
     // The producer: website to read more, and where it is
     {

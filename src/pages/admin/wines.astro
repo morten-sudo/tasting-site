@@ -24,6 +24,7 @@ import '../../styles/admin.css';
           <div class="wd-grid">
             <div>
               <p id="wd-description" class="wd-description" hidden></p>
+              <div id="wd-facts-strip"></div>
               <section id="wd-facts-block" class="wd-block" hidden>
                 <h2 data-i18n="wineAdmin.facts">Details</h2>
                 <dl id="wd-facts" class="wd-facts"></dl>
@@ -166,6 +167,8 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-abv" data-i18n="admin.abv">Alcohol (%)</label>
           <input id="wf-abv" type="text" inputmode="decimal" class="short" />
+          <label for="wf-grapes"><span data-i18n="label.grapes">Grapes</span> <span class="hint" data-i18n="wineFields.grapesHint">(e.g. 85 % Merlot, 15 % Cabernet Franc)</span></label>
+          <input id="wf-grapes" type="text" maxlength="300" autocomplete="off" />
           </section>
 
           <!-- 3. Origin and the producer -->
@@ -212,6 +215,10 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-description" data-i18n="admin.description">Description</label>
           <textarea id="wf-description" rows="3"></textarea>
+          <label for="wf-food"><span data-i18n="wineFields.food">Goes with</span> <span class="hint" data-i18n="wineFields.foodHint">(e.g. grilled fish, salads, cheese)</span></label>
+          <input id="wf-food" type="text" maxlength="400" autocomplete="off" />
+          <label for="wf-serving"><span data-i18n="wineFields.serving">Serving</span> <span class="hint" data-i18n="wineFields.servingHint">(e.g. 14–16 °C, decant an hour before)</span></label>
+          <input id="wf-serving" type="text" maxlength="300" autocomplete="off" />
           <label for="wf-details"><span data-i18n="admin.details">More about the wine</span> <span class="hint" data-i18n="admin.detailsHint">(one line per item, e.g. "Grapes: Touriga Nacional")</span></label>
           <textarea id="wf-details" rows="3"></textarea>
           <div id="wf-finish" class="wf-finish" hidden>

@@ -14,6 +14,7 @@ export type AdminWine = {
   style: string | null; vintage: string | null; abv: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
   image_url: string | null; source_url: string | null; source_fetched_at?: string | null;
+  grapes?: string | null; food_pairing?: string | null; serving?: string | null;
   country: string | null; region: string | null; appellation: string | null; appellation_id: string | null;
   offer_price_dkk: number | null; offer_quantity: number | null;
   producer_website?: string | null; producer_address?: string | null;
@@ -21,7 +22,7 @@ export type AdminWine = {
   tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -361,7 +362,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     f.put('wf-region', r.region);
     f.put('wf-appellation', r.appellation);
     syncOrigin();
-    f.put('wf-details', r.grapes ? `${t('label.grapes')}: ${r.grapes}` : null);
+    f.put('wf-grapes', r.grapes);
     return f;
   }
 
@@ -404,18 +405,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const r = (await res.json()) as LinkResult;
       const f = fillFromLabel(r);
       f.put('wf-description', r.description);
-      // Food and serving temperature from the shop go under "More about the wine", one line each, unless already there
-      const details = field<HTMLTextAreaElement>('wf-details');
-      const add = (label: string, value: string | null | undefined) => {
-        if (!value || details.value.toLowerCase().includes(value.toLowerCase().slice(0, 12))) return;
-        const line = `${label}: ${value}`;
-        if (details.value.split('\n').some((l) => l.toLowerCase().startsWith(label.toLowerCase() + ':'))) return;
-        details.value = details.value.trim() ? `${details.value.trim()}\n${line}` : line;
-        details.classList.add('from-label');
-        f.bump();
-      };
-      add(t('link.food'), r.food);
-      add(t('link.serving'), r.serving);
+      f.put('wf-food', r.food);
+      f.put('wf-serving', r.serving);
       f.put('wf-retail', r.price != null ? String(r.price) : null);
       if (r.offer) {
         f.put('wf-offer-price', String(r.offer.price));
@@ -496,6 +487,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     field<HTMLInputElement>('wf-offer-qty').value = w?.offer_quantity != null ? String(w.offer_quantity) : '';
     field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
+    field<HTMLInputElement>('wf-grapes').value = w?.grapes ?? '';
+    field<HTMLInputElement>('wf-food').value = w?.food_pairing ?? '';
+    field<HTMLInputElement>('wf-serving').value = w?.serving ?? '';
     appInput.value = w?.appellation ?? '';
     regionInput.value = w?.region ?? '';
     countrySelect.value = w?.country ?? '';
@@ -550,7 +544,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   /** Has anything been put into the new wine? */
   function dirty() {
     if (pendingImage || sourceUrl || linkImage) return true;
-    return ['wf-name', 'wf-producer', 'wf-link', 'wf-vintage', 'wf-retail', 'wf-description', 'wf-details', 'wf-appellation', 'wf-region']
+    return ['wf-name', 'wf-producer', 'wf-link', 'wf-vintage', 'wf-retail', 'wf-description', 'wf-details', 'wf-grapes', 'wf-food', 'wf-serving', 'wf-appellation', 'wf-region']
       .some((id) => field<HTMLInputElement>(id).value.trim());
   }
   function askDiscard() {
@@ -887,6 +881,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       })(),
       description: toText(field<HTMLTextAreaElement>('wf-description').value),
       details: toText(field<HTMLTextAreaElement>('wf-details').value),
+      grapes: toText(field<HTMLInputElement>('wf-grapes').value),
+      food_pairing: toText(field<HTMLInputElement>('wf-food').value),
+      serving: toText(field<HTMLInputElement>('wf-serving').value),
       appellation: toText(appInput.value),
       region: toText(regionInput.value),
       country: countrySelect.value || null,

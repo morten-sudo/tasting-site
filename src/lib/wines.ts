@@ -8,6 +8,7 @@ export type Wine = {
   price_tiers?: PriceTier[] | null;
   country?: string | null; region?: string | null; appellation?: string | null; appellation_id?: string | null;
   producer_website?: string | null; producer_address?: string | null; producer_lat?: number | null; producer_lon?: number | null;
+  grapes?: string | null; food_pairing?: string | null; serving?: string | null;
 };
 
 import { t, money, type Key } from '../i18n';
@@ -94,4 +95,31 @@ export function withoutYear(name: string | null, vintage: string | null): string
   const cleaned = name.replace(new RegExp(`(^|[\\s,–—-]+)${vintage}(?=$|[\\s,–—-])`, 'g'), ' ')
     .replace(/\s{2,}/g, ' ').replace(/^[\s,–—-]+|[\s,–—-]+$/g, '').trim();
   return cleaned.length >= 2 ? cleaned : name;
+}
+
+/** Grapes, what the wine goes with and how to serve it: a short list with an icon each, or null when none is known. */
+export function wineFacts(w: { grapes?: string | null; food_pairing?: string | null; serving?: string | null }): HTMLElement | null {
+  const ICONS: Record<string, string> = {
+    grapes: '<circle cx="9" cy="10" r="2.6"/><circle cx="15" cy="10" r="2.6"/><circle cx="12" cy="14.5" r="2.6"/><circle cx="9" cy="19" r="2.6"/><circle cx="15" cy="19" r="2.6"/><path d="M12 7.5V3m0 1.5c1.5-1.8 3.5-2 5-1.5"/>',
+    food: '<path d="M3 17h18M5 17a7 7 0 0 1 14 0M12 8V6.5M10.5 6.5h3"/><path d="M3 20h18"/>',
+    serving: '<path d="M14 14.5V4a2 2 0 0 0-4 0v10.5a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
+  };
+  const rows = ([['grapes', 'label.grapes', w.grapes], ['food', 'wineFields.food', w.food_pairing], ['serving', 'wineFields.serving', w.serving]] as const)
+    .filter(([, , v]) => v && v.trim());
+  if (!rows.length) return null;
+  const ul = document.createElement('ul');
+  ul.className = 'wine-facts';
+  for (const [icon, key, value] of rows) {
+    const li = document.createElement('li');
+    li.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg>`;
+    const text = document.createElement('div');
+    const b = document.createElement('b');
+    b.textContent = t(key as Key);
+    const span = document.createElement('span');
+    span.textContent = value!.trim();
+    text.append(b, span);
+    li.append(text);
+    ul.append(li);
+  }
+  return ul;
 }

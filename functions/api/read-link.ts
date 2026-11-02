@@ -171,7 +171,7 @@ ${FIELDS_SPEC},
 "offer_quantity": how many bottles must be bought to get offer_price (1 if it applies to a single bottle), or null,
 "description": two or three sentences in ${LANG_NAMES[lang]} about the wine's style and taste, written in your own words – do not copy sentences from the page, and leave out prices, discounts, points and marketing,
 "food": the dishes the page suggests the wine with, as a short comma-separated list in ${LANG_NAMES[lang]} (e.g. "grilled fish, salads, cheese"), or null,
-"serving": the serving temperature the page gives, written like "10–12 °C", or null.
+"serving": how to serve it as the page says, in ${LANG_NAMES[lang]}: the temperature written like "10–12 °C", and briefly any advice such as decanting or the glass, or null.
 Use only what the page states. Use null when unsure. No other text.
 
 ${text}`;
@@ -223,7 +223,7 @@ ${text}`;
     ...toFields(answer, [title, meta['og:title'], str(product.name), shop?.title].filter(Boolean) as string[]),
     description: str(answer.description),
     food: str(answer.food),
-    serving: str(answer.serving)?.slice(0, 40) ?? null,
+    serving: str(answer.serving)?.slice(0, 300) ?? null,
     image,
     price: shopPrice,
     offer,

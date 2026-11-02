@@ -2,7 +2,7 @@
 // it is in and the guests' ratings there. Editing happens in the usual side panel (admin-wines.ts).
 import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
-import { styleName, kr, wineSlug } from './wines';
+import { styleName, kr, wineSlug, wineFacts } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
 import { wineMap, showMapCredit } from './wine-map';
 import { mk } from './admin-common';
@@ -125,6 +125,9 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   $('wd-facts-block').hidden = !facts.length;
   $('wd-description').textContent = w.description ?? '';
   $('wd-description').hidden = !w.description;
+  // Grapes, food and serving
+  const strip = wineFacts(w);
+  $('wd-facts-strip').replaceChildren(...(strip ? [strip] : []));
 
   // Origin: appellation, subregion, region, country – and the map
   const apps = await loadAppellations();
