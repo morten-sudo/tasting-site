@@ -176,8 +176,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     $('twe-meta').textContent = meta(w);
     const price = $<HTMLInputElement>('twe-price');
     price.value = amountText(r.price_dkk, locale());
-    $('twe-retail').textContent = w.retail_price_dkk != null ? t('twe.shopPrice', { price: kr(w.retail_price_dkk) }) : '';
-    $('twe-retail').hidden = w.retail_price_dkk == null;
+    const retail = $<HTMLInputElement>('twe-retail-in');
+    retail.value = amountText(w.retail_price_dkk, locale());
     $('twe-tiers').replaceChildren();
     tierRows = [];
     for (const x of tiersOf(r)) tierRow(String(x.qty), amountText(x.price, locale()));
@@ -186,7 +186,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     const pos = $<HTMLSelectElement>('twe-pos');
     pos.replaceChildren(...rows.map((_, i) => new Option(t('twe.positionOf', { n: i + 1, total: rows.length }), String(i))));
     pos.value = String(rows.indexOf(r));
-    for (const el of [price]) fieldError(el, null);
+    for (const el of [price, retail]) fieldError(el, null);
     $('twe-msg').hidden = true;
     editPanel.open();
     initHelpTips($('tw-edit'));
@@ -202,6 +202,9 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     const priceEl = $<HTMLInputElement>('twe-price');
     const price = parseAmount(priceEl.value);
     if (price != null && (Number.isNaN(price) || price < 0)) { fieldError(priceEl, t('wineCheck.price')); ok = false; }
+    const retailEl = $<HTMLInputElement>('twe-retail-in');
+    const retail = parseAmount(retailEl.value);
+    if (retail != null && (Number.isNaN(retail) || retail < 0)) { fieldError(retailEl, t('wineCheck.price')); ok = false; }
     const tiers = new Map<number, number>();
     for (const x of tierRows) {
       const qt = x.qty.value.trim(), pt = x.price.value.trim();
@@ -223,7 +226,13 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     };
     const save = $<HTMLButtonElement>('twe-save');
     save.disabled = true;
-    const done = await update(r, patch);
+    let done = await update(r, patch);
+    // The shop's price belongs to the wine (the library)
+    if (done && retail !== (r.wines.retail_price_dkk ?? null)) {
+      const { error } = await supabase.from('wines').update({ retail_price_dkk: retail }).eq('id', r.wine_id);
+      if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); done = false; }
+      else r.wines.retail_price_dkk = retail;
+    }
     save.disabled = false;
     if (!done) return;
     // A new place in the order

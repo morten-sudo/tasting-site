@@ -1272,4 +1272,6 @@ export const en = {
   "guestInvite.nameMissing": "Type the guest’s name.",
   "guestInvite.namePh": "Name",
   "guestInvite.emailPh": "Email (optional)",
+  "twe.shopPriceLabel": "Shop price",
+  "twe.shopPriceHint": "The shop’s price is saved on the wine in your library, so it follows the wine into other tastings.",
 } as const;

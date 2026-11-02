@@ -1249,7 +1249,10 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .twe-wine { display: flex; gap: 0.8rem; align-items: center; margin-bottom: 0.6rem; }
 .admin-page .twe-wine .wine-thumb { width: 3rem; height: 3.6rem; flex: none; }
 .admin-page .twe-wine .lib-meta { margin: 0; }
-.admin-page #twe-retail { margin: 0.1rem 0 0; }
+.admin-page .twe-prices { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem 1rem; }
+.admin-page .twe-prices > div { display: grid; gap: 0.4rem; align-content: start; }
+.admin-page .twe-prices-hint { margin: 0; }
+@media (max-width: 26rem) { .admin-page .twe-prices { grid-template-columns: 1fr; } }
 .admin-page .twe-group { border: 0; border-top: 1px solid var(--lodge-3); margin: 0.9rem 0 0; padding: 0.9rem 0 0; display: grid; gap: 0.45rem; }
 .admin-page .twe-group legend { font-weight: 600; padding: 0; margin-bottom: 0.2rem; display: flex; align-items: center; }
 .admin-page .twe-group > .hint { margin: 0; }
@@ -1532,3 +1535,5 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .gi-name { flex: 1.2 1 0; }
 .admin-page .gi-email { flex: 1 1 0; }
 @media (max-width: 40rem) { .admin-page .gi-fields { flex-direction: column; } .admin-page .gi-fields .qa-field { flex: none; } }
+.admin-page .twe-prices .with-unit input.short { width: 5.75rem; max-width: 5.75rem; }
+.admin-page .twe-prices .with-unit .unit { white-space: nowrap; }

@@ -1273,4 +1273,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.nameMissing": "Skriv gæstens navn.",
   "guestInvite.namePh": "Navn",
   "guestInvite.emailPh": "E-mail (valgfri)",
+  "twe.shopPriceLabel": "Butikspris",
+  "twe.shopPriceHint": "Butiksprisen gemmes på vinen i dit bibliotek, så den følger vinen med til andre smagninger.",
 };

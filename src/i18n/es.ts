@@ -1159,4 +1159,6 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.nameMissing": "Escribe el nombre del invitado.",
   "guestInvite.namePh": "Nombre",
   "guestInvite.emailPh": "Correo (opcional)",
+  "twe.shopPriceLabel": "Precio en tienda",
+  "twe.shopPriceHint": "El precio en tienda se guarda en el vino de tu biblioteca y lo acompaña a otras catas.",
 };

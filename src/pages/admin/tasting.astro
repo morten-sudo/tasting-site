@@ -268,9 +268,18 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
               <p id="twe-meta" class="lib-meta"></p>
             </div>
 
-            <label for="twe-price" data-i18n="adminTasting.guestPrice">Guest price</label>
-            <div class="with-unit"><input id="twe-price" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="twe.perBottle">kr. per bottle</span></div>
-            <p id="twe-retail" class="hint"></p>
+            <!-- The guest price (this tasting) next to the shop's price (the wine in the library, all tastings) -->
+            <div class="twe-prices">
+              <div>
+                <label for="twe-price" data-i18n="adminTasting.guestPrice">Guest price</label>
+                <div class="with-unit"><input id="twe-price" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="twe.perBottle">kr. per bottle</span></div>
+              </div>
+              <div>
+                <label for="twe-retail-in" data-i18n="twe.shopPriceLabel">Shop price</label>
+                <div class="with-unit"><input id="twe-retail-in" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="twe.perBottle">kr. per bottle</span></div>
+              </div>
+            </div>
+            <p class="hint twe-prices-hint" data-i18n="twe.shopPriceHint">The shop's price is saved on the wine in your library, so it follows the wine into other tastings.</p>
 
             <fieldset class="twe-group">
               <legend data-i18n="twe.tiersTitle">Quantity prices</legend>

@@ -1273,4 +1273,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.nameMissing": "Skrifaðu nafn gestsins.",
   "guestInvite.namePh": "Nafn",
   "guestInvite.emailPh": "Netfang (valfrjálst)",
+  "twe.shopPriceLabel": "Búðarverð",
+  "twe.shopPriceHint": "Búðarverðið er vistað á víninu í safninu og fylgir því í aðrar smakkanir.",
 };
