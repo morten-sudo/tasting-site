@@ -437,6 +437,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     foundPlace = null;
     producerTurn++;
     producerStatus('');
+    producerStatus('', '', 'wf-address-status');
     form.reset();
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
@@ -814,8 +815,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     } catch { return null; }
   }
 
-  function producerStatus(text: string, kind: 'busy' | 'ok' | '' = '') {
-    const el = $('wf-producer-status');
+  function producerStatus(text: string, kind: 'busy' | 'ok' | '' = '', id = 'wf-producer-status') {
+    const el = $(id);
     el.textContent = text;
     el.className = 'producer-status' + (kind ? ' ' + kind : '');
     el.hidden = !text;
@@ -829,20 +830,35 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!producer || (websiteEl.value.trim() && addressEl.value.trim())) return;
     if (foundPlace && normOrigin(foundPlace.producer) === normOrigin(producer)) return;
     const turn = ++producerTurn;
-    producerStatus(t('producer.searching'), 'busy');
+    // A spinner under each field that is still empty
+    const wantSite = !websiteEl.value.trim(), wantAddress = !addressEl.value.trim();
+    producerStatus(wantSite ? t('producer.searching') : '', wantSite ? 'busy' : '');
+    producerStatus(wantAddress ? t('producer.searchingAddress') : '', wantAddress ? 'busy' : '', 'wf-address-status');
     const found = await lookupProducer({
       name: field<HTMLInputElement>('wf-name').value.trim(), producer,
       appellation: toText(appInput.value), region: toText(regionInput.value), country: countrySelect.value || null,
       producer_website: webUrl(websiteEl.value),
     }, editing?.id);
     if (turn !== producerTurn || !form.isConnected) return; // the form was closed or the producer changed meanwhile
-    if (normOrigin(field<HTMLInputElement>('wf-producer').value) !== normOrigin(producer)) { producerStatus(''); return; }
-    if (!found || (!found.website && !found.address)) { producerStatus(t('producer.notFound')); return; }
-    foundPlace = { ...found, producer };
-    let n = 0;
-    if (found.website && !websiteEl.value.trim()) { websiteEl.value = found.website; websiteEl.classList.add('from-label'); n++; }
-    if (found.address && !addressEl.value.trim()) { addressEl.value = found.address; addressEl.classList.add('from-label'); n++; }
-    producerStatus(n ? t(found.lat != null ? 'producer.foundPlace' : 'producer.found') : '', n ? 'ok' : '');
+    const clear = () => { producerStatus(''); producerStatus('', '', 'wf-address-status'); };
+    if (normOrigin(field<HTMLInputElement>('wf-producer').value) !== normOrigin(producer)) { clear(); return; }
+    if (found) foundPlace = { ...found, producer };
+    // The website
+    if (wantSite) {
+      if (found?.website && !websiteEl.value.trim()) {
+        websiteEl.value = found.website;
+        websiteEl.classList.add('from-label');
+        producerStatus(t(found.lat != null ? 'producer.foundPlace' : 'producer.found'), 'ok');
+      } else producerStatus(websiteEl.value.trim() ? '' : t('producer.notFound'));
+    }
+    // The address
+    if (wantAddress) {
+      if (found?.address && !addressEl.value.trim()) {
+        addressEl.value = found.address;
+        addressEl.classList.add('from-label');
+        producerStatus(t('producer.addressFound'), 'ok', 'wf-address-status');
+      } else producerStatus(addressEl.value.trim() ? '' : t('producer.addressNotFound'), '', 'wf-address-status');
+    }
   }
   field<HTMLInputElement>('wf-producer').addEventListener('change', () => fillProducer());
 
