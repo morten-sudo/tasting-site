@@ -17,6 +17,46 @@ export const loadOverview = (id: 'europe' | 'world') => {
   if (!overviews.has(id)) overviews.set(id, getJson<OverviewMap>(`/maps/${id}.json`));
   return overviews.get(id)!;
 };
+// ---------- Detailed tiles (scripts/build-detail-tiles.py) for a map zoomed in on a small area ----------
+type Tile = { land: number[][]; lakes: number[][]; rivers: number[][]; coast: number[][]; border: number[][] };
+/** Shapes in longitude/latitude, per layer; land as one list per tile (drawn tile by tile, so overlaps show no seams). */
+export type Detail = { land: [number, number][][][]; lakes: [number, number][][]; rivers: [number, number][][]; coast: [number, number][][]; border: [number, number][][] };
+const tileIndex = once(() => getJson<{ size: number; tiles: [number, number][] }>('/maps/tiles/index.json'));
+const tiles = new Map<string, Promise<Tile | null>>();
+const decode = (flat: number[]) => {
+  const out: [number, number][] = [];
+  let x = 0, y = 0;
+  for (let i = 0; i < flat.length; i += 2) {
+    x = i ? x + flat[i] : flat[i]; y = i ? y + flat[i + 1] : flat[i + 1];
+    out.push([x / 1000, y / 1000]);
+  }
+  return out;
+};
+/** The detailed land, coast, lakes, rivers and borders of an area, or null outside the tiles. */
+export async function loadDetail(area: Box): Promise<Detail | null> {
+  const index = await tileIndex();
+  if (!index) return null;
+  const { size } = index;
+  const have = new Set(index.tiles.map(([x, y]) => `${x}_${y}`));
+  const keys: string[] = [];
+  for (let x = Math.floor(area.lon0 / size) * size; x < area.lon1; x += size)
+    for (let y = Math.floor(area.lat0 / size) * size; y < area.lat1; y += size)
+      if (have.has(`${x}_${y}`)) keys.push(`${x}_${y}`);
+  if (!keys.length || keys.length > 16) return null;
+  const got = (await Promise.all(keys.map((k) => {
+    if (!tiles.has(k)) tiles.set(k, getJson<Tile>(`/maps/tiles/${k}.json`));
+    return tiles.get(k)!;
+  }))).filter(Boolean) as Tile[];
+  if (!got.length) return null;
+  return {
+    land: got.map((t) => t.land.map(decode)),
+    lakes: got.flatMap((t) => t.lakes.map(decode)),
+    rivers: got.flatMap((t) => t.rivers.map(decode)),
+    coast: got.flatMap((t) => t.coast.map(decode)),
+    border: got.flatMap((t) => t.border.map(decode)),
+  };
+}
+
 export const loadCountries = once(async () => (await getJson<Record<string, Country>>('/maps/countries.json')) ?? {});
 let guesses: Promise<Map<string, Guess>> | null = null;
 export const loadGuesses = () => (guesses ??= (async () => {
@@ -74,7 +114,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 export type Pin = { lon: number; lat: number; label?: string; n?: number };
 
 /** The overview map, cut to `focus`, with a pin (and label or number) for each place. */
-export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'mini' | 'inset' = 'full'): string {
+export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'mini' | 'inset' = 'full', detail: Detail | null = null): string {
   const { lon0, lat1, k, s } = map.proj;
   const xy = (lon: number, lat: number) => [(lon - lon0) * k * s, (lat1 - lat) * s];
   let [x0, y0] = xy(focus.lon0, focus.lat1);
@@ -87,9 +127,20 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
   if (w / h < want) { const nw = h * want; x0 -= (nw - w) / 2; w = nw; } else { const nh = w / want; y0 -= (nh - h) / 2; h = nh; }
   const u = w / 100; // one unit ≈ 1 % of the width, so pins and text keep their size at any zoom
   const parts = [`<svg class="region-map overview ${mode}" viewBox="${x0.toFixed(1)} ${y0.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" role="img">`,
-    `<rect class="rm-sea" x="${x0}" y="${y0}" width="${w}" height="${h}"/>`,
-    `<path class="rm-land" d="${map.land}" style="stroke:#c9b9a8;stroke-width:${(u * 0.12).toFixed(2)}"/>`,
-    `<path class="rm-border" d="${map.border}" style="stroke-width:${(u * 0.18).toFixed(2)};stroke-dasharray:${(u * 1.2).toFixed(1)} ${(u * 0.6).toFixed(1)}"/>`];
+    `<rect class="rm-sea" x="${x0}" y="${y0}" width="${w}" height="${h}"/>`];
+  const dash = `stroke-width:${(u * 0.18).toFixed(2)};stroke-dasharray:${(u * 1.2).toFixed(1)} ${(u * 0.6).toFixed(1)}`;
+  if (detail) {
+    // Zoomed in: Natural Earth's detailed shapes, projected the same way as the overview
+    const d = (shape: [number, number][], close: boolean) => 'M' + shape.map(([lon, lat]) => xy(lon, lat).map((v) => v.toFixed(2)).join(' ')).join('L') + (close ? 'Z' : '');
+    for (const tile of detail.land) parts.push(`<path class="rm-land" fill-rule="evenodd" d="${tile.map((r) => d(r, true)).join('')}"/>`);
+    if (detail.lakes.length) parts.push(`<path class="rm-sea" fill-rule="evenodd" d="${detail.lakes.map((r) => d(r, true)).join('')}"/>`);
+    if (detail.rivers.length) parts.push(`<path class="rm-river" d="${detail.rivers.map((r) => d(r, false)).join('')}" style="stroke-width:${(u * 0.22).toFixed(2)};opacity:.55"/>`);
+    if (detail.coast.length) parts.push(`<path class="rm-coast" d="${detail.coast.map((r) => d(r, false)).join('')}" style="stroke:#c9b9a8;stroke-width:${(u * 0.16).toFixed(2)}"/>`);
+    if (detail.border.length) parts.push(`<path class="rm-border" d="${detail.border.map((r) => d(r, false)).join('')}" style="${dash}"/>`);
+  } else {
+    parts.push(`<path class="rm-land" d="${map.land}" style="stroke:#c9b9a8;stroke-width:${(u * 0.12).toFixed(2)}"/>`,
+      `<path class="rm-border" d="${map.border}" style="${dash}"/>`);
+  }
   for (const p of pins) {
     const [x, y] = xy(p.lon, p.lat);
     const r = mode === 'inset' ? u * 3.2 : u * 1.6;

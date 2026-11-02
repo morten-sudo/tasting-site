@@ -1,7 +1,7 @@
 // The small map for one wine: its appellation on the detailed region map when there is one,
 // otherwise a pin on the overview map. Used on the guest's wine page and in the host's wine form.
 import { loadMap, mapIdFor, drawMap, mapPoint } from './region-map';
-import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
+import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
 import { loadAppellations, matchAppellation } from './origin';
 
 export type WineOrigin = { appellation?: string | null; appellation_id?: string | null; region?: string | null; country?: string | null;
@@ -29,7 +29,11 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
   if (!place) return null;
   const [overview, focus] = await Promise.all([loadOverview(overviewFor([place])), focusFor([place], true)]);
   if (!overview) return null;
-  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini'), how: place.how };
+  // Zoomed in on a small area: the detailed tiles instead of the coarse overview
+  const small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14;
+  const margin = Math.max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35;
+  const detail = small ? await loadDetail({ lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin }) : null;
+  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini', detail), how: place.how };
 }
 
 /** A producer's pin may come from OpenStreetMap's address search, which asks to be credited where it is shown:
