@@ -861,4 +861,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "lwin.loading": "Hleður … {done} af {total}",
   "lwin.loaded": "{n} vín hlaðin.",
   "lwin.failed": "Hleðslan stöðvaðist eftir {done} vín – reyndu aftur (vín sem þegar eru hlaðin eru bara uppfærð).",
+  "lwinSearch.label": "Leita að víni",
+  "lwinSearch.placeholder": "Leita að víni – t.d. „lynch bages“ eða „kopke“",
+  "lwinSearch.credit": "Vínlisti:",
+  "lwinSearch.none": "Engin vín fundust – fylltu út sjálf(ur) eða notaðu mynd eða hlekk.",
+  "lwinSearch.filled": "Fyllt út úr vínlistanum – bættu við árgangi og verði eða sæktu restina úr hlekk eða mynd.",
+  "lwinSearch.classification": "Flokkun",
+  "lwinSearch.classificationHint": "(t.d. 5ème Cru Classé, Grand Cru)",
 };

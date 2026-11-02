@@ -75,7 +75,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   }
   pic.hidden = !w.image_url;
   $('wd-name').textContent = w.name;
-  $('wd-meta').textContent = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
+  $('wd-meta').textContent = [w.style ? styleName(w.style) : null, w.vintage, w.producer, w.classification].filter(Boolean).join(' · ');
   $('wd-edit').onclick = actions.edit;
 
   // Facts
@@ -101,6 +101,16 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     facts.push([t('producer.websiteShort'), box]);
   }
   if (w.producer_address) facts.push([t('producer.addressShort'), w.producer_address]);
+  if (w.lwin) {
+    const a = mk('a', '', String(w.lwin));
+    a.href = 'https://www.liv-ex.com/lwin/';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = 'LWIN – Liv-ex Wine Identification Number (CC BY)';
+    const box = mk('span', 'wd-source');
+    box.append(a);
+    facts.push(['LWIN', box]);
+  }
   if (w.source_url) {
     const box = mk('span', 'wd-source');
     const a = mk('a');

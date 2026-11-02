@@ -860,4 +860,11 @@ export const en = {
   "lwin.loading": "Loading … {done} of {total}",
   "lwin.loaded": "{n} wines loaded.",
   "lwin.failed": "Loading stopped after {done} wines – try again (already loaded wines are just updated).",
+  "lwinSearch.label": "Search wine",
+  "lwinSearch.placeholder": "Search wine – e.g. “lynch bages” or “kopke”",
+  "lwinSearch.credit": "Wine list:",
+  "lwinSearch.none": "No wines found – fill in the form yourself, or use a photo or a link.",
+  "lwinSearch.filled": "Filled in from the wine list – add vintage and price, or fetch the rest from a link or a photo.",
+  "lwinSearch.classification": "Classification",
+  "lwinSearch.classificationHint": "(e.g. 5ème Cru Classé, Grand Cru)",
 } as const;

@@ -154,6 +154,7 @@ import Base from '../../layouts/Base.astro';
     $('meta').textContent = [
       vintageLabel(w),
       w.producer,
+      w.classification,
       w.abv ? `${w.abv.toString().replace('.', ',')} %` : null,
     ].filter(Boolean).join(' · ');
     const origin = originFull(w);

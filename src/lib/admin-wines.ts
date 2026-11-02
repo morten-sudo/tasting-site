@@ -6,6 +6,7 @@ import { t, lang, locale } from '../i18n';
 import { wineMap } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
+import { initLwinSearch, lwinName } from './lwin-search';
 import { forgetGuesses } from './overview-map';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
@@ -18,10 +19,11 @@ export type AdminWine = {
   offer_price_dkk: number | null; offer_quantity: number | null;
   producer_website?: string | null; producer_address?: string | null;
   producer_lat?: number | null; producer_lon?: number | null; producer_source?: string | null; producer_checked_at?: string | null;
+  lwin?: number | null; classification?: string | null;
   tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, lwin, classification, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -112,6 +114,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   let linkImage: string | null = null; // product image found via a shop link
   let sourceUrl: string | null = null;
   let removeImage = false;
+  let lwinId: number | null = null; // the wine chosen from the LWIN list
 
   const form = $<HTMLFormElement>('wine-form');
   const panel = $<HTMLDialogElement>('wine-panel');
@@ -130,6 +133,27 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   const styleSelect = field<HTMLSelectElement>('wf-style');
   styleSelect.replaceChildren(new Option(t('admin.choose'), ''));
   for (const key of STYLES) styleSelect.append(new Option(styleName(key), key));
+
+  // ---------- Search wine (LWIN): choosing a wine fills in who and where it is from ----------
+  const lwinSearch = initLwinSearch(field<HTMLInputElement>('wf-lwin'), $<HTMLUListElement>('wf-lwin-list'), (w) => {
+    const set = (id: string, v: string | null) => {
+      if (!v) return;
+      const el = field<HTMLInputElement | HTMLSelectElement>(id);
+      el.value = v;
+      el.classList.add('from-label');
+    };
+    set('wf-name', lwinName(w));
+    set('wf-producer', w.producer);
+    if (w.style && (STYLES as readonly string[]).includes(w.style)) set('wf-style', w.style);
+    if (w.country && WINE_COUNTRIES.includes(w.country)) set('wf-country', w.country);
+    set('wf-region', w.region);
+    set('wf-appellation', w.appellation);
+    set('wf-classification', w.classification);
+    lwinId = w.lwin;
+    syncOrigin();
+    statusTarget = 'wf-lwin-status';
+    labelStatus(t('lwinSearch.filled'), 'ok');
+  });
 
   // ---------- Origin: country → region → appellation ----------
   // Each choice narrows the next list; a known appellation fills in region and country.
@@ -248,10 +272,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
   // Status line under the link field or under the photo, with a spinner while working
-  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-start-status' | 'wf-source-status';
+  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-start-status' | 'wf-source-status' | 'wf-lwin-status';
   let statusTarget: StatusId = 'wf-label-status';
   function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    for (const id of ['wf-label-status', 'wf-link-status', 'wf-start-status', 'wf-source-status']) {
+    for (const id of ['wf-label-status', 'wf-link-status', 'wf-start-status', 'wf-source-status', 'wf-lwin-status']) {
       const el = $(id);
       const mine = id === statusTarget;
       el.textContent = mine ? text : '';
@@ -429,6 +453,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     field<HTMLInputElement>('wf-name').value = w?.name ?? '';
     field<HTMLInputElement>('wf-producer').value = w?.producer ?? '';
     field<HTMLInputElement>('wf-producer-website').value = w?.producer_website ?? '';
+    field<HTMLInputElement>('wf-classification').value = w?.classification ?? '';
+    lwinId = w?.lwin ?? null;
+    lwinSearch.reset();
     field<HTMLInputElement>('wf-producer-address').value = w?.producer_address ?? '';
     styleSelect.value = w?.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
     field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
@@ -630,6 +657,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       source_url: sourceUrl,
       producer_website: webUrl(field<HTMLInputElement>('wf-producer-website').value),
       producer_address: toText(field<HTMLInputElement>('wf-producer-address').value),
+      classification: toText(field<HTMLInputElement>('wf-classification').value),
+      lwin: lwinId,
     };
     // A new producer or website: the place found earlier no longer applies and is looked up again
     const before = editing;

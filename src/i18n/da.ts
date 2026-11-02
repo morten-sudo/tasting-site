@@ -861,4 +861,11 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "lwin.loading": "Indlæser … {done} af {total}",
   "lwin.loaded": "{n} vine indlæst.",
   "lwin.failed": "Indlæsningen stoppede efter {done} vine – prøv igen (allerede indlæste vine bliver bare opdateret).",
+  "lwinSearch.label": "Søg vin",
+  "lwinSearch.placeholder": "Søg vin – fx “lynch bages” eller “kopke”",
+  "lwinSearch.credit": "Vinliste:",
+  "lwinSearch.none": "Ingen vine fundet – udfyld selv, eller brug et foto eller et link.",
+  "lwinSearch.filled": "Udfyldt fra vinlisten – tilføj årgang og pris, eller hent resten fra et link eller et foto.",
+  "lwinSearch.classification": "Klassifikation",
+  "lwinSearch.classificationHint": "(fx 5ème Cru Classé, Grand Cru)",
 };
