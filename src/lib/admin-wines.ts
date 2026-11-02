@@ -3,7 +3,7 @@
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
-import { wineMap } from './wine-map';
+import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
 import { forgetGuesses } from './overview-map';
@@ -252,6 +252,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       // How the wine was placed; an unknown appellation is looked up when the wine is saved
       const pending = (m.how === 'country' || m.how === 'regionCentre') && !!origin.appellation && !knownApp();
       $('wf-map-note').textContent = t(pending ? 'wineMap.pending' : `wineMap.${m.how}`);
+      showMapCredit($('wf-map-svg'), m.how);
     }, 250);
   }
   appInput.addEventListener('input', syncOrigin);

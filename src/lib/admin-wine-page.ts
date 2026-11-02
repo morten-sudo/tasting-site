@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
 import { styleName, kr, wineSlug } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
-import { wineMap } from './wine-map';
+import { wineMap, showMapCredit } from './wine-map';
 import { mk } from './admin-common';
 import { fetchedWhen, type AdminWine } from './admin-wines';
 
@@ -136,6 +136,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   const map = await wineMap(w);
   $('wd-map').innerHTML = map?.svg ?? '';
   $('wd-map').hidden = !map;
+  showMapCredit($('wd-map'), map?.how);
 
   // Tastings, newest first, with the guest price and the guests' ratings there
   const rows = (w.tasting_wines ?? []).filter((x) => x.tastings)

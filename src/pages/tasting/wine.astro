@@ -66,7 +66,7 @@ import Base from '../../layouts/Base.astro';
   import { getCart, addToCart, cartCount } from '../../lib/cart';
   import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
-  import { wineMap } from '../../lib/wine-map';
+  import { wineMap, showMapCredit } from '../../lib/wine-map';
 
   const $ = (id: string) => document.getElementById(id)!;
   const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
@@ -100,6 +100,7 @@ import Base from '../../layouts/Base.astro';
     box.innerHTML = m.svg;
     box.title = originFull(w) ?? '';
     box.hidden = false;
+    showMapCredit(box, m.how);
   }
 
   function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {

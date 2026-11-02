@@ -23,14 +23,24 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
       ? [{ lon: w.producer_lon, lat: w.producer_lat, title: w.producer ?? '' }] : [];
     const svg = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[appellationId!, 1]]) : new Map(), wholeRegion: !inMap, pins: pin });
     // An appellation on the list that is not an area covers the whole region (e.g. Porto)
-    // A pin may come from OpenStreetMap's address search, which asks to be credited where it is shown
-    const credit = pin.length ? '<p class="map-credit">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></p>' : '';
-    return { svg: svg + credit, how: pin.length ? 'producer' : inMap ? 'area' : appellationId ? 'regionWide' : 'region' };
+    return { svg, how: pin.length ? 'producer' : inMap ? 'area' : appellationId ? 'regionWide' : 'region' };
   }
   const place = await placeOf({ ...w, appellation_id: appellationId });
   if (!place) return null;
   const [overview, focus] = await Promise.all([loadOverview(overviewFor([place])), focusFor([place], true)]);
   if (!overview) return null;
-  const credit = place.how === 'producer' ? '<p class="map-credit">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a></p>' : '';
-  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini') + credit, how: place.how };
+  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini'), how: place.how };
+}
+
+/** A producer's pin may come from OpenStreetMap's address search, which asks to be credited where it is shown:
+ *  "© OpenStreetMap" just below the map, at the right (outside its frame). */
+export function showMapCredit(map: HTMLElement, how: MapHow | null | undefined) {
+  let p = map.nextElementSibling as HTMLElement | null;
+  if (!p?.classList.contains('map-credit')) {
+    p = document.createElement('p');
+    p.className = 'map-credit';
+    p.innerHTML = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+    map.after(p);
+  }
+  p.hidden = how !== 'producer' || map.hidden;
 }
