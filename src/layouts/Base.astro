@@ -339,6 +339,15 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     </script>
     <footer class="site-footer wrap">
       <p id="footer-when"></p>
+      <div class="footer-row">
+        <span class="footer-brand">Winetastr · © 2026</span>
+        <nav class="footer-links" aria-label="Winetastr">
+          <a href="/about/" data-i18n="footer.about">About</a>
+          <a href="/contact/" data-i18n="footer.contact">Contact</a>
+          <a href="/privacy/" data-i18n="footer.privacy">Privacy</a>
+          <a href="/terms/" data-i18n="footer.terms">Terms</a>
+        </nav>
+      </div>
     </footer>
   </body>
 </html>
@@ -537,6 +546,15 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     padding-top: 1.5rem;
     padding-bottom: 2rem;
     border-top: 1px solid var(--lodge-3);
+  }
+  #footer-when:empty { display: none; }
+  .footer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+  .footer-links a { color: var(--muted); text-decoration: none; padding: 0.35rem 0; }
+  .footer-links a:hover, .footer-links a:focus-visible { color: var(--paper); text-decoration: underline; }
+  @media (max-width: 40rem) {
+    .footer-row { flex-direction: column-reverse; text-align: center; }
+    .footer-links { justify-content: center; }
   }
   /* Language picker (top right) */
   .lang-pick { position: relative; }

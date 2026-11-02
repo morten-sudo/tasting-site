@@ -1,0 +1,27 @@
+---
+// A plain text page (About, Contact, Privacy, Terms): a title and translated body text.
+import Base from '../layouts/Base.astro';
+import { en } from '../i18n/en';
+interface Props { title: keyof typeof en; body: keyof typeof en; updated?: keyof typeof en }
+const { title, body, updated } = Astro.props;
+---
+<Base title={title}>
+  <article class="wrap text-page">
+    <h1 class="title" data-i18n={title}>{en[title]}</h1>
+    {updated && <p class="hint text-updated" data-i18n={updated}>{en[updated]}</p>}
+    <div class="text-body" data-i18n-html={body} set:html={en[body]} />
+  </article>
+</Base>
+
+<style>
+  .text-page { max-width: 44rem; padding-top: 2.5rem; padding-bottom: 1rem; }
+  .text-page .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 10vw, 4rem); line-height: 1.05; margin: 0 0 0.6rem; overflow-wrap: anywhere; }
+  .text-updated { margin-top: -0.5rem; }
+  .text-body { line-height: 1.65; }
+  .text-body :global(.lead) { font-size: 1.15rem; }
+  .text-body :global(h2) { font-size: 1.25rem; margin: 2rem 0 0.5rem; }
+  .text-body :global(ul) { padding-left: 1.2rem; }
+  .text-body :global(li) { margin-bottom: 0.4rem; }
+  .text-body :global(.contact-mail) { font-size: 1.3rem; margin: 1.25rem 0; }
+  .text-body :global(a) { color: var(--amber); }
+</style>
