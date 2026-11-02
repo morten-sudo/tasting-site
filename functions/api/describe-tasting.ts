@@ -16,36 +16,40 @@ const distinct = (xs: (string | null)[]) => [...new Set(xs.map(norm).filter(Bool
 const firstGrape = (g: string | null) => norm(g?.split(/[,/&+]| og | and /)[0] ?? null);
 
 /** What kind of tasting it is, from the wines – and what the introduction should do about it */
-function shapeOf(wines: Wine[]): string[] {
+function shapeOf(all: Wine[]): string[] {
+  const out: string[] = [];
+  // A single wine from another country than all the rest (e.g. one Californian among Bordeaux) is a welcome or a
+  // contrast: the theme is found from the others
+  const allCountries = distinct(all.map((w) => w.country));
+  const odd = all.length >= 4 && allCountries.length === 2
+    ? all.filter((w) => w.country && all.filter((x) => norm(x.country) === norm(w.country)).length === 1) : [];
+  const wines = odd.length === 1 ? all.filter((w) => w !== odd[0]) : all;
+  if (odd.length === 1) {
+    out.push(`One wine stands apart from the rest (${[odd[0].name, odd[0].region ?? odd[0].country].filter(Boolean).join(', ')}). Present it as a deliberate welcome or contrast – the theme of the evening comes from the other wines.`);
+  }
   const countries = distinct(wines.map((w) => w.country));
   const regions = distinct(wines.map((w) => w.region));
   const apps = distinct(wines.map((w) => w.appellation));
-  const styles = distinct(wines.map((w) => w.style));
+  const styles = distinct(all.map((w) => w.style));
   const grapes = distinct(wines.map((w) => firstGrape(w.grapes)));
   const names = distinct(wines.map((w) => `${w.producer ?? ''} ${w.name}`));
   const vintages = distinct(wines.map((w) => w.vintage));
-  const out: string[] = [];
   if (wines.length >= 3 && names.length === 1 && vintages.length > 1) {
     out.push('It is a VERTICAL tasting: the same wine in several vintages. Talk about how a wine changes with age and how the years differ; do not compare regions.');
-  } else if (countries.length === 1 && regions.length <= 1 && regions.length) {
-    out.push(`All wines come from ONE region (${wines.find((w) => w.region)?.region}). Make it a journey inside that region`
+  } else if (countries.length === 1 && regions.length === 1) {
+    out.push(`The wines come from ONE region (${wines.find((w) => w.region)?.region}). Make it a journey inside that region`
       + (apps.length > 1 ? ' – from appellation to appellation (e.g. bank to bank, village to village) –' : '')
       + ' and say what makes the region special and how the wines differ within it.');
   } else if (countries.length === 1 && regions.length > 1) {
     out.push(`The wines come from ${regions.length} regions of ONE country. Make it a tour of the country: what the regions have in common and how they differ.`);
   } else if (countries.length > 1) {
-    out.push(`The wines come from ${countries.length} countries. Do not call the evening after one region. Find the common thread (a grape, a style, a theme such as old world against new world) and present the evening as a journey across borders.`);
+    out.push(`The wines come from ${countries.length} countries. Do not name the evening after one region. Find the common thread (a grape, a style, a theme such as old world against new world) and present the evening as a journey across borders.`);
   }
   if (grapes.length === 1 && wines.length >= 3 && countries.length + regions.length > 2) {
     out.push(`Every wine is made mainly from the same grape (${grapes[0]}). Make the grape the theme: how it tastes different from place to place.`);
   }
   if (styles.length > 1) {
     out.push(`The wines are of different styles (${styles.join(', ')}). Say how the evening moves between them, e.g. a sparkling or white start and a sweet or fortified finish.`);
-  }
-  // A wine that clearly does not fit the rest (e.g. one Californian among Bordeaux): an opening or a surprise
-  const odd = wines.filter((w) => w.country && countries.length > 1 && wines.filter((x) => norm(x.country) === norm(w.country)).length === 1);
-  if (odd.length === 1 && wines.length >= 4) {
-    out.push(`One wine stands apart from the rest (${[odd[0].name, odd[0].region ?? odd[0].country].filter(Boolean).join(', ')}). Present it as a deliberate welcome or contrast – do not let it decide the theme of the evening.`);
   }
   return out;
 }
