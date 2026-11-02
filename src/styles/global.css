@@ -368,3 +368,7 @@ dialog.welcome-modal::backdrop { background: rgba(20, 12, 12, 0.45); }
 /* A producer's exact place on the region maps */
 .region-map .rm-pin path { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }
 .region-map .rm-pin circle { fill: #fff; }
+
+/* Credit under a map whose pin may come from OpenStreetMap */
+.map-credit { margin: 0; padding: 0.15rem 0.4rem; font-size: 0.7rem; line-height: 1.3; color: var(--muted); text-align: right; }
+.map-credit a { color: inherit; }

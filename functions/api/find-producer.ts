@@ -4,6 +4,7 @@
 // 3. The place: coordinates in the page's data, in an embedded map link, or the postal address as text.
 import { MODEL, isHost, json, parseAnswer, str, type AiEnv } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText } from './read-link';
+import { geocodeAddress } from '../../src/server/geocode';
 
 const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
 const TLDS: Record<string, string[]> = {
@@ -194,6 +195,11 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     });
     address = str(parseAnswer(out.response)?.address);
   } catch {}
+  // No coordinates on the site: the exact place of the address (a building, house number or the estate – never just the town)
+  if (!location && address) {
+    const hit = await geocodeAddress(address, country);
+    if (hit) location = { lat: hit.lat, lon: hit.lon, source: hit.source, page: '' };
+  }
   // pages_read and hints show what the lookup saw (for checking why something was not found)
   return json({ producer, website: new URL(site.url).origin + '/', location, address, tried, suggested,
     pages_read: pages.map((p) => ({ url: p.url, chars: p.html.length })), hints });

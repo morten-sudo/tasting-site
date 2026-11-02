@@ -80,6 +80,7 @@ const toNumber = (v: string) => {
   const n = Number(v.replace(',', '.').trim());
   return v.trim() === '' || Number.isNaN(n) ? null : n;
 };
+type GeoHit = { lat: number; lon: number; source: string };
 const toText = (v: string) => v.trim() || null;
 /** "2 Nov 2026, 12:31" – when a wine's link was read. */
 export const fetchedWhen = (iso: string) => new Intl.DateTimeFormat(locale(), {
@@ -234,9 +235,14 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     mapTimer = setTimeout(async () => {
       const turn = ++mapTurn;
       // The producer's place found earlier, while the producer is unchanged
-      const keep = editing && normOrigin(editing.producer) === normOrigin(field<HTMLInputElement>('wf-producer').value);
+      const producerNow = field<HTMLInputElement>('wf-producer').value;
+      const keep = editing && normOrigin(editing.producer) === normOrigin(producerNow);
+      // A place found in the form wins over the saved one
+      const here = foundPlace && normOrigin(foundPlace.producer) === normOrigin(producerNow) ? foundPlace : null;
+      const lat = here ? here.lat : keep ? editing!.producer_lat ?? null : null;
+      const lon = here ? here.lon : keep ? editing!.producer_lon ?? null : null;
       const origin = { appellation: appInput.value.trim() || null, region: regionInput.value.trim() || null, country: countrySelect.value || null,
-        producer: editing?.producer ?? null, producer_lat: keep ? editing!.producer_lat ?? null : null, producer_lon: keep ? editing!.producer_lon ?? null : null };
+        producer: producerNow.trim() || null, producer_lat: lat, producer_lon: lat == null ? null : lon };
       const m = await wineMap(origin);
       if (turn !== mapTurn) return;
       const box = $('wf-map');
@@ -644,6 +650,40 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const { data } = await supabase.from('wines').select(COLUMNS).eq('tenant_id', tenantId).order('name');
     wines = (data ?? []) as AdminWine[];
     render();
+    placeSavedAddresses();
+  }
+
+  /** Wines with an address but no place yet (from before addresses were placed): placed in the background,
+   *  one at a time and slowly (OpenStreetMap asks for at most one lookup a second). Tried once per wine. */
+  let placing = false;
+  async function placeSavedAddresses() {
+    if (placing) return;
+    placing = true;
+    try {
+      const todo = wines.filter((w) => w.producer_address && w.producer_lat == null && !w.producer_source);
+      const done = new Map<string, GeoHit | null>();
+      const { data } = await supabase.auth.getSession();
+      for (const w of todo) {
+        const key = `${w.producer_address}|${w.country ?? ''}`;
+        if (!done.has(key)) {
+          let hit = null as GeoHit | null;
+          try {
+            const res = await fetch('/api/geocode', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+              body: JSON.stringify({ address: w.producer_address, country: w.country }),
+            });
+            if (!res.ok) break;
+            hit = ((await res.json()) as { location: GeoHit | null }).location;
+          } catch { break; }
+          done.set(key, hit);
+          await new Promise((r) => setTimeout(r, 1200));
+        }
+        const hit = done.get(key) ?? null;
+        await supabase.from('wines').update({ producer_lat: hit?.lat ?? null, producer_lon: hit?.lon ?? null, producer_source: hit?.source ?? 'none' }).eq('id', w.id);
+        Object.assign(w, { producer_lat: hit?.lat ?? null, producer_lon: hit?.lon ?? null, producer_source: hit?.source ?? 'none' });
+      }
+    } finally { placing = false; }
   }
 
 
@@ -783,7 +823,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const fresh = foundPlace && normOrigin(foundPlace.producer) === normOrigin(row.producer)
       && (!row.producer_website || row.producer_website === webUrl(foundPlace.website ?? '')) ? foundPlace : null;
     const place = fresh
-      ? { producer_lat: fresh.lat, producer_lon: fresh.lat == null ? null : fresh.lon, producer_source: fresh.source, producer_checked_at: new Date().toISOString() }
+      ? { producer_lat: fresh.lat, producer_lon: fresh.lat == null ? null : fresh.lon, producer_source: fresh.lat == null ? 'none' : fresh.source, producer_checked_at: new Date().toISOString() }
       : changed ? { producer_lat: null, producer_lon: null, producer_source: null, producer_checked_at: null } : {};
 
     const { data: saved, error } = before
@@ -870,8 +910,39 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         producerStatus(t('producer.addressFound'), 'ok', 'wf-address-status');
       } else producerStatus(addressEl.value.trim() ? '' : t('producer.addressNotFound'), '', 'wf-address-status');
     }
+    if (found?.address && found.lat == null && addressEl.value.trim() === found.address) {
+      producerStatus(t('producer.addressFound') + ' ' + t('producer.notPrecise'), '', 'wf-address-status');
+    }
+    showOriginMap();
   }
   field<HTMLInputElement>('wf-producer').addEventListener('change', () => fillProducer());
+
+  /** A typed or corrected address: find its exact place (no pin unless the address is placed precisely). */
+  let geoTurn = 0;
+  async function placeAddress() {
+    const addressEl = field<HTMLInputElement>('wf-producer-address');
+    const address = addressEl.value.trim();
+    const producer = field<HTMLInputElement>('wf-producer').value.trim();
+    const turn = ++geoTurn;
+    if (!address) { producerStatus('', '', 'wf-address-status'); return; }
+    producerStatus(t('producer.placing'), 'busy', 'wf-address-status');
+    let hit = null as GeoHit | null;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const res = await fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ address, country: countrySelect.value || null }),
+      });
+      if (res.ok) hit = ((await res.json()) as { location: GeoHit | null }).location;
+    } catch {}
+    if (turn !== geoTurn || addressEl.value.trim() !== address) return;
+    foundPlace = { website: webUrl(field<HTMLInputElement>('wf-producer-website').value), address, producer,
+      lat: hit?.lat ?? null, lon: hit?.lon ?? null, source: hit?.source ?? null };
+    producerStatus(t(hit ? 'producer.placed' : 'producer.notPrecise'), hit ? 'ok' : '', 'wf-address-status');
+    showOriginMap();
+  }
+  field<HTMLInputElement>('wf-producer-address').addEventListener('change', () => placeAddress());
 
   /** Finds and saves the producer's website and place for a saved wine (in the background). */
   async function locateProducer(id: number, w: ProducerQuery) {
@@ -882,7 +953,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       producer_website: w.producer_website ?? webUrl(found.website ?? ''),
       producer_address: w.producer_address ?? found.address,
       producer_lat: found.lat, producer_lon: found.lat == null ? null : found.lon,
-      producer_source: found.source,
+      producer_source: found.lat == null ? 'none' : found.source,
       producer_checked_at: new Date().toISOString(),
     }).eq('id', id);
     return !error;
