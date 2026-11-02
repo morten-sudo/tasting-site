@@ -1197,3 +1197,4 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 /* The one-step "New tasting" dialog: no steps row, a narrower window */
 @media (min-width: 48rem) { dialog.wizard.wz-single { width: min(38rem, calc(100vw - 4rem)); height: auto; max-height: calc(100vh - 4rem); } }
 .start-card[hidden] { display: none; }
+.admin-page .danger-zone:not(:has(#delete-tasting:not([hidden]))) { display: none; }

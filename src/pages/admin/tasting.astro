@@ -185,7 +185,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Delete the tasting: last under settings, for whoever may manage it (not co-hosts) -->
-      <section id="delete-tasting" class="block danger-zone" data-section="settings" hidden>
+      <section class="block danger-zone" data-section="settings">
+      <div id="delete-tasting" hidden>
         <h2 data-i18n="tastingDelete.title">Delete the tasting</h2>
         <p class="hint" data-i18n="tastingDelete.hint">Removes the tasting with its guest list, answers, orders, quiz and chat. The wines stay in your library. It cannot be undone.</p>
         <button id="td-ask" class="btn small ghost danger" type="button" data-i18n="tastingDelete.button">Delete tasting …</button>
@@ -197,6 +198,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <p id="td-msg" class="message error" hidden></p>
         </div>
+      </div>
       </section>
 
       <!-- Wines in this tasting (from the wine library) -->
