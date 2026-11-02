@@ -49,7 +49,7 @@ function variants(address: string) {
   const clean = a
     .replace(/\((?:[A-Z]{2}|[^)]{1,30})\)/g, ' ')
     .replace(/,?\s*(france|italia|italy|españa|spain|portugal|deutschland|germany|österreich|austria|united states|usa|u\.s\.a\.)\s*\.?$/i, '')
-    .replace(/\b(fraz\.?|frazione|loc\.?|località|localita|lieu-dit|lieu dit)\s+[^,]+,?/gi, ' ')
+    .replace(/(^|[\s,])(fraz\.?|frazione|loc\.?|località|localita|lieu-dit|lieu dit)\s+[A-Za-zÀ-ÿ'’-]+(\s+[A-Z][a-zà-ÿ'’-]+)?/gi, '$1')
     .replace(/^(\d+[a-z]?)\s*,\s*/i, '$1 ')
     .replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').replace(/^,\s*|,\s*$/g, '').trim();
   return [...new Set([a, clean].filter((x) => x.length >= 6))];
