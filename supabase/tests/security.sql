@@ -403,6 +403,9 @@ begin
   assert claim_notifications(gen_random_uuid()) = '[]'::jsonb, 'a made-up token claims notifications';
   failed := false; begin perform invite_is_mine('selftestaa'); exception when others then failed := true; end;
   assert failed, 'invite_is_mine works without signing in';
+  -- Quantity prices: only the database reprices orders
+  failed := false; begin perform reprice_tasting('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can reprice a tasting''s orders';
 end $$;
 reset role;
 
