@@ -899,3 +899,5 @@ dialog.wizard .wf-foot .message { margin: 0 0 0.6rem; }
 .admin-page dialog.wizard .wf-actions { margin: 0; gap: 0.6rem; }
 .admin-page dialog.wizard .wf-actions .wz-spacer { display: block; flex: 1; }
 @media (min-width: 48rem) { dialog.wizard .wf-head, dialog.wizard .wf-body, dialog.wizard .wf-foot { padding-left: 2rem; padding-right: 2rem; } }
+dialog.wizard .wine-form input, dialog.wizard .wine-form textarea, dialog.wizard .wine-form select { max-width: none; }
+dialog.wizard .wine-form input.short { max-width: 8rem; }

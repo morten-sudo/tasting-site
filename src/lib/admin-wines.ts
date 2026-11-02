@@ -2,7 +2,7 @@
 // filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
-import { t, lang, locale, formatWhen } from '../i18n';
+import { t, lang, locale } from '../i18n';
 import { wineMap } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
@@ -538,7 +538,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const rows = ((data ?? []) as { id: string; title: string; starts_at: string | null }[])
       .filter((x) => !x.starts_at || new Date(x.starts_at).getTime() >= since);
     select.replaceChildren(new Option(t('wineWizard.noTasting'), ''),
-      ...rows.map((x) => new Option(x.starts_at ? `${x.title} · ${formatWhen(x.starts_at, { year: true })}` : x.title, x.id)));
+      ...rows.map((x) => new Option(x.starts_at ? `${x.title} · ${new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Copenhagen' }).format(new Date(x.starts_at))}` : x.title, x.id)));
     select.value = intoDefault && rows.some((x) => x.id === intoDefault) ? intoDefault : '';
     $('wf-into-box').hidden = !rows.length;
   }
