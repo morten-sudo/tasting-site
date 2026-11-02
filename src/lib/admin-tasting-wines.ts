@@ -1,11 +1,13 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
 // and whether guests can see (fully, or blind) and order them. Ratings from the guests are shown per wine.
 import { supabase } from './supabase';
-import { $, mk, toNumber, sheetPanel } from './admin-common';
+import { $, mk, sheetPanel } from './admin-common';
 import { styleName } from './wines';
 import { initHelpTips } from './help-tip';
-import { t, locale } from '../i18n';
-import { amountText } from './wine-validate';
+import { t, locale, money } from '../i18n';
+import { amountText, parseAmount } from './wine-validate';
+import { fieldError } from './field-error';
+import { toast } from './toast';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   image_url: string | null; retail_price_dkk: number | null;
@@ -44,171 +46,224 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
     return true;
   }
 
+  /** "409,95 kr." and "from 6 bottles 249,95 kr." – how the price reads in the list */
+  const kr = (n: number) => money(n);
+  const tiersOf = (r: Row) => [...(r.price_tiers ?? [])].sort((a, b) => a.qty - b.qty);
+  const visOf = (r: Row): 'shown' | 'blind' | 'hidden' => (!r.revealed ? 'hidden' : r.blind ? 'blind' : 'shown');
+
+  // The list: one calm line per wine – what it is, its price, what the guests see. Settings are in the panel.
   function render() {
     list.replaceChildren();
     $('tw-empty').hidden = rows.length > 0;
     rows.forEach((r, i) => {
       const w = r.wines;
-      const li = mk('li', 'tw-row');
-      const body = mk('div');
-      const nameP = mk('p', 'lib-name', w.name);
-      if (r.revealed && r.blind) nameP.append(' ', mk('span', 'pill pill-blind', t('blind.blind')));
-      body.append(nameP);
+      const li = mk('li', 'tw-item');
+      li.dataset.wine = String(r.wine_id);
+      // Drag to reorder (larger screens); the panel has the place too
+      li.draggable = true;
+      const grip = mk('span', 'tw-grip', '⋮⋮');
+      grip.setAttribute('aria-hidden', 'true');
+      const no = mk('span', 'tw-no', String(i + 1));
+
+      const main = mk('div', 'tw-main');
+      const name = mk('button', 'tw-name', w.name);
+      name.type = 'button';
+      name.addEventListener('click', () => edit(r));
+      main.append(name);
       const m = meta(w);
-      if (m) body.append(mk('p', 'lib-meta', m));
+      if (m) main.append(mk('p', 'lib-meta', m));
+      const chips = mk('div', 'tw-chips');
+      const vis = visOf(r);
+      chips.append(mk('span', `tw-chip vis-${vis}`, t(vis === 'shown' ? 'twe.chipShown' : vis === 'blind' ? 'blind.blind' : 'twe.hidden')));
+      chips.append(mk('span', `tw-chip ${r.orderable ? 'ord-yes' : 'ord-no'}`, t(r.orderable ? 'admin.orderable' : 'twe.notOrderable')));
       const rating = ratings.get(r.wine_id);
       if (rating) {
         const avg = rating.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        body.append(mk('p', 'lib-meta wine-rating', t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
+        chips.append(mk('span', 'tw-chip rating', t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
       }
+      main.append(chips);
 
-      // Guest price, visible, orderable – saved as soon as they change
-      const controls = mk('div', 'tw-controls');
-      const priceLab = mk('label');
-      const price = mk('input');
-      price.type = 'text';
-      price.inputMode = 'decimal';
-      price.value = amountText(r.price_dkk, locale());
-      price.placeholder = amountText(w.retail_price_dkk, locale());
-      price.setAttribute('aria-label', t('admin.price'));
-      price.addEventListener('change', async () => {
-        const ok = await update(r, { price_dkk: toNumber(price.value) });
-        if (ok) price.classList.add('saved');
-      });
-      priceLab.append(mk('span', '', t('adminTasting.guestPrice')), price);
+      const price = mk('div', 'tw-price');
+      price.append(mk('b', '', r.price_dkk != null ? kr(r.price_dkk) : t('twe.noPrice')));
+      for (const x of tiersOf(r)) price.append(mk('small', '', t('twe.tierLine', { n: x.qty, price: kr(x.price) })));
 
-      // Quantity prices: "from [6] bottles [80] kr." – as many as needed
-      const tiersBox = mk('div', 'tiers');
-      let tiers: { qty: string; price: string }[] = [...(r.price_tiers ?? [])]
-        .sort((x, y) => x.qty - y.qty)
-        .map((x) => ({ qty: String(x.qty), price: amountText(x.price, locale()) }));
-      const saveTiers = async () => {
-        const valid = new Map<number, number>();
-        for (const x of tiers) {
-          const q = Math.round(Number(x.qty.trim()));
-          const p = toNumber(x.price);
-          if (Number.isFinite(q) && q >= 2 && q <= 99 && p != null && p >= 0) valid.set(q, p);
-        }
-        const list = [...valid].sort((a, b) => a[0] - b[0]).map(([qty, price]) => ({ qty, price }));
-        if (JSON.stringify(list) === JSON.stringify(r.price_tiers ?? [])) return;
-        if (await update(r, { price_tiers: list })) tiersBox.classList.add('saved');
-      };
-      const drawTiers = () => {
-        tiersBox.replaceChildren(...tiers.map((x, i) => {
-          const row = mk('div', 'tier');
-          const qty = mk('input');
-          qty.type = 'text';
-          qty.inputMode = 'numeric';
-          qty.className = 'qty';
-          qty.value = x.qty;
-          qty.placeholder = '6';
-          qty.setAttribute('aria-label', t('adminTasting.bulkQty'));
-          qty.addEventListener('input', () => (x.qty = qty.value));
-          qty.addEventListener('change', saveTiers);
-          const price = mk('input');
-          price.type = 'text';
-          price.inputMode = 'decimal';
-          price.value = x.price;
-          price.setAttribute('aria-label', t('adminTasting.bulkPrice'));
-          price.addEventListener('input', () => (x.price = price.value));
-          price.addEventListener('change', saveTiers);
-          const del = mk('button', 'icon-only', '×');
-          del.type = 'button';
-          del.setAttribute('aria-label', t('adminTasting.removeTier'));
-          del.addEventListener('click', () => { tiers.splice(i, 1); drawTiers(); saveTiers(); });
-          row.append(mk('span', '', t('adminTasting.bulkFrom')), qty, mk('span', '', t('adminTasting.bulkBottles')), price, del);
-          return row;
-        }));
-        const add = mk('button', 'text-btn', t('adminTasting.addTier'));
-        add.type = 'button';
-        add.addEventListener('click', () => {
-          tiers.push({ qty: '', price: '' });
-          drawTiers();
-          (tiersBox.querySelector('.tier:last-of-type input.qty') as HTMLInputElement | null)?.focus();
-        });
-        if (tiers.length < 5) tiersBox.append(add);
-      };
-      drawTiers();
-      // What the guests see: nothing, a blind bottle, or the whole wine
-      const vis = mk('label');
-      const visSel = mk('select');
-      const state = () => (!r.revealed ? 'hidden' : r.blind ? 'blind' : 'shown');
-      for (const [v, key] of [['shown', 'blind.shown'], ['blind', 'blind.blind'], ['hidden', 'blind.hidden']] as const) {
-        const o = mk('option', '', t(key));
-        o.value = v;
-        visSel.append(o);
-      }
-      visSel.value = state();
-      visSel.addEventListener('change', async () => {
-        const v = visSel.value;
-        if (await update(r, { revealed: v !== 'hidden', blind: v === 'blind' })) render();
-        else visSel.value = state();
-      });
-      const visLabel = mk('span', '', t('blind.guestsSee'));
-      visLabel.dataset.help = 'guests-see';
-      vis.append(visLabel, visSel);
-      const ord = mk('label');
-      const ordCb = mk('input');
-      ordCb.type = 'checkbox';
-      ordCb.checked = r.orderable;
-      ordCb.addEventListener('change', async () => { if (!(await update(r, { orderable: ordCb.checked }))) ordCb.checked = !ordCb.checked; });
-      ord.append(ordCb, mk('span', '', t('admin.orderable')));
-      controls.append(priceLab, vis, ord);
-      body.append(controls, tiersBox);
-
-      const actions = mk('div', 'wine-actions');
-      const up = mk('button', 'icon-only', '↑');
-      up.type = 'button';
-      up.setAttribute('aria-label', t('admin.moveUp', { name: w.name }));
-      up.disabled = i === 0;
-      up.addEventListener('click', () => move(i, -1));
-      const down = mk('button', 'icon-only', '↓');
-      down.type = 'button';
-      down.setAttribute('aria-label', t('admin.moveDown', { name: w.name }));
-      down.disabled = i === rows.length - 1;
-      down.addEventListener('click', () => move(i, 1));
-      const remove = mk('button', 'text-btn', t('adminTasting.remove'));
-      remove.type = 'button';
-      remove.addEventListener('click', async () => {
-        if (!remove.dataset.armed) { remove.dataset.armed = '1'; remove.textContent = t('adminTasting.confirmRemove'); return; }
-        const { error } = await supabase.from('tasting_wines').delete().eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
-        if (error) { alert(t('admin.changeNotSaved')); return; }
-        rows = rows.filter((x) => x !== r);
-        render();
-      });
-      actions.append(up, down, remove);
+      const actions = mk('div', 'tw-actions');
       // Reveal a blind wine with one click, in whatever order suits the evening
-      if (r.revealed && r.blind) {
+      if (vis === 'blind') {
         const reveal = mk('button', 'btn small', t('blind.reveal'));
         reveal.type = 'button';
         reveal.addEventListener('click', async () => {
           reveal.disabled = true;
-          if (await update(r, { blind: false })) render();
+          if (await update(r, { blind: false })) { render(); toast(t('twe.revealed', { name: w.name }), { kind: 'ok' }); }
           else reveal.disabled = false;
         });
-        actions.prepend(reveal);
+        actions.append(reveal);
       }
+      const editBtn = mk('button', 'btn small ghost', t('admin.edit'));
+      editBtn.type = 'button';
+      editBtn.setAttribute('aria-label', `${t('admin.edit')}: ${w.name}`);
+      editBtn.addEventListener('click', () => edit(r));
+      actions.append(editBtn);
 
-      li.append(thumb(w), body, actions);
+      li.append(grip, no, thumb(w), main, price, actions);
+      wireDrag(li);
       list.append(li);
     });
     renderPicker();
-    initHelpTips(list);
     emit();
   }
 
-  function emit() {
-    onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order })));
+  // ---------- Reorder by dragging ----------
+  let dragged: HTMLElement | null = null;
+  function wireDrag(li: HTMLElement) {
+    li.addEventListener('dragstart', (e) => { dragged = li; li.classList.add('dragging'); e.dataTransfer?.setData('text/plain', li.dataset.wine!); });
+    li.addEventListener('dragend', () => { li.classList.remove('dragging'); dragged = null; saveOrderFromList(); });
+    li.addEventListener('dragover', (e) => {
+      if (!dragged || dragged === li) return;
+      e.preventDefault();
+      const box = li.getBoundingClientRect();
+      li.parentElement!.insertBefore(dragged, e.clientY < box.top + box.height / 2 ? li : li.nextSibling);
+    });
   }
-
-  async function move(index: number, dir: -1 | 1) {
-    const other = index + dir;
-    if (other < 0 || other >= rows.length) return;
-    [rows[index], rows[other]] = [rows[other], rows[index]];
+  async function saveOrderFromList() {
+    const ids = [...list.querySelectorAll<HTMLElement>('.tw-item')].map((x) => Number(x.dataset.wine));
+    if (ids.every((id, i) => rows[i]?.wine_id === id)) return;
+    await placeRows(ids);
+  }
+  /** Saves a new order (wine ids top to bottom) and shows it. */
+  async function placeRows(ids: number[]) {
+    const byId = new Map(rows.map((r) => [r.wine_id, r]));
+    rows = ids.map((id) => byId.get(id)!).filter(Boolean);
+    const changed = rows.filter((r, i) => r.sort_order !== i + 1);
     rows.forEach((r, i) => (r.sort_order = i + 1));
     render();
-    await Promise.all([rows[index], rows[other]].map((r) =>
+    const res = await Promise.all(changed.map((r) =>
       supabase.from('tasting_wines').update({ sort_order: r.sort_order }).eq('tasting_id', tastingId).eq('wine_id', r.wine_id)));
+    if (res.some((x) => x.error)) toast(t('admin.changeNotSaved'), { kind: 'error' });
+  }
+
+  // ---------- Edit one wine in the side panel ----------
+  const editPanel = sheetPanel($<HTMLDialogElement>('tw-edit'));
+  let editing: Row | null = null;
+  let tierRows: { qty: HTMLInputElement; price: HTMLInputElement }[] = [];
+  function tierRow(qty = '', price = '') {
+    const row = mk('div', 'twe-tier');
+    const q = mk('input');
+    q.type = 'text'; q.inputMode = 'numeric'; q.className = 'qty'; q.value = qty; q.placeholder = '6'; q.autocomplete = 'off';
+    q.id = `twe-q-${Math.random().toString(36).slice(2, 8)}`;
+    q.setAttribute('aria-label', t('adminTasting.bulkQty'));
+    const p = mk('input');
+    p.type = 'text'; p.inputMode = 'decimal'; p.value = price; p.autocomplete = 'off';
+    p.id = `twe-p-${Math.random().toString(36).slice(2, 8)}`;
+    p.setAttribute('aria-label', t('adminTasting.bulkPrice'));
+    const del = mk('button', 'text-btn', t('twe.removeTier'));
+    del.type = 'button';
+    const entry = { qty: q, price: p };
+    del.addEventListener('click', () => { tierRows = tierRows.filter((x) => x !== entry); row.remove(); });
+    row.append(mk('span', '', t('twe.from')), q, mk('span', '', t('twe.bottles')), p, mk('span', '', t('twe.krEach')), del);
+    tierRows.push(entry);
+    $('twe-tiers').append(row);
+    return entry;
+  }
+  $('twe-add-tier').addEventListener('click', () => tierRow().qty.focus());
+
+  function edit(r: Row) {
+    editing = r;
+    const w = r.wines;
+    $('twe-title').textContent = w.name;
+    $('twe-thumb').replaceWith(Object.assign(thumb(w), { id: 'twe-thumb' }));
+    $('twe-meta').textContent = meta(w);
+    const price = $<HTMLInputElement>('twe-price');
+    price.value = amountText(r.price_dkk, locale());
+    $('twe-retail').textContent = w.retail_price_dkk != null ? t('twe.shopPrice', { price: kr(w.retail_price_dkk) }) : '';
+    $('twe-retail').hidden = w.retail_price_dkk == null;
+    $('twe-tiers').replaceChildren();
+    tierRows = [];
+    for (const x of tiersOf(r)) tierRow(String(x.qty), amountText(x.price, locale()));
+    document.querySelectorAll<HTMLInputElement>('input[name="twe-vis"]').forEach((x) => (x.checked = x.value === visOf(r)));
+    $<HTMLInputElement>('twe-orderable').checked = r.orderable;
+    const pos = $<HTMLSelectElement>('twe-pos');
+    pos.replaceChildren(...rows.map((_, i) => new Option(t('twe.positionOf', { n: i + 1, total: rows.length }), String(i))));
+    pos.value = String(rows.indexOf(r));
+    for (const el of [price]) fieldError(el, null);
+    $('twe-msg').hidden = true;
+    editPanel.open();
+    initHelpTips($('tw-edit'));
+  }
+
+  $('twe-cancel').addEventListener('click', () => editPanel.close());
+  $<HTMLFormElement>('twe-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = editing;
+    if (!r) return;
+    // Check: a price is a number of 0 or more; a quantity price needs both a number of bottles (2–99) and a price
+    let ok = true;
+    const priceEl = $<HTMLInputElement>('twe-price');
+    const price = parseAmount(priceEl.value);
+    if (price != null && (Number.isNaN(price) || price < 0)) { fieldError(priceEl, t('wineCheck.price')); ok = false; }
+    const tiers = new Map<number, number>();
+    for (const x of tierRows) {
+      const qt = x.qty.value.trim(), pt = x.price.value.trim();
+      if (!qt && !pt) continue;
+      const q = Number(qt), p = parseAmount(pt);
+      const row = x.qty.parentElement!;
+      if (!/^\d+$/.test(qt) || q < 2 || q > 99) { fieldError(x.qty, t('wineCheck.offerQty'), row); ok = false; continue; }
+      if (p == null || Number.isNaN(p) || p < 0) { fieldError(x.price, t('wineCheck.price'), row); ok = false; continue; }
+      tiers.set(q, p);
+    }
+    if (!ok) { $('tw-edit').querySelector<HTMLElement>('[aria-invalid]')?.focus(); return; }
+    const vis = document.querySelector<HTMLInputElement>('input[name="twe-vis"]:checked')?.value ?? visOf(r);
+    const patch = {
+      price_dkk: price,
+      price_tiers: [...tiers].sort((a, b) => a[0] - b[0]).map(([qty, p]) => ({ qty, price: p })),
+      revealed: vis !== 'hidden',
+      blind: vis === 'blind',
+      orderable: $<HTMLInputElement>('twe-orderable').checked,
+    };
+    const save = $<HTMLButtonElement>('twe-save');
+    save.disabled = true;
+    const done = await update(r, patch);
+    save.disabled = false;
+    if (!done) return;
+    // A new place in the order
+    const to = Number($<HTMLSelectElement>('twe-pos').value);
+    const from = rows.indexOf(r);
+    editPanel.close();
+    if (to !== from) {
+      const ids = rows.map((x) => x.wine_id);
+      ids.splice(from, 1);
+      ids.splice(to, 0, r.wine_id);
+      await placeRows(ids);
+    } else render();
+    toast(t('twe.saved', { name: r.wines.name }), { kind: 'ok' });
+    list.querySelector<HTMLElement>(`[data-wine="${r.wine_id}"]`)?.classList.add('just-saved');
+  });
+
+  // Remove from the tasting – with Undo (the wine stays in the library)
+  $('twe-remove').addEventListener('click', async () => {
+    const r = editing;
+    if (!r) return;
+    const { error } = await supabase.from('tasting_wines').delete().eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
+    if (error) { $('twe-msg').textContent = t('admin.changeNotSaved'); $('twe-msg').hidden = false; return; }
+    editPanel.close();
+    const index = rows.indexOf(r);
+    rows = rows.filter((x) => x !== r);
+    render();
+    toast(t('twe.removed', { name: r.wines.name }), {
+      ms: 8000,
+      action: { label: t('wineLib.undo'), run: async () => {
+        const back = { tasting_id: tastingId, wine_id: r.wine_id, sort_order: r.sort_order, price_dkk: r.price_dkk,
+          price_tiers: r.price_tiers, orderable: r.orderable, revealed: r.revealed, blind: r.blind };
+        const { error: e2 } = await supabase.from('tasting_wines').insert(back);
+        if (e2) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return; }
+        rows.splice(index, 0, r);
+        render();
+      } },
+    });
+  });
+
+  function emit() {
+    onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order })));
   }
 
   // ---------- Picker: add wines from the library ----------
