@@ -1537,3 +1537,14 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 @media (max-width: 40rem) { .admin-page .gi-fields { flex-direction: column; } .admin-page .gi-fields .qa-field { flex: none; } }
 .admin-page .twe-prices .with-unit input.short { width: 5.75rem; max-width: 5.75rem; }
 .admin-page .twe-prices .with-unit .unit { white-space: nowrap; }
+/* A quiet icon (e.g. remove a quantity price): grey until hovered, then red */
+.admin-page .icon-act.quiet { color: var(--muted); }
+.admin-page .icon-act.quiet:hover { color: var(--error); background: #fbf0f1; border-color: #e3c4c9; }
+.admin-page .twe-tier .icon-act { margin-left: auto; }
+@media (max-width: 30rem) {
+  .admin-page .twe-tier { flex-wrap: nowrap; gap: 0.35rem; font-size: 0.88rem; }
+  .admin-page .twe-tier input.qty { width: 2.6rem !important; min-width: 0; padding-inline: 0.4rem; }
+  .admin-page .twe-tier input:not(.qty) { width: 4.8rem !important; min-width: 0; padding-inline: 0.5rem; }
+  .admin-page .twe-tier span { white-space: nowrap; }
+  .admin-page .twe-tier .icon-act { flex: none; width: 2.2rem; height: 2.2rem; }
+}

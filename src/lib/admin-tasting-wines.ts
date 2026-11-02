@@ -157,8 +157,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     p.type = 'text'; p.inputMode = 'decimal'; p.value = price; p.autocomplete = 'off';
     p.id = `twe-p-${Math.random().toString(36).slice(2, 8)}`;
     p.setAttribute('aria-label', t('adminTasting.bulkPrice'));
-    const del = mk('button', 'text-btn', t('twe.removeTier'));
-    del.type = 'button';
+    const del = iconButton('trash', t('twe.removeTier'), { quiet: true });
     const entry = { qty: q, price: p };
     del.addEventListener('click', () => { tierRows = tierRows.filter((x) => x !== entry); row.remove(); });
     row.append(mk('span', '', t('twe.from')), q, mk('span', '', t('twe.bottles')), p, mk('span', '', t('twe.krEach')), del);
