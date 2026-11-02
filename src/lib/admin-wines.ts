@@ -6,7 +6,6 @@ import { t, lang, locale } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
-import { forgetGuesses } from './overview-map';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
 import { combo, type ComboOption } from './combo';

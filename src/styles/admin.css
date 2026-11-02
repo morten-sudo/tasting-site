@@ -1410,3 +1410,7 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   .admin-page .qa-job .wine-thumb { width: 2.6rem; height: 3.4rem; align-self: start; }
   .admin-page .qa-job-actions { grid-column: 2; justify-content: flex-start; }
 }
+.admin-page .qa-field #qa-input, .admin-page .qa-field #qa-input:focus { border: 0; box-shadow: none; outline: none; background: transparent; }
+@media (pointer: coarse) { .admin-page .qa-drop { display: none; } }
+.admin-page .qa:has(.qa-bar:not([hidden])), .admin-page .qa:has(.qa-jobs:not(:empty)) { margin-bottom: 0.9rem; }
+.admin-page #wine-add-toggle, .admin-page #tw-add-toggle { white-space: nowrap; flex: none; }

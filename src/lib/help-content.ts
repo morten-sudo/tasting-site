@@ -15,18 +15,18 @@ export const HELP: HelpSection[] = [
     body: {
       da: `<p>Sådan går du fra tom konto til en smagning med inviterede gæster:</p>
 <ol>
-<li><b>Læg vinene ind.</b> Gå til <a href="/admin/wines/?open=wine-add-toggle">Vine → Ny vin</a>. Tag et billede af etiketten eller indsæt et link til butikken, så udfyldes det meste af sig selv. Se <a href="#wines">Vine</a>.</li>
+<li><b>Læg vinene ind.</b> Gå til <a href="/admin/wines/?open=wine-add-toggle">Vine → Ny vin</a> og skriv navnet, indsæt et link til butikken eller vælg et billede af etiketten – med link eller billede udfyldes det meste af sig selv. Se <a href="#wines">Vine</a>.</li>
 <li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>, og udfyld titel, dato, start- og evt. sluttid, maks. antal gæster, sted og introduktion – kun titlen skal udfyldes. Tryk <i>Opret smagning</i>, så kommer du til smagningens side, hvor kortet <i>Kom i gang</i> har en knap til hvert af de næste skridt.</li>
-<li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Vælg fra biblioteket</a> tilføjer du vine fra dit bibliotek (eller opretter en ny), sætter rækkefølgen og gæsteprisen.</li>
+<li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Tilføj vin</a> skriver du navnet på en vin fra dit bibliotek og trykker <i>Tilføj</i> – eller indsætter et link eller et billede for en ny. Bagefter sætter du rækkefølgen og gæsteprisen.</li>
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
 <li><b>På aftenen</b> åbner du for quiz og bestillinger under <a href="t:settings/#controls">Kontakter</a>, når det passer – og afslører vinene, hvis det er en blindsmagning.</li>
 </ol>`,
       en: `<p>From an empty account to a tasting with invited guests:</p>
 <ol>
-<li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a>. Take a photo of the label or paste a link to the shop, and most of it fills itself in. See <a href="#wines">Wines</a>.</li>
+<li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a> and type the name, paste a link to the shop or choose a photo of the label – with a link or a photo most of it fills itself in. See <a href="#wines">Wines</a>.</li>
 <li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a> and fill in the title, date, start and optional end time, max number of guests, place and introduction – only the title is needed. Press <i>Create tasting</i> and you come to the tasting's page, where the <i>Get started</i> card has a button for each of the next steps.</li>
-<li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Choose from library</a>, add wines from your library (or create a new one), set their order and the guest price.</li>
+<li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Add wine</a>, type the name of a wine in your library and press <i>Add</i> – or paste a link or a photo for a new one. Then set their order and the guest price.</li>
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>
 <li><b>On the evening</b>, open the quiz and ordering under <a href="t:settings/#controls">Controls</a> when it suits you – and reveal the wines if it is a blind tasting.</li>
@@ -89,14 +89,14 @@ export const HELP: HelpSection[] = [
 <h4 id="filter-wines">Find dine vine</h4>
 <p>Over listen kan du <a href="/admin/wines/">filtrere</a> på <b>land</b>, <b>region</b>, <b>type</b> og <b>smagning</b> – og søge i fritekst. Regionerne følger landet: vælger du et land, ses kun dets regioner, og vælger du en region, vælges landet med. Under smagning kan du også vælge <i>Ikke i nogen smagning</i>. Tallet i parentes er antallet af vine, og <i>Nulstil filtre</i> viser alle igen. Filtrene står i adressen, så de er der stadig, når du går tilbage fra en vin.</p>
 <h4 id="new-wine">Ny vin</h4>
-<p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> (under Vine eller på Overblik) for guiden. Du kan starte på tre måder:</p>
+<p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> (under Vine eller på Overblik). Over listen kommer én linje, hvor du kan:</p>
 <ul>
-<li><b>Billede af etiketten</b> – navn, producent, årgang, stil m.m. læses fra billedet.</li>
-<li><b>Link til en butik</b> – beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden. Er billedet forkert (fx bagetiketten), vises sidens andre billeder, så du kan vælge det rigtige. Under vinen står <i>Hentet fra … (dato)</i>, og du kan hente igen med opdater-ikonet.</li>
-<li><b>Udfyld selv</b>.</li>
+<li><b>Skrive navnet</b> – mens du skriver, vises vine i dit bibliotek med samme navn, så du ikke laver en kopi. Tryk <i>Tilføj</i> for at oprette en ny med det navn.</li>
+<li><b>Indsætte et link til en butik</b> – navn, type, årgang, oprindelse, beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden.</li>
+<li><b>Vælge et billede af etiketten</b> (eller trække det ind eller indsætte det) – navn, producent, årgang, type m.m. læses fra billedet.</li>
 </ul>
-<p>Tjek altid felterne – det automatiske er et godt udgangspunkt, ikke en garanti. Kun <b>navnet</b> (markeret med <span class="req">*</span>) skal udfyldes; resten kan du tilføje senere. Er noget skrevet forkert, fx en årgang uden tal eller en pris, der ikke er et tal, står det med rødt lige under feltet. Priser og alkohol må skrives med komma eller punktum.</p>
-<p>Når vinen er gemt, står der en kort besked nederst, og vinen lyser op i listen. Ligner navnet en vin, du allerede har, vises den under navnefeltet, så du kan åbne den i stedet for at lave en kopi.</p>
+<p>Med link eller billede kommer der et kort over listen, hvor du kan se, hvad der kommer ind – til sidst producentens hjemmeside og adresse. Så glider vinen ind i listen og lyser op, og der står en kort besked nederst. Du kan tilføje flere vine i træk, mens kortene arbejder. Kan siden eller etiketten ikke læses, skriver kortet det, og <i>Skriv navnet</i> lader dig skrive navnet selv – linket eller billedet gemmes stadig med vinen. Har du allerede vinen, foreslås den i stedet.</p>
+<p>Tjek altid vinen bagefter med <i>Rediger</i> – det automatiske er et godt udgangspunkt, ikke en garanti. Kun <b>navnet</b> skal være der; resten kan du tilføje senere. Er noget skrevet forkert, fx en årgang uden tal eller en pris, der ikke er et tal, står det med rødt lige under feltet. Priser og alkohol må skrives med komma eller punktum. Er vinen hentet fra et link, står der <i>Hentet fra … (dato)</i>, og du kan hente igen med opdater-ikonet. Er billedet forkert (fx bagetiketten), kan du vælge et andet.</p>
 <h4 id="delete-wine">Slet en vin</h4>
 <p>Åbn vinen, tryk <i>Rediger</i> og så <i>Slet vin</i> nederst. Du bliver spurgt først, og bagefter kan du trykke <i>Fortryd</i> i nogle sekunder. En vin, som gæster har bestilt, kan ikke slettes – fjern den fra smagningen i stedet.</p>
 <h4>Producent og kort</h4>
@@ -104,20 +104,20 @@ export const HELP: HelpSection[] = [
 <h4>Billede</h4>
 <p>Træk et billede ind, vælg en fil – eller tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h4 id="tasting-wines">Vinene i en smagning</h4>
-<p>En vin, der ikke er i biblioteket endnu, opretter du direkte fra smagningen med <a href="t:wines/#tw-new-wine">Vine → Opret ny vin</a>: guiden lægger den både i biblioteket og i smagningen og sender dig tilbage bagefter.</p>
+<p>På smagningen tilføjer du vine med <a href="t:wines/?open=tw-add-toggle">Vine → Tilføj vin</a>: skriv navnet, og vine fra dit bibliotek vises med <i>Tilføj</i>. Et link eller et billede opretter en ny vin, som kommer både i biblioteket og i smagningen – på samme måde som under <a href="#new-wine">Ny vin</a>.</p>
 <p>På smagningens fane <a href="t:wines/">Vine</a> står vinene i den rækkefølge, de skænkes, med pris, hvad gæsterne ser (<i>Synlig</i>, <i>Blind</i> eller <i>Skjult</i>), om de kan bestilles, og gæsternes gennemsnitlige karakter. Træk i ⋮⋮ for at ændre rækkefølgen. Tryk <i>Rediger</i> ved en vin for at sætte gæsteprisen, mængdepriser (fx "fra 6 flasker 249,95 kr. pr. stk."), hvad gæsterne ser, om den kan bestilles, og dens plads – eller for at fjerne den fra smagningen (med Fortryd). En blind vin har sin egen <i>Afslør</i>-knap i listen.</p>`,
       en: `<p>Your wine library under <a href="/admin/wines/">Wines</a> is shared by all hosts on the account, and a wine can be used in many tastings.</p>
 <h4 id="filter-wines">Finding your wines</h4>
 <p>Above the list you can <a href="/admin/wines/">filter</a> by <b>country</b>, <b>region</b>, <b>type</b> and <b>tasting</b> – and search in free text. The regions follow the country: choose a country and only its regions are shown; choose a region and its country is chosen too. Under tasting you can also choose <i>Not in any tasting</i>. The number in brackets is the number of wines, and <i>Clear filters</i> shows them all again. The filters are kept in the address, so they are still there when you go back from a wine.</p>
 <h4 id="new-wine">New wine</h4>
-<p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> (under Wines or on the Overview) for the guide. You can start in three ways:</p>
+<p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> (under Wines or on the Overview). One line appears above the list, where you can:</p>
 <ul>
-<li><b>Photo of the label</b> – name, producer, vintage, style and more are read from the photo.</li>
-<li><b>Link to a shop</b> – description, prices, grapes, "goes with", serving and picture are fetched from the page. If the picture is wrong (e.g. the back label), the page's other pictures are shown so you can pick the right one. Below the wine it says <i>Fetched from … (date)</i>, and the refresh icon fetches it again.</li>
-<li><b>Fill it in yourself</b>.</li>
+<li><b>Type the name</b> – as you type, wines in your library with the same name are shown, so you do not make a copy. Press <i>Add</i> to create a new one with that name.</li>
+<li><b>Paste a link to a shop</b> – name, type, vintage, origin, description, prices, grapes, "goes with", serving and picture are fetched from the page.</li>
+<li><b>Choose a photo of the label</b> (or drag it in or paste it) – name, producer, vintage, type and more are read from the photo.</li>
 </ul>
-<p>Always check the fields – the automatic part is a good start, not a guarantee. Only the <b>name</b> (marked <span class="req">*</span>) is needed; the rest you can add later. If something is written wrong, e.g. a vintage without a number or a price that is not a number, it says so in red right under the field. Prices and alcohol can be written with a comma or a point.</p>
-<p>When the wine is saved, a short message shows at the bottom and the wine lights up in the list. If the name looks like a wine you already have, it is shown under the name field, so you can open it instead of making a copy.</p>
+<p>With a link or a photo, a card above the list shows what comes in – last the producer's website and address. Then the wine moves into the list and lights up, and a short message shows at the bottom. You can add more wines in a row while the cards work. If the page or the label cannot be read, the card says so, and <i>Type the name</i> lets you type the name yourself – the link or photo is still saved with the wine. If you already have the wine, it is suggested instead.</p>
+<p>Always check the wine afterwards with <i>Edit</i> – the automatic part is a good start, not a guarantee. Only the <b>name</b> is needed; the rest you can add later. If something is written wrong, e.g. a vintage without a number or a price that is not a number, it says so in red right under the field. Prices and alcohol can be written with a comma or a point. A wine fetched from a link says <i>Fetched from … (date)</i>, and the refresh icon fetches it again. If the picture is wrong (e.g. the back label), you can choose another.</p>
 <h4 id="delete-wine">Deleting a wine</h4>
 <p>Open the wine, press <i>Edit</i> and then <i>Delete wine</i> at the bottom. You are asked first, and afterwards you can press <i>Undo</i> for a few seconds. A wine that guests have ordered cannot be deleted – remove it from the tasting instead.</p>
 <h4>Producer and map</h4>
@@ -125,7 +125,7 @@ export const HELP: HelpSection[] = [
 <h4>Picture</h4>
 <p>Drag a picture in, choose a file – or press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h4 id="tasting-wines">The wines in a tasting</h4>
-<p>A wine that is not in the library yet can be created straight from the tasting with <a href="t:wines/#tw-new-wine">Wines → Create new wine</a>: the guide puts it in both the library and the tasting and brings you back afterwards.</p>
+<p>In a tasting you add wines with <a href="t:wines/?open=tw-add-toggle">Wines → Add wine</a>: type the name, and wines from your library are shown with <i>Add</i>. A link or a photo creates a new wine that goes into both the library and the tasting – the same way as under <a href="#new-wine">New wine</a>.</p>
 <p>On the tasting's <a href="t:wines/">Wines</a> tab the wines are listed in the order they are poured, with price, what the guests see (<i>Shown</i>, <i>Blind</i> or <i>Hidden</i>), whether they can be ordered, and the guests' average rating. Drag ⋮⋮ to change the order. Press <i>Edit</i> by a wine to set the guest price, quantity prices (e.g. "from 6 bottles 249.95 kr. each"), what the guests see, whether it can be ordered and its place – or to remove it from the tasting (with Undo). A blind wine has its own <i>Reveal</i> button in the list.</p>`,
     },
   },
@@ -301,8 +301,8 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
     da: 'Gæster med e-mail får en mail med tid, sted og en knap til deres personlige invitation. Svar på mailen går til dig.',
     en: 'Guests with an email get a mail with time, place and a button to their personal invitation. Replies to the mail go to you.' } },
   'new-wine': { more: 'new-wine', text: {
-    da: 'Start med et billede af etiketten eller et link til butikken – så udfyldes det meste af sig selv. Tjek felterne bagefter.',
-    en: 'Start with a photo of the label or a link to the shop – most of it fills itself in. Check the fields afterwards.' } },
+    da: 'Skriv navnet, indsæt et link til butikken eller vælg et billede af etiketten – med link eller billede udfyldes det meste af sig selv.',
+    en: 'Type the name, paste a link to the shop or choose a photo of the label – with a link or a photo most of it fills itself in.' } },
   'orders-open': { more: 'orders', text: {
     da: 'Gæsterne kan lægge vine i kurven og bestille. Kun vine, der kan bestilles og ikke er blinde.',
     en: 'Guests can put wines in the cart and order. Only wines that can be ordered and are not blind.' } },

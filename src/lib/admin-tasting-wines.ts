@@ -93,7 +93,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const actions = mk('div', 'tw-actions');
       // Reveal a blind wine with one click, in whatever order suits the evening
       if (vis === 'blind') {
-        const reveal = mk('button', 'btn small', t('blind.reveal'));
+        const reveal = mk('button', 'btn small ghost', t('blind.reveal'));
         reveal.type = 'button';
         reveal.addEventListener('click', async () => {
           reveal.disabled = true;
@@ -112,7 +112,6 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       wireDrag(li);
       list.append(li);
     });
-    renderPicker();
     emit();
   }
 

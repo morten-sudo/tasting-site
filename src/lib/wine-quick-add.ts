@@ -17,6 +17,8 @@ type Opts = {
   hostId: string;
   /** The "+ New wine" button: it opens the line (and hides while the line is open). */
   toggle: HTMLElement;
+  /** More to hide while the line is open (e.g. the list's own search, which the line replaces). */
+  hide?: HTMLElement[];
   /** The host's wines, for the search. */
   library: () => QuickWine[];
   /** Tasting page: wines already in the tasting, and putting a library wine into it. */
@@ -75,12 +77,12 @@ export function initQuickAdd(o: Opts) {
   const isOpen = () => !bar.hidden;
   function open(focus = true) {
     bar.hidden = false;
-    o.toggle.hidden = true;
+    for (const el of [o.toggle, ...(o.hide ?? [])]) el.hidden = true;
     if (focus && matchMedia('(min-width: 48rem)').matches) input.focus();
   }
   function close() {
     bar.hidden = true;
-    o.toggle.hidden = false;
+    for (const el of [o.toggle, ...(o.hide ?? [])]) el.hidden = false;
     input.value = '';
     setCarry(null);
     fieldError(input, null);
@@ -338,9 +340,9 @@ export function initQuickAdd(o: Opts) {
     if (twin && src.kind !== 'name') {
       say(li, t('qa.twin'), '');
       const actions: [string, () => void, string?][] = [];
-      if (o.pick && !o.inHere?.().has(twin.id)) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }, 'btn small']);
-      else actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }, 'btn small']);
-      actions.push([t('qa.createAnyway'), () => { job.name = name; save(job, r, name, vintage, style, country); }]);
+      if (o.pick && !o.inHere?.().has(twin.id)) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }]);
+      else actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }]);
+      actions.push([t('qa.createAnyway'), () => { job.name = name; save(job, r, name, vintage, style, country); }, 'text-btn']);
       actions.push(['×', () => drop(li), 'qa-x']);
       buttons(li, ...actions);
       return;
@@ -402,9 +404,10 @@ export function initQuickAdd(o: Opts) {
   function failed(job: Job, text: string) {
     say(job.li, text, 'error');
     part(job.li).title.textContent = job.src.kind === 'link' ? site(job.src.url) : t('qa.photo');
+    job.li.querySelector<HTMLElement>('.qa-src')!.hidden = true;
     buttons(job.li,
-      [t('qa.typeNameBtn'), () => { drop(job.li); open(); setCarry(job.src); input.focus(); }, 'btn small'],
-      [t('qa.retry'), () => run(job)],
+      [t('qa.typeNameBtn'), () => { drop(job.li); open(); setCarry(job.src); input.focus(); }],
+      [t('qa.retry'), () => run(job), 'text-btn'],
       ['×', () => drop(job.li), 'qa-x']);
   }
 
