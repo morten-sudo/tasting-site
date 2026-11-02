@@ -13,6 +13,8 @@ Sources (downloaded into a data folder given as the first argument):
 - Tuscan municipalities (comuni), ISTAT boundaries – github.com/openpolis/geojson-italy,
   geojson/limits_R_9_municipalities.geojson saved as it-toscana-comuni.geojson
 - Piedmont comuni from the same repository, geojson/limits_R_1_municipalities.geojson saved as it-piemonte-comuni.geojson
+- Spanish municipalities (municipios), IGN boundaries as TopoJSON from es-atlas 0.6.0 (MIT; npm package es-atlas,
+  github.com/martgnz/es-atlas), es/municipalities.json saved as es-municipalities.json
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
 lists closely, but an appellation may in reality cover only part of a municipality.
@@ -925,7 +927,110 @@ PIEMONTE = {
               ('Gattinara', 8.3700, 45.6170, 'small')],
 }
 
+# ---------- Rioja ----------
+def municipios(provinces):
+    """Spanish municipalities (municipios) of the given provinces (INE codes, e.g. '26'), IGN boundaries as published by
+    es-atlas (TopoJSON, es/municipalities.json, saved as es-municipalities.json), by INE name ('Oyón-Oion',
+    'Labastida/Bastida'). A name found in more than one of the provinces is only available with its code: 'Leza (01)'."""
+    topo = load('es-municipalities.json')
+    sx, sy = topo['transform']['scale']
+    tx, ty = topo['transform']['translate']
+    arcs = []
+    for arc in topo['arcs']:  # delta-encoded, quantized positions → lon/lat
+        x = y = 0
+        pts = []
+        for dx, dy in arc:
+            x += dx; y += dy
+            pts.append((x * sx + tx, y * sy + ty))
+        arcs.append(pts)
+
+    def ring(idx):
+        pts = []
+        for i in idx:
+            a = arcs[i] if i >= 0 else arcs[~i][::-1]
+            pts.extend(a if not pts else a[1:])
+        return pts
+
+    def poly(rings):
+        # Simplification can leave a ring with fewer than four points (a sliver); it is left out
+        rs = [ring(r) for r in rings]
+        return Polygon(rs[0], [r for r in rs[1:] if len(r) >= 4]) if len(rs[0]) >= 4 else Polygon()
+
+    out, seen = {}, {}
+    for o in topo['objects']['municipalities']['geometries']:
+        prov = str(o['id'])[:2]
+        if prov not in provinces:
+            continue
+        g = poly(o['arcs']) if o['type'] == 'Polygon' else MultiPolygon([poly(p) for p in o['arcs']])
+        name = o['properties']['name']
+        out[f'{name} ({prov})'] = g.buffer(0)
+        seen.setdefault(name, []).append(out[f'{name} ({prov})'])
+    out.update({n: gs[0] for n, gs in seen.items() if len(gs) == 1})
+    return out
+
+EL_TERNERO = 'El Ternero (Miranda de Ebro)'
+
+def rioja():
+    """The municipios of La Rioja (26), Álava/Araba (01) and Navarra (31), plus the enclaves of Miranda de Ebro (Burgos,
+    09) within La Rioja: El Ternero by Sajazarra and a small piece west of it (the parts of the municipio south of 42.64° N)."""
+    out = municipios(('26', '01', '31', '09'))
+    out[EL_TERNERO] = unary_union([g for g in out['Miranda de Ebro'].geoms if g.centroid.y < 42.64])
+    return out
+
+# The 144 municipios of the DOCa Rioja by sub-zone, as the Reglamento (Orden APA/3465/2004, Art. 4.2; BOE 27 Oct 2004)
+# lists them: 118 in La Rioja, 18 in Álava and 8 in Navarra. Rioja Oriental is the Rioja Baja of the Reglamento (renamed
+# 2018). With today's INE names: Albelda → Albelda de Iregua, Bergasilla → Bergasillas Bajera, Canillas → Canillas de Río
+# Tuerto; Ocón (La Villa) and Molinos de Ocón are the municipio of Ocón; Santa Engracia del Jubera only in its north (drawn
+# whole). In Álava, Barriobusto and Labraza are part of Oyón-Oion and Salinillas de Buradón of Labastida. Rioja Alta also
+# takes in 'El Ternero', an enclave of Miranda de Ebro (Burgos), drawn with the municipio's enclaves within La Rioja.
+RIOJA = {
+    'id': 'rioja', 'name': 'Rioja',
+    # The Ebro valley from the Conchas de Haro to Alfaro, with the Sierra de Cantabria in the north and the Cameros and
+    # the Sierra de la Demanda foothills in the south
+    'bounds': (-3.20, 41.88, -1.62, 42.72),
+    # The Ebro and the lowest stretch of the Aragón; the Oja, Najerilla, Iregua, Cidacos and Alhama are not in Natural
+    # Earth (10m). Natural Earth names the Aragón 'Alagón'.
+    'rivers': ['Ebro', 'Aragón'],
+    'river_parts': {'Aragón': ['Alagón']},
+    'municipalities': rioja,
+    # Rioja DOCa (and 'La Rioja') lights the whole map
+    'whole': ['rioja', 'rioja-doca', 'la-rioja'],
+    'sources': 'Natural Earth; IGN (es-atlas)',
+    'titles': {'rioja-alta': 'Rioja Alta', 'rioja-alavesa': 'Rioja Alavesa', 'rioja-oriental': 'Rioja Oriental'},
+    # Badges in the heart of the vineyards, not in the hills of the large southern municipios
+    'label_at': {'rioja-alta': (-2.78, 42.47), 'rioja-alavesa': (-2.56, 42.57), 'rioja-oriental': (-2.02, 42.27)},
+    'areas': {
+        'rioja-alta': [
+            'Ábalos', 'Alesanco', 'Alesón', 'Anguciana', 'Arenzana de Abajo', 'Arenzana de Arriba', 'Azofra', 'Badarán',
+            'Bañares', 'Baños de Río Tobía', 'Baños de Rioja', 'Berceo', 'Bezares', 'Bobadilla', 'Briñas', 'Briones',
+            'Camprovín', 'Canillas de Río Tuerto', 'Cañas', 'Cárdenas', 'Casalarreina', 'Castañares de Rioja', 'Cellorigo',
+            'Cenicero', 'Cidamón', 'Cihuri', 'Cirueña', 'Cordovín', 'Cuzcurrita de Río Tirón', 'Daroca de Rioja', 'Entrena',
+            'Estollo', 'Foncea', 'Fonzaleche', 'Fuenmayor', 'Galbárruli', 'Gimileo', 'Haro', 'Hervías', 'Herramélluri',
+            'Hormilla', 'Hormilleja', 'Hornos de Moncalvillo', 'Huércanos', 'Lardero', 'Leiva', 'Logroño', 'Manjarrés',
+            'Matute', 'Medrano', 'Nájera', 'Navarrete', 'Ochánduri', 'Ollauri', 'Rodezno', 'Sajazarra', 'San Asensio',
+            'San Millán de Yécora', 'San Torcuato', 'San Vicente de la Sonsierra', 'Santa Coloma', 'Sojuela', 'Sorzano',
+            'Sotés', 'Tirgo', 'Tormantos', 'Torrecilla sobre Alesanco', 'Torremontalbo', 'Treviana', 'Tricio', 'Uruñuela',
+            'Ventosa', 'Villalba de Rioja', 'Villar de Torre', 'Villarejo', 'Zarratón', EL_TERNERO],
+        'rioja-alavesa': [
+            'Baños de Ebro/Mañueta', 'Kripan', 'Elciego', 'Elvillar/Bilar', 'Labastida/Bastida', 'Laguardia',
+            'Lanciego/Lantziego', 'Lapuebla de Labarca', 'Leza', 'Moreda de Álava/Moreda Araba', 'Navaridas', 'Oyón-Oion',
+            'Samaniego', 'Villabuena de Álava/Eskuernaga', 'Yécora/Iekora'],
+        'rioja-oriental': [
+            'Agoncillo', 'Aguilar del Río Alhama', 'Albelda de Iregua', 'Alberite', 'Alcanadre', 'Aldeanueva de Ebro', 'Alfaro',
+            'Arnedillo', 'Arnedo', 'Arrúbal', 'Ausejo', 'Autol', 'Bergasa', 'Bergasillas Bajera', 'Calahorra',
+            'Cervera del Río Alhama', 'Clavijo', 'Corera', 'Cornago', 'El Redal', 'El Villar de Arnedo', 'Galilea', 'Grávalos',
+            'Herce', 'Igea', 'Lagunilla del Jubera', 'Leza de Río Leza', 'Murillo de Río Leza', 'Muro de Aguas', 'Nalda',
+            'Ocón', 'Pradejón', 'Préjano', 'Quel', 'Ribafrecha', 'Rincón de Soto', 'Santa Engracia del Jubera',
+            'Santa Eulalia Bajera', 'Tudelilla', 'Villamediana de Iregua', 'Villarroya',
+            # Navarra
+            'Andosilla', 'Aras', 'Azagra', 'Bargota', 'Mendavia', 'San Adrián', 'Sartaguda', 'Viana'],
+    },
+    'towns': [('Logroño', -2.4450, 42.4650, 'big'), ('Haro', -2.8475, 42.5775, 'mid'), ('Calahorra', -1.9650, 42.3050, 'mid'),
+              ('Alfaro', -1.7500, 42.1800, 'mid'), ('Laguardia', -2.5847, 42.5536, 'small'), ('Cenicero', -2.6440, 42.4800, 'small'),
+              ('Elciego', -2.6170, 42.5150, 'small'), ('Briones', -2.7850, 42.5440, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA, PIEMONTE):
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA, PIEMONTE, RIOJA):
         build(r)

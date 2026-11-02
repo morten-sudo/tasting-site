@@ -89,7 +89,7 @@ export const HELP: HelpSection[] = [
 </ul>
 <p>Tjek altid felterne – det automatiske er et godt udgangspunkt, ikke en garanti.</p>
 <h4>Producent og kort</h4>
-<p>Producentens hjemmeside og adresse findes automatisk, mens du skriver. Adressen placeres som en nål på kortet, når den kan findes præcist. Oprindelse (land, region, appellation) farver regionen på kortet – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, Rhône, Toscana og Piemonte på et detaljeret kort.</p>
+<p>Producentens hjemmeside og adresse findes automatisk, mens du skriver. Adressen placeres som en nål på kortet, når den kan findes præcist. Oprindelse (land, region, appellation) farver regionen på kortet – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, Rhône, Toscana, Piemonte og Rioja på et detaljeret kort.</p>
 <h4>Billede</h4>
 <p>Træk et billede ind, vælg en fil – eller tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h4 id="tasting-wines">Vinene i en smagning</h4>
@@ -104,7 +104,7 @@ export const HELP: HelpSection[] = [
 </ul>
 <p>Always check the fields – the automatic part is a good start, not a guarantee.</p>
 <h4>Producer and map</h4>
-<p>The producer's website and address are found automatically as you type. The address is placed as a pin on the map when it can be found exactly. The origin (country, region, appellation) colours the region on the map – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, the Rhône, Tuscany and Piedmont on a detailed map.</p>
+<p>The producer's website and address are found automatically as you type. The address is placed as a pin on the map when it can be found exactly. The origin (country, region, appellation) colours the region on the map – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, the Rhône, Tuscany, Piedmont and Rioja on a detailed map.</p>
 <h4>Picture</h4>
 <p>Drag a picture in, choose a file – or press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h4 id="tasting-wines">The wines in a tasting</h4>
