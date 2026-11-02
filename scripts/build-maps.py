@@ -12,6 +12,7 @@ Sources (downloaded into a data folder given as the first argument):
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
 - Tuscan municipalities (comuni), ISTAT boundaries – github.com/openpolis/geojson-italy,
   geojson/limits_R_9_municipalities.geojson saved as it-toscana-comuni.geojson
+- Piedmont comuni from the same repository, geojson/limits_R_1_municipalities.geojson saved as it-piemonte-comuni.geojson
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
 lists closely, but an appellation may in reality cover only part of a municipality.
@@ -672,12 +673,17 @@ RHONE = {
 }
 
 # ---------- Toscana ----------
+def comuni(name):
+    """Italian municipalities (comuni) of one region, ISTAT boundaries as published by openpolis/geojson-italy
+    (geojson/limits_R_<region code>_municipalities.geojson), by name. Names are unique within a region."""
+    return {f['properties']['name']: shape(f['geometry']) for f in load(name)['features']}
+
+
 def toscana():
-    """Municipalities (comuni) of Toscana, ISTAT boundaries as published by openpolis/geojson-italy
-    (geojson/limits_R_9_municipalities.geojson, saved as it-toscana-comuni.geojson), by name. Names are unique within
-    the region. These are today's comuni: merged ones are drawn whole (Barberino Tavarnelle, 2019, from Barberino Val
-    d'Elsa and Tavarnelle Val di Pesa; Montalcino, 2017, with San Giovanni d'Asso)."""
-    return {f['properties']['name']: shape(f['geometry']) for f in load('it-toscana-comuni.geojson')['features']}
+    """The comuni of Toscana (limits_R_9, saved as it-toscana-comuni.geojson). These are today's comuni: merged ones are
+    drawn whole (Barberino Tavarnelle, 2019, from Barberino Val d'Elsa and Tavarnelle Val di Pesa; Montalcino, 2017,
+    with San Giovanni d'Asso)."""
+    return comuni('it-toscana-comuni.geojson')
 
 # Chianti DOCG: the disciplinare (Art. 3, after the D.P.R. of 9 August 1967 and the D.M. of 31 July 1932) draws the zone by
 # boundary lines, not as a list of comuni. Drawn here with the comuni those lines run through or enclose, by province
@@ -759,7 +765,167 @@ TOSCANA = {
               ('Bolgheri', 10.6136, 43.2306, 'small'), ('Scansano', 11.3326, 42.6879, 'small')],
 }
 
+# ---------- Piemonte ----------
+# Barbaresco and Asti / Moscato d'Asti take in only the south-eastern frazioni of Alba (San Rocco Seno d'Elvio, and
+# Como for Asti). They are drawn as the part of the comune of Alba east of 8.055° E and south of 44.695° N, an
+# approximation of those frazioni (the comune itself is in Langhe, Barbera d'Alba and Dolcetto d'Alba).
+ALBA_SE = "Alba (San Rocco Seno d'Elvio)"
+
+def piemonte():
+    """The comuni of Piemonte (limits_R_1, saved as it-piemonte-comuni.geojson), plus the south-east of Alba."""
+    out = comuni('it-piemonte-comuni.geojson')
+    out[ALBA_SE] = out['Alba'].intersection(box(8.055, 44.60, 8.20, 44.695))
+    return out
+
+# The comuni as the disciplinari di produzione list them (Art. 3), with ISTAT names ('S. Stefano Belbo' → 'Santo Stefano
+# Belbo', 'Acqui' → 'Acqui Terme', 'Calliano' → 'Calliano Monferrato'). Comuni listed only in part are drawn whole. Merged
+# comuni are drawn whole: Camo is part of Santo Stefano Belbo (2019), Moransengo and Tonengo are Moransengo-Tonengo (2023),
+# Lu and Cuccaro Monferrato are Lu e Cuccaro Monferrato (2019).
+# Langhe DOC: 94 comuni in the province of Cuneo (the list for all types but Arneis)
+LANGHE = [
+    'Alba', 'Albaretto della Torre', 'Arguello', "Baldissero d'Alba", 'Barbaresco', 'Barolo', 'Bastia Mondovì',
+    'Belvedere Langhe', 'Benevello', 'Bergolo', 'Bonvicino', 'Borgomale', 'Bosia', 'Bossolasco', 'Bra', 'Briaglia',
+    'Canale', 'Carrù', 'Castagnito', 'Castellinaldo d\'Alba', 'Castellino Tanaro', 'Castiglione Falletto',
+    'Castiglione Tinella', 'Castino', 'Cerretto Langhe', 'Cherasco', 'Cigliè', 'Cissone', 'Clavesana',
+    "Corneliano d'Alba", 'Cortemilia', 'Cossano Belbo', 'Cravanzana', "Diano d'Alba", 'Dogliani', 'Farigliano',
+    'Feisoglio', 'Gorzegno', 'Govone', 'Grinzane Cavour', 'Guarene', 'Igliano', 'La Morra', 'Lequio Berria', 'Levice',
+    'Magliano Alfieri', 'Mango', 'Marsaglia', 'Mombarcaro', 'Monchiero', 'Mondovì', "Monforte d'Alba", 'Montà',
+    'Montaldo Roero', 'Montelupo Albese', 'Monteu Roero', "Monticello d'Alba", 'Murazzano', 'Narzole', 'Neive',
+    'Neviglie', 'Niella Belbo', 'Niella Tanaro', 'Novello', 'Perletto', 'Pezzolo Valle Uzzone', "Piobesi d'Alba",
+    'Piozzo', 'Pocapaglia', 'Priocca', 'Prunetto', 'Roascio', 'Rocca Cigliè', 'Rocchetta Belbo', 'Roddi', 'Roddino',
+    'Rodello', 'San Benedetto Belbo', 'San Michele Mondovì', "Santa Vittoria d'Alba", 'Santo Stefano Belbo',
+    'Santo Stefano Roero', "Serralunga d'Alba", 'Serravalle Langhe', 'Sinio', 'Somano', 'Sommariva Perno',
+    'Torre Bormida', 'Treiso', 'Trezzo Tinella', 'Verduno', "Vezza d'Alba", 'Vicoforte']
+
+# Barbera d'Asti DOCG: 116 comuni in the province of Asti and 51 in Alessandria (Coniolo, Casale Monferrato, Occimiano and
+# Mirabello Monferrato only on the hills south of the Po).
+BARBERA_D_ASTI = [
+    # Asti
+    'Agliano Terme', 'Albugnano', 'Antignano', 'Aramengo', 'Asti', "Azzano d'Asti", 'Baldichieri d\'Asti', 'Belveglio',
+    'Berzano di San Pietro', 'Bruno', 'Bubbio', "Buttigliera d'Asti", 'Calamandrana', 'Calliano Monferrato', 'Calosso',
+    'Camerano Casasco', 'Canelli', 'Cantarana', 'Capriglio', 'Casorzo Monferrato', 'Cassinasco', 'Castagnole delle Lanze',
+    'Castagnole Monferrato', 'Castel Boglione', "Castell'Alfero", 'Castellero', 'Castelletto Molina',
+    "Castello di Annone", 'Castelnuovo Belbo', 'Castelnuovo Calcea', 'Castelnuovo Don Bosco', 'Castel Rocchero',
+    'Celle Enomondo', "Cerreto d'Asti", 'Cerro Tanaro', 'Cessole', "Chiusano d'Asti", 'Cinaglio', "Cisterna d'Asti",
+    'Coazzolo', 'Cocconato', 'Corsione', 'Cortandone', 'Cortanze', 'Cortazzone', 'Cortiglione', 'Cossombrato',
+    "Costigliole d'Asti", 'Cunico', 'Dusino San Michele', 'Ferrere', 'Fontanile', 'Frinco', 'Grana Monferrato', 'Grazzano Badoglio',
+    'Incisa Scapaccino', "Isola d'Asti", 'Loazzolo', 'Maranzana', 'Maretto', 'Moasca', 'Mombaldone', 'Mombaruzzo',
+    'Mombercelli', 'Monale', 'Monastero Bormida', 'Moncalvo', 'Moncucco Torinese', 'Mongardino', 'Montabone', 'Montafia',
+    'Montaldo Scarampi', "Montechiaro d'Asti", "Montegrosso d'Asti", 'Montemagno Monferrato', 'Montiglio Monferrato', 'Moransengo-Tonengo',
+    'Nizza Monferrato', 'Olmo Gentile', 'Passerano Marmorito', 'Penango', 'Piea', "Pino d'Asti", 'Piovà Massaia',
+    'Portacomaro', 'Quaranti', 'Refrancore', "Revigliasco d'Asti", 'Roatto', 'Robella', "Rocca d'Arazzo",
+    'Roccaverano', 'Rocchetta Palafea', 'Rocchetta Tanaro', "San Damiano d'Asti", 'San Giorgio Scarampi',
+    'San Martino Alfieri', 'San Marzano Oliveto', 'San Paolo Solbrito', 'Scurzolengo', 'Serole', 'Sessame', 'Settime',
+    'Soglio', 'Tigliole', 'Tonco', 'Vaglio Serra', 'Valfenera', 'Vesime', "Viale", 'Viarigi', 'Vigliano d\'Asti',
+    "Villafranca d'Asti", 'Villa San Secondo', 'Vinchio',
+    # Alessandria
+    'Acqui Terme', 'Alfiano Natta', 'Alice Bel Colle', 'Altavilla Monferrato', 'Bergamasco', 'Bistagno',
+    'Borgoratto Alessandrino', 'Camagna Monferrato', 'Camino', 'Carentino', 'Casale Monferrato', 'Cassine',
+    'Castelletto Merli', 'Cella Monte', 'Cereseto', 'Cerrina Monferrato', 'Coniolo', 'Conzano', 'Lu e Cuccaro Monferrato',
+    'Frascaro', 'Frassinello Monferrato', 'Fubine Monferrato', 'Gabiano', 'Gamalero', 'Mirabello Monferrato',
+    'Mombello Monferrato', 'Moncestino', 'Murisengo Monferrato', 'Occimiano', 'Odalengo Grande', 'Odalengo Piccolo', 'Olivola',
+    'Ottiglio', 'Ozzano Monferrato', 'Pontestura', 'Ponzano Monferrato', 'Ricaldone', 'Rosignano Monferrato',
+    'Sala Monferrato', 'San Giorgio Monferrato', 'San Salvatore Monferrato', 'Serralunga di Crea', 'Solonghello',
+    'Strevi', 'Terruggia', 'Terzo', 'Treville', 'Vignale Monferrato', 'Villadeati', 'Villamiroglio']
+
+# Asti and Moscato d'Asti DOCG: 9 comuni in Alessandria, 28 in Asti and 13 in Cuneo, and the frazioni Como and San Rocco
+# Seno d'Elvio of Alba
+ASTI = [
+    'Acqui Terme', 'Alice Bel Colle', 'Bistagno', 'Cassine', 'Grognardo', 'Ricaldone', 'Strevi', 'Terzo', 'Visone',
+    'Bubbio', 'Calamandrana', 'Calosso', 'Canelli', 'Cassinasco', 'Castagnole delle Lanze', 'Castel Boglione',
+    'Castelletto Molina', 'Castelnuovo Belbo', 'Castel Rocchero', 'Cessole', 'Coazzolo', "Costigliole d'Asti", 'Fontanile',
+    'Incisa Scapaccino', 'Loazzolo', 'Maranzana', 'Mombaruzzo', 'Monastero Bormida', 'Montabone', 'Nizza Monferrato',
+    'Quaranti', 'San Marzano Oliveto', 'Moasca', 'Sessame', 'Vesime', 'Rocchetta Palafea', 'San Giorgio Scarampi',
+    'Castiglione Tinella', 'Cossano Belbo', 'Mango', 'Neive', 'Neviglie', 'Rocchetta Belbo', "Serralunga d'Alba",
+    'Santo Stefano Belbo', "Santa Vittoria d'Alba", 'Treiso', 'Trezzo Tinella', 'Castino', 'Perletto', ALBA_SE]
+
+PIEMONTE = {
+    'id': 'piemonte', 'name': 'Piemonte',
+    # The Langhe, Roero and Monferrato with Gavi by the Ligurian border, and Gattinara and Ghemme in the north; Torino on
+    # the western edge, not the Alps
+    'bounds': (7.55, 44.30, 9.0, 45.70),
+    'rivers': ['Tanaro', 'Po'],
+    'municipalities': piemonte,
+    # Piemonte DOC (and 'Piedmont') lights the whole map
+    'whole': ['piemonte', 'piedmont'],
+    'sources': 'Natural Earth; ISTAT (openpolis)',
+    # Badges for the wide areas by the places they are known by, apart from those of the smaller areas within them
+    'label_at': {'langhe': (8.06, 44.54), 'barbera-d-alba': (8.03, 44.655), 'dolcetto-d-alba': (8.12, 44.62),
+                 'nebbiolo-d-alba': (7.93, 44.75), 'roero': (8.04, 44.80), 'barbera-d-asti': (8.30, 45.00),
+                 'moscato-d-asti': (8.22, 44.68), 'asti': (8.22, 44.68),
+                 'barbaresco': (8.11, 44.72)},
+    # Drawn in this order: the wide areas (Langhe, Barbera d'Asti, Asti, the Alba DOCs), then the smaller ones on top
+    'areas': {
+        'langhe': LANGHE,
+        'barbera-d-asti': BARBERA_D_ASTI,
+        'moscato-d-asti': ASTI,
+        'asti': ASTI,
+        # Barbera d'Alba DOC: 41 comuni wholly; Baldissero d'Alba, Bra, Cortemilia, Cherasco, La Morra, Monchiero, Montà,
+        # Montaldo Roero, Monteu Roero, Narzole, Pocapaglia, Santo Stefano Roero and Sommariva Perno in part
+        'barbera-d-alba': [
+            'Alba', 'Albaretto della Torre', 'Barbaresco', 'Barolo', 'Borgomale', 'Canale', 'Castagnito',
+            "Castellinaldo d'Alba", 'Castiglione Falletto', 'Castiglione Tinella', 'Castino', "Corneliano d'Alba",
+            'Cossano Belbo', "Diano d'Alba", 'Govone', 'Grinzane Cavour', 'Guarene', 'Magliano Alfieri', 'Mango',
+            "Monforte d'Alba", 'Montelupo Albese', "Monticello d'Alba", 'Neive', 'Neviglie', 'Novello', 'Perletto',
+            "Piobesi d'Alba", 'Priocca', 'Rocchetta Belbo', 'Roddi', 'Roddino', 'Rodello', "Santa Vittoria d'Alba",
+            'Santo Stefano Belbo', "Serralunga d'Alba", 'Sinio', 'Treiso', 'Trezzo Tinella', 'Verduno', "Vezza d'Alba",
+            "Baldissero d'Alba", 'Bra', 'Cortemilia', 'Cherasco', 'La Morra', 'Monchiero', 'Montà', 'Montaldo Roero',
+            'Monteu Roero', 'Narzole', 'Pocapaglia', 'Santo Stefano Roero', 'Sommariva Perno'],
+        # Dolcetto d'Alba DOC: 24 comuni in Cuneo and Coazzolo (Asti) wholly; Barbaresco, Cherasco, Narzole, Neive,
+        # Novello, La Morra, Roddi and Verduno south of the Tanaro, and parts of Roddino, Torre Bormida and Cortemilia
+        'dolcetto-d-alba': [
+            'Alba', 'Albaretto della Torre', 'Arguello', 'Barolo', 'Benevello', 'Borgomale', 'Bosia',
+            'Castiglione Falletto', 'Castiglione Tinella', 'Castino', 'Cossano Belbo', 'Grinzane Cavour', 'Lequio Berria',
+            'Mango', "Monforte d'Alba", 'Montelupo Albese', 'Neviglie', 'Rocchetta Belbo', 'Rodello', 'Santo Stefano Belbo',
+            "Serralunga d'Alba", 'Sinio', 'Treiso', 'Trezzo Tinella', 'Coazzolo',
+            'Barbaresco', 'Cherasco', 'Narzole', 'Neive', 'Novello', 'La Morra', 'Roddi', 'Verduno', 'Roddino',
+            'Torre Bormida', 'Cortemilia'],
+        # Nebbiolo d'Alba DOC: 9 comuni wholly, 23 in part (mostly the Roero and the comuni north of the Barolo zone)
+        'nebbiolo-d-alba': [
+            'Canale', "Castellinaldo d'Alba", "Corneliano d'Alba", "Monticello d'Alba", "Piobesi d'Alba", 'Priocca',
+            "Santa Vittoria d'Alba", "Vezza d'Alba", 'Sinio', 'Govone',
+            'Alba', 'Bra', "Baldissero d'Alba", 'Castagnito', "Diano d'Alba", 'Grinzane Cavour', 'Guarene', 'La Morra',
+            'Magliano Alfieri', 'Monchiero', "Monforte d'Alba", 'Montà', 'Montaldo Roero', 'Montelupo Albese',
+            'Monteu Roero', 'Novello', 'Pocapaglia', 'Roddi', 'Roddino', 'Santo Stefano Roero', 'Sommariva Perno',
+            'Verduno'],
+        # Roero DOCG: Canale, Corneliano d'Alba, Piobesi d'Alba and Vezza d'Alba wholly, 15 comuni in part
+        'roero': [
+            'Canale', "Corneliano d'Alba", "Piobesi d'Alba", "Vezza d'Alba",
+            "Baldissero d'Alba", 'Castagnito', "Castellinaldo d'Alba", 'Govone', 'Guarene', 'Magliano Alfieri', 'Montà',
+            'Montaldo Roero', 'Monteu Roero', "Monticello d'Alba", 'Pocapaglia', 'Priocca', "Santa Vittoria d'Alba",
+            'Santo Stefano Roero', 'Sommariva Perno'],
+        # Dogliani DOCG: 14 comuni wholly; Carrù, Mondovì, Murazzano, Roddino, San Michele Mondovì, Somano and Vicoforte
+        # in part
+        'dogliani': [
+            'Bastia Mondovì', 'Belvedere Langhe', 'Briaglia', 'Castellino Tanaro', 'Cigliè', 'Clavesana', 'Dogliani',
+            'Farigliano', 'Igliano', 'Marsaglia', 'Monchiero', 'Niella Tanaro', 'Piozzo', 'Rocca Cigliè',
+            'Carrù', 'Mondovì', 'Murazzano', 'Roddino', 'San Michele Mondovì', 'Somano', 'Vicoforte'],
+        # Nizza DOCG: 18 comuni around Nizza Monferrato
+        'nizza': [
+            'Agliano Terme', 'Belveglio', 'Calamandrana', 'Castel Boglione', 'Castelnuovo Belbo', 'Castelnuovo Calcea',
+            'Castel Rocchero', 'Cortiglione', 'Incisa Scapaccino', 'Mombaruzzo', 'Mombercelli', 'Nizza Monferrato',
+            'Vaglio Serra', 'Vinchio', 'Bruno', 'Rocchetta Palafea', 'Moasca', 'San Marzano Oliveto'],
+        # Barolo DOCG: Barolo, Castiglione Falletto and Serralunga d'Alba wholly; Monforte d'Alba, La Morra, Verduno,
+        # Grinzane Cavour, Diano d'Alba, Novello, Cherasco and Roddi in part
+        'barolo': ['Barolo', 'Castiglione Falletto', "Serralunga d'Alba", "Monforte d'Alba", 'La Morra', 'Verduno',
+                   'Grinzane Cavour', "Diano d'Alba", 'Novello', 'Cherasco', 'Roddi'],
+        # Barbaresco DOCG: Barbaresco, Neive and Treiso, and San Rocco Seno d'Elvio, the part of Alba they border
+        'barbaresco': ['Barbaresco', 'Neive', 'Treiso', ALBA_SE],
+        # Gavi or Cortese di Gavi DOCG: the 11 comuni of its Allegato 1 (Novi Ligure and Serravalle Scrivia in part)
+        'gavi': ['Bosio', 'Carrosio', "Capriata d'Orba", 'Francavilla Bisio', 'Gavi', 'Novi Ligure', 'Parodi Ligure',
+                 'Pasturana', 'San Cristoforo', 'Serravalle Scrivia', 'Tassarolo'],
+        # Gattinara DOCG: the comune of Gattinara (Vercelli). Ghemme DOCG: Ghemme and part of Romagnano Sesia (Novara)
+        'gattinara': ['Gattinara'],
+        'ghemme': ['Ghemme', 'Romagnano Sesia'],
+    },
+    'towns': [('Torino', 7.6869, 45.0703, 'big'), ('Alba', 8.0353, 44.7009, 'mid'), ('Asti', 8.2068, 44.9008, 'mid'),
+              ('Novara', 8.6219, 45.4469, 'mid'), ('Bra', 7.8550, 44.6990, 'small'), ('Barolo', 7.9429, 44.6107, 'small'),
+              ('Barbaresco', 8.0812, 44.7262, 'small'), ('Nizza Monferrato', 8.3570, 44.7746, 'small'),
+              ('Canelli', 8.2928, 44.7213, 'small'), ('Dogliani', 7.9453, 44.5303, 'small'), ('Gavi', 8.8065, 44.6884, 'small'),
+              ('Gattinara', 8.3700, 45.6170, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA):
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA, PIEMONTE):
         build(r)
