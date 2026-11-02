@@ -53,6 +53,8 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
   </aside>
 
   <div class="admin-content">
+    <!-- Shown while the page signs in and fetches its data; hidden by CSS once #admin-main (or "not found") shows -->
+    <p class="page-loading" aria-live="polite"><span data-i18n="common.loading">Loading …</span></p>
     <slot />
   </div>
 </div>

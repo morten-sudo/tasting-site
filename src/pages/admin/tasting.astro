@@ -1166,10 +1166,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const newWine = `/admin/wines/?new=${tasting.id}&back=${encodeURIComponent(`/t/${tasting.slug}/admin/wines/`)}`;
     ($('tw-new-wine') as HTMLAnchorElement).href = newWine;
     ($('tw-new-wine-2') as HTMLAnchorElement).href = newWine;
-    await tastingWines.load();
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
-    await initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; },
-      () => (tasting?.language as string | null) ?? lang()).load();
+    // The wines and the quiz at the same time, not one after the other
+    await Promise.all([
+      tastingWines.load(),
+      initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; },
+        () => (tasting?.language as string | null) ?? lang()).load(),
+    ]);
     renderParticipants();
     renderOrders();
     loadSettings();
