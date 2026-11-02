@@ -105,6 +105,9 @@ begin
   failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
   assert failed, 'a host can add to the appellation list';
   update appellations set name = 'hacked' where id = 'porto'; get diagnostics n = row_count;              assert n = 0, 'a host can change the appellation list';
+  failed := false; begin insert into wine_regions (id, country, name) values ('selftest', 'XX', 'x'); exception when others then failed := true; end;
+  assert failed, 'a host can add to the wine regions';
+  update wine_regions set name = 'hacked' where id = 'pt-douro'; get diagnostics n = row_count;           assert n = 0, 'a host can change the wine regions';
   -- The guest page of another host's tasting stays closed
   assert host_guest_code('selftest-b') is null, 'host A gets a guest code for host B''s tasting';
   -- Hosts are managed only by the owner of the tasting
@@ -311,6 +314,10 @@ begin
   select count(*) into n from appellations where id = 'porto';                                              assert n = 1, 'the appellation list is not readable';
   failed := false; begin insert into appellations (id, name, region, country) values ('selftest', 'x', 'x', 'XX'); exception when others then failed := true; end;
   assert failed, 'anyone can add to the appellation list';
+  -- The wine regions can be read but not changed
+  select count(*) into n from wine_regions where id = 'pt-douro';                                           assert n = 1, 'the wine regions are not readable';
+  failed := false; begin insert into wine_regions (id, country, name) values ('selftest', 'XX', 'x'); exception when others then failed := true; end;
+  assert failed, 'anyone can add to the wine regions';
   -- Places for the overview map: readable, written only by hosts through the checked function
   failed := false; begin perform save_place_guess('X', 'FR', 46, 2); exception when others then failed := true; end;
   assert failed, 'anyone can save a place';
