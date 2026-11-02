@@ -821,3 +821,42 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .wf-source-text { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-page .wf-source-text a { color: var(--amber); }
 .admin-page .wf-source .text-btn { justify-self: start; font-size: 0.85rem; }
+/* Wine library: names lead to the wine's own page */
+.admin-page a.wine-name { display: block; color: var(--paper); text-decoration: none; }
+.admin-page a.wine-name:hover, .admin-page a.wine-name:focus-visible { color: var(--amber); text-decoration: underline; }
+/* One wine: /admin/wines/<id>/ */
+.admin-page .wd-back { display: inline-block; margin-bottom: 1rem; color: var(--muted); text-decoration: none; font-size: 0.92rem; }
+.admin-page .wd-back:hover { color: var(--paper); }
+.admin-page .wd-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 1.25rem; align-items: start; margin-bottom: 1.5rem; }
+.admin-page .wd-pic { width: 7.5rem; height: 11rem; display: grid; place-items: center; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
+.admin-page .wd-pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.admin-page .wd-head .title { margin: 0 0 0.35rem; overflow-wrap: anywhere; }
+.admin-page .wd-meta { margin: 0; color: var(--muted); }
+.admin-page .wd-overall { margin: 0.6rem 0 0; font-weight: 500; }
+.admin-page .wd-grid { display: grid; gap: 1.5rem; }
+@media (min-width: 56rem) { .admin-page .wd-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; } }
+.admin-page .wd-description { margin: 0 0 1.25rem; line-height: 1.6; }
+.admin-page .wd-block { margin-bottom: 1.5rem; }
+.admin-page .wd-block h2 { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.6rem; }
+.admin-page .wd-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.45rem 1.25rem; margin: 0; padding: 0.9rem 1rem; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .wd-facts dt { color: var(--muted); }
+.admin-page .wd-facts dd { margin: 0; overflow-wrap: anywhere; }
+.admin-page .wd-source a { color: var(--amber); }
+.admin-page .wd-tastings { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .wd-tasting { display: flex; justify-content: space-between; gap: 1rem; padding: 0.75rem 1rem; border-top: 1px solid var(--lodge-2); }
+.admin-page .wd-tasting:first-child { border-top: 0; }
+.admin-page .wd-t-title { display: block; color: var(--paper); font-weight: 500; text-decoration: none; }
+.admin-page .wd-t-title:hover { color: var(--amber); text-decoration: underline; }
+.admin-page .wd-t-sub, .admin-page .wd-votes { display: block; font-size: 0.85rem; color: var(--muted); }
+.admin-page .wd-t-rating { text-align: right; white-space: nowrap; }
+.admin-page .wd-score { font-weight: 600; color: var(--amber); }
+.admin-page .wd-origin-text { margin: 0 0 0.75rem; }
+.admin-page .wd-map { background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
+.admin-page .wd-map svg { display: block; width: 100%; height: auto; }
+@media (max-width: 40rem) {
+  .admin-page .wd-head { grid-template-columns: auto minmax(0, 1fr); }
+  .admin-page .wd-pic { width: 5.5rem; height: 8rem; }
+  .admin-page .wd-head #wd-edit { grid-column: 1 / -1; justify-self: start; }
+}
+.admin-page #wd-edit { white-space: nowrap; }
+.admin-page .wd-head .title { font-size: clamp(2.2rem, 6vw, 3.4rem); }

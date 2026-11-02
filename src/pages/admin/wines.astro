@@ -7,6 +7,43 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="wines">
     <div id="admin-main" hidden>
+      <!-- One wine: /admin/wines/<id>/ (the same page, shown instead of the list) -->
+      <section id="wine-detail" class="wine-detail" hidden>
+        <a class="wd-back" href="/admin/wines/">← <span data-i18n="wineAdmin.back">All wines</span></a>
+        <p id="wd-missing" class="hint" hidden data-i18n="wineAdmin.notFound">The wine was not found.</p>
+        <div id="wd-main">
+          <div class="wd-head">
+            <div id="wd-pic" class="wd-pic" hidden></div>
+            <div class="wd-head-text">
+              <h1 id="wd-name" class="title"></h1>
+              <p id="wd-meta" class="wd-meta"></p>
+              <p id="wd-overall" class="wd-overall" hidden></p>
+            </div>
+            <button id="wd-edit" class="btn small ghost" type="button" data-i18n="admin.edit">Edit</button>
+          </div>
+          <div class="wd-grid">
+            <div>
+              <p id="wd-description" class="wd-description" hidden></p>
+              <section id="wd-facts-block" class="wd-block" hidden>
+                <h2 data-i18n="wineAdmin.facts">Details</h2>
+                <dl id="wd-facts" class="wd-facts"></dl>
+              </section>
+              <section class="wd-block">
+                <h2 data-i18n="wineAdmin.tastings">Tastings</h2>
+                <ul id="wd-tastings" class="wd-tastings"></ul>
+                <p id="wd-tastings-empty" class="hint" hidden data-i18n="wineLib.unused">Not in any tasting</p>
+              </section>
+            </div>
+            <section id="wd-origin" class="wd-block" hidden>
+              <h2 data-i18n="wineAdmin.origin">Origin</h2>
+              <p id="wd-origin-text" class="wd-origin-text"></p>
+              <div id="wd-map" class="wd-map" hidden></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <div id="wine-list-view">
       <h1 class="title" data-i18n="adminNav.wines">Wines</h1>
       <p class="hint" data-i18n="wineLib.intro">All your wines. Add them here, then choose them for each tasting – where you also set the guest price.</p>
 
@@ -130,6 +167,7 @@ import '../../styles/admin.css';
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
         <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
       </section>
+      </div>
     </div>
     </AdminNav>
   </section>
@@ -138,11 +176,17 @@ import '../../styles/admin.css';
 <script>
   import { requireHost, $ } from '../../lib/admin-common';
   import { initWineAdmin } from '../../lib/admin-wines';
+  import { wineIdFromPath, showWinePage } from '../../lib/admin-wine-page';
 
   const host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
-    await initWineAdmin(host.id, host.tenant_id).load();
+    const wineId = wineIdFromPath();
+    // On a wine's own page: saving reloads the page's facts, deleting goes back to the list
+    const show = () => showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true) });
+    const admin = initWineAdmin(host.id, host.tenant_id, wineId ? { onSaved: show, onDeleted: () => { location.href = '/admin/wines/'; } } : {});
+    await admin.load();
+    if (wineId) await show();
     // Search the list
     $('wine-search').addEventListener('input', (e) => {
       const q = (e.target as HTMLInputElement).value.trim().toLowerCase();

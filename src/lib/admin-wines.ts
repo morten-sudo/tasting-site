@@ -93,7 +93,7 @@ async function locateAppellation(appellation: string | null, region: string | nu
   } catch { /* the wine is saved; the map falls back to the country */ }
 }
 
-export function initWineAdmin(hostId: string, tenantId: string) {
+export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved?: () => void; onDeleted?: () => void } = {}) {
   let wines: AdminWine[] = [];
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
@@ -457,7 +457,9 @@ export function initWineAdmin(hostId: string, tenantId: string) {
         thumb.append(img);
       }
       const body = mk('div', 'wine-body');
-      body.append(mk('p', 'wine-name', w.name));
+      const name = mk('a', 'wine-name', w.name);
+      name.href = `/admin/wines/${w.id}/`;
+      body.append(name);
       const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
       const origin = originLine(w);
@@ -625,6 +627,7 @@ export function initWineAdmin(hostId: string, tenantId: string) {
     locateAppellation(row.appellation, row.region, row.country);
     closeForm();
     await load();
+    hooks.onSaved?.();
   });
 
   // Delete in two steps instead of a browser dialog
@@ -644,8 +647,17 @@ export function initWineAdmin(hostId: string, tenantId: string) {
       return;
     }
     closeForm();
+    if (hooks.onDeleted) { hooks.onDeleted(); return; }
     await load();
   });
 
-  return { load };
+  /** Opens the panel for a wine on the list; with refresh it fetches its link again straight away. */
+  function edit(id: number, refresh = false) {
+    const w = wines.find((x) => x.id === id);
+    if (!w) return;
+    openForm(w);
+    if (refresh && w.source_url) readLink(true);
+  }
+
+  return { load, edit };
 }

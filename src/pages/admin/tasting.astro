@@ -28,7 +28,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <header class="ta-head">
         <div class="ta-top">
           <h1 id="ta-title" class="title"></h1>
-          <a id="t-guestpage" class="ta-guest" href="/home/" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span> ↗</a>
+          <a id="t-guestpage" class="ta-guest" href="/home/" target="_blank" rel="noopener" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span> ↗</a>
         </div>
         <nav id="admin-tabs" class="ta-tabs" aria-label="Tasting admin" data-i18n-attr="aria-label=adminBar.label">
           {TABS.map((tab) => <a href="/admin/" data-apath={tab.path} data-section={tab.id} data-i18n={tab.key}>{en[tab.key]}</a>)}
