@@ -208,9 +208,10 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     // The producer's own domain, but a home page with little to read (an age check, a picture): read its contact or
     // about page too before deciding – the domain alone is not enough (bollinger.com is not the Champagne house)
     if (score == null && why.includes('own domain') && why.includes('wine words 0')) {
-      const extra = (await Promise.all(contactLinks(page.html, page.url).slice(0, 4).map((u) => get(u, 5000)))).filter(Boolean) as { url: string; html: string }[];
+      const links = contactLinks(page.html, page.url).slice(0, 4);
+      const extra = (await Promise.all(links.map((u) => get(u, 6000)))).filter(Boolean) as { url: string; html: string }[];
       if (extra.length) ({ score, why } = scorePage({ url: page.url, html: page.html + extra.map((e) => e.html).join('') }, words, origin, wineWords));
-      why += ` (with ${extra.length} more pages)`;
+      why += ` (with ${extra.length} of ${links.map((l) => new URL(l).pathname).join(' ')})`;
     }
     tried.push({ url: candidates[i], result: (score == null ? 'not the producer: ' : `score ${score}: `) + why });
     if (score != null && score > best) { best = score; site = page; }
