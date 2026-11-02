@@ -11,6 +11,7 @@ import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
 import { combo, type ComboOption } from './combo';
 import { SUPABASE_URL, SUPABASE_KEY } from './config';
+import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
 export type AdminWine = {
@@ -28,7 +29,6 @@ export type AdminWine = {
 
 const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
-const MAX_IMAGE_SIDE = 1400;
 
 const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 /** A typed web address as https://…, or null. */
@@ -48,69 +48,12 @@ function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   return e;
 }
 
-/** Shrinks a photo to at most MAX_IMAGE_SIDE px and re-encodes it as JPEG. */
-async function shrinkImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file).catch(() => null);
-  if (!bitmap) return file;
-  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve) => canvas.toBlob((b) => resolve(b ?? file), 'image/jpeg', 0.85));
-}
-
-/** A smaller JPEG data URI for reading the label (keeps the request light). */
-async function labelDataUrl(blob: Blob, maxSide = 1024): Promise<string | null> {
-  const bitmap = await createImageBitmap(blob).catch(() => null);
-  if (!bitmap) return null;
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.8);
-}
-
-type LabelResult = {
-  name: string | null; producer: string | null; vintage: string | null; style: string | null;
-  abv: number | null; appellation: string | null; region: string | null; country: string | null; grapes: string | null;
-};
-type LinkResult = LabelResult & {
-  description: string | null; image: string | null; images?: string[]; price: number | null; source_url: string;
-  food?: string | null; serving?: string | null;
-  offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
-};
-
 type GeoHit = { lat: number; lon: number; source: string };
 const toText = (v: string) => v.trim() || null;
 /** "2 Nov 2026, 12:31" – when a wine's link was read. */
 export const fetchedWhen = (iso: string) => new Intl.DateTimeFormat(locale(), {
   day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen',
 }).format(new Date(iso));
-
-/** Asks Cloudflare AI where an unknown appellation lies and saves it (checked against the country in the database). */
-async function locateAppellation(appellation: string | null, region: string | null, country: string | null) {
-  if (!appellation || !country) return;
-  const list = await loadAppellations();
-  if (matchAppellation(list, appellation)) return;
-  const key = `${normOrigin(appellation)}|${country}`;
-  const { data: known } = await supabase.from('appellation_guesses').select('key').eq('key', key).maybeSingle();
-  if (known) return;
-  try {
-    const { data: s } = await supabase.auth.getSession();
-    const res = await fetch('/api/locate', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
-      body: JSON.stringify({ appellation, region, country }),
-    });
-    const r = (await res.json()) as { found?: boolean; lat?: number; lon?: number };
-    if (r.found) {
-      await supabase.rpc('save_place_guess', { name: appellation, country, lat: r.lat, lon: r.lon });
-      forgetGuesses();
-    }
-  } catch { /* the wine is saved; the map falls back to the country */ }
-}
 
 export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved?: () => void; onDeleted?: (id: number) => void } = {}) {
   let wines: AdminWine[] = [];
@@ -129,26 +72,13 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   const form = $<HTMLFormElement>('wine-form');
   const panel = $<HTMLDialogElement>('wine-panel');
-  // A new wine is a guide in steps (dialog.wizard); editing is the side panel (dialog.sheet)
-  let step = 0;
-  let intoDefault: string | null = null; // the tasting the guide was opened from, chosen in the last step
-  const guide = () => panel.classList.contains('wizard');
-  $('wf-close').addEventListener('click', () => requestClose());
+  // Editing a wine: the side panel (new wines come in through the line above the list, wine-quick-add.ts)
+  $('wf-close').addEventListener('click', () => closeForm());
   panel.addEventListener('close', () => { editing = null; });
-  // Esc and a click beside the guide ask before throwing away what was typed
-  // A second Esc (with the question showing) closes.
-  panel.addEventListener('cancel', (e) => { if (guide() && dirty() && $('wf-discard').hidden) { e.preventDefault(); askDiscard(); } });
-  panel.addEventListener('click', (e) => { if (e.target === panel && guide()) requestClose(); });
   const list = $<HTMLUListElement>('wine-admin-list');
   const checks = wineChecks(form);
   const AMOUNTS = ['wf-abv', 'wf-retail', 'wf-offer-price'];
   const field = <E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id: string) => $<E>(id);
-
-  // On a computer the photo tile uploads a picture; on a phone it opens the camera
-  if (!matchMedia('(pointer: coarse)').matches) {
-    const text = document.getElementById('wf-photo-text');
-    if (text) { text.dataset.i18n = 'start.photoTextUpload'; text.textContent = t('start.photoTextUpload'); }
-  }
 
   // Style options
   const styleSelect = field<HTMLSelectElement>('wf-style');
@@ -289,10 +219,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
   // Status line under the link field or under the photo, with a spinner while working
-  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-start-status' | 'wf-source-status';
+  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-source-status';
   let statusTarget: StatusId = 'wf-label-status';
   function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    for (const id of ['wf-label-status', 'wf-link-status', 'wf-start-status', 'wf-source-status']) {
+    for (const id of ['wf-label-status', 'wf-link-status', 'wf-source-status']) {
       const el = $(id);
       const mine = id === statusTarget;
       el.textContent = mine ? text : '';
@@ -324,8 +254,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       });
       if (!res.ok) throw new Error(String(res.status));
       const r = (await res.json()) as LabelResult;
-      // The guide moves on to the wine, where the result is shown under the picture
-      if (guide() && step === 0) { statusTarget = 'wf-label-status'; goStep(1); }
       fillStatus(fillFromLabel(r), t('label.filled', { n: '{n}' }), t('label.nothing'));
       fillProducer();
     } catch {
@@ -450,7 +378,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       sourceFetchedAt = new Date().toISOString();
       showSource();
       statusTarget = 'wf-source-status';
-      if (guide() && step === 0) goStep(1);
       const offer = r.offer
         ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: kr.format(r.offer.price), n: r.offer.quantity })
         : '';
@@ -475,7 +402,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     $('wf-read-label').hidden = !pendingImage;
   }
 
-  function openForm(w: AdminWine | null) {
+  function openForm(w: AdminWine) {
     editing = w;
     checks.clear();
     $('wf-similar').hidden = true;
@@ -483,8 +410,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     pendingImage = null;
     removeImage = false;
     linkImage = null;
-    sourceUrl = w?.source_url ?? null;
-    sourceFetchedAt = w?.source_fetched_at ?? null;
+    sourceUrl = w.source_url ?? null;
+    sourceFetchedAt = w.source_fetched_at ?? null;
     foundPlace = null;
     producerTurn++;
     producerStatus('');
@@ -495,154 +422,37 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
     showMsg('');
-    $('wf-title').textContent = w ? t('admin.editWine') : t('admin.newWine');
-    // New wine: the guide; editing: the side panel
-    panel.className = w ? 'sheet wide' : 'wizard';
-    $('wf-steps').hidden = !!w;
-    $('wf-finish').hidden = !!w;
-    $('wf-cancel').hidden = !w;
-    $('wf-discard').hidden = true;
     $('wf-actions').hidden = false;
-    $('wf-delete').hidden = !w;
     $('wf-delete-confirm').hidden = true;
-    field<HTMLInputElement>('wf-name').value = w?.name ?? '';
-    field<HTMLInputElement>('wf-producer').value = w?.producer ?? '';
-    field<HTMLInputElement>('wf-producer-website').value = w?.producer_website ?? '';
-    field<HTMLInputElement>('wf-producer-address').value = w?.producer_address ?? '';
-    styleSelect.value = w?.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
-    field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
-    field<HTMLInputElement>('wf-abv').value = amountText(w?.abv, locale());
-    field<HTMLInputElement>('wf-retail').value = amountText(w?.retail_price_dkk, locale());
-    field<HTMLInputElement>('wf-offer-price').value = amountText(w?.offer_price_dkk, locale());
-    field<HTMLInputElement>('wf-offer-qty').value = w?.offer_quantity != null ? String(w.offer_quantity) : '';
-    field<HTMLTextAreaElement>('wf-description').value = w?.description ?? '';
-    field<HTMLTextAreaElement>('wf-details').value = w?.details ?? '';
-    field<HTMLInputElement>('wf-grapes').value = w?.grapes ?? '';
-    field<HTMLInputElement>('wf-food').value = w?.food_pairing ?? '';
-    field<HTMLInputElement>('wf-serving').value = w?.serving ?? '';
-    appInput.value = w?.appellation ?? '';
-    regionInput.value = w?.region ?? '';
-    countrySelect.value = w?.country ?? '';
+    field<HTMLInputElement>('wf-name').value = w.name ?? '';
+    field<HTMLInputElement>('wf-producer').value = w.producer ?? '';
+    field<HTMLInputElement>('wf-producer-website').value = w.producer_website ?? '';
+    field<HTMLInputElement>('wf-producer-address').value = w.producer_address ?? '';
+    styleSelect.value = w.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
+    field<HTMLInputElement>('wf-vintage').value = w.vintage ?? '';
+    field<HTMLInputElement>('wf-abv').value = amountText(w.abv, locale());
+    field<HTMLInputElement>('wf-retail').value = amountText(w.retail_price_dkk, locale());
+    field<HTMLInputElement>('wf-offer-price').value = amountText(w.offer_price_dkk, locale());
+    field<HTMLInputElement>('wf-offer-qty').value = w.offer_quantity != null ? String(w.offer_quantity) : '';
+    field<HTMLTextAreaElement>('wf-description').value = w.description ?? '';
+    field<HTMLTextAreaElement>('wf-details').value = w.details ?? '';
+    field<HTMLInputElement>('wf-grapes').value = w.grapes ?? '';
+    field<HTMLInputElement>('wf-food').value = w.food_pairing ?? '';
+    field<HTMLInputElement>('wf-serving').value = w.serving ?? '';
+    appInput.value = w.appellation ?? '';
+    regionInput.value = w.region ?? '';
+    countrySelect.value = w.country ?? '';
     syncOrigin();
-    setPreview(w?.image_url ?? null);
-    // New wine: two tiles (photo / link) first; editing: the link field as before
-    $('wf-start').hidden = !!w;
+    setPreview(w.image_url ?? null);
     // A wine fetched from a link shows where from (with Update) instead of an empty link field
     showSource();
-    showLinkBox(!!w && !sourceUrl);
-    if (!w) { loadTastings(); goStep(0); }
-    // A wine saved before the producer lookup existed (or never looked up): look it up now
-    else if (w.producer && !w.producer_checked_at && (!w.producer_website || !w.producer_address)) fillProducer();
-    else { $('wf-back').hidden = true; $('wf-next').hidden = true; $('wf-save').hidden = false; $('wf-save').textContent = t('common.save'); }
+    showLinkBox(!sourceUrl);
+    if (w.producer && !w.producer_checked_at && (!w.producer_website || !w.producer_address)) fillProducer();
     panel.showModal();
     panel.scrollTop = 0;
     // On phones the keyboard would cover the sheet, so only focus a field on larger screens
-    if (w && matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
+    if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
     else (document.activeElement as HTMLElement | null)?.blur();
-  }
-
-  // ---------- The guide (new wine) ----------
-  const STEPS = 4;
-  /** The guide's step that holds an element. */
-  const stepOf = (el: Element) => Number(el.closest<HTMLElement>('.wf-step')?.dataset.step ?? 0);
-  function goStep(n: number, checked = true) {
-    // Forward only when the fields of the steps passed are fine (each says what is wrong under it)
-    if (checked && n > step) {
-      for (let i = step; i < n; i++) {
-        const section = form.querySelector<HTMLElement>(`.wf-step[data-step="${i}"]`);
-        if (section && !checks.checkWithin(section)) { if (i !== step) goStep(i, false); section.querySelector<HTMLElement>('[aria-invalid]')?.focus(); return; }
-      }
-    }
-    step = Math.max(0, Math.min(STEPS - 1, n));
-    form.querySelectorAll<HTMLElement>('.wf-step').forEach((s) => s.classList.toggle('current', Number(s.dataset.step) === step));
-    panel.querySelectorAll<HTMLButtonElement>('#wf-steps .wz-step').forEach((b) => {
-      const i = Number(b.dataset.step);
-      b.classList.toggle('current', i === step);
-      b.classList.toggle('done', i < step);
-      if (i === step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
-    });
-    $('wf-back').hidden = step === 0;
-    // Step 1 has its own three ways forward (photo, link, by hand), so no "Next" there
-    $('wf-next').hidden = step === 0 || step === STEPS - 1;
-    $('wf-save').hidden = step === 0;
-    $('wf-save').textContent = t('wineWizard.save');
-    $('wf-save').className = step === STEPS - 1 ? 'btn small' : 'btn small ghost';
-    $('wf-next').className = step === STEPS - 1 ? 'btn small ghost' : 'btn small';
-    showMsg('');
-    if (step === STEPS - 1) renderSummary();
-    const body = form.querySelector<HTMLElement>('.wf-body');
-    if (body) body.scrollTop = 0;
-    if (step === 1 && matchMedia('(min-width: 48rem)').matches && !field<HTMLInputElement>('wf-name').value) {
-      field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
-    }
-  }
-  panel.querySelectorAll<HTMLButtonElement>('#wf-steps .wz-step').forEach((b) => b.addEventListener('click', () => goStep(Number(b.dataset.step))));
-  $('wf-next').addEventListener('click', () => goStep(step + 1));
-  $('wf-back').addEventListener('click', () => goStep(step - 1));
-  $('wf-start-manual').addEventListener('click', () => goStep(1));
-
-  /** Has anything been put into the new wine? */
-  function dirty() {
-    if (pendingImage || sourceUrl || linkImage) return true;
-    return ['wf-name', 'wf-producer', 'wf-link', 'wf-vintage', 'wf-retail', 'wf-description', 'wf-details', 'wf-grapes', 'wf-food', 'wf-serving', 'wf-appellation', 'wf-region']
-      .some((id) => field<HTMLInputElement>(id).value.trim());
-  }
-  function askDiscard() {
-    $('wf-discard').hidden = false;
-    $('wf-actions').hidden = true;
-    $('wf-discard-no').focus();
-  }
-  function requestClose() {
-    if (guide() && dirty()) askDiscard(); else closeForm();
-  }
-  $('wf-discard-yes').addEventListener('click', () => closeForm());
-  $('wf-discard-no').addEventListener('click', () => { $('wf-discard').hidden = true; $('wf-actions').hidden = false; });
-
-  /** The tastings a new wine can go straight into: coming ones and those without a date. */
-  async function loadTastings() {
-    const select = field<HTMLSelectElement>('wf-into');
-    const { data } = await supabase.from('tastings').select('id, title, starts_at').order('starts_at', { ascending: true, nullsFirst: false });
-    const since = Date.now() - 24 * 3600 * 1000;
-    const rows = ((data ?? []) as { id: string; title: string; starts_at: string | null }[])
-      .filter((x) => !x.starts_at || new Date(x.starts_at).getTime() >= since);
-    select.replaceChildren(new Option(t('wineWizard.noTasting'), ''),
-      ...rows.map((x) => new Option(x.starts_at ? `${x.title} · ${new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/Copenhagen' }).format(new Date(x.starts_at))}` : x.title, x.id)));
-    select.value = intoDefault && rows.some((x) => x.id === intoDefault) ? intoDefault : '';
-    $('wf-into-box').hidden = !rows.length;
-  }
-
-  /** The wine as it will be saved: picture, name and the main facts. */
-  function renderSummary() {
-    const box = $('wf-summary');
-    box.replaceChildren();
-    const preview = $<HTMLImageElement>('wf-preview');
-    if (!preview.hidden && preview.src) {
-      const img = mk('img');
-      img.src = preview.src;
-      img.alt = '';
-      box.append(img);
-    }
-    const text = mk('div');
-    const name = withoutYear(field<HTMLInputElement>('wf-name').value.trim(), field<HTMLInputElement>('wf-vintage').value.trim());
-    text.append(mk('b', '', name || t('admin.wineNameMissing')));
-    const meta = [styleSelect.value ? styleName(styleSelect.value) : null, field<HTMLInputElement>('wf-vintage').value.trim() || null,
-      field<HTMLInputElement>('wf-producer').value.trim() || null].filter(Boolean).join(' · ');
-    if (meta) text.append(mk('small', '', meta));
-    const origin = originLine({ appellation: toText(appInput.value), region: toText(regionInput.value), country: countrySelect.value || null });
-    if (origin) text.append(mk('small', '', origin));
-    box.append(text);
-  }
-
-  /** Puts a newly saved wine in a tasting, last, with the shop's prices as a start (as the tasting's wine list does). */
-  async function addToTasting(tastingId: string, wineId: number, retail: number | null, offer: number | null, qty: number | null) {
-    const { data } = await supabase.from('tasting_wines').select('sort_order').eq('tasting_id', tastingId)
-      .order('sort_order', { ascending: false }).limit(1);
-    const sort = ((data?.[0] as { sort_order: number } | undefined)?.sort_order ?? 0) + 1;
-    const fromOffer = qty != null && qty >= 2 && offer != null;
-    await supabase.from('tasting_wines').insert({
-      tasting_id: tastingId, wine_id: wineId, sort_order: sort, price_dkk: retail,
-      price_tiers: fromOffer ? [{ qty, price: Number(offer) }] : [],
-    });
   }
 
   function closeForm() {
@@ -853,12 +663,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
 
   // ---------- Events ----------
-  /** Opens the guide for a new wine; from a tasting, that tasting is chosen in the last step. */
-  function create(opts: { tastingId?: string } = {}) {
-    intoDefault = opts.tastingId ?? null;
-    openForm(null);
-  }
-  $('wine-add-toggle').addEventListener('click', () => create());
   $('wf-cancel').addEventListener('click', closeForm);
 
   async function useImage(input: HTMLInputElement, status: StatusId) {
@@ -950,12 +754,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     input.files = dt.files;
     useImage(input, 'wf-label-status');
   });
-  field<HTMLInputElement>('wf-camera').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-start-status'));
-  // The link tile shows the link field
-  $('wf-start-link').addEventListener('click', () => {
-    showLinkBox(true);
-    field<HTMLInputElement>('wf-link').focus();
-  });
   /** "Fetched from <site>" above the name, when the wine came from a link. */
   function showSource() {
     const box = $('wf-source');
@@ -974,8 +772,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
   function showLinkBox(on: boolean) {
     $('wf-link-box').hidden = !on;
-    $('wf-start-link').classList.toggle('active', on);
-    $('wf-start-link').setAttribute('aria-expanded', String(on));
   }
 
   $('wf-read-label').addEventListener('click', () => readLabel());
@@ -1003,15 +799,14 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     e.preventDefault();
     // The year belongs in Vintage, not in the name ("Château Fombrauge 2020" → "Château Fombrauge")
     const name = withoutYear(field<HTMLInputElement>('wf-name').value.trim(), field<HTMLInputElement>('wf-vintage').value.trim()) ?? '';
-    // Every field checked; the guide goes to the step with the first error
+    // Every field checked; the first error gets the focus
     if (!checks.checkWithin(form) || !name) {
       if (!name) checks.check('wf-name');
       const bad = form.querySelector<HTMLElement>('[aria-invalid]');
-      if (bad && guide()) { goStep(stepOf(bad), false); bad.focus(); }
+      bad?.focus();
       showMsg(t('wineCheck.fix'));
       return;
     }
-    const into = guide() ? field<HTMLSelectElement>('wf-into').value || null : null;
 
     const save = $<HTMLButtonElement>('wf-save');
     save.disabled = true;
@@ -1024,7 +819,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const url = await uploadImage(pendingImage);
       if (!url) {
         save.disabled = false;
-        save.textContent = guide() ? t('wineWizard.save') : t('common.save');
+        save.textContent = t('common.save');
         showMsg(t('admin.imageFailed'));
         return;
       }
@@ -1073,10 +868,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       : await supabase.from('wines').insert({ ...row, ...place, host_id: hostId }).select('id').single();
 
     save.disabled = false;
-    save.textContent = guide() ? t('wineWizard.save') : t('common.save');
+    save.textContent = t('common.save');
     if (error) { showMsg(t('admin.wineNotSaved')); return; }
     const newId = (saved as { id: number } | null)?.id;
-    if (into && newId) await addToTasting(into, newId, row.retail_price_dkk, row.offer_price_dkk, row.offer_quantity);
     // An appellation that is not on our list: find its place for the overview map (in the background)
     locateAppellation(row.appellation, row.region, row.country);
     closeForm();
@@ -1090,7 +884,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       li.classList.add('just-saved');
       setTimeout(() => li.classList.remove('just-saved'), 2600);
     }
-    toast(t(before ? 'wineLib.savedToast' : into ? 'wineLib.addedToast' : 'wineLib.createdToast', { name: shownName }), {
+    toast(t(before ? 'wineLib.savedToast' : 'wineLib.createdToast', { name: shownName }), {
       kind: 'ok',
       action: !before && newId && !li ? { label: t('wineLib.open'), href: paths().get(newId) ?? `/admin/wines/${newId}/` } : undefined,
     });
@@ -1149,7 +943,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const clear = () => { producerStatus(''); producerStatus('', '', 'wf-address-status'); producerStatus('', '', 'wf-producer-busy'); };
     if (normOrigin(field<HTMLInputElement>('wf-producer').value) !== normOrigin(producer)) { clear(); return; }
     if (found) foundPlace = { ...found, producer };
-    // Under the producer: what was found, and where it is (step 3); nothing when nothing was found
+    // Under the producer: what was found, and where it is (further down); nothing when nothing was found
     const got = (wantSite && found?.website) || (wantAddress && found?.address);
     producerStatus(got ? t('producer.foundStep3') : '', got ? 'ok' : '', 'wf-producer-busy');
     // The website
@@ -1313,5 +1107,17 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   /** Every wine's own address (see admin-wine-page.ts). */
   function paths() { return winePaths(wines); }
 
-  return { load, edit, paths, create, deleteLater };
+  /** Scrolls to a wine in the list and lights it up for a moment; false when it is not shown (filters). */
+  function highlight(id: number) {
+    const li = list.querySelector<HTMLElement>(`li[data-id="${id}"]`);
+    if (!li) return false;
+    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    li.classList.remove('just-saved');
+    void li.offsetWidth;
+    li.classList.add('just-saved');
+    setTimeout(() => li.classList.remove('just-saved'), 2600);
+    return true;
+  }
+
+  return { load, edit, paths, deleteLater, highlight, wines: () => wines.filter((w) => !pendingDelete.has(w.id)) };
 }

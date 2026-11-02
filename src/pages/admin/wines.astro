@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
+import WineQuickAdd from '../../components/WineQuickAdd.astro';
 import '../../styles/admin.css';
 ---
 <Base title="adminNav.wines">
@@ -54,6 +55,9 @@ import '../../styles/admin.css';
           <button id="wine-add-toggle" class="btn small" type="button" data-i18n="wineLib.newWineBtn">+ New wine</button><span data-help="new-wine"></span>
         </div>
 
+        <!-- New wine: one line that pushes the list down (name, link or photo) -->
+        <WineQuickAdd />
+
         <!-- Filters: country → region (linked), type, tasting; filled from the wines in admin-wines.ts -->
         <div id="wine-filters" class="wine-filters" hidden>
           <select id="wl-country" aria-label="Country" data-i18n-attr="aria-label=wineLib.country"></select>
@@ -64,58 +68,24 @@ import '../../styles/admin.css';
           <button id="wl-clear" class="text-btn" type="button" hidden data-i18n="wineLib.clearFilters">Clear filters</button>
         </div>
 
-        <!-- New / edit wine: side panel on larger screens, bottom sheet on phones -->
-
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
         <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
         <p id="wine-no-match" class="hint" hidden data-i18n="wineLib.noMatch">No wines match the filters.</p>
       </section>
       </div>
       <!-- Outside the list, so it also opens on a wine's own page (where the list is hidden) -->
-        <!-- One dialog, two ways: a new wine is a guide in four steps (class "wizard", one step at a time);
-             editing a wine is the side panel from the right (class "sheet wide", every step below the other). -->
+        <!-- Editing a wine: the side panel from the right (bottom sheet on phones). New wines come in through the line above the list. -->
         <dialog id="wine-panel" class="sheet wide" aria-labelledby="wf-title">
         <div class="wf-head">
           <div class="sheet-head">
-            <h2 id="wf-title" data-i18n="admin.newWine">New wine</h2>
+            <h2 id="wf-title" data-i18n="admin.editWine">Edit wine</h2>
             <button id="wf-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
           </div>
-          <ol id="wf-steps" class="wz-steps" hidden>
-            {[['wineWizard.source', 'Source'], ['wineWizard.wine', 'The wine'], ['wineWizard.origin', 'Origin'], ['wineWizard.price', 'Price & description']].map(([key, text], i) => (
-              <li>
-                <button type="button" class="wz-step" data-step={i}>
-                  <span class="wz-num">{i + 1}</span>
-                  <span class="wz-label"><b data-i18n={key}>{text}</b></span>
-                </button>
-              </li>
-            ))}
-          </ol>
         </div>
         <form id="wine-form" class="add-form wine-form" novalidate>
         <div class="wf-body">
-          <!-- 1. Source: a photo of the label, a link, or by hand (new wines); a link (editing) -->
+          <!-- 1. Source: a link to the wine (fetches it again) -->
           <section class="wf-step" data-step="0">
-          <div id="wf-start" class="wf-start">
-            <div class="start-tiles">
-              <label class="start-tile" for="wf-camera">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg>
-                <b data-i18n="start.photo">Photo of the label</b>
-                <span id="wf-photo-text" data-i18n="start.photoText">Take a picture – we read the label</span>
-              </label>
-              <input id="wf-camera" class="visually-hidden" type="file" accept="image/*" tabindex="-1" />
-              <button id="wf-start-link" class="start-tile" type="button" aria-controls="wf-link-box" aria-expanded="false">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.2 1.2" /><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.2-1.2" /></svg>
-                <b data-i18n="start.link">Link to the wine</b>
-                <span data-i18n="start.linkText">Paste a link from a web shop</span>
-              </button>
-              <button id="wf-start-manual" class="start-tile" type="button">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z" /><path d="M13.5 6.5l4 4" /></svg>
-                <b data-i18n="wineWizard.manual">Fill in yourself</b>
-                <span data-i18n="wineWizard.manualText">Type in what you know</span>
-              </button>
-            </div>
-            <p id="wf-start-status" class="label-status" hidden aria-live="polite"></p>
-          </div>
           <div id="wf-link-box" class="wf-link-box">
           <label for="wf-link"><span data-i18n="link.label">Link to the wine</span> <span class="hint" data-i18n="link.hint">(e.g. from a web shop – fills in the form)</span></label>
           <div class="inline-form link-row">
@@ -239,32 +209,16 @@ import '../../styles/admin.css';
           <input id="wf-serving" type="text" maxlength="300" autocomplete="off" />
           <label for="wf-details"><span data-i18n="admin.details">More about the wine</span> <span class="hint" data-i18n="admin.detailsHint">(one line per item, e.g. "Grapes: Touriga Nacional")</span></label>
           <textarea id="wf-details" rows="3"></textarea>
-          <div id="wf-finish" class="wf-finish" hidden>
-            <p class="wz-sub" data-i18n="wineWizard.summary">Your wine</p>
-            <div id="wf-summary" class="wf-summary"></div>
-            <div id="wf-into-box">
-              <label for="wf-into"><span data-i18n="wineWizard.tasting">Add it to a tasting</span> <span class="hint" data-i18n="wineWizard.tastingHint">(you set the guest price under the tasting's wines)</span></label>
-              <select id="wf-into"></select>
-            </div>
-          </div>
           </section>
         </div>
         <div class="wf-foot">
           <p id="wf-msg" class="message error" hidden></p>
-          <div id="wf-discard" class="wf-discard" hidden>
-            <span data-i18n="wineWizard.discard">Discard the new wine?</span>
-            <button id="wf-discard-yes" class="btn small" type="button" data-i18n="wineWizard.discardYes">Discard</button>
-            <button id="wf-discard-no" class="text-btn" type="button" data-i18n="wineWizard.discardNo">Keep going</button>
-          </div>
           <div id="wf-delete-confirm" class="wf-discard wf-delete-confirm" hidden>
             <span id="wf-delete-q"></span>
             <button id="wf-delete-yes" class="btn small danger" type="button" data-i18n="admin.deleteWine">Delete wine</button>
             <button id="wf-delete-no" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
           </div>
           <div id="wf-actions" class="row-actions wf-actions">
-            <button id="wf-back" class="text-btn" type="button" hidden data-i18n="wizard.back">Back</button>
-            <span class="wz-spacer"></span>
-            <button id="wf-next" class="btn small ghost" type="button" hidden data-i18n="wineWizard.next">Next</button>
             <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
             <button id="wf-delete" class="btn small ghost danger" type="button" hidden data-i18n="admin.deleteWine">Delete wine</button>
@@ -283,6 +237,9 @@ import '../../styles/admin.css';
   import { requireHost, $ } from '../../lib/admin-common';
   import { initWineAdmin } from '../../lib/admin-wines';
   import { winePaths, wineIdFromPath, onWinePage, showWinePage } from '../../lib/admin-wine-page';
+  import { initQuickAdd } from '../../lib/wine-quick-add';
+  import { toast } from '../../lib/toast';
+  import { t } from '../../i18n';
 
   const host = await requireHost();
   if (host) {
@@ -299,8 +256,6 @@ import '../../styles/admin.css';
       ? { onSaved: () => { show(); }, onDeleted: (id) => { location.href = `/admin/wines/?deleted=${id}`; } } : {});
     await admin.load();
     followHelpLink();
-    // From a tasting: ?new=<tasting id>&back=<its wines tab> opens the guide with that tasting chosen, and
-    // saving or closing goes back there
     const params = new URLSearchParams(location.search);
     // Deleted on the wine's own page: hidden here with "Undo" before it is deleted for real
     const deleted = Number(params.get('deleted'));
@@ -309,15 +264,26 @@ import '../../styles/admin.css';
       history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : ''));
       admin.deleteLater(deleted);
     }
-    const into = params.get('new');
-    const back = params.get('back') ?? '';
-    if (into !== null) {
-      history.replaceState(null, '', location.pathname);
-      admin.create(/^[0-9a-f-]{36}$/i.test(into) ? { tastingId: into } : {});
-      if (/^\/t\/[a-z0-9-]+\/admin\//.test(back)) {
-        $('wine-panel').addEventListener('close', () => { location.href = back; }, { once: true });
-      }
-    }
+    // New wine: the line above the list. Opened by "+ New wine", by ?new (help links) and when the library is empty.
+    const quick = initQuickAdd({
+      hostId: host.id,
+      toggle: $('wine-add-toggle'),
+      library: () => admin.wines(),
+      href: (w) => admin.paths().get(w.id) ?? `/admin/wines/${w.id}/`,
+      done: async (id, name) => {
+        await admin.load();
+        const shown = admin.highlight(id);
+        toast(t('wineLib.createdToast', { name }), {
+          kind: 'ok',
+          action: shown ? { label: t('admin.edit'), run: () => admin.edit(id) } : { label: t('wineLib.open'), href: admin.paths().get(id) ?? `/admin/wines/${id}/` },
+        });
+      },
+    });
+    if (params.has('new')) {
+      params.delete('new'); params.delete('back');
+      history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : ''));
+      quick.open();
+    } else if (!onWinePage() && !admin.wines().length) quick.open();
     if (onWinePage()) {
       wineId = wineIdFromPath(admin.paths());
       await show();

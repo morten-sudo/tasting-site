@@ -8,16 +8,19 @@ import { t, locale, money } from '../i18n';
 import { amountText, parseAmount } from './wine-validate';
 import { fieldError } from './field-error';
 import { toast } from './toast';
+import { initQuickAdd } from './wine-quick-add';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
-  image_url: string | null; retail_price_dkk: number | null;
+  image_url: string | null; source_url: string | null; retail_price_dkk: number | null;
   offer_price_dkk: number | null; offer_quantity: number | null };
 type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean; blind: boolean;
   price_tiers: Tier[]; wines: LibWine };
 type Tier = { qty: number; price: number };
 export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number; tiers: Tier[] };
 
-export function initTastingWines(tastingId: string, tenantId: string, onChange: (wines: TastingWine[]) => void) {
+const COLS = 'id, name, producer, style, vintage, image_url, source_url, retail_price_dkk, offer_price_dkk, offer_quantity';
+
+export function initTastingWines(tastingId: string, hostId: string, tenantId: string, onChange: (wines: TastingWine[]) => void) {
   let rows: Row[] = [];
   let library: LibWine[] = [];
   let ratings = new Map<number, { average: number; votes: number }>();
@@ -266,61 +269,64 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
     onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order, tiers: r.price_tiers ?? [] })));
   }
 
-  // ---------- Picker: add wines from the library ----------
-  function renderPicker() {
-    const q = $<HTMLInputElement>('tw-search').value.trim().toLowerCase();
-    const inTasting = new Set(rows.map((r) => r.wine_id));
-    const candidates = library.filter((w) => !inTasting.has(w.id))
-      .filter((w) => !q || `${w.name} ${w.producer ?? ''} ${w.vintage ?? ''}`.toLowerCase().includes(q));
-    const ul = $<HTMLUListElement>('tw-picker-list');
-    ul.replaceChildren(...candidates.map((w) => {
-      const li = mk('li');
-      const text = mk('div');
-      text.append(mk('p', 'lib-name', w.name));
-      const m = meta(w);
-      if (m) text.append(mk('p', 'lib-meta', m));
-      const add = mk('button', 'btn small ghost', t('admin.add'));
-      add.type = 'button';
-      add.addEventListener('click', async () => {
-        add.disabled = true;
-        const sort = rows.reduce((mx, r) => Math.max(mx, r.sort_order), 0) + 1;
-        // Start from the regular price, and the shop's offer as quantity price when it is for several bottles
-        const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
-        const row = {
-          tasting_id: tastingId, wine_id: w.id, sort_order: sort, price_dkk: w.retail_price_dkk,
-          price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [],
-        };
-        // (a blind tasting makes the new wine blind; the answer says so)
-        const { data: saved, error } = await supabase.from('tasting_wines').insert(row).select('orderable, revealed, blind').single();
-        if (error || !saved) { add.disabled = false; alert(t('admin.changeNotSaved')); return; }
-        rows.push({ ...row, ...(saved as { orderable: boolean; revealed: boolean; blind: boolean }), wines: w });
-        $('tw-msg').textContent = t('adminTasting.wineAdded', { name: w.name });
-        $('tw-msg').hidden = false;
-        render();
-      });
-      li.append(text, add);
-      return li;
-    }));
-    $('tw-picker-empty').hidden = candidates.length > 0;
+  // ---------- Adding: the line above the list (wine-quick-add.ts) ----------
+  /** Puts a library wine last in the tasting, with the shop's prices as a start. */
+  async function addWine(w: LibWine) {
+    const sort = rows.reduce((mx, r) => Math.max(mx, r.sort_order), 0) + 1;
+    // Start from the regular price, and the shop's offer as quantity price when it is for several bottles
+    const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
+    const row = {
+      tasting_id: tastingId, wine_id: w.id, sort_order: sort, price_dkk: w.retail_price_dkk,
+      price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [],
+    };
+    // (a blind tasting makes the new wine blind; the answer says so)
+    const { data: saved, error } = await supabase.from('tasting_wines').insert(row).select('orderable, revealed, blind').single();
+    if (error || !saved) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return false; }
+    rows.push({ ...row, ...(saved as { orderable: boolean; revealed: boolean; blind: boolean }), wines: w });
+    render();
+    highlight(w.id);
+    toast(t('adminTasting.wineAdded', { name: [w.name, w.vintage].filter(Boolean).join(' ') }), { kind: 'ok' });
+    return true;
   }
-
-  // The panel stays open, so several wines can be added in a row
-  const panel = sheetPanel($<HTMLDialogElement>('tw-panel'));
-  $('tw-add-toggle').addEventListener('click', () => {
-    $<HTMLInputElement>('tw-search').value = '';
-    $('tw-msg').hidden = true;
-    renderPicker();
-    panel.open();
-    if (matchMedia('(min-width: 48rem)').matches) $<HTMLInputElement>('tw-search').focus();
+  function highlight(id: number) {
+    const li = list.querySelector<HTMLElement>(`[data-wine="${id}"]`);
+    if (!li) return;
+    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    li.classList.remove('just-saved');
+    void li.offsetWidth;
+    li.classList.add('just-saved');
+    setTimeout(() => li.classList.remove('just-saved'), 2600);
+  }
+  const quick = initQuickAdd({
+    hostId,
+    toggle: $('tw-add-toggle'),
+    library: () => library,
+    inHere: () => new Set(rows.map((r) => r.wine_id)),
+    pick: (w) => addWine(w as LibWine),
+    href: (w) => `/admin/wines/${w.id}/`,
+    // A new wine goes into the tasting as soon as it is saved – the card goes on showing what comes in
+    saved: async (id) => {
+      const { data } = await supabase.from('wines').select(COLS).eq('id', id).single();
+      if (!data) return;
+      const w = data as LibWine;
+      library.push(w);
+      const sort = rows.reduce((mx, r) => Math.max(mx, r.sort_order), 0) + 1;
+      const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
+      await supabase.from('tasting_wines').insert({ tasting_id: tastingId, wine_id: id, sort_order: sort, price_dkk: w.retail_price_dkk,
+        price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [] });
+    },
+    done: async (id, name) => {
+      await load();
+      highlight(id);
+      toast(t('adminTasting.wineAdded', { name }), { kind: 'ok', action: { label: t('wineLib.open'), href: `/admin/wines/${id}/` } });
+    },
   });
-  $('tw-search').addEventListener('input', () => { $('tw-msg').hidden = true; renderPicker(); });
 
   async function load() {
-    const cols = 'id, name, producer, style, vintage, image_url, retail_price_dkk, offer_price_dkk, offer_quantity';
     const [tw, lib, r] = await Promise.all([
-      supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, price_tiers, orderable, revealed, blind, wines(${cols})`)
+      supabase.from('tasting_wines').select(`wine_id, sort_order, price_dkk, price_tiers, orderable, revealed, blind, wines(${COLS})`)
         .eq('tasting_id', tastingId).order('sort_order'),
-      supabase.from('wines').select(cols).eq('tenant_id', tenantId).order('name'),
+      supabase.from('wines').select(COLS).eq('tenant_id', tenantId).order('name'),
       supabase.rpc('tasting_wine_ratings', { t_id: tastingId }),
     ]);
     rows = (tw.data ?? []) as unknown as Row[];
@@ -328,6 +334,8 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
     ratings = new Map(((r.data ?? []) as { wine_id: number; average: number; votes: number }[])
       .map((x) => [x.wine_id, { average: Number(x.average), votes: x.votes }]));
     render();
+    // No wines yet: the line is open, ready for the first one
+    if (!rows.length && !quick.isOpen()) quick.open(false);
   }
 
   return { load };

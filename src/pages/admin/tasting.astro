@@ -4,6 +4,7 @@ import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
 import ChatBox from '../../components/ChatBox.astro';
+import WineQuickAdd from '../../components/WineQuickAdd.astro';
 import '../../styles/admin.css';
 import { en } from '../../i18n/en';
 // The parts of a tasting's admin (as SECTIONS in src/lib/admin-side.ts), shown as the page's sub-menu
@@ -46,8 +47,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <li id="start-wines">
               <span class="start-label"><b data-i18n="getStarted.wines">Add the wines</b><small id="start-wines-info"></small></span>
               <span class="start-actions">
-                <button class="btn small" type="button" data-go="wines" data-open="tw-add-toggle" data-i18n="adminTasting.addWine">Choose from library</button>
-                <a id="start-new-wine" class="btn small ghost" href="/admin/wines/" data-i18n="adminTasting.newWine">+ Create new wine</a>
+                <button class="btn small" type="button" data-go="wines" data-open="tw-add-toggle" data-i18n="adminTasting.addWineBtn">+ Add wine</button>
               </span>
             </li>
             <li id="start-guests">
@@ -243,24 +243,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block wines-admin" data-section="wines">
         <div class="guests-head">
           <h2 data-i18n="page.wines">Wines</h2>
-          <div class="head-actions">
-            <a id="tw-new-wine" class="btn small ghost" href="/admin/wines/" data-i18n="adminTasting.newWine">New wine</a>
-            <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWine">Add wine</button>
-          </div>
+          <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWineBtn">+ Add wine</button>
         </div>
-        <!-- Add wines from the account's wine list: side panel -->
-        <dialog id="tw-panel" class="sheet" aria-labelledby="tw-panel-title">
-          <div class="sheet-head">
-            <h2 id="tw-panel-title" data-i18n="adminTasting.addWine">Add wine</h2>
-            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
-          </div>
-          <label for="tw-search" data-i18n="adminTasting.pickWines">Choose from your wines</label>
-          <input id="tw-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" />
-          <p id="tw-msg" class="message ok" hidden aria-live="polite"></p>
-          <ul id="tw-picker-list" class="picker-list"></ul>
-          <p id="tw-picker-empty" class="hint" hidden data-i18n="adminTasting.noMoreWines">No other wines in your library.</p>
-          <p class="hint tw-new"><span data-i18n="adminTasting.newWineQ">A wine that is not in your library?</span> <a id="tw-new-wine-2" href="/admin/wines/" data-i18n="adminTasting.newWineLink">Create it here</a></p>
-        </dialog>
+        <!-- Add a wine: one line that pushes the list down – search the library, paste a link or add a photo -->
+        <WineQuickAdd />
         <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
         <ol id="tw-list" class="tw-list"></ol>
         <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
@@ -1389,12 +1375,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
     quizTotal = q.count || 1;
-    tastingWines = initTastingWines(tasting.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); renderSetup(); renderBulk(); });
-    // A new wine from here: the wine guide goes into the library and this tasting, then comes back
-    const newWine = `/admin/wines/?new=${tasting.id}&back=${encodeURIComponent(`/t/${tasting.slug}/admin/wines/`)}`;
-    ($('tw-new-wine') as HTMLAnchorElement).href = newWine;
-    ($('tw-new-wine-2') as HTMLAnchorElement).href = newWine;
-    ($('start-new-wine') as HTMLAnchorElement).href = newWine;
+    tastingWines = initTastingWines(tasting.id, host!.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); renderSetup(); renderBulk(); });
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     // The wines and the quiz at the same time, not one after the other
     await Promise.all([
