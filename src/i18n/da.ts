@@ -889,4 +889,9 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "image.needWebsite": "Producentens hjemmeside skal kendes – den står under Oprindelse.",
   "link.food": "Mad",
   "link.serving": "Servering",
+  "status.waitlist": "Venteliste",
+  "waitlist.max": "Max antal deltagere",
+  "waitlist.maxHint": "(tomt = ingen grænse; når den er fuld, kommer gæster, der svarer ja, på venteliste)",
+  "guest.statusWaitlist": "Du står på ventelisten. Bliver der en plads, rykker du automatisk op – det kan du se her.",
+  "guest.fullHint": "Smagningen er fuld. Svarer du ja, kommer du på ventelisten.",
 };

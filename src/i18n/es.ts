@@ -818,4 +818,9 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "image.needWebsite": "Hace falta la web del productor – está en Origen.",
   "link.food": "Maridaje",
   "link.serving": "Servicio",
+  "status.waitlist": "Lista de espera",
+  "waitlist.max": "Número máximo de invitados",
+  "waitlist.maxHint": "(vacío = sin límite; cuando esté completa, quien diga sí pasa a la lista de espera)",
+  "guest.statusWaitlist": "Estás en la lista de espera. Si queda una plaza libre, subes automáticamente – lo verás aquí.",
+  "guest.fullHint": "La cata está completa. Si dices que sí, pasas a la lista de espera.",
 };

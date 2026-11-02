@@ -889,4 +889,9 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "image.needWebsite": "Vefsíða framleiðandans þarf að vera þekkt – hún er undir Uppruna.",
   "link.food": "Matur",
   "link.serving": "Framreiðsla",
+  "status.waitlist": "Biðlisti",
+  "waitlist.max": "Hámarksfjöldi gesta",
+  "waitlist.maxHint": "(autt = engin takmörk; þegar fullt er fara gestir sem segja já á biðlista)",
+  "guest.statusWaitlist": "Þú ert á biðlistanum. Ef pláss losnar færist þú sjálfkrafa upp – þú sérð það hér.",
+  "guest.fullHint": "Smökkunin er full. Ef þú segir já ferðu á biðlistann.",
 };

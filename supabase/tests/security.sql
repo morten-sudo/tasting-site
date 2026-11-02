@@ -27,6 +27,10 @@ insert into guests (id, host_id, name, email) values
 insert into participants (id, tasting_id, guest_id, name, email, invite_code, status) values
   ('00000000-0000-4000-d000-00000000000a', '00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-c000-00000000000a', 'Guest A', 'guest-a@selftest.invalid', 'selftestaa', 'yes'),
   ('00000000-0000-4000-d000-00000000000b', '00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-c000-00000000000b', 'Guest B', 'guest-b@selftest.invalid', 'selftestbb', 'yes');
+-- Tasting A takes one guest; a second invited guest (for the waiting list)
+update tastings set max_guests = 1 where slug = 'selftest-a';
+insert into participants (tasting_id, name, email, invite_code, status) values
+  ('00000000-0000-4000-b000-00000000000a', 'Guest W', 'guest-w@selftest.invalid', 'selftestwl', 'invited');
 insert into orders (id, participant_id, tasting_id) values
   (-2001, '00000000-0000-4000-d000-00000000000a', '00000000-0000-4000-b000-00000000000a'),
   (-2002, '00000000-0000-4000-d000-00000000000b', '00000000-0000-4000-b000-00000000000b');
@@ -363,6 +367,15 @@ begin
   -- …while a guest's own chat works
   perform post_chat('selftestaa', 'hi from A');
   select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';
+  -- Waiting list: tasting A is full, so a yes goes on the list; when A says no, W moves up
+  assert (get_tasting('selftestaa', null) ->> 'full')::boolean, 'a full tasting does not say so';
+  assert respond_invite('selftestwl', true, null, null) = 'waitlist', 'a yes to a full tasting is not put on the waiting list';
+  assert respond_invite('selftestwl', true, null, null) = 'waitlist', 'answering again loses the place on the list';
+  assert respond_invite('selftestaa', false, null, null) = 'no', 'guest A cannot say no';
+  assert (select status from get_invite('selftestwl')) = 'yes', 'the first on the waiting list does not move up';
+  assert respond_invite('selftestaa', true, null, null) = 'waitlist', 'a full tasting lets a guest past the limit';
+  failed := false; begin perform promote_waitlist('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can move guests up from the waiting list';
 end $$;
 reset role;
 

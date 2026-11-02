@@ -55,6 +55,7 @@ import Base from '../../layouts/Base.astro';
             <p id="h-coming" class="coming" hidden></p>
             <button id="change" type="button" class="change" hidden data-i18n="tastingHome.change">Change answer</button>
             <p id="closed-hint" class="field-hint" hidden data-i18n="tastingHome.closedHint">Sign-up is closed.</p>
+            <p id="full-hint" class="field-hint" hidden data-i18n="guest.fullHint">The tasting is full. If you say yes, you go on the waiting list.</p>
 
             <form id="rsvp-form" class="rsvp" novalidate>
               <fieldset class="seg-row">
@@ -159,6 +160,11 @@ import Base from '../../layouts/Base.astro';
       current.textContent = t('guest.statusYes');
       current.dataset.state = 'yes';
       current.hidden = false;
+    } else if (status === 'waitlist') {
+      // Full: on the waiting list, moved up automatically when a place is free
+      current.textContent = t('guest.statusWaitlist');
+      current.dataset.state = 'waitlist';
+      current.hidden = false;
     } else if (status === 'no') {
       current.textContent = t('guest.statusNo');
       current.dataset.state = 'no';
@@ -172,6 +178,8 @@ import Base from '../../layouts/Base.astro';
   let headerDone = false;
   function showHeader(info: Record<string, unknown>) {
     signupOpen = info.signup_open !== false;
+    // Full: a yes goes on the waiting list – said before the guest answers
+    $('full-hint').hidden = info.full !== true;
     updateRsvpView();
     if (headerDone) {
       setComing(info.coming);
@@ -402,8 +410,8 @@ import Base from '../../layouts/Base.astro';
       return;
     }
     guestName = row.name;
-    if (row.status === 'yes' || row.status === 'no') {
-      (form.querySelector(`input[value="${row.status}"]`) as HTMLInputElement).checked = true;
+    if (row.status === 'yes' || row.status === 'no' || row.status === 'waitlist') {
+      (form.querySelector(`input[value="${row.status === 'no' ? 'no' : 'yes'}"]`) as HTMLInputElement).checked = true;
     }
     $<HTMLTextAreaElement>('note').value = row.note ?? '';
     ($('note-box') as HTMLDetailsElement).open = !!row.note;
@@ -643,6 +651,7 @@ import Base from '../../layouts/Base.astro';
     background: var(--ok);
   }
   .status[data-state='no']::before { background: var(--muted); }
+  .status[data-state='waitlist']::before { background: var(--tawny); }
   .status.flash { animation: flash 0.6s ease-out; }
   @keyframes flash { from { color: var(--amber); } }
 

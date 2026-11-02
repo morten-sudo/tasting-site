@@ -818,4 +818,9 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "image.needWebsite": "De website van de producent is nodig – die staat onder Herkomst.",
   "link.food": "Eten",
   "link.serving": "Schenktemperatuur",
+  "status.waitlist": "Wachtlijst",
+  "waitlist.max": "Maximaal aantal gasten",
+  "waitlist.maxHint": "(leeg = geen grens; als het vol is, komen gasten die ja zeggen op een wachtlijst)",
+  "guest.statusWaitlist": "Je staat op de wachtlijst. Komt er een plek vrij, dan schuif je automatisch door – dat zie je hier.",
+  "guest.fullHint": "De proeverij is vol. Zeg je ja, dan kom je op de wachtlijst.",
 };

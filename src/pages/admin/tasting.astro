@@ -96,6 +96,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
         </div>
+        <!-- Max number of guests: when it is reached, a yes puts the guest on the waiting list -->
+        <div class="max-guests">
+          <label for="max-guests"><span data-i18n="waitlist.max">Max number of guests</span> <span class="hint" data-i18n="waitlist.maxHint">(empty = no limit; when full, guests who say yes go on a waiting list)</span></label>
+          <div class="inline-form">
+            <input id="max-guests" type="number" inputmode="numeric" min="1" max="10000" class="short" />
+            <span id="max-guests-msg" class="hint" aria-live="polite"></span>
+          </div>
+        </div>
         <p class="hint"><span data-i18n="admin.tvLink">Leaderboard for the TV:</span> <a id="tv-link" href="/" target="_blank"></a></p>
       </section>
 
@@ -195,6 +203,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div class="filters" role="tablist" aria-label="Vis deltagere">
           <button type="button" role="tab" data-filter="all" aria-selected="true"><b data-i18n="admin.fAll">All</b> <span></span></button>
           <button type="button" role="tab" data-filter="yes"><b data-i18n="admin.fYes">Coming</b> <span></span></button>
+          <button type="button" role="tab" data-filter="waitlist"><b data-i18n="status.waitlist">Waiting list</b> <span></span></button>
           <button type="button" role="tab" data-filter="invited"><b data-i18n="status.invited">No reply yet</b> <span></span></button>
           <button type="button" role="tab" data-filter="no"><b data-i18n="status.no">Not attending</b> <span></span></button>
           <button type="button" role="tab" data-filter="noemail"><b data-i18n="admin.fNoEmail">Missing email</b> <span></span></button>
@@ -301,9 +310,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   const $ = (id: string) => document.getElementById(id)!;
   const kr = { format: money };
-  const STATUS: Record<string, string> = { yes: t('admin.fYes'), no: t('status.no'), invited: t('status.invited') };
+  const STATUS: Record<string, string> = { yes: t('admin.fYes'), waitlist: t('status.waitlist'), no: t('status.no'), invited: t('status.invited') };
 
-  type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean };
+  type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean; waitlisted_at?: string | null };
   type W = { id: number; name: string; price_dkk: number | null; sort_order: number };
   type OLine = { wine_id: number; quantity: number; unit_price: number };
   type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
@@ -426,8 +435,32 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     }
   });
 
+  /** The guest list again (someone may have moved up from the waiting list). */
+  async function reloadParticipants() {
+    if (!tasting) return;
+    const { data } = await supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id, waitlisted_at').eq('tasting_id', tasting.id);
+    if (data) participants = data as P[];
+    renderParticipants();
+    renderFee();
+  }
+
+  // Max number of guests (saved when changed; a higher limit moves guests up from the waiting list)
+  $('max-guests').addEventListener('change', async () => {
+    if (!tasting) return;
+    const el = $('max-guests') as HTMLInputElement;
+    const n = Math.round(Number(el.value));
+    const max = el.value.trim() && n >= 1 ? Math.min(n, 10000) : null;
+    const { error } = await supabase.from('tastings').update({ max_guests: max }).eq('id', tasting.id);
+    $('max-guests-msg').textContent = error ? t('admin.changeNotSaved') : t('common.saved');
+    if (error) return;
+    tasting.max_guests = max;
+    el.value = max ? String(max) : '';
+    await reloadParticipants();
+  });
+
   function loadSettings() {
     if (!tasting) return;
+    ($('max-guests') as HTMLInputElement).value = tasting.max_guests ? String(tasting.max_guests) : '';
     feeTotal = Number(tasting.tasting_total) || 0;
     feeAmount = Number(tasting.tasting_fee) || 0;
     ($('fee-total') as HTMLInputElement).value = feeTotal ? String(feeTotal) : '';
@@ -480,7 +513,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   });
 
   // ---------- Guests ----------
-  const STATUS_ORDER: Record<string, number> = { yes: 0, invited: 1, no: 2 };
+  const STATUS_ORDER: Record<string, number> = { yes: 0, waitlist: 1, invited: 2, no: 3 };
   let guestFilter = 'all';
   let guestQuery = '';
   // Editing a guest of the tasting happens in a side panel
@@ -519,7 +552,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const li = mk('li', 'guest status-' + p.status);
 
     const top = mk('div', 'guest-top');
-    top.append(mk('span', 'guest-name', p.name), mk('span', 'pill pill-' + p.status, STATUS[p.status] ?? p.status));
+    // On the waiting list: its number in the queue
+    const place = p.status === 'waitlist'
+      ? participants.filter((x) => x.status === 'waitlist' && (x.waitlisted_at ?? '') <= (p.waitlisted_at ?? '')).length : 0;
+    top.append(mk('span', 'guest-name', p.name), mk('span', 'pill pill-' + p.status, place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status));
     li.append(top);
 
     li.append(p.email ? mk('p', 'guest-email', p.email) : mk('p', 'guest-email missing', t('admin.noEmail')));
@@ -596,7 +632,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       if (error) { alert(t('admin.changeNotSaved')); return; }
       participants = participants.filter((x) => x.id !== p.id);
       guestPanel.close();
-      renderParticipants();
+      await reloadParticipants();
       renderFee();
     });
     row.append(save, cancel, remove);
@@ -607,7 +643,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       const email = em.value.trim().toLowerCase() || null;
       if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert(t('guest.emailBad')); return; }
       save.disabled = true;
-      if (await saveGuest(p, { status, email })) { guestPanel.close(); renderParticipants(); }
+      if (await saveGuest(p, { status, email })) { guestPanel.close(); await reloadParticipants(); }
       save.disabled = false;
     });
     return form;
@@ -617,7 +653,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const list = $('guest-list');
     list.replaceChildren();
     const sorted = [...participants]
-      .sort((a, b) => (STATUS_ORDER[a.status] - STATUS_ORDER[b.status]) || a.name.localeCompare(b.name, 'da'))
+      .sort((a, b) => (STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+        || (a.status === 'waitlist' ? (a.waitlisted_at ?? '').localeCompare(b.waitlisted_at ?? '') : 0)
+        || a.name.localeCompare(b.name, 'da'))
       .filter(matches);
     for (const p of sorted) list.append(guestCard(p));
     $('guest-empty').hidden = sorted.length > 0;
@@ -629,6 +667,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       all: participants.length,
       yes: participants.filter((p) => p.status === 'yes').length,
       invited: participants.filter((p) => p.status === 'invited').length,
+      waitlist: participants.filter((p) => p.status === 'waitlist').length,
       no: participants.filter((p) => p.status === 'no').length,
       noemail: participants.filter((p) => !p.email).length,
     };
@@ -923,7 +962,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) { $('not-found').hidden = false; return; }
     $('admin-main').hidden = false;
     const [p, o, g, q] = await Promise.all([
-      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id').eq('tasting_id', tasting.id),
+      supabase.from('participants').select('id, name, email, status, diet, note, invite_code, tasting_paid, guest_id, waitlisted_at').eq('tasting_id', tasting.id),
       supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting.id),
       supabase.from('guests').select('id, name, email').eq('tenant_id', host!.tenant_id).order('name'),
       supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id),

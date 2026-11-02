@@ -818,4 +818,9 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "image.needWebsite": "Potrzebna jest strona producenta – jest w sekcji Pochodzenie.",
   "link.food": "Do potraw",
   "link.serving": "Podawanie",
+  "status.waitlist": "Lista oczekujących",
+  "waitlist.max": "Maksymalna liczba gości",
+  "waitlist.maxHint": "(puste = bez limitu; gdy jest komplet, kto powie tak, trafia na listę oczekujących)",
+  "guest.statusWaitlist": "Jesteś na liście oczekujących. Gdy zwolni się miejsce, przejdziesz automatycznie – zobaczysz to tutaj.",
+  "guest.fullHint": "Degustacja jest pełna. Jeśli powiesz tak, trafisz na listę oczekujących.",
 };

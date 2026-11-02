@@ -888,4 +888,9 @@ export const en = {
   "image.needWebsite": "The producer's website is needed – it is under Origin.",
   "link.food": "Food",
   "link.serving": "Serving",
+  "status.waitlist": "Waiting list",
+  "waitlist.max": "Max number of guests",
+  "waitlist.maxHint": "(empty = no limit; when full, guests who say yes go on a waiting list)",
+  "guest.statusWaitlist": "You are on the waiting list. If a place becomes free, you move up automatically – you will see it here.",
+  "guest.fullHint": "The tasting is full. If you say yes, you go on the waiting list.",
 } as const;
