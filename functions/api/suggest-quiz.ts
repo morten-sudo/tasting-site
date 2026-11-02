@@ -10,6 +10,8 @@ const MODEL = '@cf/openai/gpt-oss-120b';
 const LANGS: Record<string, string> = {
   da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', nl: 'Dutch', pl: 'Polish',
 };
+// "Wine 3" in the quiz's language, so the questions match the numbers the guests see
+const WINE_WORD: Record<string, string> = { da: 'Vin', en: 'Wine', is: 'Vín', fr: 'Vin', de: 'Wein', it: 'Vino', es: 'Vino', nl: 'Wijn', pl: 'Wino' };
 type Wine = { name: string; producer: string | null; vintage: string | null; style: string | null; appellation: string | null;
   region: string | null; country: string | null; grapes: string | null; abv: number | null; description: string | null };
 type Row = { blind: boolean; revealed: boolean; wines: Wine };
@@ -55,7 +57,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
     const w = r.wines;
     const facts = [w.style, w.appellation, w.region, w.country, w.grapes ? `grapes: ${w.grapes}` : null, w.abv ? `${w.abv}% abv` : null].filter(Boolean).join(', ');
     const name = [w.producer, w.name, w.vintage].filter(Boolean).join(' ');
-    return `Wine ${i + 1}${r.blind ? ' (BLIND – the guests do not know what it is)' : ''}: ${name} – ${facts}`
+    return `${WINE_WORD[lang]} ${i + 1}${r.blind ? ' (BLIND – the guests do not know what it is)' : ''}: ${name} – ${facts}`
       + (w.description ? ` – notes: ${w.description.slice(0, 250)}` : '');
   }).join('\n');
 
@@ -74,8 +76,9 @@ Mix the kinds of questions, inspired by classic wine quizzes:
 - an "odd one out" among appellations, grapes or regions linked to the evening.
 Rules:
 - Facts about the wines must come from the list. General wine knowledge is fine for how wine is made and for terms, but only well-established facts – nothing you are unsure of.
-- Refer to a wine as "wine N" (in ${LANGS[lang]}) when that helps. For a BLIND wine ask a guessing question (e.g. its country, grape or age) without giving the answer away in the question.
+- Refer to a wine exactly as in the list ("${WINE_WORD[lang]} N") when that helps. For a BLIND wine ask a guessing question (e.g. its country, grape or age) without giving the answer away in the question.
 - Wrong options must be plausible and of the same kind as the right one. Questions short and clear.
+- Check every question against the list: exactly ONE option may be right. For "which is NOT …" or "odd one out", make sure every other option really does fit.
 Answer with JSON only, no other text:
 {"questions":[{"question":"…","options":["…","…","…","…"],"correct":0,"explanation":"…"}]}
 "correct" is the index (0–3) of the right option.`;
