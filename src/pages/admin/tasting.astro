@@ -316,30 +316,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <!-- Guests are invited to wines: at least one wine in the tasting first -->
         <p id="g-needs-wine" class="message" hidden><span data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</span> <a href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></p>
 
-        <!-- Invite: someone from the guest list, or a new guest – one panel -->
-        <dialog id="g-panel" class="sheet" aria-labelledby="g-panel-title">
-          <div class="sheet-head">
-            <h2 id="g-panel-title" data-i18n="adminTasting.inviteGuest">Invite guest</h2>
-            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
-          </div>
-          <label for="g-search" data-i18n="adminTasting.searchOrNew">Search your guest list – or type the name of a new guest</label>
-          <input id="g-search" class="search" type="search" autocomplete="off" placeholder="Name or email" data-i18n-attr="placeholder=adminTasting.nameOrEmail" />
-          <label class="toggle send-mail" data-help="invite-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
-          <p id="g-msg" class="message ok" hidden aria-live="polite"></p>
-          <ul id="g-picker-list" class="picker-list"></ul>
-          <p id="g-picker-empty" class="hint" hidden></p>
-          <button id="g-new-toggle" class="new-guest-btn" type="button"></button>
-          <form id="add-p" class="add-form" hidden>
-            <label for="new-name" data-i18n="admin.name">Name</label>
-            <input id="new-name" type="text" autocomplete="off" required />
-            <label for="new-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
-            <input id="new-email" type="email" autocomplete="off" />
-            <div class="row-actions">
-              <button class="btn small" type="submit" data-i18n="adminTasting.invite">Invite</button>
-              <button id="add-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-            </div>
-          </form>
-        </dialog>
 
         <div class="filters" role="tablist" aria-label="Vis deltagere">
           <button type="button" role="tab" data-filter="all" aria-selected="true"><b data-i18n="admin.fAll">All</b> <span></span></button>
@@ -352,6 +328,29 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
         <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
 
+        <!-- Invite a guest: a new row that slides in at the top of the list – type a name (searches your guest list),
+             or a name and an email -->
+        <div class="qa qa-guest">
+          <div id="gi-bar" class="qa-slide" inert>
+            <div class="qa-slide-in">
+              <div class="qa-item qa-new gi-row">
+                <span class="guest-av gi-av" aria-hidden="true">+</span>
+                <div class="qa-body">
+                  <label for="gi-input" class="visually-hidden" data-i18n="guestInvite.label">Name – or name and email</label>
+                  <div id="gi-field" class="qa-field">
+                    <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name – or name and email" data-i18n-attr="placeholder=guestInvite.placeholder" />
+                  </div>
+                  <label class="gi-mail" data-help="invite-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
+                  <ul id="gi-hits" class="qa-hits" hidden></ul>
+                </div>
+                <div class="qa-actions">
+                  <button id="gi-go" class="btn small" type="button" data-i18n="adminTasting.invite">Invite</button>
+                  <button id="gi-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <ul id="guest-list" class="tw-list guest-list"></ul>
         <!-- Edit one guest of the tasting: side panel -->
         <dialog id="p-panel" class="sheet" aria-labelledby="p-panel-title">
@@ -1090,24 +1089,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderParticipants();
   });
 
-  // A new guest: the form opens with what was typed in the search (a name, or an email)
-  function showNewGuest(on: boolean) {
-    $('add-p').hidden = !on;
-    $('g-new-toggle').hidden = on;
-    if (!on) return;
-    const q = ($('g-search') as HTMLInputElement).value.trim();
-    const isEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(q);
-    ($('new-name') as HTMLInputElement).value = isEmail ? '' : q;
-    ($('new-email') as HTMLInputElement).value = isEmail ? q : '';
-    (isEmail || !q ? $('new-name') : $('new-email') as HTMLInputElement).focus();
-  }
-  $('g-new-toggle').addEventListener('click', () => showNewGuest(true));
-  $('add-cancel').addEventListener('click', () => showNewGuest(false));
-  function invitedMsg(name: string) {
-    $('g-msg').textContent = t('adminTasting.invitedName', { name });
-    $('g-msg').hidden = false;
-  }
-
   // ---------- Invitation by email ----------
   /** Emails the guest their invitation; true when it was sent */
   async function mailInvite(p: P): Promise<boolean> {
@@ -1123,48 +1104,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     } catch { /* below */ }
     return false;
   }
-  /** Right after inviting: mail it when the host chose so and the guest has an email */
-  async function mailIfChosen(p: P) {
-    if (!p.email || !($('g-send-mail') as HTMLInputElement).checked) return;
-    const ok = await mailInvite(p);
-    $('g-msg').textContent = t(ok ? 'inviteMail.sentTo' : 'inviteMail.failed', { name: p.name });
-    $('g-msg').className = 'message ' + (ok ? 'ok' : 'error');
-    $('g-msg').hidden = false;
-    renderParticipants();
-  }
-  $('add-p').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const nameEl = $('new-name') as HTMLInputElement;
-    const emailEl = $('new-email') as HTMLInputElement;
-    const name = nameEl.value.trim();
-    const email = emailEl.value.trim().toLowerCase() || null;
-    if (!name) { nameEl.focus(); return; }
-    // The new guest goes into the guest library too (or reuses the one with the same email)
-    let guestId: string | null = null;
-    if (email) {
-      const { data: found } = await supabase.from('guests').select('id').eq('tenant_id', host!.tenant_id).ilike('email', email).maybeSingle();
-      guestId = found?.id ?? null;
-    }
-    if (!guestId) {
-      const { data: g, error: ge } = await supabase.from('guests').insert({ host_id: host!.id, name, email }).select('id').single();
-      if (ge || !g) { alert(t('admin.guestNotAdded')); return; }
-      guestId = g.id;
-    }
-    const { data, error } = await supabase.from('participants')
-      .insert({ name, email, tasting_id: tasting!.id, guest_id: guestId }).select().single();
-    if (error) { alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
-    participants.push(data as P);
-    library = library.filter((g) => g.id !== guestId);
-    void mailIfChosen(data as P);
-    nameEl.value = '';
-    emailEl.value = '';
-    ($('g-search') as HTMLInputElement).value = '';
-    showNewGuest(false);
-    invitedMsg(name);
-    renderParticipants();
-    renderGuestPicker();
-  });
-
   // ---------- Orders ----------
   const orderTotal = (o: O) => o.order_lines.reduce((t, l) => t + l.quantity * Number(l.unit_price), 0);
 
@@ -1282,56 +1221,147 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   type G = { id: string; name: string; email: string | null };
   let library: G[] = [];
 
-  function renderGuestPicker() {
-    const invited = new Set(participants.map((p) => (p as P & { guest_id?: string }).guest_id));
-    const q = ($('g-search') as HTMLInputElement).value.trim().toLowerCase();
-    const candidates = library.filter((g) => !invited.has(g.id))
-      .filter((g) => !q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q));
-    $('g-picker-list').replaceChildren(...candidates.map((g) => {
-      const li = mkEl('li');
-      const text = mkEl('div');
-      text.append(mkEl('p', 'lib-name', g.name));
-      if (g.email) text.append(mkEl('p', 'lib-meta', g.email));
-      const add = mkEl('button', 'btn small ghost', t('adminTasting.invite'));
-      add.type = 'button';
-      add.addEventListener('click', async () => {
-        add.disabled = true;
-        const { data, error } = await supabase.from('participants')
-          .insert({ name: g.name, email: g.email, tasting_id: tasting!.id, guest_id: g.id }).select().single();
-        if (error) { add.disabled = false; alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded')); return; }
-        participants.push(data as P);
-        invitedMsg(g.name);
-        renderParticipants();
-        renderGuestPicker();
-        void mailIfChosen(data as P);
-      });
-      li.append(text, add);
-      return li;
-    }));
-    const empty = $('g-picker-empty');
-    empty.hidden = candidates.length > 0;
-    empty.textContent = q ? t('adminTasting.noMatch') : t('adminTasting.noMoreGuests');
-    const typed = ($('g-search') as HTMLInputElement).value.trim();
-    $('g-new-toggle').textContent = typed ? t('adminTasting.newGuestNamed', { name: typed }) : t('adminTasting.newGuest');
+  // ---------- Invite a guest: a new row that slides in at the top of the guest list ----------
+  // Type a name (it searches your guest list) or a name and an email; Enter or "Invite" invites.
+  const giBar = $('gi-bar');
+  const giInput = $('gi-input') as HTMLInputElement;
+  const giHits = $('gi-hits');
+  const giToggle = $('g-invite-toggle') as HTMLButtonElement;
+  const giOpen = () => giBar.classList.contains('open');
+  const EMAIL_RE = /[^@\s<>,;]+@[^@\s<>,;]+\.[^@\s<>,;]+/;
+  const normName = (x: string) => x.trim().toLowerCase().replace(/\s+/g, ' ');
+  /** "Anna Holm anna@holm.dk", "Anna Holm <anna@holm.dk>" or just a name / an email */
+  function parseGuest(text: string) {
+    const m = text.match(EMAIL_RE);
+    const email = m ? m[0].toLowerCase() : null;
+    const name = (m ? text.replace(m[0], '') : text).replace(/[<>,;()]/g, ' ').replace(/\s+/g, ' ').trim();
+    return { name, email };
   }
-  const guestPanelInvite = sheetPanel($('g-panel') as HTMLDialogElement);
-  // No inviting before the tasting has a wine
-  function gateInvite() {
-    const none = wines.length === 0;
-    ($('g-invite-toggle') as HTMLButtonElement).disabled = none;
-    $('g-needs-wine').hidden = !none;
+  const invitedIds = () => new Set(participants.map((p) => (p as P & { guest_id?: string }).guest_id));
+
+  function openInvite(focus = true) {
+    if (!wines.length) return;
+    giBar.classList.add('open');
+    giBar.inert = false;
+    giToggle.disabled = true;
+    giToggle.setAttribute('aria-expanded', 'true');
+    if (focus && matchMedia('(min-width: 48rem)').matches) giInput.focus({ preventScroll: true });
+    if (focus) giBar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function closeInvite() {
+    giBar.classList.remove('open');
+    giBar.inert = true;
+    giToggle.setAttribute('aria-expanded', 'false');
+    gateInvite();
+    giInput.value = '';
+    fieldError(giInput, null);
+    renderGuestHits();
+    giToggle.focus();
+  }
+  giToggle.setAttribute('aria-controls', 'gi-bar');
+  giToggle.setAttribute('aria-expanded', 'false');
+  giToggle.addEventListener('click', () => openInvite());
+  $('gi-close').addEventListener('click', closeInvite);
+
+  /** Your guest list's matches for what is typed (name or email) */
+  function guestMatches(text: string) {
+    const { name, email } = parseGuest(text);
+    const q = normName(name);
+    if (!email && q.length < 2) return [];
+    return library.filter((g) => (email && g.email?.toLowerCase() === email) || (q && normName(`${g.name} ${g.email ?? ''}`).includes(q)))
+      .sort((a, b) => a.name.localeCompare(b.name, locale())).slice(0, 5);
+  }
+  function renderGuestHits(list?: G[], head?: string) {
+    const found = list ?? guestMatches(giInput.value);
+    giHits.replaceChildren();
+    giHits.hidden = !found.length;
+    if (!found.length) return;
+    giHits.append(mkEl('li', 'qa-hits-head', head ?? t('guestInvite.fromList')));
+    const invited = invitedIds();
+    for (const g of found) {
+      const li = mkEl('li', 'qa-hit');
+      const av = mkEl('span', 'guest-av small', g.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase());
+      const body = mkEl('div', 'wine-body');
+      body.append(mkEl('p', 'wine-name', g.name));
+      body.append(mkEl('p', 'wine-meta', g.email ?? t('admin.noEmail')));
+      li.append(av, body);
+      if (invited.has(g.id)) li.append(mkEl('span', 'chip', t('guestInvite.already')));
+      else {
+        const b = mkEl('button', 'btn small ghost', t('adminTasting.invite'));
+        b.type = 'button';
+        b.addEventListener('click', () => inviteGuest(g, b));
+        li.append(b);
+      }
+      giHits.append(li);
+    }
+  }
+  giInput.addEventListener('input', () => renderGuestHits());
+  giInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submitInvite(); }
+    else if (e.key === 'Escape') { e.preventDefault(); if (giInput.value) { giInput.value = ''; renderGuestHits(); } else closeInvite(); }
+    else if (e.key === 'ArrowDown') { const b = giHits.querySelector<HTMLElement>('button'); if (b) { e.preventDefault(); b.focus(); } }
+  });
+  $('gi-go').addEventListener('click', () => submitInvite());
+
+  async function submitInvite() {
+    const text = giInput.value.trim();
+    if (!text) { fieldError(giInput, t('guestInvite.empty'), $('gi-field')); giInput.focus(); return; }
+    const { name, email } = parseGuest(text);
+    // Already in your guest list (same email, or exactly the same name): invite that guest – never a second copy
+    const same = library.filter((g) => (email && g.email?.toLowerCase() === email) || (!email && normName(g.name) === normName(name)));
+    if (same.length) {
+      const free = same.filter((g) => !invitedIds().has(g.id));
+      if (free.length === 1 && same.length === 1) { await inviteGuest(free[0], $('gi-go') as HTMLButtonElement); return; }
+      renderGuestHits(same, t(free.length ? 'guestInvite.pick' : 'guestInvite.alreadyAll'));
+      return;
+    }
+    if (!name) { fieldError(giInput, t('guestInvite.nameMissing'), $('gi-field')); giInput.focus(); return; }
+    const btn = $('gi-go') as HTMLButtonElement;
+    btn.disabled = true;
+    btn.classList.add('loading');
+    try {
+      // A new guest goes into the guest list too
+      const { data: g, error: ge } = await supabase.from('guests').insert({ host_id: host!.id, name, email }).select('id, name, email').single();
+      if (ge || !g) { toast(t('admin.guestNotAdded'), { kind: 'error' }); return; }
+      library.push(g as G);
+      await inviteGuest(g as G);
+    } finally { btn.disabled = false; btn.classList.remove('loading'); }
   }
 
-  $('g-invite-toggle').addEventListener('click', () => {
-    if (!wines.length) return;
-    ($('g-search') as HTMLInputElement).value = '';
-    $('g-msg').hidden = true;
-    showNewGuest(false);
-    renderGuestPicker();
-    guestPanelInvite.open();
-    if (matchMedia('(min-width: 48rem)').matches) ($('g-search') as HTMLInputElement).focus();
-  });
-  $('g-search').addEventListener('input', () => { $('g-msg').hidden = true; renderGuestPicker(); });
+  /** Puts a guest from the guest list into the tasting – and mails the invitation when chosen */
+  async function inviteGuest(g: G, btn?: HTMLButtonElement) {
+    if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+    const { data, error } = await supabase.from('participants')
+      .insert({ name: g.name, email: g.email, tasting_id: tasting!.id, guest_id: g.id }).select().single();
+    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    if (error || !data) { toast(error?.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded'), { kind: 'error', ms: 7000 }); return; }
+    const p = data as P;
+    participants.push(p);
+    giInput.value = '';
+    renderGuestHits();
+    // Show the new guest: the filter that hides them is reset
+    if (!matches(p)) { guestFilter = 'all'; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
+    renderParticipants();
+    const li = document.querySelector<HTMLElement>(`[data-guest="${p.id}"]`);
+    if (li) { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }
+    if (matchMedia('(min-width: 48rem)').matches) giInput.focus({ preventScroll: true });
+    if (p.email && ($('g-send-mail') as HTMLInputElement).checked) {
+      toast(t('guestInvite.mailing', { name: p.name }), { ms: 2500 });
+      const ok = await mailInvite(p);
+      toast(t(ok ? 'guestInvite.mailed' : 'guestInvite.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error', ms: ok ? 4000 : 8000 });
+      renderParticipants();
+    } else {
+      toast(t(p.email ? 'guestInvite.added' : 'guestInvite.addedNoMail', { name: p.name }), { kind: 'ok' });
+    }
+  }
+
+  // No inviting before the tasting has a wine; while the row is open the button waits
+  function gateInvite() {
+    const none = wines.length === 0;
+    giToggle.disabled = none || giOpen();
+    $('g-needs-wine').hidden = !none;
+    if (none && giOpen()) closeInvite();
+  }
 
   // ---------- Sections: each part of the tasting has its own address /t/<slug>/admin/<section>/ ----------
   function showSection(id: string) {

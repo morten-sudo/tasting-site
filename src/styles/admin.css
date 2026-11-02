@@ -812,15 +812,12 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 }
 
 /* The invite panel: the guest list, then "+ New guest" */
-.admin-page #g-panel .search { width: 100%; margin: 0.3rem 0 0.6rem; }
-.admin-page #g-panel .picker-list { max-height: none; }
 .admin-page .new-guest-btn {
   display: block; width: 100%; text-align: left; margin-top: 0.4rem; padding: 0.75rem 0; background: none; border: 0;
   border-top: 1px solid var(--lodge-3); font: inherit; color: var(--amber); font-weight: 500; cursor: pointer;
 }
 .admin-page .new-guest-btn:hover { text-decoration: underline; }
 .admin-page .new-guest-btn[hidden] { display: none; }
-.admin-page #g-panel .add-form { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--lodge-3); }
 /* Filling from a label or link: the fields that already hold something else */
 .admin-page .label-status .fill-diff { display: block; margin-top: 0.35rem; color: var(--paper); }
 .admin-page .label-status .fill-use { margin-top: 0.5rem; }
@@ -1509,3 +1506,24 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   .admin-page .tw-item:not(.guest-row) { grid-template-columns: auto 2.6rem minmax(0, 1fr) auto; grid-template-areas: 'no pic main actions' 'no pic price price'; }
   .admin-page .tw-item:not(.guest-row) .tw-actions { align-self: start; justify-content: flex-end; }
 }
+
+/* Invite a guest: the new row at the top of the guest list (same columns as the guest rows) */
+.admin-page .qa-guest .qa-item { margin-inline: 0; padding-inline: 0.25rem; grid-template-columns: 2.6rem minmax(0, 1fr) auto; }
+.admin-page .gi-av { border-style: dashed; background: transparent; color: var(--amber); font-size: 1.2rem; font-weight: 400; align-self: start; margin-top: 0.1rem; }
+.admin-page .guest-av.small { width: 2.2rem; height: 2.2rem; font-size: 0.75rem; }
+.admin-page .gi-mail { display: flex; align-items: center; gap: 0.45rem; margin: 0.45rem 0 0; font-size: 0.86rem; font-weight: 400; color: var(--muted); cursor: pointer; }
+.admin-page .gi-mail input { width: 1.05rem; height: 1.05rem; accent-color: var(--amber); margin: 0; }
+.admin-page .qa-guest + .guest-list .tw-item:first-child { border-top: 1px solid var(--lodge-3); }
+.admin-page .qa-guest { --qa-line: var(--lodge-3); margin-top: 0.75rem; }
+.admin-page .qa-guest + .guest-list.tw-list { margin-top: 0; }
+@media (max-width: 40rem) {
+  .admin-page .qa-guest .qa-item { grid-template-columns: 2.6rem minmax(0, 1fr); }
+}
+.admin-page .qa-field input, .admin-page .qa-field input:focus {
+  flex: 1; min-width: 0; font: inherit; color: var(--paper); background: transparent; border: 0; outline: 0; box-shadow: none;
+  padding: 0; margin: 0; height: 100%; width: auto; max-width: none;
+}
+.admin-page .gi-row .qa-field { height: 2.75rem; box-sizing: border-box; }
+.admin-page .gi-row .qa-actions .btn { height: 2.75rem; padding-block: 0; box-sizing: border-box; }
+.admin-page .gi-row .qa-actions .qa-x { height: 2.75rem; }
+.admin-page .gi-row { align-items: start; }
