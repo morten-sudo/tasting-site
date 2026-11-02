@@ -3,6 +3,7 @@
 import { supabase } from './supabase';
 import { $, mk, toNumber, sheetPanel } from './admin-common';
 import { styleName } from './wines';
+import { initHelpTips } from './help-tip';
 import { t, locale } from '../i18n';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
@@ -142,7 +143,9 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
         if (await update(r, { revealed: v !== 'hidden', blind: v === 'blind' })) render();
         else visSel.value = state();
       });
-      vis.append(mk('span', '', t('blind.guestsSee')), visSel);
+      const visLabel = mk('span', '', t('blind.guestsSee'));
+      visLabel.dataset.help = 'guests-see';
+      vis.append(visLabel, visSel);
       const ord = mk('label');
       const ordCb = mk('input');
       ordCb.type = 'checkbox';
@@ -189,6 +192,7 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
       list.append(li);
     });
     renderPicker();
+    initHelpTips(list);
     emit();
   }
 

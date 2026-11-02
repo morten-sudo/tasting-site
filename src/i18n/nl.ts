@@ -842,4 +842,11 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "inviteMail.sentTo": "De uitnodiging is naar {name} gemaild.",
   "inviteMail.failed": "{name} is uitgenodigd, maar de e-mail kon niet worden verstuurd. Probeer „Uitnodiging sturen” bij de gast of kopieer de link.",
   "inviteMail.failedShort": "Niet verstuurd – opnieuw",
+  "adminNav.help": "Help",
+  "help.intro": "Alles wat Winetastr kan, en hoe. Zoek of open een onderwerp.",
+  "help.search": "Zoeken in de help",
+  "help.topics": "Onderwerpen",
+  "help.noMatch": "Niets gevonden. Probeer een ander woord.",
+  "help.more": "Lees meer →",
+  "help.what": "Wat is dit?",
 };

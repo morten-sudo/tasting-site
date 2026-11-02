@@ -1,7 +1,7 @@
 ---
 // Admin shell shared by all host pages: the menu on the left (a drawer on phones),
 // the signed-in line and the "not a host" notice. Page content goes in the slot.
-interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'account' | 'payments' }
+interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'account' | 'payments' | 'help' }
 const { active } = Astro.props;
 const cur = (key: string) => (active === key ? 'page' : undefined);
 ---
@@ -44,6 +44,7 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
         <li><a href="/admin/account/" aria-current={cur('account')} data-i18n="account.navLink">Account and hosts</a></li>
         <li><a href="/admin/payments/" aria-current={cur('payments')} data-i18n="adminNav.payments">Payments</a></li>
       </ul>
+      <a class="side-group" href="/admin/help/" aria-current={cur('help')}><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6" /><circle cx="12" cy="17" r=".6" /></svg><span data-i18n="adminNav.help">Help</span></a>
     </nav>
     <div class="side-foot">
       <span id="me" class="side-me"></span>

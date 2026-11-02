@@ -51,7 +51,7 @@ import '../../styles/admin.css';
       <section class="block wines-admin">
         <div class="guests-head">
           <input id="wine-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" style="max-width:20rem;margin:0" />
-          <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button>
+          <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button><span data-help="new-wine"></span>
         </div>
 
         <!-- New / edit wine: side panel on larger screens, bottom sheet on phones -->
@@ -255,6 +255,8 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { initHelpTips } from '../../lib/help-tip';
+  initHelpTips();
   import { requireHost, $ } from '../../lib/admin-common';
   import { initWineAdmin } from '../../lib/admin-wines';
   import { winePaths, wineIdFromPath, onWinePage, showWinePage } from '../../lib/admin-wine-page';

@@ -842,4 +842,11 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "inviteMail.sentTo": "Die Einladung wurde per E-Mail an {name} gesendet.",
   "inviteMail.failed": "{name} ist eingeladen, aber die E-Mail konnte nicht gesendet werden. Versuchen Sie „Einladung senden“ beim Gast oder kopieren Sie den Link.",
   "inviteMail.failedShort": "Nicht gesendet – erneut versuchen",
+  "adminNav.help": "Hilfe",
+  "help.intro": "Alles, was Winetastr kann, und wie. Suchen Sie oder öffnen Sie ein Thema.",
+  "help.search": "Hilfe durchsuchen",
+  "help.topics": "Themen",
+  "help.noMatch": "Nichts gefunden. Versuchen Sie ein anderes Wort.",
+  "help.more": "Mehr dazu →",
+  "help.what": "Was ist das?",
 };

@@ -913,4 +913,11 @@ export const en = {
   "inviteMail.sentTo": "The invitation was emailed to {name}.",
   "inviteMail.failed": "{name} is invited, but the email could not be sent. Try \"Send invitation\" on the guest, or copy the link.",
   "inviteMail.failedShort": "Not sent – try again",
+  "adminNav.help": "Help",
+  "help.intro": "Everything Winetastr can do, and how. Search, or open a topic.",
+  "help.search": "Search the help",
+  "help.topics": "Topics",
+  "help.noMatch": "Nothing found. Try another word.",
+  "help.more": "Read more →",
+  "help.what": "What is this?",
 } as const;

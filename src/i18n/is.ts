@@ -914,4 +914,11 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "inviteMail.sentTo": "Boðið var sent í tölvupósti til {name}.",
   "inviteMail.failed": "{name} er boðið en ekki tókst að senda tölvupóstinn. Reyndu „Senda boð“ hjá gestinum eða afritaðu hlekkinn.",
   "inviteMail.failedShort": "Ekki sent – reyndu aftur",
+  "adminNav.help": "Hjálp",
+  "help.intro": "Allt sem Winetastr getur og hvernig. Leitaðu eða opnaðu efni.",
+  "help.search": "Leita í hjálpinni",
+  "help.topics": "Efni",
+  "help.noMatch": "Ekkert fannst. Prófaðu annað orð.",
+  "help.more": "Lesa meira →",
+  "help.what": "Hvað er þetta?",
 };

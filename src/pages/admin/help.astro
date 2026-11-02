@@ -1,0 +1,80 @@
+---
+// Help for hosts: every feature, step by step. Only shown to signed-in hosts (in the admin menu).
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="adminNav.help">
+  <section class="wrap admin-page">
+    <AdminNav active="help">
+    <div id="admin-main" hidden>
+      <h1 class="title" data-i18n="adminNav.help">Help</h1>
+      <p class="hint" data-i18n="help.intro">Everything Winetastr can do, and how. Search, or open a topic.</p>
+      <label for="help-search" class="sr" data-i18n="help.search">Search the help</label>
+      <input id="help-search" class="search" type="search" autocomplete="off" placeholder="Search the help" data-i18n-attr="placeholder=help.search" />
+      <nav id="help-toc" class="help-toc" aria-label="Topics" data-i18n-attr="aria-label=help.topics"></nav>
+      <div id="help-list" class="help-list"></div>
+      <p id="help-none" class="hint" hidden data-i18n="help.noMatch">Nothing found. Try another word.</p>
+    </div>
+    </AdminNav>
+  </section>
+</Base>
+
+<script>
+  import { requireHost, $ } from '../../lib/admin-common';
+  import { HELP, pick } from '../../lib/help-content';
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    render();
+    openFromHash();
+  }
+
+  function render() {
+    $('help-toc').replaceChildren(...HELP.map((s) => {
+      const a = document.createElement('a');
+      a.href = `#${s.id}`;
+      a.textContent = pick(s.title);
+      return a;
+    }));
+    $('help-list').replaceChildren(...HELP.map((s) => {
+      const d = document.createElement('details');
+      d.className = 'help-topic';
+      d.id = s.id;
+      const sum = document.createElement('summary');
+      sum.textContent = pick(s.title);
+      const body = document.createElement('div');
+      body.className = 'help-body';
+      body.innerHTML = pick(s.body);
+      d.append(sum, body);
+      return d;
+    }));
+  }
+
+  // /admin/help/#max-guests opens the topic (or the topic holding that heading) and scrolls to it
+  function openFromHash() {
+    const id = decodeURIComponent(location.hash.slice(1));
+    if (!id) return;
+    const target = document.getElementById(id);
+    const topic = target?.closest('details') as HTMLDetailsElement | null;
+    if (!target || !topic) return;
+    topic.open = true;
+    requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }
+  window.addEventListener('hashchange', openFromHash);
+
+  // Search: topics whose text matches open; the rest are hidden
+  $('help-search').addEventListener('input', () => {
+    const q = ($('help-search') as HTMLInputElement).value.trim().toLowerCase();
+    let shown = 0;
+    document.querySelectorAll<HTMLDetailsElement>('.help-topic').forEach((d) => {
+      const hit = !q || d.textContent!.toLowerCase().includes(q);
+      d.hidden = !hit;
+      d.open = !!q && hit;
+      if (hit) shown++;
+    });
+    $('help-toc').hidden = !!q;
+    $('help-none').hidden = shown > 0;
+  });
+</script>

@@ -954,3 +954,32 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 /* Invitation by email: the choice in the invite panel and when it was sent */
 .admin-page .send-mail { margin: 0.25rem 0 0.75rem; }
 .admin-page .guest-mailed { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.85rem; }
+
+/* ---------- Help ---------- */
+.admin-page .help-toc { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 1rem 0 1.5rem; }
+.admin-page .help-toc a { color: var(--amber); font-size: 0.95rem; }
+.admin-page .help-list { display: grid; gap: 0.6rem; }
+.admin-page .help-topic { border: 1px solid var(--lodge-3); border-radius: 10px; background: #fff; }
+.admin-page .help-topic > summary { cursor: pointer; padding: 0.9rem 1.1rem; font-family: var(--display); font-size: 1.3rem; list-style-position: inside; }
+.admin-page .help-topic[open] > summary { border-bottom: 1px solid var(--lodge-3); }
+.admin-page .help-body { padding: 0.4rem 1.1rem 1.1rem; line-height: 1.55; max-width: 44rem; }
+.admin-page .help-body h4 { margin: 1.1rem 0 0.3rem; font-size: 1rem; scroll-margin-top: 6rem; }
+.admin-page .help-body ol, .admin-page .help-body ul { padding-left: 1.3rem; }
+.admin-page .help-body li { margin: 0.3rem 0; }
+.admin-page .help-topic { scroll-margin-top: 6rem; }
+
+/* The "?" next to a setting, and its bubble */
+.help-q {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.25rem; height: 1.25rem; margin-left: 0.4rem; padding: 0;
+  border-radius: 50%; border: 1px solid var(--lodge-3); background: #fff; color: var(--muted);
+  font-size: 0.75rem; font-weight: 600; line-height: 1; cursor: pointer; vertical-align: middle; flex: none;
+}
+.help-q:hover, .help-q[aria-expanded="true"] { border-color: var(--amber); color: var(--amber); }
+.help-bubble {
+  position: absolute; z-index: 1000; width: min(20rem, calc(100vw - 16px));
+  background: var(--paper, #231a17); color: #fff; border-radius: 10px; padding: 0.85rem 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); font-size: 0.9rem; line-height: 1.45;
+}
+.help-bubble p { margin: 0 0 0.5rem; }
+.help-bubble a { color: #f1c27d; font-weight: 500; }

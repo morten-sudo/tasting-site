@@ -92,14 +92,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <h2 data-i18n="admin.controls">Controls</h2>
         <div class="toggles">
           <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
-          <label class="toggle"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
-          <label class="toggle"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
+          <label class="toggle" data-help="orders-open"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
+          <label class="toggle" data-help="quiz"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
-          <label class="toggle"><input type="checkbox" data-key="blind" /> <span data-i18n="blind.tasting">Blind tasting (all wines blind until you reveal them)</span></label>
+          <label class="toggle" data-help="blind"><input type="checkbox" data-key="blind" /> <span data-i18n="blind.tasting">Blind tasting (all wines blind until you reveal them)</span></label>
         </div>
         <!-- Max number of guests: when it is reached, a yes puts the guest on the waiting list -->
         <div class="max-guests">
-          <label for="max-guests"><span data-i18n="waitlist.max">Max number of guests</span> <span class="hint" data-i18n="waitlist.maxHint">(empty = no limit; when full, guests who say yes go on a waiting list)</span></label>
+          <label for="max-guests" data-help="max-guests"><span data-i18n="waitlist.max">Max number of guests</span> <span class="hint" data-i18n="waitlist.maxHint">(empty = no limit; when full, guests who say yes go on a waiting list)</span></label>
           <div class="inline-form">
             <input id="max-guests" type="number" inputmode="numeric" min="1" max="10000" class="short" />
             <span id="max-guests-msg" class="hint" aria-live="polite"></span>
@@ -131,7 +131,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
       <!-- Tasting fee -->
       <section class="block" data-section="settings">
-        <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
+        <h2><span data-i18n="guest.feeTitle">Tasting fee</span><span data-help="fee"></span></h2>
         <div class="fee-grid">
           <label for="fee-total" data-i18n="admin.feeTotal">Total cost (DKK)</label>
           <input id="fee-total" type="number" min="0" step="1" inputmode="decimal" />
@@ -185,7 +185,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <label for="g-search" data-i18n="adminTasting.searchOrNew">Search your guest list – or type the name of a new guest</label>
           <input id="g-search" class="search" type="search" autocomplete="off" placeholder="Name or email" data-i18n-attr="placeholder=adminTasting.nameOrEmail" />
-          <label class="toggle send-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
+          <label class="toggle send-mail" data-help="invite-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
           <p id="g-msg" class="message ok" hidden aria-live="polite"></p>
           <ul id="g-picker-list" class="picker-list"></ul>
           <p id="g-picker-empty" class="hint" hidden></p>
@@ -294,6 +294,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 </Base>
 
 <script>
+  import { initHelpTips } from '../../lib/help-tip';
+  initHelpTips();
   import { supabase } from '../../lib/supabase';
   import { currentSlug, tastingUrl } from '../../lib/guest';
   import { initHosts } from '../../lib/admin-hosts';
