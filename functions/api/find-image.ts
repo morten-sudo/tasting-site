@@ -47,10 +47,19 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     const n = fits(text + ' ' + decodeURIComponent(new URL(u).pathname));
     if (n) found.set(u.split('#')[0], Math.max(found.get(u.split('#')[0]) ?? 0, n));
   };
-  for (const m of home.html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)) note(m[1], htmlToText(m[2]));
-  const seen: string[] = [`home ${home.url}: ${(home.html.match(/<a\b/gi) ?? []).length} links, ${home.html.length} chars`];
+  const linksOf = (html: string) => [...html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,300}?)<\/a>/gi)].map((m) => ({ href: m[1], text: htmlToText(m[2]) }));
+  const homeLinks = linksOf(home.html);
+  for (const l of homeLinks) note(l.href, l.text);
+  // One level deeper: the producer's list of wines ("Nos vins", "Our wines", "Gamme", "Collection" …)
+  const LIST = /(^|[^a-z])(vins|nos vins|wines|our wines|wine|vini|i vini|weine|unsere weine|vinos|vinhos|gamme|collection|collections|produits|products|range|cuvees|cuvee|shop|boutique|tienda|negozio|sortiment)([^a-z]|$)/;
+  const lists = [...new Set(homeLinks.filter((l) => LIST.test(plain(l.text + ' ' + l.href).replace(/[-_/]+/g, ' ')))
+    .map((l) => abs(l.href, home.url)).filter((u): u is string => !!u && new URL(u).hostname === host))].slice(0, 4);
+  for (const l of await Promise.all(lists.map((u) => get(u, 6000)))) if (l) for (const x of linksOf(l.html)) note(x.href, x.text);
+  const seen: string[] = [`home ${home.url}: ${homeLinks.length} links; wine lists: ${lists.join(' ') || 'none'}`];
   if (found.size < 3) {
-    const maps = [new URL('/sitemap.xml', home.url).href, new URL('/sitemap_index.xml', home.url).href, new URL('/wp-sitemap.xml', home.url).href];
+    const robots = await get(new URL('/robots.txt', home.url).href, 4000);
+    const fromRobots = [...(robots?.html.matchAll(/^\s*sitemap:\s*(\S+)/gim) ?? [])].map((m) => m[1]);
+    const maps = [...new Set([...fromRobots, new URL('/sitemap.xml', home.url).href, new URL('/sitemap_index.xml', home.url).href, new URL('/wp-sitemap.xml', home.url).href])].slice(0, 5);
     for (const sm of maps) {
       const x = await get(sm, 5000);
       if (!x || !/<(urlset|sitemapindex)/i.test(x.html)) { seen.push(`${sm}: none`); continue; }
