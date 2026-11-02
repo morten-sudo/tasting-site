@@ -70,9 +70,9 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const no = mk('span', 'tw-no', String(i + 1));
 
       const main = mk('div', 'tw-main');
-      const name = mk('button', 'tw-name', w.name);
-      name.type = 'button';
-      name.addEventListener('click', () => edit(r));
+      // The name opens the wine's own page in the library (origin, map, description); the pencil edits it here
+      const name = mk('a', 'tw-name', w.name);
+      name.href = `/admin/wines/${w.id}/`;
       main.append(name);
       const m = meta(w);
       if (m) main.append(mk('p', 'lib-meta', m));
@@ -178,7 +178,6 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     $('twe-title').textContent = w.name;
     $('twe-thumb').replaceWith(Object.assign(thumb(w), { id: 'twe-thumb' }));
     $('twe-meta').textContent = meta(w);
-    $<HTMLAnchorElement>('twe-page').href = `/admin/wines/${w.id}/`;
     const price = $<HTMLInputElement>('twe-price');
     price.value = amountText(r.price_dkk, locale());
     const retail = $<HTMLInputElement>('twe-retail-in');

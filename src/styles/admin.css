@@ -1612,4 +1612,4 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 }
 /* Orders tab: who counts towards quantity prices, under the "Order wine" switch and as wide as it */
 .admin-page [data-section='orders'] .bulk-choice { max-width: 46rem; box-sizing: border-box; margin: 0 0 1.5rem; }
-.admin-page .twe-page { display: inline-block; margin-top: 0.2rem; font-size: 0.88rem; color: var(--amber); }
+.admin-page a.tw-name { text-decoration: none; display: inline-block; }
