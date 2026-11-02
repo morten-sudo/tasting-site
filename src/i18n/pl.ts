@@ -874,4 +874,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "aiIntro.undo": "Cofnij – przywróć mój tekst",
   "aiIntro.failed": "Nie udało się teraz napisać szkicu. Spróbuj ponownie za chwilę.",
   "aiIntro.noWines": "Najpierw dodaj wina do degustacji – szkic powstaje na ich podstawie.",
+  "notFound.title": "Nie znaleziono strony",
+  "notFound.text": "Strona nie istnieje (już). Sprawdź adres lub zacznij od strony głównej.",
+  "notFound.home": "Na stronę główną",
 };

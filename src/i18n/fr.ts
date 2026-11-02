@@ -874,4 +874,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "aiIntro.undo": "Annuler – récupérer mon texte",
   "aiIntro.failed": "Le brouillon n’a pas pu être rédigé. Réessayez dans un instant.",
   "aiIntro.noWines": "Ajoutez d’abord des vins à la dégustation – le brouillon est rédigé à partir d’eux.",
+  "notFound.title": "Page introuvable",
+  "notFound.text": "Cette page n’existe pas (ou plus). Vérifiez l’adresse ou repartez de l’accueil.",
+  "notFound.home": "Vers l’accueil",
 };

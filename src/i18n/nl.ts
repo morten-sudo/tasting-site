@@ -874,4 +874,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "aiIntro.undo": "Ongedaan maken – mijn tekst terug",
   "aiIntro.failed": "Het concept kon nu niet worden geschreven. Probeer het zo opnieuw.",
   "aiIntro.noWines": "Voeg eerst wijnen toe – het concept wordt op basis daarvan geschreven.",
+  "notFound.title": "Pagina niet gevonden",
+  "notFound.text": "De pagina bestaat niet (meer). Controleer het adres of begin op de voorpagina.",
+  "notFound.home": "Naar de voorpagina",
 };

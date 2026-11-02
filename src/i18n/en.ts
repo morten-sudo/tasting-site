@@ -945,4 +945,7 @@ export const en = {
   "aiIntro.undo": "Undo – bring back my text",
   "aiIntro.failed": "The draft could not be written right now. Try again in a moment.",
   "aiIntro.noWines": "Add wines to the tasting first – the draft is written from them.",
+  "notFound.title": "Page not found",
+  "notFound.text": "The page does not exist (any more). Check the address, or start from the front page.",
+  "notFound.home": "To the front page",
 } as const;

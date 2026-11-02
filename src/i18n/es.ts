@@ -874,4 +874,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "aiIntro.undo": "Deshacer – recuperar mi texto",
   "aiIntro.failed": "No se pudo escribir el borrador ahora. Inténtalo de nuevo en un momento.",
   "aiIntro.noWines": "Añade primero vinos a la cata: el borrador se escribe a partir de ellos.",
+  "notFound.title": "Página no encontrada",
+  "notFound.text": "La página no existe (o ya no existe). Revisa la dirección o empieza desde la portada.",
+  "notFound.home": "A la portada",
 };

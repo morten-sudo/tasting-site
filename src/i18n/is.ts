@@ -946,4 +946,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "aiIntro.undo": "Afturkalla – fá textann minn aftur",
   "aiIntro.failed": "Ekki tókst að skrifa drögin núna. Reyndu aftur eftir smá stund.",
   "aiIntro.noWines": "Bættu fyrst vínum við smökkunina – drögin eru skrifuð út frá þeim.",
+  "notFound.title": "Síðan fannst ekki",
+  "notFound.text": "Síðan er ekki til (lengur). Athugaðu slóðina eða byrjaðu á forsíðunni.",
+  "notFound.home": "Á forsíðuna",
 };
