@@ -1092,4 +1092,7 @@ export const en = {
   "plans.title": "Features and plans",
   "plans.lead": "Everything Winetastr can do today, and what is coming.",
   "signup.terms": "By creating an account you accept the <a href=\"/terms/\" target=\"_blank\" rel=\"noopener\">terms ↗</a> and the <a href=\"/privacy/\" target=\"_blank\" rel=\"noopener\">privacy policy ↗</a>. You must be at least 18.",
+  "meta.description": "Host wine tastings your guests remember: invitations, the wines, orders, ratings and a quiz – all on your guests’ phones. Free to get started.",
+  "meta.inviteTitle": "You are invited to a wine tasting",
+  "meta.invite": "Open the invitation to see the date, the place and the wines – and to reply.",
 } as const;

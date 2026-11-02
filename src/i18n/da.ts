@@ -1093,4 +1093,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "plans.title": "Funktioner og planer",
   "plans.lead": "Alt hvad Winetastr kan i dag – og hvad der kommer.",
   "signup.terms": "Når du opretter en konto, accepterer du <a href=\"/terms/\" target=\"_blank\" rel=\"noopener\">vilkårene ↗</a> og <a href=\"/privacy/\" target=\"_blank\" rel=\"noopener\">privatlivspolitikken ↗</a>. Du skal være mindst 18 år.",
+  "meta.description": "Hold vinsmagninger, dine gæster husker: invitationer, vinene, bestillinger, bedømmelser og quiz – alt på gæsternes telefoner. Gratis at komme i gang.",
+  "meta.inviteTitle": "Du er inviteret til en vinsmagning",
+  "meta.invite": "Åbn invitationen for at se dato, sted og vinene – og svar.",
 };
