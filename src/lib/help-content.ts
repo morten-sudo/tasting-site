@@ -105,7 +105,7 @@ export const HELP: HelpSection[] = [
 <p>Træk et billede ind, vælg en fil – eller tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h4 id="tasting-wines">Vinene i en smagning</h4>
 <p>På smagningen tilføjer du vine med <a href="t:wines/?open=tw-add-toggle">Vine → Tilføj vin</a>: skriv navnet, og vine fra dit bibliotek vises med <i>Tilføj</i>. Et link eller et billede opretter en ny vin, som kommer både i biblioteket og i smagningen – på samme måde som under <a href="#new-wine">Ny vin</a>.</p>
-<p>På smagningens fane <a href="t:wines/">Vine</a> står vinene i den rækkefølge, de skænkes, med pris, hvad gæsterne ser (<i>Synlig</i>, <i>Blind</i> eller <i>Skjult</i>), om de kan bestilles, og gæsternes gennemsnitlige karakter. Træk i ⋮⋮ for at ændre rækkefølgen. Tryk <i>Rediger</i> ved en vin for at sætte gæsteprisen, mængdepriser (fx "fra 6 flasker 249,95 kr. pr. stk."), hvad gæsterne ser, om den kan bestilles, og dens plads – eller for at fjerne den fra smagningen (med Fortryd). En blind vin har sin egen <i>Afslør</i>-knap i listen.</p>`,
+<p>På smagningens fane <a href="t:wines/">Vine</a> står vinene i den rækkefølge, de skænkes, med pris, hvad gæsterne ser (<i>Synlig</i>, <i>Blind</i> eller <i>Skjult</i>), om de kan bestilles, og gæsternes gennemsnitlige karakter. Træk i ⋮⋮ for at ændre rækkefølgen. Tryk på blyanten (<i>Rediger</i>) ved en vin for at sætte gæsteprisen, mængdepriser (fx "fra 6 flasker 249,95 kr. pr. stk."), hvad gæsterne ser, om den kan bestilles, og dens plads – eller for at fjerne den fra smagningen (med Fortryd). En blind vin har sit eget øje-ikon (<i>Afslør</i>) i listen.</p>`,
       en: `<p>Your wine library under <a href="/admin/wines/">Wines</a> is shared by all hosts on the account, and a wine can be used in many tastings.</p>
 <h4 id="filter-wines">Finding your wines</h4>
 <p>Above the list you can <a href="/admin/wines/">filter</a> by <b>country</b>, <b>region</b>, <b>type</b> and <b>tasting</b> – and search in free text. The regions follow the country: choose a country and only its regions are shown; choose a region and its country is chosen too. Under tasting you can also choose <i>Not in any tasting</i>. The number in brackets is the number of wines, and <i>Clear filters</i> shows them all again. The filters are kept in the address, so they are still there when you go back from a wine.</p>
@@ -126,7 +126,7 @@ export const HELP: HelpSection[] = [
 <p>Drag a picture in, choose a file – or press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h4 id="tasting-wines">The wines in a tasting</h4>
 <p>In a tasting you add wines with <a href="t:wines/?open=tw-add-toggle">Wines → Add wine</a>: type the name, and wines from your library are shown with <i>Add</i>. A link or a photo creates a new wine that goes into both the library and the tasting – the same way as under <a href="#new-wine">New wine</a>.</p>
-<p>On the tasting's <a href="t:wines/">Wines</a> tab the wines are listed in the order they are poured, with price, what the guests see (<i>Shown</i>, <i>Blind</i> or <i>Hidden</i>), whether they can be ordered, and the guests' average rating. Drag ⋮⋮ to change the order. Press <i>Edit</i> by a wine to set the guest price, quantity prices (e.g. "from 6 bottles 249.95 kr. each"), what the guests see, whether it can be ordered and its place – or to remove it from the tasting (with Undo). A blind wine has its own <i>Reveal</i> button in the list.</p>`,
+<p>On the tasting's <a href="t:wines/">Wines</a> tab the wines are listed in the order they are poured, with price, what the guests see (<i>Shown</i>, <i>Blind</i> or <i>Hidden</i>), whether they can be ordered, and the guests' average rating. Drag ⋮⋮ to change the order. Press the pencil (<i>Edit</i>) by a wine to set the guest price, quantity prices (e.g. "from 6 bottles 249.95 kr. each"), what the guests see, whether it can be ordered and its place – or to remove it from the tasting (with Undo). A blind wine has its own eye icon (<i>Reveal</i>) in the list.</p>`,
     },
   },
   {
@@ -136,13 +136,13 @@ export const HELP: HelpSection[] = [
       da: `<p>En blind vin vises for gæsterne som "Vin 3" med en flaskesilhuet i vinens farve (rød, hvid, rosé, mousserende …). Navn, producent, årgang, oprindelse, billede, pris og noter vises ikke – de sendes slet ikke til gæsternes telefoner. Gæsterne kan give karakter og skrive noter, men ikke bestille vinen.</p>
 <ul>
 <li><b>Hele smagningen:</b> slå <a href="t:settings/#controls">Blindsmagning</a> til under kontakterne. Alle vine bliver blinde, og vine du tilføjer senere starter blinde.</li>
-<li><b>Enkelte vine:</b> tryk <i>Rediger</i> ved vinen under <a href="t:wines/">Vine</a>, og vælg <i>Blind</i> under <i>Gæsterne ser</i>.</li>
+<li><b>Enkelte vine:</b> tryk på blyanten (<i>Rediger</i>) ved vinen under <a href="t:wines/">Vine</a>, og vælg <i>Blind</i> under <i>Gæsterne ser</i>.</li>
 <li><b>Afslør:</b> tryk <i>Afslør</i> ved vinen under <a href="t:wines/">Vine</a> – i den rækkefølge, der passer aftenen. Gæsternes skærme skifter selv til den rigtige vin inden for ca. 15 sekunder.</li>
 </ul>`,
       en: `<p>Guests see a blind wine as "Wine 3" with a bottle silhouette in the wine's colour (red, white, rosé, sparkling …). Name, producer, vintage, origin, picture, price and notes are not shown – they are not even sent to the guests' phones. Guests can rate it and write notes, but cannot order it.</p>
 <ul>
 <li><b>The whole tasting:</b> turn on <a href="t:settings/#controls">Blind tasting</a> under the controls. All wines become blind, and wines you add later start blind.</li>
-<li><b>Single wines:</b> press <i>Edit</i> by the wine under <a href="t:wines/">Wines</a> and choose <i>Blind</i> under <i>Guests see</i>.</li>
+<li><b>Single wines:</b> press the pencil (<i>Edit</i>) by the wine under <a href="t:wines/">Wines</a> and choose <i>Blind</i> under <i>Guests see</i>.</li>
 <li><b>Reveal:</b> press <i>Reveal</i> on the wine under <a href="t:wines/">Wines</a> – in whatever order suits the evening. The guests' screens switch to the real wine by themselves within about 15 seconds.</li>
 </ul>`,
     },
@@ -155,18 +155,18 @@ export const HELP: HelpSection[] = [
 <h4 id="invite">Inviter</h4>
 <p>Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a> på smagningen: søg i gæstebiblioteket, eller skriv navnet på en ny gæst (e-mail er valgfri).</p>
 <h4 id="invite-mail">Invitation på mail – eller link</h4>
-<p>Med <i>Send invitationen på mail</i> slået til får gæster med e-mail en mail med tid, sted og en knap til deres personlige invitation. Svarer gæsten på mailen, går svaret til dig. Ved hver gæst kan du <i>Send invitation</i> / <i>Send igen</i>, og du kan se, hvornår den sidst blev sendt.</p>
-<p>Uden e-mail: tryk <i>Kopier link</i> og send linket selv, fx på sms. Linket er personligt – det er gæstens adgang til smagningen.</p>
+<p>Med <i>Send invitationen på mail</i> slået til får gæster med e-mail en mail med tid, sted og en knap til deres personlige invitation. Svarer gæsten på mailen, går svaret til dig. Under hver gæst står, hvornår invitationen blev sendt. En gæst, der aldrig har fået den, har et ✉-ikon i rækken, der sender den. Ellers trykker du på blyanten (<i>Rediger</i>) og vælger <i>Send igen</i> eller <i>Kopiér link</i>.</p>
+<p>Uden e-mail: tryk på link-ikonet i rækken (eller <i>Kopiér link</i> under blyanten) og send linket selv, fx på sms. Linket er personligt – det er gæstens adgang til smagningen.</p>
 <h4>Svar</h4>
-<p>Gæsten svarer ja eller nej og kan skrive kost-hensyn og en note. Under <a href="t:guests/">Gæster</a> ser du status ved hver gæst og kan filtrere: <i>Kommer, Venteliste, Ikke svaret, Kommer ikke, Mangler e-mail</i>. Med <i>Rediger</i> kan du selv ændre status eller e-mail.</p>`,
+<p>Gæsten svarer ja eller nej og kan skrive kost-hensyn og en note. Under <a href="t:guests/">Gæster</a> står hver gæst på en række som vinene: status, <i>Betalt</i>/<i>Ikke betalt</i> når der er gebyr, kost-hensyn, en besked og hvor mange flasker gæsten har bestilt. Du kan filtrere: <i>Kommer, Venteliste, Ikke svaret, Kommer ikke, Mangler e-mail</i>. Blyanten (<i>Rediger</i>) åbner sidepanelet, hvor du sender invitationen, ændrer status, markerer gebyret betalt, retter e-mail – eller fjerner gæsten fra smagningen.</p>`,
       en: `<p>Your guest library under <a href="/admin/guests/">Guests</a> is shared by the account's hosts, so you can invite the same guests again. <a href="/admin/guests/?open=add-toggle">Add a guest</a> to the library.</p>
 <h4 id="invite">Invite</h4>
 <p>Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a> on the tasting: search the guest library, or type the name of a new guest (email is optional).</p>
 <h4 id="invite-mail">Invitation by email – or link</h4>
-<p>With <i>Send the invitation by email</i> turned on, guests with an email get a mail with the time, the place and a button to their personal invitation. If the guest replies to the mail, the reply goes to you. On each guest you can <i>Send invitation</i> / <i>Send again</i> and see when it was last sent.</p>
-<p>Without an email: press <i>Copy link</i> and send the link yourself, e.g. by text message. The link is personal – it is the guest's access to the tasting.</p>
+<p>With <i>Send the invitation by email</i> turned on, guests with an email get a mail with the time, the place and a button to their personal invitation. If the guest replies to the mail, the reply goes to you. Under each guest it says when the invitation was sent. A guest who never got it has a ✉ icon in the row that sends it. Otherwise press the pencil (<i>Edit</i>) and choose <i>Send again</i> or <i>Copy link</i>.</p>
+<p>Without an email: press the link icon in the row (or <i>Copy link</i> under the pencil) and send the link yourself, e.g. by text message. The link is personal – it is the guest's access to the tasting.</p>
 <h4>Replies</h4>
-<p>The guest replies yes or no and can add dietary needs and a note. Under <a href="t:guests/">Guests</a> you see the status on each guest and can filter: <i>Coming, Waiting list, No reply yet, Not attending, Missing email</i>. With <i>Edit</i> you can change the status or email yourself.</p>`,
+<p>The guest replies yes or no and can add dietary needs and a note. Under <a href="t:guests/">Guests</a> each guest has a row like the wines: status, <i>Paid</i>/<i>Not paid</i> when there is a fee, dietary needs, a note and how many bottles they ordered. You can filter: <i>Coming, Waiting list, No reply yet, Not attending, Missing email</i>. The pencil (<i>Edit</i>) opens the side panel, where you send the invitation, change the status, mark the fee paid, correct the email – or remove the guest from the tasting.</p>`,
     },
   },
   {

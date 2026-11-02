@@ -352,7 +352,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
         <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
 
-        <ul id="guest-list" class="guest-list"></ul>
+        <ul id="guest-list" class="tw-list guest-list"></ul>
         <!-- Edit one guest of the tasting: side panel -->
         <dialog id="p-panel" class="sheet" aria-labelledby="p-panel-title">
           <div class="sheet-head">
@@ -470,13 +470,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
-  import { requireHost, mk as mkEl, sheetPanel, toNumber, type Host } from '../../lib/admin-common';
+  import { requireHost, mk as mkEl, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
   import { initWhen, readWhen, readEnd, writeWhen, checkWhen } from '../../lib/datetime';
   import { fieldError, focusField } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
+  import { confirmModal } from '../../lib/confirm';
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
@@ -863,72 +864,107 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   async function saveGuest(p: P, patch: Partial<P>) {
     const { error } = await supabase.from('participants').update(patch).eq('id', p.id);
     if (error) {
-      alert(error.code === '23505' ? t('guest.emailTaken') : t('admin.changeNotSaved'));
+      toast(error.code === '23505' ? t('guest.emailTaken') : t('admin.changeNotSaved'), { kind: 'error', ms: 7000 });
       return false;
     }
     Object.assign(p, patch);
     return true;
   }
 
-  function guestCard(p: P) {
-    const li = mk('li', 'guest status-' + p.status);
+  /** "28 Oct" – when the invitation was mailed */
+  const mailedWhen = (iso: string) => new Date(iso).toLocaleString(locale(), { day: 'numeric', month: 'short' });
+  /** Bottles a guest has ordered in this tasting */
+  const bottlesOf = (p: P) => orders.filter((o) => o.participant_id === p.id).reduce((n, o) => n + o.order_lines.reduce((m, l) => m + l.quantity, 0), 0);
+  /** The guest's link to their invitation */
+  const inviteUrl = (p: P) => `${location.origin}/t/${tasting!.slug}/?k=${p.invite_code}`;
+  async function copyInvite(p: P) {
+    try { await navigator.clipboard.writeText(inviteUrl(p)); toast(t('admin.linkCopiedFor', { name: p.name }), { kind: 'ok' }); }
+    catch { prompt(t('admin.copyLinkPrompt'), inviteUrl(p)); }
+  }
+  async function sendInvite(p: P, btn: HTMLButtonElement) {
+    btn.disabled = true;
+    btn.classList.add('loading');
+    const ok = await mailInvite(p);
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    toast(t(ok ? 'inviteMail.sentTo' : 'guestRow.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
+    if (ok) renderParticipants();
+    return ok;
+  }
 
-    const top = mk('div', 'guest-top');
+  // One row per guest, the same as the wines: a "picture" (initials), name, a line with email and invitation,
+  // status as small chips, what they ordered on the right – and "Edit". The rest is in the side panel.
+  function guestCard(p: P) {
+    const li = mk('li', 'tw-item guest-row');
+    li.dataset.guest = p.id;
+    const initials = p.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+    li.append(Object.assign(mk('span', 'guest-av', initials), { ariaHidden: 'true' }));
+
+    const main = mk('div', 'tw-main');
+    const name = mk('button', 'tw-name', p.name);
+    name.type = 'button';
+    name.addEventListener('click', () => openGuestPanel(p));
+    main.append(name);
+    const meta = mk('p', 'lib-meta');
+    if (p.email) meta.append(p.email);
+    else meta.append(mk('span', 'guest-missing', t('admin.noEmail')));
+    meta.append(' · ', p.invite_mailed_at ? t('guestRow.mailed', { when: mailedWhen(p.invite_mailed_at) }) : t('guestRow.notMailed'));
+    main.append(meta);
+
+    const chips = mk('div', 'tw-chips');
     // On the waiting list: its number in the queue
     const place = p.status === 'waitlist'
       ? participants.filter((x) => x.status === 'waitlist' && (x.waitlisted_at ?? '') <= (p.waitlisted_at ?? '')).length : 0;
-    top.append(mk('span', 'guest-name', p.name), mk('span', 'pill pill-' + p.status, place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status));
-    li.append(top);
-
-    li.append(p.email ? mk('p', 'guest-email', p.email) : mk('p', 'guest-email missing', t('admin.noEmail')));
-    if (p.note) li.append(mk('p', 'guest-note', p.note));
-
-    const actions = mk('div', 'guest-actions');
+    const statusCls = { yes: 'vis-shown', no: 'ord-no', waitlist: 'st-wait', invited: '' }[p.status] ?? '';
+    chips.append(mk('span', `tw-chip ${statusCls}`, place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status));
     if (p.status === 'yes' && feeAmount > 0) {
-      const paid = mk('button', 'paid-toggle' + (p.tasting_paid ? ' on' : ''), p.tasting_paid ? t('admin.feePaid') : t('admin.feeUnpaid'));
-      paid.type = 'button';
-      paid.setAttribute('aria-pressed', String(p.tasting_paid));
-      paid.addEventListener('click', async () => {
-        if (await saveGuest(p, { tasting_paid: !p.tasting_paid })) { renderParticipants(); renderFee(); }
-      });
-      actions.append(paid);
+      chips.append(mk('span', 'tw-chip ' + (p.tasting_paid ? 'vis-shown' : 'st-unpaid'), p.tasting_paid ? '✓ ' + t('guestRow.paid') : t('guestRow.unpaid')));
     }
-    const copy = mk('button', 'text-btn', t('admin.copyLink'));
-    copy.type = 'button';
-    copy.addEventListener('click', async () => {
-      const url = `${location.origin}/t/${tasting!.slug}/?k=${p.invite_code}`;
-      try { await navigator.clipboard.writeText(url); copy.textContent = t('admin.linkCopied'); }
-      catch { prompt(t('admin.copyLinkPrompt'), url); }
-      setTimeout(() => (copy.textContent = t('admin.copyLink')), 1500);
-    });
-    const edit = mk('button', 'text-btn', t('admin.edit'));
-    edit.type = 'button';
+    if (p.diet) chips.append(mk('span', 'tw-chip', p.diet));
+    if (p.note) chips.append(Object.assign(mk('span', 'tw-chip st-note', '💬 ' + t('guestRow.note')), { title: p.note }));
+    main.append(chips);
+    li.append(main);
+
+    const price = mk('div', 'tw-price');
+    const n = bottlesOf(p);
+    if (n) price.append(mk('b', '', t('guestRow.bottles', { n })));
+    li.append(price);
+
+    const actions = mk('div', 'tw-actions');
+    // Never invited: its one action in the row (as "Reveal" by a blind wine) – the rest is in the panel
+    if (!p.invite_mailed_at && p.status === 'invited') {
+      const b = iconButton(p.email ? 'mail' : 'link', t(p.email ? 'inviteMail.send' : 'admin.copyLink'), { strong: true });
+      b.addEventListener('click', () => (p.email ? sendInvite(p, b) : copyInvite(p)));
+      actions.append(b);
+    }
+    const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
+    edit.dataset.tip = t('admin.edit');
     edit.addEventListener('click', () => openGuestPanel(p));
-    // Email the invitation (again)
-    if (p.email) {
-      const send = mk('button', 'text-btn', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
-      send.type = 'button';
-      send.addEventListener('click', async () => {
-        send.disabled = true;
-        send.textContent = t('common.sending');
-        const ok = await mailInvite(p);
-        if (ok) renderParticipants();
-        else { send.disabled = false; send.textContent = t('inviteMail.failedShort'); }
-      });
-      actions.append(send);
-    }
-    actions.append(copy, edit);
-    if (p.invite_mailed_at) {
-      li.append(mk('p', 'guest-mailed', t('inviteMail.sentAt', {
-        when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })));
-    }
+    actions.append(edit);
     li.append(actions);
     return li;
   }
 
+  // The side panel for one guest: the invitation, status, fee paid, email – and removing them from the tasting
   function editPanel(p: P) {
     const form = mk('form', 'edit-panel');
     let status = p.status;
+
+    // The invitation: send (again) and copy the link
+    form.append(mk('p', 'edit-label', t('guestRow.invitation')));
+    form.append(mk('p', 'hint guest-inv-when', p.invite_mailed_at ? t('guestRow.mailedLong', { when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }) : t('guestRow.notMailedLong')));
+    const inv = mk('div', 'row-actions guest-inv');
+    if (p.email) {
+      const send = mk('button', 'btn small ghost', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
+      send.type = 'button';
+      send.addEventListener('click', async () => { if (await sendInvite(p, send)) guestPanel.close(); });
+      inv.append(send);
+    }
+    const copy = mk('button', 'btn small ghost', t('admin.copyLink'));
+    copy.type = 'button';
+    copy.addEventListener('click', () => copyInvite(p));
+    inv.append(copy);
+    form.append(inv);
 
     form.append(mk('p', 'edit-label', t('admin.status')));
     const seg = mk('div', 'segmented');
@@ -939,10 +975,23 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       b.addEventListener('click', () => {
         status = v;
         seg.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        paidBox.hidden = !(feeAmount > 0 && status === 'yes');
       });
       seg.append(b);
     }
     form.append(seg);
+
+    // The fee: paid or not (only for guests who come, when there is a fee)
+    const paidBox = mk('label', 'set-switch guest-paid');
+    const paid = mk('input');
+    paid.type = 'checkbox';
+    paid.setAttribute('role', 'switch');
+    paid.checked = p.tasting_paid;
+    const paidText = mk('span');
+    paidText.append(mk('b', '', t('guestRow.feePaid')), mk('small', '', t('guestRow.feePaidHint', { amount: money(feeAmount) })));
+    paidBox.append(paid, paidText);
+    paidBox.hidden = !(feeAmount > 0 && status === 'yes');
+    form.append(paidBox);
 
     const lab = mk('label', 'edit-label', t('common.email'));
     const id = 'em-' + p.id;
@@ -960,30 +1009,43 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const cancel = mk('button', 'text-btn', t('common.cancel'));
     cancel.type = 'button';
     cancel.addEventListener('click', () => guestPanel.close());
+    row.append(save, cancel);
+    form.append(row);
 
-    // Remove from this tasting (the guest stays in the guest list). Two taps; not when they have orders.
+    // Remove from this tasting (the guest stays in the guest list): quiet, and asked about first
+    const quiet = mk('div', 'guest-remove');
     const remove = mk('button', 'text-btn danger', t('adminTasting.removeGuest'));
     remove.type = 'button';
     remove.addEventListener('click', async () => {
-      if (orders.some((o) => o.participant_id === p.id)) { alert(t('adminTasting.guestHasOrders')); return; }
-      if (!remove.dataset.armed) { remove.dataset.armed = '1'; remove.textContent = t('adminTasting.confirmRemoveGuest'); return; }
+      if (orders.some((o) => o.participant_id === p.id)) { toast(t('adminTasting.guestHasOrders'), { kind: 'error', ms: 7000 }); return; }
+      if (!(await confirmModal(t('guestRow.removeQ', { name: p.name }), t('adminTasting.removeGuest'), t('guestRow.removeNote')))) return;
       const { error } = await supabase.from('participants').delete().eq('id', p.id);
-      if (error) { alert(t('admin.changeNotSaved')); return; }
+      if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return; }
       participants = participants.filter((x) => x.id !== p.id);
       guestPanel.close();
       await reloadParticipants();
       renderFee();
+      toast(t('guestRow.removed', { name: p.name }), { kind: 'ok' });
     });
-    row.append(save, cancel, remove);
-    form.append(row);
+    quiet.append(remove);
+    form.append(quiet);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = em.value.trim().toLowerCase() || null;
-      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { alert(t('guest.emailBad')); return; }
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { fieldError(em, t('guest.emailBad')); em.focus(); return; }
       save.disabled = true;
-      if (await saveGuest(p, { status, email })) { guestPanel.close(); await reloadParticipants(); }
+      const patch: Partial<P> = { status, email };
+      if (feeAmount > 0 && status === 'yes') patch.tasting_paid = paid.checked;
+      const ok = await saveGuest(p, patch);
       save.disabled = false;
+      if (!ok) return;
+      guestPanel.close();
+      await reloadParticipants();
+      renderFee();
+      toast(t('guestRow.saved', { name: p.name }), { kind: 'ok' });
+      const li = document.querySelector<HTMLElement>(`[data-guest="${p.id}"]`);
+      if (li) { li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }
     });
     return form;
   }
@@ -1402,9 +1464,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; },
         () => (tasting?.language as string | null) ?? lang()).load(),
     ]);
+    // Settings first: the guest rows show whether the fee is paid
+    loadSettings();
     renderParticipants();
     renderOrders();
-    loadSettings();
     renderSetup();
     followHelpLink();
     const rows = await fetchLeaderboard({ slug: tasting.slug });

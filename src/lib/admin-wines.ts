@@ -6,6 +6,7 @@ import { t, lang, locale } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
+import { iconButton } from './admin-common';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
 import { fieldError } from './field-error';
@@ -604,8 +605,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       body.append(chips);
 
       const actions = mk('div', 'wine-actions');
-      const edit = mk('button', 'text-btn', t('admin.edit'));
-      edit.type = 'button';
+      const edit = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
+      edit.dataset.tip = t('admin.edit');
       edit.addEventListener('click', () => openForm(w));
       actions.append(edit);
 

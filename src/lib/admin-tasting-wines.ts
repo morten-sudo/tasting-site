@@ -1,7 +1,7 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
 // and whether guests can see (fully, or blind) and order them. Ratings from the guests are shown per wine.
 import { supabase } from './supabase';
-import { $, mk, sheetPanel } from './admin-common';
+import { $, mk, sheetPanel, iconButton } from './admin-common';
 import { styleName } from './wines';
 import { initHelpTips } from './help-tip';
 import { t, locale, money } from '../i18n';
@@ -93,8 +93,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const actions = mk('div', 'tw-actions');
       // Reveal a blind wine with one click, in whatever order suits the evening
       if (vis === 'blind') {
-        const reveal = mk('button', 'btn small ghost', t('blind.reveal'));
-        reveal.type = 'button';
+        const reveal = iconButton('reveal', `${t('blind.reveal')}: ${w.name}`, { strong: true });
+        reveal.dataset.tip = t('blind.reveal');
         reveal.addEventListener('click', async () => {
           reveal.disabled = true;
           if (await update(r, { blind: false })) { render(); toast(t('twe.revealed', { name: w.name }), { kind: 'ok' }); }
@@ -102,9 +102,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
         });
         actions.append(reveal);
       }
-      const editBtn = mk('button', 'btn small ghost', t('admin.edit'));
-      editBtn.type = 'button';
-      editBtn.setAttribute('aria-label', `${t('admin.edit')}: ${w.name}`);
+      const editBtn = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
+      editBtn.dataset.tip = t('admin.edit');
       editBtn.addEventListener('click', () => edit(r));
       actions.append(editBtn);
 

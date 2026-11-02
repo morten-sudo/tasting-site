@@ -1461,3 +1461,51 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .qa-new .qa-field { height: 2.75rem; box-sizing: border-box; }
 .admin-page .qa-new .qa-actions .btn { height: 2.75rem; padding-block: 0; box-sizing: border-box; }
 .admin-page .qa-new .qa-actions .qa-x { height: 2.75rem; }
+
+/* Row actions as icons, with the name as a tip on hover and focus */
+.admin-page .icon-act {
+  position: relative; display: inline-grid; place-items: center; width: 2.4rem; height: 2.4rem; padding: 0;
+  border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--amber); cursor: pointer;
+}
+.admin-page .icon-act svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.admin-page .icon-act:hover { background: var(--lodge-2); border-color: var(--lodge-3); }
+.admin-page .icon-act.strong { border-color: var(--amber); }
+.admin-page .icon-act.strong:hover { background: var(--amber); color: #fff; }
+.admin-page .icon-act:disabled { opacity: 0.5; cursor: default; }
+.admin-page .icon-act.loading svg { visibility: hidden; }
+.admin-page .icon-act.loading::before { content: ''; position: absolute; inset: 0; margin: auto; width: 1.3rem; height: 1.3rem; background: url(/img/glass-spinner.svg) center / contain no-repeat; }
+.admin-page .icon-act[data-tip]::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; padding: 0.3rem 0.55rem; border-radius: 6px; background: var(--paper); color: #fff;
+  font: 500 0.78rem/1.2 var(--body); pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 5;
+}
+.admin-page .icon-act[data-tip]:hover::after, .admin-page .icon-act[data-tip]:focus-visible::after { opacity: 1; transition-delay: 0.25s; }
+.admin-page .tw-actions { align-items: center; gap: 0.25rem; }
+.admin-page .wine-actions .icon-act { margin-left: 0; }
+
+/* A tasting's guests: the same rows as its wines (.tw-item), with initials for a picture */
+.admin-page .guest-list.tw-list { border-top: 0; margin-top: 0.75rem; }
+.admin-page .tw-item.guest-row { grid-template-columns: 2.6rem minmax(0, 1fr) auto auto; }
+.admin-page .guest-av {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; box-sizing: border-box;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); color: var(--muted); font-size: 0.85rem; font-weight: 600;
+}
+.admin-page .guest-missing { color: var(--error); }
+.admin-page .tw-chip.st-wait { color: var(--tawny); border-color: #e2c9ad; background: #fbf3ea; }
+.admin-page .tw-chip.st-unpaid { color: var(--amber); border-color: #e3c4c9; background: #fbf0f1; }
+.admin-page .tw-chip.st-note { cursor: help; }
+.admin-page .guest-inv { margin: 0.2rem 0 0.4rem; }
+.admin-page .guest-inv-when { margin: 0; }
+.admin-page .guest-paid { margin-top: 0.4rem; }
+.admin-page .guest-paid[hidden] { display: none; }
+.admin-page .guest-remove { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--lodge-3); }
+@media (max-width: 40rem) {
+  .admin-page .tw-item.guest-row { grid-template-columns: 2.6rem minmax(0, 1fr) auto; grid-template-areas: 'pic main actions' 'pic price actions'; }
+  .admin-page .guest-row .guest-av { grid-area: pic; align-self: start; }
+  .admin-page .guest-row .tw-actions { grid-area: actions; align-self: start; }
+}
+@media (max-width: 40rem) {
+  /* Phones: the row's icons stay top right, as on the guest rows */
+  .admin-page .tw-item:not(.guest-row) { grid-template-columns: auto 2.6rem minmax(0, 1fr) auto; grid-template-areas: 'no pic main actions' 'no pic price price'; }
+  .admin-page .tw-item:not(.guest-row) .tw-actions { align-self: start; justify-content: flex-end; }
+}
