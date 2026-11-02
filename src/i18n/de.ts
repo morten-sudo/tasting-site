@@ -865,4 +865,13 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "im Chat schreibt",
   "notify.order": "Wein bestellt",
   "notify.hint": "Für alle Verkostungen, die Sie ausrichten. Mehreres auf einmal kommt in einer E-Mail pro Verkostung.",
+  "aiIntro.write": "Entwurf mit KI schreiben",
+  "aiIntro.writing": "Schreibe einen Entwurf aus den Weinen … (dauert ein paar Sekunden)",
+  "aiIntro.label": "Entwurf der KI – prüfen Sie ihn vor der Verwendung",
+  "aiIntro.use": "Entwurf verwenden",
+  "aiIntro.again": "Erneut versuchen",
+  "aiIntro.discard": "Verwerfen",
+  "aiIntro.undo": "Rückgängig – meinen Text zurückholen",
+  "aiIntro.failed": "Der Entwurf konnte gerade nicht geschrieben werden. Versuchen Sie es gleich noch einmal.",
+  "aiIntro.noWines": "Fügen Sie zuerst Weine hinzu – der Entwurf wird aus ihnen geschrieben.",
 };

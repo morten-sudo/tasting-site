@@ -865,4 +865,13 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "napisze na czacie",
   "notify.order": "zamówi wino",
   "notify.hint": "Dla wszystkich degustacji, które prowadzisz. Kilka rzeczy naraz przychodzi w jednym e-mailu na degustację.",
+  "aiIntro.write": "Napisz szkic z AI",
+  "aiIntro.writing": "Piszę szkic na podstawie win … (kilka sekund)",
+  "aiIntro.label": "Szkic z AI – sprawdź go przed użyciem",
+  "aiIntro.use": "Użyj szkicu",
+  "aiIntro.again": "Spróbuj ponownie",
+  "aiIntro.discard": "Odrzuć",
+  "aiIntro.undo": "Cofnij – przywróć mój tekst",
+  "aiIntro.failed": "Nie udało się teraz napisać szkicu. Spróbuj ponownie za chwilę.",
+  "aiIntro.noWines": "Najpierw dodaj wina do degustacji – szkic powstaje na ich podstawie.",
 };

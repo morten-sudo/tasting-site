@@ -865,4 +865,13 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "in de chat schrijft",
   "notify.order": "wijn bestelt",
   "notify.hint": "Voor alle proeverijen die je host. Meerdere dingen tegelijk komen in één mail per proeverij.",
+  "aiIntro.write": "Concept schrijven met AI",
+  "aiIntro.writing": "Concept schrijven op basis van de wijnen … (duurt een paar seconden)",
+  "aiIntro.label": "Concept van AI – controleer het voordat je het gebruikt",
+  "aiIntro.use": "Concept gebruiken",
+  "aiIntro.again": "Opnieuw proberen",
+  "aiIntro.discard": "Verwijderen",
+  "aiIntro.undo": "Ongedaan maken – mijn tekst terug",
+  "aiIntro.failed": "Het concept kon nu niet worden geschreven. Probeer het zo opnieuw.",
+  "aiIntro.noWines": "Voeg eerst wijnen toe – het concept wordt op basis daarvan geschreven.",
 };

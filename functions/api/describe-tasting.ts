@@ -10,7 +10,9 @@ const LANGS: Record<string, string> = {
 type Wine = { name: string; producer: string | null; vintage: string | null; style: string | null; appellation: string | null;
   region: string | null; country: string | null; grapes: string | null; description: string | null };
 type Row = { blind: boolean; revealed: boolean; wines: Wine };
-const MODELS = [MODEL, '@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/openai/gpt-oss-120b'];
+// gpt-oss-120b writes the best Danish of the Workers AI models we tried; the others can still be tried side by side
+const WRITER = '@cf/openai/gpt-oss-120b';
+const MODELS = [WRITER, MODEL, '@cf/meta/llama-3.3-70b-instruct-fp8-fast'];
 
 /** The text of the answer, whichever shape the model gives it in */
 function answerText(out: Record<string, unknown>): string {
@@ -110,7 +112,7 @@ Write to the guests ("we", "you"). Plain text only: no headings, no bullet point
 
   try {
     // For trying models side by side: only these
-    const model = MODELS.includes(String(body.model)) ? String(body.model) : MODEL;
+    const model = MODELS.includes(String(body.model)) ? String(body.model) : WRITER;
     const out = await env.AI.run(model, { messages: [{ role: 'user', content: prompt }], max_tokens: 1200, temperature: 0.4 }) as Record<string, unknown>;
     const text = answerText(out).replace(/\*\*/g, '').trim();
     if (!text) return json({ error: 'empty' }, 502);

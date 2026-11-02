@@ -937,4 +937,13 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "skrifar í spjallið",
   "notify.order": "pantar vín",
   "notify.hint": "Gildir um allar smakkanir sem þú heldur. Margt í einu kemur í einum pósti á smökkun.",
+  "aiIntro.write": "Skrifa drög með gervigreind",
+  "aiIntro.writing": "Skrifar drög út frá vínunum … (tekur nokkrar sekúndur)",
+  "aiIntro.label": "Drög frá gervigreind – athugaðu þau áður en þú notar þau",
+  "aiIntro.use": "Nota drögin",
+  "aiIntro.again": "Reyna aftur",
+  "aiIntro.discard": "Henda",
+  "aiIntro.undo": "Afturkalla – fá textann minn aftur",
+  "aiIntro.failed": "Ekki tókst að skrifa drögin núna. Reyndu aftur eftir smá stund.",
+  "aiIntro.noWines": "Bættu fyrst vínum við smökkunina – drögin eru skrifuð út frá þeim.",
 };

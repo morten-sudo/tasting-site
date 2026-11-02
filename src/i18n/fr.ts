@@ -865,4 +865,13 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "écrit dans le chat",
   "notify.order": "commande du vin",
   "notify.hint": "Pour toutes les dégustations que vous organisez. Plusieurs choses à la fois arrivent en un e-mail par dégustation.",
+  "aiIntro.write": "Rédiger un brouillon avec l’IA",
+  "aiIntro.writing": "Rédaction d’un brouillon à partir des vins … (quelques secondes)",
+  "aiIntro.label": "Brouillon de l’IA – vérifiez-le avant de l’utiliser",
+  "aiIntro.use": "Utiliser le brouillon",
+  "aiIntro.again": "Réessayer",
+  "aiIntro.discard": "Supprimer",
+  "aiIntro.undo": "Annuler – récupérer mon texte",
+  "aiIntro.failed": "Le brouillon n’a pas pu être rédigé. Réessayez dans un instant.",
+  "aiIntro.noWines": "Ajoutez d’abord des vins à la dégustation – le brouillon est rédigé à partir d’eux.",
 };

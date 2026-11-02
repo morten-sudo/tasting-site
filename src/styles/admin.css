@@ -987,3 +987,8 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .help-flash { outline: 3px solid var(--amber); outline-offset: 4px; border-radius: 6px; transition: outline-color 0.6s; }
 .admin-page .help-target { margin: 0 0 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .admin-page .help-target select { max-width: 100%; }
+/* Introduction drafted by AI: beside the host's own text */
+.admin-page .ai-intro { margin: 0.35rem 0 0.9rem; }
+.admin-page .ai-draft { margin-top: 0.6rem; padding: 0.85rem 1rem; border: 1px dashed var(--amber); border-radius: 10px; background: #fffaf2; }
+.admin-page .ai-draft-label { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; }
+.admin-page .ai-text p { margin: 0 0 0.6rem; line-height: 1.5; }

@@ -865,4 +865,13 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "escribe en el chat",
   "notify.order": "pide vino",
   "notify.hint": "Para todas las catas que organizas. Varias cosas a la vez llegan en un correo por cata.",
+  "aiIntro.write": "Escribir un borrador con IA",
+  "aiIntro.writing": "Escribiendo un borrador a partir de los vinos … (unos segundos)",
+  "aiIntro.label": "Borrador de la IA – revísalo antes de usarlo",
+  "aiIntro.use": "Usar el borrador",
+  "aiIntro.again": "Intentar de nuevo",
+  "aiIntro.discard": "Descartar",
+  "aiIntro.undo": "Deshacer – recuperar mi texto",
+  "aiIntro.failed": "No se pudo escribir el borrador ahora. Inténtalo de nuevo en un momento.",
+  "aiIntro.noWines": "Añade primero vinos a la cata: el borrador se escribe a partir de ellos.",
 };

@@ -74,6 +74,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <input id="d-title" type="text" required />
           <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
           <textarea id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
+          <!-- A draft from Cloudflare AI: shown beside the host's own text, never written over it without asking -->
+          <div class="ai-intro">
+            <button id="ai-write" class="text-btn" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiIntro.write">Write a draft with AI</span></button>
+            <button id="ai-undo" class="text-btn" type="button" hidden data-i18n="aiIntro.undo">Undo – bring back my text</button>
+            <p id="ai-status" class="hint" aria-live="polite" hidden></p>
+            <div id="ai-draft" class="ai-draft" hidden>
+              <p class="ai-draft-label" data-i18n="aiIntro.label">Draft from AI – check it before you use it</p>
+              <div id="ai-text" class="ai-text"></div>
+              <div class="row-actions">
+                <button id="ai-use" class="btn small" type="button" data-i18n="aiIntro.use">Use the draft</button>
+                <button id="ai-again" class="text-btn" type="button" data-i18n="aiIntro.again">Try again</button>
+                <button id="ai-discard" class="text-btn" type="button" data-i18n="aiIntro.discard">Discard</button>
+              </div>
+            </div>
+          </div>
           <DateTimeFields prefix="d" />
           <AddressFields prefix="d" />
           <div class="row-actions">
@@ -381,7 +396,67 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     writeWhen('d', tasting.starts_at as string | null);
     writeAddress('d', tasting as Record<string, string | null>);
     ($('d-intro') as HTMLTextAreaElement).value = (tasting.intro as string) ?? '';
+    resetAiIntro();
   }
+
+  // ---------- Introduction drafted by AI ----------
+  // The draft is shown under the host's text; "Use" puts it in the field (with Undo); nothing is saved before Save.
+  let aiDraft = '';
+  let beforeAi: string | null = null;
+  function resetAiIntro() {
+    aiDraft = '';
+    beforeAi = null;
+    $('ai-draft').hidden = true;
+    $('ai-undo').hidden = true;
+    $('ai-status').hidden = true;
+  }
+  async function writeAiIntro() {
+    if (!tasting) return;
+    const status = $('ai-status');
+    status.textContent = t('aiIntro.writing');
+    status.hidden = false;
+    ($('ai-write') as HTMLButtonElement).disabled = true;
+    ($('ai-again') as HTMLButtonElement).disabled = true;
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      const res = await fetch('/api/describe-tasting', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ tasting_id: tasting.id, lang: (tasting.language as string | null) ?? lang() }),
+      });
+      const out = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
+      if (!res.ok || !out.text) {
+        status.textContent = t(out.error === 'no_wines' ? 'aiIntro.noWines' : 'aiIntro.failed');
+        return;
+      }
+      aiDraft = out.text.trim();
+      $('ai-text').replaceChildren(...aiDraft.split(/\n\s*\n/).map((para) => Object.assign(document.createElement('p'), { textContent: para.trim() })));
+      $('ai-draft').hidden = false;
+      status.hidden = true;
+    } catch {
+      status.textContent = t('aiIntro.failed');
+    } finally {
+      ($('ai-write') as HTMLButtonElement).disabled = false;
+      ($('ai-again') as HTMLButtonElement).disabled = false;
+    }
+  }
+  $('ai-write').addEventListener('click', writeAiIntro);
+  $('ai-again').addEventListener('click', writeAiIntro);
+  $('ai-discard').addEventListener('click', () => { $('ai-draft').hidden = true; aiDraft = ''; });
+  $('ai-use').addEventListener('click', () => {
+    const field = $('d-intro') as HTMLTextAreaElement;
+    beforeAi = field.value;
+    field.value = aiDraft;
+    $('ai-draft').hidden = true;
+    $('ai-undo').hidden = false;
+    field.focus();
+  });
+  $('ai-undo').addEventListener('click', () => {
+    if (beforeAi === null) return;
+    ($('d-intro') as HTMLTextAreaElement).value = beforeAi;
+    beforeAi = null;
+    $('ai-undo').hidden = true;
+  });
   function renderDetails() {
     if (!tasting) return;
     const dash = '—';

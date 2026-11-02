@@ -936,4 +936,13 @@ export const en = {
   "notify.chat": "writes in the chat",
   "notify.order": "orders wine",
   "notify.hint": "For all tastings you host. Several things at once come in one email per tasting.",
+  "aiIntro.write": "Write a draft with AI",
+  "aiIntro.writing": "Writing a draft from the wines … (takes a few seconds)",
+  "aiIntro.label": "Draft from AI – check it before you use it",
+  "aiIntro.use": "Use the draft",
+  "aiIntro.again": "Try again",
+  "aiIntro.discard": "Discard",
+  "aiIntro.undo": "Undo – bring back my text",
+  "aiIntro.failed": "The draft could not be written right now. Try again in a moment.",
+  "aiIntro.noWines": "Add wines to the tasting first – the draft is written from them.",
 } as const;

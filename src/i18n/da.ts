@@ -937,4 +937,13 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "notify.chat": "skriver i chatten",
   "notify.order": "bestiller vin",
   "notify.hint": "Gælder alle smagninger, du er vært for. Flere ting på én gang kommer i én mail pr. smagning.",
+  "aiIntro.write": "Skriv et udkast med AI",
+  "aiIntro.writing": "Skriver et udkast ud fra vinene … (tager et par sekunder)",
+  "aiIntro.label": "Udkast fra AI – tjek det, før du bruger det",
+  "aiIntro.use": "Brug udkastet",
+  "aiIntro.again": "Prøv igen",
+  "aiIntro.discard": "Kassér",
+  "aiIntro.undo": "Fortryd – hent min tekst tilbage",
+  "aiIntro.failed": "Udkastet kunne ikke skrives lige nu. Prøv igen om lidt.",
+  "aiIntro.noWines": "Tilføj vine til smagningen først – udkastet skrives ud fra dem.",
 };
