@@ -88,15 +88,21 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   const images = new Map<string, { url: string; page: string; score: number }>();
   const shares: { url: string; page: string }[] = [];
   const looked: string[] = []; // every picture address seen (for checking why none was chosen)
+  // Pictures that do not name the wine (many sites use numbers as file names), from the wine's own page: shown when no named one is found
+  const unnamed: { url: string; page: string; score: number }[] = [];
   const unjson = (v: string) => { try { return JSON.parse(`"${v}"`) as string; } catch { return v.replace(/\\\//g, '/'); } };
   const add = (src: string | undefined, page: string, alt: string) => {
     if (!src) return;
     const u = abs(unjson(src.trim()).split(/\s+/)[0], page);
-    if (!u || /\.svg(\?|$)/i.test(u) || /(logo|icon|sprite|favicon|placeholder|loader|flag|banner|header|background)/i.test(fileWords(u))) return;
+    if (!u || !/^https:/.test(u) || /\.svg(\?|$)/i.test(u) || /(logo|icon|sprite|favicon|placeholder|loader|flag|banner|header|background|avatar)/i.test(fileWords(u))) return;
     if (looked.length < 40 && !looked.includes(u)) looked.push(alt ? `${u} [${alt.slice(0, 60)}]` : u);
     const name = fileWords(u) + ' ' + plain(alt);
     const named = fits(name);
-    if (!named) return; // a picture of something else on the page
+    if (!named) {
+      // Only from the best page; a transparent PNG is most often the bottle shot
+      if (page === pages[0] && !NOT_BOTTLE.test(name) && !unnamed.some((x) => x.url === u)) unnamed.push({ url: u, page, score: /\.png(\?|$)/i.test(u) ? 2 : /\.webp(\?|$)/i.test(u) ? 1 : 0 });
+      return;
+    }
     let score = named * 3 + (BOTTLE.test(name) ? 2 : 0) - (NOT_BOTTLE.test(name) ? 6 : 0);
     const size = u.match(/(\d{2,4})x(\d{2,4})/);
     if (size && Number(size[1]) < 150) score -= 4; // a thumbnail
@@ -105,8 +111,9 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     if (!prev || prev.score < score || (prev.score === score && u.length > prev.url.length)) images.set(key, { url: u, page, score });
   };
   for (const page of pages) {
-    const p = await get(page);
-    if (!p) continue;
+    const got = await get(page);
+    if (!got) continue;
+    const p = { ...got, url: page };
     const og = p.html.match(/<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)/i)?.[1]
       ?? p.html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image/i)?.[1];
     const ogUrl = og && abs(og, p.url);
@@ -121,7 +128,8 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     for (const m of p.html.matchAll(/((?:https?:)?(?:\\?\/){2}[^"'\s()<>]+?|(?:\\?\/)[^"'\s()<>:]+?)\.(?:png|jpe?g|webp)(?:\?[^"'\s()<>]*)?/gi)) add(m[0], p.url, '');
   }
   let list = [...images.values()].filter((i) => i.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
+  if (!list.length) list = [...unnamed].sort((a, b) => b.score - a.score).slice(0, 8);
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
   // pages and seen show where the pictures came from (and why there are none)
-  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked });
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15) });
 };
