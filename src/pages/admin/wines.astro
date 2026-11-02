@@ -181,17 +181,26 @@ import '../../styles/admin.css';
 <script>
   import { requireHost, $ } from '../../lib/admin-common';
   import { initWineAdmin } from '../../lib/admin-wines';
-  import { wineIdFromPath, showWinePage } from '../../lib/admin-wine-page';
+  import { winePaths, wineIdFromPath, onWinePage, showWinePage } from '../../lib/admin-wine-page';
 
   const host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
-    const wineId = wineIdFromPath();
-    // On a wine's own page: saving reloads the page's facts, deleting goes back to the list
-    const show = () => showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true) });
-    const admin = initWineAdmin(host.id, host.tenant_id, wineId ? { onSaved: show, onDeleted: () => { location.href = '/admin/wines/'; } } : {});
+    // A wine's own page lives on the same page: /admin/wines/<country>/<region>/…/<name>/<vintage>/
+    let wineId: number | null = null;
+    const show = async () => {
+      // The address follows the wine (also after a rename or an old numeric link)
+      const path = admin.paths().get(wineId!);
+      if (path && path !== location.pathname) history.replaceState(null, '', path);
+      await showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true) });
+    };
+    const admin = initWineAdmin(host.id, host.tenant_id, onWinePage()
+      ? { onSaved: () => { show(); }, onDeleted: () => { location.href = '/admin/wines/'; } } : {});
     await admin.load();
-    if (wineId) await show();
+    if (onWinePage()) {
+      wineId = wineIdFromPath(admin.paths());
+      await show();
+    }
     // Search the list
     $('wine-search').addEventListener('input', (e) => {
       const q = (e.target as HTMLInputElement).value.trim().toLowerCase();

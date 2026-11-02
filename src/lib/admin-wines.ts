@@ -5,6 +5,7 @@ import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
 import { wineMap } from './wine-map';
 import { withoutYear } from './wines';
+import { winePaths } from './admin-wine-page';
 import { forgetGuesses } from './overview-map';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
@@ -474,7 +475,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       }
       const body = mk('div', 'wine-body');
       const name = mk('a', 'wine-name', w.name);
-      name.href = `/admin/wines/${w.id}/`;
+      name.href = paths().get(w.id) ?? `/admin/wines/${w.id}/`;
       body.append(name);
       const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
@@ -715,5 +716,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (refresh && w.source_url) readLink(true);
   }
 
-  return { load, edit };
+  /** Every wine's own address (see admin-wine-page.ts). */
+  function paths() { return winePaths(wines); }
+
+  return { load, edit, paths };
 }

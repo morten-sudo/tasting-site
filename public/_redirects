@@ -23,6 +23,6 @@
 /superadmin/tenants/:id/           /superadmin/tenant/                 200
 /superadmin/tenants/:id/:section   /superadmin/tenants/:id/:section/   301
 /superadmin/tenants/:id/:section/  /superadmin/tenant/                 200
-# Host admin: one wine in the library, /admin/wines/<id>/ (served by the wines page)
-/admin/wines/:id          /admin/wines/:id/          301
-/admin/wines/:id/         /admin/wines/              200
+# Host admin: one wine in the library, /admin/wines/<country>/<region>/<appellation>/<name>/<vintage>/
+# (served by the wines page, which finds the wine from the address)
+/admin/wines/*            /admin/wines/              200
