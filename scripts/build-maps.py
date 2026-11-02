@@ -119,6 +119,8 @@ def build(region):
     towns = [{'name': n, 'x': round(p.xy(lon, lat)[0]), 'y': round(p.xy(lon, lat)[1]), 'size': s} for n, lon, lat, s in region['towns']]
     out = {
         'id': region['id'], 'name': region['name'], 'w': W, 'h': p.h,
+        # x = (lon - lon0) * k * s, y = (lat1 - lat) * s – for pins at exact places
+        'proj': {'lon0': p.lon0, 'lat1': p.lat1, 'k': round(p.k, 6), 's': round(p.s, 4)},
         'land': d_of(land, 0.9),
         'coast': d_of(p.geom(coast), 0.9) if coast is not None else '',
         'border': d_of(p.geom(border), 0.9) if border is not None else '',

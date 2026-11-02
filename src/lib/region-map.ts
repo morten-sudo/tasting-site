@@ -11,7 +11,20 @@ export type RegionMap = {
   whole: string[];
   towns: { name: string; x: number; y: number; size: 'big' | 'mid' | 'small' }[];
   sources: string;
+  /** x = (lon - lon0) * k * s, y = (lat1 - lat) * s */
+  proj?: { lon0: number; lat1: number; k: number; s: number };
 };
+
+/** A place on the map (SVG coordinates), or null when outside it or the map has no projection. */
+export function mapPoint(map: RegionMap, lon: number, lat: number): [number, number] | null {
+  if (!map.proj) return null;
+  const x = (lon - map.proj.lon0) * map.proj.k * map.proj.s, y = (map.proj.lat1 - lat) * map.proj.s;
+  return x >= 0 && x <= map.w && y >= 0 && y <= map.h ? [x, y] : null;
+}
+
+/** A map pin whose tip is at (x, y). */
+export const pinSvg = (x: number, y: number, title = '', scale = 1) =>
+  `<g class="rm-pin" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})">${title ? `<title>${esc(title)}</title>` : ''}<path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"/><circle cy="-22" r="4"/></g>`;
 
 // Regions that have a map, by the region name stored on wines
 const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro' };
@@ -76,11 +89,13 @@ type DrawOptions = {
   mode?: 'full' | 'mini' | 'background';
   /** area id → label shown next to the badge */
   titles?: Map<string, string>;
+  /** producers' exact places */
+  pins?: { lon: number; lat: number; title?: string }[];
 };
 
 /** The map as an SVG string. */
 export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
-  const { counts = new Map(), wholeRegion = false, mode = 'full', titles = new Map() } = opts;
+  const { counts = new Map(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [] } = opts;
   const max = Math.max(1, ...counts.values());
   const lines = mode === 'background';
   const parts: string[] = [];
@@ -145,6 +160,12 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
     parts.push(...titleSvg);
     for (const b of badges) {
       parts.push(`<g class="rm-badge" transform="translate(${b.x} ${b.y})"><circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text></g>`);
+    }
+  }
+  if (mode !== 'background') {
+    for (const p of pins) {
+      const at = mapPoint(map, p.lon, p.lat);
+      if (at) parts.push(pinSvg(at[0], at[1], p.title, mode === 'mini' ? 1.6 : 1.2));
     }
   }
   parts.push('</svg>');

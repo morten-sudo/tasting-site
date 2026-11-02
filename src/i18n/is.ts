@@ -847,4 +847,10 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.voteOne": "1 einkunn",
   "wineAdmin.noRatings": "Engar einkunnir enn",
   "wineAdmin.overall": "Gestir: ★ {avg} úr {n} einkunnum",
+  "producer.website": "Vefsíða framleiðanda",
+  "producer.websiteHint": "(finnst sjálfkrafa þegar þú vistar)",
+  "producer.address": "Heimilisfang framleiðanda",
+  "producer.websiteShort": "Vefsíða",
+  "producer.addressShort": "Heimilisfang",
+  "wineMap.producer": "Nálin er við framleiðandann (af vefsíðu hans).",
 };

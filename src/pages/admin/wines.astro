@@ -107,6 +107,11 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input id="wf-producer" type="text" />
+          <!-- The producer's website and address: found automatically after saving, or typed here -->
+          <label for="wf-producer-website"><span data-i18n="producer.website">Producer's website</span> <span class="hint" data-i18n="producer.websiteHint">(found automatically when you save)</span></label>
+          <input id="wf-producer-website" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
+          <label for="wf-producer-address" data-i18n="producer.address">Producer's address</label>
+          <input id="wf-producer-address" type="text" autocomplete="off" />
           <div class="wf-pair">
             <div>
               <label for="wf-style" data-i18n="admin.style">Type</label>

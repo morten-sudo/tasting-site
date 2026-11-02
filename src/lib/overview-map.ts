@@ -8,7 +8,7 @@ import { loadAppellations, loadRegions, matchRegion, normOrigin, countryName } f
 export type OverviewMap = { id: string; w: number; h: number; proj: { lon0: number; lat1: number; k: number; s: number }; land: string; border: string };
 type Country = { box: [number, number, number, number]; centre: [number, number] };
 type Guess = { key: string; name: string; country: string; lat: number; lon: number };
-export type Place = { lon: number; lat: number; how: 'appellation' | 'guess' | 'regionCentre' | 'country'; label: string; country: string | null };
+export type Place = { lon: number; lat: number; how: 'producer' | 'appellation' | 'guess' | 'regionCentre' | 'country'; label: string; country: string | null };
 
 const once = <T,>(f: () => Promise<T>) => { let p: Promise<T> | null = null; return () => (p ??= f()); };
 const getJson = <T,>(url: string) => fetch(url).then((r) => (r.ok ? (r.json() as Promise<T>) : null)).catch(() => null);
@@ -26,11 +26,16 @@ export const loadGuesses = () => (guesses ??= (async () => {
 /** After a new place has been saved: read the places again next time. */
 export const forgetGuesses = () => { guesses = null; };
 
-type OriginWine = { appellation?: string | null; appellation_id?: string | null; region?: string | null; country?: string | null };
+type OriginWine = { appellation?: string | null; appellation_id?: string | null; region?: string | null; country?: string | null;
+  producer?: string | null; producer_lat?: number | null; producer_lon?: number | null };
 
 /** Where a wine goes on an overview map, or null when not even the country is known. */
 export async function placeOf(w: OriginWine): Promise<Place | null> {
   const [apps, guesses, countries, regions] = await Promise.all([loadAppellations(), loadGuesses(), loadCountries(), loadRegions()]);
+  // The producer's own place (from its website) is the most exact
+  if (w.producer_lat != null && w.producer_lon != null) {
+    return { lon: w.producer_lon, lat: w.producer_lat, how: 'producer', label: w.producer || w.appellation || '', country: w.country ?? null };
+  }
   const a = w.appellation_id ? apps.find((x) => x.id === w.appellation_id) : null;
   if (a?.lat != null && a?.lon != null) return { lon: a.lon, lat: a.lat, how: 'appellation', label: a.name, country: a.country };
   if (w.appellation && w.country) {

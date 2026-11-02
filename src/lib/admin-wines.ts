@@ -15,14 +15,25 @@ export type AdminWine = {
   image_url: string | null; source_url: string | null;
   country: string | null; region: string | null; appellation: string | null; appellation_id: string | null;
   offer_price_dkk: number | null; offer_quantity: number | null;
+  producer_website?: string | null; producer_address?: string | null;
+  producer_lat?: number | null; producer_lon?: number | null; producer_source?: string | null; producer_checked_at?: string | null;
   tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
 const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
+/** A typed web address as https://…, or null. */
+const webUrl = (v: string) => {
+  const s = v.trim();
+  if (!s) return null;
+  try {
+    const u = new URL(/^https?:\/\//i.test(s) ? s : `https://${s}`);
+    return /^https?:$/.test(u.protocol) && u.hostname.includes('.') ? u.href : null;
+  } catch { return null; }
+};
 
 function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
   const e = document.createElement(tag);
@@ -205,7 +216,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     clearTimeout(mapTimer);
     mapTimer = setTimeout(async () => {
       const turn = ++mapTurn;
-      const origin = { appellation: appInput.value.trim() || null, region: regionInput.value.trim() || null, country: countrySelect.value || null };
+      // The producer's place found earlier, while the producer is unchanged
+      const keep = editing && normOrigin(editing.producer) === normOrigin(field<HTMLInputElement>('wf-producer').value);
+      const origin = { appellation: appInput.value.trim() || null, region: regionInput.value.trim() || null, country: countrySelect.value || null,
+        producer: editing?.producer ?? null, producer_lat: keep ? editing!.producer_lat ?? null : null, producer_lon: keep ? editing!.producer_lon ?? null : null };
       const m = await wineMap(origin);
       if (turn !== mapTurn) return;
       const box = $('wf-map');
@@ -413,6 +427,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     delete $('wf-delete').dataset.armed;
     field<HTMLInputElement>('wf-name').value = w?.name ?? '';
     field<HTMLInputElement>('wf-producer').value = w?.producer ?? '';
+    field<HTMLInputElement>('wf-producer-website').value = w?.producer_website ?? '';
+    field<HTMLInputElement>('wf-producer-address').value = w?.producer_address ?? '';
     styleSelect.value = w?.style && (STYLES as readonly string[]).includes(w.style) ? w.style : '';
     field<HTMLInputElement>('wf-vintage').value = w?.vintage ?? '';
     field<HTMLInputElement>('wf-abv').value = w?.abv != null ? String(w.abv).replace('.', ',') : '';
@@ -611,14 +627,18 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       country: countrySelect.value || null,
       image_url,
       source_url: sourceUrl,
+      producer_website: webUrl(field<HTMLInputElement>('wf-producer-website').value),
+      producer_address: toText(field<HTMLInputElement>('wf-producer-address').value),
     };
+    // A new producer or website: the place found earlier no longer applies and is looked up again
+    const before = editing;
+    const changed = !before || normOrigin(before.producer) !== normOrigin(row.producer)
+      || (before.producer_website ?? null) !== row.producer_website;
+    const place = changed ? { producer_lat: null, producer_lon: null, producer_source: null, producer_checked_at: null } : {};
 
-    const { error } = editing
-      ? await supabase.from('wines').update(row).eq('id', editing.id)
-      : await supabase.from('wines').insert({
-          ...row,
-          host_id: hostId,
-        });
+    const { data: saved, error } = before
+      ? await supabase.from('wines').update({ ...row, ...place }).eq('id', before.id).select('id').single()
+      : await supabase.from('wines').insert({ ...row, ...place, host_id: hostId }).select('id').single();
 
     save.disabled = false;
     save.textContent = t('common.save');
@@ -628,7 +648,43 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     closeForm();
     await load();
     hooks.onSaved?.();
+    // The producer's website, address and place (in the background; the page updates when found)
+    const id = (saved as { id: number } | null)?.id;
+    if (id && row.producer && (changed || !before?.producer_checked_at)) {
+      locateProducer(id, { ...row, name }).then((found) => { if (found) { load(); hooks.onSaved?.(); } });
+    }
   });
+
+  /** Finds the producer's website and place: from another wine by the same producer, else /api/find-producer. */
+  async function locateProducer(id: number, w: { name: string; producer: string | null; appellation: string | null; region: string | null; country: string | null; producer_website: string | null; producer_address: string | null }) {
+    const same = wines.find((x) => x.id !== id && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
+      && (!w.producer_website || x.producer_website === w.producer_website));
+    let found: { website: string | null; address: string | null; lat: number | null; lon: number | null; source: string | null };
+    if (same) {
+      found = { website: same.producer_website ?? null, address: same.producer_address ?? null, lat: same.producer_lat ?? null, lon: same.producer_lon ?? null, source: same.producer_source ?? null };
+    } else {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const res = await fetch('/api/find-producer', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+          body: JSON.stringify({ producer: w.producer, wine: w.name, appellation: w.appellation, region: w.region, country: w.country, website: w.producer_website }),
+        });
+        if (!res.ok) return false;
+        const r = (await res.json()) as { website: string | null; address: string | null; location: { lat: number; lon: number; source: string } | null };
+        found = { website: r.website, address: r.address, lat: r.location?.lat ?? null, lon: r.location?.lon ?? null, source: r.location?.source ?? null };
+      } catch { return false; }
+    }
+    // What the host typed stays; the lookup fills the rest
+    const { error } = await supabase.from('wines').update({
+      producer_website: w.producer_website ?? webUrl(found.website ?? ''),
+      producer_address: w.producer_address ?? found.address,
+      producer_lat: found.lat, producer_lon: found.lat == null ? null : found.lon,
+      producer_source: found.source,
+      producer_checked_at: new Date().toISOString(),
+    }).eq('id', id);
+    return !error;
+  }
 
   // Delete in two steps instead of a browser dialog
   $('wf-delete').addEventListener('click', async () => {

@@ -57,6 +57,17 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     const [k, ...v] = line.split(':');
     facts.push(v.length ? [k.trim(), v.join(':').trim()] : [t('admin.details'), line]);
   }
+  if (w.producer_website) {
+    const a = mk('a');
+    a.href = w.producer_website;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    try { a.textContent = new URL(w.producer_website).hostname.replace(/^www\./, ''); } catch { a.textContent = w.producer_website; }
+    const box = mk('span', 'wd-source');
+    box.append(a);
+    facts.push([t('producer.websiteShort'), box]);
+  }
+  if (w.producer_address) facts.push([t('producer.addressShort'), w.producer_address]);
   if (w.source_url) {
     const box = mk('span', 'wd-source');
     const a = mk('a');

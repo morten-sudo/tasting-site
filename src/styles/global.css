@@ -365,3 +365,6 @@ dialog.welcome-modal::backdrop { background: rgba(20, 12, 12, 0.45); }
 .welcome-modal .welcome-text { margin: 0 0 0.4rem; }
 .welcome-modal .row-actions { justify-content: center; margin-top: 1.1rem; }
 @keyframes welcome-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* A producer's exact place on the region maps */
+.region-map .rm-pin path { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }
+.region-map .rm-pin circle { fill: #fff; }

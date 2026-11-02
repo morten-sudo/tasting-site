@@ -846,4 +846,10 @@ export const en = {
   "wineAdmin.voteOne": "1 rating",
   "wineAdmin.noRatings": "No ratings yet",
   "wineAdmin.overall": "Guests: ★ {avg} from {n} ratings",
+  "producer.website": "Producer's website",
+  "producer.websiteHint": "(found automatically when you save)",
+  "producer.address": "Producer's address",
+  "producer.websiteShort": "Website",
+  "producer.addressShort": "Address",
+  "wineMap.producer": "Pinned at the producer (from its website).",
 } as const;

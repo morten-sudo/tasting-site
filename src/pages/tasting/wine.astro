@@ -179,6 +179,22 @@ import Base from '../../layouts/Base.astro';
     if (w.description) $('desc').textContent = w.description;
     else $('desc').hidden = true;
 
+    // The producer: website to read more, and where it is
+    {
+      const dl = $('details');
+      if (w.producer_website) {
+        const a = el('a', 'producer-link', (() => { try { return new URL(w.producer_website).hostname.replace(/^www\./, ''); } catch { return w.producer_website; } })()) as HTMLAnchorElement;
+        a.href = w.producer_website;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        const dd = el('dd');
+        dd.append(a);
+        dl.append(el('dt', '', t('producer.websiteShort')), dd);
+      }
+      if (w.producer_address) dl.append(el('dt', '', t('producer.addressShort')), el('dd', '', w.producer_address));
+      if (w.producer_website || w.producer_address) dl.hidden = false;
+    }
+
     if (w.details) {
       const dl = $('details');
       for (const line of w.details.split('\n')) {

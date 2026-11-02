@@ -847,4 +847,10 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.voteOne": "1 bedømmelse",
   "wineAdmin.noRatings": "Ingen bedømmelser endnu",
   "wineAdmin.overall": "Gæsterne: ★ {avg} fra {n} bedømmelser",
+  "producer.website": "Producentens hjemmeside",
+  "producer.websiteHint": "(findes automatisk, når du gemmer)",
+  "producer.address": "Producentens adresse",
+  "producer.websiteShort": "Hjemmeside",
+  "producer.addressShort": "Adresse",
+  "wineMap.producer": "Nålen står ved producenten (fra producentens hjemmeside).",
 };

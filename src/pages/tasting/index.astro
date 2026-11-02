@@ -228,7 +228,8 @@ import Base from '../../layouts/Base.astro';
   }
 
   // ---------- Where the wines come from ----------
-  type MapWine = { id: number; sort_order: number; name: string; region: string | null; appellation: string | null; appellation_id: string | null; country: string | null };
+  type MapWine = { id: number; sort_order: number; name: string; region: string | null; appellation: string | null; appellation_id: string | null; country: string | null;
+    producer: string | null; producer_lat?: number | null; producer_lon?: number | null };
   async function showOrigins(wines: MapWine[]) {
     const region = mainRegion(wines);
     const map = region ? await loadMap(region) : null;
@@ -241,7 +242,10 @@ import Base from '../../layouts/Base.astro';
     $('hero-map').innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion: whole && !counts.size });
     // The map card; on phones it zooms to the filled appellations
     const box = $('origin-map');
-    box.innerHTML = drawMap(map, { counts, titles, wholeRegion: whole && !counts.size });
+    // Producers with an exact place get a pin (one per producer)
+    const pins = [...new Map(wines.filter((w) => w.producer_lat != null && w.producer_lon != null)
+      .map((w) => [`${w.producer_lat},${w.producer_lon}`, { lon: w.producer_lon!, lat: w.producer_lat!, title: w.producer ?? '' }])).values()];
+    box.innerHTML = drawMap(map, { counts, titles, wholeRegion: whole && !counts.size, pins });
     // Shown before zooming: sizes can only be measured on a visible map
     $('origin-block').hidden = false;
     if (matchMedia('(max-width: 40rem)').matches) fitToAreas(box.querySelector('svg')!, map);

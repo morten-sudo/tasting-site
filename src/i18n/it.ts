@@ -776,4 +776,10 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.voteOne": "1 valutazione",
   "wineAdmin.noRatings": "Ancora nessuna valutazione",
   "wineAdmin.overall": "Ospiti: ★ {avg} su {n} valutazioni",
+  "producer.website": "Sito web del produttore",
+  "producer.websiteHint": "(trovato automaticamente al salvataggio)",
+  "producer.address": "Indirizzo del produttore",
+  "producer.websiteShort": "Sito web",
+  "producer.addressShort": "Indirizzo",
+  "wineMap.producer": "Segnato presso il produttore (dal suo sito).",
 };

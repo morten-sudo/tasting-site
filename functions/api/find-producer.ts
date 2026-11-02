@@ -1,9 +1,8 @@
-// Finds a wine producer's own website and, from it, where the producer is (test, superadmin only).
+// Finds a wine producer's own website and, from it, where the producer is (hosts; the browser saves the result on the wine).
 // 1. Candidate sites: Cloudflare AI's suggestions plus domains built from the producer's name.
 // 2. A candidate counts only when the page itself names the producer.
 // 3. The place: coordinates in the page's data, in an embedded map link, or the postal address as text.
-import { SUPABASE_URL, SUPABASE_KEY } from '../../src/lib/config';
-import { MODEL, json, parseAnswer, str, type AiEnv } from '../../src/server/wine-ai';
+import { MODEL, isHost, json, parseAnswer, str, type AiEnv } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText } from './read-link';
 
 const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
@@ -12,17 +11,6 @@ const TLDS: Record<string, string[]> = {
   ZA: ['co.za'], CL: ['cl'], AR: ['com.ar'], GB: ['co.uk'],
 };
 const PREFIXES = /^(chateau|château|domaine|dom\.?|quinta|bodegas?|cantina|tenuta|weingut|maison|clos|castello|fattoria|azienda agricola|casa|vina|viña|cave)\s+/i;
-
-async function isAdmin(request: Request) {
-  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  if (!token) return false;
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/is_admin`, {
-    method: 'POST',
-    headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-    body: '{}',
-  });
-  return res.ok && (await res.json()) === true;
-}
 
 const plain = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ø/g, 'o').replace(/ß/g, 'ss');
 /** The distinctive words of a producer's name, e.g. "Château Malartic-Lagravière" → ["malartic", "lagraviere"]. */
@@ -89,17 +77,18 @@ function contactLinks(html: string, base: string) {
 }
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
-  if (!(await isAdmin(request))) return json({ error: 'not_admin' }, 403);
-  let body: { producer?: string; wine?: string; region?: string; appellation?: string; country?: string };
+  if (!(await isHost(request))) return json({ error: 'not_host' }, 403);
+  let body: { producer?: string; wine?: string; region?: string; appellation?: string; country?: string; website?: string };
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
   const producer = String(body.producer ?? '').trim();
   if (!producer) return json({ error: 'no_producer' }, 400);
   const country = String(body.country ?? '').toUpperCase() || null;
   const words = keyWords(producer);
 
-  // 1. Candidates: the model's suggestions first, then names turned into domains
+  // 1. Candidates: a website the host gave, else the model's suggestions, then names turned into domains
+  const given = cleanUrl(String(body.website ?? ''))?.href ?? null;
   let suggested: string[] = [];
-  try {
+  if (!given) try {
     const out = await env.AI.run(MODEL, {
       messages: [{ role: 'user', content: `What is the official website of this wine producer? Return ONLY JSON {"websites": [up to 3 full URLs, most likely first]} or {"websites": []} if you do not know.
 Producer: ${producer}
@@ -110,7 +99,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     const a = parseAnswer(out.response);
     suggested = (Array.isArray(a?.websites) ? a!.websites : []).map(str).filter(Boolean) as string[];
   } catch {}
-  const candidates = [...new Set([...suggested, ...guessDomains(producer, country)])].slice(0, 12);
+  const candidates = given ? [given] : [...new Set([...suggested, ...guessDomains(producer, country)])].slice(0, 12);
 
   // 2. The first candidate whose page names the producer
   const tried: { url: string; result: string }[] = [];
@@ -120,18 +109,19 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     if (!page) { tried.push({ url, result: 'unreachable' }); continue; }
     const head = plain(htmlToText(page.html.slice(0, 200_000)).slice(0, 20_000) + ' ' + page.url);
     const hits = words.filter((w) => head.includes(w)).length;
-    if (words.length && hits >= Math.min(words.length, 2)) { site = page; tried.push({ url, result: 'match' }); break; }
+    if (given || (words.length && hits >= Math.min(words.length, 2))) { site = page; tried.push({ url, result: 'match' }); break; }
     tried.push({ url, result: 'does not name the producer' });
   }
-  if (!site) return json({ producer, website: null, tried, suggested });
+  if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
 
   // 3. The place: home page first, then contact/visit pages
   const pages = [site, ...(await Promise.all(contactLinks(site.html, site.url).map((u) => get(u))))].filter(Boolean) as { url: string; html: string }[];
+  let location: { lat: number; lon: number; source: string; page: string } | null = null;
   for (const p of pages) {
     const c = findCoords(p.html);
-    if (c) return json({ producer, website: site.url, location: { lat: c.lat, lon: c.lon, source: c.how, page: p.url }, tried, suggested });
+    if (c) { location = { lat: c.lat, lon: c.lon, source: c.how, page: p.url }; break; }
   }
-  // No coordinates: the postal address as written on the site
+  // The postal address as written on the site
   let address: string | null = null;
   try {
     const text = pages.map((p) => htmlToText(p.html).slice(-4000)).join('\n---\n').slice(0, 9000);
@@ -141,5 +131,5 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     });
     address = str(parseAnswer(out.response)?.address);
   } catch {}
-  return json({ producer, website: site.url, location: null, address, contact_pages: pages.slice(1).map((p) => p.url), tried, suggested });
+  return json({ producer, website: new URL(site.url).origin + '/', location, address, tried, suggested });
 };

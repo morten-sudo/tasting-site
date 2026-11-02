@@ -776,4 +776,10 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "wineAdmin.voteOne": "1 beoordeling",
   "wineAdmin.noRatings": "Nog geen beoordelingen",
   "wineAdmin.overall": "Gasten: ★ {avg} uit {n} beoordelingen",
+  "producer.website": "Website van de producent",
+  "producer.websiteHint": "(wordt automatisch gevonden bij opslaan)",
+  "producer.address": "Adres van de producent",
+  "producer.websiteShort": "Website",
+  "producer.addressShort": "Adres",
+  "wineMap.producer": "Gemarkeerd bij de producent (van zijn website).",
 };
