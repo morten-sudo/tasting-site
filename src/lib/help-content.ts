@@ -47,7 +47,7 @@ export const HELP: HelpSection[] = [
 <h4 id="controls"><a href="t:settings/#controls">Kontakter</a></h4>
 <ul>
 <li><b>Tilmelding åben</b> – gæsterne kan svare ja eller nej.</li>
-<li><b>Bestilling åben</b> – gæsterne kan lægge vine i kurven og bestille. Se <a href="#orders">Bestillinger og betaling</a>.</li>
+<li><b>Bestilling åben</b> – gæsterne kan lægge vine i kurven og bestille. Se <a href="#orders">Bestillinger og betaling</a>. Kontakten findes også øverst på fanen <a href="t:orders/">Bestillinger</a>, og quiz-kontakterne øverst på <a href="t:quiz/">Quiz</a>.</li>
 <li><b>Quiz åben</b> og <b>Quiz afsluttet</b> – se <a href="#evening">Under aftenen</a>.</li>
 <li><b>Blindsmagning</b> – se <a href="#blind">Blindsmagning</a>.</li>
 </ul>
@@ -67,7 +67,7 @@ export const HELP: HelpSection[] = [
 <h4 id="controls"><a href="t:settings/#controls">Controls</a></h4>
 <ul>
 <li><b>Sign-up open</b> – guests can reply yes or no.</li>
-<li><b>Ordering open</b> – guests can put wines in the cart and order. See <a href="#orders">Orders and payment</a>.</li>
+<li><b>Ordering open</b> – guests can put wines in the cart and order. See <a href="#orders">Orders and payment</a>. The switch is also at the top of the <a href="t:orders/">Orders</a> tab, and the quiz switches at the top of <a href="t:quiz/">Quiz</a>.</li>
 <li><b>Quiz open</b> and <b>Quiz finished</b> – see <a href="#evening">During the evening</a>.</li>
 <li><b>Blind tasting</b> – see <a href="#blind">Blind tasting</a>.</li>
 </ul>

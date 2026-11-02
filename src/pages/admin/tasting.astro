@@ -269,7 +269,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <!-- Orders -->
       <section class="block" data-section="orders">
         <h2 data-i18n="admin.orders">Orders</h2>
+        <!-- The same switch as under Settings, here where it is used -->
+        <label class="toggle tab-switch" data-help="orders-open"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
         <div id="orders-by-guest"></div>
+        <div id="orders-total">
         <h3 data-i18n="admin.totalPurchase">Total purchase</h3>
         <div class="table-wrap">
           <table class="table">
@@ -278,6 +281,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </table>
         </div>
         <button id="csv" class="btn small ghost" type="button" data-i18n="admin.csv">Download orders as CSV</button>
+        </div>
       </section>
 
       <!-- Event chat -->
@@ -292,6 +296,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div class="guests-head">
           <h2 data-i18n="page.quiz">Quiz</h2>
           <button id="q-add-toggle" class="btn small ghost" type="button" data-i18n="aq.add">Add question</button>
+        </div>
+        <div class="tab-switches">
+          <label class="toggle tab-switch" data-help="quiz"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
+          <label class="toggle tab-switch"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
         </div>
         <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
 
@@ -611,6 +619,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         box.checked = !box.checked;
         // Ordering with quantity prices needs the host's choice first
         if (error.message.includes('bulk_mode_needed')) {
+          // The choice lives under Settings: go there if the switch was used on another tab
+          if (!$('bulk-mode').offsetParent) { location.href = `/t/${tasting.slug}/admin/settings/#bulk-mode`; return; }
           $('bulk-msg').textContent = t('bulk.chooseFirst');
           $('bulk-mode').classList.add('help-flash');
           $('bulk-mode').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -619,6 +629,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         return;
       }
       tasting[box.dataset.key!] = box.checked;
+      // The same switch on another tab follows
+      document.querySelectorAll<HTMLInputElement>(`input[data-key="${box.dataset.key}"]`).forEach((b) => (b.checked = box.checked));
+      $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
       // Blind tasting changes every wine in it: show them again
       if (box.dataset.key === 'blind') await tastingWines?.load();
     });
@@ -831,6 +844,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       .filter(matches);
     for (const p of sorted) list.append(guestCard(p));
     $('guest-empty').hidden = sorted.length > 0;
+    // No guests at all is not "none match": say how to start
+    $('guest-empty').textContent = t(participants.length ? 'admin.noMatch' : 'admin.noGuestsYet');
     renderSummary();
   }
 
@@ -942,6 +957,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const wineById = new Map(wines.map((w) => [w.id, w]));
     const pById = new Map(participants.map((p) => [p.id, p]));
 
+    // No orders: no empty table or CSV button
+    $('orders-total').hidden = orders.length === 0;
     if (orders.length === 0) {
       const p = document.createElement('p');
       p.className = 'hint';

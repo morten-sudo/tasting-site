@@ -1020,4 +1020,5 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "plans.title": "Fonctions et formules",
   "plans.lead": "Tout ce que Winetastr sait faire aujourd’hui, et ce qui arrive.",
   "signup.terms": "En créant un compte, vous acceptez les <a href=\"/terms/\" target=\"_blank\" rel=\"noopener\">conditions ↗</a> et la <a href=\"/privacy/\" target=\"_blank\" rel=\"noopener\">politique de confidentialité ↗</a>. Vous devez avoir au moins 18 ans.",
+  "admin.noGuestsYet": "Pas encore d’invités – appuyez sur Inviter un invité pour ajouter le premier.",
 };

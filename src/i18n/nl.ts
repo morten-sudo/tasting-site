@@ -1020,4 +1020,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "plans.title": "Functies en abonnementen",
   "plans.lead": "Alles wat Winetastr vandaag kan – en wat eraan komt.",
   "signup.terms": "Door een account te maken ga je akkoord met de <a href=\"/terms/\" target=\"_blank\" rel=\"noopener\">voorwaarden ↗</a> en het <a href=\"/privacy/\" target=\"_blank\" rel=\"noopener\">privacybeleid ↗</a>. Je moet minstens 18 jaar zijn.",
+  "admin.noGuestsYet": "Nog geen gasten – druk op Gast uitnodigen om de eerste toe te voegen.",
 };

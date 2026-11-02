@@ -1096,4 +1096,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "meta.description": "Haltu vínsmakkanir sem gestirnir muna: boð, vínin, pantanir, einkunnir og spurningakeppni – allt í símum gestanna.",
   "meta.inviteTitle": "Þér er boðið í vínsmökkun",
   "meta.invite": "Opnaðu boðið til að sjá dagsetningu, stað og vínin – og svara.",
+  "admin.noGuestsYet": "Engir gestir enn – ýttu á Bjóða gesti til að bæta við þeim fyrsta.",
 };

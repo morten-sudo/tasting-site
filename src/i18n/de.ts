@@ -1020,4 +1020,5 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "plans.title": "Funktionen und Tarife",
   "plans.lead": "Alles, was Winetastr heute kann – und was noch kommt.",
   "signup.terms": "Mit dem Anlegen eines Kontos akzeptieren Sie die <a href=\"/terms/\" target=\"_blank\" rel=\"noopener\">Bedingungen ↗</a> und die <a href=\"/privacy/\" target=\"_blank\" rel=\"noopener\">Datenschutzerklärung ↗</a>. Sie müssen mindestens 18 Jahre alt sein.",
+  "admin.noGuestsYet": "Noch keine Gäste – drücken Sie Gast einladen, um den ersten hinzuzufügen.",
 };

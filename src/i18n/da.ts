@@ -1096,4 +1096,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "meta.description": "Hold vinsmagninger, dine gæster husker: invitationer, vinene, bestillinger, bedømmelser og quiz – alt på gæsternes telefoner. Gratis at komme i gang.",
   "meta.inviteTitle": "Du er inviteret til en vinsmagning",
   "meta.invite": "Åbn invitationen for at se dato, sted og vinene – og svar.",
+  "admin.noGuestsYet": "Ingen gæster endnu – tryk Inviter gæst for at tilføje den første.",
 };

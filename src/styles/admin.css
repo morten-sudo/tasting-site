@@ -1171,3 +1171,12 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .danger-zone .btn.ghost.danger { margin-left: 0; }
 .admin-page .td-confirm { margin-top: 0.6rem; padding: 0.75rem 0.9rem; border-radius: var(--radius); background: #fbeeed; }
 .admin-page .td-q { margin: 0 0 0.5rem; font-weight: 600; }
+
+/* A tasting's tabs on phones: two rows instead of tabs hidden off the screen */
+@media (max-width: 40rem) {
+  .ta-tabs { flex-wrap: wrap; overflow-x: visible; column-gap: 1.1rem; row-gap: 0; }
+}
+/* Switches repeated on the tab they belong to (Orders, Quiz) */
+.admin-page .tab-switch { margin: 0 0 0.8rem; }
+.admin-page .tab-switches { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+.admin-page #orders-total[hidden] { display: none; }

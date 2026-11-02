@@ -1095,4 +1095,5 @@ export const en = {
   "meta.description": "Host wine tastings your guests remember: invitations, the wines, orders, ratings and a quiz – all on your guests’ phones. Free to get started.",
   "meta.inviteTitle": "You are invited to a wine tasting",
   "meta.invite": "Open the invitation to see the date, the place and the wines – and to reply.",
+  "admin.noGuestsYet": "No guests yet – press Invite guest to add the first.",
 } as const;
