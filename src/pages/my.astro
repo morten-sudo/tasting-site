@@ -131,7 +131,7 @@ import Base from '../layouts/Base.astro';
 
   // ---------- Wines ----------
   function showWines(all: BookWine[]) {
-    $('st-wines').textContent = String(new Set(all.map((w) => w.wine_id)).size);
+    stat('st-wines', new Set(all.map((w) => w.wine_id)).size, 'book.statWines');
     $('no-wines').hidden = all.length > 0;
     $('w-search').parentElement!.hidden = all.length < 4;
     const render = () => {
@@ -194,9 +194,17 @@ import Base from '../layouts/Base.astro';
     return li;
   }
 
+  /** A number in the stats with its label in the right form ("1 tasting", "3 tastings"). */
+  function stat(id: string, n: number, key: 'book.statWines' | 'book.statTastings' | 'book.statBottles') {
+    $(id).textContent = String(n);
+    const label = $(id).nextElementSibling as HTMLElement;
+    label.removeAttribute('data-i18n');
+    label.textContent = t(key, { n });
+  }
+
   // ---------- Tastings ----------
   function showTastings({ upcoming, past, all }: Awaited<ReturnType<typeof loadAllMyTastings>>) {
-    $('st-tastings').textContent = String(past.filter((x) => x.status === 'yes').length || all.length);
+    stat('st-tastings', past.filter((x) => x.status === 'yes').length || all.length, 'book.statTastings');
     $('up-list').replaceChildren(...upcoming.map(tastingCard));
     $('past-list').replaceChildren(...past.map(tastingCard));
     $('up-h').hidden = !upcoming.length || !past.length;
@@ -208,7 +216,7 @@ import Base from '../layouts/Base.astro';
   function showOrders(lines: Awaited<ReturnType<typeof loadOrders>>) {
     const bottles = lines.reduce((s, l) => s + l.quantity, 0);
     const total = lines.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
-    $('st-bottles').textContent = String(bottles);
+    stat('st-bottles', bottles, 'book.statBottles');
     $('order-list').replaceChildren(...orderCards(lines));
     $('no-orders').hidden = lines.length > 0;
     $('orders-sum').textContent = lines.length ? t('book.ordersSum', { n: bottles, total: money(total) }) : '';

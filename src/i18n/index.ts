@@ -63,8 +63,24 @@ export const locale = () => {
 };
 
 /** Translate a key; {name} placeholders are filled from vars. */
+// Which plural form a number takes in the page's language ("one", "few", "other" …)
+let rules: { lang: string; r: Intl.PluralRules } | null = null;
+function pluralOf(n: number): string {
+  if (rules?.lang !== current) rules = { lang: current, r: new Intl.PluralRules(locale()) };
+  return rules.r.select(n);
+}
+
+/**
+ * The text for a key in the page's language. With a number {n}, a form for that number is used when there is
+ * one: "<key>#one" for 1 in most languages ("1 wine", "1 vin"), from the same language as the rest.
+ */
 export function t(key: Key, vars: Record<string, string | number> = {}): string {
-  const text = DICTS[current][key] ?? en[key] ?? key;
+  const dict = DICTS[current] as Record<string, string | undefined>;
+  const n = typeof vars.n === 'number' ? vars.n : typeof vars.n === 'string' && /^\d+$/.test(vars.n) ? Number(vars.n) : null;
+  const form = n != null ? pluralOf(n) : 'other';
+  const own = form !== 'other' ? dict[`${key}#${form}`] : undefined;
+  const fromEn = form !== 'other' && !dict[key] ? (en as Record<string, string | undefined>)[`${key}#${form}`] : undefined;
+  const text = own ?? fromEn ?? DICTS[current][key] ?? en[key] ?? key;
   return text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
 }
 

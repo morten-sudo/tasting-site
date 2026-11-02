@@ -167,7 +167,7 @@ import Base from '../../layouts/Base.astro';
 
   function setCurrent(i: number) {
     current = i;
-    $('counter').textContent = `${i + 1} af ${cards.length}`;
+    $('counter').textContent = t('wines.position', { n: i + 1, total: cards.length });
     ($('prev') as HTMLButtonElement).disabled = i === 0;
     ($('next') as HTMLButtonElement).disabled = i === cards.length - 1;
     cards.forEach((c, n) => c.classList.toggle('is-current', n === i));
