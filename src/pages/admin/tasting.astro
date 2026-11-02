@@ -1339,13 +1339,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       body.append(mkEl('p', 'wine-name', g.name));
       body.append(mkEl('p', 'wine-meta', g.email ?? t('admin.noEmail')));
       li.append(av, body);
-      if (invited.has(g.id)) li.append(mkEl('span', 'chip', t('guestInvite.already')));
-      else {
-        const b = mkEl('button', 'btn small ghost', t('adminTasting.invite'));
-        b.type = 'button';
-        b.addEventListener('click', () => inviteGuest(g, b));
-        li.append(b);
-      }
+      // The same button either way: disabled ("✓ Invited") when the guest is already in the tasting
+      const b = mkEl('button', 'btn small ghost', invited.has(g.id) ? '✓ ' + t('guestInvite.already') : t('adminTasting.invite'));
+      b.type = 'button';
+      if (invited.has(g.id)) b.disabled = true;
+      else b.addEventListener('click', () => inviteGuest(g, b));
+      li.append(b);
       giHits.append(li);
     }
   }

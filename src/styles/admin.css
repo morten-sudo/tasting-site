@@ -1552,3 +1552,7 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .icon-act.chat-del svg { width: 1.05rem; height: 1.05rem; }
 .admin-page .icon-space { width: 2.4rem; flex: none; }
 .admin-page #add-toggle { white-space: nowrap; flex: none; }
+/* Not available right now – also for ghost and danger buttons (grey, flat, no hover) */
+.admin-page .btn:disabled:not(.loading), .admin-page .btn:disabled:not(.loading):hover {
+  opacity: 1; cursor: default; background: var(--lodge-2); border-color: var(--lodge-3); color: var(--muted);
+}

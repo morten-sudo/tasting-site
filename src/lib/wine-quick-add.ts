@@ -154,8 +154,13 @@ export function initQuickAdd(o: Opts) {
       const m = metaOf(w);
       if (m) body.append(mk('p', 'wine-meta', m));
       li.append(thumb(w.image_url), body);
-      if (here.has(w.id)) li.append(mk('span', 'chip', t('qa.alreadyHere')));
-      else if (o.pick) {
+      if (here.has(w.id)) {
+        // The same button as "Add", disabled: the wine is already in the tasting
+        const b = mk('button', 'btn small ghost', '✓ ' + t('qa.alreadyHere'));
+        b.type = 'button';
+        b.disabled = true;
+        li.append(b);
+      } else if (o.pick) {
         const add = mk('button', 'btn small ghost', t('admin.add'));
         add.type = 'button';
         add.addEventListener('click', () => pickWine(w, add));
