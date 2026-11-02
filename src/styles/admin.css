@@ -811,3 +811,6 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page #tw-panel .search { width: 100%; margin: 0.3rem 0 0.6rem; }
 .admin-page #tw-panel .picker-list { max-height: none; }
 .admin-page #tw-panel .tw-new { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--lodge-3); }
+/* Filling from a label or link: the fields that already hold something else */
+.admin-page .label-status .fill-diff { display: block; margin-top: 0.35rem; color: var(--paper); }
+.admin-page .label-status .fill-use { margin-top: 0.5rem; }

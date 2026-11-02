@@ -268,8 +268,7 @@ export function initWineAdmin(hostId: string, tenantId: string) {
       });
       if (!res.ok) throw new Error(String(res.status));
       const r = (await res.json()) as LabelResult;
-      const filled = fillFromLabel(r);
-      labelStatus(filled ? t('label.filled', { n: filled }) : t('label.nothing'), filled ? 'ok' : 'error');
+      fillStatus(fillFromLabel(r), t('label.filled', { n: '{n}' }), t('label.nothing'));
     } catch {
       labelStatus(t('label.failed'), 'error');
     } finally {
@@ -278,29 +277,70 @@ export function initWineAdmin(hostId: string, tenantId: string) {
     }
   }
 
-  /** Fills only empty fields, so nothing the host typed is overwritten. Returns how many were filled. */
-  function fillFromLabel(r: LabelResult) {
-    let n = 0;
-    const put = (id: string, value: string | number | null) => {
+  // ---------- Filling the form from a label or a link ----------
+  // Empty fields are filled straight away; fields that already hold something else are offered
+  // as a list the host can accept with one click, so nothing is overwritten by accident.
+  type Change = { id: string; apply: () => void };
+  /** The field's label without its hint, e.g. "Vintage". */
+  const fieldName = (id: string) => {
+    const label = form.querySelector<HTMLElement>(`label[for="${id}"]`);
+    const first = label?.querySelector('span:not(.hint)') ?? label;
+    return (first?.textContent ?? id).replace(/\s*\(.*\)\s*$/, '').trim();
+  };
+  const same = (a: string, b: string) => {
+    const na = Number(a.replace(',', '.')), nb = Number(b.replace(',', '.'));
+    if (a.trim() && b.trim() && Number.isFinite(na) && Number.isFinite(nb)) return na === nb;
+    return normOrigin(a) === normOrigin(b) && a.trim().toLowerCase() === b.trim().toLowerCase()
+      || a.replace(/\s+/g, ' ').trim() === b.replace(/\s+/g, ' ').trim();
+  };
+  function filler() {
+    let filled = 0;
+    const changes: Change[] = [];
+    const set = (el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, v: string) => { el.value = v; el.classList.add('from-label'); };
+    const put = (id: string, value: string | number | null | undefined) => {
+      if (value == null || value === '') return;
       const el = field<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id);
-      if (value == null || value === '' || el.value.trim()) return;
-      el.value = String(value).replace('.', id === 'wf-abv' ? ',' : '.');
-      el.classList.add('from-label');
-      n++;
+      const v = String(value).replace('.', id === 'wf-abv' ? ',' : '.');
+      if (!el.value.trim()) { set(el, v); filled++; }
+      else if (!same(el.value, v)) changes.push({ id, apply: () => set(el, v) });
     };
-    put('wf-name', r.name);
-    put('wf-producer', r.producer);
-    put('wf-vintage', r.vintage);
-    if (r.style && !styleSelect.value) { styleSelect.value = r.style; styleSelect.classList.add('from-label'); n++; }
-    put('wf-abv', r.abv);
-    put('wf-appellation', r.appellation);
-    put('wf-region', r.region);
-    if (r.country && !countrySelect.value && WINE_COUNTRIES.includes(r.country)) {
-      countrySelect.value = r.country; countrySelect.classList.add('from-label'); n++;
-    }
+    return { put, changes, add: (c: Change) => changes.push(c), count: () => filled, bump: () => { filled++; } };
+  }
+  type Filler = ReturnType<typeof filler>;
+
+  /** Puts a label reading into the form (see filler). */
+  function fillFromLabel(r: LabelResult, f: Filler = filler()) {
+    f.put('wf-name', r.name);
+    f.put('wf-producer', r.producer);
+    f.put('wf-vintage', r.vintage);
+    if (r.style) f.put('wf-style', r.style);
+    f.put('wf-abv', r.abv);
+    if (r.country && WINE_COUNTRIES.includes(r.country)) f.put('wf-country', r.country);
+    f.put('wf-region', r.region);
+    f.put('wf-appellation', r.appellation);
     syncOrigin();
-    put('wf-details', r.grapes ? `${t('label.grapes')}: ${r.grapes}` : null);
-    return n;
+    f.put('wf-details', r.grapes ? `${t('label.grapes')}: ${r.grapes}` : null);
+    return f;
+  }
+
+  /** The status line after filling, with a button for the fields that differ. */
+  function fillStatus(f: Filler, done: string, nothing: string, extra = '') {
+    const n = f.count();
+    const text = (n ? done.replace('{n}', String(n)) : f.changes.length ? '' : nothing) + extra;
+    labelStatus(text.trim(), n ? 'ok' : f.changes.length ? '' : 'error');
+    if (!f.changes.length) return;
+    const el = $(statusTarget);
+    const names = [...new Set(f.changes.map((c) => fieldName(c.id)))];
+    const line = mk('span', 'fill-diff', t('fill.differs', { n: names.length, fields: names.join(', ') }));
+    const btn = mk('button', 'btn small ghost fill-use', t('fill.useNew'));
+    btn.type = 'button';
+    btn.addEventListener('click', () => {
+      f.changes.forEach((c) => c.apply());
+      syncOrigin();
+      labelStatus(t('fill.applied', { n: names.length }), 'ok');
+    });
+    el.append(...(text.trim() ? [document.createTextNode(' ')] : []), line, ' ', btn);
+    el.hidden = false;
   }
 
   // ---------- Fetch from a shop link (/api/read-link) ----------
@@ -321,25 +361,18 @@ export function initWineAdmin(hostId: string, tenantId: string) {
       });
       if (!res.ok) throw new Error(String(res.status));
       const r = (await res.json()) as LinkResult;
-      let n = fillFromLabel(r);
-      const put = (id: string, value: string | null) => {
-        const el = field<HTMLInputElement | HTMLTextAreaElement>(id);
-        if (!value || el.value.trim()) return;
-        el.value = value;
-        el.classList.add('from-label');
-        n++;
-      };
-      put('wf-description', r.description);
-      put('wf-retail', r.price != null ? String(r.price) : null);
+      const f = fillFromLabel(r);
+      f.put('wf-description', r.description);
+      f.put('wf-retail', r.price != null ? String(r.price) : null);
       if (r.offer) {
-        put('wf-offer-price', String(r.offer.price));
-        put('wf-offer-qty', String(r.offer.quantity));
+        f.put('wf-offer-price', String(r.offer.price));
+        f.put('wf-offer-qty', String(r.offer.quantity));
       }
-      if (r.image && !pendingImage && $<HTMLImageElement>('wf-preview').hidden) {
-        linkImage = r.image;
-        removeImage = false;
-        setPreview(r.image);
-        n++;
+      if (r.image && !pendingImage) {
+        const useImage = () => { linkImage = r.image; removeImage = false; setPreview(r.image); };
+        const preview = $<HTMLImageElement>('wf-preview');
+        if (preview.hidden) { useImage(); f.bump(); }
+        else if (preview.src !== r.image) f.add({ id: 'wf-image', apply: useImage });
       }
       sourceUrl = r.source_url;
       const offer = r.offer
@@ -347,7 +380,7 @@ export function initWineAdmin(hostId: string, tenantId: string) {
         : '';
       const foreign = r.foreign_currency && !field<HTMLInputElement>('wf-retail').value.trim()
         ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
-      labelStatus((n ? t('link.filled', { n }) : t('link.nothing')) + offer + foreign, n ? 'ok' : 'error');
+      fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + foreign);
     } catch {
       labelStatus(t('link.failed'), 'error');
     } finally {
