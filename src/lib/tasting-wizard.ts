@@ -194,6 +194,9 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   dialog.querySelectorAll<HTMLInputElement>('input[name="wz-fee-yes"]').forEach((r) =>
     r.addEventListener('change', () => { showFee(r.value === 'yes'); if (r.value === 'yes') $('wz-fee').focus(); }));
 
+  // Ordering on: the host chooses what counts towards quantity prices
+  $('wz-orders').addEventListener('change', () => { $('wz-bulk').hidden = !$<HTMLInputElement>('wz-orders').checked; });
+
   function fillSetup() {
     const fee = Number(tasting?.tasting_fee) || 0;
     $<HTMLInputElement>('wz-fee').value = fee ? String(fee).replace('.', ',') : '';
@@ -202,6 +205,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     $<HTMLInputElement>('wz-signup').checked = tasting?.signup_open !== false;
     $<HTMLInputElement>('wz-orders').checked = tasting?.orders_open === true;
     $<HTMLInputElement>('wz-blind').checked = tasting?.blind === true;
+    dialog.querySelectorAll<HTMLInputElement>('input[name="wz-bulk"]').forEach((r) => (r.checked = r.value === tasting?.bulk_mode));
+    $('wz-bulk').hidden = !$<HTMLInputElement>('wz-orders').checked;
     const mp = $('wz-mp');
     mp.replaceChildren();
     if (host.mobilepay) mp.textContent = t('wizard.mpSet', { number: host.mobilepay.replace(/(\d{2})(?=\d)/g, '$1 ') });
@@ -218,9 +223,10 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
       signup_open: $<HTMLInputElement>('wz-signup').checked,
       orders_open: $<HTMLInputElement>('wz-orders').checked,
       blind: $<HTMLInputElement>('wz-blind').checked,
+      ...(() => { const b = dialog.querySelector<HTMLInputElement>('input[name="wz-bulk"]:checked'); return b ? { bulk_mode: b.value } : {}; })(),
     };
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting!.id);
-    if (error) { msg(t('admin.changesNotSaved')); return false; }
+    if (error) { msg(t(error.message.includes('bulk_mode_needed') ? 'bulk.chooseFirst' : 'admin.changesNotSaved')); return false; }
     Object.assign(tasting!, patch);
     return true;
   }

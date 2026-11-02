@@ -111,6 +111,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
           <label class="toggle" data-help="blind"><input type="checkbox" data-key="blind" /> <span data-i18n="blind.tasting">Blind tasting (all wines blind until you reveal them)</span></label>
         </div>
+        <!-- Quantity prices: what counts towards them – the host decides (no default) -->
+        <fieldset id="bulk-mode" class="bulk-mode">
+          <legend><span data-i18n="bulk.legend">Quantity prices count …</span><span data-help="bulk-mode"></span></legend>
+          <label><input type="radio" name="bulk-mode" value="guest" /> <span><b data-i18n="bulk.guestTitle">Each guest's own bottles</b><small data-i18n="bulk.guestHint">A guest who orders 6 bottles (also over several orders) gets the quantity price.</small></span></label>
+          <label><input type="radio" name="bulk-mode" value="pooled" /> <span><b data-i18n="bulk.pooledTitle">All the guests' bottles together</b><small data-i18n="bulk.pooledHint">When the guests together order 6 bottles of a wine, everyone gets the quantity price. Prices are provisional until you close ordering – the guests pay after that.</small></span></label>
+          <p id="bulk-msg" class="hint" aria-live="polite"></p>
+        </fieldset>
         <!-- Max number of guests: when it is reached, a yes puts the guest on the waiting list -->
         <div class="max-guests">
           <label for="max-guests" data-help="max-guests"><span data-i18n="waitlist.max">Max number of guests</span> <span class="hint" data-i18n="waitlist.maxHint">(empty = no limit; when full, guests who say yes go on a waiting list)</span></label>
@@ -573,16 +580,37 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
       box.checked = tasting![box.dataset.key!] === true;
     });
+    document.querySelectorAll<HTMLInputElement>('input[name="bulk-mode"]').forEach((r) => (r.checked = r.value === tasting!.bulk_mode));
   }
   document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
     box.addEventListener('change', async () => {
       if (!tasting) return;
       const { error } = await supabase.from('tastings')
         .update({ [box.dataset.key!]: box.checked }).eq('id', tasting.id);
-      if (error) { box.checked = !box.checked; alert(t('admin.changeNotSaved')); return; }
+      if (error) {
+        box.checked = !box.checked;
+        // Ordering with quantity prices needs the host's choice first
+        if (error.message.includes('bulk_mode_needed')) {
+          $('bulk-msg').textContent = t('bulk.chooseFirst');
+          $('bulk-mode').classList.add('help-flash');
+          $('bulk-mode').scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => $('bulk-mode').classList.remove('help-flash'), 2400);
+        } else alert(t('admin.changeNotSaved'));
+        return;
+      }
       tasting[box.dataset.key!] = box.checked;
       // Blind tasting changes every wine in it: show them again
       if (box.dataset.key === 'blind') await tastingWines?.load();
+    });
+  });
+
+  // Quantity prices: guest or pooled (saved right away; prices of unpaid orders follow in the database)
+  document.querySelectorAll<HTMLInputElement>('input[name="bulk-mode"]').forEach((r) => {
+    r.addEventListener('change', async () => {
+      if (!tasting) return;
+      const { error } = await supabase.from('tastings').update({ bulk_mode: r.value }).eq('id', tasting.id);
+      $('bulk-msg').textContent = error ? t('admin.changeNotSaved') : t('common.saved');
+      if (!error) tasting.bulk_mode = r.value;
     });
   });
 

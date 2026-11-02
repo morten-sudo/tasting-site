@@ -1047,3 +1047,17 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
   border: 1px solid var(--lodge-3); background: #fff; color: var(--muted); font-size: 0.95rem; line-height: 1; cursor: pointer; padding: 0;
 }
 .admin-page .image-remove:hover { color: var(--amber); border-color: var(--amber); }
+/* Quantity prices: what counts – each choice with a line on what it means */
+.admin-page .bulk-mode { border: 1px solid var(--lodge-3); border-radius: 10px; padding: 0.8rem 1rem; margin: 0 0 1rem; display: grid; gap: 0.6rem; }
+.admin-page .bulk-mode legend { padding: 0 0.3rem; font-weight: 600; font-size: 0.95rem; }
+.admin-page .bulk-mode label { display: flex; gap: 0.7rem; align-items: flex-start; cursor: pointer; font-weight: 400; margin: 0; }
+.admin-page .bulk-mode label > span { display: flex; flex-direction: column; gap: 0.15rem; }
+.admin-page .bulk-mode small { color: var(--muted); font-size: 0.85rem; }
+.admin-page .bulk-mode input { margin-top: 0.2rem; accent-color: var(--amber); }
+.admin-page .bulk-mode .hint { margin: 0; }
+.wz-setup .wz-bulk { margin: 0 0 0.6rem 3.4rem; display: grid; gap: 0.5rem; }
+.wz-setup .wz-bulk-q { margin: 0; font-weight: 600; font-size: 0.9rem; }
+.wz-setup .wz-bulk label { display: flex; gap: 0.6rem; align-items: flex-start; cursor: pointer; font-weight: 400; margin: 0; }
+.wz-setup .wz-bulk label > span { display: flex; flex-direction: column; gap: 0.1rem; }
+.wz-setup .wz-bulk small { color: var(--muted); font-size: 0.82rem; }
+.wz-setup .wz-bulk input { margin-top: 0.2rem; accent-color: var(--amber); }

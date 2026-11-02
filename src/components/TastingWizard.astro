@@ -89,6 +89,11 @@ const steps = [
           <span><b data-i18n="wizard.signupTitle">Reply to the invitation</b><small data-i18n="wizard.signupHint">Guests can say yes or no and add a note.</small></span></label>
         <label class="wz-switch"><input id="wz-orders" type="checkbox" role="switch" />
           <span><b data-i18n="wizard.ordersTitle">Order wine</b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
+        <div id="wz-bulk" class="wz-bulk" hidden>
+          <p class="wz-bulk-q" data-i18n="bulk.legend">Quantity prices count …</p>
+          <label><input type="radio" name="wz-bulk" value="guest" /> <span><b data-i18n="bulk.guestTitle">Each guest's own bottles</b><small data-i18n="bulk.guestHint">A guest who orders 6 bottles (also over several orders) gets the quantity price.</small></span></label>
+          <label><input type="radio" name="wz-bulk" value="pooled" /> <span><b data-i18n="bulk.pooledTitle">All the guests' bottles together</b><small data-i18n="bulk.pooledHint">When the guests together order 6 bottles of a wine, everyone gets the quantity price. Prices are provisional until you close ordering – the guests pay after that.</small></span></label>
+        </div>
         <label class="wz-switch"><input id="wz-blind" type="checkbox" role="switch" />
           <span><b data-i18n="wizard.blindTitle">Blind tasting</b><small data-i18n="wizard.blindHint">Guests see only the number and colour of each wine until you reveal it.</small></span></label>
       </div>

@@ -50,9 +50,10 @@ import Base from '../../layouts/Base.astro';
   import { getCart, setQty, clearCart, MAX_PER_WINE } from '../../lib/cart';
   import { payBox, setPayee } from '../../lib/pay';
   import { unitPrice, nextTierLabel, type PriceTier } from '../../lib/wines';
+  import { bulkNote } from '../../lib/bulk';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number;
-    price_tiers: PriceTier[] | null };
+    price_tiers: PriceTier[] | null; ordered?: number };
   type Line = {
     order_id: number; created_at: string; paid: boolean;
     wine_id: number; wine_name: string; quantity: number; unit_price: number;
@@ -67,6 +68,10 @@ import Base from '../../layouts/Base.astro';
   const slug = currentSlug() ?? '';
   let wines = new Map<number, Wine>();
   let open = false;
+  // What counts towards a quantity price: the guest's own bottles over all their orders, or everyone's (pooled)
+  let bulkMode: 'guest' | 'pooled' | null = null;
+  // Pooled prices can still fall while ordering is open, so paying waits until the host closes it
+  const payLater = () => bulkMode === 'pooled' && open;
 
   function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
     const e = document.createElement(tag);
@@ -89,13 +94,17 @@ import Base from '../../layouts/Base.astro';
     for (const id of ids) {
       const w = wines.get(id)!;
       const n = cart[id];
-      const price = unitPrice(w, n);
+      // Bottles already ordered count towards the quantity price too
+      const counted = (w.ordered ?? 0) + n;
+      const price = unitPrice(w, counted);
       total += n * price;
 
       const li = el('li', 'line');
       const info = el('div', 'line-info');
       info.append(el('p', 'line-name', w.name), el('p', 'line-unit', [t('cart.perBottle', { price: kr.format(price) }),
-        nextTierLabel(w, n)].filter(Boolean).join(' · ')));
+        nextTierLabel(w, counted)].filter(Boolean).join(' · ')));
+      const note = bulkNote(w, bulkMode, n);
+      if (note) info.append(el('p', 'line-bulk', note));
 
       const ctrl = el('div', 'line-ctrl');
       const minus = el('button', 'step', '−');
@@ -149,7 +158,9 @@ import Base from '../../layouts/Base.astro';
       const foot = el('div', 'order-foot');
       foot.append(el('span', '', t('cart.total')), el('strong', '', kr.format(total)));
       card.append(foot);
-      if (!ls[0].paid) {
+      if (!ls[0].paid && payLater()) {
+        card.append(el('p', 'hint', t('bulk.payLater')));
+      } else if (!ls[0].paid) {
         const more = el('details', 'pay-more');
         more.append(el('summary', '', t('cart.howToPay')));
         more.append(payBox(total, t('pay.orderComment', { id })));
@@ -185,10 +196,18 @@ import Base from '../../layouts/Base.astro';
       return;
     }
 
-    const total = items.reduce((s, i) => s + i.qty * (wines.has(i.wine_id) ? unitPrice(wines.get(i.wine_id)!, i.qty) : 0), 0);
+    const total = items.reduce((s, i) => {
+      const w = wines.get(i.wine_id);
+      return s + i.qty * (w ? unitPrice(w, (w.ordered ?? 0) + i.qty) : 0);
+    }, 0);
     clearCart();
     $('confirm-title').textContent = t('cart.thanks', { id: String(data) });
-    $('confirm-pay').replaceChildren(payBox(total, t('pay.orderComment', { id: String(data) })));
+    $('confirm-pay').replaceChildren(payLater()
+      ? Object.assign(document.createElement('p'), { textContent: t('bulk.payLater') })
+      : payBox(total, t('pay.orderComment', { id: String(data) })));
+    // The counts changed: fetch them again
+    const { data: fresh } = await supabase.rpc('get_wines', { code });
+    wines = new Map(((fresh ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
     $('confirm').hidden = false;
     renderCart();
     await renderHistory();
@@ -208,6 +227,7 @@ import Base from '../../layouts/Base.astro';
     wines = new Map(((w.data ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
     const settings = ((s.data ?? {}) as Record<string, unknown>);
     open = settings.orders_open === true;
+    bulkMode = (settings.bulk_mode as 'guest' | 'pooled' | null) ?? null;
     setPayee(settings.mobilepay ?? null);
     $('loading').hidden = true;
     $('closed').hidden = open;
@@ -234,6 +254,7 @@ import Base from '../../layouts/Base.astro';
   .cart-page .line { padding: 1rem 0; border-bottom: 1px solid var(--lodge-2); }
   .cart-page .line-name { margin: 0; font-weight: 500; line-height: 1.35; }
   .cart-page .line-unit { margin: 0.1rem 0 0.6rem; color: var(--muted); font-size: 0.9rem; }
+  .cart-page .line-bulk { margin: -0.3rem 0 0.6rem; color: var(--amber); font-size: 0.88rem; }
   .cart-page .line-ctrl { display: flex; align-items: center; gap: 1rem; }
   .cart-page .line-total { margin-left: auto; font-variant-numeric: tabular-nums; }
   .cart-page .remove {

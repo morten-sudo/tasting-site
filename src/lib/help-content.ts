@@ -177,9 +177,25 @@ export const HELP: HelpSection[] = [
     id: 'orders',
     title: { da: 'Bestillinger og betaling', en: 'Orders and payment' },
     body: {
-      da: `<p>Når <a href="t:settings/#controls">Bestilling åben</a> er slået til, kan gæsterne lægge de vine i kurven, der kan bestilles, og sende bestillingen. Mængdepriser gælder automatisk. Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger, markerer dem betalt og kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
+      da: `<p>Når <a href="t:settings/#controls">Bestilling åben</a> er slået til, kan gæsterne lægge de vine i kurven, der kan bestilles, og sende bestillingen. Mængdepriser gælder automatisk.</p>
+<h4 id="bulk">Mængderabat – hver gæst eller alle samlet</h4>
+<p>Har en vin en mængdepris (fx "fra 6 flasker 359,95 kr."), vælger du under <a href="t:settings/#bulk-mode">Indstillinger → Mængderabat tæller …</a>, hvad der tæller med. Du skal vælge, før du kan åbne for bestillinger:</p>
+<ul>
+<li><b>Hver gæsts egne flasker</b> – en gæst, der bestiller 6 (også fordelt på flere bestillinger), får mængdeprisen.</li>
+<li><b>Alle gæsternes flasker samlet</b> – god til vinklubber og fællesindkøb: når gæsterne tilsammen bestiller 6, får alle mængdeprisen. Gæsterne ser "Sammen har I bestilt 4 af 6 – 2 flasker mere …". Priserne er foreløbige, indtil du lukker for bestillinger, og gæsterne bliver bedt om at vente med at betale til da.</li>
+</ul>
+<p>Når grænsen er nået, gælder den billige pris for alle flasker – også dem ud over 6. Betalte bestillinger beholder deres pris.</p>
+<p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger, markerer dem betalt og kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
 <p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne får så en knap, der åbner MobilePay med beløb og besked udfyldt – både til bestillinger og deltagergebyr.</p>`,
-      en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. Quantity prices apply automatically. On the <a href="t:orders/">Orders</a> tab you see all orders, mark them paid and can <a href="t:orders/#csv">download them as CSV</a> for the supplier.</p>
+      en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. Quantity prices apply automatically.</p>
+<h4 id="bulk">Quantity prices – each guest or everyone together</h4>
+<p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:settings/#bulk-mode">Settings → Quantity prices count …</a> what counts. You must choose before you can open ordering:</p>
+<ul>
+<li><b>Each guest's own bottles</b> – a guest who orders 6 (also over several orders) gets the quantity price.</li>
+<li><b>All the guests' bottles together</b> – good for wine clubs and joint orders: when the guests together order 6, everyone gets the quantity price. Guests see "Together you have ordered 4 of 6 – 2 more …". Prices are provisional until you close ordering, and guests are asked to wait with paying until then.</li>
+</ul>
+<p>Once the quantity is reached, the lower price applies to every bottle – also those beyond 6. Paid orders keep their price.</p>
+<p>On the <a href="t:orders/">Orders</a> tab you see all orders, mark them paid and can <a href="t:orders/#csv">download them as CSV</a> for the supplier.</p>
 <p>Under <a href="/admin/payments/#mp-number">Payments</a> you enter your MobilePay number. Guests then get a button that opens MobilePay with the amount and message filled in – for orders and the tasting fee.</p>`,
     },
   },
@@ -286,6 +302,9 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
   'ai-quiz': { more: 'evening', text: {
     da: 'AI foreslår 5 spørgsmål ud fra vinene i den valgte sværhedsgrad. Intet kommer i quizzen, før du trykker <i>Tilføj</i> – tjek det rigtige svar først.',
     en: 'AI suggests 5 questions from the wines at the chosen difficulty. Nothing goes into the quiz until you press <i>Add</i> – check the right answer first.' } },
+  'bulk-mode': { more: 'bulk', text: {
+    da: '<b>Hver gæst</b>: gæstens egne flasker tæller. <b>Samlet</b>: alle gæsters flasker af en vin tæller sammen – godt til vinklubber. Priserne er så foreløbige, til du lukker for bestillinger.',
+    en: '<b>Each guest</b>: the guest\'s own bottles count. <b>Together</b>: all the guests\' bottles of a wine count together – good for wine clubs. Prices are then provisional until you close ordering.' } },
   'account-hosts': { more: 'account', text: {
     da: 'Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Kun ejeren kan tilføje og fjerne værter.',
     en: 'Every host on the account sees and edits all tastings, wines and guests. Only the owner can add and remove hosts.' } },

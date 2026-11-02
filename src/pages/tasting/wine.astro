@@ -67,6 +67,7 @@ import Base from '../../layouts/Base.astro';
   import { getCart, addToCart, cartCount } from '../../lib/cart';
   import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, wineFacts, nameBlind, blindBottle, watchBlind } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
+  import { bulkNote } from '../../lib/bulk';
   import { wineMap, showMapCredit } from '../../lib/wine-map';
 
   const $ = (id: string) => document.getElementById(id)!;
@@ -202,6 +203,9 @@ import Base from '../../layouts/Base.astro';
         price.append(normal);
       }
       for (const label of tierLabels(w)) price.append(el('span', 'bulk', label));
+      // How far the guest (or all the guests together) is towards the quantity price
+      const note = bulkNote(w, ((settingsRes.data ?? {}) as { bulk_mode?: 'guest' | 'pooled' | null }).bulk_mode ?? null);
+      if (note) price.append(el('span', 'bulk bulk-progress', note));
     }
 
     if (w.description) $('desc').textContent = w.description;
