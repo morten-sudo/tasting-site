@@ -34,6 +34,15 @@ const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro', bou
   // Not 'moselle': that is also the French department and AOC Moselle
   mosel: 'mosel', 'mosel saar ruwer': 'mosel' };
 
+/** The detailed maps there are, with the region's name and country – for the superadmin's overview. */
+export const DETAILED_MAPS: { id: string; name: string; country: string }[] = [
+  { id: 'bordeaux', name: 'Bordeaux', country: 'FR' }, { id: 'bourgogne', name: 'Bourgogne', country: 'FR' },
+  { id: 'champagne', name: 'Champagne', country: 'FR' }, { id: 'rhone', name: 'Rhône', country: 'FR' },
+  { id: 'roussillon', name: 'Roussillon', country: 'FR' }, { id: 'toscana', name: 'Toscana', country: 'IT' },
+  { id: 'piemonte', name: 'Piemonte', country: 'IT' }, { id: 'rioja', name: 'Rioja', country: 'ES' },
+  { id: 'douro', name: 'Douro', country: 'PT' }, { id: 'mosel', name: 'Mosel', country: 'DE' },
+];
+
 const cache = new Map<string, Promise<RegionMap | null>>();
 export function loadMap(id: string): Promise<RegionMap | null> {
   if (!cache.has(id)) {

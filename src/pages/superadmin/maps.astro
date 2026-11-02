@@ -10,6 +10,7 @@ import '../../styles/admin.css';
       <!-- Maps: which regions the wines come from, to decide which detailed maps to make next -->
       <section class="block maps-block">
                 <p class="hint" data-i18n="super.mapsHint">The regions the wines in all tastings come from. Regions without a detailed map are shown on the overview map – the most used ones are the next candidates for a detailed map.</p>
+        <p id="maps-have" class="hint"></p>
         <div class="table-wrap">
           <table class="table">
             <thead><tr>
@@ -40,7 +41,7 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { t } from '../../i18n';
   import { requireAdmin, $ } from '../../lib/super-common';
-  import { mapIdFor } from '../../lib/region-map';
+  import { mapIdFor, DETAILED_MAPS } from '../../lib/region-map';
   import { countryName } from '../../lib/origin';
 
   if (await requireAdmin()) loadMaps();
@@ -52,7 +53,12 @@ import '../../styles/admin.css';
       supabase.from('appellation_guesses').select('key, name, country, lat, lon, created_at').order('created_at', { ascending: false }),
     ]);
     type D = { region: string; country: string | null; wines: number; tastings: number; upcoming: number; hosts: number };
-    const rows = ((demand ?? []) as D[]).sort((a, b) => Number(!!mapIdFor(a.region)) - Number(!!mapIdFor(b.region)) || b.upcoming - a.upcoming || b.tastings - a.tastings);
+    // Every detailed map is in the table, also those no tasting uses yet
+    const used = new Set(((demand ?? []) as D[]).map((r) => mapIdFor(r.region)));
+    const unused: D[] = DETAILED_MAPS.filter((m) => !used.has(m.id))
+      .map((m) => ({ region: m.name, country: m.country, wines: 0, tastings: 0, upcoming: 0, hosts: 0 }));
+    $('maps-have').textContent = t('super.mapsHave', { n: DETAILED_MAPS.length, list: DETAILED_MAPS.map((m) => m.name).join(', ') });
+    const rows = [...((demand ?? []) as D[]), ...unused].sort((a, b) => Number(!!mapIdFor(a.region)) - Number(!!mapIdFor(b.region)) || b.upcoming - a.upcoming || b.tastings - a.tastings);
     $('map-rows').replaceChildren(...rows.map((r) => {
       const tr = document.createElement('tr');
       const cell = (text: string, cls = '') => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; return td; };

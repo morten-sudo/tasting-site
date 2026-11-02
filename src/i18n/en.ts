@@ -1002,4 +1002,5 @@ export const en = {
   "wineLib.showing": "{n} of {total} wines",
   "wineLib.clearFilters": "Clear filters",
   "wineLib.noMatch": "No wines match the filters.",
+  "super.mapsHave": "{n} detailed maps: {list}.",
 } as const;

@@ -1003,4 +1003,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wineLib.showing": "{n} af {total} vínum",
   "wineLib.clearFilters": "Hreinsa síur",
   "wineLib.noMatch": "Engin vín passa við síurnar.",
+  "super.mapsHave": "{n} nákvæm kort: {list}.",
 };

@@ -1003,4 +1003,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wineLib.showing": "{n} af {total} vine",
   "wineLib.clearFilters": "Nulstil filtre",
   "wineLib.noMatch": "Ingen vine passer til filtrene.",
+  "super.mapsHave": "{n} detaljerede kort: {list}.",
 };
