@@ -128,6 +128,9 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
     } catch {}
   }
 
+  // The page's currency; prices in other currencies than kroner and euro are left out (the host types the price)
+  const currency = String(offers?.priceCurrency ?? meta['og:price:currency'] ?? meta['product:price:currency'] ?? '').trim().toUpperCase() || null;
+
   const title = decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').trim();
   const parts = [
     `URL: ${url.href}`,
@@ -144,14 +147,15 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
     (meta['og:description'] || meta['description']) && `Summary: ${meta['og:description'] || meta['description']}`,
     str(product.description) && `Description: ${htmlToText(String(product.description))}`,
     shop?.body_html && `Description: ${htmlToText(shop.body_html)}`,
+    currency && `Currency of the prices: ${currency}`,
     `Page text:\n${htmlToText(html)}`,
   ].filter(Boolean).join('\n');
   const text = parts.slice(0, MAX_TEXT);
 
   const prompt = `Below is text from a web shop's product page for a wine. Return ONLY a JSON object with these keys:
 ${FIELDS_SPEC},
-"regular_price": the normal, non-discounted price for ONE bottle in DKK as a number (often shown crossed out or as "normal price"/"vejl. pris"), or null,
-"offer_price": a discounted price per bottle in DKK as a number, or null,
+"regular_price": the normal, non-discounted price for ONE bottle as a number (often shown crossed out or as "normal price"/"vejl. pris") – only when the page shows it in Danish kroner (DKK/kr.) or euro (EUR/€), otherwise null,
+"offer_price": a discounted price per bottle as a number in the same currency, or null,
 "offer_quantity": how many bottles must be bought to get offer_price (1 if it applies to a single bottle), or null,
 "description": two or three sentences in ${LANG_NAMES[lang]} about the wine's style and taste, written in your own words – do not copy sentences from the page, and leave out prices, discounts, points and marketing.
 Use only what the page states. Use null when unsure. No other text.
@@ -171,20 +175,30 @@ ${text}`;
   }
   if (!answer) return json({ error: 'unreadable' }, 422);
 
-  const image = absolute(shop?.images?.[0]?.src, url) ?? absolute(first(product.image), url) ??
+  let image = absolute(shop?.images?.[0]?.src, url) ?? absolute(first(product.image), url) ??
     absolute(meta['og:image:secure_url'] ?? meta['og:image'], url);
+  // Vivino shares a close crop of the label (…_pl_375x500.png); the bottle shot (…_pb_x600.png) suits the wine card
+  const bottle = image?.match(/^(https:\/\/images\.vivino\.com\/thumbs\/[\w-]+)_pl_\d+x\d+\.png$/)?.[1];
+  if (bottle) {
+    try {
+      const res = await fetch(`${bottle}_pb_x600.png`, { method: 'HEAD', signal: AbortSignal.timeout(4000) });
+      if (res.ok) image = `${bottle}_pb_x600.png`;
+    } catch {}
+  }
   // Regular price per bottle: what the page calls the normal price, else the structured price
   const v0 = shop?.variants?.[0];
-  const regular = price(answer.regular_price) ??
+  // Euro is pegged to the krone; any other currency gives no price
+  const toDkk = (n: number | null) => (n == null ? null : !currency || currency === 'DKK' ? n : currency === 'EUR' ? Math.round(n * 7.46) : null);
+  const regular = toDkk(price(answer.regular_price)) ??
     (v0?.compare_at_price && price(v0.compare_at_price)! > price(v0.price)! && /^(1|default|1 ?stk\.?|1 ?fl\.?)?$/i.test((v0.title ?? '').trim().replace(/^default title$/i, ''))
       ? price(v0.compare_at_price) : null);
-  const offerPrice = price(answer.offer_price);
+  const offerPrice = toDkk(price(answer.offer_price));
   const offerQty = Number(answer.offer_quantity);
   const offer = offerPrice && (!regular || offerPrice < regular)
     ? { price: offerPrice, quantity: Number.isInteger(offerQty) && offerQty > 0 && offerQty < 100 ? offerQty : 1 }
     : null;
-  const structured = price(offers?.price) ?? price(offers?.lowPrice) ??
-    price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price);
+  const structured = toDkk(price(offers?.price) ?? price(offers?.lowPrice) ??
+    price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price));
   // Never use the offer price as the regular price
   const shopPrice = regular ?? (offer && structured === offer.price ? null : structured);
 
