@@ -114,6 +114,8 @@ function findCoords(html: string): { lat: number; lon: number; how: string } | n
     [/maps[^"'\s<>]*[?&](?:q|ll|center|daddr|destination|query)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/i, 'map link'],
     [/data-lat(?:itude)?=["'](-?\d+\.\d+)["'][^>]*data-(?:lng|lon|longitude)=["'](-?\d+\.\d+)/i, 'map data'],
     [/"lat"\s*:\s*(-?\d+\.\d{3,})\s*,\s*"(?:lng|lon)"\s*:\s*(-?\d+\.\d{3,})/i, 'map data'],
+    // Written on the page: "GPS: 44.613474 7.965826", "Coordinates: 44.61, 7.96", "N 44.6134 E 7.9658"
+    [/(?:gps|coordinate[s]?|coordinat[ea]|koordinaten|coordonn[ée]es|lat(?:itude)?)\s*[:.]?\s*N?\s*(-?\d{1,2}\.\d{4,})[°\s]*[,;\s/]+\s*(?:E|lon(?:gitude)?\s*[:.]?)?\s*(-?\d{1,3}\.\d{4,})/i, 'on the page'],
   ];
   for (const [re, how] of tries) {
     const m = html.match(re);
@@ -192,7 +194,9 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   if (!(await isHost(request))) return json({ error: 'not_host' }, 403);
   let body: { producer?: string; wine?: string; region?: string; appellation?: string; country?: string; website?: string };
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
-  const producer = String(body.producer ?? '').trim();
+  const given0 = cleanUrl(String(body.website ?? ''))?.href ?? null;
+  // A website alone is enough (the host typed it); otherwise the producer's name is needed to look for one
+  const producer = String(body.producer ?? '').trim() || (given0 ? new URL(given0).hostname.replace(/^www\./, '').split('.')[0] : '');
   if (!producer) return json({ error: 'no_producer' }, 400);
   const country = String(body.country ?? '').toUpperCase() || null;
   const words = keyWords(producer);
@@ -243,7 +247,8 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   const pages = [site, ...more.filter((p, i) => more.findIndex((q) => q.url === p.url || q.html === p.html) === i)];
   let location: { lat: number; lon: number; source: string; page: string } | null = null;
   for (const p of pages) {
-    const c = findCoords(p.html);
+    // In the page's code, or written in its text ("GPS: 44.61 7.96" with tags in between)
+    const c = findCoords(p.html) ?? findCoords(htmlToText(p.html));
     if (c) { location = { lat: c.lat, lon: c.lon, source: c.how, page: p.url }; break; }
   }
   // The postal address: from the site's structured data, else as written on the site (read by the model)

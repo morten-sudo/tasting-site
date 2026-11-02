@@ -908,7 +908,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   type ProducerQuery = { name: string; producer: string | null; appellation: string | null; region: string | null; country: string | null; producer_website: string | null; producer_address?: string | null };
   /** The producer's website and place: from another wine by the same producer, else /api/find-producer. */
   async function lookupProducer(w: ProducerQuery, skipId?: number): Promise<Found | null> {
-    const same = wines.find((x) => x.id !== skipId && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
+    const same = !w.producer ? null : wines.find((x) => x.id !== skipId && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
       && (!w.producer_website || x.producer_website === w.producer_website));
     if (same) return { website: same.producer_website ?? null, address: same.producer_address ?? null, lat: same.producer_lat ?? null, lon: same.producer_lon ?? null, source: same.producer_source ?? null };
     try {
@@ -992,7 +992,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     siteEl.classList.remove('from-label');
     const addressEl = field<HTMLInputElement>('wf-producer-address');
     const producer = field<HTMLInputElement>('wf-producer').value.trim();
-    if (addressEl.value.trim() || !producer) { producerStatus('✓ ' + t('producer.websiteSet'), 'ok'); return; }
+    if (addressEl.value.trim()) { producerStatus('✓ ' + t('producer.websiteSet'), 'ok'); return; }
     // Look for the address from this website
     const turn = ++producerTurn;
     producerStatus(t('producer.websiteSet'), 'ok');
