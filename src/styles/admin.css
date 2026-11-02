@@ -901,3 +901,14 @@ dialog.wizard .wf-foot .message { margin: 0 0 0.6rem; }
 @media (min-width: 48rem) { dialog.wizard .wf-head, dialog.wizard .wf-body, dialog.wizard .wf-foot { padding-left: 2rem; padding-right: 2rem; } }
 dialog.wizard .wine-form input, dialog.wizard .wine-form textarea, dialog.wizard .wine-form select { max-width: none; }
 dialog.wizard .wine-form input.short { max-width: 8rem; }
+
+/* "Fetched from supervin.dk (2 Nov 2026, 12:31) ⟳" – the refresh is a round icon button */
+.admin-page .source-when { color: var(--muted); font-size: 0.85rem; }
+.admin-page .icon-btn {
+  display: inline-grid; place-items: center; width: 2rem; height: 2rem; padding: 0; flex-shrink: 0; vertical-align: middle;
+  border: 1px solid var(--lodge-3); border-radius: 50%; background: var(--lodge-2); color: var(--amber); cursor: pointer;
+}
+.admin-page .icon-btn:hover, .admin-page .icon-btn:focus-visible { border-color: var(--amber); }
+.admin-page .icon-btn svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.admin-page .icon-btn.loading svg { animation: spin 0.8s linear infinite; }
+.admin-page .icon-btn:disabled { opacity: 0.6; cursor: default; }

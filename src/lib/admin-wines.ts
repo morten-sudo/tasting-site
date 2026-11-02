@@ -13,7 +13,7 @@ export type AdminWine = {
   id: number; host_id: string; name: string; producer: string | null;
   style: string | null; vintage: string | null; abv: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
-  image_url: string | null; source_url: string | null;
+  image_url: string | null; source_url: string | null; source_fetched_at?: string | null;
   country: string | null; region: string | null; appellation: string | null; appellation_id: string | null;
   offer_price_dkk: number | null; offer_quantity: number | null;
   producer_website?: string | null; producer_address?: string | null;
@@ -21,7 +21,7 @@ export type AdminWine = {
   tasting_wines?: { tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
 const BUCKET = 'wine-images';
 const MAX_IMAGE_SIDE = 1400;
 
@@ -81,6 +81,10 @@ const toNumber = (v: string) => {
   return v.trim() === '' || Number.isNaN(n) ? null : n;
 };
 const toText = (v: string) => v.trim() || null;
+/** "2 Nov 2026, 12:31" – when a wine's link was read. */
+export const fetchedWhen = (iso: string) => new Intl.DateTimeFormat(locale(), {
+  day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen',
+}).format(new Date(iso));
 
 /** Asks Cloudflare AI where an unknown appellation lies and saves it (checked against the country in the database). */
 async function locateAppellation(appellation: string | null, region: string | null, country: string | null) {
@@ -111,6 +115,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   let pendingImage: Blob | null = null;
   let linkImage: string | null = null; // product image found via a shop link
   let sourceUrl: string | null = null;
+  let sourceFetchedAt: string | null = null; // when the link was last read
   let removeImage = false;
   // The producer's place found while the form is open; saved with the wine if the producer and website still match
   type Found = { website: string | null; address: string | null; lat: number | null; lon: number | null; source: string | null };
@@ -403,6 +408,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         else if (preview.src !== r.image) f.add({ id: 'wf-image', apply: useImage });
       }
       sourceUrl = r.source_url;
+      sourceFetchedAt = new Date().toISOString();
       showSource();
       statusTarget = 'wf-source-status';
       if (guide() && step === 0) goStep(1);
@@ -434,6 +440,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     removeImage = false;
     linkImage = null;
     sourceUrl = w?.source_url ?? null;
+    sourceFetchedAt = w?.source_fetched_at ?? null;
     foundPlace = null;
     producerTurn++;
     producerStatus('');
@@ -685,6 +692,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const u = new URL(sourceUrl);
       a.textContent = u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? decodeURIComponent(u.pathname) : '');
     } catch { a.textContent = sourceUrl; }
+    $('wf-source-when').textContent = sourceFetchedAt ? `(${fetchedWhen(sourceFetchedAt)})` : '';
     // The link field is only needed for another link
     showLinkBox(false);
   }
@@ -763,6 +771,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       country: countrySelect.value || null,
       image_url,
       source_url: sourceUrl,
+      source_fetched_at: sourceUrl ? sourceFetchedAt : null,
       producer_website: webUrl(field<HTMLInputElement>('wf-producer-website').value),
       producer_address: toText(field<HTMLInputElement>('wf-producer-address').value),
     };

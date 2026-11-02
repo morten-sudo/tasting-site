@@ -119,8 +119,8 @@ import '../../styles/admin.css';
           <!-- Where the wine's data came from, with a button that fetches it again -->
           <div id="wf-source" class="wf-source" hidden>
             <div class="wf-source-row">
-              <span class="wf-source-text"><span data-i18n="source.from">Fetched from</span> <a id="wf-source-link" href="#" target="_blank" rel="noopener"></a></span>
-              <button id="wf-source-refresh" class="btn small ghost" type="button" data-i18n="source.refresh">Update</button>
+              <span class="wf-source-text"><span data-i18n="source.from">Fetched from</span> <a id="wf-source-link" href="#" target="_blank" rel="noopener"></a> <span id="wf-source-when" class="source-when"></span></span>
+              <button id="wf-source-refresh" class="icon-btn" type="button" title="Update" aria-label="Update" data-i18n-attr="title=source.refresh;aria-label=source.refresh"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><path d="M20 20v-4h-4" /></svg></button>
             </div>
             <button id="wf-source-other" class="text-btn" type="button" data-i18n="source.other">Use another link</button>
             <p id="wf-source-status" class="label-status" hidden aria-live="polite"></p>

@@ -6,7 +6,7 @@ import { styleName, kr, wineSlug } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
 import { wineMap } from './wine-map';
 import { mk } from './admin-common';
-import type { AdminWine } from './admin-wines';
+import { fetchedWhen, type AdminWine } from './admin-wines';
 
 type Detail = Omit<AdminWine, 'tasting_wines'> & {
   tasting_wines: { price_dkk: number | null; tastings: { id: string; slug: string; title: string; starts_at: string | null } | null }[];
@@ -109,10 +109,15 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     a.rel = 'noopener';
     a.title = w.source_url;
     try { a.textContent = new URL(w.source_url).hostname.replace(/^www\./, ''); } catch { a.textContent = w.source_url; }
-    const btn = mk('button', 'text-btn', t('source.refresh'));
+    const btn = mk('button', 'icon-btn');
     btn.type = 'button';
+    btn.title = t('source.refresh');
+    btn.setAttribute('aria-label', t('source.refresh'));
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><path d="M20 20v-4h-4" /></svg>';
     btn.addEventListener('click', actions.refresh);
-    box.append(a, ' · ', btn);
+    box.append(a);
+    if (w.source_fetched_at) box.append(' ', mk('span', 'source-when', `(${fetchedWhen(w.source_fetched_at)})`));
+    box.append(' ', btn);
     facts.push([t('source.from'), box]);
   }
   const dl = $('wd-facts');
