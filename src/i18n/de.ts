@@ -782,11 +782,4 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteShort": "Website",
   "producer.addressShort": "Adresse",
   "wineMap.producer": "Beim Erzeuger markiert (laut seiner Website).",
-  "lwinSearch.label": "Wein suchen",
-  "lwinSearch.placeholder": "Wein suchen – z. B. „lynch bages“ oder „kopke“",
-  "lwinSearch.credit": "Weinliste:",
-  "lwinSearch.none": "Kein Wein gefunden – selbst ausfüllen oder ein Foto oder einen Link verwenden.",
-  "lwinSearch.filled": "Aus der Weinliste ausgefüllt – Jahrgang und Preis ergänzen oder den Rest über einen Link oder ein Foto holen.",
-  "lwinSearch.classification": "Klassifikation",
-  "lwinSearch.classificationHint": "(z. B. 5ème Cru Classé, Grand Cru)",
 };

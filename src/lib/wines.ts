@@ -8,7 +8,6 @@ export type Wine = {
   price_tiers?: PriceTier[] | null;
   country?: string | null; region?: string | null; appellation?: string | null; appellation_id?: string | null;
   producer_website?: string | null; producer_address?: string | null; producer_lat?: number | null; producer_lon?: number | null;
-  classification?: string | null;
 };
 
 import { t, money, type Key } from '../i18n';

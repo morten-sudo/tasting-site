@@ -782,11 +782,4 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteShort": "Website",
   "producer.addressShort": "Adres",
   "wineMap.producer": "Gemarkeerd bij de producent (van zijn website).",
-  "lwinSearch.label": "Wijn zoeken",
-  "lwinSearch.placeholder": "Wijn zoeken – bijv. “lynch bages” of “kopke”",
-  "lwinSearch.credit": "Wijnlijst:",
-  "lwinSearch.none": "Geen wijnen gevonden – vul zelf in of gebruik een foto of een link.",
-  "lwinSearch.filled": "Ingevuld uit de wijnlijst – voeg jaargang en prijs toe of haal de rest uit een link of foto.",
-  "lwinSearch.classification": "Classificatie",
-  "lwinSearch.classificationHint": "(bijv. 5ème Cru Classé, Grand Cru)",
 };
