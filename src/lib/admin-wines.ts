@@ -26,10 +26,10 @@ export type AdminWine = {
   offer_price_dkk: number | null; offer_quantity: number | null;
   producer_website?: string | null; producer_address?: string | null;
   producer_lat?: number | null; producer_lon?: number | null; producer_source?: string | null; producer_checked_at?: string | null;
-  tasting_wines?: { tastings: { slug: string; title: string } | null }[];
+  tasting_wines?: { price_dkk?: number | null; price_tiers?: { qty: number; price: number }[] | null; tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(price_dkk, price_tiers, tastings(slug, title))';
 const BUCKET = 'wine-images';
 
 const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
@@ -436,6 +436,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     field<HTMLInputElement>('wf-retail').value = amountText(w.retail_price_dkk, locale());
     field<HTMLInputElement>('wf-offer-price').value = amountText(w.offer_price_dkk, locale());
     field<HTMLInputElement>('wf-offer-qty').value = w.offer_quantity != null ? String(w.offer_quantity) : '';
+    renderInTastings(w);
     field<HTMLTextAreaElement>('wf-description').value = w.description ?? '';
     field<HTMLTextAreaElement>('wf-details').value = w.details ?? '';
     field<HTMLInputElement>('wf-grapes').value = w.grapes ?? '';
@@ -455,6 +456,25 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     // On phones the keyboard would cover the sheet, so only focus a field on larger screens
     if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
     else (document.activeElement as HTMLElement | null)?.blur();
+  }
+
+  /** The guest price in each tasting the wine is in – read here, changed in the tasting (the link opens its panel). */
+  function renderInTastings(w: AdminWine) {
+    const box = document.getElementById('wf-in-tastings');
+    const list = document.getElementById('wf-in-tastings-list');
+    if (!box || !list) return;
+    const rows = (w.tasting_wines ?? []).filter((x) => x.tastings);
+    box.hidden = !rows.length;
+    list.replaceChildren(...rows.map((x) => {
+      const li = mk('li');
+      const name = mk('span', 'wf-it-name', x.tastings!.title);
+      const tiers = (x.price_tiers ?? []).map((y) => t('twe.tierLine', { n: y.qty, price: kr.format(Number(y.price)) }));
+      const price = mk('span', 'wf-it-price', [x.price_dkk != null ? kr.format(Number(x.price_dkk)) : t('twe.noPrice'), ...tiers].join(' · '));
+      const go = mk('a', 'text-btn', t('wineLib.changeInTasting'));
+      go.href = `/t/${x.tastings!.slug}/admin/wines/?edit=${w.id}`;
+      li.append(name, price, go);
+      return li;
+    }));
   }
 
   function closeForm() {
@@ -595,7 +615,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const ts = tastingsOf(w);
       const chips = mk('div', 'chips');
       for (const tt of ts) {
-        const a = mk('a', 'chip', tt.title);
+        // The tasting and the wine's guest price there (separate from the shop's price above)
+        const p = (w.tasting_wines ?? []).find((x) => x.tastings?.slug === tt.slug)?.price_dkk;
+        const a = mk('a', 'chip', p != null ? `${tt.title} · ${kr.format(Number(p))}` : tt.title);
         a.href = `/t/${tt.slug}/admin/`;
         chips.append(a);
       }

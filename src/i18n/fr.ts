@@ -1192,4 +1192,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteSet": "Le site est défini – il est enregistré quand vous appuyez sur Enregistrer.",
   "wineCheck.offerQtyOne": "Le nombre de bouteilles doit être un nombre entier de 1 à 99.",
   "qa.unnamed": "Nouveau vin",
+  "wineLib.inTastings": "Prix invités dans vos dégustations",
+  "wineLib.inTastingsHint": "Fixé pour chaque dégustation – distinct du prix en boutique ci-dessus.",
+  "wineLib.changeInTasting": "Modifier",
 };

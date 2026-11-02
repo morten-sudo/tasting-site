@@ -1306,4 +1306,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteSet": "Vefsíðan er skráð – hún vistast þegar þú ýtir á Vista.",
   "wineCheck.offerQtyOne": "Fjöldi flaskna verður að vera heil tala frá 1 til 99.",
   "qa.unnamed": "Nýtt vín",
+  "wineLib.inTastings": "Gestaverð í smökkunum þínum",
+  "wineLib.inTastingsHint": "Stillt fyrir hverja smökkun – aðskilið frá verði búðarinnar að ofan.",
+  "wineLib.changeInTasting": "Breyta",
 };

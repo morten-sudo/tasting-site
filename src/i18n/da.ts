@@ -1306,4 +1306,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteSet": "Hjemmesiden er sat – den gemmes, når du trykker Gem.",
   "wineCheck.offerQtyOne": "Antal flasker skal være et helt tal fra 1 til 99.",
   "qa.unnamed": "Ny vin",
+  "wineLib.inTastings": "Gæstepris i dine smagninger",
+  "wineLib.inTastingsHint": "Sættes for hver smagning – adskilt fra butikkens pris ovenfor.",
+  "wineLib.changeInTasting": "Ret",
 };

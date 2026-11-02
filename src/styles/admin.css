@@ -1618,3 +1618,14 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .wd-empty p { margin: 0 0 0.8rem; }
 .admin-page .wd-empty b { display: block; font-weight: 600; margin-bottom: 0.2rem; }
 .admin-page .wd-empty span { color: var(--muted); }
+
+/* Wine panel: the guest price in each tasting (read here, changed in the tasting) */
+.admin-page .wf-in-tastings { display: grid; gap: 0.35rem; margin-top: 0.6rem; max-width: 36rem; }
+.admin-page .wf-in-tastings .field-label { margin: 0; }
+.admin-page .wf-in-tastings ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: #fff; }
+.admin-page .wf-in-tastings li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; padding: 0.6rem 0.8rem; }
+.admin-page .wf-in-tastings li + li { border-top: 1px solid var(--lodge-2); }
+.admin-page .wf-it-name { font-weight: 500; }
+.admin-page .wf-it-price { color: var(--muted); font-variant-numeric: tabular-nums; }
+.admin-page .wf-in-tastings .text-btn { margin-left: auto; }
+.admin-page .wf-in-tastings .hint { margin: 0; }

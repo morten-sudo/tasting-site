@@ -203,6 +203,12 @@ import '../../styles/admin.css';
             <input id="wf-offer-qty" type="text" inputmode="numeric" placeholder="6" aria-label="Number of bottles" data-i18n-attr="aria-label=adminTasting.bulkQty" />
             <span data-i18n="adminTasting.bulkBottles">bottles</span>
           </div>
+          <!-- The guest price belongs to each tasting: shown here, changed in the tasting -->
+          <div id="wf-in-tastings" class="wf-in-tastings" hidden>
+            <p class="field-label" data-i18n="wineLib.inTastings">Guest price in your tastings</p>
+            <ul id="wf-in-tastings-list"></ul>
+            <p class="hint" data-i18n="wineLib.inTastingsHint">Set for each tasting – separate from the shop's price above.</p>
+          </div>
           <label for="wf-description" data-i18n="admin.description">Description</label>
           <textarea id="wf-description" rows="3"></textarea>
           <label for="wf-grapes"><span data-i18n="label.grapes">Grapes</span> <span class="hint" data-i18n="wineFields.grapesHint">(e.g. 85 % Merlot, 15 % Cabernet Franc)</span></label>

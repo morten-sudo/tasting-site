@@ -1192,4 +1192,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteSet": "De website staat erin – hij wordt bewaard als je op Opslaan drukt.",
   "wineCheck.offerQtyOne": "Het aantal flessen moet een heel getal van 1 tot 99 zijn.",
   "qa.unnamed": "Nieuwe wijn",
+  "wineLib.inTastings": "Gastprijs in je proeverijen",
+  "wineLib.inTastingsHint": "Per proeverij ingesteld – los van de winkelprijs hierboven.",
+  "wineLib.changeInTasting": "Wijzigen",
 };

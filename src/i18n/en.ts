@@ -1305,4 +1305,7 @@ export const en = {
   "producer.websiteSet": "The website is set – it is saved when you press Save.",
   "wineCheck.offerQtyOne": "The number of bottles must be a whole number from 1 to 99.",
   "qa.unnamed": "New wine",
+  "wineLib.inTastings": "Guest price in your tastings",
+  "wineLib.inTastingsHint": "Set for each tasting – separate from the shop's price above.",
+  "wineLib.changeInTasting": "Change",
 } as const;

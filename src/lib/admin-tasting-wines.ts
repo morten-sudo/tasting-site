@@ -356,6 +356,13 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     render();
     // No wines yet: the line is open, ready for the first one
     if (!rows.length && !quick.isOpen()) quick.open(false);
+    // ?edit=<wine id> (from the wine library): open that wine's panel
+    const want = Number(new URLSearchParams(location.search).get('edit'));
+    const hit = want ? rows.find((x) => x.wine_id === want) : null;
+    if (hit) {
+      const u = new URL(location.href); u.searchParams.delete('edit'); history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+      edit(hit);
+    }
   }
 
   return { load };
