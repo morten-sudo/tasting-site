@@ -767,13 +767,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         box.checked = !box.checked;
         // Ordering with quantity prices needs the host's choice first
         if (error.message.includes('bulk_mode_needed')) {
-          // The choice lives under Settings: go there if the switch was used on another tab
-          if (!$('bulk-mode').offsetParent) { location.href = `/t/${tasting.slug}/admin/settings/#bulk-mode`; return; }
+          // The choice is right under the switch on this tab: show it, say so, and point to it
+          renderBulk();
+          $('bulk-mode').hidden = false;
           $('bulk-msg').textContent = t('bulk.chooseFirst');
           $('bulk-mode').classList.add('help-flash');
           $('bulk-mode').scrollIntoView({ behavior: 'smooth', block: 'center' });
           setTimeout(() => $('bulk-mode').classList.remove('help-flash'), 2400);
-        } else alert(t('admin.changeNotSaved'));
+        } else toast(t('admin.changeNotSaved'), { kind: 'error' });
         return;
       }
       tasting[box.dataset.key!] = box.checked;
