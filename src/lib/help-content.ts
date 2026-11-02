@@ -20,7 +20,7 @@ export const HELP: HelpSection[] = [
 <li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Tilføj vin</a> skriver du navnet på en vin fra dit bibliotek og trykker <i>Tilføj</i> – eller indsætter et link eller et billede for en ny. Bagefter sætter du rækkefølgen og gæsteprisen.</li>
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
-<li><b>På aftenen</b> åbner du for quiz og bestillinger under <a href="t:settings/#controls">Kontakter</a>, når det passer – og afslører vinene, hvis det er en blindsmagning.</li>
+<li><b>På aftenen</b> åbner du for bestillinger under <a href="t:orders/">Bestillinger</a> og for quizzen under <a href="t:quiz/">Quiz</a>, når det passer – og afslører vinene, hvis det er en blindsmagning.</li>
 </ol>`,
       en: `<p>From an empty account to a tasting with invited guests:</p>
 <ol>
@@ -29,7 +29,7 @@ export const HELP: HelpSection[] = [
 <li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Add wine</a>, type the name of a wine in your library and press <i>Add</i> – or paste a link or a photo for a new one. Then set their order and the guest price.</li>
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>
-<li><b>On the evening</b>, open the quiz and ordering under <a href="t:settings/#controls">Controls</a> when it suits you – and reveal the wines if it is a blind tasting.</li>
+<li><b>On the evening</b>, open ordering under <a href="t:orders/">Orders</a> and the quiz under <a href="t:quiz/">Quiz</a> when it suits you – and reveal the wines if it is a blind tasting.</li>
 </ol>`,
     },
   },
@@ -48,7 +48,6 @@ export const HELP: HelpSection[] = [
 <p>Øverst under <a href="t:settings/">Indstillinger</a> slår du til og fra, hvad gæsterne kan – det gemmes med det samme:</p>
 <ul>
 <li><b>Svare på invitationen</b> – gæsterne kan svare ja eller nej.</li>
-<li><b>Bestille vin</b> – gæsterne kan lægge vine i kurven og bestille. Se <a href="#orders">Bestillinger og betaling</a>. Kontakten findes også øverst på fanen <a href="t:orders/">Bestillinger</a>, og quiz-kontakterne øverst på <a href="t:quiz/">Quiz</a>.</li>
 <li><b>Svare på quizzen</b> og <b>Se quizzens facit</b> – se <a href="#evening">Under aftenen</a>.</li>
 </ul>
 <p>Under <i>Smagningen</i> finder du <b>Blindsmagning</b> (se <a href="#blind">Blindsmagning</a>), maks. antal gæster og linket til pointtavlen på tv’et.</p>
@@ -69,7 +68,6 @@ export const HELP: HelpSection[] = [
 <p>At the top of <a href="t:settings/">Settings</a> you switch on and off what the guests can do – it is saved at once:</p>
 <ul>
 <li><b>Reply to the invitation</b> – guests can reply yes or no.</li>
-<li><b>Order wine</b> – guests can put wines in the cart and order. See <a href="#orders">Orders and payment</a>. The switch is also at the top of the <a href="t:orders/">Orders</a> tab, and the quiz switches at the top of <a href="t:quiz/">Quiz</a>.</li>
 <li><b>Answer the quiz</b> and <b>See the quiz answers</b> – see <a href="#evening">During the evening</a>.</li>
 </ul>
 <p>Under <i>The tasting</i> you find <b>Blind tasting</b> (see <a href="#blind">Blind tasting</a>), the max number of guests and the link to the leaderboard for the TV.</p>
@@ -195,7 +193,7 @@ export const HELP: HelpSection[] = [
     body: {
       da: `<p>Når <a href="t:settings/#controls">Bestilling åben</a> er slået til, kan gæsterne lægge de vine i kurven, der kan bestilles, og sende bestillingen. Mængdepriser gælder automatisk.</p>
 <h4 id="bulk">Mængderabat – hver gæst eller alle samlet</h4>
-<p>Har en vin en mængdepris (fx "fra 6 flasker 359,95 kr."), vælger du under <a href="t:settings/#bulk-mode">Indstillinger → Bestille vin</a>, hvem der tæller med – valget vises kun, når en vin i smagningen har mængdepris. Du skal vælge, før du kan åbne for bestillinger:</p>
+<p>Har en vin en mængdepris (fx "fra 6 flasker 359,95 kr."), vælger du under <a href="t:orders/#bulk-mode">Bestillinger → Bestille vin</a>, hvem der tæller med – valget vises kun, når en vin i smagningen har mængdepris. Du skal vælge, før du kan åbne for bestillinger:</p>
 <ul>
 <li><b>Hver gæst for sig</b> – en gæst, der bestiller 6 (også fordelt på flere bestillinger), får mængdeprisen.</li>
 <li><b>Alle gæster sammen</b> – god til vinklubber og fællesindkøb: når gæsterne tilsammen bestiller 6, får alle mængdeprisen. Gæsterne ser "Sammen har I bestilt 4 af 6 – 2 flasker mere …". Priserne er foreløbige, indtil du lukker for bestillinger, og gæsterne bliver bedt om at vente med at betale til da.</li>
@@ -205,7 +203,7 @@ export const HELP: HelpSection[] = [
 <p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne får så en knap, der åbner MobilePay med beløb og besked udfyldt – både til bestillinger og deltagergebyr.</p>`,
       en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. Quantity prices apply automatically.</p>
 <h4 id="bulk">Quantity prices – each guest or everyone together</h4>
-<p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:settings/#bulk-mode">Settings → Order wine</a> who counts – the choice only shows when a wine in the tasting has a quantity price. You must choose before you can open ordering:</p>
+<p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:orders/#bulk-mode">Orders → Order wine</a> who counts – the choice only shows when a wine in the tasting has a quantity price. You must choose before you can open ordering:</p>
 <ul>
 <li><b>Each guest</b> – a guest who orders 6 (also over several orders) gets the quantity price.</li>
 <li><b>All guests together</b> – good for wine clubs and joint orders: when the guests together order 6, everyone gets the quantity price. Guests see "Together you have ordered 4 of 6 – 2 more …". Prices are provisional until you close ordering, and guests are asked to wait with paying until then.</li>

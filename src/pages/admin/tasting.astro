@@ -129,19 +129,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <h2 data-i18n="set.guestsCan">The guests can</h2>
         <label class="set-switch"><input type="checkbox" role="switch" data-key="signup_open" />
           <span><b data-i18n="wizard.signupTitle">Reply to the invitation</b><small data-i18n="wizard.signupHint">Guests can say yes or no and add a note.</small></span></label>
-        <label class="set-switch"><input type="checkbox" role="switch" data-key="orders_open" />
-          <span><b><span data-i18n="wizard.ordersTitle">Order wine</span><span data-help="orders-open"></span></b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
-        <!-- Quantity prices: only when a wine in the tasting has one – who counts towards it (the host decides) -->
-        <div id="bulk-mode" class="bulk-choice" hidden>
-          <p id="bulk-q" class="bulk-q"></p>
-          <!-- The same choice cards as everywhere else (radio, name, what it means) -->
-          <div class="choice-cards" role="radiogroup" aria-labelledby="bulk-q">
-            <label><input type="radio" name="bulk-mode" value="guest" /> <span><b data-i18n="bulk.segGuest">Each guest</b><small id="bulk-ex-guest"></small></span></label>
-            <label><input type="radio" name="bulk-mode" value="pooled" /> <span><b data-i18n="bulk.segPooled">All guests together</b><small id="bulk-ex-pooled"></small></span></label>
-          </div>
-          <p id="bulk-example" class="bulk-example"></p>
-          <p id="bulk-msg" class="hint" aria-live="polite"></p>
-        </div>
         <label class="set-switch"><input type="checkbox" role="switch" data-key="quiz_open" />
           <span><b><span data-i18n="set.quizOpen">Answer the quiz</span><span data-help="quiz"></span></b><small data-i18n="set.quizOpenHint">The questions are open for answers on the guests’ phones.</small></span></label>
         <label class="set-switch"><input type="checkbox" role="switch" data-key="quiz_finished" />
@@ -392,9 +379,20 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <!-- Orders -->
       <section class="block" data-section="orders">
         <h2 data-i18n="admin.orders">Orders</h2>
-        <!-- The same switch as under Settings, here where it is used -->
+        <!-- Ordering: the switch and, when a wine has a quantity price, who counts towards it -->
         <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="orders_open" />
           <span><b><span data-i18n="wizard.ordersTitle">Order wine</span><span data-help="orders-open"></span></b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
+        <!-- Quantity prices: only when a wine in the tasting has one – who counts towards it (the host decides) -->
+        <div id="bulk-mode" class="bulk-choice" hidden>
+          <p id="bulk-q" class="bulk-q"></p>
+          <!-- The same choice cards as everywhere else (radio, name, what it means) -->
+          <div class="choice-cards" role="radiogroup" aria-labelledby="bulk-q">
+            <label><input type="radio" name="bulk-mode" value="guest" /> <span><b data-i18n="bulk.segGuest">Each guest</b><small id="bulk-ex-guest"></small></span></label>
+            <label><input type="radio" name="bulk-mode" value="pooled" /> <span><b data-i18n="bulk.segPooled">All guests together</b><small id="bulk-ex-pooled"></small></span></label>
+          </div>
+          <p id="bulk-example" class="bulk-example"></p>
+          <p id="bulk-msg" class="hint" aria-live="polite"></p>
+        </div>
         <div id="orders-by-guest"></div>
         <div id="orders-total">
         <h3 data-i18n="admin.totalPurchase">Total purchase</h3>

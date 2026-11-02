@@ -1610,3 +1610,5 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   .admin-page .guests-head:has(#g-filter-dd) .head-actions { width: 100%; flex-wrap: nowrap; justify-content: space-between; }
   .admin-page #g-filter-dd .filter-dd-menu { left: 0; right: auto; }
 }
+/* Orders tab: who counts towards quantity prices, under the "Order wine" switch and as wide as it */
+.admin-page [data-section='orders'] .bulk-choice { max-width: 46rem; box-sizing: border-box; margin: 0 0 1.5rem; }
