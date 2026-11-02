@@ -1001,4 +1001,4 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .ai-suggestion { padding: 0.85rem 1rem; border: 1px dashed var(--amber); border-radius: 10px; background: #fffaf2; }
 .admin-page .ai-suggestion .ai-q { margin: 0; font-weight: 500; }
 .admin-page .q-explain { margin: 0.4rem 0 0.5rem; color: var(--muted); font-size: 0.88rem; font-style: italic; }
-.admin-page .ai-warn { margin: 0.6rem 0 0; padding: 0.55rem 0.8rem; border-radius: 8px; background: #fff3e0; color: #7a4a00; font-size: 0.9rem; }
+.admin-page .ai-warn { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.9rem; font-style: italic; }
