@@ -41,22 +41,28 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div id="setup-card" class="setup-card start-card" hidden>
           <div class="start-head">
             <p class="setup-title" data-i18n="getStarted.title">Get started</p>
-            <button id="start-hide" class="text-btn" type="button" data-i18n="getStarted.hide">Hide</button>
+            <span class="start-head-right">
+              <span id="start-progress" class="start-progress"></span>
+              <button id="start-hide" class="text-btn" type="button" data-i18n="getStarted.hide">Hide</button>
+            </span>
           </div>
+          <div class="start-bar" aria-hidden="true"><i id="start-bar"></i></div>
+          <!-- One row per step: ✓ when done, its number when not; only the next step has a (red) button -->
           <ol class="start-steps">
             <li id="start-wines">
-              <span class="start-label"><b data-i18n="getStarted.wines">Add the wines</b><small id="start-wines-info"></small></span>
-              <span class="start-actions">
-                <button class="btn small" type="button" data-go="wines" data-open="tw-add-toggle" data-i18n="adminTasting.addWineBtn">+ Add wine</button>
-              </span>
+              <span class="start-ic" aria-hidden="true">1</span>
+              <span class="start-label"><b data-i18n="getStarted.winesTitle">The wines</b><small id="start-wines-info"></small></span>
+              <button id="start-wines-btn" class="text-btn" type="button" data-go="wines" data-open="tw-add-toggle"></button>
             </li>
             <li id="start-guests">
+              <span class="start-ic" aria-hidden="true">2</span>
               <span class="start-label"><b data-i18n="getStarted.guests">Invite the guests</b><small id="start-guests-info"></small></span>
-              <span class="start-actions"><button class="btn small" type="button" data-go="guests" data-open="g-invite-toggle" data-i18n="getStarted.invite">Invite guests</button></span>
+              <button id="start-guests-btn" class="text-btn" type="button" data-go="guests" data-open="g-invite-toggle"></button>
             </li>
             <li id="start-setup">
-              <span class="start-label"><b data-i18n="getStarted.setup">Payment and ordering</b><small data-i18n="getStarted.optional">optional</small></span>
-              <span class="start-actions"><button class="btn small ghost" type="button" data-go="settings" data-i18n="getStarted.settings">Settings</button></span>
+              <span class="start-ic" aria-hidden="true">3</span>
+              <span class="start-label"><b data-i18n="getStarted.setup">Payment and ordering</b><small id="start-setup-info"></small></span>
+              <button id="start-setup-btn" class="text-btn" type="button" data-go="settings" data-i18n="getStarted.settings">Settings</button>
             </li>
           </ol>
         </div>
@@ -1318,11 +1324,24 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     let hidden = false;
     try { hidden = localStorage.getItem(hideKey()) === '1'; } catch {}
     $('setup-card').hidden = hidden || (done.wines && done.guests);
-    $('start-wines').classList.toggle('done', done.wines);
-    $('start-guests').classList.toggle('done', done.guests);
-    $('start-setup').classList.toggle('done', done.setup);
-    $('start-wines-info').textContent = done.wines ? t('tastingsAdmin.wines', { n: wines.length }) : '';
-    $('start-guests-info').textContent = done.guests ? t('getStarted.guestsInfo', { n: participants.length }) : '';
+    // The next step is the first one not done; it alone gets the red button and a soft background
+    const order = ['wines', 'guests', 'setup'] as const;
+    const next = order.find((k) => !done[k]) ?? null;
+    const n = order.filter((k) => done[k]).length;
+    $('start-progress').textContent = t('getStarted.progress', { n, total: order.length });
+    $('start-bar').style.width = `${(n / order.length) * 100}%`;
+    order.forEach((k, i) => {
+      const li = $(`start-${k}`);
+      li.classList.toggle('done', done[k]);
+      li.classList.toggle('now', k === next);
+      li.querySelector('.start-ic')!.textContent = done[k] ? '✓' : String(i + 1);
+      $(`start-${k}-btn`).className = k === next ? 'btn small' : 'text-btn';
+    });
+    $('start-wines-info').textContent = done.wines ? t('tastingsAdmin.wines', { n: wines.length }) : t('getStarted.winesHint');
+    $('start-guests-info').textContent = done.guests ? t('getStarted.guestsInfo', { n: participants.length }) : t('getStarted.guestsHint');
+    $('start-setup-info').textContent = t(done.setup ? 'getStarted.setupDone' : 'getStarted.setupHint');
+    $('start-wines-btn').textContent = t(done.wines ? 'getStarted.addMore' : 'adminTasting.addWineBtn');
+    $('start-guests-btn').textContent = t(done.guests ? 'getStarted.inviteMore' : 'getStarted.invite');
   }
   $('start-hide').addEventListener('click', () => {
     try { localStorage.setItem(hideKey(), '1'); } catch {}

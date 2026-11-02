@@ -1175,19 +1175,34 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .tab-switches .tab-switch { margin: 0; }
 .admin-page #orders-total[hidden] { display: none; }
 
-/* "Get started" on a new tasting's overview: one row per step, with the button that does it */
-.start-card { display: block; }
+/* "Get started" on a new tasting's overview: a checklist where only the next step has a (red) button */
+.start-card { display: block; padding-bottom: 0.4rem; }
 .start-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-.start-steps { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.2rem; }
-.start-steps li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap; padding: 0.55rem 0; border-top: 1px solid var(--lodge-3); }
-.start-steps li:first-child { border-top: 0; }
-.start-label { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
-.start-label::before { content: '○'; color: var(--muted); }
-.start-steps li.done .start-label::before { content: '✓'; color: var(--ok); font-weight: 700; }
-.start-steps li.done .start-label b { color: var(--muted); font-weight: 500; }
-.start-label small { color: var(--muted); font-size: 0.85rem; }
-.start-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.start-actions .btn { margin: 0; }
+.start-head-right { display: flex; align-items: baseline; gap: 0.9rem; }
+.start-progress { color: var(--muted); font-size: 0.85rem; }
+.start-bar { height: 6px; border-radius: 99px; background: var(--lodge-2); overflow: hidden; margin: 0.35rem 0 0.6rem; }
+.start-bar i { display: block; height: 100%; width: 0; background: var(--ok); border-radius: 99px; transition: width 0.4s ease-out; }
+.start-steps { list-style: none; margin: 0; padding: 0; }
+.start-steps li {
+  display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; gap: 0.4rem 0.8rem; align-items: center;
+  padding: 0.75rem 0; border-top: 1px solid var(--lodge-2);
+}
+.start-steps li.now { background: #fbf6ee; margin: 0 -1.1rem; padding: 0.85rem 1.1rem; }
+.start-ic {
+  width: 1.45rem; height: 1.45rem; border-radius: 50%; display: grid; place-items: center; font-size: 0.78rem; font-weight: 600;
+  border: 1.5px solid var(--lodge-3); color: var(--muted); box-sizing: border-box;
+}
+.start-steps li.now .start-ic { background: var(--amber); border-color: var(--amber); color: #fff; }
+.start-steps li.done .start-ic { background: #eef6f0; border: 1px solid #b9d3be; color: var(--ok); }
+.start-label { min-width: 0; }
+.start-label b { display: block; font-weight: 500; }
+.start-label small { display: block; color: var(--muted); font-size: 0.85rem; margin-top: 0.1rem; }
+.start-steps li.done .start-label b { color: var(--muted); font-weight: 400; }
+.start-steps .btn, .start-steps .text-btn { margin: 0; white-space: nowrap; }
+@media (max-width: 30rem) {
+  .start-steps li { grid-template-columns: 1.5rem minmax(0, 1fr); }
+  .start-steps li > button { grid-column: 2; justify-self: start; }
+}
 /* The one-step "New tasting" dialog: no steps row, a narrower window */
 @media (min-width: 48rem) { dialog.wizard.wz-single { width: min(38rem, calc(100vw - 4rem)); height: auto; max-height: calc(100vh - 4rem); } }
 .start-card[hidden] { display: none; }

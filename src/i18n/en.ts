@@ -1234,4 +1234,12 @@ export const en = {
   "qa.nameHere": "This wine is already in the tasting.",
   "qa.twinHere": "This wine is already in the tasting.",
   "wineCheck.twin": "You already have a wine with this name and vintage.",
+  "getStarted.winesTitle": "The wines",
+  "getStarted.progress": "{n} of {total} done",
+  "getStarted.winesHint": "Type a name, paste a link or take a photo of the label.",
+  "getStarted.guestsHint": "Add the guests and send them an invitation.",
+  "getStarted.setupHint": "Optional – a fee for the tasting and ordering wine.",
+  "getStarted.setupDone": "Set up",
+  "getStarted.addMore": "Add more",
+  "getStarted.inviteMore": "Invite more",
 } as const;

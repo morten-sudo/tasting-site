@@ -1235,4 +1235,12 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "qa.nameHere": "Vínið er þegar í smökkuninni.",
   "qa.twinHere": "Vínið er þegar í smökkuninni.",
   "wineCheck.twin": "Þú ert þegar með vín með þessu heiti og árgangi.",
+  "getStarted.winesTitle": "Vínin",
+  "getStarted.progress": "{n} af {total} tilbúið",
+  "getStarted.winesHint": "Skrifaðu heitið, límdu tengil eða taktu mynd af miðanum.",
+  "getStarted.guestsHint": "Bættu gestunum við og sendu þeim boð.",
+  "getStarted.setupHint": "Valfrjálst – gjald fyrir smökkunina og pöntun á víni.",
+  "getStarted.setupDone": "Sett upp",
+  "getStarted.addMore": "Bæta fleiri við",
+  "getStarted.inviteMore": "Bjóða fleirum",
 };

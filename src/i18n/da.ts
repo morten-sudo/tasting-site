@@ -1235,4 +1235,12 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "qa.nameHere": "Vinen er allerede i smagningen.",
   "qa.twinHere": "Vinen er allerede i smagningen.",
   "wineCheck.twin": "Du har allerede en vin med dette navn og denne årgang.",
+  "getStarted.winesTitle": "Vinene",
+  "getStarted.progress": "{n} af {total} klar",
+  "getStarted.winesHint": "Skriv navnet, indsæt et link eller tag et billede af etiketten.",
+  "getStarted.guestsHint": "Tilføj gæsterne, og send dem en invitation.",
+  "getStarted.setupHint": "Valgfrit – gebyr for smagningen og bestilling af vin.",
+  "getStarted.setupDone": "Sat op",
+  "getStarted.addMore": "Tilføj flere",
+  "getStarted.inviteMore": "Inviter flere",
 };

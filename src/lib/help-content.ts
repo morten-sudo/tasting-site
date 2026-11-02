@@ -16,7 +16,7 @@ export const HELP: HelpSection[] = [
       da: `<p>Sådan går du fra tom konto til en smagning med inviterede gæster:</p>
 <ol>
 <li><b>Læg vinene ind.</b> Gå til <a href="/admin/wines/?open=wine-add-toggle">Vine → Ny vin</a> og skriv navnet, indsæt et link til butikken eller vælg et billede af etiketten – med link eller billede udfyldes det meste af sig selv. Se <a href="#wines">Vine</a>.</li>
-<li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>, og udfyld titel, dato, start- og evt. sluttid, maks. antal gæster, sted og introduktion – kun titlen skal udfyldes. Tryk <i>Opret smagning</i>, så kommer du til smagningens side, hvor kortet <i>Kom i gang</i> har en knap til hvert af de næste skridt.</li>
+<li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>, og udfyld titel, dato, start- og evt. sluttid, maks. antal gæster, sted og introduktion – kun titlen skal udfyldes. Tryk <i>Opret smagning</i>, så kommer du til smagningens side, hvor kortet <i>Kom i gang</i> viser de næste skridt med ✓ ved det, der er klaret – og en knap ved det, du skal gøre nu.</li>
 <li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Tilføj vin</a> skriver du navnet på en vin fra dit bibliotek og trykker <i>Tilføj</i> – eller indsætter et link eller et billede for en ny. Bagefter sætter du rækkefølgen og gæsteprisen.</li>
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
@@ -25,7 +25,7 @@ export const HELP: HelpSection[] = [
       en: `<p>From an empty account to a tasting with invited guests:</p>
 <ol>
 <li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a> and type the name, paste a link to the shop or choose a photo of the label – with a link or a photo most of it fills itself in. See <a href="#wines">Wines</a>.</li>
-<li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a> and fill in the title, date, start and optional end time, max number of guests, place and introduction – only the title is needed. Press <i>Create tasting</i> and you come to the tasting's page, where the <i>Get started</i> card has a button for each of the next steps.</li>
+<li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a> and fill in the title, date, start and optional end time, max number of guests, place and introduction – only the title is needed. Press <i>Create tasting</i> and you come to the tasting's page, where the <i>Get started</i> card shows the next steps with ✓ by what is done – and a button by what to do now.</li>
 <li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Add wine</a>, type the name of a wine in your library and press <i>Add</i> – or paste a link or a photo for a new one. Then set their order and the guest price.</li>
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>

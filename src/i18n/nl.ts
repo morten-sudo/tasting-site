@@ -1121,4 +1121,12 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "qa.nameHere": "De wijn staat al in de proeverij.",
   "qa.twinHere": "De wijn staat al in de proeverij.",
   "wineCheck.twin": "Je hebt al een wijn met deze naam en dit jaar.",
+  "getStarted.winesTitle": "De wijnen",
+  "getStarted.progress": "{n} van {total} klaar",
+  "getStarted.winesHint": "Typ de naam, plak een link of fotografeer het etiket.",
+  "getStarted.guestsHint": "Voeg de gasten toe en stuur ze een uitnodiging.",
+  "getStarted.setupHint": "Optioneel – een bijdrage voor de proeverij en wijn bestellen.",
+  "getStarted.setupDone": "Ingesteld",
+  "getStarted.addMore": "Meer toevoegen",
+  "getStarted.inviteMore": "Meer uitnodigen",
 };

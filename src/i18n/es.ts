@@ -1121,4 +1121,12 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "qa.nameHere": "El vino ya está en la cata.",
   "qa.twinHere": "El vino ya está en la cata.",
   "wineCheck.twin": "Ya tienes un vino con este nombre y añada.",
+  "getStarted.winesTitle": "Los vinos",
+  "getStarted.progress": "{n} de {total} listos",
+  "getStarted.winesHint": "Escribe el nombre, pega un enlace o fotografía la etiqueta.",
+  "getStarted.guestsHint": "Añade a los invitados y envíales una invitación.",
+  "getStarted.setupHint": "Opcional: tarifa de la cata y pedidos de vino.",
+  "getStarted.setupDone": "Configurado",
+  "getStarted.addMore": "Añadir más",
+  "getStarted.inviteMore": "Invitar a más",
 };

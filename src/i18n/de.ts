@@ -1121,4 +1121,12 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "qa.nameHere": "Der Wein ist schon in der Verkostung.",
   "qa.twinHere": "Der Wein ist schon in der Verkostung.",
   "wineCheck.twin": "Sie haben schon einen Wein mit diesem Namen und Jahrgang.",
+  "getStarted.winesTitle": "Die Weine",
+  "getStarted.progress": "{n} von {total} erledigt",
+  "getStarted.winesHint": "Namen eingeben, Link einfügen oder das Etikett fotografieren.",
+  "getStarted.guestsHint": "Gäste hinzufügen und ihnen eine Einladung senden.",
+  "getStarted.setupHint": "Optional – Gebühr für die Verkostung und Weinbestellung.",
+  "getStarted.setupDone": "Eingerichtet",
+  "getStarted.addMore": "Weitere hinzufügen",
+  "getStarted.inviteMore": "Weitere einladen",
 };
