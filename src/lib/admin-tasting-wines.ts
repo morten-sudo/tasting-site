@@ -10,8 +10,10 @@ import { fieldError } from './field-error';
 import { toast } from './toast';
 import { confirmModal } from './confirm';
 import { initQuickAdd } from './wine-quick-add';
+import { winePaths } from './wine-paths';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
+  country: string | null; region: string | null; appellation: string | null;
   image_url: string | null; source_url: string | null; retail_price_dkk: number | null;
   offer_price_dkk: number | null; offer_quantity: number | null };
 type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean; blind: boolean;
@@ -19,7 +21,7 @@ type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orde
 type Tier = { qty: number; price: number };
 export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number; tiers: Tier[] };
 
-const COLS = 'id, name, producer, style, vintage, image_url, source_url, retail_price_dkk, offer_price_dkk, offer_quantity';
+const COLS = 'id, name, producer, style, vintage, country, region, appellation, image_url, source_url, retail_price_dkk, offer_price_dkk, offer_quantity';
 
 export function initTastingWines(tastingId: string, hostId: string, tenantId: string, onChange: (wines: TastingWine[]) => void) {
   let rows: Row[] = [];
@@ -27,6 +29,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   let ratings = new Map<number, { average: number; votes: number }>();
   const list = $<HTMLUListElement>('tw-list');
 
+  /** A wine's address in the library (its real one, worked out from all the account's wines) */
+  const wineHref = (id: number) => winePaths(library).get(id) ?? '/admin/wines/';
   const meta = (w: LibWine) => [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
 
   function thumb(w: LibWine) {
@@ -72,7 +76,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const main = mk('div', 'tw-main');
       // The name opens the wine's own page in the library (origin, map, description); the pencil edits it here
       const name = mk('a', 'tw-name', w.name);
-      name.href = `/admin/wines/${w.id}/`;
+      name.href = wineHref(w.id);
       main.append(name);
       const m = meta(w);
       if (m) main.append(mk('p', 'lib-meta', m));
@@ -316,7 +320,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     library: () => library,
     inHere: () => new Set(rows.map((r) => r.wine_id)),
     pick: (w) => addWine(w as LibWine),
-    href: (w) => `/admin/wines/${w.id}/`,
+    href: (w) => wineHref(w.id),
     // A new wine goes into the tasting as soon as it is saved – the card goes on showing what comes in
     saved: async (id) => {
       const { data } = await supabase.from('wines').select(COLS).eq('id', id).single();
@@ -331,7 +335,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     done: async (id, name) => {
       await load();
       highlight(id);
-      toast(t('adminTasting.wineAdded', { name }), { kind: 'ok', action: { label: t('wineLib.open'), href: `/admin/wines/${id}/` } });
+      toast(t('adminTasting.wineAdded', { name }), { kind: 'ok', action: { label: t('wineLib.open'), href: wineHref(id) } });
     },
   });
 

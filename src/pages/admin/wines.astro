@@ -268,13 +268,13 @@ import '../../styles/admin.css';
       hostId: host.id,
       toggle: $('wine-add-toggle'),
       library: () => admin.wines(),
-      href: (w) => admin.paths().get(w.id) ?? `/admin/wines/${w.id}/`,
+      href: (w) => admin.paths().get(w.id) ?? '/admin/wines/',
       done: async (id, name) => {
         await admin.load();
         const shown = admin.highlight(id);
         toast(t('wineLib.createdToast', { name }), {
           kind: 'ok',
-          action: shown ? { label: t('admin.edit'), run: () => admin.edit(id) } : { label: t('wineLib.open'), href: admin.paths().get(id) ?? `/admin/wines/${id}/` },
+          action: shown ? { label: t('admin.edit'), run: () => admin.edit(id) } : { label: t('wineLib.open'), href: admin.paths().get(id) ?? '/admin/wines/' },
         });
       },
     });

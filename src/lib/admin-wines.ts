@@ -582,7 +582,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       }
       const body = mk('div', 'wine-body');
       const name = mk('a', 'wine-name', w.name);
-      name.href = paths().get(w.id) ?? `/admin/wines/${w.id}/`;
+      name.href = paths().get(w.id) ?? '/admin/wines/';
       body.append(name);
       const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
       if (meta) body.append(mk('p', 'wine-meta', meta));
@@ -896,7 +896,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     }
     toast(t(before ? 'wineLib.savedToast' : 'wineLib.createdToast', { name: shownName }), {
       kind: 'ok',
-      action: !before && newId && !li ? { label: t('wineLib.open'), href: paths().get(newId) ?? `/admin/wines/${newId}/` } : undefined,
+      action: !before && newId && !li ? { label: t('wineLib.open'), href: paths().get(newId) ?? '/admin/wines/' } : undefined,
     });
     // The producer's website, address and place (in the background; the page updates when found)
     const id = (saved as { id: number } | null)?.id;
@@ -1002,7 +1002,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     for (const { w } of hits) {
       const li = document.createElement('li');
       const a = document.createElement('a');
-      a.href = paths().get(w.id) ?? `/admin/wines/${w.id}/`;
+      a.href = paths().get(w.id) ?? '/admin/wines/';
       a.target = '_blank';
       a.rel = 'noopener';
       a.textContent = [w.name, w.vintage, w.producer].filter(Boolean).join(' · ') + ' ↗';
