@@ -462,7 +462,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "wizard.setup": "Paiement et réglages",
   "wizard.optional": "facultatif",
   "wizard.onlyStep1": "Seule l’étape 1 est nécessaire. Enregistrez quand vous voulez et ajoutez vins, invités et paiement plus tard.",
-  "wizard.winesNote": "Choisissez les vins dans votre bibliothèque. Le prix invité se fixe sous Vins dans la dégustation.",
+  "wizard.winesNote": "Choisissez les vins dans votre bibliothèque. Vous pouvez aussi le faire plus tard.",
   "wizard.noWines": "Votre bibliothèque de vins est vide. <a href=\"/admin/wines/\">Ajoutez des vins</a> – vous pourrez les choisir ici ensuite.",
   "wizard.guestsNote": "Choisissez qui inviter. Chaque invité reçoit un lien personnel que vous pourrez envoyer ensuite.",
   "wizard.newGuest": "Nouvel invité",

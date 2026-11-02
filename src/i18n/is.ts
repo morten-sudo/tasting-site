@@ -462,7 +462,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "wizard.setup": "Greiðsla og stillingar",
   "wizard.optional": "valfrjálst",
   "wizard.onlyStep1": "Aðeins skref 1 er nauðsynlegt. Vistaðu þegar þú vilt og bættu við vínum, gestum og greiðslu síðar.",
-  "wizard.winesNote": "Veldu vínin úr safninu þínu. Gestaverðið stillir þú undir Vínin í smökkuninni.",
+  "wizard.winesNote": "Veldu vínin úr safninu þínu. Þú getur líka gert það síðar.",
   "wizard.noWines": "Vínsafnið þitt er tómt. <a href=\"/admin/wines/\">Bættu við vínum</a> – þá getur þú valið þau hér á eftir.",
   "wizard.guestsNote": "Veldu hverjum á að bjóða. Hver gestur fær persónulegan tengil sem þú getur sent á eftir.",
   "wizard.newGuest": "Nýr gestur",

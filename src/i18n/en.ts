@@ -461,7 +461,7 @@ export const en = {
   "wizard.setup": "Payment & setup",
   "wizard.optional": "optional",
   "wizard.onlyStep1": "Only step 1 is needed. Save when you like and add wines, guests and payment later.",
-  "wizard.winesNote": "Choose the wines from your library. You set the guest price under Wines in the tasting.",
+  "wizard.winesNote": "Choose the wines from your library. You can also do it later.",
   "wizard.noWines": "Your wine library is empty. <a href=\"/admin/wines/\">Add wines</a> – you can choose them here afterwards.",
   "wizard.guestsNote": "Choose who to invite. Each guest gets a personal link you can send afterwards.",
   "wizard.newGuest": "New guest",

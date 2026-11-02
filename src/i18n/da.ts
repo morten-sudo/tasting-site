@@ -462,7 +462,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "wizard.setup": "Økonomi & opsætning",
   "wizard.optional": "valgfri",
   "wizard.onlyStep1": "Kun trin 1 er nødvendigt. Gem når du vil, og tilføj vine, gæster og økonomi senere.",
-  "wizard.winesNote": "Vælg vinene fra dit bibliotek. Gæsteprisen sætter du under Vinene i smagningen.",
+  "wizard.winesNote": "Vælg vinene fra dit bibliotek. Du kan også gøre det senere.",
   "wizard.noWines": "Dit vinbibliotek er tomt. <a href=\"/admin/wines/\">Tilføj vine</a> – så kan du vælge dem her bagefter.",
   "wizard.guestsNote": "Vælg hvem du vil invitere. Hver gæst får et personligt link, som du kan sende bagefter.",
   "wizard.newGuest": "Ny gæst",

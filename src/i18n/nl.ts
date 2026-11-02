@@ -462,7 +462,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "wizard.setup": "Betaling & instellingen",
   "wizard.optional": "optioneel",
   "wizard.onlyStep1": "Alleen stap 1 is nodig. Sla op wanneer je wilt en voeg wijnen, gasten en betaling later toe.",
-  "wizard.winesNote": "Kies de wijnen uit je bibliotheek. De gastenprijs stel je in onder Wijnen in de proeverij.",
+  "wizard.winesNote": "Kies de wijnen uit je bibliotheek. Je kunt dit ook later doen.",
   "wizard.noWines": "Je wijnbibliotheek is leeg. <a href=\"/admin/wines/\">Voeg wijnen toe</a> – daarna kun je ze hier kiezen.",
   "wizard.guestsNote": "Kies wie je uitnodigt. Elke gast krijgt een persoonlijke link die je daarna kunt versturen.",
   "wizard.newGuest": "Nieuwe gast",
