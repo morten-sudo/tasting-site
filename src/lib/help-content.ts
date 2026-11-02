@@ -40,6 +40,8 @@ export const HELP: HelpSection[] = [
       da: `<p>En smagning har sin egen side med faner: <a href="t:">Overblik</a>, <a href="t:wines/">Vine</a>, <a href="t:guests/">Gæster</a>, <a href="t:orders/">Bestillinger</a>, <a href="t:quiz/">Quiz</a>, <a href="t:chat/">Chat</a> og <a href="t:settings/">Indstillinger</a>. Se alle under <a href="/admin/tastings/">Smagninger</a>. Alle værter på kontoen kan se og rette alle smagninger.</p>
 <h4>Detaljer</h4>
 <p>Under <a href="t:">Overblik → Rediger</a>: titel, dato og tid, sted (adressen slås op, mens du skriver), en introduktion til gæsterne og smagningens sprog. Sproget bestemmer bl.a. sproget i invitationsmails.</p>
+<h4 id="ai-intro">Introduktion skrevet med AI</h4>
+<p>Tryk <i>Skriv et udkast med AI</i> under introduktionen. Cloudflares AI skriver et udkast ud fra smagningens vine – fx en rejse gennem én region, en tur på tværs af lande eller en drue som tema – og blinde vine bliver ikke afsløret. Udkastet vises <b>under</b> din egen tekst: <i>Brug udkastet</i> sætter det ind i feltet (med <i>Fortryd</i>, der henter din tekst tilbage), <i>Prøv igen</i> giver et nyt, og <i>Kassér</i> fjerner det. Intet gemmes, før du trykker <i>Gem</i>. Et udkast tager op til ca. 20 sekunder. Tjek altid teksten – AI kan finde på ting.</p>
 <h4 id="controls"><a href="t:settings/#controls">Kontakter</a></h4>
 <ul>
 <li><b>Tilmelding åben</b> – gæsterne kan svare ja eller nej.</li>
@@ -56,6 +58,8 @@ export const HELP: HelpSection[] = [
       en: `<p>A tasting has its own page with tabs: <a href="t:">Overview</a>, <a href="t:wines/">Wines</a>, <a href="t:guests/">Guests</a>, <a href="t:orders/">Orders</a>, <a href="t:quiz/">Quiz</a>, <a href="t:chat/">Chat</a> and <a href="t:settings/">Settings</a>. See them all under <a href="/admin/tastings/">Tastings</a>. Every host on the account can see and edit every tasting.</p>
 <h4>Details</h4>
 <p>Under <a href="t:">Overview → Edit</a>: title, date and time, place (the address is looked up as you type), an introduction for the guests and the tasting's language. The language decides, among other things, the language of the invitation emails.</p>
+<h4 id="ai-intro">Introduction written with AI</h4>
+<p>Press <i>Write a draft with AI</i> under the introduction. Cloudflare's AI writes a draft from the tasting's wines – e.g. a journey through one region, a tour across countries or a grape as the theme – and blind wines are not given away. The draft is shown <b>below</b> your own text: <i>Use the draft</i> puts it in the field (with <i>Undo</i>, which brings your text back), <i>Try again</i> gives a new one, and <i>Discard</i> removes it. Nothing is saved until you press <i>Save</i>. A draft takes up to about 20 seconds. Always check the text – AI can make things up.</p>
 <h4 id="controls"><a href="t:settings/#controls">Controls</a></h4>
 <ul>
 <li><b>Sign-up open</b> – guests can reply yes or no.</li>
@@ -180,9 +184,13 @@ export const HELP: HelpSection[] = [
     title: { da: 'Konto og værter', en: 'Account and hosts' },
     body: {
       da: `<p>Under <a href="/admin/account/">Konto og værter</a> kan kontoen få et navn, fx en vinklub. Ejeren – den der oprettede kontoen – kan invitere flere værter. Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Ejeren kan ikke fjernes.</p>
-<p>Under <a href="/profile/">Profil</a> (menuen øverst til højre) retter du dit navn, din e-mail og dit sprog. Du logger ind med en kode på mail; <i>Husk mig</i> holder dig logget ind på enheden.</p>`,
+<p>Under <a href="/profile/">Profil</a> (menuen øverst til højre) retter du dit navn, din e-mail og dit sprog. Du logger ind med en kode på mail; <i>Husk mig</i> holder dig logget ind på enheden.</p>
+<h4 id="notify">Mails til dig om gæsterne</h4>
+<p>Under <a href="/profile/#notify">Profil → Mail til mig, når en gæst …</a> vælger du, hvad du vil have mail om: når en gæst siger ja (også venteliste og oprykning), siger nej, skriver en note eller et kost-hensyn, skriver i chatten eller bestiller vin. Alt er slået fra fra start. Det gælder alle smagninger, du er vært eller medvært for; flere ting på én gang kommer i én mail pr. smagning, og du får aldrig mail om noget, du selv har gjort.</p>`,
       en: `<p>Under <a href="/admin/account/">Account and hosts</a> the account can get a name, e.g. a wine club. The owner – whoever created the account – can invite more hosts. Every host on the account sees and edits all tastings, wines and guests. The owner cannot be removed.</p>
-<p>Under <a href="/profile/">Profile</a> (the menu at the top right) you change your name, email and language. You sign in with a code by email; <i>Remember me</i> keeps you signed in on the device.</p>`,
+<p>Under <a href="/profile/">Profile</a> (the menu at the top right) you change your name, email and language. You sign in with a code by email; <i>Remember me</i> keeps you signed in on the device.</p>
+<h4 id="notify">Emails to you about the guests</h4>
+<p>Under <a href="/profile/#notify">Profile → Email me when a guest …</a> you choose what you want an email about: a guest saying yes (also the waiting list and moving up), saying no, writing a note or diet, writing in the chat or ordering wine. Everything starts off. It applies to all tastings you host or co-host; several things at once come in one email per tasting, and you never get an email about something you did yourself.</p>`,
     },
   },
   {
@@ -215,8 +223,12 @@ export const HELP: HelpSection[] = [
 <p>Tjek at <a href="t:settings/#controls">Bestilling åben</a> er slået til, og under <a href="t:wines/">Vine</a> at vinen kan bestilles og ikke er blind.</p>
 <h4>Gæsten kan ikke se en vin</h4>
 <p>Tjek <i>Gæsterne ser</i> ved vinen under <a href="t:wines/">Vine</a> – den kan stå på <i>Intet (skjult)</i>.</p>
+<h4>"Inviter gæst" kan ikke trykkes</h4>
+<p>En smagning skal have mindst én vin, før du kan invitere gæster. Tilføj en under <a href="t:wines/?open=tw-add-toggle">Vine</a>.</p>
 <h4>Kan jeg ændre rækkefølgen af vinene?</h4>
 <p>Ja, med ↑ ↓ på smagningens fane <a href="t:wines/">Vine</a>. Nummeret, gæsterne ser, følger rækkefølgen.</p>
+<h4>Jeg kan ikke se en smagning, jeg er inviteret til</h4>
+<p>Når du er logget ind, ser du kun invitationer til den e-mail, du er logget ind med. Er du inviteret med en anden e-mail, så åbn invitationslinket og vælg <i>Log ud og åbn invitationen</i> – eller bed værten rette din e-mail på gæstelisten.</p>
 <h4>Gæsten har mistet sit link</h4>
 <p>Send invitationen igen, eller lad gæsten logge ind på winetastr.com med sin e-mail.</p>`,
       en: `<h4>The guest has not received the invitation</h4>
@@ -225,8 +237,12 @@ export const HELP: HelpSection[] = [
 <p>Check that <a href="t:settings/#controls">Ordering open</a> is on, and under <a href="t:wines/">Wines</a> that the wine can be ordered and is not blind.</p>
 <h4>A guest cannot see a wine</h4>
 <p>Check <i>Guests see</i> on the wine under <a href="t:wines/">Wines</a> – it may be set to <i>Nothing (hidden)</i>.</p>
+<h4>"Invite guest" cannot be pressed</h4>
+<p>A tasting needs at least one wine before you can invite guests. Add one under <a href="t:wines/?open=tw-add-toggle">Wines</a>.</p>
 <h4>Can I change the order of the wines?</h4>
 <p>Yes, with ↑ ↓ on the tasting's <a href="t:wines/">Wines</a> tab. The number the guests see follows the order.</p>
+<h4>I cannot see a tasting I am invited to</h4>
+<p>When you are signed in, you only see invitations to the email you are signed in with. If you were invited with another email, open the invitation link and choose <i>Sign out and open the invitation</i> – or ask the host to correct your email on the guest list.</p>
 <h4>A guest has lost their link</h4>
 <p>Send the invitation again, or let the guest sign in at winetastr.com with their email.</p>`,
     },
@@ -260,6 +276,9 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
   fee: { more: 'fee', text: {
     da: 'Skriv det samlede indkøb, så foreslås et gebyr pr. gæst, der kommer. Du markerer selv, hvem der har betalt.',
     en: 'Enter the total purchase and a fee per guest who is coming is suggested. You mark yourself who has paid.' } },
+  'ai-intro': { more: 'ai-intro', text: {
+    da: 'AI skriver et udkast ud fra vinene. Det vises under din tekst – intet overskrives, før du vælger <i>Brug udkastet</i>, og <i>Fortryd</i> henter din tekst tilbage.',
+    en: 'AI writes a draft from the wines. It is shown below your text – nothing is replaced until you choose <i>Use the draft</i>, and <i>Undo</i> brings your text back.' } },
   'account-hosts': { more: 'account', text: {
     da: 'Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Kun ejeren kan tilføje og fjerne værter.',
     en: 'Every host on the account sees and edits all tastings, wines and guests. Only the owner can add and remove hosts.' } },

@@ -866,7 +866,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "notify.order": "wijn bestelt",
   "notify.hint": "Voor alle proeverijen die je host. Meerdere dingen tegelijk komen in één mail per proeverij.",
   "aiIntro.write": "Concept schrijven met AI",
-  "aiIntro.writing": "Concept schrijven op basis van de wijnen … (duurt een paar seconden)",
+  "aiIntro.writing": "Concept schrijven op basis van de wijnen … (tot ongeveer 20 seconden)",
   "aiIntro.label": "Concept van AI – controleer het voordat je het gebruikt",
   "aiIntro.use": "Concept gebruiken",
   "aiIntro.again": "Opnieuw proberen",

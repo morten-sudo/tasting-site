@@ -938,7 +938,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "notify.order": "bestiller vin",
   "notify.hint": "Gælder alle smagninger, du er vært for. Flere ting på én gang kommer i én mail pr. smagning.",
   "aiIntro.write": "Skriv et udkast med AI",
-  "aiIntro.writing": "Skriver et udkast ud fra vinene … (tager et par sekunder)",
+  "aiIntro.writing": "Skriver et udkast ud fra vinene … (op til ca. 20 sekunder)",
   "aiIntro.label": "Udkast fra AI – tjek det, før du bruger det",
   "aiIntro.use": "Brug udkastet",
   "aiIntro.again": "Prøv igen",

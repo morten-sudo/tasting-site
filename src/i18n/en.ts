@@ -937,7 +937,7 @@ export const en = {
   "notify.order": "orders wine",
   "notify.hint": "For all tastings you host. Several things at once come in one email per tasting.",
   "aiIntro.write": "Write a draft with AI",
-  "aiIntro.writing": "Writing a draft from the wines … (takes a few seconds)",
+  "aiIntro.writing": "Writing a draft from the wines … (up to about 20 seconds)",
   "aiIntro.label": "Draft from AI – check it before you use it",
   "aiIntro.use": "Use the draft",
   "aiIntro.again": "Try again",

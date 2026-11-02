@@ -866,7 +866,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "notify.order": "Wein bestellt",
   "notify.hint": "Für alle Verkostungen, die Sie ausrichten. Mehreres auf einmal kommt in einer E-Mail pro Verkostung.",
   "aiIntro.write": "Entwurf mit KI schreiben",
-  "aiIntro.writing": "Schreibe einen Entwurf aus den Weinen … (dauert ein paar Sekunden)",
+  "aiIntro.writing": "Schreibe einen Entwurf aus den Weinen … (bis zu etwa 20 Sekunden)",
   "aiIntro.label": "Entwurf der KI – prüfen Sie ihn vor der Verwendung",
   "aiIntro.use": "Entwurf verwenden",
   "aiIntro.again": "Erneut versuchen",

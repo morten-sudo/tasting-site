@@ -75,7 +75,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
           <textarea id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
           <!-- A draft from Cloudflare AI: shown beside the host's own text, never written over it without asking -->
-          <div class="ai-intro">
+          <div class="ai-intro" data-help="ai-intro">
             <button id="ai-write" class="text-btn" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiIntro.write">Write a draft with AI</span></button>
             <button id="ai-undo" class="text-btn" type="button" hidden data-i18n="aiIntro.undo">Undo – bring back my text</button>
             <p id="ai-status" class="hint" aria-live="polite" hidden></p>

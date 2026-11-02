@@ -866,7 +866,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "notify.order": "commande du vin",
   "notify.hint": "Pour toutes les dégustations que vous organisez. Plusieurs choses à la fois arrivent en un e-mail par dégustation.",
   "aiIntro.write": "Rédiger un brouillon avec l’IA",
-  "aiIntro.writing": "Rédaction d’un brouillon à partir des vins … (quelques secondes)",
+  "aiIntro.writing": "Rédaction d’un brouillon à partir des vins … (jusqu’à 20 secondes environ)",
   "aiIntro.label": "Brouillon de l’IA – vérifiez-le avant de l’utiliser",
   "aiIntro.use": "Utiliser le brouillon",
   "aiIntro.again": "Réessayer",

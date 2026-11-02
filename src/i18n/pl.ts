@@ -866,7 +866,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "notify.order": "zamówi wino",
   "notify.hint": "Dla wszystkich degustacji, które prowadzisz. Kilka rzeczy naraz przychodzi w jednym e-mailu na degustację.",
   "aiIntro.write": "Napisz szkic z AI",
-  "aiIntro.writing": "Piszę szkic na podstawie win … (kilka sekund)",
+  "aiIntro.writing": "Piszę szkic na podstawie win … (do około 20 sekund)",
   "aiIntro.label": "Szkic z AI – sprawdź go przed użyciem",
   "aiIntro.use": "Użyj szkicu",
   "aiIntro.again": "Spróbuj ponownie",
