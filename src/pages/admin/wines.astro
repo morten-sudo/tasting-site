@@ -51,7 +51,7 @@ import '../../styles/admin.css';
       <section class="block wines-admin">
         <div class="guests-head">
           <input id="wine-search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" style="max-width:20rem;margin:0" />
-          <button id="wine-add-toggle" class="btn small ghost" type="button" data-i18n="admin.addWine">Add wine</button><span data-help="new-wine"></span>
+          <button id="wine-add-toggle" class="btn small" type="button" data-i18n="wineLib.newWineBtn">+ New wine</button><span data-help="new-wine"></span>
         </div>
 
         <!-- Filters: country → region (linked), type, tasting; filled from the wines in admin-wines.ts -->
@@ -140,6 +140,8 @@ import '../../styles/admin.css';
           <p class="hint wf-required-note"><span class="req" aria-hidden="true">*</span> <span data-i18n="wineCheck.onlyName">Only the name is needed – the rest you can fill in now or later.</span></p>
           <label for="wf-name"><span data-i18n="admin.name">Name</span> <span class="req" aria-hidden="true">*</span></label>
           <input id="wf-name" type="text" required aria-required="true" autocomplete="off" />
+          <!-- Wines already in the library with a name like this one -->
+          <div id="wf-similar" class="wf-similar" hidden aria-live="polite"></div>
           <p class="field-label" data-i18n="admin.image">Image</p>
           <div class="wf-image" id="wf-image-box">
             <!-- Click or drop a picture; with a picture: the picture, "Change" and "Remove" -->
@@ -164,6 +166,8 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input id="wf-producer" type="text" />
+          <!-- The producer's website and address are looked up as soon as the producer is known; shown in step 3 -->
+          <p id="wf-producer-busy" class="producer-status" hidden aria-live="polite"></p>
           <div class="wf-pair">
             <div>
               <label for="wf-style" data-i18n="admin.style">Type</label>
@@ -217,6 +221,7 @@ import '../../styles/admin.css';
 
           <!-- 4. Price and description; a new wine can go straight into a tasting -->
           <section class="wf-step" data-step="3">
+          <p class="hint wf-prices-note" data-i18n="wineLib.pricesNote">The shop's prices – what the wine costs to buy. When you put the wine in a tasting, they become the guest price and quantity price, which you can change under the tasting's wines.</p>
           <label for="wf-retail" data-i18n="admin.retail">Regular price (DKK)</label>
           <input id="wf-retail" type="text" inputmode="decimal" />
           <label for="wf-offer-price"><span data-i18n="wineLib.offer">Shop offer</span> <span class="hint" data-i18n="wineLib.offerHint">(optional – becomes the quantity price when you add the wine to a tasting)</span></label>

@@ -17,7 +17,7 @@ export const HELP: HelpSection[] = [
 <ol>
 <li><b>Læg vinene ind.</b> Gå til <a href="/admin/wines/?open=wine-add-toggle">Vine → Ny vin</a>. Tag et billede af etiketten eller indsæt et link til butikken, så udfyldes det meste af sig selv. Se <a href="#wines">Vine</a>.</li>
 <li><b>Opret smagningen.</b> Tryk <a href="/admin/tastings/?new=1">Ny smagning</a>. Giv den en titel, dato, tid og sted. Guiden <i>Fortsæt opsætning</i> viser, hvad der mangler.</li>
-<li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Tilføj vin</a> tilføjer du vine fra dit bibliotek, sætter rækkefølgen og gæsteprisen.</li>
+<li><b>Vælg vinene.</b> Under smagningens fane <a href="t:wines/?open=tw-add-toggle">Vine → Vælg fra biblioteket</a> tilføjer du vine fra dit bibliotek, sætter rækkefølgen og gæsteprisen.</li>
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
 <li><b>På aftenen</b> åbner du for quiz og bestillinger under <a href="t:settings/#controls">Kontakter</a>, når det passer – og afslører vinene, hvis det er en blindsmagning.</li>
@@ -26,7 +26,7 @@ export const HELP: HelpSection[] = [
 <ol>
 <li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a>. Take a photo of the label or paste a link to the shop, and most of it fills itself in. See <a href="#wines">Wines</a>.</li>
 <li><b>Create the tasting.</b> Press <a href="/admin/tastings/?new=1">New tasting</a>. Give it a title, date, time and place. The <i>Continue set-up</i> guide shows what is missing.</li>
-<li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Add wine</a>, add wines from your library, set their order and the guest price.</li>
+<li><b>Choose the wines.</b> On the tasting's <a href="t:wines/?open=tw-add-toggle">Wines → Choose from library</a>, add wines from your library, set their order and the guest price.</li>
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>
 <li><b>On the evening</b>, open the quiz and ordering under <a href="t:settings/#controls">Controls</a> when it suits you – and reveal the wines if it is a blind tasting.</li>
@@ -83,7 +83,7 @@ export const HELP: HelpSection[] = [
 <h4 id="filter-wines">Find dine vine</h4>
 <p>Over listen kan du <a href="/admin/wines/">filtrere</a> på <b>land</b>, <b>region</b>, <b>type</b> og <b>smagning</b> – og søge i fritekst. Regionerne følger landet: vælger du et land, ses kun dets regioner, og vælger du en region, vælges landet med. Under smagning kan du også vælge <i>Ikke i nogen smagning</i>. Tallet i parentes er antallet af vine, og <i>Nulstil filtre</i> viser alle igen. Filtrene står i adressen, så de er der stadig, når du går tilbage fra en vin.</p>
 <h4 id="new-wine">Ny vin</h4>
-<p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> for guiden. Du kan starte på tre måder:</p>
+<p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> (under Vine eller på Overblik) for guiden. Du kan starte på tre måder:</p>
 <ul>
 <li><b>Billede af etiketten</b> – navn, producent, årgang, stil m.m. læses fra billedet.</li>
 <li><b>Link til en butik</b> – beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden. Er billedet forkert (fx bagetiketten), vises sidens andre billeder, så du kan vælge det rigtige. Under vinen står <i>Hentet fra … (dato)</i>, og du kan hente igen med opdater-ikonet.</li>
@@ -95,13 +95,13 @@ export const HELP: HelpSection[] = [
 <h4>Billede</h4>
 <p>Træk et billede ind, vælg en fil – eller tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h4 id="tasting-wines">Vinene i en smagning</h4>
-<p>En vin, der ikke er i biblioteket endnu, opretter du direkte fra smagningen med <a href="t:wines/#tw-new-wine">Vine → Ny vin</a>: guiden lægger den både i biblioteket og i smagningen og sender dig tilbage bagefter.</p>
+<p>En vin, der ikke er i biblioteket endnu, opretter du direkte fra smagningen med <a href="t:wines/#tw-new-wine">Vine → Opret ny vin</a>: guiden lægger den både i biblioteket og i smagningen og sender dig tilbage bagefter.</p>
 <p>På smagningens fane <a href="t:wines/">Vine</a> sætter du for hver vin: rækkefølgen (↑ ↓), gæsteprisen, mængdepriser (fx "fra 6 flasker 80 kr."), om den kan bestilles, og hvad gæsterne ser: <i>Vinen</i>, <i>Blind</i> eller <i>Intet (skjult)</i>. Gæsternes gennemsnitlige karakter vises ved hver vin.</p>`,
       en: `<p>Your wine library under <a href="/admin/wines/">Wines</a> is shared by all hosts on the account, and a wine can be used in many tastings.</p>
 <h4 id="filter-wines">Finding your wines</h4>
 <p>Above the list you can <a href="/admin/wines/">filter</a> by <b>country</b>, <b>region</b>, <b>type</b> and <b>tasting</b> – and search in free text. The regions follow the country: choose a country and only its regions are shown; choose a region and its country is chosen too. Under tasting you can also choose <i>Not in any tasting</i>. The number in brackets is the number of wines, and <i>Clear filters</i> shows them all again. The filters are kept in the address, so they are still there when you go back from a wine.</p>
 <h4 id="new-wine">New wine</h4>
-<p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> for the guide. You can start in three ways:</p>
+<p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> (under Wines or on the Overview) for the guide. You can start in three ways:</p>
 <ul>
 <li><b>Photo of the label</b> – name, producer, vintage, style and more are read from the photo.</li>
 <li><b>Link to a shop</b> – description, prices, grapes, "goes with", serving and picture are fetched from the page. If the picture is wrong (e.g. the back label), the page's other pictures are shown so you can pick the right one. Below the wine it says <i>Fetched from … (date)</i>, and the refresh icon fetches it again.</li>
@@ -113,7 +113,7 @@ export const HELP: HelpSection[] = [
 <h4>Picture</h4>
 <p>Drag a picture in, choose a file – or press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h4 id="tasting-wines">The wines in a tasting</h4>
-<p>A wine that is not in the library yet can be created straight from the tasting with <a href="t:wines/#tw-new-wine">Wines → New wine</a>: the guide puts it in both the library and the tasting and brings you back afterwards.</p>
+<p>A wine that is not in the library yet can be created straight from the tasting with <a href="t:wines/#tw-new-wine">Wines → Create new wine</a>: the guide puts it in both the library and the tasting and brings you back afterwards.</p>
 <p>On the tasting's <a href="t:wines/">Wines</a> tab you set for each wine: the order (↑ ↓), the guest price, quantity prices (e.g. "from 6 bottles 80 kr."), whether it can be ordered, and what the guests see: <i>The wine</i>, <i>Blind</i> or <i>Nothing (hidden)</i>. The guests' average rating is shown by each wine.</p>`,
     },
   },

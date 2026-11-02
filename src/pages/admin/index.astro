@@ -10,7 +10,10 @@ import '../../styles/admin.css';
     <div id="admin-main" hidden>
       <div class="dash-head">
         <h1 class="title" data-i18n="adminNav.overview">Overview</h1>
-        <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
+        <div class="dash-actions">
+          <a class="btn small ghost" href="/admin/wines/?new"><span aria-hidden="true">+ </span><span data-i18n="admin.newWine">New wine</span></a>
+          <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
+        </div>
       </div>
       <!-- The host is also invited somewhere as a guest -->
       <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>

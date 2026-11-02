@@ -1,5 +1,6 @@
 // Shared by the host's admin pages: sign-in check, host record and small DOM helpers.
 import { supabase } from './supabase';
+import { parseAmount } from './wine-validate';
 import { i18nReady, t } from '../i18n';
 import { initSide } from './admin-side';
 import { linkMe, takeCohostWelcome } from './link-me';
@@ -55,9 +56,10 @@ export async function requireHost(): Promise<Host | null> {
   return { ...host, tenant_id: tenantId as string, tenant_owner: (tenant as { owner_id: string } | null)?.owner_id === host.id } as Host;
 }
 
+/** A typed amount: "144,95", "144.95", "1.234,50" or "149 kr." – null when empty or not a number. */
 export const toNumber = (v: string) => {
-  const n = Number(v.replace(',', '.').trim());
-  return v.trim() === '' || Number.isNaN(n) ? null : n;
+  const n = parseAmount(v);
+  return n == null || Number.isNaN(n) ? null : n;
 };
 
 /**

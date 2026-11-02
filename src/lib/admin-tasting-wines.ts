@@ -5,6 +5,7 @@ import { $, mk, toNumber, sheetPanel } from './admin-common';
 import { styleName } from './wines';
 import { initHelpTips } from './help-tip';
 import { t, locale } from '../i18n';
+import { amountText } from './wine-validate';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   image_url: string | null; retail_price_dkk: number | null;
@@ -67,8 +68,8 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
       const price = mk('input');
       price.type = 'text';
       price.inputMode = 'decimal';
-      price.value = r.price_dkk != null ? String(r.price_dkk).replace('.', ',') : '';
-      price.placeholder = w.retail_price_dkk != null ? String(w.retail_price_dkk) : '';
+      price.value = amountText(r.price_dkk, locale());
+      price.placeholder = amountText(w.retail_price_dkk, locale());
       price.setAttribute('aria-label', t('admin.price'));
       price.addEventListener('change', async () => {
         const ok = await update(r, { price_dkk: toNumber(price.value) });
@@ -80,7 +81,7 @@ export function initTastingWines(tastingId: string, tenantId: string, onChange: 
       const tiersBox = mk('div', 'tiers');
       let tiers: { qty: string; price: string }[] = [...(r.price_tiers ?? [])]
         .sort((x, y) => x.qty - y.qty)
-        .map((x) => ({ qty: String(x.qty), price: String(x.price).replace('.', ',') }));
+        .map((x) => ({ qty: String(x.qty), price: amountText(x.price, locale()) }));
       const saveTiers = async () => {
         const valid = new Map<number, number>();
         for (const x of tiers) {

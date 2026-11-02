@@ -339,7 +339,11 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function filler() {
     let filled = 0;
     const changes: Change[] = [];
-    const set = (el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, v: string) => { el.value = v; el.classList.add('from-label'); };
+    const set = (el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, v: string) => {
+      el.value = v;
+      el.classList.add('from-label');
+      if (el.id === 'wf-name' || el.id === 'wf-vintage') queueMicrotask(showSimilar);
+    };
     const put = (id: string, value: string | number | null | undefined) => {
       if (value == null || value === '') return;
       const el = field<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id);
@@ -458,6 +462,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function openForm(w: AdminWine | null) {
     editing = w;
     checks.clear();
+    $('wf-similar').hidden = true;
+    $('wf-producer-busy').hidden = true;
     pendingImage = null;
     removeImage = false;
     linkImage = null;
@@ -1100,8 +1106,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!producer || (websiteEl.value.trim() && addressEl.value.trim())) return;
     if (foundPlace && normOrigin(foundPlace.producer) === normOrigin(producer)) return;
     const turn = ++producerTurn;
-    // A spinner under each field that is still empty
+    // A spinner under each field that is still empty – and under the producer, where the search starts
     const wantSite = !websiteEl.value.trim(), wantAddress = !addressEl.value.trim();
+    producerStatus(t('producer.searchingBoth'), 'busy', 'wf-producer-busy');
     producerStatus(wantSite ? t('producer.searching') : '', wantSite ? 'busy' : '');
     producerStatus(wantAddress ? t('producer.searchingAddress') : '', wantAddress ? 'busy' : '', 'wf-address-status');
     const found = await lookupProducer({
@@ -1110,9 +1117,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       producer_website: webUrl(websiteEl.value),
     }, editing?.id);
     if (turn !== producerTurn || !form.isConnected) return; // the form was closed or the producer changed meanwhile
-    const clear = () => { producerStatus(''); producerStatus('', '', 'wf-address-status'); };
+    const clear = () => { producerStatus(''); producerStatus('', '', 'wf-address-status'); producerStatus('', '', 'wf-producer-busy'); };
     if (normOrigin(field<HTMLInputElement>('wf-producer').value) !== normOrigin(producer)) { clear(); return; }
     if (found) foundPlace = { ...found, producer };
+    // Under the producer: what was found, and where it is (step 3); nothing when nothing was found
+    const got = (wantSite && found?.website) || (wantAddress && found?.address);
+    producerStatus(got ? t('producer.foundStep3') : '', got ? 'ok' : '', 'wf-producer-busy');
     // The website
     if (wantSite) {
       if (found?.website && !websiteEl.value.trim()) {
@@ -1135,6 +1145,43 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     showOriginMap();
   }
   field<HTMLInputElement>('wf-producer').addEventListener('change', () => fillProducer());
+
+  /** Wines in the library with a name like the one typed – to open instead of making a second copy. */
+  function showSimilar() {
+    const box = $('wf-similar');
+    const typed = normOrigin(field<HTMLInputElement>('wf-name').value);
+    const words = typed.split(' ').filter((x) => x.length > 2);
+    if (typed.length < 3 || !words.length) { box.hidden = true; return; }
+    const vintage = field<HTMLInputElement>('wf-vintage').value.trim();
+    const hits = wines
+      .filter((w) => w.id !== editing?.id)
+      .map((w) => {
+        const n = normOrigin(w.name);
+        const score = n === typed ? 3 : n.includes(typed) || typed.includes(n) ? 2 : words.every((x) => n.includes(x)) ? 1 : 0;
+        return { w, score: score + (score && vintage && w.vintage === vintage ? 1 : 0) };
+      })
+      .filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+    if (!hits.length) { box.hidden = true; return; }
+    const same = hits[0].score >= 3;
+    const head = document.createElement('p');
+    head.textContent = t(same ? 'wineCheck.sameName' : 'wineCheck.similar');
+    const ul = document.createElement('ul');
+    for (const { w } of hits) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = paths().get(w.id) ?? `/admin/wines/${w.id}/`;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = [w.name, w.vintage, w.producer].filter(Boolean).join(' · ') + ' ↗';
+      li.append(a);
+      ul.append(li);
+    }
+    box.replaceChildren(head, ul);
+    box.classList.toggle('same', same);
+    box.hidden = false;
+  }
+  field<HTMLInputElement>('wf-name').addEventListener('input', showSimilar);
+  field<HTMLInputElement>('wf-vintage').addEventListener('change', showSimilar);
 
   /** A typed or corrected address: find its exact place (no pin unless the address is placed precisely). */
   let geoTurn = 0;

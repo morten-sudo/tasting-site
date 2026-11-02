@@ -624,6 +624,7 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 /* Admin overview */
 .admin-page .dash-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
 .admin-page .dash-head .title { margin-bottom: 0.75rem; }
+.admin-page .dash-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .admin-page .dash-head .btn { margin-bottom: 1.25rem; display: inline-flex; gap: 0.3rem; align-items: center; }
 .admin-page .dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 0.5rem 0 1.5rem; max-width: 52rem; }
 .admin-page .stat {
@@ -1088,3 +1089,10 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 @media (max-width: 40rem) {
   .admin-page .wine-filters select { flex: 1 1 calc(50% - 0.5rem); }
 }
+
+/* New wine: wines in the library with a name like the one typed */
+.admin-page .wf-similar { margin: 0.4rem 0 0; padding: 0.5rem 0.7rem; border-radius: var(--radius); background: var(--lodge); border: 1px solid var(--lodge-3); font-size: 0.9rem; }
+.admin-page .wf-similar.same { border-color: var(--tawny); background: #fbf3e9; }
+.admin-page .wf-similar p { margin: 0 0 0.2rem; color: var(--muted); }
+.admin-page .wf-similar ul { margin: 0; padding-left: 1.1rem; }
+.admin-page .wf-similar[hidden] { display: none; }
