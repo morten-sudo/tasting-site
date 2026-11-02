@@ -1085,4 +1085,7 @@ export const en = {
   "book.statWines#one": "wine tasted",
   "book.statTastings#one": "tasting",
   "book.statBottles#one": "bottle bought",
+  "wine.readMore": "Read more",
+  "wine.readLess": "Show less",
+  "wine.moreAbout": "More about the wine and the producer",
 } as const;

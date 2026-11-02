@@ -1013,4 +1013,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "book.statWines#one": "vino catado",
   "book.statTastings#one": "cata",
   "book.statBottles#one": "botella comprada",
+  "wine.readMore": "Leer más",
+  "wine.readLess": "Mostrar menos",
+  "wine.moreAbout": "Más sobre el vino y el productor",
 };

@@ -24,19 +24,26 @@ import Base from '../../layouts/Base.astro';
       <h1 id="name" class="name"></h1>
       <p id="meta" class="meta"></p>
       <p id="origin" class="origin" hidden></p>
-      <div id="mini-map" class="mini-map" hidden></div>
 
+      <!-- What the guest does here comes first: price and cart, then their own rating; reading after -->
       <div class="buy">
         <p id="price" class="price"></p>
         <button id="add" type="button" class="add" hidden data-i18n="wine.add">Add to cart</button>
       </div>
       <p id="order-status" class="hint" hidden></p>
 
-      <p id="desc" class="desc"></p>
-      <div id="facts"></div>
-      <dl id="details" class="details" hidden></dl>
-
       <div id="my-rating"></div>
+
+      <div id="desc-box" class="desc-box">
+        <p id="desc" class="desc"></p>
+        <button id="desc-more" class="desc-more" type="button" hidden aria-expanded="false" aria-controls="desc" data-i18n="wine.readMore">Read more</button>
+      </div>
+      <div id="facts"></div>
+      <div id="mini-map" class="mini-map" hidden></div>
+      <details id="details-box" class="details-box" hidden>
+        <summary data-i18n="wine.moreAbout">More about the wine and the producer</summary>
+        <dl id="details" class="details" hidden></dl>
+      </details>
 
       <nav class="pager" aria-label="Other wines" data-i18n-attr="aria-label=wine.others">
         <a id="prev" class="pager-link prev" hidden></a>
@@ -208,8 +215,23 @@ import Base from '../../layouts/Base.astro';
       if (note) price.append(el('span', 'bulk bulk-progress', note));
     }
 
-    if (w.description) $('desc').textContent = w.description;
-    else $('desc').hidden = true;
+    if (w.description) {
+      $('desc').textContent = w.description;
+      // A long text starts folded (a few lines) with "Read more"
+      requestAnimationFrame(() => {
+        const d = $('desc');
+        d.classList.add('folded');
+        if (d.scrollHeight > d.clientHeight + 8) {
+          const more = $('desc-more') as HTMLButtonElement;
+          more.hidden = false;
+          more.onclick = () => {
+            const open = d.classList.toggle('folded') === false;
+            more.setAttribute('aria-expanded', String(open));
+            more.textContent = t(open ? 'wine.readLess' : 'wine.readMore');
+          };
+        } else d.classList.remove('folded');
+      });
+    } else $('desc').hidden = true;
     // Grapes, food and serving – each with its icon
     const facts = wineFacts(w);
     $('facts').replaceChildren(...(facts ? [facts] : []));
@@ -227,7 +249,7 @@ import Base from '../../layouts/Base.astro';
         dl.append(el('dt', '', t('producer.websiteShort')), dd);
       }
       if (w.producer_address) dl.append(el('dt', '', t('producer.addressShort')), el('dd', '', w.producer_address));
-      if (w.producer_website || w.producer_address) dl.hidden = false;
+      if (w.producer_website || w.producer_address) { dl.hidden = false; $('details-box').hidden = false; }
     }
 
     if (w.details) {
@@ -241,7 +263,10 @@ import Base from '../../layouts/Base.astro';
         }
       }
       dl.hidden = false;
+      $('details-box').hidden = false;
     }
+    // On larger screens there is room: the details start open
+    if (matchMedia('(min-width: 900px)').matches) ($('details-box') as HTMLDetailsElement).open = true;
 
     // Ordering
     const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
@@ -327,9 +352,10 @@ import Base from '../../layouts/Base.astro';
   .wine-page .pic {
     position: relative;
     margin-top: 0.25rem;
-    height: 62vh;
-    min-height: 20rem;
-    max-height: 34rem;
+    /* Phones: a smaller picture, so name, price, cart and rating come up near the top */
+    height: 34vh;
+    min-height: 13rem;
+    max-height: 20rem;
     background: #fff;
     display: flex;
     align-items: center;
@@ -427,7 +453,18 @@ import Base from '../../layouts/Base.astro';
   @keyframes pop { 50% { transform: scale(1.06); } }
   .wine-page #order-status { margin: 0.6rem 0 0; }
 
-  .wine-page .desc { margin-top: 1.6rem; font-size: 1.02rem; line-height: 1.8; }
+  .wine-page .desc { margin: 1.6rem 0 0; font-size: 1.02rem; line-height: 1.8; }
+  .wine-page .desc.folded { display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+  .wine-page .desc-more { font: inherit; color: var(--amber); background: none; border: 0; padding: 0.4rem 0; cursor: pointer; text-decoration: underline; min-height: 2.25rem; }
+  .wine-page .details-box { margin-top: 1.5rem; border-top: 1px solid var(--lodge-3); padding-top: 0.6rem; }
+  .wine-page .details-box[hidden] { display: none; }
+  .wine-page .details-box summary { cursor: pointer; font-weight: 500; padding: 0.5rem 0; min-height: 2.25rem; }
+  .wine-page .details-box .details { margin-top: 0.6rem; }
+  .wine-page .mini-map { margin-top: 1.2rem !important; }
+  .wine-page #my-rating .my-rating { margin-top: 1.25rem; padding-top: 1.25rem; }
+  @media (min-width: 900px) {
+    .wine-page .pic { height: calc(100vh - 9rem); min-height: 0; max-height: none; }
+  }
   .wine-page .my-rating { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--lodge-3); }
   .wine-page .rating-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .wine-page .rating-head h2 { font-size: 1.5rem; margin: 0; }
