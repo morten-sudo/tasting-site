@@ -1191,4 +1191,5 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteBad": "Das sieht nicht wie eine Webadresse aus, z. B. parusso.com",
   "producer.websiteSet": "Die Website ist eingetragen – sie wird beim Speichern gesichert.",
   "wineCheck.offerQtyOne": "Die Flaschenzahl muss eine ganze Zahl von 1 bis 99 sein.",
+  "qa.unnamed": "Neuer Wein",
 };

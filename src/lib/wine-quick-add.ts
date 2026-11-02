@@ -137,6 +137,8 @@ export function initQuickAdd(o: Opts) {
   function thumb(url: string | null) {
     const box = mk('div', 'wine-thumb');
     if (url) { const img = mk('img'); img.src = url; img.alt = ''; box.append(img); }
+    // No picture yet: the same quiet bottle as the new row – no blank box
+    else { box.classList.add('qa-thumb'); box.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4v4.5c0 1 .6 1.6 1.2 2.4.8 1 1.3 2 1.3 3.6V21H7.5v-7.5c0-1.6.5-2.6 1.3-3.6.6-.8 1.2-1.4 1.2-2.4z" /></svg>'; }
     return box;
   }
 
@@ -265,8 +267,9 @@ export function initQuickAdd(o: Opts) {
     const pic = thumb(src.kind === 'photo' ? src.preview : null);
     const body = mk('div', 'wine-body');
     const title = mk('p', 'wine-name');
+    // Until the name is read: a quiet "New wine" – the status line below shows that it is being fetched
     if (name) title.textContent = name;
-    else title.append(mk('span', 'qa-ph'));
+    else { title.textContent = t('qa.unnamed'); title.classList.add('qa-unnamed'); }
     const source = mk('p', 'wine-meta qa-src', src.kind === 'link' ? site(src.url) : src.kind === 'photo' ? t('qa.photo') : '');
     source.hidden = src.kind === 'name';
     const facts = mk('div', 'qa-facts');
@@ -350,7 +353,8 @@ export function initQuickAdd(o: Opts) {
     const style = r.style && (STYLES as readonly string[]).includes(r.style) ? r.style : null;
     const country = r.country && WINE_COUNTRIES.includes(r.country) ? r.country : null;
     p.title.textContent = [name, vintage].filter(Boolean).join(' ');
-    if (r.image && src.kind === 'link') p.pic.replaceChildren(Object.assign(mk('img'), { src: r.image, alt: '' }));
+    p.title.classList.remove('qa-unnamed');
+    if (r.image && src.kind === 'link') { p.pic.classList.remove('qa-thumb'); p.pic.replaceChildren(Object.assign(mk('img'), { src: r.image, alt: '' })); }
     fact(li, metaOf({ style, vintage, producer: r.producer ?? null }) || null);
     fact(li, originLine({ appellation: r.appellation ?? null, region: r.region ?? null, country }));
     if (r.price != null) fact(li, t('qa.price', { price: money(r.price) }));

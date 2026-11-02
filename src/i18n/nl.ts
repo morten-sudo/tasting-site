@@ -1191,4 +1191,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "producer.websiteBad": "Dat lijkt geen webadres, bv. parusso.com",
   "producer.websiteSet": "De website staat erin – hij wordt bewaard als je op Opslaan drukt.",
   "wineCheck.offerQtyOne": "Het aantal flessen moet een heel getal van 1 tot 99 zijn.",
+  "qa.unnamed": "Nieuwe wijn",
 };

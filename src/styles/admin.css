@@ -1429,16 +1429,10 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .qa-job .label-status.busy::before { width: 1.1rem; height: 1.1rem; }
 .admin-page .qa-job .label-status:empty { display: none; }
 @keyframes qa-row-in { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 20rem; } }
-.admin-page .qa-ph {
-  display: inline-block; width: 12rem; max-width: 100%; height: 0.9em; border-radius: 0.25rem; vertical-align: middle;
-  background: linear-gradient(90deg, var(--lodge-2) 25%, var(--lodge-3) 50%, var(--lodge-2) 75%); background-size: 200% 100%;
-  animation: qa-shimmer 1.3s linear infinite;
-}
-@keyframes qa-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.admin-page .qa-job .wine-name.qa-unnamed { color: var(--muted); font-weight: 400; }
 @media (pointer: coarse) { .admin-page .qa-drop { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .admin-page .qa-slide, .admin-page .qa-job { transition: none; animation: none; }
-  .admin-page .qa-ph { animation: none; }
 }
 @media (max-width: 40rem) {
   .admin-page .qa-item { grid-template-columns: 2.6rem minmax(0, 1fr); }
