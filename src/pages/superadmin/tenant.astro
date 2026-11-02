@@ -22,7 +22,7 @@ import '../../styles/admin.css';
         <h2 id="sec-title"></h2>
 
         <section data-sec="hosts" hidden>
-          <ul id="hosts" class="hosts-list"></ul>
+          <ul id="hosts" class="tw-list guest-list hosts-rows"></ul>
         </section>
 
         <section data-sec="tastings" hidden>
@@ -83,6 +83,7 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { t, money, type Key } from '../../i18n';
   import { requireAdmin, $, mk, cell, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
+  import { personRow } from '../../lib/ui/person-row';
   import { eventText, eventGroup } from '../../lib/super-events';
   import { styleName } from '../../lib/wines';
 
@@ -125,13 +126,10 @@ import '../../styles/admin.css';
     async hosts() {
       const { data } = await supabase.rpc('admin_tenant_members', { tn: id });
       const rows = (data ?? []) as { email: string; name: string | null; owner: boolean; created_at: string }[];
-      $('hosts').replaceChildren(...rows.map((r) => {
-        const li = mk('li', 'host-row');
-        const who = mk('div', 'host-who');
-        who.append(mk('span', 'host-name', r.name || r.email), mk('span', 'host-email', [r.email, r.created_at ? date.format(new Date(r.created_at)) : ''].filter(Boolean).join(' · ')));
-        li.append(who, mk('span', 'host-tag' + (r.owner ? ' owner' : ''), r.owner ? t('account.owner') : t('account.host')));
-        return li;
-      }));
+      $('hosts').replaceChildren(...rows.map((r) => personRow({
+        name: r.name || r.email, meta: [r.name ? r.email : '', r.created_at ? date.format(new Date(r.created_at)) : ''],
+        chips: [r.owner ? { text: t('account.owner'), tone: 'accent' } : { text: t('account.host') }],
+      })));
       none($('hosts'));
     },
     async tastings() {

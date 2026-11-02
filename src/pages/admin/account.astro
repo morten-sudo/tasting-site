@@ -23,7 +23,7 @@ import '../../styles/admin.css';
       <!-- The account's hosts: the owner first; only the owner removes others -->
       <section class="block">
         <h2><span data-i18n="account.hostsTitle">Hosts on the account</span><span data-help="account-hosts"></span></h2>
-        <ul id="members" class="hosts-list"></ul>
+        <ul id="members" class="tw-list guest-list hosts-rows"></ul>
         <p class="hint" data-i18n="account.addHint">New hosts join the account when you add them as co-host of a tasting (Settings → Hosts in the tasting).</p>
       </section>
 
@@ -53,6 +53,7 @@ import '../../styles/admin.css';
   initHelpTips();
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
+  import { personRow } from '../../lib/ui/person-row';
   import { confirmModal } from '../../lib/confirm';
   import { toast } from '../../lib/toast';
   import { t } from '../../i18n';
@@ -97,13 +98,7 @@ import '../../styles/admin.css';
     const { data } = await supabase.rpc('tenant_members');
     const rows = (data ?? []) as Member[];
     $('members').replaceChildren(...rows.map((r) => {
-      const li = mk('li', 'host-row');
-      const who = mk('div', 'host-who');
-      const n = mk('span', 'host-name', r.name || r.email);
-      if (r.me) n.append(mk('span', 'host-me', ` (${t('hosts.you')})`));
-      who.append(n);
-      if (r.name) who.append(mk('span', 'host-email', r.email));
-      li.append(who, mk('span', 'host-tag' + (r.owner ? ' owner' : ''), r.owner ? t('account.owner') : t('account.host')));
+      const actions: HTMLElement[] = [];
       // The owner can remove other hosts; the owner can never be removed
       if (host!.tenant_owner && !r.owner) {
         // Remove a host: a quiet icon, asked about first in a small window
@@ -116,9 +111,13 @@ import '../../styles/admin.css';
           toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' });
           loadMembers();
         });
-        li.append(del);
-      } else if (host!.tenant_owner) li.append(mk('span', 'icon-space')); // keeps the tags in line
-      return li;
+        actions.push(del);
+      }
+      // The same row as the guests
+      return personRow({
+        name: r.name || r.email, you: r.me ? t('hosts.you') : null, meta: r.name ? [r.email] : [],
+        chips: [r.owner ? { text: t('account.owner'), tone: 'accent' } : { text: t('account.host') }], actions,
+      });
     }));
   }
 </script>

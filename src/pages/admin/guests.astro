@@ -77,6 +77,7 @@ import '../../styles/admin.css';
   import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
+  import { personRow } from '../../lib/ui/person-row';
   import { fieldError } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
   import { confirmModal } from '../../lib/confirm';
@@ -113,36 +114,21 @@ import '../../styles/admin.css';
     const shown = guests.filter((g) => !pendingDelete.has(g.id) && (!q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q)));
     $('guest-empty').hidden = guests.some((g) => !pendingDelete.has(g.id));
     $('guest-list').replaceChildren(...shown.map((g) => {
-      const li = mk('li', 'tw-item guest-row');
-      li.dataset.guest = g.id;
-      li.append(Object.assign(mk('span', 'guest-av', initials(g.name)), { ariaHidden: 'true' }));
-      const main = mk('div', 'tw-main');
-      const name = mk('button', 'tw-name', g.name);
-      name.type = 'button';
-      name.addEventListener('click', () => openForm(g));
-      main.append(name);
-      const meta = mk('p', 'lib-meta');
-      if (g.email) meta.append(g.email); else meta.append(mk('span', 'guest-missing', t('admin.noEmail')));
-      main.append(meta);
-      const chips = mk('div', 'tw-chips');
-      for (const p of g.participants) {
-        if (!p.tastings) continue;
-        const a = mk('a', 'tw-chip', `${p.tastings.title} · ${t(STATUS[p.status] ?? 'status.invited')}`);
-        a.href = `/t/${p.tastings.slug}/admin/guests/`;
-        chips.append(a);
-      }
-      if (!g.participants.length) chips.append(mk('span', 'tw-chip', t('guestLib.notInvited')));
-      main.append(chips);
-      li.append(main, mk('div', 'tw-price'));
-      const actions = mk('div', 'tw-actions');
       const edit = iconButton('edit', `${t('admin.edit')}: ${g.name}`);
       edit.dataset.tip = t('admin.edit');
       edit.addEventListener('click', () => openForm(g));
       const del = iconButton('trash', `${t('guestLib.delete')}: ${g.name}`, { quiet: true });
       del.dataset.tip = t('guestLib.delete');
       del.addEventListener('click', () => deleteGuest(g));
-      actions.append(edit, del);
-      li.append(actions);
+      const chips = g.participants.filter((p) => p.tastings).map((p) => ({
+        text: `${p.tastings!.title} · ${t(STATUS[p.status] ?? 'status.invited')}`, href: `/t/${p.tastings!.slug}/admin/guests/` }));
+      const li = personRow({
+        name: g.name, onOpen: () => openForm(g),
+        meta: [g.email ?? mk('span', 'guest-missing', t('admin.noEmail'))],
+        chips: chips.length ? chips : [{ text: t('guestLib.notInvited') }],
+        actions: [edit, del],
+      });
+      li.dataset.guest = g.id;
       return li;
     }));
   }

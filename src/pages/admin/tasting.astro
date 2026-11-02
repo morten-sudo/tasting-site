@@ -83,7 +83,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <h2 data-i18n="hosts.title">Hosts</h2>
           <a id="ov-hosts-manage" class="text-btn" href="settings/" data-section="settings" hidden data-i18n="hosts.manage">Manage hosts</a>
         </div>
-        <ul id="ov-hosts" class="hosts-list"></ul>
+        <ul id="ov-hosts" class="tw-list guest-list hosts-rows"></ul>
 
         <dialog id="details-panel" class="sheet wide" aria-labelledby="details-panel-title">
           <div class="sheet-head">
@@ -119,7 +119,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
         </form>
         </dialog>
-        <p class="hint"><span data-i18n="admin.tastingPage">Tasting page:</span> <a id="tasting-link" href="/" target="_blank"></a><br />
+        <p class="hint ov-link-note"><span data-i18n="admin.tastingPage">Tasting page:</span> <a id="tasting-link" href="/" target="_blank"></a><br />
           <span data-i18n="admin.personalLinks">Each guest gets a personal link under Guests.</span></p>
       </section>
 
@@ -156,7 +156,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <button id="host-open" class="btn small ghost" type="button" hidden data-i18n="hosts.add">Add host</button>
         </div>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
-        <ul id="hosts-list" class="hosts-list"></ul>
+        <ul id="hosts-list" class="tw-list guest-list hosts-rows"></ul>
       </section>
 
       <!-- Tasting fee -->
@@ -494,6 +494,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, mk as mkEl, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
+  import { personRow, type PersonChip } from '../../lib/ui/person-row';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
@@ -657,17 +658,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) return;
     const { data } = await supabase.rpc('tasting_cohosts', { t_id: tasting.id });
     type H = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
-    $('ov-hosts').replaceChildren(...((data ?? []) as H[]).map((h) => {
-      const li = mkEl('li', 'host-row');
-      const who = mkEl('div', 'host-who');
-      const name = mkEl('span', 'host-name', h.name || h.email);
-      if (h.me) name.append(mkEl('span', 'host-me', ` (${t('hosts.you')})`));
-      who.append(name);
-      if (h.name) who.append(mkEl('span', 'host-email', h.email));
-      li.append(who, mkEl('span', 'host-tag' + (h.pending ? ' pending' : h.owner ? ' owner' : ''),
-        h.owner ? t('hosts.owner') : h.pending ? t('hosts.pending') : t('hosts.cohost')));
-      return li;
-    }));
+    // The same rows as the guests (read-only here; hosts are managed under Settings)
+    $('ov-hosts').replaceChildren(...((data ?? []) as H[]).map((h) => personRow({
+      name: h.name || h.email, you: h.me ? t('hosts.you') : null, meta: h.name ? [h.email] : [],
+      chips: [h.owner ? { text: t('hosts.owner'), tone: 'accent' } : h.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
+    })));
     const manage = $('ov-hosts-manage') as HTMLAnchorElement;
     manage.href = `/t/${slug}/admin/settings/`;
     manage.hidden = !canManage;
@@ -928,47 +923,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   // One row per guest, the same as the wines: a "picture" (initials), name, a line with email and invitation,
   // status as small chips, what they ordered on the right – and "Edit". The rest is in the side panel.
   function guestCard(p: P) {
-    const li = mk('li', 'tw-item guest-row');
-    li.dataset.guest = p.id;
-    const initials = p.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
-    li.append(Object.assign(mk('span', 'guest-av', initials), { ariaHidden: 'true' }));
-
-    const main = mk('div', 'tw-main');
-    const name = mk('button', 'tw-name', p.name);
-    name.type = 'button';
-    name.addEventListener('click', () => openGuestPanel(p));
-    main.append(name);
-    const meta = mk('p', 'lib-meta');
-    if (p.email) meta.append(p.email);
-    else meta.append(mk('span', 'guest-missing', t('admin.noEmail')));
-    meta.append(' · ', p.invite_mailed_at ? t('guestRow.mailed', { when: mailedWhen(p.invite_mailed_at) }) : t('guestRow.notMailed'));
-    main.append(meta);
-
-    const chips = mk('div', 'tw-chips');
     // On the waiting list: its number in the queue
     const place = p.status === 'waitlist'
       ? participants.filter((x) => x.status === 'waitlist' && (x.waitlisted_at ?? '') <= (p.waitlisted_at ?? '')).length : 0;
-    const statusCls = { yes: 'vis-shown', no: 'ord-no', waitlist: 'st-wait', invited: '' }[p.status] ?? '';
-    chips.append(mk('span', `tw-chip ${statusCls}`, place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status));
-    if (p.status === 'yes' && feeAmount > 0) {
-      chips.append(mk('span', 'tw-chip ' + (p.tasting_paid ? 'vis-shown' : 'st-unpaid'), p.tasting_paid ? '✓ ' + t('guestRow.paid') : t('guestRow.unpaid')));
-    }
-    if (p.diet) chips.append(mk('span', 'tw-chip', p.diet));
-    if (p.note) chips.append(Object.assign(mk('span', 'tw-chip st-note', '💬 ' + t('guestRow.note')), { title: p.note }));
-    main.append(chips);
-    li.append(main);
-
-    const price = mk('div', 'tw-price');
+    const tone = ({ yes: 'ok', no: 'no', waitlist: 'wait', invited: '' } as const)[p.status as 'yes'] ?? '';
+    const chips: PersonChip[] = [{ text: place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status, tone }];
+    if (p.status === 'yes' && feeAmount > 0) chips.push(p.tasting_paid ? { text: '✓ ' + t('guestRow.paid'), tone: 'ok' } : { text: t('guestRow.unpaid'), tone: 'warn' });
+    if (p.diet) chips.push({ text: p.diet });
+    if (p.note) chips.push({ text: '💬 ' + t('guestRow.note'), title: p.note });
     const n = bottlesOf(p);
-    if (n) price.append(mk('b', '', t('guestRow.bottles', { n })));
-    li.append(price);
-
-    const actions = mk('div', 'tw-actions');
+    const actions: HTMLElement[] = [];
     // Never invited: its one action in the row (as "Reveal" by a blind wine) – the rest is in the panel
     if (!p.invite_mailed_at && p.status === 'invited') {
       const b = iconButton(p.email ? 'mail' : 'link', t(p.email ? 'inviteMail.send' : 'admin.copyLink'), { strong: true });
       b.addEventListener('click', () => (p.email ? sendInvite(p, b) : copyInvite(p)));
-      actions.append(b);
+      actions.push(b);
     }
     const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
     edit.dataset.tip = t('admin.edit');
@@ -977,8 +946,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const del = iconButton('trash', `${t('adminTasting.removeGuest')}: ${p.name}`, { quiet: true });
     del.dataset.tip = t('adminTasting.removeGuest');
     del.addEventListener('click', () => removeGuest(p));
-    actions.append(edit, del);
-    li.append(actions);
+    actions.push(edit, del);
+    const li = personRow({
+      name: p.name, onOpen: () => openGuestPanel(p),
+      meta: [p.email ?? mk('span', 'guest-missing', t('admin.noEmail')),
+        p.invite_mailed_at ? t('guestRow.mailed', { when: mailedWhen(p.invite_mailed_at) }) : t('guestRow.notMailed')],
+      chips, side: n ? mk('b', '', t('guestRow.bottles', { n })) : null, actions,
+    });
+    li.dataset.guest = p.id;
     return li;
   }
 

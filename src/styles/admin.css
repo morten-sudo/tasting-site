@@ -1474,6 +1474,14 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   font: 500 0.78rem/1.2 var(--body); pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 5;
 }
 .admin-page .icon-act[data-tip]:hover::after, .admin-page .icon-act[data-tip]:focus-visible::after { opacity: 1; transition-delay: 0.25s; }
+/* The tip exists only while it shows (a hidden one off the right edge made phones scroll sideways);
+   the last icon in a row opens its tip to the left, inside the screen */
+.admin-page .icon-act[data-tip]:not(:hover):not(:focus-visible)::after { display: none; }
+.admin-page .icon-act[data-tip]:last-child::after { left: auto; right: 0; transform: none; }
+.admin-page a.tw-chip { text-decoration: none; color: var(--muted); }
+.admin-page a.tw-chip:hover { border-color: var(--muted); color: var(--paper); }
+.admin-page a.text-btn { text-decoration: none; }
+.admin-page .ov-link-note { margin-top: 0.9rem; }
 .admin-page .tw-actions { align-items: center; gap: 0.25rem; }
 .admin-page .wine-actions .icon-act { margin-left: 0; }
 
@@ -1629,3 +1637,9 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .wf-it-price { color: var(--muted); font-variant-numeric: tabular-nums; }
 .admin-page .wf-in-tastings .text-btn { margin-left: auto; }
 .admin-page .wf-in-tastings .hint { margin: 0; }
+
+/* Person rows (src/lib/ui/person-row.ts): guests, hosts – one look everywhere */
+.admin-page .tw-chip.tone-accent { color: var(--amber); border-color: var(--amber); background: #fff; }
+.admin-page .person-you { font-weight: 400; color: var(--muted); }
+.admin-page span.tw-name { font-weight: 500; }
+.admin-page .hosts-rows.guest-list.tw-list { margin-top: 0.5rem; }

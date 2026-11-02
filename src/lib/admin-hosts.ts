@@ -1,6 +1,7 @@
 // Admin, one tasting: its hosts. The owner adds co-hosts by email and removes them;
 // co-hosts see the list. Everything goes through security-definer functions in the database.
 import { supabase } from './supabase';
+import { personRow } from './ui/person-row';
 import { $, mk, sheetPanel, iconButton } from './admin-common';
 import { confirmModal } from './confirm';
 import { toast } from './toast';
@@ -51,15 +52,7 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     const rows = (data ?? []) as HostRow[];
     hosts = rows;
     list.replaceChildren(...rows.map((r) => {
-      const li = mk('li', 'host-row');
-      const who = mk('div', 'host-who');
-      const name = mk('span', 'host-name', r.name || r.email);
-      if (r.me) name.append(mk('span', 'host-me', ` (${t('hosts.you')})`));
-      who.append(name);
-      if (r.name) who.append(mk('span', 'host-email', r.email));
-      li.append(who);
-      const tag = r.owner ? t('hosts.owner') : r.pending ? t('hosts.pending') : t('hosts.cohost');
-      li.append(mk('span', 'host-tag' + (r.pending ? ' pending' : r.owner ? ' owner' : ''), tag));
+      const actions: HTMLElement[] = [];
       if (isOwner && !r.owner) {
         const del = iconButton('trash', `${t('hosts.remove')}: ${r.name || r.email}`, { quiet: true });
         del.dataset.tip = t('hosts.remove');
@@ -70,9 +63,14 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
           if (error) toast(t('hosts.failed'), { kind: 'error' });
           else { toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' }); load(); }
         });
-        li.append(del);
-      } else if (isOwner) li.append(mk('span', 'icon-space')); // keeps the tags in line
-      return li;
+        actions.push(del);
+      }
+      // The same row as the guests
+      return personRow({
+        name: r.name || r.email, you: r.me ? t('hosts.you') : null, meta: r.name ? [r.email] : [],
+        chips: [r.owner ? { text: t('hosts.owner'), tone: 'accent' } : r.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
+        actions,
+      });
     }));
   }
 
