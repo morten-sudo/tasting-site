@@ -834,4 +834,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "fill.differs": "Önnur gildi fyrir {n} reiti: {fields}.",
   "fill.useNew": "Nota nýju gildin",
   "fill.applied": "Uppfærði {n} reiti – athugaðu þá áður en þú vistar.",
+  "source.from": "Sótt frá",
+  "source.refresh": "Uppfæra",
+  "source.other": "Nota annan hlekk",
 };

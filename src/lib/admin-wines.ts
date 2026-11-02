@@ -233,10 +233,10 @@ export function initWineAdmin(hostId: string, tenantId: string) {
 
   // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
   // Status line under the link field or under the photo, with a spinner while working
-  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-start-status';
+  type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-start-status' | 'wf-source-status';
   let statusTarget: StatusId = 'wf-label-status';
   function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    for (const id of ['wf-label-status', 'wf-link-status', 'wf-start-status']) {
+    for (const id of ['wf-label-status', 'wf-link-status', 'wf-start-status', 'wf-source-status']) {
       const el = $(id);
       const mine = id === statusTarget;
       el.textContent = mine ? text : '';
@@ -344,12 +344,11 @@ export function initWineAdmin(hostId: string, tenantId: string) {
   }
 
   // ---------- Fetch from a shop link (/api/read-link) ----------
-  async function readLink() {
-    const input = field<HTMLInputElement>('wf-link');
-    const url = input.value.trim();
-    statusTarget = 'wf-link-status';
+  async function readLink(again = false) {
+    const url = again ? sourceUrl ?? '' : field<HTMLInputElement>('wf-link').value.trim();
+    statusTarget = again ? 'wf-source-status' : 'wf-link-status';
     if (!/^https?:\/\//i.test(url)) { labelStatus(t('link.invalid'), 'error'); return; }
-    const btn = $<HTMLButtonElement>('wf-read-link');
+    const btn = $<HTMLButtonElement>(again ? 'wf-source-refresh' : 'wf-read-link');
     busyButton(btn, true);
     labelStatus(t('link.reading'), 'busy');
     try {
@@ -375,6 +374,8 @@ export function initWineAdmin(hostId: string, tenantId: string) {
         else if (preview.src !== r.image) f.add({ id: 'wf-image', apply: useImage });
       }
       sourceUrl = r.source_url;
+      showSource();
+      statusTarget = 'wf-source-status';
       const offer = r.offer
         ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: kr.format(r.offer.price), n: r.offer.quantity })
         : '';
@@ -427,7 +428,9 @@ export function initWineAdmin(hostId: string, tenantId: string) {
     setPreview(w?.image_url ?? null);
     // New wine: two tiles (photo / link) first; editing: the link field as before
     $('wf-start').hidden = !!w;
-    showLinkBox(!!w);
+    // A wine fetched from a link shows where from (with Update) instead of an empty link field
+    showSource();
+    showLinkBox(!!w && !sourceUrl);
     panel.showModal();
     panel.scrollTop = 0;
     // On phones the keyboard would cover the sheet, so only focus a field on larger screens
@@ -521,6 +524,21 @@ export function initWineAdmin(hostId: string, tenantId: string) {
     showLinkBox(true);
     field<HTMLInputElement>('wf-link').focus();
   });
+  /** "Fetched from <site>" above the name, when the wine came from a link. */
+  function showSource() {
+    const box = $('wf-source');
+    box.hidden = !sourceUrl;
+    if (!sourceUrl) return;
+    const a = $<HTMLAnchorElement>('wf-source-link');
+    a.href = sourceUrl;
+    a.title = sourceUrl;
+    try {
+      const u = new URL(sourceUrl);
+      a.textContent = u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? decodeURIComponent(u.pathname) : '');
+    } catch { a.textContent = sourceUrl; }
+    // The link field is only needed for another link
+    showLinkBox(false);
+  }
   function showLinkBox(on: boolean) {
     $('wf-link-box').hidden = !on;
     $('wf-start-link').classList.toggle('active', on);
@@ -529,7 +547,12 @@ export function initWineAdmin(hostId: string, tenantId: string) {
 
   $('wf-read-label').addEventListener('click', () => readLabel());
   $('wf-nv').addEventListener('click', () => { field<HTMLInputElement>('wf-vintage').value = 'NV'; });
-  $('wf-read-link').addEventListener('click', readLink);
+  $('wf-read-link').addEventListener('click', () => readLink());
+  $('wf-source-refresh').addEventListener('click', () => readLink(true));
+  $('wf-source-other').addEventListener('click', () => {
+    showLinkBox(true);
+    field<HTMLInputElement>('wf-link').focus();
+  });
   field<HTMLInputElement>('wf-link').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); readLink(); }
   });

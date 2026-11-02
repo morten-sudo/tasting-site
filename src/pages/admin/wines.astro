@@ -49,6 +49,15 @@ import '../../styles/admin.css';
           </div>
           <p id="wf-link-status" class="label-status" hidden aria-live="polite"></p>
           </div>
+          <!-- Where the wine's data came from, with a button that fetches it again -->
+          <div id="wf-source" class="wf-source" hidden>
+            <div class="wf-source-row">
+              <span class="wf-source-text"><span data-i18n="source.from">Fetched from</span> <a id="wf-source-link" href="#" target="_blank" rel="noopener"></a></span>
+              <button id="wf-source-refresh" class="btn small ghost" type="button" data-i18n="source.refresh">Update</button>
+            </div>
+            <button id="wf-source-other" class="text-btn" type="button" data-i18n="source.other">Use another link</button>
+            <p id="wf-source-status" class="label-status" hidden aria-live="polite"></p>
+          </div>
           <label for="wf-name" data-i18n="admin.name">Name</label>
           <input id="wf-name" type="text" required />
           <label for="wf-image"><span data-i18n="admin.image">Image</span> <span class="hint" data-i18n="admin.imageHint">(a photo of the label fills in the form)</span></label>

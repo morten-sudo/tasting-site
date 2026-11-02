@@ -814,3 +814,10 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 /* Filling from a label or link: the fields that already hold something else */
 .admin-page .label-status .fill-diff { display: block; margin-top: 0.35rem; color: var(--paper); }
 .admin-page .label-status .fill-use { margin-top: 0.5rem; }
+/* Wine form: where the data was fetched from */
+.admin-page .wf-source { display: grid; gap: 0.35rem; margin-bottom: 1rem; padding: 0.75rem 0.9rem; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .wf-source[hidden] { display: none; }
+.admin-page .wf-source-row { display: flex; align-items: center; gap: 0.75rem; }
+.admin-page .wf-source-text { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-page .wf-source-text a { color: var(--amber); }
+.admin-page .wf-source .text-btn { justify-self: start; font-size: 0.85rem; }

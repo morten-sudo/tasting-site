@@ -763,4 +763,7 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "fill.differs": "Altri valori per {n} campi: {fields}.",
   "fill.useNew": "Usa i nuovi valori",
   "fill.applied": "Aggiornati {n} campi – controllali prima di salvare.",
+  "source.from": "Recuperato da",
+  "source.refresh": "Aggiorna",
+  "source.other": "Usa un altro link",
 };

@@ -833,4 +833,7 @@ export const en = {
   "fill.differs": "Other values for {n} fields: {fields}.",
   "fill.useNew": "Use the new values",
   "fill.applied": "Updated {n} fields – check them before saving.",
+  "source.from": "Fetched from",
+  "source.refresh": "Update",
+  "source.other": "Use another link",
 } as const;

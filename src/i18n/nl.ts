@@ -763,4 +763,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "fill.differs": "Andere waarden voor {n} velden: {fields}.",
   "fill.useNew": "Nieuwe waarden gebruiken",
   "fill.applied": "{n} velden bijgewerkt – controleer ze voor het opslaan.",
+  "source.from": "Opgehaald van",
+  "source.refresh": "Bijwerken",
+  "source.other": "Andere link gebruiken",
 };

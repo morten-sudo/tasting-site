@@ -834,4 +834,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "fill.differs": "Andre værdier for {n} felter: {fields}.",
   "fill.useNew": "Brug de nye værdier",
   "fill.applied": "Opdaterede {n} felter – tjek dem, før du gemmer.",
+  "source.from": "Hentet fra",
+  "source.refresh": "Opdater",
+  "source.other": "Brug et andet link",
 };
