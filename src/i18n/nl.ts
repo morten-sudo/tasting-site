@@ -1059,4 +1059,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "twe.notOrderable": "Niet te bestellen",
   "twe.noPrice": "Geen prijs",
   "twe.tierLine": "vanaf {n} flessen {price}",
+  "tastingDelete.keepWines": "De wijnen blijven in je bibliotheek. Kan niet ongedaan worden.",
 };

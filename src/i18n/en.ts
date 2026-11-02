@@ -1171,4 +1171,5 @@ export const en = {
   "twe.notOrderable": "Not for ordering",
   "twe.noPrice": "No price",
   "twe.tierLine": "from {n} bottles {price}",
+  "tastingDelete.keepWines": "The wines stay in your library. It cannot be undone.",
 } as const;

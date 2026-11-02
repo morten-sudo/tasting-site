@@ -185,20 +185,22 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Delete the tasting: last under settings, for whoever may manage it (not co-hosts) -->
-      <section class="block danger-zone" data-section="settings">
+      <section class="block quiet-zone" data-section="settings">
       <div id="delete-tasting" hidden>
-        <h2 data-i18n="tastingDelete.title">Delete the tasting</h2>
+        <h3 data-i18n="tastingDelete.title">Delete the tasting</h3>
         <p class="hint" data-i18n="tastingDelete.hint">Removes the tasting with its guest list, answers, orders, quiz and chat. The wines stay in your library. It cannot be undone.</p>
         <button id="td-ask" class="btn small ghost danger" type="button" data-i18n="tastingDelete.button">Delete tasting …</button>
-        <div id="td-confirm" class="td-confirm" hidden>
-          <p id="td-q" class="td-q"></p>
-          <div class="row-actions">
-            <button id="td-yes" class="btn small danger" type="button" data-i18n="tastingDelete.yes">Yes, delete it</button>
-            <button id="td-no" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-          </div>
-          <p id="td-msg" class="message error" hidden></p>
-        </div>
       </div>
+      <!-- The question, in a small window -->
+      <dialog id="td-confirm" class="confirm-modal" aria-labelledby="td-q">
+        <p id="td-q" class="td-q"></p>
+        <p class="hint" data-i18n="tastingDelete.keepWines">The wines stay in your library. It cannot be undone.</p>
+        <p id="td-msg" class="message error" hidden></p>
+        <div class="row-actions">
+          <button id="td-no" class="btn small ghost" type="button" data-i18n="common.cancel">Cancel</button>
+          <button id="td-yes" class="btn small danger" type="button" data-i18n="tastingDelete.yes">Yes, delete it</button>
+        </div>
+      </dialog>
       </section>
 
       <!-- Wines in this tasting (from the wine library) -->
@@ -1261,11 +1263,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (!tasting) return;
     const n = participants.length;
     $('td-q').textContent = t(n ? 'tastingDelete.qGuests' : 'tastingDelete.q', { title: tasting.title, n });
-    $('td-confirm').hidden = false;
-    $('td-ask').hidden = true;
+    $('td-msg').hidden = true;
+    ($('td-confirm') as HTMLDialogElement).showModal();
     $('td-no').focus();
   });
-  $('td-no').addEventListener('click', () => { $('td-confirm').hidden = true; $('td-ask').hidden = false; $('td-ask').focus(); });
+  $('td-no').addEventListener('click', () => ($('td-confirm') as HTMLDialogElement).close());
   $('td-yes').addEventListener('click', async () => {
     if (!tasting) return;
     const btn = $('td-yes') as HTMLButtonElement;

@@ -1172,4 +1172,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "twe.notOrderable": "Ekki hægt að panta",
   "twe.noPrice": "Ekkert verð",
   "twe.tierLine": "frá {n} stk. {price}",
+  "tastingDelete.keepWines": "Vínin verða áfram í safninu. Ekki hægt að afturkalla.",
 };

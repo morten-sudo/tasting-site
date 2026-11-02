@@ -1059,4 +1059,5 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "twe.notOrderable": "Non ordinabile",
   "twe.noPrice": "Nessun prezzo",
   "twe.tierLine": "da {n} bottiglie {price}",
+  "tastingDelete.keepWines": "I vini restano nella cantina. Non si può annullare.",
 };

@@ -1166,10 +1166,6 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 dialog.wizard .wz-body { overflow-x: hidden; }
 
 /* Delete a tasting: last under Settings, set apart */
-.admin-page .danger-zone { border: 1px solid #ecc9c6; }
-.admin-page .danger-zone h2 { color: var(--error); }
-.admin-page .danger-zone .btn.ghost.danger { margin-left: 0; }
-.admin-page .td-confirm { margin-top: 0.6rem; padding: 0.75rem 0.9rem; border-radius: var(--radius); background: #fbeeed; }
 .admin-page .td-q { margin: 0 0 0.5rem; font-weight: 600; }
 
 /* A tasting's tabs on phones: two rows instead of tabs hidden off the screen */
@@ -1279,4 +1275,19 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .twe-danger { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--lodge-3); }
 .admin-page .twe-danger .btn { margin-left: 0 !important; }
 .admin-page .twe-danger .hint { margin: 0.35rem 0 0; }
-.admin-page .danger-zone:not(:has(#delete-tasting:not([hidden]))) { display: none; }
+
+/* Delete the tasting: quiet, last under Settings; the question comes in a small window */
+.admin-page .quiet-zone { margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--lodge-3); }
+.admin-page .quiet-zone:not(:has(#delete-tasting:not([hidden]))) { display: none; }
+.admin-page .quiet-zone h3 { margin: 0 0 0.25rem; font-family: var(--body); font-size: 0.95rem; font-weight: 600; color: var(--paper); }
+.admin-page .quiet-zone .hint { margin: 0 0 0.7rem; max-width: 36rem; }
+.admin-page .quiet-zone .btn.ghost.danger { margin-left: 0; }
+dialog.confirm-modal {
+  width: min(26rem, calc(100vw - 2rem)); padding: 1.4rem 1.4rem 1.2rem; border: 0; border-radius: 0.9rem;
+  background: var(--lodge); color: var(--paper); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+dialog.confirm-modal::backdrop { background: rgba(20, 12, 12, 0.45); }
+dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
+.confirm-modal .td-q { margin: 0 0 0.4rem; font-weight: 600; font-size: 1.05rem; }
+.confirm-modal .hint { margin: 0 0 0.4rem; }
+.confirm-modal .row-actions { justify-content: flex-end; margin-top: 1rem; gap: 0.6rem; }
