@@ -1183,4 +1183,5 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "guestFilter.chosen": "{n} scelti",
   "twe.removeQ": "Rimuovere «{name}» dalla degustazione?",
   "twe.removeFailed": "Impossibile rimuovere «{name}» – forse gli ospiti l’hanno ordinato.",
+  "twe.winePage": "Pagina del vino – origine, mappa e descrizione",
 };

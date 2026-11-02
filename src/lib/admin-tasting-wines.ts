@@ -178,6 +178,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     $('twe-title').textContent = w.name;
     $('twe-thumb').replaceWith(Object.assign(thumb(w), { id: 'twe-thumb' }));
     $('twe-meta').textContent = meta(w);
+    $<HTMLAnchorElement>('twe-page').href = `/admin/wines/${w.id}/`;
     const price = $<HTMLInputElement>('twe-price');
     price.value = amountText(r.price_dkk, locale());
     const retail = $<HTMLInputElement>('twe-retail-in');

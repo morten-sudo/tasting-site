@@ -1296,4 +1296,5 @@ export const en = {
   "guestFilter.chosen": "{n} chosen",
   "twe.removeQ": "Remove “{name}” from the tasting?",
   "twe.removeFailed": "“{name}” could not be removed – guests may have ordered it.",
+  "twe.winePage": "The wine’s page – origin, map and description",
 } as const;

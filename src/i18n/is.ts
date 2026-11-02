@@ -1297,4 +1297,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guestFilter.chosen": "{n} valin",
   "twe.removeQ": "Fjarlægja „{name}“ úr smökkuninni?",
   "twe.removeFailed": "Ekki tókst að fjarlægja „{name}“ – kannski hafa gestir pantað það.",
+  "twe.winePage": "Síða vínsins – uppruni, kort og lýsing",
 };
