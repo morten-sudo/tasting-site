@@ -65,8 +65,10 @@ async function imageSize(url: string): Promise<{ w: number; h: number } | null> 
 }
 
 /** A bottle shot is tall and narrow (a whole bottle standing); scenes, glasses, vineyards and cases are wider. */
+const sizes: string[] = []; // what was measured (for checking)
 async function isBottleShot(url: string): Promise<boolean> {
   const s = await imageSize(url);
+  sizes.push(`${url.split('/').pop()?.slice(0, 40)} ${s ? `${s.w}x${s.h}` : 'unknown'}`);
   return !!s && s.h >= 250 && s.h >= s.w * 1.5;
 }
 
@@ -190,5 +192,5 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   }
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
   // pages and seen show where the pictures came from (and why there are none)
-  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15) });
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15), sizes: sizes.splice(0) });
 };
