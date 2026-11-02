@@ -61,7 +61,7 @@ type LabelResult = {
 };
 type LinkResult = LabelResult & {
   description: string | null; image: string | null; price: number | null; source_url: string;
-  offer: { price: number; quantity: number } | null;
+  offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
 };
 
 const toNumber = (v: string) => {
@@ -345,7 +345,9 @@ export function initWineAdmin(hostId: string, tenantId: string) {
       const offer = r.offer
         ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: kr.format(r.offer.price), n: r.offer.quantity })
         : '';
-      labelStatus((n ? t('link.filled', { n }) : t('label.nothing')) + offer, n ? 'ok' : 'error');
+      const foreign = r.foreign_currency && !field<HTMLInputElement>('wf-retail').value.trim()
+        ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
+      labelStatus((n ? t('link.filled', { n }) : t('link.nothing')) + offer + foreign, n ? 'ok' : 'error');
     } catch {
       labelStatus(t('link.failed'), 'error');
     } finally {

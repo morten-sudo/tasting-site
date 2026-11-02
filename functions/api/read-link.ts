@@ -208,6 +208,8 @@ ${text}`;
     image,
     price: shopPrice,
     offer,
+    // Prices shown in a currency we do not convert: the host types the price
+    foreign_currency: currency && currency !== 'DKK' && currency !== 'EUR' ? currency : null,
     source_url: url.href,
   });
 };
