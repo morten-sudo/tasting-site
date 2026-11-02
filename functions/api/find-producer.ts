@@ -102,17 +102,23 @@ function mapPlaces(html: string): string[] {
 
 /** Pages likely to hold the address or a map: contact, visit, find us … */
 function contactLinks(html: string, base: string) {
-  const out = new Set<string>();
-  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,120}?)<\/a>/gi)) {
+  const host = new URL(base).hostname;
+  const contact: string[] = [], visit: string[] = [];
+  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,160}?)<\/a>/gi)) {
     const text = plain(htmlToText(m[2]) + ' ' + m[1]);
-    if (!/contact|kontakt|contato|contacto|contatti|visit|besuch|visite|acces|venir|trouver|find-us|find us|location|localiza|come-to|onde|where|map|plan/.test(text)) continue;
+    // Contact pages first: they hold the address; visit and map pages often hold the coordinates
+    const kind = /contact|kontakt|contato|contacto|contatti|impressum|mentions-legales|legal/.test(text) ? contact
+      : /\b(visit|besuch|visite|acces|venir|trouver|find-us|find us|location|localiza|come-to|onde|where|map|plan d'acces)\b/.test(text) ? visit : null;
+    if (!kind) continue;
     try {
       const u = new URL(m[1], base);
-      if (u.hostname === new URL(base).hostname) out.add(u.href);
+      if (u.hostname === host && !kind.includes(u.href)) kind.push(u.href);
     } catch {}
-    if (out.size >= 3) break;
   }
-  return [...out];
+  // The usual addresses of a contact page, in case the menu is built by script
+  const guesses = ['contact', 'contact/', 'contact-us', 'kontakt', 'contatti', 'contacto', 'en/contact', 'fr/contact']
+    .map((p) => new URL('/' + p, base).href);
+  return [...new Set([...contact.slice(0, 3), ...visit.slice(0, 2), ...guesses])].slice(0, 8);
 }
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
@@ -154,7 +160,9 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
 
   // 3. The place: home page first, then contact/visit pages
-  const pages = [site, ...(await Promise.all(contactLinks(site.html, site.url).map((u) => get(u))))].filter(Boolean) as { url: string; html: string }[];
+  const more = (await Promise.all(contactLinks(site.html, site.url).map((u) => get(u, 5000))))
+    .filter((p): p is { url: string; html: string } => !!p && p.html !== site!.html);
+  const pages = [site, ...more.filter((p, i) => more.findIndex((q) => q.url === p.url) === i)];
   let location: { lat: number; lon: number; source: string; page: string } | null = null;
   for (const p of pages) {
     const c = findCoords(p.html);
@@ -165,7 +173,8 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   if (!address) try {
     // Addresses sit in the header, the footer or the middle of a contact page: give the model the start and end of each page,
     // and first the lines that look like an address (a postcode and a town) and the place names in map links
-    const texts = pages.map((p) => htmlToText(p.html));
+    // Contact pages before the home page, so they are not cut off
+    const texts = [...pages.slice(1), pages[0]].map((p) => htmlToText(p.html));
     const hints = [...new Set([
       ...texts.flatMap((t) => t.split(/\n|\s{3,}|\|/).map((l) => l.trim())
         .filter((l) => l.length > 6 && l.length < 160 && /\b(\d{4,5}|\d{3}\s?\d{2}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2})\b/.test(l) && /[a-zà-ÿ]{3,}/i.test(l))),
