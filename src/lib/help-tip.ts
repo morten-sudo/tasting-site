@@ -66,3 +66,25 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 window.addEventListener('resize', close);
+
+/** Links from the help: ?open=<id> presses that button (e.g. "Invite guest"), #<id> scrolls to that spot and
+ *  marks it for a moment. Called by a page once its content is shown. */
+export function followHelpLink() {
+  const params = new URLSearchParams(location.search);
+  const open = params.get('open');
+  const id = decodeURIComponent(location.hash.slice(1));
+  requestAnimationFrame(() => {
+    if (open) {
+      document.getElementById(open)?.click();
+      params.delete('open');
+      const rest = params.toString();
+      history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : '') + location.hash);
+    }
+    const target = id ? document.getElementById(id) : null;
+    if (target && !target.closest('[hidden]')) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('help-flash');
+      setTimeout(() => target.classList.remove('help-flash'), 2400);
+    }
+  });
+}

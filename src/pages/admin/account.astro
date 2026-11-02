@@ -50,7 +50,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
-  import { initHelpTips } from '../../lib/help-tip';
+  import { initHelpTips, followHelpLink } from '../../lib/help-tip';
   initHelpTips();
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel } from '../../lib/admin-common';
@@ -62,6 +62,7 @@ import '../../styles/admin.css';
   if (host) {
     $('admin-main').hidden = false;
     await Promise.all([loadName(), loadMembers()]);
+    followHelpLink();
   }
 
   // ---------- Name ----------

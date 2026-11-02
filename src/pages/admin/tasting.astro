@@ -88,7 +88,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Controls -->
-      <section class="block" data-section="settings">
+      <section id="controls" class="block" data-section="settings">
         <h2 data-i18n="admin.controls">Controls</h2>
         <div class="toggles">
           <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
@@ -109,7 +109,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Hosts: the owner gives others the host role for this tasting -->
-      <section class="block" data-section="settings">
+      <section id="hosts" class="block" data-section="settings">
         <h2 data-i18n="hosts.title">Hosts</h2>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
         <ul id="hosts-list" class="hosts-list"></ul>
@@ -130,7 +130,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Tasting fee -->
-      <section class="block" data-section="settings">
+      <section id="fee" class="block" data-section="settings">
         <h2><span data-i18n="guest.feeTitle">Tasting fee</span><span data-help="fee"></span></h2>
         <div class="fee-grid">
           <label for="fee-total" data-i18n="admin.feeTotal">Total cost (DKK)</label>
@@ -294,7 +294,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 </Base>
 
 <script>
-  import { initHelpTips } from '../../lib/help-tip';
+  import { initHelpTips, followHelpLink } from '../../lib/help-tip';
   initHelpTips();
   import { supabase } from '../../lib/supabase';
   import { currentSlug, tastingUrl } from '../../lib/guest';
@@ -1030,6 +1030,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderOrders();
     loadSettings();
     renderSetup();
+    followHelpLink();
     const rows = await fetchLeaderboard({ slug: tasting.slug });
     if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
   }

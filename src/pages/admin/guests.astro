@@ -45,6 +45,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel } from '../../lib/admin-common';
   import { t, type Key } from '../../i18n';
@@ -62,6 +63,7 @@ import '../../styles/admin.css';
   if (host) {
     $('admin-main').hidden = false;
     await load();
+    followHelpLink();
   }
 
   async function load() {

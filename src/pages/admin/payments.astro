@@ -33,6 +33,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $ } from '../../lib/admin-common';
   import { t } from '../../i18n';
@@ -41,6 +42,7 @@ import '../../styles/admin.css';
   if (host) {
     $('admin-main').hidden = false;
     $<HTMLInputElement>('mp-number').value = (host.mobilepay ?? '').replace(/(\d{2})(?=\d)/g, '$1 ');
+    followHelpLink();
   }
 
   $('mp-form').addEventListener('submit', async (e) => {

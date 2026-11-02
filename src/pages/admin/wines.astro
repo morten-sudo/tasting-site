@@ -255,7 +255,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
-  import { initHelpTips } from '../../lib/help-tip';
+  import { initHelpTips, followHelpLink } from '../../lib/help-tip';
   initHelpTips();
   import { requireHost, $ } from '../../lib/admin-common';
   import { initWineAdmin } from '../../lib/admin-wines';
@@ -275,6 +275,7 @@ import '../../styles/admin.css';
     const admin = initWineAdmin(host.id, host.tenant_id, onWinePage()
       ? { onSaved: () => { show(); }, onDeleted: () => { location.href = '/admin/wines/'; } } : {});
     await admin.load();
+    followHelpLink();
     if (onWinePage()) {
       wineId = wineIdFromPath(admin.paths());
       await show();

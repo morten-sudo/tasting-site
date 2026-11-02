@@ -921,5 +921,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "help.noMatch": "Intet fundet. Prøv et andet ord.",
   "help.more": "Læs mere →",
   "help.what": "Hvad er det?",
+  "help.linksTo": "Links til en smagning går til",
   "wines.none": "Værten har ikke vist nogen vine endnu.",
 };
