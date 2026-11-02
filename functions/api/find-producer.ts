@@ -61,6 +61,32 @@ function findCoords(html: string): { lat: number; lon: number; how: string } | n
   return null;
 }
 
+/** A postal address in the page's schema.org data (Organization, Winery, LocalBusiness …). */
+function schemaAddress(html: string): string | null {
+  for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    let data: unknown;
+    try { data = JSON.parse(m[1].trim()); } catch { continue; }
+    const stack: unknown[] = [data];
+    while (stack.length) {
+      const v = stack.pop();
+      if (Array.isArray(v)) { stack.push(...v); continue; }
+      if (!v || typeof v !== 'object') continue;
+      const o = v as Record<string, unknown>;
+      const a = o.address;
+      if (typeof a === 'string' && a.trim().length > 8) return a.trim().slice(0, 300);
+      if (a && typeof a === 'object' && !Array.isArray(a)) {
+        const x = a as Record<string, unknown>;
+        const country = typeof x.addressCountry === 'object' && x.addressCountry ? (x.addressCountry as Record<string, unknown>).name : x.addressCountry;
+        const line = [x.streetAddress, [x.postalCode, x.addressLocality].filter((y) => typeof y === 'string' && y.trim()).join(' '), country]
+          .filter((y) => typeof y === 'string' && y.trim()).map((y) => String(y).trim()).join(', ');
+        if (x.streetAddress || x.postalCode) return line.slice(0, 300);
+      }
+      stack.push(...Object.values(o).filter((y) => y && typeof y === 'object'));
+    }
+  }
+  return null;
+}
+
 /** Pages likely to hold the address or a map: contact, visit, find us … */
 function contactLinks(html: string, base: string) {
   const out = new Set<string>();
@@ -121,10 +147,12 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     const c = findCoords(p.html);
     if (c) { location = { lat: c.lat, lon: c.lon, source: c.how, page: p.url }; break; }
   }
-  // The postal address as written on the site
-  let address: string | null = null;
-  try {
-    const text = pages.map((p) => htmlToText(p.html).slice(-4000)).join('\n---\n').slice(0, 9000);
+  // The postal address: from the site's structured data, else as written on the site (read by the model)
+  let address: string | null = pages.map((p) => schemaAddress(p.html)).find(Boolean) ?? null;
+  if (!address) try {
+    // Addresses sit in the header, the footer or the middle of a contact page: give the model the start and end of each page
+    const text = pages.map((p) => { const t = htmlToText(p.html); return t.length > 6000 ? t.slice(0, 2500) + '\n…\n' + t.slice(-3500) : t; })
+      .join('\n---\n').slice(0, 14000);
     const out = await env.AI.run(MODEL, {
       messages: [{ role: 'user', content: `Below is text from the website of the wine producer "${producer}". Return ONLY JSON {"address": the producer's postal address (street, postcode, town, country) exactly as written, or null}.\n\n${text}` }],
       max_tokens: 120, temperature: 0,

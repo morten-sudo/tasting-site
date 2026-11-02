@@ -70,6 +70,18 @@ function jsonLdProducts(html: string) {
 
 const first = (v: unknown): unknown => (Array.isArray(v) ? v[0] : v);
 
+// Shops often show the wine's case, gift box or a set next to the bottle (Supervin: …_kasse_….jpg).
+// The first picture that does not look like one of those wins; failing that, the first picture.
+const NOT_BOTTLE = /(^|[^a-z])(kasse|kasser|box|boks|case|cases|karton|carton|gave|gift|geschenk|coffret|caisse|kiste|aeske|æske|pack|bundle|set|etui|tube|glas|glass|label|etiket)([^a-z]|$)/i;
+const BOTTLE = /(^|[^a-z])(flaske|bottle|bouteille|flasche|bottiglia|botella|fles|packshot)([^a-z]|$)/i;
+function pickImage(urls: string[]): string | null {
+  const seen = [...new Set(urls)];
+  const name = (u: string) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() ?? ''); } catch { return u; } };
+  return seen.find((u) => BOTTLE.test(name(u)) && !NOT_BOTTLE.test(name(u)))
+    ?? seen.find((u) => !NOT_BOTTLE.test(name(u)))
+    ?? seen[0] ?? null;
+}
+
 function absolute(src: unknown, base: URL) {
   const s = str(typeof src === 'object' && src ? (src as Record<string, unknown>).url : src);
   if (!s) return null;
@@ -175,8 +187,11 @@ ${text}`;
   }
   if (!answer) return json({ error: 'unreadable' }, 422);
 
-  let image = absolute(shop?.images?.[0]?.src, url) ?? absolute(first(product.image), url) ??
-    absolute(meta['og:image:secure_url'] ?? meta['og:image'], url);
+  let image = pickImage([
+    ...(shop?.images ?? []).map((i) => i.src),
+    ...(Array.isArray(product.image) ? product.image : [product.image]),
+    meta['og:image:secure_url'], meta['og:image'],
+  ].map((x) => absolute(x, url)).filter(Boolean) as string[]);
   // Vivino shares a close crop of the label (…_pl_375x500.png); the bottle shot (…_pb_x600.png) suits the wine card
   const bottle = image?.match(/^(https:\/\/images\.vivino\.com\/thumbs\/[\w-]+)_pl_\d+x\d+\.png$/)?.[1];
   if (bottle) {
