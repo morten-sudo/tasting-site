@@ -328,17 +328,22 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
         <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
 
-        <!-- Invite a guest: a new row that slides in at the top of the list – type a name (searches your guest list),
-             or a name and an email -->
+        <!-- Invite a guest: a new row that slides in at the top of the list – name (searches your guest list) and email -->
         <div class="qa qa-guest">
           <div id="gi-bar" class="qa-slide" inert>
             <div class="qa-slide-in">
               <div class="qa-item qa-new gi-row">
                 <span class="guest-av gi-av" aria-hidden="true">+</span>
                 <div class="qa-body">
-                  <label for="gi-input" class="visually-hidden" data-i18n="guestInvite.label">Name – or name and email</label>
-                  <div id="gi-field" class="qa-field">
-                    <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name – or name and email" data-i18n-attr="placeholder=guestInvite.placeholder" />
+                  <div id="gi-fields" class="gi-fields">
+                    <div id="gi-field" class="qa-field gi-name">
+                      <label for="gi-input" class="visually-hidden" data-i18n="admin.name">Name</label>
+                      <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
+                    </div>
+                    <div id="gi-email-field" class="qa-field gi-email">
+                      <label for="gi-email" class="visually-hidden" data-i18n="common.email">Email</label>
+                      <input id="gi-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
+                    </div>
                   </div>
                   <label class="gi-mail" data-help="invite-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
                   <ul id="gi-hits" class="qa-hits" hidden></ul>
@@ -1222,21 +1227,15 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   let library: G[] = [];
 
   // ---------- Invite a guest: a new row that slides in at the top of the guest list ----------
-  // Type a name (it searches your guest list) or a name and an email; Enter or "Invite" invites.
+  // Name (it searches your guest list) and email (optional); Enter or "Invite" invites.
   const giBar = $('gi-bar');
   const giInput = $('gi-input') as HTMLInputElement;
+  const giEmail = $('gi-email') as HTMLInputElement;
   const giHits = $('gi-hits');
   const giToggle = $('g-invite-toggle') as HTMLButtonElement;
   const giOpen = () => giBar.classList.contains('open');
-  const EMAIL_RE = /[^@\s<>,;]+@[^@\s<>,;]+\.[^@\s<>,;]+/;
   const normName = (x: string) => x.trim().toLowerCase().replace(/\s+/g, ' ');
-  /** "Anna Holm anna@holm.dk", "Anna Holm <anna@holm.dk>" or just a name / an email */
-  function parseGuest(text: string) {
-    const m = text.match(EMAIL_RE);
-    const email = m ? m[0].toLowerCase() : null;
-    const name = (m ? text.replace(m[0], '') : text).replace(/[<>,;()]/g, ' ').replace(/\s+/g, ' ').trim();
-    return { name, email };
-  }
+  const typedGuest = () => ({ name: giInput.value.replace(/\s+/g, ' ').trim(), email: giEmail.value.trim().toLowerCase() || null });
   const invitedIds = () => new Set(participants.map((p) => (p as P & { guest_id?: string }).guest_id));
 
   function openInvite(focus = true) {
@@ -1254,7 +1253,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     giToggle.setAttribute('aria-expanded', 'false');
     gateInvite();
     giInput.value = '';
+    giEmail.value = '';
     fieldError(giInput, null);
+    fieldError(giEmail, null);
     renderGuestHits();
     giToggle.focus();
   }
@@ -1264,15 +1265,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   $('gi-close').addEventListener('click', closeInvite);
 
   /** Your guest list's matches for what is typed (name or email) */
-  function guestMatches(text: string) {
-    const { name, email } = parseGuest(text);
+  function guestMatches() {
+    const { name, email } = typedGuest();
     const q = normName(name);
-    if (!email && q.length < 2) return [];
-    return library.filter((g) => (email && g.email?.toLowerCase() === email) || (q && normName(`${g.name} ${g.email ?? ''}`).includes(q)))
+    const e = email && email.length >= 3 ? email : null;
+    if (!e && q.length < 2) return [];
+    return library.filter((g) => (e && g.email?.toLowerCase().includes(e)) || (q.length >= 2 && normName(`${g.name} ${g.email ?? ''}`).includes(q)))
       .sort((a, b) => a.name.localeCompare(b.name, locale())).slice(0, 5);
   }
   function renderGuestHits(list?: G[], head?: string) {
-    const found = list ?? guestMatches(giInput.value);
+    const found = list ?? guestMatches();
     giHits.replaceChildren();
     giHits.hidden = !found.length;
     if (!found.length) return;
@@ -1295,18 +1297,19 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       giHits.append(li);
     }
   }
-  giInput.addEventListener('input', () => renderGuestHits());
-  giInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); submitInvite(); }
-    else if (e.key === 'Escape') { e.preventDefault(); if (giInput.value) { giInput.value = ''; renderGuestHits(); } else closeInvite(); }
-    else if (e.key === 'ArrowDown') { const b = giHits.querySelector<HTMLElement>('button'); if (b) { e.preventDefault(); b.focus(); } }
-  });
+  for (const el of [giInput, giEmail]) {
+    el.addEventListener('input', () => renderGuestHits());
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); submitInvite(); }
+      else if (e.key === 'Escape') { e.preventDefault(); if (giInput.value || giEmail.value) { giInput.value = ''; giEmail.value = ''; renderGuestHits(); giInput.focus(); } else closeInvite(); }
+      else if (e.key === 'ArrowDown') { const b = giHits.querySelector<HTMLElement>('button'); if (b) { e.preventDefault(); b.focus(); } }
+    });
+  }
   $('gi-go').addEventListener('click', () => submitInvite());
 
   async function submitInvite() {
-    const text = giInput.value.trim();
-    if (!text) { fieldError(giInput, t('guestInvite.empty'), $('gi-field')); giInput.focus(); return; }
-    const { name, email } = parseGuest(text);
+    const { name, email } = typedGuest();
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { fieldError(giEmail, t('guest.emailBad'), $('gi-fields')); giEmail.focus(); return; }
     // Already in your guest list (same email, or exactly the same name): invite that guest – never a second copy
     const same = library.filter((g) => (email && g.email?.toLowerCase() === email) || (!email && normName(g.name) === normName(name)));
     if (same.length) {
@@ -1315,7 +1318,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       renderGuestHits(same, t(free.length ? 'guestInvite.pick' : 'guestInvite.alreadyAll'));
       return;
     }
-    if (!name) { fieldError(giInput, t('guestInvite.nameMissing'), $('gi-field')); giInput.focus(); return; }
+    if (!name) { fieldError(giInput, t('guestInvite.nameMissing'), $('gi-fields')); giInput.focus(); return; }
     const btn = $('gi-go') as HTMLButtonElement;
     btn.disabled = true;
     btn.classList.add('loading');
@@ -1338,6 +1341,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const p = data as P;
     participants.push(p);
     giInput.value = '';
+    giEmail.value = '';
     renderGuestHits();
     // Show the new guest: the filter that hides them is reset
     if (!matches(p)) { guestFilter = 'all'; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
