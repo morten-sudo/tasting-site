@@ -44,19 +44,20 @@ export const HELP: HelpSection[] = [
 <p>Tryk <i>Skriv et udkast med AI</i> under introduktionen. Cloudflares AI skriver et udkast ud fra smagningens vine – fx en rejse gennem én region, en tur på tværs af lande eller en drue som tema – og blinde vine bliver ikke afsløret. Udkastet vises <b>under</b> din egen tekst: <i>Brug udkastet</i> sætter det ind i feltet (med <i>Fortryd</i>, der henter din tekst tilbage), <i>Prøv igen</i> giver et nyt, og <i>Kassér</i> fjerner det. Intet gemmes, før du trykker <i>Gem</i>. Et udkast tager op til ca. 20 sekunder. Tjek altid teksten – AI kan finde på ting.</p>
 <h4 id="delete-tasting">Slet en smagning</h4>
 <p>Nederst under <a href="t:settings/#delete-tasting">Indstillinger → Slet smagningen</a>. Kun den, der oprettede smagningen, og kontoens ejer kan slette den. Gæsteliste, svar, bestillinger, quiz og chat forsvinder; vinene bliver i biblioteket.</p>
-<h4 id="controls"><a href="t:settings/#controls">Kontakter</a></h4>
+<h4 id="controls"><a href="t:settings/#controls">Gæsterne kan</a></h4>
+<p>Øverst under <a href="t:settings/">Indstillinger</a> slår du til og fra, hvad gæsterne kan – det gemmes med det samme:</p>
 <ul>
-<li><b>Tilmelding åben</b> – gæsterne kan svare ja eller nej.</li>
-<li><b>Bestilling åben</b> – gæsterne kan lægge vine i kurven og bestille. Se <a href="#orders">Bestillinger og betaling</a>. Kontakten findes også øverst på fanen <a href="t:orders/">Bestillinger</a>, og quiz-kontakterne øverst på <a href="t:quiz/">Quiz</a>.</li>
-<li><b>Quiz åben</b> og <b>Quiz afsluttet</b> – se <a href="#evening">Under aftenen</a>.</li>
-<li><b>Blindsmagning</b> – se <a href="#blind">Blindsmagning</a>.</li>
+<li><b>Svare på invitationen</b> – gæsterne kan svare ja eller nej.</li>
+<li><b>Bestille vin</b> – gæsterne kan lægge vine i kurven og bestille. Se <a href="#orders">Bestillinger og betaling</a>. Kontakten findes også øverst på fanen <a href="t:orders/">Bestillinger</a>, og quiz-kontakterne øverst på <a href="t:quiz/">Quiz</a>.</li>
+<li><b>Svare på quizzen</b> og <b>Se quizzens facit</b> – se <a href="#evening">Under aftenen</a>.</li>
 </ul>
+<p>Under <i>Smagningen</i> finder du <b>Blindsmagning</b> (se <a href="#blind">Blindsmagning</a>), maks. antal gæster og linket til pointtavlen på tv’et.</p>
 <h4 id="max-guests"><a href="t:settings/#max-guests">Max antal gæster og venteliste</a></h4>
-<p>Skriv et tal for at sætte et loft. Når smagningen er fuld, kommer gæster, der siger ja, på venteliste i den rækkefølge, de svarede. Melder en, der kommer, fra – eller hæver du loftet – rykker den første på ventelisten automatisk op. Tomt felt betyder intet loft. Gæsterne ser ikke, hvor mange pladser der er tilbage.</p>
+<p>Tryk <i>Rediger</i> ved <i>Maks. antal gæster</i>, og skriv et tal. Når smagningen er fuld, kommer gæster, der siger ja, på venteliste i den rækkefølge, de svarede. Melder en, der kommer, fra – eller hæver du loftet – rykker den første på ventelisten automatisk op. Tomt felt betyder intet loft. Gæsterne ser ikke, hvor mange pladser der er tilbage.</p>
 <h4>Medværter</h4>
-<p>Under <a href="t:settings/#hosts">Indstillinger → Værter</a> kan du tilføje medværter til en smagning. De får en mail og kan rette smagningen, vinene og gæsterne, men ikke slette smagningen eller styre værterne.</p>
+<p>Under <a href="t:settings/#hosts">Indstillinger → Værter</a> trykker du <i>Tilføj vært</i> og skriver e-mailen. De får en mail og kan rette smagningen, vinene og gæsterne, men ikke slette smagningen eller styre værterne.</p>
 <h4 id="fee"><a href="t:settings/#fee">Deltagergebyr</a></h4>
-<p>Skriv det samlede indkøb, så foreslås et gebyr pr. gæst ud fra antallet, der kommer. Slå <i>Vis gebyret</i> til, når gæsterne skal se det. Du markerer selv, hvem der har betalt.</p>`,
+<p>Tryk <i>Rediger</i> under <i>Betaling for smagningen</i>, og skriv, hvad smagningen koster i alt – så foreslås et beløb pr. gæst ud fra antallet, der kommer. Slå <i>Vis gebyret for gæsterne</i> til, når de skal se det. Du markerer selv, hvem der har betalt.</p>`,
       en: `<p>A tasting has its own page with tabs: <a href="t:">Overview</a>, <a href="t:wines/">Wines</a>, <a href="t:guests/">Guests</a>, <a href="t:orders/">Orders</a>, <a href="t:quiz/">Quiz</a>, <a href="t:chat/">Chat</a> and <a href="t:settings/">Settings</a>. See them all under <a href="/admin/tastings/">Tastings</a>. Every host on the account can see and edit every tasting.</p>
 <h4>Details</h4>
 <p>Under <a href="t:">Overview → Edit</a>: title, date and time, place (the address is looked up as you type), an introduction for the guests and the tasting's language. The language decides, among other things, the language of the invitation emails.</p>
@@ -64,19 +65,20 @@ export const HELP: HelpSection[] = [
 <p>Press <i>Write a draft with AI</i> under the introduction. Cloudflare's AI writes a draft from the tasting's wines – e.g. a journey through one region, a tour across countries or a grape as the theme – and blind wines are not given away. The draft is shown <b>below</b> your own text: <i>Use the draft</i> puts it in the field (with <i>Undo</i>, which brings your text back), <i>Try again</i> gives a new one, and <i>Discard</i> removes it. Nothing is saved until you press <i>Save</i>. A draft takes up to about 20 seconds. Always check the text – AI can make things up.</p>
 <h4 id="delete-tasting">Deleting a tasting</h4>
 <p>At the bottom of <a href="t:settings/#delete-tasting">Settings → Delete the tasting</a>. Only the one who created the tasting and the account's owner can delete it. Guest list, replies, orders, quiz and chat go; the wines stay in the library.</p>
-<h4 id="controls"><a href="t:settings/#controls">Controls</a></h4>
+<h4 id="controls"><a href="t:settings/#controls">The guests can</a></h4>
+<p>At the top of <a href="t:settings/">Settings</a> you switch on and off what the guests can do – it is saved at once:</p>
 <ul>
-<li><b>Sign-up open</b> – guests can reply yes or no.</li>
-<li><b>Ordering open</b> – guests can put wines in the cart and order. See <a href="#orders">Orders and payment</a>. The switch is also at the top of the <a href="t:orders/">Orders</a> tab, and the quiz switches at the top of <a href="t:quiz/">Quiz</a>.</li>
-<li><b>Quiz open</b> and <b>Quiz finished</b> – see <a href="#evening">During the evening</a>.</li>
-<li><b>Blind tasting</b> – see <a href="#blind">Blind tasting</a>.</li>
+<li><b>Reply to the invitation</b> – guests can reply yes or no.</li>
+<li><b>Order wine</b> – guests can put wines in the cart and order. See <a href="#orders">Orders and payment</a>. The switch is also at the top of the <a href="t:orders/">Orders</a> tab, and the quiz switches at the top of <a href="t:quiz/">Quiz</a>.</li>
+<li><b>Answer the quiz</b> and <b>See the quiz answers</b> – see <a href="#evening">During the evening</a>.</li>
 </ul>
+<p>Under <i>The tasting</i> you find <b>Blind tasting</b> (see <a href="#blind">Blind tasting</a>), the max number of guests and the link to the leaderboard for the TV.</p>
 <h4 id="max-guests"><a href="t:settings/#max-guests">Max number of guests and the waiting list</a></h4>
-<p>Enter a number to set a limit. When the tasting is full, guests who say yes go on the waiting list in the order they replied. When someone who is coming drops out – or you raise the limit – the first on the list moves up automatically. An empty field means no limit. Guests do not see how many places are left.</p>
+<p>Press <i>Edit</i> by <i>Max. number of guests</i> and enter a number. When the tasting is full, guests who say yes go on the waiting list in the order they replied. When someone who is coming drops out – or you raise the limit – the first on the list moves up automatically. An empty field means no limit. Guests do not see how many places are left.</p>
 <h4>Co-hosts</h4>
-<p>Under <a href="t:settings/#hosts">Settings → Hosts</a> you can add co-hosts to a tasting. They get an email and can edit the tasting, its wines and guests, but cannot delete the tasting or manage its hosts.</p>
+<p>Under <a href="t:settings/#hosts">Settings → Hosts</a> press <i>Add host</i> and enter the email. They get an email and can edit the tasting, its wines and guests, but cannot delete the tasting or manage its hosts.</p>
 <h4 id="fee"><a href="t:settings/#fee">Tasting fee</a></h4>
-<p>Enter the total purchase and a fee per guest is suggested from the number who are coming. Turn on <i>Show the fee</i> when the guests should see it. You mark yourself who has paid.</p>`,
+<p>Press <i>Edit</i> under <i>Tasting fee</i> and enter what the tasting costs in all – an amount per guest is suggested from the number who are coming. Turn on <i>Show the fee to the guests</i> when they should see it. You mark yourself who has paid.</p>`,
     },
   },
   {
@@ -173,14 +175,14 @@ export const HELP: HelpSection[] = [
     body: {
       da: `<ul>
 <li><b><a href="g:wines/">Vinene</a></b> – gæsterne bladrer gennem vinene på telefonen, med billede, kort, druer, mad og servering, og giver hver vin stjerner og noter.</li>
-<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">lav spørgsmål</a> med svarmuligheder under fanen <a href="t:quiz/">Quiz</a>. Slå <a href="t:settings/#controls">Quiz åben</a> til, når gæsterne skal svare, og <i>Quiz afsluttet</i>, når de rigtige svar og stillingen skal vises.</li>
+<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">lav spørgsmål</a> med svarmuligheder under fanen <a href="t:quiz/">Quiz</a>. Slå <a href="t:settings/#controls">Svare på quizzen</a> til, når gæsterne skal svare, og <i>Quiz afsluttet</i>, når de rigtige svar og stillingen skal vises.</li>
 <li><b>Quiz-forslag fra AI</b> – vælg sværhedsgrad (<i>Let, Mellem, Ekspert</i>) og tryk <a href="t:quiz/#q-ai">Forslag fra AI</a>. Du får 5 spørgsmål ud fra vinene – om land og region, druer, alder, fremstilling, begreber og "hvilken passer ikke ind". Ved en almindelig smagning handler spørgsmålene om viden omkring vinene (regionen, druerne, fremstillingen), ikke om det, gæsterne kan læse på vinens kort; kun blinde vine får gættespørgsmål. Forslagene tilføjes kun, når du trykker <i>Tilføj</i>; tjek de rigtige svar, og ret spørgsmålet bagefter som alle andre. <i>Flere forslag</i> giver nye uden gentagelser.</li>
 <li><b><a href="t:chat/">Chat</a></b> – en fælles chat for aftenen, som både du og gæsterne kan skrive i.</li>
 <li><b>Blinde vine</b> – afslør dem undervejs, se <a href="#blind">Blindsmagning</a>.</li>
 </ul>`,
       en: `<ul>
 <li><b><a href="g:wines/">The wines</a></b> – guests browse the wines on their phone, with picture, map, grapes, food and serving, and give each wine stars and notes.</li>
-<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">make questions</a> with answer options on the <a href="t:quiz/">Quiz</a> tab. Turn on <a href="t:settings/#controls">Quiz open</a> when the guests should answer, and <i>Quiz finished</i> when the right answers and the standings should be shown.</li>
+<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">make questions</a> with answer options on the <a href="t:quiz/">Quiz</a> tab. Turn on <a href="t:settings/#controls">Answer the quiz</a> when the guests should answer, and <i>Quiz finished</i> when the right answers and the standings should be shown.</li>
 <li><b>Quiz suggestions from AI</b> – choose a difficulty (<i>Easy, Medium, Expert</i>) and press <a href="t:quiz/#q-ai">Suggestions from AI</a>. You get 5 questions from the wines – about country and region, grapes, age, how it is made, terms and "odd one out". In an ordinary tasting the questions are about the knowledge around the wines (the region, the grapes, how it is made), not what guests can read on the wine's card; only blind wines get guessing questions. Suggestions are only added when you press <i>Add</i>; check the right answers, and edit the question afterwards like any other. <i>More suggestions</i> gives new ones without repeats.</li>
 <li><b><a href="t:chat/">Chat</a></b> – a shared chat for the evening that you and the guests can write in.</li>
 <li><b>Blind wines</b> – reveal them as you go, see <a href="#blind">Blind tasting</a>.</li>
@@ -305,8 +307,8 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
     da: 'Gæsterne kan lægge vine i kurven og bestille. Kun vine, der kan bestilles og ikke er blinde.',
     en: 'Guests can put wines in the cart and order. Only wines that can be ordered and are not blind.' } },
   quiz: { more: 'evening', text: {
-    da: '<b>Quiz åben</b>: gæsterne kan svare. <b>Quiz afsluttet</b>: de rigtige svar og stillingen vises.',
-    en: '<b>Quiz open</b>: guests can answer. <b>Quiz finished</b>: the right answers and the standings are shown.' } },
+    da: '<b>Svare på quizzen</b>: gæsterne kan svare. <b>Se quizzens facit</b>: de rigtige svar og stillingen vises.',
+    en: '<b>Answer the quiz</b>: guests can answer. <b>See the quiz answers</b>: the right answers and the standings are shown.' } },
   fee: { more: 'fee', text: {
     da: 'Skriv det samlede indkøb, så foreslås et gebyr pr. gæst, der kommer. Du markerer selv, hvem der har betalt.',
     en: 'Enter the total purchase and a fee per guest who is coming is suggested. You mark yourself who has paid.' } },

@@ -1,7 +1,9 @@
 // Admin, one tasting: its hosts. The owner adds co-hosts by email and removes them;
 // co-hosts see the list. Everything goes through security-definer functions in the database.
 import { supabase } from './supabase';
-import { $, mk } from './admin-common';
+import { $, mk, sheetPanel } from './admin-common';
+import { confirmModal } from './confirm';
+import { toast } from './toast';
 import { t, lang } from '../i18n';
 
 type HostRow = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
@@ -11,7 +13,16 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
   const form = $<HTMLFormElement>('host-add');
   const input = $<HTMLInputElement>('host-email');
   const msg = $('host-msg');
-  form.hidden = !isOwner;
+  // Adding hosts: a side panel, opened by the owner's "Add host"
+  const panel = sheetPanel($<HTMLDialogElement>('host-panel'));
+  $('host-open').hidden = !isOwner;
+  $('host-open').addEventListener('click', () => {
+    say('');
+    $('host-link').hidden = true;
+    closeConfirm();
+    panel.open();
+    if (matchMedia('(min-width: 48rem)').matches) input.focus();
+  });
 
   const say = (text: string, ok = false) => {
     msg.textContent = text;
@@ -52,16 +63,12 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
       if (isOwner && !r.owner) {
         const del = mk('button', 'text-btn danger', t('hosts.remove')) as HTMLButtonElement;
         del.type = 'button';
-        // Two taps instead of a browser dialog
+        // Asked first, in a small window
         del.addEventListener('click', async () => {
-          if (!del.dataset.armed) {
-            del.dataset.armed = '1';
-            del.textContent = t('hosts.removeConfirm');
-            setTimeout(() => { delete del.dataset.armed; del.textContent = t('hosts.remove'); }, 4000);
-            return;
-          }
+          if (!(await confirmModal(t('hosts.removeQ', { name: r.name || r.email }), t('hosts.remove')))) return;
           const { error } = await supabase.rpc('remove_cohost', { t_id: tastingId, e: r.email });
-          if (error) say(t('hosts.failed')); else { say(''); load(); }
+          if (error) toast(t('hosts.failed'), { kind: 'error' });
+          else { toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' }); load(); }
         });
         li.append(del);
       }

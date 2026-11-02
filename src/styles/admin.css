@@ -1173,8 +1173,9 @@ dialog.wizard .wz-body { overflow-x: hidden; }
   .ta-tabs { flex-wrap: wrap; overflow-x: visible; column-gap: 1.1rem; row-gap: 0; }
 }
 /* Switches repeated on the tab they belong to (Orders, Quiz) */
-.admin-page .tab-switch { margin: 0 0 0.8rem; }
-.admin-page .tab-switches { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+.admin-page .tab-switch { margin: 0 0 0.8rem; max-width: 46rem; border-top: 0; border-bottom: 1px solid var(--lodge-3); }
+.admin-page .tab-switches { display: grid; max-width: 46rem; margin-bottom: 0.8rem; }
+.admin-page .tab-switches .tab-switch { margin: 0; }
 .admin-page #orders-total[hidden] { display: none; }
 
 /* "Get started" on a new tasting's overview: one row per step, with the button that does it */
@@ -1291,3 +1292,40 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .confirm-modal .td-q { margin: 0 0 0.4rem; font-weight: 600; font-size: 1.05rem; }
 .confirm-modal .hint { margin: 0 0 0.4rem; }
 .confirm-modal .row-actions { justify-content: flex-end; margin-top: 1rem; gap: 0.6rem; }
+
+/* ---------- A tasting's settings: cards with switches (save at once) and rows with "Edit" (side panel) ---------- */
+.admin-page .set-card { max-width: 46rem; }
+.admin-page .set-card h2 { margin-bottom: 0.4rem; }
+.admin-page .set-switch, .admin-page .set-row {
+  display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.85rem 0; margin: 0; border-top: 1px solid var(--lodge-3);
+  font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 1rem; color: var(--paper);
+}
+.admin-page .set-card h2 + .set-switch, .admin-page .set-card h2 + .set-row { border-top: 0; }
+.admin-page .set-switch { cursor: pointer; }
+.admin-page .set-switch > span, .admin-page .set-row > span { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; min-width: 0; }
+.admin-page .set-switch b, .admin-page .set-row b { font-weight: 500; display: inline-flex; align-items: center; }
+.admin-page .set-switch small, .admin-page .set-row small { color: var(--muted); font-size: 0.88rem; overflow-wrap: anywhere; }
+.admin-page .set-row { align-items: center; }
+.admin-page .set-row .btn { flex: none; margin: 0; }
+.admin-page .set-switch input {
+  appearance: none; -webkit-appearance: none; flex: none; order: 2; margin: 0.1rem 0 0; padding: 0 !important; border: 0;
+  width: 2.6rem !important; height: 1.5rem; border-radius: 999px; background: var(--lodge-3); position: relative; cursor: pointer;
+}
+.admin-page .set-switch input::after {
+  content: ''; position: absolute; top: 0.15rem; left: 0.15rem; width: 1.2rem; height: 1.2rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 0.15s;
+}
+.admin-page .set-switch input:checked { background: var(--amber); }
+.admin-page .set-switch input:checked::after { transform: translateX(1.1rem); }
+.admin-page .set-switch input:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+/* What counts towards quantity prices: under "Order wine", indented */
+.admin-page .set-sub { margin: -0.3rem 0 0.8rem 0; padding: 0.7rem 0.9rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); }
+.admin-page .set-sub legend { font-size: 0.9rem; font-weight: 600; padding: 0 0.3rem; }
+.admin-page dialog.sheet .set-switch { border-top: 1px solid var(--lodge-3); margin-top: 0.6rem; }
+.admin-page #host-panel .add-form { display: grid; gap: 0.4rem; }
+.admin-page .quiet-zone { max-width: 46rem; }
+/* Hosts on the settings page: lines like the rest of the settings, not boxes */
+.admin-page #hosts .hosts-list { gap: 0; margin: 0.4rem 0 0; }
+.admin-page #hosts .host-row { border: 0; border-top: 1px solid var(--lodge-3); border-radius: 0; background: none; padding: 0.75rem 0; }
+.admin-page #hosts .host-row .text-btn.danger { min-height: 2.25rem; padding: 0.35rem 0.5rem; }
+.admin-page .set-switch.tab-switch { border-top: 0; }

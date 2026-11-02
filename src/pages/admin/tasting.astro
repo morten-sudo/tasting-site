@@ -118,42 +118,94 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Controls -->
-      <section id="controls" class="block" data-section="settings">
-        <h2 data-i18n="admin.controls">Controls</h2>
-        <div class="toggles">
-          <label class="toggle"><input type="checkbox" data-key="signup_open" /> <span data-i18n="admin.signupOpen">Sign-up open</span></label>
-          <label class="toggle" data-help="orders-open"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
-          <label class="toggle" data-help="quiz"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
-          <label class="toggle"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
-          <label class="toggle" data-help="blind"><input type="checkbox" data-key="blind" /> <span data-i18n="blind.tasting">Blind tasting (all wines blind until you reveal them)</span></label>
-        </div>
+      <!-- Settings: switches that save straight away; values with an "Edit" that opens the side panel -->
+      <section id="controls" class="block set-card" data-section="settings">
+        <h2 data-i18n="set.guestsCan">The guests can</h2>
+        <label class="set-switch"><input type="checkbox" role="switch" data-key="signup_open" />
+          <span><b data-i18n="wizard.signupTitle">Reply to the invitation</b><small data-i18n="wizard.signupHint">Guests can say yes or no and add a note.</small></span></label>
+        <label class="set-switch"><input type="checkbox" role="switch" data-key="orders_open" />
+          <span><b><span data-i18n="wizard.ordersTitle">Order wine</span><span data-help="orders-open"></span></b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
         <!-- Quantity prices: what counts towards them – the host decides (no default) -->
-        <fieldset id="bulk-mode" class="bulk-mode">
+        <fieldset id="bulk-mode" class="bulk-mode set-sub">
           <legend><span data-i18n="bulk.legend">Quantity prices count …</span><span data-help="bulk-mode"></span></legend>
           <label><input type="radio" name="bulk-mode" value="guest" /> <span><b data-i18n="bulk.guestTitle">Each guest's own bottles</b><small data-i18n="bulk.guestHint">A guest who orders 6 bottles (also over several orders) gets the quantity price.</small></span></label>
           <label><input type="radio" name="bulk-mode" value="pooled" /> <span><b data-i18n="bulk.pooledTitle">All the guests' bottles together</b><small data-i18n="bulk.pooledHint">When the guests together order 6 bottles of a wine, everyone gets the quantity price. Prices are provisional until you close ordering – the guests pay after that.</small></span></label>
           <p id="bulk-msg" class="hint" aria-live="polite"></p>
         </fieldset>
-        <!-- Max number of guests: when it is reached, a yes puts the guest on the waiting list -->
-        <div class="max-guests">
-          <label for="max-guests" data-help="max-guests"><span data-i18n="waitlist.max">Max number of guests</span> <span class="hint" data-i18n="waitlist.maxHint">(empty = no limit; when full, guests who say yes go on a waiting list)</span></label>
-          <div class="inline-form">
-            <input id="max-guests" type="number" inputmode="numeric" min="1" max="10000" class="short" />
-            <span id="max-guests-msg" class="hint" aria-live="polite"></span>
-          </div>
+        <label class="set-switch"><input type="checkbox" role="switch" data-key="quiz_open" />
+          <span><b><span data-i18n="set.quizOpen">Answer the quiz</span><span data-help="quiz"></span></b><small data-i18n="set.quizOpenHint">The questions are open for answers on the guests’ phones.</small></span></label>
+        <label class="set-switch"><input type="checkbox" role="switch" data-key="quiz_finished" />
+          <span><b data-i18n="set.quizDone">See the quiz answers</b><small data-i18n="set.quizDoneHint">The quiz is closed and the right answers and explanations are shown.</small></span></label>
+      </section>
+
+      <section class="block set-card" data-section="settings">
+        <h2 data-i18n="set.tasting">The tasting</h2>
+        <label class="set-switch"><input type="checkbox" role="switch" data-key="blind" />
+          <span><b><span data-i18n="wizard.blindTitle">Blind tasting</span><span data-help="blind"></span></b><small data-i18n="wizard.blindHint">Guests see only the number and colour of each wine until you reveal it.</small></span></label>
+        <div id="max-guests-row" class="set-row">
+          <span><b><span data-i18n="wizard.maxGuests">Max. number of guests</span><span data-help="max-guests"></span></b><small id="max-guests-view"></small></span>
+          <button id="max-guests-edit" class="btn small ghost" type="button" data-i18n="admin.edit">Edit</button>
         </div>
-        <p class="hint"><span data-i18n="admin.tvLink">Leaderboard for the TV:</span> <a id="tv-link" href="/" target="_blank"></a></p>
+        <div class="set-row">
+          <span><b data-i18n="set.tv">Leaderboard for the TV</b><small><a id="tv-link" href="/" target="_blank"></a></small></span>
+          <button id="tv-copy" class="btn small ghost" type="button" data-i18n="hosts.copy">Copy</button>
+        </div>
       </section>
 
       <!-- Hosts: the owner gives others the host role for this tasting -->
-      <section id="hosts" class="block" data-section="settings">
-        <h2 data-i18n="hosts.title">Hosts</h2>
+      <section id="hosts" class="block set-card" data-section="settings">
+        <div class="guests-head">
+          <h2 data-i18n="hosts.title">Hosts</h2>
+          <button id="host-open" class="btn small ghost" type="button" hidden data-i18n="hosts.add">Add host</button>
+        </div>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
         <ul id="hosts-list" class="hosts-list"></ul>
-        <form id="host-add" class="inline-form host-add" novalidate hidden>
-          <input id="host-name" type="text" autocomplete="off" maxlength="80" placeholder="Name (optional)" aria-label="Name of the new host (optional)" data-i18n-attr="placeholder=hosts.namePlaceholder;aria-label=hosts.nameLabel" />
-          <input id="host-email" type="email" inputmode="email" autocomplete="off" placeholder="Email" aria-label="Email of the new host" data-i18n-attr="placeholder=common.email;aria-label=hosts.emailLabel" />
-          <button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button>
+      </section>
+
+      <!-- Tasting fee -->
+      <section id="fee" class="block set-card" data-section="settings">
+        <h2><span data-i18n="guest.feeTitle">Tasting fee</span><span data-help="fee"></span></h2>
+        <div class="set-row">
+          <span><b id="fee-view"></b><small id="fee-summary"></small></span>
+          <button id="fee-edit" class="btn small ghost" type="button" data-i18n="admin.edit">Edit</button>
+        </div>
+      </section>
+
+      <!-- Side panels for the settings above -->
+      <dialog id="mg-panel" class="sheet" aria-labelledby="mg-title">
+        <div class="sheet-head"><h2 id="mg-title" data-i18n="wizard.maxGuests">Max. number of guests</h2><button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button></div>
+        <form id="mg-form" class="add-form" novalidate>
+          <label for="max-guests" data-i18n="wizard.maxGuests">Max. number of guests</label>
+          <div class="with-unit"><input id="max-guests" class="short" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
+          <p class="hint" data-i18n="set.maxHint">Leave it empty for no limit. When it is full, guests who say yes go on a waiting list – and move up by themselves when someone says no.</p>
+          <div class="row-actions"><button class="btn small" type="submit" data-i18n="common.save">Save</button><button class="text-btn" type="button" data-close data-i18n="common.cancel">Cancel</button></div>
+        </form>
+      </dialog>
+
+      <dialog id="fee-panel" class="sheet" aria-labelledby="fee-title">
+        <div class="sheet-head"><h2 id="fee-title" data-i18n="guest.feeTitle">Tasting fee</h2><button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button></div>
+        <form id="fee-form" class="add-form" novalidate>
+          <label for="fee-total" data-i18n="set.feeTotal">What the tasting costs in all</label>
+          <div class="with-unit"><input id="fee-total" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit">kr.</span></div>
+          <p id="fee-suggest" class="hint"></p>
+          <label for="fee-amount" data-i18n="set.feePer">Each guest pays</label>
+          <div class="with-unit"><input id="fee-amount" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="wizard.krPerPerson">kr. per person</span></div>
+          <p class="hint" data-i18n="set.feePerHint">Leave it empty to use the suggestion above.</p>
+          <label class="set-switch"><input id="fee-open" type="checkbox" role="switch" />
+            <span><b data-i18n="wizard.feeShowTitle">Show the fee to the guests</b><small data-i18n="wizard.feeShowHint">Guests who are coming see the amount and can pay with MobilePay.</small></span></label>
+          <div class="row-actions"><button class="btn small" type="submit" data-i18n="common.save">Save</button><button class="text-btn" type="button" data-close data-i18n="common.cancel">Cancel</button></div>
+        </form>
+      </dialog>
+
+      <dialog id="host-panel" class="sheet" aria-labelledby="host-title">
+        <div class="sheet-head"><h2 id="host-title" data-i18n="hosts.add">Add host</h2><button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button></div>
+        <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
+        <form id="host-add" class="add-form host-add" novalidate>
+          <label for="host-email" data-i18n="common.email">Email</label>
+          <input id="host-email" type="email" inputmode="email" autocomplete="off" />
+          <label for="host-name"><span data-i18n="admin.name">Name</span> <span class="hint" data-i18n="dt.optional">(optional)</span></label>
+          <input id="host-name" type="text" autocomplete="off" maxlength="80" />
+          <div class="row-actions"><button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button></div>
         </form>
         <div id="host-confirm" class="host-confirm" role="alertdialog" aria-live="polite" hidden></div>
         <p id="host-msg" class="message" hidden></p>
@@ -164,27 +216,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <button id="host-link-copy" class="btn small ghost" type="button" data-i18n="hosts.copy">Copy</button>
           </div>
         </div>
-      </section>
+      </dialog>
 
-      <!-- Tasting fee -->
-      <section id="fee" class="block" data-section="settings">
-        <h2><span data-i18n="guest.feeTitle">Tasting fee</span><span data-help="fee"></span></h2>
-        <div class="fee-grid">
-          <label for="fee-total" data-i18n="admin.feeTotal">Total cost (DKK)</label>
-          <input id="fee-total" type="number" min="0" step="1" inputmode="decimal" />
-          <p id="fee-suggest" class="hint"></p>
-          <label for="fee-amount" data-i18n="admin.feePer">Price per person (DKK)</label>
-          <div class="inline-form">
-            <input id="fee-amount" type="number" min="0" step="1" inputmode="decimal" />
-            <button id="fee-save" class="btn small" type="button" data-i18n="common.save">Save</button>
-          </div>
-          <p id="fee-msg" class="hint" aria-live="polite"></p>
-        </div>
-        <label class="toggle"><input type="checkbox" data-key="tasting_fee_open" /> <span data-i18n="admin.feeShow">Show the fee to attending guests</span></label>
-        <p id="fee-summary" class="hint fee-summary"></p>
-      </section>
-
-      <!-- Delete the tasting: last under settings, for whoever may manage it (not co-hosts) -->
       <section class="block quiet-zone" data-section="settings">
       <div id="delete-tasting" hidden>
         <h3 data-i18n="tastingDelete.title">Delete the tasting</h3>
@@ -340,7 +373,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block" data-section="orders">
         <h2 data-i18n="admin.orders">Orders</h2>
         <!-- The same switch as under Settings, here where it is used -->
-        <label class="toggle tab-switch" data-help="orders-open"><input type="checkbox" data-key="orders_open" /> <span data-i18n="admin.ordersOpen">Ordering open</span></label>
+        <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="orders_open" />
+          <span><b><span data-i18n="wizard.ordersTitle">Order wine</span><span data-help="orders-open"></span></b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
         <div id="orders-by-guest"></div>
         <div id="orders-total">
         <h3 data-i18n="admin.totalPurchase">Total purchase</h3>
@@ -368,14 +402,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <button id="q-add-toggle" class="btn small ghost" type="button" data-i18n="aq.add">Add question</button>
         </div>
         <div class="tab-switches">
-          <label class="toggle tab-switch" data-help="quiz"><input type="checkbox" data-key="quiz_open" /> <span data-i18n="admin.quizOpen">Quiz open for answers</span></label>
-          <label class="toggle tab-switch"><input type="checkbox" data-key="quiz_finished" /> <span data-i18n="admin.quizFinished">Quiz finished (show answers)</span></label>
+          <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="quiz_open" />
+            <span><b><span data-i18n="set.quizOpen">Answer the quiz</span><span data-help="quiz"></span></b><small data-i18n="set.quizOpenHint">The questions are open for answers on the guests’ phones.</small></span></label>
+          <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="quiz_finished" />
+            <span><b data-i18n="set.quizDone">See the quiz answers</b><small data-i18n="set.quizDoneHint">The quiz is closed, and the right answers and explanations are shown.</small></span></label>
         </div>
         <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
 
         <!-- Suggestions from AI: shown here, added one by one only when the host chooses -->
-        <div class="ai-quiz" data-help="ai-quiz">
-          <div class="ai-quiz-bar">
+        <div class="ai-quiz">
+          <div class="ai-quiz-bar" data-help="ai-quiz">
             <div class="segmented" role="radiogroup" aria-label="Difficulty" data-i18n-attr="aria-label=aiQuiz.level">
               <label><input type="radio" name="q-ai-level" value="easy" /> <span data-i18n="aiQuiz.easy">Easy</span></label>
               <label><input type="radio" name="q-ai-level" value="medium" checked /> <span data-i18n="aiQuiz.medium">Medium</span></label>
@@ -439,12 +475,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
-  import { requireHost, mk as mkEl, sheetPanel, type Host } from '../../lib/admin-common';
+  import { requireHost, mk as mkEl, sheetPanel, toNumber, type Host } from '../../lib/admin-common';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
   import { initWhen, readWhen, readEnd, writeWhen, checkWhen } from '../../lib/datetime';
   import { fieldError, focusField } from '../../lib/field-error';
+  import { toast } from '../../lib/toast';
+  import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
 
@@ -652,27 +690,49 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderFee();
   }
 
-  // Max number of guests (saved when changed; a higher limit moves guests up from the waiting list)
-  $('max-guests').addEventListener('change', async () => {
+  // ---------- Settings: side panels for max guests and the fee ----------
+  const mgPanel = sheetPanel($('mg-panel') as HTMLDialogElement);
+  const feePanel = sheetPanel($('fee-panel') as HTMLDialogElement);
+  document.querySelectorAll<HTMLButtonElement>('#mg-panel [data-close], #fee-panel [data-close]').forEach((b) =>
+    b.addEventListener('click', () => (b.closest('dialog') as HTMLDialogElement).close()));
+  function renderMaxGuests() {
+    if (!tasting) return;
+    const max = tasting.max_guests as number | null;
+    $('max-guests-view').textContent = max ? t('set.maxView', { n: max }) : t('set.noLimit');
+  }
+  $('max-guests-edit').addEventListener('click', () => {
     if (!tasting) return;
     const el = $('max-guests') as HTMLInputElement;
-    const n = Math.round(Number(el.value));
-    const max = el.value.trim() && n >= 1 ? Math.min(n, 10000) : null;
+    el.value = tasting.max_guests ? String(tasting.max_guests) : '';
+    fieldError(el, null);
+    mgPanel.open();
+  });
+  // A higher limit moves guests up from the waiting list (in the database)
+  $('mg-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!tasting) return;
+    const el = $('max-guests') as HTMLInputElement;
+    const v = el.value.trim();
+    if (v && !(/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 10000)) { fieldError(el, t('wizard.maxBad')); el.focus(); return; }
+    const max = v ? Number(v) : null;
     const { error } = await supabase.from('tastings').update({ max_guests: max }).eq('id', tasting.id);
-    $('max-guests-msg').textContent = error ? t('admin.changeNotSaved') : t('common.saved');
-    if (error) return;
+    if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return; }
     tasting.max_guests = max;
-    el.value = max ? String(max) : '';
+    mgPanel.close();
+    renderMaxGuests();
+    toast(t('common.saved'), { kind: 'ok' });
     await reloadParticipants();
+  });
+  $('tv-copy').addEventListener('click', async () => {
+    const url = ($('tv-link') as HTMLAnchorElement).href;
+    try { await navigator.clipboard.writeText(url); toast(t('hosts.copied'), { kind: 'ok' }); } catch { /* the link is there to select */ }
   });
 
   function loadSettings() {
     if (!tasting) return;
-    ($('max-guests') as HTMLInputElement).value = tasting.max_guests ? String(tasting.max_guests) : '';
+    renderMaxGuests();
     feeTotal = Number(tasting.tasting_total) || 0;
     feeAmount = Number(tasting.tasting_fee) || 0;
-    ($('fee-total') as HTMLInputElement).value = feeTotal ? String(feeTotal) : '';
-    ($('fee-amount') as HTMLInputElement).value = feeAmount ? String(feeAmount) : '';
     document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
       box.checked = tasting![box.dataset.key!] === true;
     });
@@ -697,6 +757,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         return;
       }
       tasting[box.dataset.key!] = box.checked;
+      toast(t('common.saved'), { kind: 'ok', ms: 2000 });
       // The same switch on another tab follows
       document.querySelectorAll<HTMLInputElement>(`input[data-key="${box.dataset.key}"]`).forEach((b) => (b.checked = box.checked));
       $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
@@ -710,42 +771,59 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     r.addEventListener('change', async () => {
       if (!tasting) return;
       const { error } = await supabase.from('tastings').update({ bulk_mode: r.value }).eq('id', tasting.id);
-      $('bulk-msg').textContent = error ? t('admin.changeNotSaved') : t('common.saved');
-      if (!error) tasting.bulk_mode = r.value;
+      $('bulk-msg').textContent = error ? t('admin.changeNotSaved') : '';
+      if (!error) { tasting.bulk_mode = r.value; toast(t('common.saved'), { kind: 'ok', ms: 2000 }); }
     });
   });
 
-  // ---------- Tasting fee ----------
+  // ---------- Tasting fee: shown on the page, edited in the side panel ----------
   function renderFee() {
     const coming = participants.filter((p) => p.status === 'yes');
-    const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
+    const total = toNumber(($('fee-total') as HTMLInputElement).value) ?? 0;
     $('fee-suggest').textContent = total && coming.length
       ? t('admin.feeSuggest', { n: coming.length, price: kr.format(Math.ceil(total / coming.length)) })
       : t('admin.feeComing', { n: coming.length });
     const paid = coming.filter((p) => p.tasting_paid);
+    $('fee-view').textContent = feeAmount ? t('set.feeView', { price: kr.format(feeAmount) }) : t('set.noFee');
     $('fee-summary').textContent = feeAmount
-      ? t('admin.feePaidSummary', { paid: paid.length, n: coming.length, got: kr.format(paid.length * feeAmount), all: kr.format(coming.length * feeAmount) })
-      : t('admin.noFee');
+      ? [t('admin.feePaidSummary', { paid: paid.length, n: coming.length, got: kr.format(paid.length * feeAmount), all: kr.format(coming.length * feeAmount) }),
+         tasting?.tasting_fee_open ? t('set.feeShown') : t('set.feeNotShown')].join(' · ')
+      : t('set.feeNone');
   }
-
   $('fee-total').addEventListener('input', renderFee);
-
-  $('fee-save').addEventListener('click', async () => {
-    const total = Number(($('fee-total') as HTMLInputElement).value) || 0;
-    let amount = Number(($('fee-amount') as HTMLInputElement).value) || 0;
-    const coming = participants.filter((p) => p.status === 'yes').length;
-    if (!amount && total && coming) {
-      amount = Math.ceil(total / coming);
-      ($('fee-amount') as HTMLInputElement).value = String(amount);
-    }
+  $('fee-edit').addEventListener('click', () => {
     if (!tasting) return;
+    ($('fee-total') as HTMLInputElement).value = feeTotal ? amountText(feeTotal, locale()) : '';
+    ($('fee-amount') as HTMLInputElement).value = feeAmount ? amountText(feeAmount, locale()) : '';
+    ($('fee-open') as HTMLInputElement).checked = tasting.tasting_fee_open === true;
+    for (const id of ['fee-total', 'fee-amount']) fieldError($(id), null);
+    renderFee();
+    feePanel.open();
+  });
+  $('fee-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!tasting) return;
+    const totalEl = $('fee-total') as HTMLInputElement, amountEl = $('fee-amount') as HTMLInputElement;
+    const total = toNumber(totalEl.value), amountTyped = toNumber(amountEl.value);
+    let bad = false;
+    if (totalEl.value.trim() && (total == null || total < 0)) { fieldError(totalEl, t('wizard.feeBad')); bad = true; }
+    if (amountEl.value.trim() && (amountTyped == null || amountTyped < 0)) { fieldError(amountEl, t('wizard.feeBad')); bad = true; }
+    if (bad) return;
+    // No amount typed: the suggestion (the total shared among those coming, rounded up)
+    const coming = participants.filter((p) => p.status === 'yes').length;
+    const amount = amountTyped ?? (total && coming ? Math.ceil(total / coming) : 0);
+    const open = ($('fee-open') as HTMLInputElement).checked;
     const { error } = await supabase.from('tastings')
-      .update({ tasting_total: total, tasting_fee: amount }).eq('id', tasting.id);
-    if (error) { $('fee-msg').textContent = t('admin.couldNotSave'); return; }
-    feeTotal = total;
+      .update({ tasting_total: total ?? 0, tasting_fee: amount, tasting_fee_open: open && amount > 0 }).eq('id', tasting.id);
+    if (error) { toast(t('admin.couldNotSave'), { kind: 'error' }); return; }
+    feeTotal = total ?? 0;
     feeAmount = amount;
-    $('fee-msg').textContent = `Gemt: ${kr.format(amount)} pr. person.`;
+    tasting.tasting_fee = amount;
+    tasting.tasting_fee_open = open && amount > 0;
+    feePanel.close();
+    renderFee();
     renderParticipants();
+    toast(t('common.saved'), { kind: 'ok' });
   });
 
   // ---------- Guests ----------
