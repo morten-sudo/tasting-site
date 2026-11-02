@@ -907,4 +907,5 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.newWine": "Nuovo vino",
   "adminTasting.newWineQ": "Un vino che non è nella tua libreria?",
   "adminTasting.newWineLink": "Crealo qui – finisce in entrambi",
+  "image.fromSource": "Immagine sbagliata? Scegline un’altra dalla pagina:",
 };

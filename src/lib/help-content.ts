@@ -84,7 +84,7 @@ export const HELP: HelpSection[] = [
 <p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> for guiden. Du kan starte på tre måder:</p>
 <ul>
 <li><b>Billede af etiketten</b> – navn, producent, årgang, stil m.m. læses fra billedet.</li>
-<li><b>Link til en butik</b> – beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden. Under vinen står <i>Hentet fra … (dato)</i>, og du kan hente igen med opdater-ikonet.</li>
+<li><b>Link til en butik</b> – beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden. Er billedet forkert (fx bagetiketten), vises sidens andre billeder, så du kan vælge det rigtige. Under vinen står <i>Hentet fra … (dato)</i>, og du kan hente igen med opdater-ikonet.</li>
 <li><b>Udfyld selv</b>.</li>
 </ul>
 <p>Tjek altid felterne – det automatiske er et godt udgangspunkt, ikke en garanti.</p>
@@ -100,7 +100,7 @@ export const HELP: HelpSection[] = [
 <p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> for the guide. You can start in three ways:</p>
 <ul>
 <li><b>Photo of the label</b> – name, producer, vintage, style and more are read from the photo.</li>
-<li><b>Link to a shop</b> – description, prices, grapes, "goes with", serving and picture are fetched from the page. Below the wine it says <i>Fetched from … (date)</i>, and the refresh icon fetches it again.</li>
+<li><b>Link to a shop</b> – description, prices, grapes, "goes with", serving and picture are fetched from the page. If the picture is wrong (e.g. the back label), the page's other pictures are shown so you can pick the right one. Below the wine it says <i>Fetched from … (date)</i>, and the refresh icon fetches it again.</li>
 <li><b>Fill it in yourself</b>.</li>
 </ul>
 <p>Always check the fields – the automatic part is a good start, not a guarantee.</p>

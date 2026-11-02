@@ -978,4 +978,5 @@ export const en = {
   "adminTasting.newWine": "New wine",
   "adminTasting.newWineQ": "A wine that is not in your library?",
   "adminTasting.newWineLink": "Create it here – it goes into both",
+  "image.fromSource": "Wrong picture? Pick another one from the page:",
 } as const;

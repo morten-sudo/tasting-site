@@ -907,4 +907,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.newWine": "Nieuwe wijn",
   "adminTasting.newWineQ": "Een wijn die niet in je bibliotheek staat?",
   "adminTasting.newWineLink": "Maak hem hier – hij komt op beide plekken",
+  "image.fromSource": "Verkeerde afbeelding? Kies een andere van de pagina:",
 };

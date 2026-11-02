@@ -73,7 +73,7 @@ type LabelResult = {
   abv: number | null; appellation: string | null; region: string | null; country: string | null; grapes: string | null;
 };
 type LinkResult = LabelResult & {
-  description: string | null; image: string | null; price: number | null; source_url: string;
+  description: string | null; image: string | null; images?: string[]; price: number | null; source_url: string;
   food?: string | null; serving?: string | null;
   offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
 };
@@ -418,6 +418,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         if (preview.hidden) { useImage(); f.bump(); }
         else if (preview.src !== r.image) f.add({ id: 'wf-image', apply: useImage });
       }
+      // The page's other pictures: our guess may be the back label or a detail – the host can pick another
+      const others = (r.images ?? []).filter((u) => u !== r.image);
+      if (others.length && !pendingImage) {
+        showImageOptions([r.image, ...others].filter((u): u is string => !!u).map((url) => ({ url })));
+        producerStatus(t('image.fromSource'), '', 'wf-image-status');
+      }
       sourceUrl = r.source_url;
       sourceFetchedAt = new Date().toISOString();
       showSource();
@@ -750,10 +756,16 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     btn.disabled = false;
     if (!images.length) { producerStatus(t('image.noneFound'), '', 'wf-image-status'); return; }
     producerStatus(t('image.pick'), '', 'wf-image-status');
+    showImageOptions(images);
+  });
+
+  /** Pictures to choose from under the image (from the producer's site, or the other pictures on the shop page) */
+  function showImageOptions(images: { url: string; page?: string }[]) {
+    const box = $('wf-image-options');
     box.replaceChildren(...images.map((im) => {
       const b = mk('button', 'image-option');
       b.type = 'button';
-      b.title = im.page;
+      if (im.page) b.title = im.page;
       const img = mk('img');
       img.src = im.url;
       img.alt = '';
@@ -772,7 +784,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       return b;
     }));
     box.hidden = false;
-  });
+  }
 
   // Drop a picture on the image field (or on the picture shown)
   const imageBox = $('wf-image-box');

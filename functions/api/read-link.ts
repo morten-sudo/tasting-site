@@ -71,15 +71,13 @@ function jsonLdProducts(html: string) {
 const first = (v: unknown): unknown => (Array.isArray(v) ? v[0] : v);
 
 // Shops often show the wine's case, gift box or a set next to the bottle (Supervin: …_kasse_….jpg).
-// The first picture that does not look like one of those wins; failing that, the first picture.
+// The first picture (the shop's main one comes first) that does not look like one of those wins; failing that, the first.
 export const NOT_BOTTLE = /(^|[^a-z])(kasse|kasser|box|boks|case|cases|karton|carton|gave|gift|geschenk|coffret|caisse|kiste|aeske|æske|pack|bundle|set|etui|tube|glas|glass|label|etiket)([^a-z]|$)/i;
 export const BOTTLE = /(^|[^a-z])(flaske|bottle|bouteille|flasche|bottiglia|botella|fles|packshot)([^a-z]|$)/i;
 function pickImage(urls: string[]): string | null {
   const seen = [...new Set(urls)];
   const name = (u: string) => { try { return decodeURIComponent(new URL(u).pathname.split('/').pop() ?? ''); } catch { return u; } };
-  return seen.find((u) => BOTTLE.test(name(u)) && !NOT_BOTTLE.test(name(u)))
-    ?? seen.find((u) => !NOT_BOTTLE.test(name(u)))
-    ?? seen[0] ?? null;
+  return seen.find((u) => !NOT_BOTTLE.test(name(u))) ?? seen[0] ?? null;
 }
 
 function absolute(src: unknown, base: URL) {
@@ -189,11 +187,15 @@ ${text}`;
   }
   if (!answer) return json({ error: 'unreadable' }, 422);
 
-  let image = pickImage([
-    ...(shop?.images ?? []).map((i) => i.src),
-    ...(Array.isArray(product.image) ? product.image : [product.image]),
+  // The shop's own main picture (what it shares and marks as the product's image) comes before its gallery,
+  // which can hold the back label or a detail first; all of them are returned so the host can pick another
+  const pictures = [
     meta['og:image:secure_url'], meta['og:image'],
-  ].map((x) => absolute(x, url)).filter(Boolean) as string[]);
+    ...(Array.isArray(product.image) ? product.image : [product.image]),
+    ...(shop?.images ?? []).map((i) => i.src),
+  ].map((x) => absolute(x, url)).filter(Boolean) as string[];
+  let image = pickImage(pictures);
+  const images = [...new Set(pictures)].filter((u) => !NOT_BOTTLE.test(decodeURIComponent(u.split('/').pop() ?? ''))).slice(0, 8);
   // Vivino shares a close crop of the label (…_pl_375x500.png); the bottle shot (…_pb_x600.png) suits the wine card
   const bottle = image?.match(/^(https:\/\/images\.vivino\.com\/thumbs\/[\w-]+)_pl_\d+x\d+\.png$/)?.[1];
   if (bottle) {
@@ -225,6 +227,7 @@ ${text}`;
     food: str(answer.food),
     serving: str(answer.serving)?.slice(0, 300) ?? null,
     image,
+    images,
     price: shopPrice,
     offer,
     // Prices shown in a currency we do not convert: the host types the price
