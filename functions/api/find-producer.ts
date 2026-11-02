@@ -3,7 +3,8 @@
 //    forms such as champagne-bollinger.com, chateau-x.com, weingut-x.de).
 // 2. Every candidate is checked and scored: it must name the producer and be about wine; the producer's name in
 //    the domain or title, its region or appellation and the wine's name on the page count in its favour. The best wins.
-// 3. The place: coordinates in the page's data, in an embedded map link, or the postal address as text.
+// 3. The place: the site is crawled along its own links (and sitemap) to the contact and visit pages; coordinates in
+//    the page or its text, an embedded map link, or the postal address in its data or as text.
 import { MODEL, isHost, json, parseAnswer, str, type AiEnv, meteredAi } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText } from './read-link';
 import { geocodeAddress } from '../../src/server/geocode';
@@ -164,30 +165,101 @@ function mapPlaces(html: string): string[] {
   return out;
 }
 
-/** Pages likely to hold the address or a map: contact, visit, find us … */
-function contactLinks(html: string, base: string, country: string | null = null) {
-  const host = new URL(base).hostname;
-  const contact: string[] = [], visit: string[] = [];
-  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,160}?)<\/a>/gi)) {
-    const text = plain(htmlToText(m[2]) + ' ' + m[1]);
-    // Contact pages first: they hold the address; visit and map pages often hold the coordinates
-    const kind = /contact|kontakt|contato|contacto|contatti|impressum|mentions-legales|legal/.test(text) ? contact
-      : /\b(visit|besuch|visite|acces|venir|trouver|find-us|find us|location|localiza|come-to|onde|where|map|plan d'acces)\b/.test(text) ? visit : null;
-    if (!kind) continue;
-    try {
-      const u = new URL(m[1], base);
-      if (u.hostname === host && !kind.includes(u.href)) kind.push(u.href);
-    } catch {}
+// ---------- Crawling the producer's own site: follow its real links, not guessed addresses ----------
+// How likely a link leads to the address, from its text and address (in the wine countries' languages)
+const LINK_SCORE: [RegExp, number][] = [
+  [/contact|kontakt|contato|contacto|contatti|contactos|impressum|mentions[- ]legales|legal notice|note legali|aviso legal|imprint/, 6],
+  [/\b(visit|visite|visita|besuch|degustaz|tasting|dove siamo|where|find[- ]us|location|localiza|come[- ]to|onde|acces|plan d.acces|venir|trouver|map|mappa|karte|anfahrt)\b/, 4],
+  [/about|azienda|chi[- ]siamo|storia|history|histoire|qui sommes|nosotros|quem somos|uber uns|ueber uns|weingut|cantina|domaine|bodega|quinta|estate/, 2],
+];
+const SKIP = /\.(jpe?g|png|gif|webp|svg|pdf|zip|mp4|mp3|css|js|xml)(\?|$)|^mailto:|^tel:|^javascript:|\/(cart|basket|checkout|account|login|wp-admin|feed)\b|[?&](error|add-to-cart|lang)=/i;
+
+/** The site's own links that may lead to the address, best first – read from the page itself. */
+function rankedLinks(html: string, base: string): { url: string; score: number }[] {
+  const host = new URL(base).hostname.replace(/^www\./, '');
+  const out = new Map<string, number>();
+  for (const m of html.matchAll(/<a\b[^>]*href=["']([^"'#]+)["'][^>]*>([\s\S]{0,200}?)<\/a>/gi)) {
+    if (SKIP.test(m[1])) continue;
+    let u: URL;
+    try { u = new URL(m[1], base); } catch { continue; }
+    if (u.hostname.replace(/^www\./, '') !== host) continue;
+    u.hash = '';
+    const text = plain(htmlToText(m[2]) + ' ' + decodeURIComponent(u.pathname));
+    const score = LINK_SCORE.reduce((sum, [re, n]) => sum + (re.test(text) ? n : 0), 0);
+    if (score > 0) out.set(u.href, Math.max(out.get(u.href) ?? 0, score));
   }
-  // The usual addresses of a contact page, in case the menu is built by script
-  // (the country's own words first: an Italian site has /contatti, not /contact)
+  return [...out].map(([url, score]) => ({ url, score })).sort((a, b) => b.score - a.score);
+}
+
+/** URLs listed in the site's sitemap (robots.txt tells where it is), ranked the same way – for menus built by script. */
+async function sitemapLinks(base: string): Promise<{ url: string; score: number }[]> {
+  const root = new URL('/', base).href;
+  const robots = await get(new URL('/robots.txt', root).href, 4000).catch(() => null);
+  const maps = [...(robots?.html.matchAll(/^sitemap:\s*(\S+)/gim) ?? [])].map((m) => m[1]).slice(0, 2);
+  if (!maps.length) maps.push(new URL('/sitemap.xml', root).href);
+  const urls: string[] = [];
+  for (const m of maps) {
+    const x = await getXml(m);
+    if (!x) continue;
+    const locs = [...x.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((y) => y[1]);
+    // A sitemap index: read its first few sitemaps
+    if (/<sitemapindex/i.test(x)) { for (const sub of locs.slice(0, 3)) { const y = await getXml(sub); if (y) urls.push(...[...y.matchAll(/<loc>\s*([^<\s]+)\s*<\/loc>/gi)].map((z) => z[1])); } }
+    else urls.push(...locs);
+  }
+  return urls.filter((u) => !SKIP.test(u)).map((url) => ({ url, score: LINK_SCORE.reduce((sum, [re, n]) => sum + (re.test(plain(decodeURIComponent(url))) ? n : 0), 0) }))
+    .filter((x) => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 20);
+}
+async function getXml(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { headers: { 'user-agent': BROWSER_UA }, signal: AbortSignal.timeout(5000) });
+    return res.ok ? (await res.text()).slice(0, 600_000) : null;
+  } catch { return null; }
+}
+
+/** Does a page give the place? A postal address in its data, coordinates, or a line with a postcode and a town. */
+const POSTCODE_LINE = /\b(\d{4,5}|\d{3}\s?\d{2}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2})\b[^\n]{2,60}[a-zà-ÿ]{3,}/i;
+const placeIn = (html: string) => ({ address: !!schemaAddress(html), coords: !!(findCoords(html) ?? findCoords(htmlToText(html))),
+  line: POSTCODE_LINE.test(htmlToText(html)) });
+
+/** Reads the producer's site the way a person would: the home page, then the pages its own links (and sitemap) point
+ *  to that are most likely to hold the address – contact, visit, about – one level further if needed. Stops when the
+ *  address and the coordinates are found, or after maxPages. Guessed addresses (/contact …) only when the site has
+ *  no such links at all (a menu built by script and no sitemap). */
+async function crawlSite(home: { url: string; html: string }, country: string | null, maxPages = 10) {
+  const seen = new Set<string>([home.url]);
+  const pages: { url: string; html: string }[] = [];
+  let queue = rankedLinks(home.html, home.url);
+  if (!queue.length) queue = await sitemapLinks(home.url);
+  if (!queue.length) queue = guessedContactPages(home.url, country).map((url) => ({ url, score: 1 }));
+  let found = placeIn(home.html);
+  while (queue.length && pages.length < maxPages && !(found.coords && (found.address || found.line))) {
+    const batch = queue.filter((q) => !seen.has(q.url)).slice(0, 4);
+    if (!batch.length) break;
+    batch.forEach((q) => seen.add(q.url));
+    const got = (await Promise.all(batch.map((q) => get(q.url, 5000)))).filter((p): p is { url: string; html: string } => !!p);
+    for (const p of got) {
+      if (pages.some((x) => x.html === p.html) || p.html === home.html) continue;
+      pages.push(p);
+      const f = placeIn(p.html);
+      found = { address: found.address || f.address, coords: found.coords || f.coords, line: found.line || f.line };
+      // One level further: the links on this page (e.g. "Contatti" under "Azienda")
+      queue.push(...rankedLinks(p.html, p.url).map((l) => ({ ...l, score: l.score - 1 })));
+    }
+    queue = queue.filter((q) => !seen.has(q.url)).sort((a, b) => b.score - a.score);
+  }
+  return pages;
+}
+function guessedContactPages(base: string, country: string | null) {
   const own: Record<string, string[]> = {
-    IT: ['contatti', 'azienda', 'chi-siamo', 'cantina'], ES: ['contacto', 'bodega', 'nosotros'], PT: ['contactos', 'contacto', 'quinta'],
-    DE: ['kontakt', 'weingut', 'impressum'], AT: ['kontakt', 'weingut', 'impressum'], FR: ['contact', 'domaine', 'nous-contacter'],
+    IT: ['contatti', 'azienda', 'chi-siamo'], ES: ['contacto', 'nosotros'], PT: ['contactos', 'contacto'],
+    DE: ['kontakt', 'impressum'], AT: ['kontakt', 'impressum'], FR: ['contact', 'nous-contacter'],
   };
-  const guesses = [...(own[country ?? ''] ?? []), 'contact', 'contact-us', 'about', 'kontakt', 'contatti', 'contacto', 'en/contact']
-    .map((p) => new URL('/' + p, base).href);
-  return [...new Set([...contact.slice(0, 3), ...visit.slice(0, 2), ...guesses])].slice(0, 8);
+  return [...new Set([...(own[country ?? ''] ?? []), 'contact', 'contact-us', 'kontakt', 'contatti', 'contacto', 'about'])].map((p) => new URL('/' + p, base).href);
+}
+/** For the "is this the producer's site" check: the few pages most likely to say who and what. */
+function contactLinks(html: string, base: string, country: string | null = null) {
+  const real = rankedLinks(html, base).map((l) => l.url);
+  return (real.length ? real : guessedContactPages(base, country)).slice(0, 4);
 }
 
 export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
@@ -241,10 +313,8 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   }
   if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
 
-  // 3. The place: home page first, then contact/visit pages
-  const more = (await Promise.all(contactLinks(site.html, site.url, country).map((u) => get(u, 5000))))
-    .filter((p): p is { url: string; html: string } => !!p && p.html !== site!.html);
-  const pages = [site, ...more.filter((p, i) => more.findIndex((q) => q.url === p.url || q.html === p.html) === i)];
+  // 3. The place: the home page, then the pages the site's own links lead to (contact, visit, about …)
+  const pages = [site, ...(await crawlSite(site, country))];
   let location: { lat: number; lon: number; source: string; page: string } | null = null;
   for (const p of pages) {
     // In the page's code, or written in its text ("GPS: 44.61 7.96" with tags in between)
