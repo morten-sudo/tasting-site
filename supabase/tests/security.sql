@@ -388,7 +388,7 @@ update tastings set blind = true where slug = 'selftest-a';
 select set_config('request.jwt.claims', '', true);
 set local role anon;
 do $$
-declare w record; failed boolean;
+declare w record; failed boolean; n int;
 begin
   select * into w from get_wines('selftestaa') x where x.id = -1001;
   assert w.blind and w.name is null and w.producer is null and w.vintage is null and w.image_url is null
@@ -397,6 +397,12 @@ begin
   failed := false; begin perform place_order('selftestaa', '[{"wine_id":-1001,"qty":1}]'); exception when others then failed := true; end;
   assert failed, 'a blind wine can be ordered';
   assert not exists (select 1 from my_wine_book(array['selftestaa']) b where b.wine_id = -1001), 'the wine book shows a blind wine';
+  -- Email updates: the outbox is closed, and claiming without the batch's token gives nothing
+  begin select count(*) into n from notifications; failed := false; exception when others then failed := true; end;
+  assert failed, 'anyone can read the notification outbox';
+  assert claim_notifications(gen_random_uuid()) = '[]'::jsonb, 'a made-up token claims notifications';
+  failed := false; begin perform invite_is_mine('selftestaa'); exception when others then failed := true; end;
+  assert failed, 'invite_is_mine works without signing in';
 end $$;
 reset role;
 
