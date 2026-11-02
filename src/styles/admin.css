@@ -1442,3 +1442,7 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .wines-admin #wine-add-toggle { margin-left: auto; }
 .admin-page .wines-admin .guests-head:has(#wine-search) { gap: 0.5rem; }
 .admin-page .wines-admin .guests-head + .wine-filters { margin-top: 0.75rem; }
+/* The new row: field and buttons the same height */
+.admin-page .qa-new .qa-field { height: 2.75rem; box-sizing: border-box; }
+.admin-page .qa-new .qa-actions .btn { height: 2.75rem; padding-block: 0; box-sizing: border-box; }
+.admin-page .qa-new .qa-actions .qa-x { height: 2.75rem; }

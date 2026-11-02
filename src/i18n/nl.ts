@@ -1102,8 +1102,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "qa.empty": "Typ een naam, plak een link of kies een foto.",
   "qa.nameMissing": "Typ de naam van de wijn.",
   "qa.linkKnown": "Je hebt de wijn van deze link al",
-  "qa.nameKnown": "Je hebt al een wijn met deze naam – kies “Toch aanmaken” voor een nieuwe",
-  "qa.createAnyway": "Toch aanmaken",
   "qa.readingLink": "Wijn ophalen van {site} …",
   "qa.readingLabel": "Etiket lezen …",
   "qa.linkFailed": "De pagina kon niet worden gelezen.",
@@ -1119,4 +1117,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "qa.findingProducer": "{producer} zoeken …",
   "qa.producerFound": "Producent: {what}",
   "qa.saved": "Opgeslagen",
+  "qa.nameKnown": "Je hebt deze wijn al. Een ander jaar? Typ het jaartal achter de naam.",
+  "qa.nameHere": "De wijn staat al in de proeverij.",
+  "qa.twinHere": "De wijn staat al in de proeverij.",
+  "wineCheck.twin": "Je hebt al een wijn met deze naam en dit jaar.",
 };

@@ -1216,8 +1216,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "qa.empty": "Skrifaðu heiti, límdu tengil eða veldu mynd.",
   "qa.nameMissing": "Skrifaðu heiti vínsins.",
   "qa.linkKnown": "Þú ert þegar með vínið úr þessum tengli",
-  "qa.nameKnown": "Þú ert þegar með vín með þessu heiti – ýttu á „Búa samt til“ fyrir nýtt",
-  "qa.createAnyway": "Búa samt til",
   "qa.readingLink": "Sæki vínið frá {site} …",
   "qa.readingLabel": "Les miðann …",
   "qa.linkFailed": "Ekki tókst að lesa síðuna.",
@@ -1233,4 +1231,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "qa.findingProducer": "Finn {producer} …",
   "qa.producerFound": "Framleiðandi: {what}",
   "qa.saved": "Vistað",
+  "qa.nameKnown": "Þú ert þegar með þetta vín. Annar árgangur? Skrifaðu árið á eftir heitinu.",
+  "qa.nameHere": "Vínið er þegar í smökkuninni.",
+  "qa.twinHere": "Vínið er þegar í smökkuninni.",
+  "wineCheck.twin": "Þú ert þegar með vín með þessu heiti og árgangi.",
 };

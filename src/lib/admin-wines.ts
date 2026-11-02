@@ -8,6 +8,7 @@ import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
+import { fieldError } from './field-error';
 import { combo, type ComboOption } from './combo';
 import { SUPABASE_URL, SUPABASE_KEY } from './config';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
@@ -807,6 +808,15 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       return;
     }
 
+    // Never the same wine twice: same name and vintage as another wine in the library
+    const vintageNow = field<HTMLInputElement>('wf-vintage').value.trim();
+    const twin = wines.find((w) => w.id !== editing?.id && normOrigin(w.name) === normOrigin(name) && (w.vintage ?? '') === vintageNow);
+    if (twin) {
+      fieldError(field<HTMLInputElement>('wf-name'), t('wineCheck.twin'));
+      field<HTMLInputElement>('wf-name').focus();
+      showMsg(t('wineCheck.fix'));
+      return;
+    }
     const save = $<HTMLButtonElement>('wf-save');
     save.disabled = true;
     save.textContent = t('common.saving');

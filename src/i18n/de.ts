@@ -1102,8 +1102,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "qa.empty": "Namen eingeben, Link einfügen oder Foto wählen.",
   "qa.nameMissing": "Geben Sie den Namen des Weins ein.",
   "qa.linkKnown": "Sie haben den Wein von diesem Link schon",
-  "qa.nameKnown": "Sie haben schon einen Wein mit diesem Namen – „Trotzdem anlegen“ für einen neuen",
-  "qa.createAnyway": "Trotzdem anlegen",
   "qa.readingLink": "Wein wird von {site} geholt …",
   "qa.readingLabel": "Etikett wird gelesen …",
   "qa.linkFailed": "Die Seite konnte nicht gelesen werden.",
@@ -1119,4 +1117,8 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "qa.findingProducer": "Suche {producer} …",
   "qa.producerFound": "Erzeuger: {what}",
   "qa.saved": "Gespeichert",
+  "qa.nameKnown": "Diesen Wein haben Sie schon. Ein anderer Jahrgang? Jahr hinter den Namen schreiben.",
+  "qa.nameHere": "Der Wein ist schon in der Verkostung.",
+  "qa.twinHere": "Der Wein ist schon in der Verkostung.",
+  "wineCheck.twin": "Sie haben schon einen Wein mit diesem Namen und Jahrgang.",
 };

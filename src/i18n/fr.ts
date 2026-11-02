@@ -1102,8 +1102,6 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "qa.empty": "Tapez un nom, collez un lien ou choisissez une photo.",
   "qa.nameMissing": "Tapez le nom du vin.",
   "qa.linkKnown": "Vous avez déjà le vin de ce lien",
-  "qa.nameKnown": "Vous avez déjà un vin de ce nom – appuyez sur « Créer quand même » pour un nouveau",
-  "qa.createAnyway": "Créer quand même",
   "qa.readingLink": "Récupération du vin sur {site} …",
   "qa.readingLabel": "Lecture de l’étiquette …",
   "qa.linkFailed": "La page n’a pas pu être lue.",
@@ -1119,4 +1117,8 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "qa.findingProducer": "Recherche de {producer} …",
   "qa.producerFound": "Producteur : {what}",
   "qa.saved": "Enregistré",
+  "qa.nameKnown": "Vous avez déjà ce vin. Un autre millésime ? Tapez l’année après le nom.",
+  "qa.nameHere": "Ce vin est déjà dans la dégustation.",
+  "qa.twinHere": "Ce vin est déjà dans la dégustation.",
+  "wineCheck.twin": "Vous avez déjà un vin avec ce nom et ce millésime.",
 };

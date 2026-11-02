@@ -46,6 +46,11 @@ export function asLink(text: string): string | null {
     return u.hostname.includes('.') ? u.href : null;
   } catch { return null; }
 }
+/** "Barolo San Giovanni 2019" → name and vintage; a name without a year at the end has no vintage. */
+export function splitYear(text: string): { name: string; vintage: string | null } {
+  const m = text.trim().match(/^(.*?)[\s,–—-]+((?:19|20)\d{2})$/);
+  return m && m[1].trim().length >= 2 ? { name: m[1].trim(), vintage: m[2] } : { name: text.trim(), vintage: null };
+}
 const site = (url: string) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -70,8 +75,6 @@ export function initQuickAdd(o: Opts) {
   const lead = $('qa').classList.contains('qa-lead');
   // A link or photo that could not be read: kept here while the host types the name
   let carry: Source | null = null;
-  // "Create anyway" after a warning that the name is already in the library
-  let confirmedName = '';
 
   // The new row slides in at the top of the list (.qa-slide.open); closed it is inert, so it cannot be tabbed into
   const isOpen = () => bar.classList.contains('open');
@@ -177,8 +180,6 @@ export function initQuickAdd(o: Opts) {
   }
 
   input.addEventListener('input', () => {
-    confirmedName = '';
-    go.textContent = t('admin.add');
     renderHits();
   });
   input.addEventListener('keydown', (e) => {
@@ -210,20 +211,19 @@ export function initQuickAdd(o: Opts) {
       if (known.length) { renderHits(known, t('qa.linkKnown')); return; }
       start({ kind: 'link', url });
     } else {
-      const same = o.library().find((w) => norm(w.name) === norm(text));
-      if (same && confirmedName !== norm(text)) {
-        // Tasting: the library wine is what was meant. Library: say it exists, and let a second press create it.
-        if (o.pick && !o.inHere?.().has(same.id)) { pickWine(same); return; }
-        renderHits([same], t('qa.nameKnown'));
-        confirmedName = norm(text);
-        go.textContent = t('qa.createAnyway');
+      // The same wine twice is not allowed: a name without a year matches the name in any vintage,
+      // "Barolo 2019" only that vintage. Tasting: the library wine is what was meant; library: show it.
+      const typed = splitYear(text);
+      const same = o.library().filter((w) => norm(w.name) === norm(typed.name) && (!typed.vintage || (w.vintage ?? '') === typed.vintage));
+      if (same.length) {
+        const free = same.filter((w) => !o.inHere?.().has(w.id));
+        if (o.pick && free.length === 1 && same.length === 1) { pickWine(free[0]); return; }
+        renderHits(same, t(o.pick && !free.length ? 'qa.nameHere' : 'qa.nameKnown'));
         return;
       }
       start({ kind: 'name' }, text);
     }
     input.value = '';
-    confirmedName = '';
-    go.textContent = t('admin.add');
     renderHits();
   }
 
@@ -332,8 +332,10 @@ export function initQuickAdd(o: Opts) {
         return;
       }
     }
-    const vintage = r.vintage?.trim() || null;
-    const name = withoutYear((job.name ?? r.name ?? '').trim(), vintage ?? '')?.trim() ?? '';
+    // A typed name may end in its year ("Barolo 2019")
+    const typed = job.name ? splitYear(job.name) : null;
+    const vintage = r.vintage?.trim() || typed?.vintage || null;
+    const name = withoutYear((typed?.name ?? r.name ?? '').trim(), vintage ?? '')?.trim() ?? '';
     if (!name) { failed(job, t(src.kind === 'link' ? 'qa.linkNoName' : 'qa.labelNoName')); return; }
 
     // What came in
@@ -347,12 +349,13 @@ export function initQuickAdd(o: Opts) {
 
     // The same wine is in the library already (same name and vintage): use that one
     const twin = o.library().find((w) => norm(w.name) === norm(name) && (w.vintage ?? '') === (vintage ?? ''));
-    if (twin && src.kind !== 'name') {
-      say(li, t('qa.twin'), '');
+    if (twin) {
+      // Never the same wine twice: offer the one in the library instead
+      const here = !!o.inHere?.().has(twin.id);
+      say(li, t(here ? 'qa.twinHere' : 'qa.twin'), '');
       const actions: [string, () => void, string?][] = [];
-      if (o.pick && !o.inHere?.().has(twin.id)) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }]);
-      else actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }]);
-      actions.push([t('qa.createAnyway'), () => { job.name = name; save(job, r, name, vintage, style, country); }, 'text-btn']);
+      if (o.pick && !here) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }]);
+      else if (!o.pick) actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }]);
       actions.push(['×', () => drop(li), 'qa-x']);
       buttons(li, ...actions);
       return;

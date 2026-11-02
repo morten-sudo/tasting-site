@@ -1215,8 +1215,6 @@ export const en = {
   "qa.empty": "Type a name, paste a link or choose a photo.",
   "qa.nameMissing": "Type the name of the wine.",
   "qa.linkKnown": "You already have the wine from this link",
-  "qa.nameKnown": "You already have a wine with this name – press “Create anyway” for a new one",
-  "qa.createAnyway": "Create anyway",
   "qa.readingLink": "Fetching the wine from {site} …",
   "qa.readingLabel": "Reading the label …",
   "qa.linkFailed": "The page could not be read.",
@@ -1232,4 +1230,8 @@ export const en = {
   "qa.findingProducer": "Finding {producer} …",
   "qa.producerFound": "Producer: {what}",
   "qa.saved": "Saved",
+  "qa.nameKnown": "You already have this wine. Another vintage? Type the year after the name.",
+  "qa.nameHere": "This wine is already in the tasting.",
+  "qa.twinHere": "This wine is already in the tasting.",
+  "wineCheck.twin": "You already have a wine with this name and vintage.",
 } as const;
