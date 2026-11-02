@@ -3,7 +3,8 @@
 
 Sources (downloaded into a data folder given as the first argument):
 - Natural Earth 10m land, coastline, rivers and country borders (public domain) – github.com/nvkelso/natural-earth-vector
-- Gironde municipalities (IGN Admin Express, Licence ouverte) – github.com/gregoiredavid/france-geojson
+- Gironde municipalities (IGN Admin Express, Licence ouverte) – github.com/gregoiredavid/france-geojson- Burgundy municipalities from the same repository: departements/{21-cote-d-or,71-saone-et-loire,89-yonne}/
+  communes-<dep>-<name>.geojson, saved as communes-21.geojson, communes-71.geojson and communes-89.geojson
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
@@ -94,7 +95,9 @@ def build(region):
     river_names = region['rivers']
     rivers = []
     for name in river_names:
-        g = lines_in(rivers_src, p, lambda pr, n=name: (pr.get('name') or pr.get('name_en') or '') == n)
+        # A river may be split over several Natural Earth names (e.g. the lower Saône is spelt 'Sane')
+        names = {name, *region.get('river_parts', {}).get(name, [])}
+        g = lines_in(rivers_src, p, lambda pr, ns=names: (pr.get('name') or pr.get('name_en') or '') in ns)
         if g is not None:
             rivers.append({'name': name, 'd': d_of(p.geom(g), 0.8)})
 
@@ -238,7 +241,83 @@ DOURO = {
               ('Vila Nova de Foz Côa', -7.1415, 41.0820, 'small'), ('Barca d’Alva', -6.9727, 41.0276, 'small')],
 }
 
+# ---------- Bourgogne ----------
+def burgundy():
+    """Municipalities of Côte-d'Or (21), Saône-et-Loire (71) and Yonne (89). A name found in more than one of
+    them (e.g. Maligny, Givry, Bussières) is only available with its department: 'Givry (71)'."""
+    out, seen = {}, {}
+    for dep in ('21', '71', '89'):
+        for f in load(f'communes-{dep}.geojson')['features']:
+            name = f['properties']['nom']
+            g = shape(f['geometry'])
+            out[f'{name} ({dep})'] = g
+            seen.setdefault(name, []).append(g)
+    out.update({n: gs[0] for n, gs in seen.items() if len(gs) == 1})
+    return out
+
+BOURGOGNE = {
+    'id': 'bourgogne', 'name': 'Bourgogne',
+    'bounds': (3.35, 46.15, 5.35, 47.98),
+    'rivers': ['Saône', 'Yonne', 'Doubs'],
+    'river_parts': {'Saône': ['Sane']},
+    'municipalities': burgundy,
+    'whole': ['bourgogne', 'cremant-de-bourgogne'],
+    'sources': 'Natural Earth; IGN Admin Express',
+    # Village and Grand Cru appellations by the municipalities INAO lists for them (an appellation may cover only part
+    # of a municipality). As with Haut-Médoc in Bordeaux, the wider appellations leave out the municipalities that have
+    # a village appellation of their own on this map (Côte de Nuits-Villages: Fixin, Brochon; Mâcon: the Pouilly-Fuissé
+    # and Viré-Clessé villages), and each appellation is drawn with its own municipalities only, also when the id stands
+    # for neighbours too ('mercurey' for Givry and Rully, 'pouilly-fuisse' for Saint-Véran, 'corton' for Ladoix).
+    'areas': {
+        'chablis': ['Chablis', 'Beine', 'Béru', 'Chemilly-sur-Serein', 'Chichée', 'Collan', 'Courgis', 'Fleys',
+                    'Fontenay-près-Chablis', 'Chapelle-Vaupelteigne', 'Lignorelles', 'Ligny-le-Châtel', 'Maligny (89)',
+                    'Poilly-sur-Serein', 'Préhy', 'Saint-Cyr-les-Colons', 'Villy', 'Viviers'],
+        'chablis-grand-cru': ['Chablis'],
+        # Côte de Nuits
+        'marsannay': ['Chenôve', 'Marsannay-la-Côte', 'Couchey'],
+        'fixin': ['Fixin'],
+        'gevrey-chambertin': ['Gevrey-Chambertin', 'Brochon'],
+        'morey-saint-denis': ['Morey-Saint-Denis'],
+        'chambolle-musigny': ['Chambolle-Musigny'],
+        'vougeot': ['Vougeot'],
+        'vosne-romanee': ['Vosne-Romanée', 'Flagey-Echézeaux'],
+        'nuits-saint-georges': ['Nuits-Saint-Georges', 'Premeaux-Prissey'],
+        'cote-de-nuits-villages': ['Comblanchien', 'Corgoloin'],
+        # Côte de Beaune
+        'corton': ['Aloxe-Corton', 'Ladoix-Serrigny'],
+        'pernand-vergelesses': ['Pernand-Vergelesses'],
+        'savigny-les-beaune': ['Savigny-lès-Beaune'],
+        'chorey-les-beaune': ['Chorey-les-Beaune'],
+        'beaune': ['Beaune'],
+        'pommard': ['Pommard'],
+        'volnay': ['Volnay'],
+        'monthelie': ['Monthelie'],
+        'auxey-duresses': ['Auxey-Duresses'],
+        'saint-romain': ['Saint-Romain'],
+        'meursault': ['Meursault'],
+        'puligny-montrachet': ['Puligny-Montrachet'],
+        'saint-aubin': ['Saint-Aubin'],
+        'chassagne-montrachet': ['Chassagne-Montrachet'],
+        'santenay': ['Santenay', 'Remigny'],
+        # Côte Chalonnaise
+        'bouzeron': ['Bouzeron'],
+        'mercurey': ['Mercurey', 'Saint-Martin-sous-Montaigu'],
+        'montagny': ['Montagny-lès-Buxy', 'Buxy', 'Jully-lès-Buxy', 'Saint-Vallerin'],
+        # Mâconnais
+        'macon': ['Mâcon', 'Charnay-lès-Mâcon', 'Hurigny', 'Sancé', 'Chevagny-les-Chevrières', 'Roche-Vineuse', 'Prissé',
+                  'Davayé', 'Vinzelles', 'Leynes', 'Chânes', 'Chasselas', 'Saint-Vérand', 'Pierreclos', 'Bussières (71)',
+                  'Milly-Lamartine', 'Sologny', 'Verzé', 'Igé', 'Azé', 'Péronne', 'Lugny', 'Saint-Gengoux-de-Scissé', 'Burgy',
+                  'Bissy-la-Mâconnaise', 'Cruzille', 'Chardonnay', 'Uchizy', 'Plottes', 'Mancey'],
+        'vire-clesse': ['Viré', 'Clessé', 'Laizé', 'Montbellet'],
+        'pouilly-fuisse': ['Fuissé', 'Solutré-Pouilly', 'Vergisson', 'Chaintré'],
+    },
+    'towns': [('Dijon', 5.0415, 47.3220, 'big'), ('Beaune', 4.8400, 47.0260, 'mid'), ('Auxerre', 3.5673, 47.7982, 'mid'),
+              ('Chalon-sur-Saône', 4.8535, 46.7808, 'mid'), ('Mâcon', 4.8326, 46.3069, 'mid'), ('Chablis', 3.7983, 47.8141, 'small'),
+              ('Nuits-Saint-Georges', 4.9505, 47.1376, 'small'), ('Gevrey-Chambertin', 4.9680, 47.2260, 'small'),
+              ('Meursault', 4.7703, 46.9786, 'small'), ('Tournus', 4.9087, 46.5626, 'small'), ('Cluny', 4.6590, 46.4344, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO):
+    for r in (BORDEAUX, DOURO, BOURGOGNE):
         build(r)

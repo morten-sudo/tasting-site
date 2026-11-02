@@ -27,7 +27,7 @@ export const pinSvg = (x: number, y: number, title = '', scale = 1) =>
   `<g class="rm-pin" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})">${title ? `<title>${esc(title)}</title>` : ''}<path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"/><circle cy="-22" r="4"/></g>`;
 
 // Regions that have a map, by the region name stored on wines
-const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro' };
+const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro', bourgogne: 'bourgogne', burgundy: 'bourgogne' };
 
 const cache = new Map<string, Promise<RegionMap | null>>();
 export function loadMap(id: string): Promise<RegionMap | null> {
