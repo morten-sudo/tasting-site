@@ -162,7 +162,7 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   // 3. The place: home page first, then contact/visit pages
   const more = (await Promise.all(contactLinks(site.html, site.url).map((u) => get(u, 5000))))
     .filter((p): p is { url: string; html: string } => !!p && p.html !== site!.html);
-  const pages = [site, ...more.filter((p, i) => more.findIndex((q) => q.url === p.url) === i)];
+  const pages = [site, ...more.filter((p, i) => more.findIndex((q) => q.url === p.url || q.html === p.html) === i)];
   let location: { lat: number; lon: number; source: string; page: string } | null = null;
   for (const p of pages) {
     const c = findCoords(p.html);
@@ -175,16 +175,21 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     // Addresses sit in the header, the footer or the middle of a contact page: give the model the start and end of each page,
     // and first the lines that look like an address (a postcode and a town) and the place names in map links
     // Contact pages before the home page, so they are not cut off
-    const texts = [...pages.slice(1), pages[0]].map((p) => htmlToText(p.html));
+    const texts = [...new Set([...pages.slice(1), pages[0]].map((p) => htmlToText(p.html)))];
+    // A line with a postcode and a town, together with the two lines above it (name and street)
+    const POSTCODE = /\b(\d{4,5}|\d{3}\s?\d{2}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2})\b/;
     hints = [...new Set([
-      ...texts.flatMap((t) => t.split(/\n|\s{3,}|\|/).map((l) => l.trim())
-        .filter((l) => l.length > 6 && l.length < 160 && /\b(\d{4,5}|\d{3}\s?\d{2}|[A-Z]{1,2}\d{1,2}\s?\d[A-Z]{2})\b/.test(l) && /[a-zà-ÿ]{3,}/i.test(l))),
+      ...texts.flatMap((t) => {
+        const lines = t.split(/\n|\s{3,}|\|/).map((l) => l.trim()).filter(Boolean);
+        return lines.flatMap((l, i) => l.length > 6 && l.length < 160 && POSTCODE.test(l) && /[a-zà-ÿ]{3,}/i.test(l) && !/©|copyright/i.test(l)
+          ? [lines.slice(Math.max(0, i - 2), i + 1).filter((x) => x.length < 120).join(', ')] : []);
+      }),
       ...pages.flatMap((p) => mapPlaces(p.html)),
     ])].slice(0, 25);
     const text = (hints.length ? 'Lines that may be the address:\n' + hints.join('\n') + '\n\n' : '')
       + texts.map((t) => (t.length > 6000 ? t.slice(0, 2500) + '\n…\n' + t.slice(-3500) : t)).join('\n---\n').slice(0, 14000);
     const out = await env.AI.run(MODEL, {
-      messages: [{ role: 'user', content: `Below is text from the website of the wine producer "${producer}". Return ONLY JSON {"address": the producer's own postal address as written on the site – street if given, postcode, town, country – or null if the site does not give one}. Many estates have no street: "Château X, 33250 Pauillac, France" is a full address.\n\n${text}` }],
+      messages: [{ role: 'user', content: `Below is text from the website of the wine producer "${producer}". Return ONLY JSON {"address": the producer's own postal address as written on the site – street if given, postcode, town, country – or null if the site does not give one}. Many estates have no street: "Château X, 33250 Pauillac, France" is a full address. The address on the site's own contact page counts even when it is written under the name of the company that owns or sells the wine. Leave out company names and return the address only.\n\n${text}` }],
       max_tokens: 120, temperature: 0,
     });
     address = str(parseAnswer(out.response)?.address);
