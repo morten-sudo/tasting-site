@@ -10,6 +10,17 @@ const LANGS: Record<string, string> = {
 type Wine = { name: string; producer: string | null; vintage: string | null; style: string | null; appellation: string | null;
   region: string | null; country: string | null; grapes: string | null; description: string | null };
 type Row = { blind: boolean; revealed: boolean; wines: Wine };
+const MODELS = [MODEL, '@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/openai/gpt-oss-120b'];
+
+/** The text of the answer, whichever shape the model gives it in */
+function answerText(out: Record<string, unknown>): string {
+  if (typeof out.response === 'string') return out.response;
+  const choices = out.choices as { message?: { content?: string } }[] | undefined;
+  if (choices?.[0]?.message?.content) return choices[0].message.content;
+  const output = out.output as { type?: string; content?: { type?: string; text?: string }[] }[] | undefined;
+  const msg = output?.find((o) => o.type === 'message');
+  return msg?.content?.map((c) => c.text ?? '').join('') ?? '';
+}
 
 const norm = (s: string | null) => (s ?? '').trim().toLowerCase();
 const distinct = (xs: (string | null)[]) => [...new Set(xs.map(norm).filter(Boolean))];
@@ -57,7 +68,7 @@ function shapeOf(all: Wine[]): string[] {
 export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return json({ error: 'not_signed_in' }, 401);
-  let body: { tasting_id?: unknown; lang?: unknown };
+  let body: { tasting_id?: unknown; lang?: unknown; model?: unknown };
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
   const id = str(body.tasting_id) ?? '';
   if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'bad_request' }, 400);
@@ -92,16 +103,18 @@ The wines, in the order they are poured:
 ${list}
 
 ${guidance.length ? `About this tasting:\n${guidance.map((g) => `- ${g}`).join('\n')}\n` : ''}
-Write the introduction in ${LANGS[lang]}: 2 or 3 short paragraphs separated by a blank line, 80–140 words in all, warm and inviting but not over the top.
+Write the introduction in ${LANGS[lang]}: exactly 2 short paragraphs separated by a blank line, at most 120 words in all, warm and inviting but not over the top. Say each thing once – do not repeat yourself.
 Say what the evening is about and how the wines lead from one to the next, from the first to the last. Write natural, idiomatic ${LANGS[lang]} – no translated-sounding phrases or wine-jargon clichés.
 Use only facts from the list – no scores, prices, dates, places or producers' stories that are not given. Do not list every wine.
 Write to the guests ("we", "you"). Plain text only: no headings, no bullet points, no markdown, no greeting, no signature.`;
 
   try {
-    const out = await env.AI.run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: 500, temperature: 0.6 });
-    const text = String(typeof out.response === 'string' ? out.response : '').replace(/\*\*/g, '').trim();
+    // For trying models side by side: only these
+    const model = MODELS.includes(String(body.model)) ? String(body.model) : MODEL;
+    const out = await env.AI.run(model, { messages: [{ role: 'user', content: prompt }], max_tokens: 1200, temperature: 0.4 }) as Record<string, unknown>;
+    const text = answerText(out).replace(/\*\*/g, '').trim();
     if (!text) return json({ error: 'empty' }, 502);
-    return json({ text, lang });
+    return json({ text, lang, model, usage: out.usage ?? null });
   } catch {
     return json({ error: 'model_failed' }, 502);
   }
