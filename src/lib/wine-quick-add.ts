@@ -81,6 +81,8 @@ export function initQuickAdd(o: Opts) {
     bar.classList.add('open');
     bar.inert = false;
     o.toggle.setAttribute('aria-expanded', 'true');
+    // The row is open: the button waits (grey) until the row is closed with ×
+    (o.toggle as HTMLButtonElement).disabled = true;
     if (focus && matchMedia('(min-width: 48rem)').matches) input.focus({ preventScroll: true });
     if (focus) bar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
@@ -88,6 +90,7 @@ export function initQuickAdd(o: Opts) {
     bar.classList.remove('open');
     bar.inert = true;
     o.toggle.setAttribute('aria-expanded', 'false');
+    (o.toggle as HTMLButtonElement).disabled = false;
     input.value = '';
     setCarry(null);
     fieldError(input, null);

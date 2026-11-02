@@ -116,6 +116,10 @@ textarea, input[type='text'], input[type='email'], input[type='password'], selec
 }
 .btn:hover { background: #4f0a16; border-color: #4f0a16; color: #ffffff; }
 .btn:disabled { opacity: 0.6; cursor: progress; }
+/* Not available right now (e.g. "+ Add wine" while its row is open): grey, flat, no hover – not "busy" */
+.btn:disabled:not(.loading), .btn:disabled:not(.loading):hover {
+  opacity: 1; cursor: default; background: var(--lodge-2); border-color: var(--lodge-3); color: var(--muted);
+}
 
 label {
   display: block;
