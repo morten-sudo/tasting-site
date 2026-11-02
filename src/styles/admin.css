@@ -1038,3 +1038,12 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .setup-steps a { color: inherit; text-decoration: underline; text-decoration-color: var(--lodge-3); text-underline-offset: 3px; }
 .setup-steps a:hover { color: var(--amber); }
 .admin-page .head-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+
+/* Picture choices: the chosen one marked, an × to remove one from the row */
+.admin-page .image-cell { position: relative; }
+.admin-page .image-option[aria-pressed="true"] { border: 2px solid var(--amber); }
+.admin-page .image-remove {
+  position: absolute; top: -0.45rem; right: -0.45rem; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  border: 1px solid var(--lodge-3); background: #fff; color: var(--muted); font-size: 0.95rem; line-height: 1; cursor: pointer; padding: 0;
+}
+.admin-page .image-remove:hover { color: var(--amber); border-color: var(--amber); }

@@ -908,4 +908,5 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.newWineQ": "Ein Wein, der nicht in Ihrer Bibliothek ist?",
   "adminTasting.newWineLink": "Hier anlegen – er kommt an beide Stellen",
   "image.fromSource": "Falsches Bild? Wählen Sie ein anderes von der Seite:",
+  "image.removeChoice": "Bild aus der Auswahl entfernen",
 };

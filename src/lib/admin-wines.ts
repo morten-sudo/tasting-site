@@ -762,26 +762,35 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   /** Pictures to choose from under the image (from the producer's site, or the other pictures on the shop page) */
   function showImageOptions(images: { url: string; page?: string }[]) {
     const box = $('wf-image-options');
+    // The choices stay after picking one (the chosen one is marked); each can be removed with ×
+    const current = $<HTMLImageElement>('wf-preview').hidden ? null : $<HTMLImageElement>('wf-preview').src;
     box.replaceChildren(...images.map((im) => {
+      const cell = mk('div', 'image-cell');
       const b = mk('button', 'image-option');
       b.type = 'button';
       if (im.page) b.title = im.page;
+      b.setAttribute('aria-pressed', String(im.url === current));
       const img = mk('img');
       img.src = im.url;
       img.alt = '';
       img.loading = 'lazy';
       // A picture that does not load is left out
-      img.addEventListener('error', () => b.remove());
+      img.addEventListener('error', () => cell.remove());
       b.append(img);
       b.addEventListener('click', () => {
         pendingImage = null;
         removeImage = false;
         linkImage = im.url;
         setPreview(im.url);
-        box.hidden = true;
+        box.querySelectorAll('.image-option').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
         producerStatus(t('image.chosen'), 'ok', 'wf-image-status');
       });
-      return b;
+      const remove = mk('button', 'image-remove', '×');
+      remove.type = 'button';
+      remove.setAttribute('aria-label', t('image.removeChoice'));
+      remove.addEventListener('click', () => { cell.remove(); if (!box.children.length) box.hidden = true; });
+      cell.append(b, remove);
+      return cell;
     }));
     box.hidden = false;
   }

@@ -980,4 +980,5 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "adminTasting.newWineQ": "En vin, der ikke er i dit bibliotek?",
   "adminTasting.newWineLink": "Opret den her – den kommer med begge steder",
   "image.fromSource": "Forkert billede? Vælg et andet fra siden:",
+  "image.removeChoice": "Fjern billedet fra valgmulighederne",
 };
