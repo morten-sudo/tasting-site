@@ -51,7 +51,7 @@ function guessDomains(producer: string, country: string | null, region: string |
 }
 
 /** How well a page fits the producer: null when it is not the producer's (does not name it or is not about wine). */
-function scorePage(page: { url: string; html: string }, words: string[], origin: string[], wineWords: string[]) {
+function scorePage(page: { url: string; html: string }, words: string[], origin: string[], wineWords: string[]): { score: number | null; why: string } {
   const title = plain(htmlToText((page.html.match(/<title[^>]*>([\s\S]{0,300}?)<\/title>/i)?.[1] ?? '') + ' '
     + (page.html.match(/property=["']og:site_name["'][^>]*content=["']([^"']{0,200})/i)?.[1] ?? '')));
   const text = ' ' + plain(htmlToText(page.html.slice(0, 300_000)).slice(0, 30_000) + ' ' + title).replace(/[^a-z0-9]+/g, ' ') + ' ';
@@ -60,14 +60,16 @@ function scorePage(page: { url: string; html: string }, words: string[], origin:
   try { host = plain(new URL(page.url).hostname); } catch {}
   // The whole name as the domain (neirano.com, bertranddemonceny.com) is a strong sign in itself
   const domain = host.replace(/^www\./, '').split('.')[0].replace(/-/g, '');
-  const ownDomain = words.length > 0 && domain.includes(words.join(''));
-  if (!words.length || !(words.every(has) || ownDomain)) return null; // does not name the producer
+  const ownDomain = words.length > 0 && words.every((w) => domain.includes(w));
+  const why = (named: boolean, wine: number) => `name ${named ? 'yes' : 'no'}${ownDomain ? ' (own domain)' : ''}, wine words ${wine}, ${text.length} chars`;
+  if (!words.length || !(words.every(has) || ownDomain)) return { score: null, why: why(false, 0) }; // does not name the producer
   const inOrigin = origin.some((o) => text.includes(` ${o} `));
   // About wine: wine words or grapes, and the wine's region or appellation counts as two
   const wine = WINE_WORDS.filter((w) => text.includes(` ${w} `)).length + (inOrigin ? 2 : 0);
-  if (wine < (ownDomain ? 1 : 2)) return null; // a page about something else that shares the name (bollinger.com is not the Champagne house)
-  return (words.some((w) => host.includes(w)) ? 3 : 0) + (words.every((w) => title.includes(w)) ? 2 : 0)
-    + Math.min(wine, 6) / 2 + (inOrigin ? 3 : 0) + (wineWords.some((w) => has(w)) ? 1 : 0);
+  // A page about something else that shares the name (bollinger.com is not the Champagne house)
+  if (wine < (ownDomain ? 1 : 2)) return { score: null, why: why(true, wine) };
+  return { why: why(true, wine), score: (words.some((w) => host.includes(w)) ? 3 : 0) + (words.every((w) => title.includes(w)) ? 2 : 0)
+    + Math.min(wine, 6) / 2 + (inOrigin ? 3 : 0) + (wineWords.some((w) => has(w)) ? 1 : 0) };
 }
 
 async function get(url: string, ms = 7000): Promise<{ url: string; html: string } | null> {
@@ -202,8 +204,8 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
   fetched.forEach((page, i) => {
     if (!page) { tried.push({ url: candidates[i], result: 'unreachable' }); return; }
     if (given) { site = page; tried.push({ url: candidates[i], result: 'given' }); return; }
-    const score = scorePage(page, words, origin, wineWords);
-    tried.push({ url: candidates[i], result: score == null ? 'not the producer (name or wine missing)' : `score ${score}` });
+    const { score, why } = scorePage(page, words, origin, wineWords);
+    tried.push({ url: candidates[i], result: (score == null ? 'not the producer: ' : `score ${score}: `) + why });
     if (score != null && score > best) { best = score; site = page; }
   });
   if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
