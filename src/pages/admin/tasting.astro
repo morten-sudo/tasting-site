@@ -366,12 +366,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
                     </div>
                   </div>
                   <label class="gi-mail" data-help="invite-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
-                  <ul id="gi-hits" class="qa-hits" hidden></ul>
                 </div>
                 <div class="qa-actions">
                   <button id="gi-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
                   <button id="gi-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
                 </div>
+                <!-- Matches from the library: across the row, from the field to the right edge -->
+                <ul id="gi-hits" class="qa-hits" hidden></ul>
               </div>
             </div>
           </div>

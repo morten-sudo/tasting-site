@@ -24,7 +24,6 @@ const { lead = false } = Astro.props as { lead?: boolean };
               placeholder="Name of the wine, or paste a link" data-i18n-attr="placeholder=qa.placeholder" />
           </div>
           <p class="qa-hint"><span data-i18n="qa.hint">A link from a web shop or a photo of the label fills in the rest.</span> <span class="qa-drop" data-i18n="qa.dropHint">You can also drop a picture here.</span></p>
-          <ul id="qa-hits" class="qa-hits" hidden></ul>
         </div>
         <div class="qa-actions">
           <button id="qa-photo" class="btn small ghost qa-photo" type="button">
@@ -35,6 +34,8 @@ const { lead = false } = Astro.props as { lead?: boolean };
           <button id="qa-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
           <button id="qa-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
         </div>
+        <!-- Matches from the library: across the row, from the field to the right edge -->
+        <ul id="qa-hits" class="qa-hits" hidden></ul>
       </div>
     </div>
   </div>

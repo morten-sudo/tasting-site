@@ -1597,3 +1597,9 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .filter-dd-menu .text-btn[hidden] { display: none; }
 @media (max-width: 30rem) { .admin-page .filter-dd-btn { max-width: 11rem; } }
 .admin-page #guest-search { margin-top: 0.75rem; }
+/* The matches span the row from the field to the right edge (same room on both sides) */
+.admin-page .qa-item > .qa-hits { grid-column: 2 / -1; margin-top: 0.1rem; }
+.admin-page .qa-lead .qa-item > .qa-hits { grid-column: 4 / -1; }
+@media (max-width: 40rem) {
+  .admin-page .qa-lead .qa-item > .qa-hits { grid-column: 3 / -1; }
+}
