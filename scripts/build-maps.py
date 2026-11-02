@@ -10,6 +10,8 @@ Sources (downloaded into a data folder given as the first argument):
 - Roussillon municipalities from the same repository, departments 66 and 11, saved as communes-66.geojson and communes-11.geojson
 - Rhône valley municipalities from the same repository, departments 69, 42, 07, 26, 84 and 30, saved as communes-<dep>.geojson
 - Portuguese municipalities, CAOP (DGT, open data) – github.com/nmota/caop_GeoJSON
+- Tuscan municipalities (comuni), ISTAT boundaries – github.com/openpolis/geojson-italy,
+  geojson/limits_R_9_municipalities.geojson saved as it-toscana-comuni.geojson
 
 Appellations are drawn as the union of the municipalities they cover. That follows the official
 lists closely, but an appellation may in reality cover only part of a municipality.
@@ -669,7 +671,95 @@ RHONE = {
               ('Gigondas', 5.0047, 44.1636, 'small'), ('Nyons', 5.1400, 44.3606, 'small'), ('Condrieu', 4.7667, 45.4631, 'small')],
 }
 
+# ---------- Toscana ----------
+def toscana():
+    """Municipalities (comuni) of Toscana, ISTAT boundaries as published by openpolis/geojson-italy
+    (geojson/limits_R_9_municipalities.geojson, saved as it-toscana-comuni.geojson), by name. Names are unique within
+    the region. These are today's comuni: merged ones are drawn whole (Barberino Tavarnelle, 2019, from Barberino Val
+    d'Elsa and Tavarnelle Val di Pesa; Montalcino, 2017, with San Giovanni d'Asso)."""
+    return {f['properties']['name']: shape(f['geometry']) for f in load('it-toscana-comuni.geojson')['features']}
+
+# Chianti DOCG: the disciplinare (Art. 3, after the D.P.R. of 9 August 1967 and the D.M. of 31 July 1932) draws the zone by
+# boundary lines, not as a list of comuni. Drawn here with the comuni those lines run through or enclose, by province
+# (Colli Aretini and Valdarno/Valdichiana; Colli Fiorentini, Rufina, Montespertoli and Montalbano; Colline Pisane; Colli
+# Senesi), without the four comuni that lie wholly in Chianti Classico. An approximation: many comuni are only partly in it.
+CHIANTI = [
+    # Arezzo
+    'Arezzo', 'Bucine', 'Capolona', 'Castelfranco Piandiscò', 'Castiglion Fibocchi', 'Castiglion Fiorentino', 'Cavriglia',
+    'Civitella in Val di Chiana', 'Cortona', 'Foiano della Chiana', 'Laterina Pergine Valdarno', 'Loro Ciuffenna',
+    'Lucignano', 'Marciano della Chiana', 'Monte San Savino', 'Montevarchi', 'San Giovanni Valdarno', 'Subbiano',
+    'Terranuova Bracciolini',
+    # Firenze and Prato
+    'Bagno a Ripoli', 'Barberino Tavarnelle', 'Capraia e Limite', 'Carmignano', 'Castelfiorentino', 'Cerreto Guidi',
+    'Certaldo', 'Dicomano', 'Empoli', 'Fiesole', 'Figline e Incisa Valdarno', 'Firenze', 'Fucecchio', 'Gambassi Terme',
+    'Impruneta', 'Lastra a Signa', 'Londa', 'Montaione', 'Montelupo Fiorentino', 'Montespertoli', 'Pelago', 'Pontassieve',
+    'Reggello', "Rignano sull'Arno", 'Rufina', 'San Casciano in Val di Pesa', 'San Godenzo', 'Scandicci', 'Signa',
+    'Vicchio', 'Vinci', 'Poggio a Caiano', 'Montemurlo', 'Prato',
+    # Pisa
+    'Capannoli', 'Casciana Terme Lari', 'Chianni', 'Crespina Lorenzana', 'Fauglia', 'Montopoli in Val d\'Arno',
+    'Orciano Pisano', 'Palaia', 'Peccioli', 'Ponsacco', 'San Miniato', 'Santa Luce', 'Terricciola',
+    # Pistoia
+    'Lamporecchio', 'Larciano', 'Monsummano Terme', 'Pistoia', 'Quarrata', 'Serravalle Pistoiese',
+    # Siena
+    'Asciano', 'Buonconvento', "Casole d'Elsa", 'Castelnuovo Berardenga', 'Cetona', 'Chianciano Terme', 'Chiusi',
+    "Colle di Val d'Elsa", 'Montalcino', 'Montepulciano', 'Monteriggioni', "Monteroni d'Arbia", 'Murlo', 'Pienza',
+    'Poggibonsi', 'Rapolano Terme', 'San Gimignano', 'Sarteano', 'Siena', 'Sinalunga', 'Sovicille', 'Torrita di Siena',
+    'Trequanda']
+
+# Maremma Toscana DOC: the whole province of Grosseto
+MAREMMA = ['Arcidosso', 'Campagnatico', 'Capalbio', 'Castel del Piano', "Castell'Azzara", 'Castiglione della Pescaia',
+           'Cinigiano', 'Civitella Paganico', 'Follonica', 'Gavorrano', 'Grosseto', 'Isola del Giglio', 'Magliano in Toscana',
+           'Manciano', 'Massa Marittima', 'Monte Argentario', 'Monterotondo Marittimo', 'Montieri', 'Orbetello', 'Pitigliano',
+           'Roccalbegna', 'Roccastrada', 'Santa Fiora', 'Scansano', 'Scarlino', 'Seggiano', 'Semproniano', 'Sorano']
+
+TOSCANA = {
+    'id': 'toscana', 'name': 'Toscana',
+    # From Pistoia and Prato to the Lazio border, the coast from Pisa to the Argentario with Elba
+    'bounds': (10.0, 42.33, 12.25, 44.05),
+    # The Ombrone is not in Natural Earth (10m)
+    'rivers': ['Arno', 'Ombrone'],
+    'municipalities': toscana,
+    # Toscana IGT (and 'Toscana', 'Tuscany') lights the whole map
+    'whole': ['toscana-igt', 'toscana', 'tuscany'],
+    'sources': 'Natural Earth; ISTAT (openpolis)',
+    # Badges by the places the appellations are known by, not in the middle of the large areas
+    'label_at': {'chianti': (11.05, 43.62), 'vin-santo-del-chianti': (11.05, 43.62), 'maremma': (11.05, 42.95),
+                 'montecucco': (11.42, 42.90), 'chianti-classico': (11.33, 43.50), 'morellino-di-scansano': (11.30, 42.68)},
+    # The areas by the comuni the disciplinari di produzione list (Art. 3); comuni only partly in an appellation are drawn
+    # whole. Drawn in this order: the wide areas (Maremma Toscana, Montecucco, Chianti), then the smaller ones on top.
+    'areas': {
+        'maremma': MAREMMA,
+        # Montecucco DOC / Sangiovese DOCG: Cinigiano and Civitella Paganico wholly, the others in part
+        'montecucco': ['Arcidosso', 'Campagnatico', 'Castel del Piano', 'Cinigiano', 'Civitella Paganico', 'Roccalbegna',
+                       'Seggiano'],
+        'chianti': CHIANTI,
+        # Vin Santo del Chianti: the Chianti zone
+        'vin-santo-del-chianti': CHIANTI,
+        # Chianti Classico: Castellina, Gaiole, Greve and Radda wholly; Barberino Tavarnelle, Castelnuovo Berardenga,
+        # Poggibonsi and San Casciano in Val di Pesa in part (drawn whole)
+        'chianti-classico': ['Castellina in Chianti', 'Gaiole in Chianti', 'Greve in Chianti', 'Radda in Chianti',
+                             'Barberino Tavarnelle', 'Castelnuovo Berardenga', 'Poggibonsi', 'San Casciano in Val di Pesa'],
+        'carmignano': ['Carmignano', 'Poggio a Caiano'],
+        'vernaccia-di-san-gimignano': ['San Gimignano'],
+        # The comune of Montalcino before it took in San Giovanni d'Asso (2017); drawn as today's comune
+        'brunello-di-montalcino': ['Montalcino'],
+        'rosso-di-montalcino': ['Montalcino'],
+        'vino-nobile-di-montepulciano': ['Montepulciano'],
+        'rosso-di-montepulciano': ['Montepulciano'],
+        # Morellino di Scansano: Scansano wholly; Campagnatico, Grosseto, Magliano in Toscana, Manciano, Roccalbegna
+        # and Semproniano in part
+        'morellino-di-scansano': ['Scansano', 'Campagnatico', 'Grosseto', 'Magliano in Toscana', 'Manciano', 'Roccalbegna',
+                                  'Semproniano'],
+        # Bolgheri: part of Castagneto Carducci (drawn whole)
+        'bolgheri': ['Castagneto Carducci'],
+    },
+    'towns': [('Firenze', 11.2558, 43.7696, 'big'), ('Siena', 11.3308, 43.3188, 'big'), ('Pisa', 10.4017, 43.7228, 'mid'),
+              ('Livorno', 10.3167, 43.5485, 'mid'), ('Grosseto', 11.1139, 42.7635, 'mid'), ('Montalcino', 11.4889, 43.0586, 'small'),
+              ('Montepulciano', 11.7820, 43.0927, 'small'), ('San Gimignano', 11.0433, 43.4677, 'small'),
+              ('Bolgheri', 10.6136, 43.2306, 'small'), ('Scansano', 11.3326, 42.6879, 'small')],
+}
+
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE):
+    for r in (BORDEAUX, DOURO, BOURGOGNE, CHAMPAGNE, ROUSSILLON, RHONE, TOSCANA):
         build(r)

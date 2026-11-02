@@ -29,7 +29,7 @@ export const pinSvg = (x: number, y: number, title = '', scale = 1) =>
 // Regions that have a map, by the region name stored on wines
 const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro', bourgogne: 'bourgogne', burgundy: 'bourgogne', champagne: 'champagne', roussillon: 'roussillon',
   // Keys are matched after normOrigin (lower case, no accents): 'Rhône', 'Vallée du Rhône' → 'rhone', 'vallee du rhone'
-  rhone: 'rhone', 'rhone valley': 'rhone', 'vallee du rhone': 'rhone' };
+  rhone: 'rhone', 'rhone valley': 'rhone', 'vallee du rhone': 'rhone', toscana: 'toscana', tuscany: 'toscana' };
 
 const cache = new Map<string, Promise<RegionMap | null>>();
 export function loadMap(id: string): Promise<RegionMap | null> {
