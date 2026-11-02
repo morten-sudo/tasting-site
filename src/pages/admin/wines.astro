@@ -107,9 +107,10 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input id="wf-producer" type="text" />
-          <!-- The producer's website and address: found automatically after saving, or typed here -->
-          <label for="wf-producer-website"><span data-i18n="producer.website">Producer's website</span> <span class="hint" data-i18n="producer.websiteHint">(found automatically when you save)</span></label>
+          <!-- The producer's website and address: found as soon as the producer is known (link, label or typed), or typed here -->
+          <label for="wf-producer-website"><span data-i18n="producer.website">Producer's website</span> <span class="hint" data-i18n="producer.websiteHint">(found automatically from the producer)</span></label>
           <input id="wf-producer-website" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
+          <p id="wf-producer-status" class="producer-status" hidden aria-live="polite"></p>
           <label for="wf-producer-address" data-i18n="producer.address">Producer's address</label>
           <input id="wf-producer-address" type="text" autocomplete="off" />
           <div class="wf-pair">

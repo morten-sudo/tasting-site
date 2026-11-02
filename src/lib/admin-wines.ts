@@ -112,6 +112,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   let linkImage: string | null = null; // product image found via a shop link
   let sourceUrl: string | null = null;
   let removeImage = false;
+  // The producer's place found while the form is open; saved with the wine if the producer and website still match
+  type Found = { website: string | null; address: string | null; lat: number | null; lon: number | null; source: string | null };
+  let foundPlace: (Found & { producer: string }) | null = null;
+  let producerTurn = 0;
 
   const form = $<HTMLFormElement>('wine-form');
   const panel = $<HTMLDialogElement>('wine-panel');
@@ -284,6 +288,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       if (!res.ok) throw new Error(String(res.status));
       const r = (await res.json()) as LabelResult;
       fillStatus(fillFromLabel(r), t('label.filled', { n: '{n}' }), t('label.nothing'));
+      fillProducer();
     } catch {
       labelStatus(t('label.failed'), 'error');
     } finally {
@@ -397,6 +402,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const foreign = r.foreign_currency && !field<HTMLInputElement>('wf-retail').value.trim()
         ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
       fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + foreign);
+      fillProducer();
     } catch {
       labelStatus(t('link.failed'), 'error');
     } finally {
@@ -418,6 +424,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     removeImage = false;
     linkImage = null;
     sourceUrl = w?.source_url ?? null;
+    foundPlace = null;
+    producerTurn++;
+    producerStatus('');
     form.reset();
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
@@ -635,7 +644,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const before = editing;
     const changed = !before || normOrigin(before.producer) !== normOrigin(row.producer)
       || (before.producer_website ?? null) !== row.producer_website;
-    const place = changed ? { producer_lat: null, producer_lon: null, producer_source: null, producer_checked_at: null } : {};
+    // …unless it was just found in the form for this producer and website
+    const fresh = foundPlace && normOrigin(foundPlace.producer) === normOrigin(row.producer)
+      && (!row.producer_website || row.producer_website === webUrl(foundPlace.website ?? '')) ? foundPlace : null;
+    const place = fresh
+      ? { producer_lat: fresh.lat, producer_lon: fresh.lat == null ? null : fresh.lon, producer_source: fresh.source, producer_checked_at: new Date().toISOString() }
+      : changed ? { producer_lat: null, producer_lon: null, producer_source: null, producer_checked_at: null } : {};
 
     const { data: saved, error } = before
       ? await supabase.from('wines').update({ ...row, ...place }).eq('id', before.id).select('id').single()
@@ -651,31 +665,66 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     hooks.onSaved?.();
     // The producer's website, address and place (in the background; the page updates when found)
     const id = (saved as { id: number } | null)?.id;
-    if (id && row.producer && (changed || !before?.producer_checked_at)) {
+    if (id && row.producer && !fresh && (changed || !before?.producer_checked_at)) {
       locateProducer(id, { ...row, name }).then((found) => { if (found) { load(); hooks.onSaved?.(); } });
     }
   });
 
-  /** Finds the producer's website and place: from another wine by the same producer, else /api/find-producer. */
-  async function locateProducer(id: number, w: { name: string; producer: string | null; appellation: string | null; region: string | null; country: string | null; producer_website: string | null; producer_address: string | null }) {
-    const same = wines.find((x) => x.id !== id && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
+  type ProducerQuery = { name: string; producer: string | null; appellation: string | null; region: string | null; country: string | null; producer_website: string | null; producer_address?: string | null };
+  /** The producer's website and place: from another wine by the same producer, else /api/find-producer. */
+  async function lookupProducer(w: ProducerQuery, skipId?: number): Promise<Found | null> {
+    const same = wines.find((x) => x.id !== skipId && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
       && (!w.producer_website || x.producer_website === w.producer_website));
-    let found: { website: string | null; address: string | null; lat: number | null; lon: number | null; source: string | null };
-    if (same) {
-      found = { website: same.producer_website ?? null, address: same.producer_address ?? null, lat: same.producer_lat ?? null, lon: same.producer_lon ?? null, source: same.producer_source ?? null };
-    } else {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const res = await fetch('/api/find-producer', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
-          body: JSON.stringify({ producer: w.producer, wine: w.name, appellation: w.appellation, region: w.region, country: w.country, website: w.producer_website }),
-        });
-        if (!res.ok) return false;
-        const r = (await res.json()) as { website: string | null; address: string | null; location: { lat: number; lon: number; source: string } | null };
-        found = { website: r.website, address: r.address, lat: r.location?.lat ?? null, lon: r.location?.lon ?? null, source: r.location?.source ?? null };
-      } catch { return false; }
-    }
+    if (same) return { website: same.producer_website ?? null, address: same.producer_address ?? null, lat: same.producer_lat ?? null, lon: same.producer_lon ?? null, source: same.producer_source ?? null };
+    try {
+      const { data } = await supabase.auth.getSession();
+      const res = await fetch('/api/find-producer', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
+        body: JSON.stringify({ producer: w.producer, wine: w.name, appellation: w.appellation, region: w.region, country: w.country, website: w.producer_website }),
+      });
+      if (!res.ok) return null;
+      const r = (await res.json()) as { website: string | null; address: string | null; location: { lat: number; lon: number; source: string } | null };
+      return { website: r.website, address: r.address, lat: r.location?.lat ?? null, lon: r.location?.lon ?? null, source: r.location?.source ?? null };
+    } catch { return null; }
+  }
+
+  function producerStatus(text: string, kind: 'busy' | 'ok' | '' = '') {
+    const el = $('wf-producer-status');
+    el.textContent = text;
+    el.className = 'producer-status' + (kind ? ' ' + kind : '');
+    el.hidden = !text;
+  }
+
+  /** As soon as the producer is known in the form: find the website and address and fill in the empty fields. */
+  async function fillProducer() {
+    const producer = field<HTMLInputElement>('wf-producer').value.trim();
+    const websiteEl = field<HTMLInputElement>('wf-producer-website');
+    const addressEl = field<HTMLInputElement>('wf-producer-address');
+    if (!producer || (websiteEl.value.trim() && addressEl.value.trim())) return;
+    if (foundPlace && normOrigin(foundPlace.producer) === normOrigin(producer)) return;
+    const turn = ++producerTurn;
+    producerStatus(t('producer.searching'), 'busy');
+    const found = await lookupProducer({
+      name: field<HTMLInputElement>('wf-name').value.trim(), producer,
+      appellation: toText(appInput.value), region: toText(regionInput.value), country: countrySelect.value || null,
+      producer_website: webUrl(websiteEl.value),
+    }, editing?.id);
+    if (turn !== producerTurn || !form.isConnected) return; // the form was closed or the producer changed meanwhile
+    if (normOrigin(field<HTMLInputElement>('wf-producer').value) !== normOrigin(producer)) { producerStatus(''); return; }
+    if (!found || (!found.website && !found.address)) { producerStatus(t('producer.notFound')); return; }
+    foundPlace = { ...found, producer };
+    let n = 0;
+    if (found.website && !websiteEl.value.trim()) { websiteEl.value = found.website; websiteEl.classList.add('from-label'); n++; }
+    if (found.address && !addressEl.value.trim()) { addressEl.value = found.address; addressEl.classList.add('from-label'); n++; }
+    producerStatus(n ? t(found.lat != null ? 'producer.foundPlace' : 'producer.found') : '', n ? 'ok' : '');
+  }
+  field<HTMLInputElement>('wf-producer').addEventListener('change', () => fillProducer());
+
+  /** Finds and saves the producer's website and place for a saved wine (in the background). */
+  async function locateProducer(id: number, w: ProducerQuery) {
+    const found = await lookupProducer(w, id);
+    if (!found) return false;
     // What the host typed stays; the lookup fills the rest
     const { error } = await supabase.from('wines').update({
       producer_website: w.producer_website ?? webUrl(found.website ?? ''),
