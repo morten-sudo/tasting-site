@@ -2,7 +2,7 @@
 // 1. Pages about the wine: links on the home page and URLs in the sitemap whose words match the wine's name.
 // 2. Their pictures: the page's share picture, the product picture in its data, and <img> whose file name or alt text
 //    names the wine. Bottle shots count in favour; logos, icons, cases and gift boxes against.
-import { MODEL, isHost, json, type AiEnv } from '../../src/server/wine-ai';
+import { isHost, json } from '../../src/server/wine-ai';
 import { cleanUrl, htmlToText, NOT_BOTTLE, BOTTLE } from './read-link';
 
 const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
@@ -20,31 +20,60 @@ async function get(url: string, ms = 7000): Promise<{ url: string; html: string 
   } catch { return null; }
 }
 
-/** Is the picture a product photo of one wine bottle (not a vineyard, a glass, people or a case)? Cloudflare AI decides. */
-async function isBottleShot(env: AiEnv, url: string): Promise<boolean> {
+/** A picture's width and height, read from the first bytes of the file (PNG, JPEG, WebP, GIF) – cheap, no decoding. */
+async function imageSize(url: string): Promise<{ w: number; h: number } | null> {
   try {
-    const res = await fetch(url, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(6000) });
-    const type = res.headers.get('content-type') ?? '';
-    if (!res.ok || !type.startsWith('image/')) return false;
-    const bytes = new Uint8Array(await res.arrayBuffer());
-    if (bytes.length < 3000 || bytes.length > 1_500_000) return false;
-    let bin = '';
-    for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-    const out = await env.AI.run(MODEL, {
-      messages: [{ role: 'user', content: [
-        { type: 'text', text: 'Is this picture a product photo of one wine bottle – the whole bottle, standing, on a plain, white or transparent background? Answer only yes or no.' },
-        { type: 'image_url', image_url: { url: `data:${type.split(';')[0]};base64,${btoa(bin)}` } },
-      ] }],
-      max_tokens: 5, temperature: 0,
-    });
-    return /^\s*yes/i.test(String(out.response ?? ''));
-  } catch { return false; }
+    const res = await fetch(url, { headers: { 'user-agent': UA, range: 'bytes=0-65535' }, signal: AbortSignal.timeout(5000) });
+    if (!res.ok && res.status !== 206) return null;
+    const reader = res.body?.getReader();
+    if (!reader) return null;
+    const chunks: Uint8Array[] = [];
+    let size = 0;
+    while (size < 65536) {
+      const { done, value } = await reader.read();
+      if (done || !value) break;
+      chunks.push(value);
+      size += value.length;
+    }
+    reader.cancel().catch(() => {});
+    const b = new Uint8Array(size);
+    let o = 0;
+    for (const c of chunks) { b.set(c.subarray(0, Math.min(c.length, size - o)), o); o += c.length; }
+    const u16 = (i: number) => (b[i] << 8) | b[i + 1];
+    const le16 = (i: number) => b[i] | (b[i + 1] << 8);
+    const le24 = (i: number) => b[i] | (b[i + 1] << 8) | (b[i + 2] << 16);
+    if (b[0] === 0x89 && b[1] === 0x50) return { w: (u16(16) << 16) | u16(18), h: (u16(20) << 16) | u16(22) }; // PNG
+    if (b[0] === 0x47 && b[1] === 0x49) return { w: le16(6), h: le16(8) }; // GIF
+    if (b[0] === 0x52 && b[8] === 0x57) { // WebP
+      const kind = String.fromCharCode(b[12], b[13], b[14], b[15]);
+      if (kind === 'VP8X') return { w: le24(24) + 1, h: le24(27) + 1 };
+      if (kind === 'VP8 ') return { w: le16(26) & 0x3fff, h: le16(28) & 0x3fff };
+      if (kind === 'VP8L') { const v = b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24); return { w: (v & 0x3fff) + 1, h: ((v >> 14) & 0x3fff) + 1 }; }
+      return null;
+    }
+    if (b[0] === 0xff && b[1] === 0xd8) { // JPEG: the frame header
+      let i = 2;
+      while (i + 9 < b.length) {
+        if (b[i] !== 0xff) { i++; continue; }
+        const m = b[i + 1];
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) return { w: u16(i + 7), h: u16(i + 5) };
+        i += 2 + u16(i + 2);
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
+/** A bottle shot is tall and narrow (a whole bottle standing); scenes, glasses, vineyards and cases are wider. */
+async function isBottleShot(url: string): Promise<boolean> {
+  const s = await imageSize(url);
+  return !!s && s.h >= 250 && s.h >= s.w * 1.5;
 }
 
 const abs = (src: string, base: string) => { try { const u = new URL(src.replace(/&amp;/g, '&'), base); if (u.protocol === 'http:') u.protocol = 'https:'; return u.href; } catch { return null; } };
 const fileWords = (url: string) => { try { return plain(decodeURIComponent(new URL(url).pathname)).replace(/[^a-z0-9]+/g, ' '); } catch { return ''; } };
 
-export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
+export const onRequestPost = async ({ request }: { request: Request }) => {
   if (!(await isHost(request))) return json({ error: 'not_host' }, 403);
   let body: { name?: string; producer?: string; vintage?: string; website?: string };
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
@@ -148,15 +177,15 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
       for (const v of [tag.match(/\b(?:data-src|data-lazy-src|src)=["']([^"']+)/i)?.[1], ...(tag.match(/\b(?:data-srcset|srcset)=["']([^"']+)/i)?.[1]?.split(',') ?? [])]) add(v, p.url, alt);
     }
     // Every other picture address in the page: srcset of <picture>, CSS, script data and JSON (galleries built by script)
-    for (const m of p.html.matchAll(/((?:https?:)?(?:\\?\/){2}[^"'\s()<>]+?|(?:\\?\/)[^"'\s()<>:]+?)\.(?:png|jpe?g|webp)(?:\?[^"'\s()<>]*)?/gi)) add(m[0], p.url, '');
+    for (const m of p.html.slice(0, 400_000).matchAll(/((?:https?:)?(?:\\?\/){2}[^"'\s()<>]+?|(?:\\?\/)[^"'\s()<>:]+?)\.(?:png|jpe?g|webp)(?:\?[^"'\s()<>]*)?/gi)) add(m[0], p.url, '');
   }
   let list = [...images.values()].filter((i) => i.score > 0).sort((a, b) => b.score - a.score).slice(0, 6);
   if (!list.length) {
     // A picture on several of the wine's pages belongs to the site, not to the wine
     const on = (u: string) => new Set(unnamed.filter((x) => x.url === u).map((x) => x.page)).size;
     const own = unnamed.filter((x, i) => unnamed.findIndex((y) => y.url === x.url) === i && (pages.length < 2 || on(x.url) === 1));
-    // Cloudflare AI looks at each one: only a product photo of a single bottle is kept
-    const checked = await Promise.all(own.sort((a, b) => b.score - a.score).slice(0, 10).map(async (x) => ((await isBottleShot(env, x.url)) ? x : null)));
+    // Only a tall, narrow picture is kept: a bottle standing (the shape is read from the file's first bytes)
+    const checked = await Promise.all(own.sort((a, b) => b.score - a.score).slice(0, 12).map(async (x) => ((await isBottleShot(x.url)) ? x : null)));
     list = checked.filter(Boolean).slice(0, 6) as typeof list;
   }
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
