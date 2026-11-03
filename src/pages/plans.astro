@@ -13,13 +13,14 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
 <script>
   import { supabase } from '../lib/supabase';
+  import { iconSvg } from '../lib/ui/icons';
   import { i18nReady, t } from '../i18n';
   await i18nReady;
   // Signed in: "Get started" goes to your own pages instead of the sign-up
   const { data } = await supabase.auth.getSession();
   if (data.session) {
     const a = document.getElementById('plan-free-cta') as HTMLAnchorElement | null;
-    if (a) { a.href = '/home/'; delete a.dataset.i18n; a.textContent = t('landing.goHome') + ' →'; }
+    if (a) { a.href = '/home/'; delete a.dataset.i18n; a.textContent = t('landing.goHome'); a.insertAdjacentHTML('beforeend', iconSvg('right')); }
   }
 </script>
 

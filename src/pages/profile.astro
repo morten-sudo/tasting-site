@@ -1,9 +1,11 @@
 ---
+import Icon from '../components/ui/Icon.astro';
+import CloseButton from '../components/ui/CloseButton.astro';
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.profile">
   <section class="wrap profile-page">
-    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
 
     <div id="signed-out" hidden>
       <h1 class="title" data-i18n="page.profile">Profile</h1>
@@ -16,9 +18,7 @@ import Base from '../layouts/Base.astro';
       <header class="me-head">
         <div class="name-row">
           <h1 class="title" id="me-name"></h1>
-          <button id="edit-toggle" class="icon-edit" type="button" aria-label="Edit name and email" title="Edit name and email" data-i18n-attr="aria-label=profile.edit;title=profile.edit">
-            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z" /><path d="M13.5 6.5l4 4" /></svg>
-          </button>
+          <button id="edit-toggle" class="icon-act md" type="button" aria-label="Edit name and email" data-tip="Edit name and email" data-i18n-attr="aria-label=profile.edit;data-tip=profile.edit"><Icon name="edit" /></button>
         </div>
         <p id="me-email" class="hint"></p>
       </header>
@@ -27,20 +27,20 @@ import Base from '../layouts/Base.astro';
       <dialog id="edit-panel" class="sheet" aria-labelledby="edit-title">
         <div class="sheet-head">
           <h2 id="edit-title" data-i18n="profile.edit">Edit name and email</h2>
-          <button id="edit-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          <CloseButton id="edit-close" data-close />
         </div>
       <form id="edit-form" class="profile-form" novalidate>
         <div id="name-field">
           <label for="name" data-i18n="profile.name">Your name</label>
-          <input id="name" type="text" autocomplete="name" maxlength="80" />
+          <input class="input" id="name" type="text" autocomplete="name" maxlength="80" />
           <p class="hint" data-i18n="profile.nameHint">Shown at the top of the site. Hosts may list you under the name they invited you by.</p>
         </div>
         <label for="email" data-i18n="common.email">Email</label>
-        <input id="email" type="email" autocomplete="email" inputmode="email" maxlength="200" />
+        <input class="input" id="email" type="email" autocomplete="email" inputmode="email" maxlength="200" />
         <p id="edit-msg" class="message" hidden></p>
         <div class="row">
           <button id="edit-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-          <button id="edit-cancel" class="btn small ghost" type="button" data-i18n="common.cancel">Cancel</button>
+          <button id="edit-cancel" class="btn small secondary" type="button" data-i18n="common.cancel">Cancel</button>
         </div>
       </form>
       </dialog>
@@ -52,15 +52,15 @@ import Base from '../layouts/Base.astro';
       </div>
 
       <!-- Tastings, wines and orders live in the wine book -->
-      <a class="book-link" href="/my/">
+      <a class="card book-link" href="/my/">
         <span><b data-i18n="book.title">My wine book</b><span data-i18n="book.linkText">The wines you have tasted, your tastings and what you have bought</span></span>
-        <span aria-hidden="true">→</span>
+        <Icon name="right" />
       </a>
 
       <section id="host-block" class="profile-block" hidden>
         <h2 data-i18n="tastings.asHost">As a host</h2>
-        <a class="btn small ghost" href="/admin/" data-i18n="tastings.toAdmin">Go to admin</a>
-        <a class="btn small ghost" href="/home/" data-i18n="landing.goHome">Go to your home</a>
+        <a class="btn small secondary" href="/admin/" data-i18n="tastings.toAdmin">Go to admin</a>
+        <a class="btn small secondary" href="/home/" data-i18n="landing.goHome">Go to your home</a>
       </section>
 
       <!-- Hosts: what they want an email about (all tastings they host) -->
@@ -82,7 +82,7 @@ import Base from '../layouts/Base.astro';
         <ul id="lang-buttons" class="lang-list" role="list"></ul>
       </section>
 
-      <button id="sign-out" class="btn ghost" type="button" data-i18n="nav.signOut">Sign out</button>
+      <button id="sign-out" class="btn secondary" type="button" data-i18n="nav.signOut">Sign out</button>
     </div>
   </section>
 </Base>
@@ -255,15 +255,6 @@ import Base from '../layouts/Base.astro';
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal;
   }
   .profile-page .me-head .hint { margin: 0.4rem 0 0; }
-  .profile-page .icon-edit {
-    flex: none; width: 2.6rem; height: 2.6rem; display: inline-flex; align-items: center; justify-content: center;
-    border-radius: 50%; border: 1px solid var(--lodge-3); background: transparent; color: var(--paper); cursor: pointer;
-  }
-  .profile-page .icon-edit:hover { border-color: var(--amber); color: var(--amber); }
-  .profile-page .icon-edit svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .profile-page .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
-  .profile-page .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
-  .profile-page .btn.small { min-height: 2.5rem; padding: 0 1rem; }
   .profile-page .profile-form { display: grid; gap: 0.4rem; }
 
   .profile-page .profile-form #name-field { display: grid; gap: 0.4rem; margin-bottom: 0.4rem; }
@@ -272,12 +263,8 @@ import Base from '../layouts/Base.astro';
   .profile-page #link-only { margin-top: 1.5rem; }
   .profile-page .profile-block { margin-top: 2.5rem; }
   .profile-page .profile-block h2 { font-size: 1.6rem; }
-  .profile-page .book-link {
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem;
-    padding: 1.1rem 1.25rem; border: 1px solid var(--lodge-3); border-radius: 0.8rem; background: var(--lodge-2);
-    color: var(--paper); text-decoration: none;
-  }
-  .profile-page .book-link:hover { border-color: var(--amber); }
+  .profile-page .book-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
+  .profile-page .book-link svg { color: var(--amber); }
   .profile-page .book-link b { display: block; font-size: 1.1rem; }
   .profile-page .book-link span span { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
   .profile-page .lang-list {
@@ -287,7 +274,7 @@ import Base from '../layouts/Base.astro';
   .profile-page .lang-list .lang-option {
     display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.6rem 0.75rem;
     font: inherit; font-size: 0.95rem; color: var(--paper); text-align: left; cursor: pointer;
-    background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.55rem;
+    background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius);
     transition: border-color 0.15s;
   }
   .profile-page .lang-list .lang-option:hover { border-color: var(--muted); }
@@ -295,5 +282,5 @@ import Base from '../layouts/Base.astro';
   .profile-page .lang-list .lang-option span { flex: 1; }
   .profile-page .lang-list .flag { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); flex-shrink: 0; }
   .profile-page .lang-list .tick { width: 1rem; height: 1rem; fill: none; stroke: var(--amber); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .profile-page > div > .btn.ghost:last-child { margin-top: 2.5rem; }
+  .profile-page #sign-out { margin-top: 2.5rem; }
 </style>

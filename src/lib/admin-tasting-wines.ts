@@ -1,5 +1,6 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
 // and whether guests can see (fully, or blind) and order them. Ratings from the guests are shown per wine.
+import { statusChip, chip } from './ui/status';
 import { supabase } from './supabase';
 import { $, mk, sheetPanel, iconButton } from './admin-common';
 import { styleName } from './wines';
@@ -80,14 +81,14 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       main.append(name);
       const m = meta(w);
       if (m) main.append(mk('p', 'lib-meta', m));
-      const chips = mk('div', 'tw-chips');
+      const chips = mk('div', 'chips');
       const vis = visOf(r);
-      chips.append(mk('span', `tw-chip vis-${vis}`, t(vis === 'shown' ? 'twe.chipShown' : vis === 'blind' ? 'blind.blind' : 'twe.hidden')));
-      chips.append(mk('span', `tw-chip ${r.orderable ? 'ord-yes' : 'ord-no'}`, t(r.orderable ? 'admin.orderable' : 'twe.notOrderable')));
+      chips.append(statusChip(vis === 'shown' ? 'wine.shown' : vis === 'blind' ? 'wine.blind' : 'wine.hidden'));
+      chips.append(statusChip(r.orderable ? 'wine.orderable' : 'wine.notOrderable'));
       const rating = ratings.get(r.wine_id);
       if (rating) {
         const avg = rating.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        chips.append(mk('span', 'tw-chip rating', t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
+        chips.append(chip(t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
       }
       main.append(chips);
 
@@ -157,19 +158,24 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   let editing: Row | null = null;
   let tierRows: { qty: HTMLInputElement; price: HTMLInputElement }[] = [];
   function tierRow(qty = '', price = '') {
-    const row = mk('div', 'twe-tier');
+    const row = mk('div', 'field-row twe-tier');
     const q = mk('input');
-    q.type = 'text'; q.inputMode = 'numeric'; q.className = 'qty'; q.value = qty; q.placeholder = '6'; q.autocomplete = 'off';
+    q.type = 'text'; q.inputMode = 'numeric'; q.className = 'input'; q.value = qty; q.placeholder = '6'; q.autocomplete = 'off';
     q.id = `twe-q-${Math.random().toString(36).slice(2, 8)}`;
     q.setAttribute('aria-label', t('adminTasting.bulkQty'));
     const p = mk('input');
-    p.type = 'text'; p.inputMode = 'decimal'; p.value = price; p.autocomplete = 'off';
+    p.type = 'text'; p.inputMode = 'decimal'; p.className = 'input'; p.value = price; p.autocomplete = 'off';
     p.id = `twe-p-${Math.random().toString(36).slice(2, 8)}`;
     p.setAttribute('aria-label', t('adminTasting.bulkPrice'));
     const del = iconButton('trash', t('twe.removeTier'), { quiet: true });
     const entry = { qty: q, price: p };
     del.addEventListener('click', () => { tierRows = tierRows.filter((x) => x !== entry); row.remove(); });
-    row.append(mk('span', '', t('twe.from')), q, mk('span', '', t('twe.bottles')), p, mk('span', '', t('twe.krEach')), del);
+    // "From [6] bottles: [109,95 kr.] each" – the numbers in boxes with their unit inside
+    const qBox = mk('div', 'affix w-num w-qty small');
+    qBox.append(q);
+    const pBox = mk('div', 'affix w-num small');
+    pBox.append(p, mk('span', 'unit', t('unit.kr')));
+    row.append(mk('span', '', t('twe.from')), qBox, mk('span', '', t('twe.bottles')), pBox, mk('span', '', t('unit.each')), del);
     tierRows.push(entry);
     $('twe-tiers').append(row);
     return entry;
@@ -219,7 +225,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const qt = x.qty.value.trim(), pt = x.price.value.trim();
       if (!qt && !pt) continue;
       const q = Number(qt), p = parseAmount(pt);
-      const row = x.qty.parentElement!;
+      const row = x.qty.closest('.twe-tier')!;
       if (!/^\d+$/.test(qt) || q < 2 || q > 99) { fieldError(x.qty, t('wineCheck.offerQty'), row); ok = false; continue; }
       if (p == null || Number.isNaN(p) || p < 0) { fieldError(x.price, t('wineCheck.price'), row); ok = false; continue; }
       tiers.set(q, p);

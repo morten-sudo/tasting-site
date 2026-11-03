@@ -1,9 +1,10 @@
 ---
+import Icon from '../components/ui/Icon.astro';
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.home">
   <section class="wrap home-page">
-    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
 
     <div id="main" hidden>
       <h1 class="title"><span data-i18n="home2.hello">Hello</span><span id="hello-name"></span></h1>
@@ -11,35 +12,35 @@ import Base from '../layouts/Base.astro';
 
       <!-- Workspaces: guest, host and (for administrators) superadmin -->
       <div class="ws-grid">
-        <a id="ws-guest" class="ws-card" href="#my-tastings" hidden>
+        <a id="ws-guest" class="card ws-card" href="#my-tastings" hidden>
           <span class="ws-icon"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="ws-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" clip-path="url(#ws-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg></span>
           <span class="ws-kicker" data-i18n="home2.guest">As a guest</span>
           <span class="ws-title" data-i18n="nav.myTastings">My tastings</span>
           <span id="ws-guest-info" class="ws-info"></span>
-          <span class="ws-go" aria-hidden="true">→</span>
+          <Icon name="right" class="ws-go" />
         </a>
 
-        <a id="ws-host" class="ws-card" href="/admin/" hidden>
+        <a id="ws-host" class="card ws-card" href="/admin/" hidden>
           <span class="ws-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg></span>
           <span class="ws-kicker" data-i18n="home2.host">As a host</span>
           <span class="ws-title" data-i18n="page.admin">Admin</span>
           <span id="ws-host-info" class="ws-info"></span>
-          <span class="ws-go" aria-hidden="true">→</span>
+          <Icon name="right" class="ws-go" />
         </a>
 
-        <a id="ws-super" class="ws-card" href="/superadmin/" hidden>
+        <a id="ws-super" class="card ws-card" href="/superadmin/" hidden>
           <span class="ws-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg></span>
           <span class="ws-kicker">Winetastr</span>
           <span class="ws-title" data-i18n="page.superadmin">Superadmin</span>
           <span id="ws-super-info" class="ws-info"></span>
-          <span class="ws-go" aria-hidden="true">→</span>
+          <Icon name="right" class="ws-go" />
         </a>
 
-        <a id="ws-become" class="ws-card ws-soft" href="/signup/" hidden>
+        <a id="ws-become" class="card add ws-card ws-soft" href="/signup/" hidden>
           <span class="ws-kicker" data-i18n="home2.hostToo">Host your own?</span>
           <span class="ws-title" data-i18n="page.signup">Sign up</span>
           <span class="ws-info" data-i18n="home2.hostTooText">Create a free host account and invite your own guests.</span>
-          <span class="ws-go" aria-hidden="true">→</span>
+          <Icon name="right" class="ws-go" />
         </a>
       </div>
 
@@ -55,7 +56,7 @@ import Base from '../layouts/Base.astro';
         </section>
       </div>
 
-      <p class="book-more"><a href="/my/"><span data-i18n="book.homeLink">My wine book – wines, tastings and purchases</span> →</a></p>
+      <p class="book-more"><a class="text-btn fwd wrap" href="/my/"><span data-i18n="book.homeLink">My wine book – wines, tastings and purchases</span><Icon name="right" /></a></p>
       <p id="none" class="hint" hidden data-i18n="tastings.noneHint">If you got a link in an invitation, open it – or sign in with the email the host has.</p>
     </div>
   </section>
@@ -133,24 +134,17 @@ import Base from '../layouts/Base.astro';
   .home-page .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 11vw, 4.5rem); line-height: 1; margin: 0 0 0.4rem; }
   .home-page .home-lead { color: var(--muted); margin: 0 0 1.5rem; font-size: 1.05rem; }
   .ws-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
-  .ws-card {
-    position: relative; display: grid; align-content: start; gap: 0.25rem; padding: 1.3rem 1.3rem 1.2rem;
-    text-decoration: none; color: var(--paper); background: var(--lodge-2);
-    border: 1px solid var(--lodge-3); border-radius: 0.9rem; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
-  }
-  .ws-card[hidden] { display: none; }
-  .ws-card:hover { border-color: var(--amber); box-shadow: 0 10px 30px rgba(36, 28, 27, 0.08); transform: translateY(-1px); }
+  .ws-card { position: relative; display: grid; align-content: start; gap: 0.25rem; padding: 1.3rem 1.3rem 1.2rem; }
   .ws-icon { width: 2.6rem; height: 2.6rem; border-radius: 0.7rem; display: grid; place-items: center; background: var(--lodge); color: var(--amber); margin-bottom: 0.6rem; }
   .ws-icon svg { width: 1.45rem; height: 1.45rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .ws-icon svg[viewBox='0 0 100 100'] { width: 1.6rem; height: 1.6rem; }
   .ws-kicker { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
   .ws-title { font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }
   .ws-info { font-size: 0.92rem; color: var(--muted); margin-top: 0.2rem; }
-  .ws-go { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--amber); font-size: 1.2rem; }
-  .ws-soft { background: transparent; border-style: dashed; }
+  .ws-go { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--amber); }
+  .ws-soft { place-items: stretch; text-align: left; font-weight: 400; color: var(--paper); }
   #my-tastings { scroll-margin-top: 5rem; }
   .book-more { margin: 1.5rem 0 0; }
-  .book-more a { color: var(--amber); font-weight: 500; text-decoration: none; }
   .home-section { margin-top: 2.75rem; }
   .home-section h2 { font-size: 1.6rem; }
 </style>

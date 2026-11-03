@@ -1,5 +1,8 @@
 // A short message at the bottom of the screen after something is done ("Saved", "Deleted – Undo").
 // One at a time; it stays while the pointer or focus is on it.
+import { closeButton } from './ui/icon-button';
+import { t } from '../i18n';
+
 type Action = { label: string; run: () => void } | { label: string; href: string };
 
 let current: { el: HTMLElement; timer: number } | null = null;
@@ -23,11 +26,9 @@ export function toast(text: string, opts: { action?: Action; ms?: number; kind?:
     }
     el.append(btn);
   }
-  const close = document.createElement('button');
-  close.type = 'button';
-  close.className = 'toast-close';
-  close.setAttribute('aria-label', '×');
-  close.textContent = '×';
+  const close = closeButton(t('admin.close'));
+  close.classList.remove('md');
+  close.removeAttribute('data-tip');
   close.addEventListener('click', () => hideToast());
   el.append(close);
   // Above an open dialog too

@@ -1,12 +1,8 @@
 ---
 // "Not found". Having this page also makes Cloudflare Pages answer a missing file with a real 404 instead of
 // the front page – otherwise a browser that asks for a script during a deploy can keep a page as that script.
-import Base from '../layouts/Base.astro';
+import TextPage from '../components/TextPage.astro';
 ---
-<Base title="notFound.title">
-  <section class="wrap text-page">
-    <h1 class="title" data-i18n="notFound.title">Page not found</h1>
-    <p data-i18n="notFound.text">The page does not exist (any more). Check the address, or start from the front page.</p>
-    <p><a class="btn" href="/" data-i18n="notFound.home">To the front page</a></p>
-  </section>
-</Base>
+<TextPage title="notFound.title" body="notFound.text">
+  <a class="btn" href="/" data-i18n="notFound.home">To the front page</a>
+</TextPage>

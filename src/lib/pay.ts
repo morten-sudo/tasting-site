@@ -1,4 +1,6 @@
 import { t, money } from '../i18n';
+import { iconButton } from './ui/icon-button';
+import { toast } from './toast';
 // Host's MobilePay number, set from the tasting (setPayee).
 let mobilepay = '';
 export function setPayee(number: unknown) {
@@ -26,7 +28,7 @@ export function payBox(amount: number, comment: string) {
 
   box.append(el('p', 'pay-lead', t('pay.lead', { amount: money(amount) })));
 
-  const link = el('a', 'btn pay-btn', t('pay.open'));
+  const link = el('a', 'btn block pay-btn', t('pay.open'));
   link.href = `mobilepay://send?phone=${mobilepay}&amount=${amountStr}&comment=${encodeURIComponent(comment)}`;
   box.append(link);
 
@@ -34,13 +36,10 @@ export function payBox(amount: number, comment: string) {
   const row = (label: string, shown: string, copy: string) => {
     const dd = el('dd');
     dd.append(el('span', '', shown));
-    const b = el('button', 'copy', t('pay.copy'));
-    b.type = 'button';
-    b.setAttribute('aria-label', t('pay.copyLabel', { what: label.toLowerCase() }));
+    const b = iconButton('copy', t('pay.copyLabel', { what: label.toLowerCase() }));
     b.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(copy); b.textContent = t('pay.copied'); }
-      catch { b.textContent = copy; }
-      setTimeout(() => (b.textContent = t('pay.copy')), 1500);
+      try { await navigator.clipboard.writeText(copy); toast(`${t('pay.copied')}: ${shown}`, { kind: 'ok' }); }
+      catch { toast(copy); }
     });
     dd.append(b);
     dl.append(el('dt', '', label), dd);

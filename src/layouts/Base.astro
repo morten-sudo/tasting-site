@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import '../styles/components.css';
+import Icon from '../components/ui/Icon.astro';
 import { SITE_NAME } from '../lib/config';
 import { en } from '../i18n/en';
 
@@ -61,8 +63,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             <ul id="lang-menu" class="lang-menu" hidden></ul>
           </div>
           {tasting && (
-            <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-btn cart-link" aria-label="Cart" title="Cart" data-i18n-attr="aria-label=nav.cart;title=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
-              <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
+            <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below cart-link" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
+              <Icon name="cart" />
               <span id="nav-cart-count" class="badge" hidden></span>
             </a>
           )}
@@ -82,9 +84,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
               <li class="sep"><button id="logout" type="button" data-i18n="nav.signOut">Sign out</button></li>
             </ul>
           </div>
-          <a id="user-out" href="/login/" class="icon-btn" aria-label="Sign in" title="Sign in" data-i18n-attr="aria-label=nav.signIn;title=nav.signIn" hidden>
-            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
-          </a>
+          <a id="user-out" href="/login/" class="icon-act md close tip-below" aria-label="Sign in" data-tip="Sign in" data-i18n-attr="aria-label=nav.signIn;data-tip=nav.signIn" hidden><Icon name="user" /></a>
         </div>
       </div>
       {tasting && (
@@ -102,7 +102,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
               <a id="t-quiz-tab" href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} hidden={!path.startsWith('/tasting/quiz')} data-i18n="nav.quiz">Quiz</a>
               <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
             </nav>
-            <a id="t-admin" class="t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span> ↗</a>
+            <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
           </div>
           <div id="t-backdrop" class="t-backdrop" hidden></div>
           <div id="t-menu" class="pop-menu t-menu" role="menu" hidden>
@@ -406,22 +406,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   }
   .tools { display: flex; align-items: center; gap: 0.25rem; flex: 0 0 auto; }
   .tools [hidden] { display: none !important; }
-  .icon-btn {
-    position: relative;
-    width: 2.75rem;
-    height: 2.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    border-radius: 50%;
-    background: none;
-    color: var(--paper);
-    cursor: pointer;
-    text-decoration: none;
-  }
-  .icon-btn svg { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .icon-btn:hover { color: var(--amber); }
+  .tools .icon-act :global(svg) { width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
   .user-in { position: relative; display: inline-flex; align-items: center; min-width: 0; }
   .user-name {
     display: inline-flex;
@@ -484,11 +469,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   .t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; }
   .t-title:empty::before { content: '…'; color: var(--muted); }
   nav { display: flex; gap: 0 1.5rem; flex: none; }
-  .t-admin {
-    margin-left: auto; flex: none; white-space: nowrap; font-size: 0.85rem; color: var(--amber);
-    text-decoration: none; padding: 0.3rem 0.7rem; border: 1px solid var(--lodge-3); border-radius: 999px;
-  }
-  .t-admin:hover { border-color: var(--amber); }
+  .t-admin { margin-left: auto; }
   .t-admin[hidden] { display: none; }
   .t-menu { left: var(--gutter); right: auto; top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); padding: 0.35rem; }
   .t-menu-head { margin: 0.35rem 0.7rem 0.25rem; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }

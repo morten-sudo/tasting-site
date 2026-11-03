@@ -8,15 +8,6 @@
   margin-bottom: 1.25rem;
 }
 .admin-page .login { display: grid; gap: 0.6rem; max-width: 26rem; }
-.admin-page input[type='email'], .admin-page input[type='password'] {
-  width: 100%;
-  font: inherit;
-  color: var(--paper);
-  background: var(--lodge-2);
-  border: 1px solid var(--lodge-3);
-  border-radius: var(--radius);
-  padding: 0.7rem 0.8rem;
-}
 .admin-page .login .btn { margin-top: 0.4rem; justify-self: start; }
 .admin-page .pw-box summary { cursor: pointer; color: var(--amber); }
 .admin-page .pw-box .login { margin-top: 0.8rem; }
@@ -63,55 +54,10 @@
 .admin-page .fee-grid { display: grid; gap: 0.35rem; max-width: 26rem; margin-bottom: 1rem; }
 .admin-page .fee-grid label { margin: 0.4rem 0 0; }
 .admin-page .fee-grid .hint { margin: 0; font-size: 0.9rem; }
-.admin-page input[type='number'] {
-  width: 100%;
-  font: inherit;
-  color: var(--paper);
-  background: var(--lodge-2);
-  border: 1px solid var(--lodge-3);
-  border-radius: var(--radius);
-  padding: 0.6rem 0.8rem;
-}
 .admin-page .fee-summary { margin-top: 0.6rem; }
-.admin-page .email-input {
-  width: 100%;
-  min-width: 9rem;
-  margin-top: 0.3rem;
-  font: inherit;
-  font-size: 0.82rem;
-  color: var(--paper);
-  background: var(--lodge-2);
-  border: 1px solid var(--lodge-3);
-  border-radius: 0.35rem;
-  padding: 0.25rem 0.4rem;
-}
-.admin-page .email-input.saved { border-color: var(--ok); }
-.admin-page .fee-cb { width: 1.15rem; height: 1.15rem; accent-color: var(--amber); }
 .admin-page .inline-form input { flex: 1; }
-.admin-page .btn.small { padding: 0.6rem 0.9rem; min-height: 0; font-size: 0.95rem; }
-.admin-page .btn.ghost { background: none; color: var(--amber); border: 1px solid var(--amber); }
-.admin-page .link-btn {
-  font: inherit;
-  font-size: 0.88rem;
-  background: none;
-  border: 0;
-  padding: 0;
-  color: var(--amber);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-  cursor: pointer;
-  white-space: nowrap;
-}
 .admin-page .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
-.admin-page .order-card {
-  background: var(--lodge-2);
-  border-radius: var(--radius);
-  padding: 0.9rem 1rem;
-  margin-bottom: 0.6rem;
-  border-left: 4px solid var(--amber);
-}
-.admin-page .order-card.paid { border-left-color: var(--ok); }
 .admin-page .order-head { display: flex; justify-content: space-between; gap: 1rem; }
 .admin-page .order-sub { margin: 0.1rem 0 0; font-size: 0.85rem; }
 .admin-page .order-card ul { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; font-size: 0.92rem; }
@@ -126,13 +72,6 @@
   margin: 1rem 0; padding: 1rem; background: var(--lodge-2); border-radius: 0.6rem;
 }
 .admin-page .add-form label { margin: 0.3rem 0 0; }
-.admin-page .add-form input, .admin-page .search, .admin-page .edit-panel input {
-  width: 100%; font: inherit; color: var(--paper);
-  background: var(--lodge); border: 1px solid var(--lodge-3);
-  border-radius: 0.5rem; padding: 0.6rem 0.75rem;
-}
-.admin-page .search { background: var(--lodge-2); margin: 0.25rem 0 0.75rem; }
-.admin-page .row-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.6rem; }
 
 .admin-page .filters {
   display: flex; gap: 0.4rem; overflow-x: auto; padding: 1rem 0 0.5rem;
@@ -153,12 +92,6 @@
 .admin-page .guest { padding: 0.9rem 0; border-bottom: 1px solid var(--lodge-2); }
 .admin-page .guest-top { display: flex; justify-content: space-between; align-items: baseline; gap: 0.75rem; }
 .admin-page .guest-name { font-weight: 600; font-size: 1.02rem; }
-.admin-page .pill {
-  flex-shrink: 0; font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px;
-}
-.admin-page .pill-yes { color: #ffffff; background: var(--ok); }
-.admin-page .pill-invited { color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
-.admin-page .pill-no { color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); }
 .admin-page .guest.status-no .guest-name { color: var(--muted); }
 .admin-page .guest-email { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.88rem; overflow-wrap: anywhere; }
 .admin-page .guest-email.missing { font-style: italic; opacity: 0.7; }
@@ -167,23 +100,11 @@
   font-size: 0.9rem; font-style: italic;
 }
 .admin-page .guest-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.1rem; margin-top: 0.55rem; }
-.admin-page .text-btn {
-  font: inherit; font-size: 0.88rem; background: none; border: 0; padding: 0.2rem 0;
-  color: var(--amber); cursor: pointer;
-}
-.admin-page .text-btn:hover { color: var(--paper); }
-.admin-page .paid-toggle {
-  font: inherit; font-size: 0.82rem; cursor: pointer; border-radius: 999px; padding: 0.3rem 0.65rem;
-  color: var(--muted); background: none; border: 1px dashed var(--lodge-3);
-}
-.admin-page .paid-toggle.on { color: var(--ok); border: 1px solid var(--ok); }
-.admin-page .paid-toggle.on::before { content: '✓ '; }
 
 .admin-page .edit-panel {
   margin-top: 0.75rem; padding: 0.9rem 1rem; background: var(--lodge-2); border-radius: 0.6rem;
   display: grid; gap: 0.4rem; max-width: 28rem;
 }
-.admin-page .edit-label { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.85rem; font-weight: 400; }
 .admin-page .segmented { display: flex; border: 1px solid var(--lodge-3); border-radius: 999px; padding: 0.2rem; }
 .admin-page .segmented button {
   flex: 1; font: inherit; font-size: 0.88rem; color: var(--muted); background: none; border: 0;
@@ -200,7 +121,6 @@
   }
   .admin-page .guest-top { display: contents; }
   .admin-page .guest-name { grid-column: 1; grid-row: 1; }
-  .admin-page .pill { grid-column: 2; grid-row: 1; justify-self: start; margin-top: 0.15rem; }
   .admin-page .guest-email, .admin-page .guest-note { grid-column: 1; }
   .admin-page .guest-actions { grid-column: 3; grid-row: 1 / span 3; margin-top: 0; justify-content: flex-end; flex-wrap: nowrap; white-space: nowrap; }
   .admin-page .edit-panel { grid-column: 1 / -1; }
@@ -211,38 +131,19 @@
 .admin-page .tasting-bar select { flex: 1; min-width: 0; font-size: 1rem; padding: 0.55rem 0.6rem; border-radius: 0.5rem; }
 .admin-page .tasting-form { max-width: 30rem; }
 .admin-page .tasting-form h2 { margin: 0 0 0.25rem; font-size: 1.6rem; }
-.admin-page .add-form input[type='datetime-local'],
-.admin-page .add-form input[type='tel'],
-.admin-page .add-form textarea,
-.admin-page .add-form select {
-  width: 100%; font: inherit; color: var(--paper);
-  background: var(--lodge); border: 1px solid var(--lodge-3);
-  border-radius: 0.5rem; padding: 0.6rem 0.75rem; color-scheme: dark;
-}
-.admin-page .add-form input:focus, .admin-page .add-form textarea:focus, .admin-page .add-form select:focus {
-  /* Neutral: the red border is kept for errors */
-  outline: none; border-color: var(--paper); box-shadow: 0 0 0 3px rgba(36, 28, 27, 0.14);
-}
+/* Native drop-downs in forms (until the shared drop-down): the field's height and edge */
+.admin-page .add-form select { width: 100%; max-width: 36rem; height: var(--h); padding: 0 0.6rem; font: inherit; color: var(--paper);
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+.admin-page dialog .add-form select { max-width: none; }
 /* A field with an error: red border and the message right under it */
-.admin-page .add-form [aria-invalid] { border-color: var(--error); }
-.admin-page .add-form [aria-invalid]:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.16); }
-.admin-page .field-error { color: var(--error); font-size: 0.88rem; margin: 0.3rem 0 0; }
-.admin-page .field-error::before { content: '⚠ '; }
-.admin-page .field-error[hidden] { display: none; }
-.admin-page .req { color: var(--error); font-weight: 600; }
 .admin-page .wf-required-note { margin: 0 0 0.6rem; font-size: 0.88rem; }
 /* A number with its unit after the box: "13,5 %" */
-.admin-page .with-unit { display: flex; align-items: center; gap: 0.45rem; }
-.admin-page .with-unit input.short { width: 7rem; max-width: 7rem; flex: none; }
-.admin-page .add-form [aria-invalid].from-label { border-color: var(--error) !important; }
-.admin-page .with-unit .unit { color: var(--muted); }
 .admin-page .add-form .toggle {
   display: flex; align-items: center; gap: 0.6rem; margin-top: 0.4rem;
   text-transform: none; letter-spacing: 0; font-size: 0.95rem; color: var(--paper);
 }
 .admin-page .add-form .toggle input { width: 1.2rem; height: 1.2rem; flex: none; padding: 0; }
 .admin-page .add-form label .hint { text-transform: none; letter-spacing: 0; font-size: 0.85rem; }
-.admin-page .text-btn.danger { color: var(--error); margin-left: auto; }
 
 /* Wines */
 .admin-page .wines-admin { max-width: 52rem; }
@@ -251,7 +152,6 @@
 .admin-page .wf-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 .admin-page .wf-pair > div { display: grid; gap: 0.4rem; align-content: start; }
 .admin-page .wf-pair label { margin: 0.3rem 0 0; }
-.admin-page .add-form input.short { max-width: 8rem; }
 .admin-page .wf-image { display: grid; gap: 0.5rem; justify-items: start; }
 .admin-page .wf-image img { width: 7rem; height: 9rem; object-fit: contain; background: #fff; border-radius: 0.4rem; }
 .admin-page .wf-image input[type='file'] { font-size: 0.9rem; color: var(--muted); max-width: 100%; }
@@ -268,12 +168,6 @@
 .admin-page .wine-rating { color: var(--amber); }
 .admin-page .wine-flags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
 .admin-page .wine-actions { display: flex; align-items: center; gap: 0.35rem; }
-.admin-page .icon-only {
-  width: 2.2rem; height: 2.2rem; font: inherit; color: var(--paper); background: none;
-  border: 1px solid var(--lodge-3); border-radius: 0.4rem; cursor: pointer;
-}
-.admin-page .icon-only:disabled { opacity: 0.3; cursor: default; }
-.admin-page .wine-actions .text-btn { margin-left: 0.4rem; }
 @media (max-width: 30rem) {
   .admin-page .wine-row { grid-template-columns: 3rem 1fr; }
   .admin-page .wine-actions { grid-column: 2; }
@@ -316,12 +210,6 @@
   background: url(/img/glass-spinner.svg) center / contain no-repeat;
 }
 /* Spinner inside a button while it works */
-.admin-page .btn.loading { position: relative; color: transparent !important; }
-.admin-page .btn.loading::after {
-  content: ''; position: absolute; inset: 0; margin: auto; width: 1.6rem; height: 1.6rem;
-  background: url(/img/glass-spinner-white.svg) center / contain no-repeat;
-}
-.admin-page .btn.ghost.loading::after { background: url(/img/glass-spinner.svg) center / contain no-repeat; }
 /* Spinner over the photo while the label is read */
 .admin-page .wf-image { position: relative; }
 .admin-page .wf-image.busy img { opacity: 0.35; }
@@ -359,10 +247,6 @@ html.side-locked { overflow: hidden; }
 .admin-side[hidden] { display: none; }
 .side-head { display: flex; justify-content: space-between; align-items: center; padding: 0 0.6rem 0.5rem; }
 .side-kicker { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.side-close {
-  width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 1px solid var(--lodge-3);
-  background: transparent; color: var(--paper); font-size: 1.3rem; line-height: 1; cursor: pointer;
-}
 .admin-side nav { display: block; }
 .side-group {
   display: flex; align-items: center; gap: 0.55rem; margin: 1.4rem 0 0.35rem; padding: 0 0.6rem;
@@ -384,7 +268,8 @@ a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
 .side-sub a { font-size: 0.92rem; padding: 0.38rem 0.6rem; color: var(--muted); }
 .side-sub a[aria-current='page'] { background: none; color: var(--amber); font-weight: 600; box-shadow: inset 2px 0 0 var(--amber); border-radius: 0 0.45rem 0.45rem 0; margin-left: -0.65rem; padding-left: 1.25rem; }
 .side-past summary { color: var(--muted); cursor: pointer; font-size: 0.92rem; }
-.side-new { color: var(--amber); font-size: 0.93rem; margin-top: 0.15rem; }
+.side-new { display: flex; align-items: center; gap: 0.5rem; color: var(--amber); font-size: 0.93rem; margin-top: 0.15rem; }
+.admin-side .side-new svg { width: 1.1rem; height: 1.1rem; margin-left: -1.6rem; }
 .side-new:hover { background: rgba(36, 28, 27, 0.05); }
 .side-foot {
   margin-top: auto; padding: 1.5rem 0.6rem 0; display: grid; gap: 0.2rem;
@@ -392,7 +277,6 @@ a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
 }
 .side-foot { border-top: 0; }
 .side-me { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.side-foot .link-btn { justify-self: start; }
 
 /* A tasting's sections as tabs on phones */
 .section-tabs {
@@ -411,7 +295,7 @@ a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
 @media (min-width: 60rem) {
   .admin-shell { display: grid; grid-template-columns: 14.5rem minmax(0, 1fr); column-gap: clamp(2rem, 4vw, 4rem); align-items: start; }
   .admin-shell > #not-host { grid-column: 1 / -1; }
-  .side-open, .side-close, .side-backdrop, .section-tabs { display: none !important; }
+  .side-open, #side-close, .side-backdrop, .section-tabs { display: none !important; }
   .admin-side {
     grid-column: 1; grid-row: 1; position: sticky; top: calc(var(--header-h, 4.5rem) + 1.25rem);
     inset: auto; z-index: auto; width: auto; max-height: calc(100vh - var(--header-h, 4.5rem) - 2.5rem);
@@ -420,18 +304,9 @@ a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
   .side-head { display: none; }
   .admin-content { grid-column: 2; grid-row: 1; min-width: 0; }
 }
-.admin-page .back { display: inline-block; margin-bottom: 0.5rem; font-size: 0.95rem; text-decoration: none; }
-.admin-page .back::before { content: '← '; }
 
 /* Tasting cards */
 .admin-page .tasting-cards { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.75rem; max-width: 40rem; }
-.admin-page .tasting-card {
-  position: relative; display: grid; gap: 0.3rem; padding: 1rem 1.1rem; color: var(--paper); text-decoration: none;
-  background: #fff; border: 1px solid var(--lodge-3); border-radius: 0.6rem; transition: border-color 0.2s;
-}
-.admin-page .tasting-card:hover { border-color: var(--amber); color: var(--paper); }
-.admin-page .tasting-card .card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
-.admin-page .tasting-card .card-meta { color: var(--muted); font-size: 0.92rem; }
 .admin-page .tasting-card .card-stats { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; font-size: 0.88rem; color: var(--muted); }
 
 /* Library lists */
@@ -443,12 +318,6 @@ a.side-group:hover, a.side-group[aria-current='page'] { color: var(--paper); }
 .admin-page .lib-row.with-thumb { grid-template-columns: 3rem 1fr auto; }
 .admin-page .lib-name { margin: 0; font-weight: 500; }
 .admin-page .lib-meta { margin: 0.1rem 0 0; color: var(--muted); font-size: 0.88rem; overflow-wrap: anywhere; }
-.admin-page .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; }
-.admin-page .chip {
-  font-size: 0.78rem; line-height: 1; padding: 0.3rem 0.55rem; border-radius: 999px;
-  color: var(--muted); box-shadow: inset 0 0 0 1px var(--lodge-3); text-decoration: none;
-}
-a.chip:hover { color: var(--paper); }
 
 /* Picker (add from library) */
 .admin-page .picker { margin: 1rem 0; padding: 1rem; background: var(--lodge-2); border-radius: 0.6rem; max-width: 34rem; display: grid; gap: 0.5rem; }
@@ -459,12 +328,7 @@ a.chip:hover { color: var(--paper); }
 /* Tasting wine rows */
 .admin-page .tw-row { display: grid; grid-template-columns: 3rem 1fr auto; gap: 0.9rem; align-items: start; padding: 0.8rem 0; border-bottom: 1px solid var(--lodge-2); }
 .admin-page .tw-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.5rem; font-size: 0.9rem; }
-.admin-page .tw-controls input[type='text'] {
-  width: 6.5rem; font: inherit; color: var(--paper); background: var(--lodge-2);
-  border: 1px solid var(--lodge-3); border-radius: 0.4rem; padding: 0.35rem 0.5rem;
-}
 .admin-page .tw-controls label { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; text-transform: none; letter-spacing: 0; font-size: 0.9rem; color: var(--paper); }
-.admin-page .tw-controls input[type='checkbox'] { width: 1.1rem; height: 1.1rem; accent-color: var(--amber); }
 @media (max-width: 30rem) {
   .admin-page .tw-row, .admin-page .lib-row.with-thumb { grid-template-columns: 3rem 1fr; }
   .admin-page .tw-row .wine-actions, .admin-page .lib-row.with-thumb .wine-actions { grid-column: 2; }
@@ -472,18 +336,7 @@ a.chip:hover { color: var(--paper); }
 
 .admin-page .tiers { display: grid; gap: 0.4rem; margin-top: 0.5rem; justify-items: start; }
 .admin-page .tier { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
-.admin-page .tier input {
-  width: 6.5rem; font: inherit; color: var(--paper); background: var(--lodge-2);
-  border: 1px solid var(--lodge-3); border-radius: 0.4rem; padding: 0.35rem 0.5rem;
-}
-.admin-page .tier input.qty { width: 3rem; }
-.admin-page .tier .icon-only { width: 1.9rem; height: 1.9rem; }
-.admin-page .tiers.saved .tier input { border-color: var(--ok); }
-.admin-page .tw-controls input.saved { border-color: var(--ok); }
 .admin-page .offer-row { align-items: center; flex-wrap: wrap; }
-.admin-page .offer-row input { flex: 0 1 7rem !important; }
-.admin-page .offer-row input#wf-offer-qty { flex-basis: 3.5rem !important; }
-.admin-page .offer-row span { color: var(--muted); font-size: 0.9rem; }
 
 /* Large image on click */
 .admin-page .wine-thumb img, .admin-page #wf-preview { cursor: zoom-in; }
@@ -491,13 +344,10 @@ dialog.zoom {
   border: 0; padding: 0; background: transparent; max-width: 94vw; max-height: 92vh; overflow: visible;
 }
 dialog.zoom::backdrop { background: rgba(11, 9, 8, 0.88); }
+dialog.zoom > .icon-act { position: absolute; top: -1.1rem; right: -1.1rem; }
 dialog.zoom img {
   display: block; max-width: 94vw; max-height: 88vh; width: auto; height: auto;
   object-fit: contain; background: #fff; border-radius: 0.5rem; cursor: zoom-out;
-}
-dialog.zoom .zoom-close {
-  position: absolute; top: -0.9rem; right: -0.9rem; width: 2.4rem; height: 2.4rem; border-radius: 50%;
-  border: 1px solid var(--lodge-3); background: var(--lodge-2); color: var(--paper); font-size: 1.4rem; line-height: 1; cursor: pointer;
 }
 
 /* Forms inside a side panel / bottom sheet: the panel is the surface */
@@ -598,8 +448,6 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .wz-new-guest { margin-top: 1rem; }
 .wz-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 0.5rem; }
 @media (max-width: 34rem) { .wz-pair { grid-template-columns: 1fr; } .wz-pair .btn { justify-self: start; } }
-.admin-page .wz-pair input { width: 100%; min-width: 0; box-sizing: border-box; font: inherit; padding: 0.65rem 0.75rem;
-  border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); color: var(--paper); }
 .wz-foot { flex-shrink: 0; padding: 0.8rem var(--gutter) calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--lodge-3); background: var(--lodge); }
 .wz-foot .message { margin: 0 0 0.6rem; }
 .wz-actions { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
@@ -607,18 +455,14 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .wz-actions [hidden] { display: none; }
 
 /* Set-up status on a tasting's overview */
-.setup-card {
-  display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
-  margin: 0 0 1.75rem; padding: 1rem 1.1rem; max-width: 40rem;
-  background: #fff; border: 1px solid var(--lodge-3); border-radius: 10px;
-}
+.setup-card { margin: 0 0 1.75rem; max-width: 40rem; }
 .setup-card[hidden] { display: none; }
 .setup-title { margin: 0 0 0.4rem; font-weight: 600; }
 .setup-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; font-size: 0.9rem; color: var(--muted); }
 .setup-steps li::before { content: '○ '; }
 .setup-steps li.done { color: var(--ok); }
 .setup-steps li.done::before { content: '✓ '; }
-.admin-page .wz-body .add-form input:not([type='checkbox']):not(.short), .admin-page .wz-body .add-form textarea, .admin-page .wz-body .add-form select { max-width: none; width: 100%; box-sizing: border-box; }
+.admin-page .wz-body .add-form .input, .admin-page .wz-body .add-form textarea, .admin-page .wz-body .add-form select { max-width: none; width: 100%; box-sizing: border-box; }
 #new-toggle { display: inline-flex; align-items: center; gap: 0.3rem; }
 
 /* Admin overview */
@@ -627,27 +471,19 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .dash-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .admin-page .dash-head .btn { margin-bottom: 1.25rem; display: inline-flex; gap: 0.3rem; align-items: center; }
 .admin-page .dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 0.5rem 0 1.5rem; max-width: 52rem; }
-.admin-page .stat {
-  display: grid; gap: 0.1rem; padding: 1rem 1.1rem; text-decoration: none; color: var(--paper);
-  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; transition: border-color 0.15s;
-}
-.admin-page .stat:hover { border-color: var(--amber); }
+.admin-page .stat { display: grid; gap: 0.1rem; padding: 1rem 1.1rem; }
 .admin-page .stat-n { font-family: var(--display); font-size: clamp(2.2rem, 7vw, 3rem); line-height: 1; }
 .admin-page .stat-label { font-weight: 600; font-size: 0.95rem; }
 .admin-page .stat-sub { font-size: 0.82rem; color: var(--muted); }
 @media (max-width: 30rem) { .admin-page .stat { padding: 0.8rem; } .admin-page .stat-sub { display: none; } }
 .admin-page .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; max-width: 52rem; }
-.admin-page .dash-card { padding: 1.1rem 1.2rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; }
-.admin-page .dash-card[hidden] { display: none; }
+
 .admin-page .dash-wide { grid-column: 1 / -1; }
 .admin-page .dash-card h2 { margin: 0 0 0.75rem; font-size: 0.8rem; font-family: var(--body); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .admin-page .dash-next { display: grid; gap: 0.3rem; text-decoration: none; color: var(--paper); }
 .admin-page .dash-next .card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; }
 .admin-page .dash-next .card-meta { color: var(--muted); font-size: 0.92rem; }
 .admin-page .dash-next:hover .card-title { color: var(--amber); }
-.admin-page .dash-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
-.admin-page .chip.ok { border-color: var(--ok); color: var(--ok); }
-.admin-page .chip.warn { border-color: var(--tawny); color: var(--tawny); }
 .admin-page .dash-list { list-style: none; margin: 0; padding: 0; display: grid; }
 .admin-page .dash-list li + li { border-top: 1px solid var(--lodge-3); }
 .admin-page .dash-item { display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.7rem 0; text-decoration: none; color: var(--paper); }
@@ -677,11 +513,6 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 /* Tasting heading with a link to the guests' view */
 .admin-page .t-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.4rem 1rem; }
 .admin-page .t-head .title { min-width: 0; }
-.admin-page .t-guest {
-  flex: none; white-space: nowrap; font-size: 0.85rem; color: var(--amber); text-decoration: none;
-  padding: 0.3rem 0.75rem; border: 1px solid var(--lodge-3); border-radius: 999px;
-}
-.admin-page .t-guest:hover { border-color: var(--amber); }
 
 /* Wine form: whether the appellation is known */
 .admin-page .app-status { margin: -0.15rem 0 0.2rem; font-size: 0.85rem; color: var(--muted); }
@@ -695,15 +526,10 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .host-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
 .admin-page .host-me { font-weight: 400; color: var(--muted); }
 .admin-page .host-email { font-size: 0.85rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
-.admin-page .host-tag { flex: none; font-size: 0.78rem; padding: 0.15rem 0.6rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); white-space: nowrap; }
-.admin-page .host-tag.owner { color: var(--amber); border-color: var(--amber); }
-.admin-page .host-tag.pending { font-style: italic; }
-.admin-page .host-row .text-btn { flex: none; }
 .admin-page .host-add { flex-wrap: wrap; }
 .admin-page .host-add input { flex: 1 1 12rem; min-width: 0; }
 .admin-page .host-link { margin-top: 0.6rem; }
 .admin-page .host-link input { flex: 1; min-width: 0; font-size: 0.85rem; }
-.admin-page .tasting-card .cohost-tag { color: var(--amber); }
 
 
 /* The wine's map in the wine form */
@@ -718,12 +544,8 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .ta-head { margin-bottom: 0.5rem; }
 .ta-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.5rem 1rem; }
 .ta-top .title { margin: 0; font-size: clamp(2.4rem, 10vw, 4rem); min-width: 0; overflow-wrap: anywhere; }
+.ta-top .btn { margin-bottom: 0.4rem; }
 .ta-top .title:empty::before { content: '…'; color: var(--muted); }
-.ta-guest {
-  flex: none; margin-bottom: 0.4rem; white-space: nowrap; font-size: 0.88rem; color: var(--amber); text-decoration: none;
-  padding: 0.35rem 0.8rem; border: 1px solid var(--lodge-3); border-radius: 999px;
-}
-.ta-guest:hover { border-color: var(--amber); }
 .ta-tabs {
   display: flex; gap: 1.5rem; margin-top: 1.1rem; border-bottom: 1px solid var(--lodge-3);
   overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -743,7 +565,7 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 
 /* Superadmin */
 .super-shell .super-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 2rem; }
-  .super-shell .stat { display: grid; gap: 0.1rem; padding: 0.9rem 1rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; }
+  .super-shell .stat { display: grid; gap: 0.1rem; padding: 0.9rem 1rem; }
   .super-shell th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
   .super-shell th[aria-sort='ascending']::after { content: ' ▲'; font-size: 0.7em; }
   .super-shell th[aria-sort='descending']::after { content: ' ▼'; font-size: 0.7em; }
@@ -752,38 +574,20 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
   .super-shell .table-wrap { overflow-x: auto; }
   .super-shell .gdpr { margin-top: 3rem; max-width: 40rem; }
   .super-shell .gdpr .inline-form { display: flex; gap: 0.5rem; }
-  .super-shell .gdpr input { flex: 1; min-width: 0; font: inherit; padding: 0.6rem 0.75rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: var(--lodge-2); }
   .super-shell .gdpr-list { margin: 1rem 0; padding-left: 1.2rem; }
-  .super-shell .danger-btn { background: var(--error); border-color: var(--error); color: #fff; }
   .maps-block h3 { font-family: var(--body); font-size: 1rem; margin: 1.5rem 0 0.3rem; }
-  .map-ok, .map-need, .map-missing { white-space: nowrap; }
-  .map-ok { color: var(--ok); }
-  .map-need { color: var(--amber); font-weight: 600; }
-  .map-missing { color: var(--muted); }
   .guess-list { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.4rem; }
   .guess-list li { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: center; font-size: 0.92rem; }
 .super-shell .side-back { color: var(--muted); }
 .super-shell .row-link { color: inherit; text-decoration: none; }
 .super-shell .row-link:hover strong { color: var(--amber); }
-.super-shell .ev-kind { font-size: 0.78rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); white-space: nowrap; }
-.super-shell .ev-kind.k-guest { color: var(--ok); }
-.super-shell .ev-kind.k-login { color: var(--muted); }
-.super-shell .ev-kind.k-admin { color: var(--error); border-color: var(--error); }
-.super-shell .ev-kind.k-host { color: var(--amber); border-color: var(--amber); }
 .super-shell .tenant-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1.25rem; color: var(--muted); margin: -0.4rem 0 1.5rem; }
 .super-shell .tn-plan { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; font-weight: 400; color: var(--muted); }
 .super-shell .tn-plan select { width: auto; margin: 0; padding: 0.3rem 0.5rem; min-height: 0; font-size: 0.9rem; }
 .super-shell .wine-mini { width: 2rem; height: 2.6rem; object-fit: contain; background: #fff; border-radius: 0.3rem; }
 
 /* "You host": the tastings the signed-in host hosts themselves */
-.admin-page .host-badge {
-  justify-self: start;
-  align-self: flex-start; flex: none; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-  padding: 0.15rem 0.55rem; border-radius: 999px; background: var(--amber); color: #fff; white-space: nowrap;
-}
 /* The badge sits in the top right corner; the title keeps clear of it */
-.admin-page .tasting-card .host-badge { position: absolute; top: 0.9rem; right: 1rem; }
-.admin-page .tasting-card.is-mine .card-title { padding-right: 7.5rem; }
 .admin-page .mine-list { list-style: none; margin: 0 0 0.4rem; padding: 0; display: grid; gap: 0.5rem; }
 /* Plain rows with a thin line between – no boxes inside the card */
 .admin-page .mine-list { gap: 0; }
@@ -822,18 +626,15 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .label-status .fill-diff { display: block; margin-top: 0.35rem; color: var(--paper); }
 .admin-page .label-status .fill-use { margin-top: 0.5rem; }
 /* Wine form: where the data was fetched from */
-.admin-page .wf-source { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.35rem; margin-bottom: 1rem; padding: 0.75rem 0.9rem; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .wf-source { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.35rem; margin-bottom: 1rem; }
 .admin-page .wf-source[hidden] { display: none; }
 .admin-page .wf-source-row { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
 .admin-page .wf-source-text { flex: 1; min-width: 0; font-size: 0.9rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .admin-page .wf-source-text a { color: var(--amber); }
-.admin-page .wf-source .text-btn { justify-self: start; font-size: 0.85rem; }
 /* Wine library: names lead to the wine's own page */
 .admin-page a.wine-name { display: block; color: var(--paper); text-decoration: none; }
 .admin-page a.wine-name:hover, .admin-page a.wine-name:focus-visible { color: var(--amber); text-decoration: underline; }
 /* One wine: /admin/wines/<id>/ */
-.admin-page .wd-back { display: inline-block; margin-bottom: 1rem; color: var(--muted); text-decoration: none; font-size: 0.92rem; }
-.admin-page .wd-back:hover { color: var(--paper); }
 .admin-page .wd-head { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.5rem; }
 .admin-page .wd-head-text { flex: 1 1 16rem; min-width: 0; }
 .admin-page .wd-pic { flex: none; }
@@ -847,11 +648,11 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .wd-description { margin: 0 0 1.25rem; line-height: 1.6; }
 .admin-page .wd-block { margin-bottom: 1.5rem; }
 .admin-page .wd-block h2 { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.6rem; }
-.admin-page .wd-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.45rem 1.25rem; margin: 0; padding: 0.9rem 1rem; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .wd-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.45rem 1.25rem; margin: 0; padding: 0.9rem 1rem; }
 .admin-page .wd-facts dt { color: var(--muted); }
 .admin-page .wd-facts dd { margin: 0; overflow-wrap: anywhere; }
 .admin-page .wd-source a { color: var(--amber); }
-.admin-page .wd-tastings { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); }
+.admin-page .wd-tastings { list-style: none; margin: 0; padding: 0; }
 .admin-page .wd-tasting { display: flex; justify-content: space-between; gap: 1rem; padding: 0.75rem 1rem; border-top: 1px solid var(--lodge-2); }
 .admin-page .wd-tasting:first-child { border-top: 0; }
 .admin-page .wd-t-title { display: block; color: var(--paper); font-weight: 500; text-decoration: none; }
@@ -860,7 +661,7 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .wd-t-rating { text-align: right; white-space: nowrap; }
 .admin-page .wd-score { font-weight: 600; color: var(--amber); }
 .admin-page .wd-origin-text { margin: 0 0 0.75rem; }
-.admin-page .wd-map { background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
+.admin-page .wd-map { padding: 0; overflow: hidden; }
 .admin-page .wd-map svg { display: block; width: 100%; height: auto; }
 @media (max-width: 40rem) {
   .admin-page .wd-pic { width: 5.5rem; height: 8rem; }
@@ -886,7 +687,7 @@ dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
 .admin-page .wf-finish { display: grid; gap: 0.4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--lodge-3); }
 .admin-page .wf-finish[hidden] { display: none; }
 .admin-page .wf-finish .wz-sub { margin: 0; }
-.admin-page .wf-summary { display: flex; gap: 0.9rem; align-items: center; padding: 0.75rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.6rem; }
+.admin-page .wf-summary { display: flex; gap: 0.9rem; align-items: center; padding: 0.75rem; }
 .admin-page .wf-summary img { width: 3rem; height: 4rem; object-fit: contain; flex-shrink: 0; }
 .admin-page .wf-summary div { display: grid; gap: 0.15rem; min-width: 0; }
 .admin-page .wf-summary b { font-weight: 600; }
@@ -907,22 +708,11 @@ dialog.wizard .wf-foot .message { margin: 0 0 0.6rem; }
 .admin-page dialog.wizard .wf-actions .wz-spacer { display: block; flex: 1; }
 @media (min-width: 48rem) { dialog.wizard .wf-head, dialog.wizard .wf-body, dialog.wizard .wf-foot { padding-left: 2rem; padding-right: 2rem; } }
 dialog.wizard .wine-form input, dialog.wizard .wine-form textarea, dialog.wizard .wine-form select { max-width: none; }
-dialog.wizard .wine-form input.short { max-width: 8rem; }
 
 /* "Fetched from supervin.dk (2 Nov 2026, 12:31) ⟳" – the refresh is a round icon button */
 .admin-page .source-when { color: var(--muted); font-size: 0.85rem; }
-.admin-page .icon-btn {
-  display: inline-grid; place-items: center; width: 2rem; height: 2rem; padding: 0; flex-shrink: 0; vertical-align: middle;
-  border: 1px solid var(--lodge-3); border-radius: 50%; background: var(--lodge-2); color: var(--amber); cursor: pointer;
-}
-.admin-page .icon-btn:hover, .admin-page .icon-btn:focus-visible { border-color: var(--amber); }
-.admin-page .icon-btn svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.admin-page .icon-btn.loading svg { visibility: hidden; }
-.admin-page .icon-btn.loading { background: url(/img/glass-spinner.svg) center / 1.4rem no-repeat; }
-.admin-page .icon-btn:disabled { opacity: 0.6; cursor: default; }
 
 /* The wine's picture: a field to click or drop on; with a picture, the picture and its buttons */
-.admin-page .field-label { margin: 0.3rem 0 0; font-size: 0.85rem; font-weight: 500; color: #3d3433; }
 .admin-page .wf-image { justify-items: stretch; }
 .admin-page .image-drop {
   display: flex; align-items: center; gap: 0.9rem; margin: 0 !important; padding: 1rem 1.1rem; cursor: pointer;
@@ -956,9 +746,7 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 /* Max number of guests and the waiting list */
 .admin-page .max-guests { display: grid; gap: 0.3rem; margin: 0.25rem 0 0.75rem; max-width: 30rem; }
 .admin-page .max-guests .inline-form { align-items: center; }
-.admin-page .pill-waitlist { color: var(--tawny); box-shadow: inset 0 0 0 1px var(--tawny); }
 /* Blind tasting: a blind wine in the tasting's wine list */
-.admin-page .pill-blind { color: var(--paper); background: var(--lodge-3); font-size: 0.72rem; vertical-align: middle; }
 /* Invitation by email: the choice in the invite panel and when it was sent */
 .admin-page .send-mail { margin: 0.25rem 0 0.75rem; }
 .admin-page .guest-mailed { margin: 0.15rem 0 0; color: var(--muted); font-size: 0.85rem; }
@@ -1026,7 +814,6 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .wz-setup .wz-choice label:has(input:focus-visible) { outline: 2px solid var(--amber); outline-offset: 2px; }
 .wz-setup #wz-fee-box { margin-top: 0.8rem; }
 .wz-setup .wz-money { display: flex; align-items: center; gap: 0.6rem; }
-.wz-setup .wz-money input { width: 8rem; }
 .wz-setup .wz-money span { color: var(--muted); }
 .wz-setup .wz-switch { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.7rem 0; margin: 0; border-top: 1px solid var(--lodge-3); cursor: pointer; font-weight: 400; }
 .wz-setup .wz-card-title + .wz-switch { border-top: 0; padding-top: 0.2rem; }
@@ -1051,11 +838,7 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 /* Picture choices: the chosen one marked, an × to remove one from the row */
 .admin-page .image-cell { position: relative; }
 .admin-page .image-option[aria-pressed="true"] { border: 2px solid var(--amber); }
-.admin-page .image-remove {
-  position: absolute; top: -0.45rem; right: -0.45rem; width: 1.5rem; height: 1.5rem; border-radius: 50%;
-  border: 1px solid var(--lodge-3); background: #fff; color: var(--muted); font-size: 0.95rem; line-height: 1; cursor: pointer; padding: 0;
-}
-.admin-page .image-remove:hover { color: var(--amber); border-color: var(--amber); }
+.admin-page .image-cell > .icon-act { position: absolute; top: -0.7rem; right: -0.7rem; background: #fff; border-color: var(--lodge-3); border-radius: 50%; }
 /* Quantity prices: what counts – each choice with a line on what it means */
 .admin-page .bulk-mode { border: 1px solid var(--lodge-3); border-radius: 10px; padding: 0.8rem 1rem; margin: 0 0 1rem; display: grid; gap: 0.6rem; }
 .admin-page .bulk-mode legend { padding: 0 0.3rem; font-weight: 600; font-size: 0.95rem; }
@@ -1092,37 +875,20 @@ dialog.wizard .wine-form input.short { max-width: 8rem; }
 .admin-page .wf-similar[hidden] { display: none; }
 
 /* Delete: a red-outlined button, and a red one in the question */
-.admin-page .btn.ghost.danger { color: var(--error); border-color: var(--error); background: transparent; margin-left: auto; }
-.admin-page .btn.danger:not(.ghost) { background: var(--error); border-color: var(--error); color: #fff; }
 
 /* A wine just saved: shown briefly in the list */
 .admin-page .wine-row.just-saved { animation: just-saved 2.6s ease-out; border-radius: var(--radius); }
 @keyframes just-saved { 0%, 40% { background: #f6ead2; } 100% { background: transparent; } }
 
 /* Toast: a short message at the bottom after saving or deleting, sometimes with "Undo" */
-.toast {
-  position: fixed; left: 50%; bottom: max(1.25rem, env(safe-area-inset-bottom)); z-index: 1000;
-  transform: translate(-50%, 1rem); opacity: 0; transition: opacity 0.2s, transform 0.2s;
-  display: flex; align-items: center; gap: 0.9rem; max-width: min(34rem, calc(100vw - 2rem));
-  padding: 0.7rem 0.6rem 0.7rem 1rem; border-radius: var(--radius); background: var(--paper); color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22); font-size: 0.95rem;
-}
-.toast.shown { opacity: 1; transform: translate(-50%, 0); }
-.toast.error { background: var(--error); }
-.toast .toast-action { color: #f3d9a4; font-weight: 600; background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0.3rem 0.4rem; text-decoration: underline; white-space: nowrap; }
-.toast .toast-close { background: none; border: 0; color: rgba(255, 255, 255, 0.75); font-size: 1.2rem; cursor: pointer; padding: 0.2rem 0.5rem; min-width: 2rem; min-height: 2rem; }
-@media (prefers-reduced-motion: reduce) { .toast { transition: none; } .admin-page .wine-row.just-saved { animation: none; background: #f6ead2; } }
+@media (prefers-reduced-motion: reduce) {  .admin-page .wine-row.just-saved { animation: none; background: #f6ead2; } }
 
 /* Bigger click areas without bigger looks: the "?" keeps its small circle, but the area around it is 2rem;
    arrows, "NV" and text buttons get at least about 2.25rem */
 .help-q { position: relative; }
 .help-q::after { content: ''; position: absolute; inset: -0.4rem; }
-.admin-page .icon-only { min-width: 2.25rem; min-height: 2.25rem; }
-.admin-page .wine-actions .text-btn, .admin-page .row-actions .text-btn { min-height: 2.25rem; padding: 0.35rem 0.5rem; }
-.admin-page #wf-nv { min-width: 2.75rem; min-height: 2.5rem; }
 @media (pointer: coarse) {
   .help-q::after { inset: -0.65rem; }
-  .admin-page .icon-only { min-width: 2.75rem; min-height: 2.75rem; }
 }
 
 /* "Loading …" while an admin page signs in and fetches – appears after a moment, so fast pages do not flash it */
@@ -1195,7 +961,6 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .start-label b { display: block; font-weight: 500; }
 .start-label small { display: block; color: var(--muted); font-size: 0.85rem; margin-top: 0.1rem; }
 .start-steps li.done .start-label b { color: var(--muted); font-weight: 400; }
-.start-steps .btn, .start-steps .text-btn { margin: 0; white-space: nowrap; }
 @media (max-width: 30rem) {
   .start-steps li { grid-template-columns: 1.5rem minmax(0, 1fr); }
   .start-steps li > button { grid-column: 2; justify-self: start; }
@@ -1220,12 +985,6 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .tw-name { font: inherit; font-weight: 500; font-size: 1.02rem; color: var(--paper); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
 .admin-page .tw-name:hover { color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
 .admin-page .tw-main .lib-meta { margin: 0.1rem 0 0; }
-.admin-page .tw-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
-.admin-page .tw-chip { font-size: 0.78rem; padding: 0.12rem 0.55rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); background: var(--lodge-2); white-space: nowrap; }
-.admin-page .tw-chip.vis-shown { color: var(--ok); border-color: #b9d3be; background: #eef6f0; }
-.admin-page .tw-chip.vis-blind { color: #fff; border-color: var(--paper); background: var(--paper); }
-.admin-page .tw-chip.vis-hidden { border-style: dashed; }
-.admin-page .tw-chip.ord-no { color: var(--muted); }
 .admin-page .tw-price { display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; }
 .admin-page .tw-price b { font-weight: 500; }
 .admin-page .tw-price small { color: var(--muted); font-size: 0.82rem; }
@@ -1257,9 +1016,10 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .twe-group legend { font-weight: 600; padding: 0; margin-bottom: 0.2rem; display: flex; align-items: center; }
 .admin-page .twe-group > .hint { margin: 0; }
 .admin-page .twe-tiers { display: grid; gap: 0.45rem; }
-.admin-page .twe-tier { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; font-size: 0.95rem; }
-.admin-page .twe-tier input { width: 6.5rem !important; flex: none; }
-.admin-page .twe-tier input.qty { width: 3.5rem !important; }
+.admin-page .twe-tier { flex-wrap: nowrap; gap: 0.45rem; font-size: 0.95rem; }
+.admin-page .twe-tier > span { white-space: nowrap; }
+.admin-page .twe-tier .affix.w-num:not(.w-qty) { width: 7.5rem; }
+.admin-page .twe-tier > .icon-act { margin-left: auto; }
 .admin-page .twe-tier + .field-error, .admin-page .twe-tier ~ .field-error { margin-top: -0.2rem; }
 .admin-page #twe-add-tier { justify-self: start; }
 .admin-page :is(.twe-choice, .choice-cards) { display: grid; gap: 0.35rem; }
@@ -1286,7 +1046,6 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page label[for="twe-pos"] { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 1px solid var(--lodge-3); }
 .admin-page .twe-form .row-actions { margin-top: 1rem; }
 .admin-page .twe-danger { margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--lodge-3); }
-.admin-page .twe-danger .btn { margin-left: 0 !important; }
 .admin-page .twe-danger .hint { margin: 0.35rem 0 0; }
 
 /* Delete the tasting: quiet, last under Settings; the question comes in a small window */
@@ -1294,7 +1053,6 @@ dialog.wizard .wz-body { overflow-x: hidden; }
 .admin-page .quiet-zone:not(:has(#delete-tasting:not([hidden]))) { display: none; }
 .admin-page .quiet-zone h3 { margin: 0 0 0.25rem; font-family: var(--body); font-size: 0.95rem; font-weight: 600; color: var(--paper); }
 .admin-page .quiet-zone .hint { margin: 0 0 0.7rem; max-width: 36rem; }
-.admin-page .quiet-zone .btn.ghost.danger { margin-left: 0; }
 dialog.confirm-modal {
   width: min(26rem, calc(100vw - 2rem)); padding: 1.4rem 1.4rem 1.2rem; border: 0; border-radius: 0.9rem;
   background: var(--lodge); color: var(--paper); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
@@ -1339,7 +1097,6 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 /* Hosts on the settings page: lines like the rest of the settings, not boxes */
 .admin-page #hosts .hosts-list { gap: 0; margin: 0.4rem 0 0; }
 .admin-page #hosts .host-row { border: 0; border-top: 1px solid var(--lodge-3); border-radius: 0; background: none; padding: 0.75rem 0; }
-.admin-page #hosts .host-row .text-btn.danger { min-height: 2.25rem; padding: 0.35rem 0.5rem; }
 .admin-page .set-switch.tab-switch { border-top: 0; }
 
 /* Quantity prices under "Order wine": a two-way choice with an example that follows it (only when a wine has one) */
@@ -1385,23 +1142,12 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .qa-thumb { display: grid; place-items: center; background: transparent; border: 1px dashed var(--lodge-3); box-sizing: border-box; }
 .admin-page .qa-thumb svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: var(--muted); stroke-width: 1.4; stroke-linejoin: round; }
 .admin-page .qa-body { min-width: 0; }
-.admin-page .qa-field {
-  display: flex; align-items: center; gap: 0.4rem; padding: 0 0.3rem 0 0.75rem;
-  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius);
-}
-.admin-page .qa-field:focus-within { border-color: var(--paper); }
-.admin-page .qa-field:has([aria-invalid]) { border-color: var(--error); }
-.admin-page .qa-field #qa-input, .admin-page .qa-field #qa-input:focus {
-  flex: 1; min-width: 0; font: inherit; color: var(--paper); background: transparent; border: 0; outline: 0; box-shadow: none;
-  padding: 0.6rem 0; margin: 0;
-}
 .admin-page .qa-attached {
   flex: none; display: inline-flex; align-items: center; gap: 0.2rem; max-width: 45%; padding: 0.15rem 0.2rem 0.15rem 0.6rem;
   border-radius: 99px; background: var(--lodge-2); border: 1px solid var(--lodge-3); font-size: 0.85rem;
 }
 .admin-page .qa-attached[hidden] { display: none; }
 .admin-page #qa-attached-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admin-page .qa-attached button { border: 0; background: none; color: var(--muted); font-size: 1.1rem; line-height: 1; cursor: pointer; padding: 0.1rem 0.3rem; }
 .admin-page .qa-body .field-error { margin-top: 0.35rem; }
 .admin-page .qa-hint { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.84rem; }
 .admin-page .qa-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; justify-content: flex-end; }
@@ -1409,8 +1155,6 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .qa-new .qa-actions { align-self: start; }
 .admin-page .qa-photo { display: inline-flex; align-items: center; gap: 0.4rem; }
 .admin-page .qa-photo svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round; }
-.admin-page .qa-x { border: 0; background: none; color: var(--muted); font-size: 1.3rem; line-height: 1; width: 2.2rem; height: 2.2rem; cursor: pointer; border-radius: 50%; }
-.admin-page .qa-x:hover { background: var(--lodge-3); color: var(--paper); }
 /* Library wines that match the name typed */
 .admin-page .qa-hits { list-style: none; margin: 0.5rem 0 0; padding: 0.15rem 0.75rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius); }
 .admin-page .qa-hits-head { padding: 0.5rem 0 0.15rem; color: var(--muted); font-size: 0.82rem; }
@@ -1452,38 +1196,13 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .wines-admin .guests-head:has(#wine-search) { gap: 0.5rem; }
 .admin-page .wines-admin .guests-head + .wine-filters { margin-top: 0.75rem; }
 /* The new row: field and buttons the same height */
-.admin-page .qa-new .qa-field { height: 2.75rem; box-sizing: border-box; }
 .admin-page .qa-new .qa-actions .btn { height: 2.75rem; padding-block: 0; box-sizing: border-box; }
-.admin-page .qa-new .qa-actions .qa-x { height: 2.75rem; }
 
 /* Row actions as icons, with the name as a tip on hover and focus */
-.admin-page .icon-act {
-  position: relative; display: inline-grid; place-items: center; width: 2.4rem; height: 2.4rem; padding: 0;
-  border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--amber); cursor: pointer;
-}
-.admin-page .icon-act svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.admin-page .icon-act:hover { background: var(--lodge-2); border-color: var(--lodge-3); }
-.admin-page .icon-act.strong { border-color: var(--amber); }
-.admin-page .icon-act.strong:hover { background: var(--amber); color: #fff; }
-.admin-page .icon-act:disabled { opacity: 0.5; cursor: default; }
-.admin-page .icon-act.loading svg { visibility: hidden; }
-.admin-page .icon-act.loading::before { content: ''; position: absolute; inset: 0; margin: auto; width: 1.3rem; height: 1.3rem; background: url(/img/glass-spinner.svg) center / contain no-repeat; }
-.admin-page .icon-act[data-tip]::after {
-  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-  white-space: nowrap; padding: 0.3rem 0.55rem; border-radius: 6px; background: var(--paper); color: #fff;
-  font: 500 0.78rem/1.2 var(--body); pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 5;
-}
-.admin-page .icon-act[data-tip]:hover::after, .admin-page .icon-act[data-tip]:focus-visible::after { opacity: 1; transition-delay: 0.25s; }
 /* The tip exists only while it shows (a hidden one off the right edge made phones scroll sideways);
    the last icon in a row opens its tip to the left, inside the screen */
-.admin-page .icon-act[data-tip]:not(:hover):not(:focus-visible)::after { display: none; }
-.admin-page .icon-act[data-tip]:last-child::after { left: auto; right: 0; transform: none; }
-.admin-page a.tw-chip { text-decoration: none; color: var(--muted); }
-.admin-page a.tw-chip:hover { border-color: var(--muted); color: var(--paper); }
-.admin-page a.text-btn { text-decoration: none; }
 .admin-page .ov-link-note { margin-top: 0.9rem; }
 .admin-page .tw-actions { align-items: center; gap: 0.25rem; }
-.admin-page .wine-actions .icon-act { margin-left: 0; }
 
 /* A tasting's guests: the same rows as its wines (.tw-item), with initials for a picture */
 .admin-page .guest-list.tw-list { border-top: 0; margin-top: 0.75rem; }
@@ -1493,9 +1212,6 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
   background: var(--lodge-2); border: 1px solid var(--lodge-3); color: var(--muted); font-size: 0.85rem; font-weight: 600;
 }
 .admin-page .guest-missing { color: var(--error); }
-.admin-page .tw-chip.st-wait { color: var(--tawny); border-color: #e2c9ad; background: #fbf3ea; }
-.admin-page .tw-chip.st-unpaid { color: var(--amber); border-color: #e3c4c9; background: #fbf0f1; }
-.admin-page .tw-chip.st-note { cursor: help; }
 .admin-page .guest-inv { margin: 0.2rem 0 0.4rem; }
 .admin-page .guest-inv-when { margin: 0; }
 .admin-page .guest-paid { margin-top: 0.4rem; }
@@ -1524,40 +1240,21 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 @media (max-width: 40rem) {
   .admin-page .qa-guest .qa-item { grid-template-columns: 2.6rem minmax(0, 1fr); }
 }
-.admin-page .qa-field input, .admin-page .qa-field input:focus {
-  flex: 1; min-width: 0; font: inherit; color: var(--paper); background: transparent; border: 0; outline: 0; box-shadow: none;
-  padding: 0; margin: 0; height: 100%; width: auto; max-width: none;
-}
-.admin-page .gi-row .qa-field { height: 2.75rem; box-sizing: border-box; }
 .admin-page .gi-row .qa-actions .btn { height: 2.75rem; padding-block: 0; box-sizing: border-box; }
-.admin-page .gi-row .qa-actions .qa-x { height: 2.75rem; }
 .admin-page .gi-row { align-items: start; }
 .admin-page .gi-fields { display: flex; gap: 0.5rem; }
-.admin-page .gi-fields .qa-field { height: 2.75rem; box-sizing: border-box; min-width: 0; }
+.admin-page .gi-fields .qa-field { min-width: 0; }
 .admin-page .gi-name { flex: 1.2 1 0; }
 .admin-page .gi-email { flex: 1 1 0; }
 @media (max-width: 40rem) { .admin-page .gi-fields { flex-direction: column; } .admin-page .gi-fields .qa-field { flex: none; } }
-.admin-page .twe-prices .with-unit input.short { width: 5.75rem; max-width: 5.75rem; }
-.admin-page .twe-prices .with-unit .unit { white-space: nowrap; }
 /* A quiet icon (e.g. remove a quantity price): grey until hovered, then red */
-.admin-page .icon-act.quiet { color: var(--muted); }
-.admin-page .icon-act.quiet:hover { color: var(--error); background: #fbf0f1; border-color: #e3c4c9; }
-.admin-page .twe-tier .icon-act { margin-left: auto; }
 @media (max-width: 30rem) {
-  .admin-page .twe-tier { flex-wrap: nowrap; gap: 0.35rem; font-size: 0.88rem; }
-  .admin-page .twe-tier input.qty { width: 2.6rem !important; min-width: 0; padding-inline: 0.4rem; }
-  .admin-page .twe-tier input:not(.qty) { width: 4.8rem !important; min-width: 0; padding-inline: 0.5rem; }
-  .admin-page .twe-tier span { white-space: nowrap; }
-  .admin-page .twe-tier .icon-act { flex: none; width: 2.2rem; height: 2.2rem; }
+  .admin-page .twe-tier { gap: 0.35rem; font-size: 0.88rem; }
+  .admin-page .twe-tier .affix.w-qty { width: 3.75rem; }
+  .admin-page .twe-tier .affix.w-num:not(.w-qty) { width: 6.5rem; }
 }
-.admin-page .icon-act.chat-del { padding: 0; width: 2rem; height: 2rem; font-size: inherit; }
-.admin-page .icon-act.chat-del svg { width: 1.05rem; height: 1.05rem; }
 .admin-page .icon-space { width: 2.4rem; flex: none; }
 .admin-page #add-toggle { white-space: nowrap; flex: none; }
-/* Not available right now – also for ghost and danger buttons (grey, flat, no hover) */
-.admin-page .btn:disabled:not(.loading), .admin-page .btn:disabled:not(.loading):hover {
-  opacity: 1; cursor: default; background: var(--lodge-2); border-color: var(--lodge-3); color: var(--muted);
-}
 .admin-page #gi-go { min-width: 9.25rem; } /* the label changes (Add / Add and invite) without the fields jumping */
 /* The new row's soft background reaches a little beyond the list, so its content lines up with the rows below
    and still has room to the edge */
@@ -1600,8 +1297,6 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page .filter-dd-menu input { width: 1.05rem; height: 1.05rem; margin: 0; accent-color: var(--amber); flex: none; }
 .admin-page .filter-dd-menu small { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; }
 .admin-page .filter-dd-menu hr { border: 0; border-top: 1px solid var(--lodge-2); margin: 0.3rem 0; }
-.admin-page .filter-dd-menu .text-btn { display: block; margin: 0.2rem 0.55rem 0.3rem; }
-.admin-page .filter-dd-menu .text-btn[hidden] { display: none; }
 @media (max-width: 30rem) { .admin-page .filter-dd-btn { max-width: 11rem; } }
 .admin-page #guest-search { margin-top: 0.75rem; }
 /* The matches span the row from the field to the right edge (same room on both sides) */
@@ -1621,25 +1316,22 @@ dialog.confirm-modal[open] { animation: welcome-in 0.18s ease-out; }
 .admin-page [data-section='orders'] .bulk-choice { max-width: 46rem; box-sizing: border-box; margin: 0 0 1.5rem; }
 .admin-page a.tw-name { text-decoration: none; display: inline-block; }
 /* A wine with only a name: a way forward on its page */
-.admin-page .wd-empty { margin: 1rem 0 1.5rem; padding: 1rem 1.1rem; max-width: 40rem; background: #fff; border: 1px solid var(--lodge-3); border-radius: 10px; }
-.admin-page .wd-empty[hidden] { display: none; }
+.admin-page .wd-empty { margin: 1rem 0 1.5rem; max-width: 40rem; }
 .admin-page .wd-empty p { margin: 0 0 0.8rem; }
 .admin-page .wd-empty b { display: block; font-weight: 600; margin-bottom: 0.2rem; }
 .admin-page .wd-empty span { color: var(--muted); }
 
 /* Wine panel: the guest price in each tasting (read here, changed in the tasting) */
 .admin-page .wf-in-tastings { display: grid; gap: 0.35rem; margin-top: 0.6rem; max-width: 36rem; }
-.admin-page .wf-in-tastings .field-label { margin: 0; }
+.admin-page .wf-in-tastings .flabel { margin: 0; }
 .admin-page .wf-in-tastings ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: #fff; }
 .admin-page .wf-in-tastings li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; padding: 0.6rem 0.8rem; }
 .admin-page .wf-in-tastings li + li { border-top: 1px solid var(--lodge-2); }
 .admin-page .wf-it-name { font-weight: 500; }
 .admin-page .wf-it-price { color: var(--muted); font-variant-numeric: tabular-nums; }
-.admin-page .wf-in-tastings .text-btn { margin-left: auto; }
 .admin-page .wf-in-tastings .hint { margin: 0; }
 
 /* Person rows (src/lib/ui/person-row.ts): guests, hosts – one look everywhere */
-.admin-page .tw-chip.tone-accent { color: var(--amber); border-color: var(--amber); background: #fff; }
 .admin-page .person-you { font-weight: 400; color: var(--muted); }
 .admin-page span.tw-name { font-weight: 500; }
 .admin-page .hosts-rows.guest-list.tw-list { margin-top: 0.5rem; }

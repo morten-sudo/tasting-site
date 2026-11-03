@@ -7,32 +7,32 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
     <section class="su-section">
       <h2 class="su-h2" data-i18n="signup.featuresTitle">Everything for the evening</h2>
       <ul class="su-features">
-        <li>
+        <li class="card">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3.5 6.5l8.5 6.5 8.5-6.5" /></svg>
           <h3 data-i18n="signup.f1Title">Invitations and replies</h3>
           <p data-i18n="signup.f1Text">Every guest gets a personal link. Replies, diets and messages come in by themselves, and you always know who is coming.</p>
         </li>
-        <li>
+        <li class="card">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4v4.2c0 .6.3 1.1.7 1.5 1 .9 1.6 2.2 1.6 3.6V20a1.5 1.5 0 0 1-1.5 1.5H9.2A1.5 1.5 0 0 1 7.7 20v-8.2c0-1.4.6-2.7 1.6-3.6.4-.4.7-.9.7-1.5z" /><path d="M7.7 13h8.6v4.5H7.7z" /></svg>
           <h3 data-i18n="signup.f2Title">The wines on every phone</h3>
           <p data-i18n="signup.f2Text">Photos, descriptions and prices. Snap the label or paste a shop link, and the details fill themselves in.</p>
         </li>
-        <li>
+        <li class="card">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
           <h3 data-i18n="signup.f3Title">Orders and payment</h3>
           <p data-i18n="signup.f3Text">Guests order bottles during the evening – with quantity prices – and pay with MobilePay. You get the shopping list.</p>
         </li>
-        <li>
+        <li class="card">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg>
           <h3 data-i18n="signup.f4Title">Ratings and notes</h3>
           <p data-i18n="signup.f4Text">Guests give each wine stars and keep private notes. You see which wines the room loved.</p>
         </li>
-        <li>
+        <li class="card">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M8 20h8M12 16v4M7 12V9M11 12V7M15 12v-2" /></svg>
           <h3 data-i18n="signup.f5Title">Quiz with a live leaderboard</h3>
           <p data-i18n="signup.f5Text">Write your own questions and show the standings on the TV while the answers come in.</p>
         </li>
-        <li>
+        <li class="card">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5S9.6 5.9 12 3.5z" /></svg>
           <h3 data-i18n="signup.f6Title">In your guests' language</h3>
           <p data-i18n="signup.f6Text">Nine languages. Each tasting has its own, and every guest can switch for themselves.</p>
@@ -44,7 +44,7 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
     <section class="su-section">
       <h2 class="su-h2" data-i18n="signup.plansTitle">Plans</h2>
       <div class="su-plans">
-        <article class="su-plan current">
+        <article class="card su-plan current">
           <h3>Free</h3>
           <p class="su-price" data-i18n="signup.freePrice">0 kr.</p>
           <p class="su-plan-lead" data-i18n="signup.freeLead">For private tastings with friends and family.</p>
@@ -56,16 +56,16 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
           </ul>
           <a class="btn" href={cta} id="plan-free-cta" data-i18n="signup.freeCta">Get started</a>
         </article>
-        <article class="su-plan soon">
-          <h3>Pro <span class="su-soon" data-i18n="signup.soon">Coming soon</span></h3>
+        <article class="card su-plan soon">
+          <h3>Pro <span class="chip dashed" data-i18n="signup.soon">Coming soon</span></h3>
           <p class="su-plan-lead" data-i18n="signup.proLead">For the keen host who holds tastings often.</p>
           <ul>
             <li data-i18n="signup.proA">Your own logo and colours</li>
             <li data-i18n="signup.proC">Statistics across your tastings</li>
           </ul>
         </article>
-        <article class="su-plan soon">
-          <h3>Commercial <span class="su-soon" data-i18n="signup.soon">Coming soon</span></h3>
+        <article class="card su-plan soon">
+          <h3>Commercial <span class="chip dashed" data-i18n="signup.soon">Coming soon</span></h3>
           <p class="su-plan-lead" data-i18n="signup.comLead">For wine bars, shops and importers.</p>
           <ul>
             <li data-i18n="signup.comA">Ticket sales for public tastings</li>
@@ -82,18 +82,16 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
   .su-h2 { font-size: clamp(1.8rem, 5vw, 2.4rem); margin: 0 0 1.5rem; }
   .su-features { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
   @media (min-width: 56rem) { .su-features { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  .su-features li { padding: 1.25rem; border: 1px solid var(--lodge-3); border-radius: 0.8rem; background: var(--lodge-2); }
+  .su-features li { padding: 1.25rem; }
   .su-features svg { width: 1.8rem; height: 1.8rem; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .su-features h3 { margin: 0.6rem 0 0.35rem; font-size: 1.08rem; font-family: var(--body); font-weight: 600; }
   .su-features p { margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.55; }
 
   .su-plans { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); align-items: stretch; }
-  .su-plan { display: flex; flex-direction: column; padding: 1.4rem; border: 1px solid var(--lodge-3); border-radius: 0.9rem; background: var(--lodge-2); }
-  .su-plan.current { border: 2px solid var(--amber); }
-  .su-plan.soon { background: transparent; }
+  .su-plan { display: flex; flex-direction: column; padding: 1.4rem; }
+  .su-plan.current { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
   .su-plan.soon h3, .su-plan.soon .su-plan-lead, .su-plan.soon li { color: var(--muted); }
   .su-plan h3 { margin: 0; font-size: 1.4rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-  .su-soon { font-family: var(--body); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.2rem 0.55rem; border-radius: 999px; border: 1px solid var(--lodge-3); color: var(--muted); }
   .su-price { font-family: var(--display); font-size: 2.4rem; margin: 0.3rem 0 0; line-height: 1; }
   .su-plan-lead { margin: 0.6rem 0 0.8rem; }
   .su-plan ul { list-style: none; margin: 0 0 1.2rem; padding: 0; display: grid; gap: 0.4rem; font-size: 0.95rem; }

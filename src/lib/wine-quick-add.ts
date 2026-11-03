@@ -2,8 +2,10 @@
 // paste a link from a web shop, or add a photo of the label. A link or a photo is read straight away; a card above
 // the list shows what comes in (name, type, origin, price, the producer), and when it is done the wine moves into
 // the list. Used on the wine library and on a tasting's Wines tab (where a wine also goes into the tasting).
+import { setLoading } from './ui/button';
 import { supabase } from './supabase';
 import { mk } from './admin-common';
+import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang, money } from '../i18n';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
@@ -161,12 +163,12 @@ export function initQuickAdd(o: Opts) {
       li.append(thumb(w.image_url), body);
       if (here.has(w.id)) {
         // The same button as "Add", disabled: the wine is already in the tasting
-        const b = mk('button', 'btn small ghost', '✓ ' + t('qa.alreadyHere'));
+        const b = mk('button', 'btn small secondary', '✓ ' + t('qa.alreadyHere'));
         b.type = 'button';
         b.disabled = true;
         li.append(b);
       } else if (o.pick) {
-        const add = mk('button', 'btn small ghost', t('admin.add'));
+        const add = mk('button', 'btn small secondary', t('admin.add'));
         add.type = 'button';
         add.addEventListener('click', () => pickWine(w, add));
         li.append(add);
@@ -180,9 +182,9 @@ export function initQuickAdd(o: Opts) {
   }
   async function pickWine(w: QuickWine, btn?: HTMLButtonElement) {
     if (!o.pick) return;
-    if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+    if (btn) setLoading(btn, true);
     const ok = await o.pick(w);
-    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    if (btn) setLoading(btn, false);
     if (!ok) return;
     input.value = '';
     renderHits();
@@ -299,9 +301,8 @@ export function initQuickAdd(o: Opts) {
   function buttons(li: HTMLElement, ...list: [string, () => void, string?][]) {
     const box = part(li).actions;
     box.replaceChildren(...list.map(([label, run, cls]) => {
-      const b = mk('button', cls ?? 'btn small ghost', label);
+      const b = label === '×' ? closeButton(t('qa.dismiss'), 'small') : mk('button', cls ?? 'btn small secondary', label);
       b.type = 'button';
-      if (label === '×') b.setAttribute('aria-label', t('qa.dismiss'));
       b.addEventListener('click', run);
       return b;
     }));
@@ -368,7 +369,7 @@ export function initQuickAdd(o: Opts) {
       const actions: [string, () => void, string?][] = [];
       if (o.pick && !here) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }]);
       else if (!o.pick) actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }]);
-      actions.push(['×', () => drop(li), 'qa-x']);
+      actions.push(['×', () => drop(li)]);
       buttons(li, ...actions);
       return;
     }
@@ -400,7 +401,7 @@ export function initQuickAdd(o: Opts) {
     const id = (data as { id: number } | null)?.id;
     if (error || !id) {
       say(li, t('admin.wineNotSaved'), 'error');
-      buttons(li, [t('qa.retry'), () => save(job, r, name, vintage, style, country)], ['×', () => drop(li), 'qa-x']);
+      buttons(li, [t('qa.retry'), () => save(job, r, name, vintage, style, country)], ['×', () => drop(li)]);
       return;
     }
     await o.saved?.(id);
@@ -433,7 +434,7 @@ export function initQuickAdd(o: Opts) {
     buttons(job.li,
       [t('qa.typeNameBtn'), () => { drop(job.li); open(); setCarry(job.src); input.focus(); }],
       [t('qa.retry'), () => run(job), 'text-btn'],
-      ['×', () => drop(job.li), 'qa-x']);
+      ['×', () => drop(job.li)]);
   }
 
   return { open, isOpen };

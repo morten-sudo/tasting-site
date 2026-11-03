@@ -2,6 +2,7 @@
 // otherwise from the invite links stored on this device. Used by "My wine book".
 import { supabase } from './supabase';
 import { getCodes, tastingUrl } from './guest';
+import { statusChip } from './ui/status';
 import { t, money, locale } from '../i18n';
 
 export type OrderLine = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
@@ -36,17 +37,14 @@ export function orderCards(lines: OrderLine[]): HTMLElement[] {
     const first = ls[0];
     const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
     const card = document.createElement('a');
-    card.className = 'order-card' + (first.paid ? ' paid' : '');
+    card.className = 'card order-card' + (first.paid ? ' paid' : '');
     card.href = tastingUrl(first.slug, 'cart/');
     const head = document.createElement('div');
     head.className = 'card-head';
     const title = document.createElement('span');
     title.className = 'order-title';
     title.textContent = `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`;
-    const pill = document.createElement('span');
-    pill.className = 'pill ' + (first.paid ? 'pill-yes' : 'pill-invited');
-    pill.textContent = first.paid ? t('cart.paid') : t('cart.awaiting');
-    head.append(title, pill);
+    head.append(title, statusChip(first.paid ? 'order.paid' : 'order.unpaid'));
     const meta = document.createElement('span');
     meta.className = 'card-meta';
     meta.textContent = date.format(new Date(first.created_at));

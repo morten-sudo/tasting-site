@@ -1,4 +1,5 @@
 ---
+import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
@@ -18,7 +19,7 @@ import '../../styles/admin.css';
           <button type="button" role="tab" data-f="mine" aria-selected="true"><b data-i18n="roles.mine">I host</b> <span id="n-mine"></span></button>
           <button type="button" role="tab" data-f="all" aria-selected="false"><b data-i18n="roles.all">All</b> <span id="n-all"></span></button>
         </div>
-        <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
+        <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
       </div>
 
 
@@ -36,6 +37,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { chip } from '../../lib/ui/status';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, formatWhen } from '../../i18n';
@@ -55,9 +57,13 @@ import '../../styles/admin.css';
 
   function card(r: Row) {
     const li = mk('li');
-    const a = mk('a', 'tasting-card');
+    const a = mk('a', 'card tasting-card');
     a.href = adminUrl(r.slug);
-    a.append(mk('span', 'card-title', r.title));
+    // "You host" as a chip beside the title
+    const head = mk('span', 'card-head');
+    head.append(mk('span', 'card-title', r.title));
+    if (hosting.has(r.id)) head.append(chip(t('roles.youHost'), 'strong'));
+    a.append(head);
     const meta = [r.starts_at ? formatWhen(r.starts_at, { year: true }) : null, r.place].filter(Boolean).join(' · ');
     if (meta) a.append(mk('span', 'card-meta', meta));
     const stats = mk('span', 'card-stats');
@@ -66,8 +72,6 @@ import '../../styles/admin.css';
       mk('span', '', t('tastingsAdmin.guests', { coming, n: r.participants.length })),
       mk('span', '', t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })),
     );
-    if (hosting.has(r.id)) a.prepend(mk('span', 'host-badge', t('roles.youHost')));
-    a.classList.toggle('is-mine', hosting.has(r.id));
     a.append(stats);
     li.append(a);
     return li;

@@ -1,10 +1,11 @@
 ---
+import SearchField from '../components/ui/SearchField.astro';
 import Base from '../layouts/Base.astro';
 ---
 <!-- The guest's wine book: wines tasted, tastings and orders across all tastings -->
 <Base title="book.title">
   <section class="wrap book-page">
-    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
 
     <div id="signed-out" hidden>
       <h1 class="title" data-i18n="book.title">My wine book</h1>
@@ -15,9 +16,9 @@ import Base from '../layouts/Base.astro';
     <div id="book" hidden>
       <h1 class="title" data-i18n="book.title">My wine book</h1>
       <ul class="book-stats">
-        <li><b id="st-wines">0</b><span data-i18n="book.statWines">wines tasted</span></li>
-        <li><b id="st-tastings">0</b><span data-i18n="book.statTastings">tastings</span></li>
-        <li><b id="st-bottles">0</b><span data-i18n="book.statBottles">bottles bought</span></li>
+        <li class="card"><b id="st-wines">0</b><span data-i18n="book.statWines">wines tasted</span></li>
+        <li class="card"><b id="st-tastings">0</b><span data-i18n="book.statTastings">tastings</span></li>
+        <li class="card"><b id="st-bottles">0</b><span data-i18n="book.statBottles">bottles bought</span></li>
       </ul>
       <div id="link-only" class="message" hidden>
         <p data-i18n="book.linkOnly">You only see the tastings opened with an invitation link on this device. Sign in with your email to see everything, on any device.</p>
@@ -33,7 +34,7 @@ import Base from '../layouts/Base.astro';
       <!-- Wines I have tasted -->
       <section id="panel-wines" role="tabpanel" aria-labelledby="tab-wines" class="book-panel">
         <div class="book-tools">
-          <input id="w-search" type="search" class="search" autocomplete="off" placeholder="Search" aria-label="Search" data-i18n-attr="placeholder=adminTasting.search;aria-label=adminTasting.search" />
+          <SearchField id="w-search" label="adminTasting.search" />
           <select id="w-sort" aria-label="Sort" data-i18n-attr="aria-label=book.sort">
             <option value="recent" data-i18n="book.sortRecent">Newest first</option>
             <option value="rating" data-i18n="book.sortRating">Best rated</option>
@@ -160,7 +161,7 @@ import Base from '../layouts/Base.astro';
 
   function wineItem(w: BookWine) {
     const li = el('li');
-    const a = el('a', 'book-wine');
+    const a = el('a', 'card book-wine');
     // By number: the wine page turns it into the name address (unique also for two vintages of one wine)
     a.href = tastingUrl(w.slug, `wines/${w.wine_id}/`);
     const pic = el('span', 'bw-pic');
@@ -191,7 +192,7 @@ import Base from '../layouts/Base.astro';
       s.setAttribute('aria-label', t('rating.yours', { n: w.rating }));
       side.append(s);
     }
-    if (w.bought > 0) side.append(el('span', 'bw-bought', t('book.bought', { n: w.bought })));
+    if (w.bought > 0) side.append(el('span', 'chip', t('book.bought', { n: w.bought })));
     a.append(pic, body, side);
     li.append(a);
     return li;
@@ -232,7 +233,7 @@ import Base from '../layouts/Base.astro';
   .book-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 52rem; }
   .book-page .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 11vw, 4.2rem); line-height: 0.95; margin: 0 0 1.2rem; }
   .book-stats { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
-  .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.7rem; }
+  .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; }
   .book-stats b { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); }
   .book-stats span { font-size: 0.85rem; color: var(--muted); }
   .book-page #link-only { margin-bottom: 1.25rem; }
@@ -247,19 +248,13 @@ import Base from '../layouts/Base.astro';
   .book-h:first-child { margin-top: 0; }
   .book-tools { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
   .book-tools[hidden] { display: none; }
-  .book-tools .search { flex: 1; min-width: 0; margin: 0; }
-  .book-tools input, .book-tools select {
-    font: inherit; font-size: 0.95rem; color: var(--paper); background: #fff;
-    border: 1px solid #d9cfc7; border-radius: var(--radius); padding: 0.6rem 0.8rem; min-height: 2.75rem;
+  .book-tools .affix { flex: 1; max-width: none; }
+  .book-tools select {
+    flex: none; width: auto; cursor: pointer; font: inherit; font-size: 0.95rem; color: var(--paper); background: #fff;
+    border: 1px solid var(--line); border-radius: var(--radius); padding: 0 0.8rem; height: var(--h);
   }
-  .book-tools input:focus, .book-tools select:focus { outline: none; border-color: var(--amber); }
-  .book-tools select { flex: none; width: auto; cursor: pointer; }
   .book-wines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-  .book-wine {
-    display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.9rem; align-items: center; padding: 0.75rem 0.9rem;
-    background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.75rem; color: var(--paper); text-decoration: none;
-  }
-  .book-wine:hover { border-color: var(--amber); color: var(--paper); }
+  .book-wine { display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.9rem; align-items: center; padding: 0.75rem 0.9rem; }
   .bw-pic { width: 3.4rem; height: 4.4rem; border-radius: 0.45rem; background: linear-gradient(160deg, #a3213a, #b8742e); overflow: hidden; display: flex; }
   .bw-pic img { display: block; flex: 1; min-width: 0; height: 100%; object-fit: contain; background: #fff; }
   .bw-body { display: grid; gap: 0.12rem; min-width: 0; }
@@ -269,7 +264,6 @@ import Base from '../layouts/Base.astro';
   .bw-where { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
   .bw-side { display: grid; justify-items: end; gap: 0.35rem; align-self: start; }
   .bw-stars { color: var(--amber); letter-spacing: 0.05em; white-space: nowrap; }
-  .bw-bought { font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--lodge); border: 1px solid var(--lodge-3); white-space: nowrap; }
   #orders-sum { margin: 0 0 1rem; }
   @media (max-width: 30rem) {
     .book-stats b { font-size: 1.6rem; }

@@ -18,7 +18,8 @@ export function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, 
   return e;
 }
 
-export { iconButton, type IconName } from './icons';
+export { iconButton, closeButton, type IconName } from './icons';
+import { closeButton } from './ui/icon-button';
 
 async function signOut() {
   await supabase.auth.signOut();
@@ -76,11 +77,8 @@ export function enableImageZoom(closeLabel: string) {
     dialog.className = 'zoom';
     const img = document.createElement('img');
     img.alt = '';
-    const close = document.createElement('button');
-    close.type = 'button';
-    close.className = 'zoom-close';
-    close.textContent = '×';
-    close.setAttribute('aria-label', closeLabel);
+    const close = closeButton(closeLabel);
+    close.classList.add('lg');
     dialog.append(img, close);
     document.body.append(dialog);
     dialog.addEventListener('click', () => dialog!.close());
@@ -101,7 +99,7 @@ export function enableImageZoom(closeLabel: string) {
  * screens, from the bottom on phones. Closes with its × button, Escape or a click beside it.
  */
 export function sheetPanel(dialog: HTMLDialogElement, onClose?: () => void) {
-  dialog.querySelector('.sheet-close')?.addEventListener('click', () => dialog.close());
+  dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
   // A click on the backdrop lands on the dialog element itself
   dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
   dialog.addEventListener('close', () => onClose?.());

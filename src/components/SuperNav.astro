@@ -1,4 +1,5 @@
 ---
+import CloseButton from './ui/CloseButton.astro';
 // Superadmin shell: its own menu on the left (a drawer on phones) – Tenants (with the open
 // tenant's parts underneath), Log (all accounts), Maps and GDPR. Uses the same look as the host's admin menu.
 interface Props { active?: 'tenants' | 'log' | 'usage' | 'maps' | 'gdpr' }
@@ -15,7 +16,7 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
   <aside id="admin-side" class="admin-side" data-active={active} hidden>
     <div class="side-head">
       <span class="side-kicker">Superadmin</span>
-      <button id="side-close" class="side-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+      <CloseButton id="side-close" />
     </div>
     <nav aria-label="Superadmin">
       <a class="side-group side-home" href="/superadmin/" aria-current={cur('tenants')}><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V8l9-5 9 5v13" /><path d="M9 21v-6h6v6" /></svg><span data-i18n="super.tenantsNav">Tenants</span></a>
@@ -29,12 +30,12 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
     <div class="side-foot">
       <span id="me" class="side-me"></span>
       <a class="side-back" href="/admin/" data-i18n="super.toHostAdmin">To host admin</a>
-      <button id="side-logout" class="link-btn" type="button" data-i18n="nav.signOut">Sign out</button>
+      <button id="side-logout" class="text-btn small" type="button" data-i18n="nav.signOut">Sign out</button>
     </div>
   </aside>
 
   <div class="admin-content">
-    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
     <p id="denied" class="message error" hidden data-i18n="super.denied">This page is only for Winetastr administrators.</p>
     <div id="super-main" hidden>
       <slot />

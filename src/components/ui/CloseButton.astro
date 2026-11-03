@@ -1,0 +1,9 @@
+---
+// Component 3 – the one close button (×) for panels, menus, dialogs and rows; closeButton() in
+// src/lib/ui/icon-button.ts builds the same markup in TypeScript. label/i18n: its name (default "Close").
+import Icon from './Icon.astro';
+interface Props { id?: string; size?: 'small' | 'normal'; class?: string; label?: string; i18n?: string; [attr: string]: unknown }
+const { id, size = 'normal', class: cls, label = 'Close', i18n = 'admin.close', ...rest } = Astro.props;
+---
+<button type="button" id={id} class:list={['icon-act', 'close', { md: size === 'normal' }, cls]} aria-label={label} data-tip={label}
+  data-i18n-attr={`aria-label=${i18n};data-tip=${i18n}`} {...rest}><Icon name="x" /></button>

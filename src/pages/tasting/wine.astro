@@ -1,16 +1,17 @@
 ---
+import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
 ---
 <Base title="page.wine" tasting>
   <article class="wine-page">
     <div class="wrap top">
-      <a href="/home/" data-tpath="wines/" class="back" data-i18n="wine.all">All wines</a>
+      <a href="/home/" data-tpath="wines/" class="text-btn back"><Icon name="left" /><span data-i18n="wine.all">All wines</span></a>
       <div id="need-login" class="message need-login" hidden>
         <p><strong data-i18n="wines.signInTitle">Sign in to see the wines.</strong></p>
         <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
         <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
       </div>
-      <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+      <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
       <p id="load-error" class="message error" hidden>
         <span data-i18n="wine.notFound">The wine could not be found.</span> <a href="/home/" data-tpath="wines/" data-i18n="wine.back">Back to the wines</a>.
       </p>
@@ -28,7 +29,7 @@ import Base from '../../layouts/Base.astro';
       <!-- What the guest does here comes first: price and cart, then their own rating; reading after -->
       <div class="buy">
         <p id="price" class="price"></p>
-        <button id="add" type="button" class="add" hidden data-i18n="wine.add">Add to cart</button>
+        <button id="add" type="button" class="btn" hidden data-i18n="wine.add">Add to cart</button>
       </div>
       <p id="order-status" class="hint" hidden></p>
 
@@ -36,7 +37,7 @@ import Base from '../../layouts/Base.astro';
 
       <div id="desc-box" class="desc-box">
         <p id="desc" class="desc"></p>
-        <button id="desc-more" class="desc-more" type="button" hidden aria-expanded="false" aria-controls="desc" data-i18n="wine.readMore">Read more</button>
+        <button id="desc-more" class="text-btn" type="button" hidden aria-expanded="false" aria-controls="desc" data-i18n="wine.readMore">Read more</button>
       </div>
       <div id="facts"></div>
       <div id="mini-map" class="mini-map" hidden></div>
@@ -276,7 +277,7 @@ import Base from '../../layouts/Base.astro';
       const sync = () => {
         const n = getCart()[w.id] ?? 0;
         btn.textContent = n ? t('wine.addMore', { n }) : t('wine.add');
-        btn.classList.toggle('in-cart', n > 0);
+        btn.classList.toggle('secondary', n > 0);
       };
       btn.addEventListener('click', () => {
         addToCart(w.id);
@@ -331,23 +332,7 @@ import Base from '../../layouts/Base.astro';
     .wine-page .text { max-width: 40rem; padding-left: clamp(2rem, 5vw, 5rem); }
     .wine-page .style-tag { margin-top: 0.5rem; }
   }
-  .wine-page .back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-height: 2.75rem;
-    color: var(--muted);
-    text-decoration: none;
-  }
-  .wine-page .back::before {
-    content: '';
-    width: 0.45rem;
-    height: 0.45rem;
-    border-left: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(45deg);
-  }
-  .wine-page .back:hover { color: var(--paper); }
+  .wine-page > .back, .wine-page .back { margin-left: -0.15rem; }
 
   .wine-page .pic {
     position: relative;
@@ -434,28 +419,12 @@ import Base from '../../layouts/Base.astro';
   }
   .wine-page .price .ours { font-weight: 400; font-size: 1.2rem; letter-spacing: 0.02em; }
   .wine-page .price .normal { color: var(--muted); font-size: 0.88rem; }
-  .wine-page .add {
-    font: 500 0.78rem/1 var(--body);
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--lodge);
-    background: var(--amber);
-    border: 1px solid var(--amber);
-    border-radius: var(--radius);
-    padding: 0 1.75rem;
-    min-height: 3rem;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
-  }
-  .wine-page .add:hover { background: transparent; color: var(--amber); }
-  .wine-page .add.in-cart { background: none; color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); }
-  .wine-page .add.pop { animation: pop 0.25s ease-out; }
+  .wine-page #add.pop { animation: pop 0.25s ease-out; }
   @keyframes pop { 50% { transform: scale(1.06); } }
   .wine-page #order-status { margin: 0.6rem 0 0; }
 
   .wine-page .desc { margin: 1.6rem 0 0; font-size: 1.02rem; line-height: 1.8; }
   .wine-page .desc.folded { display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
-  .wine-page .desc-more { font: inherit; color: var(--amber); background: none; border: 0; padding: 0.4rem 0; cursor: pointer; text-decoration: underline; min-height: 2.25rem; }
   .wine-page .details-box { margin-top: 1.5rem; border-top: 1px solid var(--lodge-3); padding-top: 0.6rem; }
   .wine-page .details-box[hidden] { display: none; }
   .wine-page .details-box summary { cursor: pointer; font-weight: 500; padding: 0.5rem 0; min-height: 2.25rem; }

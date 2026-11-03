@@ -68,7 +68,7 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
       // The same row as the guests
       return personRow({
         name: r.name || r.email, you: r.me ? t('hosts.you') : null, meta: r.name ? [r.email] : [],
-        chips: [r.owner ? { text: t('hosts.owner'), tone: 'accent' } : r.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
+        chips: [r.owner ? { text: t('hosts.owner'), tone: 'strong' } : r.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
         actions,
       });
     }));

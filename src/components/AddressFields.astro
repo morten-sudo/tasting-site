@@ -13,21 +13,21 @@ const { prefix } = Astro.props as { prefix: string };
   <div class="addr-row addr-street">
     <div>
       <label for={`${prefix}-street`} data-i18n="address.street">Street</label>
-      <input id={`${prefix}-street`} type="text" autocomplete="address-line1" />
+      <input class="input" id={`${prefix}-street`} type="text" autocomplete="address-line1" />
     </div>
     <div>
       <label for={`${prefix}-number`} data-i18n="address.number">No.</label>
-      <input id={`${prefix}-number`} type="text" autocomplete="off" />
+      <input class="input" id={`${prefix}-number`} type="text" autocomplete="off" />
     </div>
   </div>
   <div class="addr-row addr-city">
     <div>
       <label for={`${prefix}-postal`} data-i18n="address.postalCode">Postal code</label>
-      <input id={`${prefix}-postal`} type="text" inputmode="numeric" autocomplete="postal-code" maxlength="10" placeholder="2840" />
+      <input class="input" id={`${prefix}-postal`} type="text" inputmode="numeric" autocomplete="postal-code" maxlength="10" placeholder="2840" />
     </div>
     <div>
       <label for={`${prefix}-city`} data-i18n="address.city">City</label>
-      <input id={`${prefix}-city`} type="text" autocomplete="address-level2" />
+      <input class="input" id={`${prefix}-city`} type="text" autocomplete="address-level2" />
     </div>
   </div>
   <p id={`${prefix}-postal-hint`} class="addr-hint" hidden aria-live="polite"></p>

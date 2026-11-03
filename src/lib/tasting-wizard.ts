@@ -1,5 +1,6 @@
 // New tasting: one form with its details (title, date and times, max guests, place, introduction).
 // "Create tasting" creates it and goes to its page, where the "Get started" card leads on to wines, guests and payment.
+import { setLoading } from './ui/button';
 import { supabase } from './supabase';
 import { t } from '../i18n';
 import { $, type Host } from './admin-common';
@@ -86,9 +87,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   $('wz-leave-stay').addEventListener('click', () => leaving(false));
   $('wz-create').addEventListener('click', async (e) => {
     const btn = e.currentTarget as HTMLButtonElement;
-    btn.disabled = true;
-    btn.classList.add('loading');
-    try { await create(); } finally { btn.disabled = false; btn.classList.remove('loading'); }
+    setLoading(btn, true);
+    try { await create(); } finally { setLoading(btn, false); }
   });
   // Enter in a one-line field creates it too
   dialog.addEventListener('keydown', (e) => {

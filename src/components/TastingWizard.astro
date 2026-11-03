@@ -1,4 +1,5 @@
 ---
+import CloseButton from './ui/CloseButton.astro';
 // New tasting: one form with the details. Wines, guests and payment are added afterwards on the tasting's page,
 // where a "Get started" card leads to each of them.
 import AddressFields from './AddressFields.astro';
@@ -8,7 +9,7 @@ import DateTimeFields from './DateTimeFields.astro';
   <header class="wz-head">
     <div class="wz-top">
       <h2 id="wz-title" data-i18n="admin.newTasting">New tasting</h2>
-      <button id="wz-close" class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+      <CloseButton id="wz-close" data-close />
     </div>
   </header>
 
@@ -17,13 +18,14 @@ import DateTimeFields from './DateTimeFields.astro';
     <section class="wz-pane add-form tasting-form" data-pane="0">
       <p class="wz-note" data-i18n="wizard.createNote">Only the title is needed. Wines, guests and payment you add afterwards, on the tasting's own page.</p>
       <label for="wz-title-input"><span data-i18n="admin.title">Title</span> <span class="req" aria-hidden="true">*</span></label>
-      <input id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required aria-required="true" />
+      <input class="input" id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required aria-required="true" />
       <DateTimeFields prefix="wz" />
-      <label for="wz-max"><span data-i18n="wizard.maxGuests">Max. number of guests</span> <span class="hint" data-i18n="dt.optional">(optional)</span></label>
-      <div class="with-unit"><input id="wz-max" class="short" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="wizard.maxHint">guests – more who say yes go on a waiting list</span></div>
+      <label for="wz-max"><span data-i18n="wizard.maxGuests">Max. number of guests</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
+      <div class="affix w-num u-long"><input id="wz-max" class="input" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
+      <p class="help" data-i18n="set.maxHint">Leave it empty for no limit. When it is full, guests who say yes go on a waiting list – and move up by themselves when someone says no.</p>
       <AddressFields prefix="wz" />
-      <label for="wz-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
-      <textarea id="wz-intro" rows="4" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
+      <label for="wz-intro"><span data-i18n="admin.intro">Introduction</span> <span class="opt" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
+      <textarea class="input" id="wz-intro" rows="4" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
     </section>
 
   </div>

@@ -1,4 +1,7 @@
 ---
+import Icon from '../../components/ui/Icon.astro';
+import SearchField from '../../components/ui/SearchField.astro';
+import CloseButton from '../../components/ui/CloseButton.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
@@ -12,7 +15,7 @@ import '../../styles/admin.css';
 
       <section class="block guests">
         <div class="guests-head">
-          <input id="guest-search" class="search" type="search" autocomplete="off" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" style="max-width:20rem;margin:0" />
+          <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="head-search" />
           <button id="add-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
         </div>
 
@@ -24,11 +27,11 @@ import '../../styles/admin.css';
                 <span class="guest-av gi-av" aria-hidden="true">+</span>
                 <div class="qa-body">
                   <div id="gl-fields" class="gi-fields">
-                    <div class="qa-field gi-name">
+                    <div class="input qa-field gi-name">
                       <label for="gl-name" class="visually-hidden" data-i18n="admin.name">Name</label>
                       <input id="gl-name" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
                     </div>
-                    <div class="qa-field gi-email">
+                    <div class="input qa-field gi-email">
                       <label for="gl-email" class="visually-hidden" data-i18n="common.email">Email</label>
                       <input id="gl-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
                     </div>
@@ -36,7 +39,7 @@ import '../../styles/admin.css';
                 </div>
                 <div class="qa-actions">
                   <button id="gl-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
-                  <button id="gl-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+                  <CloseButton id="gl-close" />
                 </div>
                 <!-- Matches from the library: across the row, from the field to the right edge -->
                 <ul id="gl-hits" class="qa-hits" hidden></ul>
@@ -51,19 +54,19 @@ import '../../styles/admin.css';
         <dialog id="guest-panel" class="sheet" aria-labelledby="gf-title">
         <div class="sheet-head">
           <h2 id="gf-title" data-i18n="guestLib.editGuest">Edit guest</h2>
-          <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          <CloseButton data-close />
         </div>
         <form id="guest-form" class="add-form edit-panel" novalidate>
           <label for="gf-name" data-i18n="admin.name">Name</label>
-          <input id="gf-name" type="text" autocomplete="off" required />
-          <label for="gf-email"><span data-i18n="common.email">Email</span> <span class="hint" data-i18n="admin.optional">(optional)</span></label>
-          <input id="gf-email" type="email" autocomplete="off" />
+          <input class="input" id="gf-name" type="text" autocomplete="off" required />
+          <label for="gf-email"><span data-i18n="common.email">Email</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
+          <input class="input" id="gf-email" type="email" autocomplete="off" />
           <div class="row-actions">
             <button id="gf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="gf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
           </div>
           <div class="guest-remove">
-            <button id="gf-delete" class="text-btn danger" type="button" data-i18n="guestLib.delete">Delete guest</button>
+            <button id="gf-delete" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="guestLib.delete">Delete guest</span></button>
           </div>
         </form>
         </dialog>
@@ -74,6 +77,8 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { STATUS as STATUSES, guestStatus, type Status } from '../../lib/ui/status';
+  import { setLoading } from '../../lib/ui/button';
   import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
@@ -82,7 +87,7 @@ import '../../styles/admin.css';
   import { toast } from '../../lib/toast';
   import { confirmModal } from '../../lib/confirm';
   import { SUPABASE_URL, SUPABASE_KEY } from '../../lib/config';
-  import { t, type Key } from '../../i18n';
+  import { t } from '../../i18n';
 
   // The guest list: one row per guest, the same as a tasting's guests – initials, name, email, the tastings they are
   // invited to as chips, and icons to edit and delete. A new guest comes in as a new row at the top.
@@ -90,7 +95,6 @@ import '../../styles/admin.css';
   type G = { id: string; name: string; email: string | null; participants: Invite[] };
 
   const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-  const STATUS: Record<string, Key> = { yes: 'status.yes', no: 'status.no', invited: 'status.invited', waitlist: 'status.waitlist' };
   let guests: G[] = [];
   let editing: G | null = null;
   // Guests deleted with "Undo" still possible: hidden, deleted for real when the message goes
@@ -120,8 +124,11 @@ import '../../styles/admin.css';
       const del = iconButton('trash', `${t('guestLib.delete')}: ${g.name}`, { quiet: true });
       del.dataset.tip = t('guestLib.delete');
       del.addEventListener('click', () => deleteGuest(g));
-      const chips = g.participants.filter((p) => p.tastings).map((p) => ({
-        text: `${p.tastings!.title} · ${t(STATUS[p.status] ?? 'status.invited')}`, href: `/t/${p.tastings!.slug}/admin/guests/` }));
+      // Each tasting the guest is invited to, in the tone of the guest's answer there
+      const chips = g.participants.filter((p) => p.tastings).map((p) => {
+        const st: Status = STATUSES[guestStatus(p.status)];
+        return { text: `${p.tastings!.title} · ${t(st.key)}`, tone: st.tone, dashed: st.dashed, href: `/t/${p.tastings!.slug}/admin/guests/` };
+      });
       const li = personRow({
         name: g.name, onOpen: () => openForm(g),
         meta: [g.email ?? mk('span', 'guest-missing', t('admin.noEmail'))],
@@ -206,9 +213,9 @@ import '../../styles/admin.css';
     const twin = guests.find((g) => !pendingDelete.has(g.id) && ((email && g.email?.toLowerCase() === email) || (!email && norm(g.name) === norm(name))));
     if (twin) { renderHits([twin]); fieldError(email ? emailIn : nameIn, t('guestLib.twin'), $('gl-fields')); return; }
     const btn = $<HTMLButtonElement>('gl-go');
-    btn.disabled = true; btn.classList.add('loading');
+    setLoading(btn, true);
     const { data, error } = await supabase.from('guests').insert({ host_id: host!.id, name, email }).select('id').single();
-    btn.disabled = false; btn.classList.remove('loading');
+    setLoading(btn, false);
     if (error || !data) { toast(error?.code === '23505' ? t('guestLib.emailTaken') : t('admin.changeNotSaved'), { kind: 'error', ms: 7000 }); return; }
     nameIn.value = ''; emailIn.value = '';
     renderHits();

@@ -15,7 +15,7 @@ export function confirmModal(question: string, yes: string, note = ''): Promise<
     if (note) { const n = document.createElement('p'); n.className = 'hint'; n.textContent = note; dlg.append(n); }
     const row = document.createElement('div');
     row.className = 'row-actions';
-    const no = Object.assign(document.createElement('button'), { type: 'button', className: 'btn small ghost', textContent: t('common.cancel') });
+    const no = Object.assign(document.createElement('button'), { type: 'button', className: 'btn small secondary', textContent: t('common.cancel') });
     const ok = Object.assign(document.createElement('button'), { type: 'button', className: 'btn small danger', textContent: yes });
     row.append(no, ok);
     dlg.append(row);

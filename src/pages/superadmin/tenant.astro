@@ -80,11 +80,12 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { chip } from '../../lib/ui/status';
   import { supabase } from '../../lib/supabase';
   import { t, money, type Key } from '../../i18n';
   import { requireAdmin, $, mk, cell, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
   import { personRow } from '../../lib/ui/person-row';
-  import { eventText, eventGroup } from '../../lib/super-events';
+  import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
   import { styleName } from '../../lib/wines';
 
   const m = location.pathname.match(/^\/superadmin\/tenants\/([0-9a-f-]{36})\/(?:([a-z]+)\/?)?$/);
@@ -128,7 +129,7 @@ import '../../styles/admin.css';
       const rows = (data ?? []) as { email: string; name: string | null; owner: boolean; created_at: string }[];
       $('hosts').replaceChildren(...rows.map((r) => personRow({
         name: r.name || r.email, meta: [r.name ? r.email : '', r.created_at ? date.format(new Date(r.created_at)) : ''],
-        chips: [r.owner ? { text: t('account.owner'), tone: 'accent' } : { text: t('account.host') }],
+        chips: [r.owner ? { text: t('account.owner'), tone: 'strong' } : { text: t('account.host') }],
       })));
       none($('hosts'));
     },
@@ -179,7 +180,8 @@ import '../../styles/admin.css';
       $('payments').replaceChildren(...((data ?? []) as R[]).map((r) => {
         const tr = mk('tr');
         const what = r.kind === 'order' ? `${t('super.order')} · ${r.bottles} fl.` : t('super.fee');
-        const paid = cell(r.paid ? t('super.paid') : t('super.unpaid'), r.paid ? 'map-ok' : 'map-need');
+        const paid = mk('td');
+        paid.append(chip(r.paid ? t('super.paid') : t('super.unpaid'), r.paid ? 'ok' : 'err'));
         tr.append(cell(date.format(new Date(r.at))), cell(what), cell(r.tasting), cell(r.guest), cell(money(Number(r.amount)), 'num'), paid);
         return tr;
       }));
@@ -198,7 +200,7 @@ import '../../styles/admin.css';
       const tr = mk('tr');
       const g = eventGroup(e.kind);
       const tag = mk('td');
-      tag.append(mk('span', `ev-kind k-${g}`, t(({ host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' } as Record<string, Key>)[g] ?? 'super.log')));
+      tag.append(chip(t(({ host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' } as Record<string, Key>)[g] ?? 'super.log'), GROUP_TONE[g] ?? 'neutral'));
       tr.append(cell(time.format(new Date(e.at))), tag, cell(eventText(e.kind, e.detail)), cell(e.actor ?? ''));
       return tr;
     }));

@@ -1,5 +1,6 @@
 // The host's page for one wine, /admin/wines/<id>/: picture, facts, origin with map, the tastings
 // it is in and the guests' ratings there. Editing happens in the usual side panel (admin-wines.ts).
+import { iconButton } from './ui/icon-button';
 import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
 import { styleName, kr, wineSlug, wineFacts } from './wines';
@@ -85,11 +86,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     a.rel = 'noopener';
     a.title = w.source_url;
     try { a.textContent = new URL(w.source_url).hostname.replace(/^www\./, ''); } catch { a.textContent = w.source_url; }
-    const btn = mk('button', 'icon-btn');
-    btn.type = 'button';
-    btn.title = t('source.refresh');
-    btn.setAttribute('aria-label', t('source.refresh'));
-    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16" /><path d="M20 20v-4h-4" /></svg>';
+    const btn = iconButton('refresh', t('source.refresh'));
     btn.addEventListener('click', actions.refresh);
     box.append(a);
     if (w.source_fetched_at) box.append(' ', mk('span', 'source-when', `(${fetchedWhen(w.source_fetched_at)})`));

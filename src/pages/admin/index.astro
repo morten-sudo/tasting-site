@@ -1,4 +1,5 @@
 ---
+import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
@@ -11,8 +12,8 @@ import '../../styles/admin.css';
       <div class="dash-head">
         <h1 class="title" data-i18n="adminNav.overview">Overview</h1>
         <div class="dash-actions">
-          <a class="btn small ghost" href="/admin/wines/?new"><span aria-hidden="true">+ </span><span data-i18n="admin.newWine">New wine</span></a>
-          <button id="new-toggle" class="btn small" type="button"><span aria-hidden="true">+ </span><span data-i18n="admin.newTasting">New tasting</span></button>
+          <a class="btn small secondary" href="/admin/wines/?new"><Icon name="plus" /><span data-i18n="admin.newWine">New wine</span></a>
+          <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
         </div>
       </div>
       <!-- The host is also invited somewhere as a guest -->
@@ -20,34 +21,34 @@ import '../../styles/admin.css';
 
       <!-- Counts -->
       <div class="dash-stats">
-        <a class="stat" href="/admin/tastings/"><svg class="stat-icon" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="stat-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" stroke="none" clip-path="url(#stat-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg><span id="s-tastings" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.tastings">Tastings</span><span id="s-upcoming" class="stat-sub"></span></a>
-        <a class="stat" href="/admin/guests/"><svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19.5c.8-3.3 3.1-5 6-5s5.2 1.7 6 5" /><circle cx="17" cy="9" r="2.5" /><path d="M16.2 14.2c2.4.1 4 1.6 4.8 4.3" /></svg><span id="s-guests" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.guests">Guests</span><span class="stat-sub" data-i18n="dash.inLibrary">in your library</span></a>
-        <a class="stat" href="/admin/wines/"><svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4v4.2c0 .6.3 1.1.7 1.5 1 .9 1.6 2.2 1.6 3.6V20a1.5 1.5 0 0 1-1.5 1.5H9.2A1.5 1.5 0 0 1 7.7 20v-8.2c0-1.4.6-2.7 1.6-3.6.4-.4.7-.9.7-1.5z" /><path d="M7.7 13h8.6v4.5H7.7z" /></svg><span id="s-wines" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.wines">Wines</span><span class="stat-sub" data-i18n="dash.inLibrary">in your library</span></a>
+        <a class="card stat" href="/admin/tastings/"><svg class="stat-icon" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="stat-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" stroke="none" clip-path="url(#stat-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg><span id="s-tastings" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.tastings">Tastings</span><span id="s-upcoming" class="stat-sub"></span></a>
+        <a class="card stat" href="/admin/guests/"><svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19.5c.8-3.3 3.1-5 6-5s5.2 1.7 6 5" /><circle cx="17" cy="9" r="2.5" /><path d="M16.2 14.2c2.4.1 4 1.6 4.8 4.3" /></svg><span id="s-guests" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.guests">Guests</span><span class="stat-sub" data-i18n="dash.inLibrary">in your library</span></a>
+        <a class="card stat" href="/admin/wines/"><svg class="stat-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4v4.2c0 .6.3 1.1.7 1.5 1 .9 1.6 2.2 1.6 3.6V20a1.5 1.5 0 0 1-1.5 1.5H9.2A1.5 1.5 0 0 1 7.7 20v-8.2c0-1.4.6-2.7 1.6-3.6.4-.4.7-.9.7-1.5z" /><path d="M7.7 13h8.6v4.5H7.7z" /></svg><span id="s-wines" class="stat-n">–</span><span class="stat-label" data-i18n="adminNav.wines">Wines</span><span class="stat-sub" data-i18n="dash.inLibrary">in your library</span></a>
       </div>
 
       <div class="dash-grid">
         <!-- Next tasting -->
-        <section class="dash-card">
+        <section class="card dash-card">
           <h2 data-i18n="dash.next">Next tasting</h2>
           <div id="next"></div>
         </section>
 
         <!-- The tastings I host myself (the account may have many more) -->
-        <section id="mine-card" class="dash-card mine-card" hidden>
+        <section id="mine-card" class="card dash-card mine-card" hidden>
           <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
           <ul id="mine" class="mine-list"></ul>
           <p id="mine-none" class="hint" hidden data-i18n="roles.mineNone">You are not a host of any upcoming tasting.</p>
-          <a id="mine-all" class="text-btn" href="/admin/tastings/" hidden></a>
+          <a id="mine-all" class="text-btn fwd" href="/admin/tastings/" hidden></a>
         </section>
 
         <!-- Needs paying -->
-        <section id="unpaid-card" class="dash-card" hidden>
+        <section id="unpaid-card" class="card dash-card" hidden>
           <h2 data-i18n="dash.unpaid">Awaiting payment</h2>
           <ul id="unpaid" class="dash-list"></ul>
         </section>
 
         <!-- Latest activity -->
-        <section class="dash-card dash-wide">
+        <section class="card dash-card dash-wide">
           <h2 data-i18n="dash.latest">Latest activity</h2>
           <ul id="activity" class="dash-list"></ul>
         </section>
@@ -59,6 +60,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { iconSvg } from '../../lib/ui/icons';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, money, locale, formatWhen, type Key } from '../../i18n';
@@ -149,9 +151,9 @@ import '../../styles/admin.css';
       a.append(mk('span', 'card-title', n.title));
       const meta = [n.starts_at ? formatWhen(n.starts_at) : null, n.place].filter(Boolean).join(' · ');
       if (meta) a.append(mk('span', 'card-meta', meta));
-      const chips = mk('span', 'dash-chips');
+      const chips = mk('span', 'chips');
       chips.append(mk('span', 'chip ok', t('tastingsAdmin.guests', { coming: n.coming, n: n.invited })));
-      if (n.no_reply) chips.append(mk('span', 'chip warn', t('dash.noReply', { n: n.no_reply })));
+      if (n.no_reply) chips.append(mk('span', 'chip wait', t('dash.noReply', { n: n.no_reply })));
       chips.append(mk('span', 'chip', t('tastingsAdmin.wines', { n: n.wines })));
       a.append(chips);
       next.replaceChildren(a);
@@ -216,7 +218,9 @@ import '../../styles/admin.css';
     const others = roles.length - hosting.size;
     const more = upcoming.length > MINE_SHOWN;
     $('mine-all').hidden = !more && others === 0;
-    $('mine-all').textContent = more ? t('roles.seeAllMine', { n: roles.length }) : t('roles.othersOnAccount', { n: others });
+    $('mine-all').innerHTML = '';
+    $('mine-all').append(Object.assign(document.createElement('span'), { textContent: more ? t('roles.seeAllLink', { n: roles.length }) : t('roles.othersLink', { n: others }) }));
+    $('mine-all').insertAdjacentHTML('beforeend', iconSvg('right'));
     $('mine-card').hidden = false;
   }
 

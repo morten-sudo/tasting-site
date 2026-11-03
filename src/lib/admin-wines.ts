@@ -1,12 +1,13 @@
 // Admin, wine library: the host's wines across all tastings – add, edit and delete one at a time,
 // filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
+import { setLoading } from './ui/button';
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
-import { iconButton } from './admin-common';
+import { iconButton, closeButton } from './admin-common';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './toast';
 import { fieldError } from './field-error';
@@ -233,11 +234,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     }
     form.classList.toggle('reading', kind === 'busy');
   }
-  function busyButton(btn: HTMLButtonElement, on: boolean) {
-    btn.disabled = on;
-    btn.classList.toggle('loading', on);
-    btn.setAttribute('aria-busy', String(on));
-  }
+  const busyButton = (btn: HTMLButtonElement, on: boolean) => setLoading(btn, on);
 
   async function readLabel(target: StatusId = 'wf-label-status') {
     if (!pendingImage) return;
@@ -327,7 +324,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const el = $(statusTarget);
     const names = [...new Set(f.changes.map((c) => fieldName(c.id)))];
     const line = mk('span', 'fill-diff', t('fill.differs', { n: names.length, fields: names.join(', ') }));
-    const btn = mk('button', 'btn small ghost fill-use', t('fill.useNew'));
+    const btn = mk('button', 'btn small secondary fill-use', t('fill.useNew'));
     btn.type = 'button';
     btn.addEventListener('click', () => {
       f.changes.forEach((c) => c.apply());
@@ -750,9 +747,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         box.querySelectorAll('.image-option').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
         producerStatus(t('image.chosen'), 'ok', 'wf-image-status');
       });
-      const remove = mk('button', 'image-remove', '×');
-      remove.type = 'button';
-      remove.setAttribute('aria-label', t('image.removeChoice'));
+      const remove = closeButton(t('image.removeChoice'), 'small');
       remove.addEventListener('click', () => { cell.remove(); if (!box.children.length) box.hidden = true; });
       cell.append(b, remove);
       return cell;

@@ -5,7 +5,7 @@ import Base from '../../layouts/Base.astro';
   <section class="wrap cart-page">
     <h1 class="title" data-i18n="page.cart">Cart</h1>
 
-    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
 
     <div id="no-code" class="message" hidden>
       <p data-i18n="cart.noCode">To order you need to be signed in. Sign in with your email or open the link from your invitation, then come back here.</p>
@@ -27,7 +27,7 @@ import Base from '../../layouts/Base.astro';
         <strong id="total"></strong>
       </div>
       <p id="send-error" class="message error" hidden></p>
-      <button id="send" class="btn send" type="button" data-i18n="cart.send">Send order</button>
+      <button id="send" class="btn block send" type="button" data-i18n="cart.send">Send order</button>
       <p class="hint" data-i18n="cart.binding">When you send it, the order is binding. The price is the one shown with the wine now.</p>
     </div>
 
@@ -44,6 +44,9 @@ import Base from '../../layouts/Base.astro';
 </Base>
 
 <script>
+  import { iconButton } from '../../lib/ui/icon-button';
+  import { statusChip } from '../../lib/ui/status';
+  import { setLoading } from '../../lib/ui/button';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t, money, locale } from '../../i18n';
@@ -107,19 +110,16 @@ import Base from '../../layouts/Base.astro';
       if (note) info.append(el('p', 'line-bulk', note));
 
       const ctrl = el('div', 'line-ctrl');
-      const minus = el('button', 'step', '−');
+      const minus = iconButton('minus', t('cart.oneLess', { name: w.name }), { size: 'normal', tip: false });
       const count = el('output', 'count', String(n));
-      const plus = el('button', 'step', '+');
-      minus.type = plus.type = 'button';
-      minus.setAttribute('aria-label', t('cart.oneLess', { name: w.name }));
-      plus.setAttribute('aria-label', t('cart.oneMore', { name: w.name }));
+      const plus = iconButton('plus', t('cart.oneMore', { name: w.name }), { size: 'normal', tip: false });
       plus.disabled = n >= MAX_PER_WINE;
       minus.addEventListener('click', () => { setQty(id, n - 1); renderCart(); });
       plus.addEventListener('click', () => { setQty(id, n + 1); renderCart(); });
       const stepper = el('div', 'stepper');
       stepper.append(minus, count, plus);
 
-      const remove = el('button', 'remove', t('cart.remove'));
+      const remove = el('button', 'text-btn danger small', t('cart.remove'));
       remove.type = 'button';
       remove.addEventListener('click', () => { setQty(id, 0); renderCart(); });
 
@@ -145,11 +145,11 @@ import Base from '../../layouts/Base.astro';
     }
     for (const [id, ls] of [...byOrder].reverse()) {
       const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
-      const card = el('div', 'order' + (ls[0].paid ? ' paid' : ''));
+      const card = el('div', 'card order' + (ls[0].paid ? ' paid' : ''));
       const head = el('div', 'order-head');
       head.append(
         el('strong', '', t('pay.orderComment', { id })),
-        el('span', 'status', ls[0].paid ? t('cart.paid') : t('cart.awaiting')),
+        statusChip(ls[0].paid ? 'order.paid' : 'order.unpaid'),
       );
       card.append(head, el('p', 'hint', date.format(new Date(ls[0].created_at))));
       const ul = el('ul');
@@ -178,12 +178,12 @@ import Base from '../../layouts/Base.astro';
     if (!items.length) return;
 
     const btn = $('send') as HTMLButtonElement;
-    btn.disabled = true;
-    btn.textContent = t('common.sending');
+    setLoading(btn, true, t('common.sending'));
     $('send-error').hidden = true;
 
     const { data, error } = await supabase.rpc('place_order', { code, items });
-    btn.textContent = t('cart.send');
+    setLoading(btn, false);
+    btn.disabled = true;
 
     if (error) {
       $('send-error').textContent = error.message.includes('lukket')
@@ -257,37 +257,15 @@ import Base from '../../layouts/Base.astro';
   .cart-page .line-bulk { margin: -0.3rem 0 0.6rem; color: var(--amber); font-size: 0.88rem; }
   .cart-page .line-ctrl { display: flex; align-items: center; gap: 1rem; }
   .cart-page .line-total { margin-left: auto; font-variant-numeric: tabular-nums; }
-  .cart-page .remove {
-    font: inherit;
-    font-size: 0.88rem;
-    background: none;
-    border: 0;
-    color: var(--muted);
-    text-decoration: underline;
-    text-underline-offset: 0.18em;
-    cursor: pointer;
-    padding: 0.4rem 0;
-  }
-  .cart-page .remove:hover { color: var(--paper); }
 
   .cart-page .stepper {
     display: flex;
     align-items: center;
-    border: 1px solid var(--lodge-3);
+    border: 1px solid var(--line);
     border-radius: var(--radius);
-    background: transparent;
+    background: #fff;
   }
-  .cart-page .step {
-    width: 2.75rem;
-    height: 2.75rem;
-    border: 0;
-    background: none;
-    color: var(--paper);
-    font-size: 1.35rem;
-    cursor: pointer;
-    border-radius: var(--radius);
-  }
-  .cart-page .step:disabled { color: var(--lodge-3); cursor: default; }
+  .cart-page .stepper .icon-act:hover:not(:disabled) { border-color: transparent; background: var(--lodge); }
   .cart-page .count { min-width: 1.5rem; text-align: center; font-weight: 500; font-variant-numeric: tabular-nums; }
 
   .cart-page .sum {
@@ -298,21 +276,14 @@ import Base from '../../layouts/Base.astro';
     font-size: 1.15rem;
   }
   .cart-page .sum strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
-  .cart-page .send { width: 100%; margin-bottom: 0.6rem; }
+  .cart-page .send { margin-bottom: 0.6rem; }
   .cart-page #send-error { margin-bottom: 1rem; }
 
   .cart-page .history { margin-top: 3rem; }
-  .cart-page .order {
-    border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
-    padding: 0.9rem 1rem;
-    margin-bottom: 0.75rem;
-    border-left: 4px solid var(--amber);
-  }
+  .cart-page .order { padding: 0.9rem 1rem; margin-bottom: 0.75rem; border-left: 3px solid var(--amber); }
   .cart-page .order.paid { border-left-color: var(--ok); }
   .cart-page .order-head, .cart-page .order-foot { display: flex; justify-content: space-between; gap: 1rem; }
-  .cart-page .order .status { color: var(--amber); font-size: 0.9rem; }
-  .cart-page .order.paid .status { color: var(--ok); }
+  .cart-page .order-head { align-items: center; }
   .cart-page .order .hint { margin: 0.1rem 0 0.5rem; font-size: 0.85rem; }
   .cart-page .order ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.95rem; }
   .cart-page .order-foot { border-top: 1px solid var(--lodge-3); padding-top: 0.5rem; }

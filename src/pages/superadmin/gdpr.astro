@@ -11,12 +11,12 @@ import '../../styles/admin.css';
       <section class="block gdpr">
                 <p class="hint" data-i18n="super.gdprHint">When someone asks to be forgotten: look up their email, check what is stored, then delete it all – invitations with answers, ratings, orders and chat messages, guest-list entries, a host account with everything in it, and the sign-in account. This cannot be undone.</p>
         <form id="gdpr-form" class="inline-form" novalidate>
-          <input id="gdpr-email" type="email" autocomplete="off" placeholder="name@example.com" aria-label="Email" data-i18n-attr="aria-label=common.email" />
-          <button class="btn small ghost" type="submit" data-i18n="super.gdprLookup">Look up</button>
+          <input class="input" id="gdpr-email" type="email" autocomplete="off" placeholder="name@example.com" aria-label="Email" data-i18n-attr="aria-label=common.email" />
+          <button class="btn small secondary" type="submit" data-i18n="super.gdprLookup">Look up</button>
         </form>
         <div id="gdpr-result" hidden>
           <ul id="gdpr-list" class="gdpr-list"></ul>
-          <button id="gdpr-delete" class="btn small danger-btn" type="button" data-i18n="super.gdprDelete">Delete everything</button>
+          <button id="gdpr-delete" class="btn small danger" type="button" data-i18n="super.gdprDelete">Delete everything</button>
         </div>
         <p id="gdpr-msg" class="message" hidden></p>
       </section>
@@ -100,13 +100,6 @@ import '../../styles/admin.css';
     $('gdpr-result').hidden = true;
     gdprMsg(t('super.gdprDone', { email: gdprEmail }), true);
     loadActions();
-  });
-  document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
-    th.addEventListener('click', () => {
-      const k = th.dataset.sort as keyof Tenant;
-      if (k === sortKey) desc = !desc; else { sortKey = k; desc = k !== 'name'; }
-      render();
-    });
   });
 
 

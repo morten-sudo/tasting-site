@@ -1,4 +1,5 @@
 ---
+import CloseButton from '../../components/ui/CloseButton.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
@@ -30,11 +31,11 @@ import '../../styles/admin.css';
       <dialog id="name-panel" class="sheet" aria-labelledby="name-panel-title">
         <div class="sheet-head">
           <h2 id="name-panel-title" data-i18n="account.nameTitle">Name</h2>
-          <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          <CloseButton data-close />
         </div>
         <form id="name-form" class="add-form" novalidate>
           <label for="name-input" data-i18n="account.nameLabel">The account's name</label>
-          <input id="name-input" type="text" maxlength="80" autocomplete="organization" placeholder="E.g. Holte Wine Club" data-i18n-attr="placeholder=account.namePlaceholder" />
+          <input class="input" id="name-input" type="text" maxlength="80" autocomplete="organization" placeholder="E.g. Holte Wine Club" data-i18n-attr="placeholder=account.namePlaceholder" />
           <p class="hint" data-i18n="account.nameHint">E.g. your wine club, your shop or your group of friends.</p>
           <p id="name-msg" class="message error" hidden></p>
           <div class="row-actions">
@@ -116,7 +117,7 @@ import '../../styles/admin.css';
       // The same row as the guests
       return personRow({
         name: r.name || r.email, you: r.me ? t('hosts.you') : null, meta: r.name ? [r.email] : [],
-        chips: [r.owner ? { text: t('account.owner'), tone: 'accent' } : { text: t('account.host') }], actions,
+        chips: [r.owner ? { text: t('account.owner'), tone: 'strong' } : { text: t('account.host') }], actions,
       });
     }));
   }

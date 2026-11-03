@@ -17,7 +17,7 @@ export function filterDropdown(opts: { name: string; allLabel: string; onChange:
   root.className = 'filter-dd';
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'btn small ghost filter-dd-btn';
+  btn.className = 'btn small secondary filter-dd-btn';
   btn.setAttribute('aria-haspopup', 'true');
   btn.setAttribute('aria-expanded', 'false');
   btn.setAttribute('aria-controls', id);

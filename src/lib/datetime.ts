@@ -2,6 +2,7 @@
 // new tasting) and time fields written as 19:00 – instead of the browser's pickers, which follow the browser's
 // own format (mm/dd/yyyy, AM/PM). Ids: <prefix>-date (hidden, yyyy-mm-dd), <prefix>-date-show (the button),
 // <prefix>-cal (the calendar), <prefix>-time and <prefix>-end (hh:mm).
+import { iconButton } from './ui/icon-button';
 import { t, locale } from '../i18n';
 import { fieldError } from './field-error';
 
@@ -52,10 +53,8 @@ export function initWhen(prefix: string) {
     const y = month.getFullYear(), m = month.getMonth();
     const head = document.createElement('div');
     head.className = 'dt-cal-head';
-    const prev = Object.assign(document.createElement('button'), { type: 'button', className: 'dt-nav', textContent: '‹' });
-    prev.setAttribute('aria-label', t('dt.prevMonth'));
-    const next = Object.assign(document.createElement('button'), { type: 'button', className: 'dt-nav', textContent: '›' });
-    next.setAttribute('aria-label', t('dt.nextMonth'));
+    const prev = iconButton('left', t('dt.prevMonth'), { tip: false });
+    const next = iconButton('right', t('dt.nextMonth'), { tip: false });
     const title = document.createElement('b');
     const mt = new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric' }).format(new Date(y, m, 1));
     title.textContent = mt[0].toUpperCase() + mt.slice(1);

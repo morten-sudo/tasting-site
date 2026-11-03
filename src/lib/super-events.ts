@@ -13,4 +13,7 @@ export function eventText(kind: string, d: Record<string, unknown>): string {
 }
 
 /** 'host' | 'guest' | 'login' | 'admin' – for the colour of the label */
+/** The chip tone of each group in the log (src/lib/ui/status.ts tones) */
+export const GROUP_TONE: Record<string, 'ok' | 'neutral' | 'err' | 'strong'> = { guest: 'ok', login: 'neutral', admin: 'err', host: 'strong' };
+
 export const eventGroup = (kind: string) => kind.split('.')[0];

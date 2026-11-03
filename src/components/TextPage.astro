@@ -1,5 +1,6 @@
 ---
-// A plain text page (About, Contact, Privacy, Terms): a title and translated body text.
+// A plain text page (About, Contact, Privacy, Terms, Not found): a title, translated body text and an optional slot
+// (e.g. a button) after it.
 import Base from '../layouts/Base.astro';
 import { en } from '../i18n/en';
 interface Props { title: keyof typeof en; body: keyof typeof en; updated?: keyof typeof en }
@@ -10,6 +11,7 @@ const { title, body, updated } = Astro.props;
     <h1 class="title" data-i18n={title}>{en[title]}</h1>
     {updated && <p class="hint text-updated" data-i18n={updated}>{en[updated]}</p>}
     <div class="text-body" data-i18n-html={body} set:html={en[body]} />
+    <slot />
   </article>
 </Base>
 
@@ -24,4 +26,5 @@ const { title, body, updated } = Astro.props;
   .text-body :global(li) { margin-bottom: 0.4rem; }
   .text-body :global(.contact-mail) { font-size: 1.3rem; margin: 1.25rem 0; }
   .text-body :global(a) { color: var(--amber); }
+  .text-page > :global(.btn) { margin-top: 1rem; }
 </style>

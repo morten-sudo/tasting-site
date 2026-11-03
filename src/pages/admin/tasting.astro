@@ -1,4 +1,7 @@
 ---
+import Icon from '../../components/ui/Icon.astro';
+import SearchField from '../../components/ui/SearchField.astro';
+import CloseButton from '../../components/ui/CloseButton.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
@@ -28,7 +31,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <header class="ta-head">
         <div class="ta-top">
           <h1 id="ta-title" class="title"></h1>
-          <a id="t-guestpage" class="ta-guest" href="/home/" target="_blank" rel="noopener" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span> ↗</a>
+          <a id="t-guestpage" class="btn small secondary" href="/home/" target="_blank" rel="noopener" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span><Icon name="ext" /></a>
         </div>
         <nav id="admin-tabs" class="ta-tabs" aria-label="Tasting admin" data-i18n-attr="aria-label=adminBar.label">
           {TABS.map((tab) => <a href="/admin/" data-apath={tab.path} data-section={tab.id} data-i18n={tab.key}>{en[tab.key]}</a>)}
@@ -38,7 +41,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <!-- Tasting details -->
       <section class="block" data-section="overview">
         <!-- Get started: wines, guests, payment – each with the button that does it. Gone when wines and guests are in. -->
-        <div id="setup-card" class="setup-card start-card" hidden>
+        <div id="setup-card" class="card setup-card start-card" hidden>
           <div class="start-head">
             <p class="setup-title" data-i18n="getStarted.title">Get started</p>
             <span class="start-head-right">
@@ -88,13 +91,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <dialog id="details-panel" class="sheet wide" aria-labelledby="details-panel-title">
           <div class="sheet-head">
             <h2 id="details-panel-title" data-i18n="section.details">Details</h2>
-            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+            <CloseButton data-close />
           </div>
         <form id="details" class="add-form tasting-form" novalidate>
           <label for="d-title" data-i18n="admin.title">Title</label>
-          <input id="d-title" type="text" required />
-          <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="hint" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
-          <textarea id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
+          <input class="input" id="d-title" type="text" required />
+          <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="opt" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
+          <textarea class="input" id="d-intro" rows="5" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
           <!-- A draft from Cloudflare AI: shown beside the host's own text, never written over it without asking -->
           <div class="ai-intro" data-help="ai-intro">
             <button id="ai-write" class="text-btn" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiIntro.write">Write a draft with AI</span></button>
@@ -141,11 +144,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <span><b><span data-i18n="wizard.blindTitle">Blind tasting</span><span data-help="blind"></span></b><small data-i18n="wizard.blindHint">Guests see only the number and colour of each wine until you reveal it.</small></span></label>
         <div id="max-guests-row" class="set-row">
           <span><b><span data-i18n="wizard.maxGuests">Max. number of guests</span><span data-help="max-guests"></span></b><small id="max-guests-view"></small></span>
-          <button id="max-guests-edit" class="btn small ghost" type="button" data-i18n="admin.edit">Edit</button>
+          <button id="max-guests-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
         </div>
         <div class="set-row">
           <span><b data-i18n="set.tv">Leaderboard for the TV</b><small><a id="tv-link" href="/" target="_blank"></a></small></span>
-          <button id="tv-copy" class="btn small ghost" type="button" data-i18n="hosts.copy">Copy</button>
+          <button id="tv-copy" class="btn small secondary" type="button" data-i18n="hosts.copy">Copy</button>
         </div>
       </section>
 
@@ -153,7 +156,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section id="hosts" class="block set-card" data-section="settings">
         <div class="guests-head">
           <h2 data-i18n="hosts.title">Hosts</h2>
-          <button id="host-open" class="btn small ghost" type="button" hidden data-i18n="hosts.add">Add host</button>
+          <button id="host-open" class="btn small secondary" type="button" hidden data-i18n="hosts.add">Add host</button>
         </div>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
         <ul id="hosts-list" class="tw-list guest-list hosts-rows"></ul>
@@ -164,29 +167,29 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <h2><span data-i18n="guest.feeTitle">Tasting fee</span><span data-help="fee"></span></h2>
         <div class="set-row">
           <span><b id="fee-view"></b><small id="fee-summary"></small></span>
-          <button id="fee-edit" class="btn small ghost" type="button" data-i18n="admin.edit">Edit</button>
+          <button id="fee-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
         </div>
       </section>
 
       <!-- Side panels for the settings above -->
       <dialog id="mg-panel" class="sheet" aria-labelledby="mg-title">
-        <div class="sheet-head"><h2 id="mg-title" data-i18n="wizard.maxGuests">Max. number of guests</h2><button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button></div>
+        <div class="sheet-head"><h2 id="mg-title" data-i18n="wizard.maxGuests">Max. number of guests</h2><CloseButton data-close /></div>
         <form id="mg-form" class="add-form" novalidate>
           <label for="max-guests" data-i18n="wizard.maxGuests">Max. number of guests</label>
-          <div class="with-unit"><input id="max-guests" class="short" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
+          <div class="affix w-num u-long"><input id="max-guests" class="input" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
           <p class="hint" data-i18n="set.maxHint">Leave it empty for no limit. When it is full, guests who say yes go on a waiting list – and move up by themselves when someone says no.</p>
           <div class="row-actions"><button class="btn small" type="submit" data-i18n="common.save">Save</button><button class="text-btn" type="button" data-close data-i18n="common.cancel">Cancel</button></div>
         </form>
       </dialog>
 
       <dialog id="fee-panel" class="sheet" aria-labelledby="fee-title">
-        <div class="sheet-head"><h2 id="fee-title" data-i18n="guest.feeTitle">Tasting fee</h2><button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button></div>
+        <div class="sheet-head"><h2 id="fee-title" data-i18n="guest.feeTitle">Tasting fee</h2><CloseButton data-close /></div>
         <form id="fee-form" class="add-form" novalidate>
           <label for="fee-total" data-i18n="set.feeTotal">What the tasting costs in all</label>
-          <div class="with-unit"><input id="fee-total" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit">kr.</span></div>
+          <div class="affix w-num"><input id="fee-total" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
           <p id="fee-suggest" class="hint"></p>
           <label for="fee-amount" data-i18n="set.feePer">Each guest pays</label>
-          <div class="with-unit"><input id="fee-amount" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="wizard.krPerPerson">kr. per person</span></div>
+          <div class="field-row"><div class="affix w-num"><input id="fee-amount" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div><span data-i18n="unit.perPerson">per person</span></div>
           <p class="hint" data-i18n="set.feePerHint">Leave it empty to use the suggestion above.</p>
           <label class="set-switch"><input id="fee-open" type="checkbox" role="switch" />
             <span><b data-i18n="wizard.feeShowTitle">Show the fee to the guests</b><small data-i18n="wizard.feeShowHint">Guests who are coming see the amount and can pay with MobilePay.</small></span></label>
@@ -195,13 +198,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </dialog>
 
       <dialog id="host-panel" class="sheet" aria-labelledby="host-title">
-        <div class="sheet-head"><h2 id="host-title" data-i18n="hosts.add">Add host</h2><button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button></div>
+        <div class="sheet-head"><h2 id="host-title" data-i18n="hosts.add">Add host</h2><CloseButton data-close /></div>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
         <form id="host-add" class="add-form host-add" novalidate>
           <label for="host-email" data-i18n="common.email">Email</label>
-          <input id="host-email" type="email" inputmode="email" autocomplete="off" />
-          <label for="host-name"><span data-i18n="admin.name">Name</span> <span class="hint" data-i18n="dt.optional">(optional)</span></label>
-          <input id="host-name" type="text" autocomplete="off" maxlength="80" />
+          <input class="input" id="host-email" type="email" inputmode="email" autocomplete="off" />
+          <label for="host-name"><span data-i18n="admin.name">Name</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
+          <input class="input" id="host-name" type="text" autocomplete="off" maxlength="80" />
           <div class="row-actions"><button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button></div>
         </form>
         <div id="host-confirm" class="host-confirm" role="alertdialog" aria-live="polite" hidden></div>
@@ -209,8 +212,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div id="host-link" class="host-link" hidden>
           <p id="host-link-text" class="hint"></p>
           <div class="inline-form">
-            <input id="host-link-url" type="text" readonly />
-            <button id="host-link-copy" class="btn small ghost" type="button" data-i18n="hosts.copy">Copy</button>
+            <input class="input" id="host-link-url" type="text" readonly />
+            <button id="host-link-copy" class="btn small secondary" type="button" data-i18n="hosts.copy">Copy</button>
           </div>
         </div>
       </dialog>
@@ -219,7 +222,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <div id="delete-tasting" hidden>
         <h3 data-i18n="tastingDelete.title">Delete the tasting</h3>
         <p class="hint" data-i18n="tastingDelete.hint">Removes the tasting with its guest list, answers, orders, quiz and chat. The wines stay in your library. It cannot be undone.</p>
-        <button id="td-ask" class="btn small ghost danger" type="button" data-i18n="tastingDelete.button">Delete tasting …</button>
+        <button id="td-ask" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="tastingDelete.button">Delete tasting …</span></button>
       </div>
       <!-- The question, in a small window -->
       <dialog id="td-confirm" class="confirm-modal" aria-labelledby="td-q">
@@ -227,7 +230,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <p class="hint" data-i18n="tastingDelete.keepWines">The wines stay in your library. It cannot be undone.</p>
         <p id="td-msg" class="message error" hidden></p>
         <div class="row-actions">
-          <button id="td-no" class="btn small ghost" type="button" data-i18n="common.cancel">Cancel</button>
+          <button id="td-no" class="btn small secondary" type="button" data-i18n="common.cancel">Cancel</button>
           <button id="td-yes" class="btn small danger" type="button" data-i18n="tastingDelete.yes">Yes, delete it</button>
         </div>
       </dialog>
@@ -248,7 +251,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <dialog id="tw-edit" class="sheet" aria-labelledby="twe-title">
           <div class="sheet-head">
             <h2 id="twe-title"></h2>
-            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+            <CloseButton data-close />
           </div>
           <form id="twe-form" class="add-form twe-form" novalidate>
             <div class="twe-wine">
@@ -259,12 +262,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <!-- The guest price (this tasting) next to the shop's price (the wine in the library, all tastings) -->
             <div class="twe-prices">
               <div>
-                <label for="twe-price" data-i18n="adminTasting.guestPrice">Guest price</label>
-                <div class="with-unit"><input id="twe-price" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="twe.perBottle">kr. per bottle</span></div>
+                <label for="twe-price"><span data-i18n="adminTasting.guestPrice">Guest price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
+                <div class="affix w-num"><input id="twe-price" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
               </div>
               <div>
-                <label for="twe-retail-in" data-i18n="twe.shopPriceLabel">Shop price</label>
-                <div class="with-unit"><input id="twe-retail-in" class="short" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="twe.perBottle">kr. per bottle</span></div>
+                <label for="twe-retail-in"><span data-i18n="twe.shopPriceLabel">Shop price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
+                <div class="affix w-num"><input id="twe-retail-in" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
               </div>
             </div>
             <p class="hint twe-prices-hint" data-i18n="twe.shopPriceHint">The shop's price is saved on the wine in your library, so it follows the wine into other tastings.</p>
@@ -297,7 +300,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
               <button id="twe-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
             </div>
             <div class="twe-danger">
-              <button id="twe-remove" class="btn small ghost danger" type="button" data-i18n="twe.remove">Remove from the tasting</button>
+              <button id="twe-remove" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="twe.remove">Remove from the tasting</span></button>
               <p class="hint" data-i18n="twe.removeHint">The wine stays in your library.</p>
             </div>
           </form>
@@ -311,7 +314,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <div class="head-actions">
             <!-- Show: the admin's filter drop-down (same look as src/lib/filter-dd.ts; statuses together, "Missing email" narrows them) -->
             <div class="filter-dd" id="g-filter-dd">
-              <button id="g-filter-btn" class="btn small ghost filter-dd-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="g-filter-menu">
+              <button id="g-filter-btn" class="btn small secondary filter-dd-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="g-filter-menu">
                 <span id="g-filter-label"></span>
                 <svg class="filter-dd-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
               </button>
@@ -332,8 +335,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <p id="g-needs-wine" class="message" hidden><span data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</span> <a href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></p>
 
 
-        <label for="guest-search" class="sr" data-i18n="admin.searchGuest">Search for a guest</label>
-        <input id="guest-search" class="search" type="search" placeholder="Search by name" data-i18n-attr="placeholder=admin.searchPlaceholder" autocomplete="off" />
+        <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="list-search" />
 
         <!-- Invite a guest: a new row that slides in at the top of the list – name (searches your guest list) and email -->
         <div class="qa qa-guest">
@@ -343,11 +345,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
                 <span class="guest-av gi-av" aria-hidden="true">+</span>
                 <div class="qa-body">
                   <div id="gi-fields" class="gi-fields">
-                    <div id="gi-field" class="qa-field gi-name">
+                    <div id="gi-field" class="input qa-field gi-name">
                       <label for="gi-input" class="visually-hidden" data-i18n="admin.name">Name</label>
                       <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
                     </div>
-                    <div id="gi-email-field" class="qa-field gi-email">
+                    <div id="gi-email-field" class="input qa-field gi-email">
                       <label for="gi-email" class="visually-hidden" data-i18n="common.email">Email</label>
                       <input id="gi-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
                     </div>
@@ -356,7 +358,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
                 </div>
                 <div class="qa-actions">
                   <button id="gi-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
-                  <button id="gi-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+                  <CloseButton id="gi-close" />
                 </div>
                 <!-- Matches from the library: across the row, from the field to the right edge -->
                 <ul id="gi-hits" class="qa-hits" hidden></ul>
@@ -369,7 +371,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <dialog id="p-panel" class="sheet" aria-labelledby="p-panel-title">
           <div class="sheet-head">
             <h2 id="p-panel-title"></h2>
-            <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+            <CloseButton data-close />
           </div>
           <div id="p-panel-body"></div>
         </dialog>
@@ -402,7 +404,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <tbody id="orders-by-wine"></tbody>
           </table>
         </div>
-        <button id="csv" class="btn small ghost" type="button" data-i18n="admin.csv">Download orders as CSV</button>
+        <button id="csv" class="btn small secondary" type="button" data-i18n="admin.csv">Download orders as CSV</button>
         </div>
       </section>
 
@@ -417,7 +419,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block quiz-admin" data-section="quiz">
         <div class="guests-head">
           <h2 data-i18n="page.quiz">Quiz</h2>
-          <button id="q-add-toggle" class="btn small ghost" type="button" data-i18n="aq.add">Add question</button>
+          <button id="q-add-toggle" class="btn small secondary" type="button" data-i18n="aq.add">Add question</button>
         </div>
         <div class="tab-switches">
           <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="quiz_open" />
@@ -435,7 +437,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
               <label><input type="radio" name="q-ai-level" value="medium" checked /> <span data-i18n="aiQuiz.medium">Medium</span></label>
               <label><input type="radio" name="q-ai-level" value="expert" /> <span data-i18n="aiQuiz.expert">Expert</span></label>
             </div>
-            <button id="q-ai" class="btn small ghost" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.suggest">Suggestions from AI</span></button>
+            <button id="q-ai" class="btn small secondary" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.suggest">Suggestions from AI</span></button>
           </div>
           <p id="q-ai-status" class="hint" aria-live="polite" hidden></p>
           <p id="q-ai-warn" class="ai-warn" hidden><span data-i18n="aiQuiz.warn">AI can be wrong – especially on Expert. Always check the marked answer before you press Add.</span></p>
@@ -447,18 +449,18 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <dialog id="q-panel" class="sheet wide" aria-labelledby="qf-title">
         <div class="sheet-head">
           <h2 id="qf-title" data-i18n="aq.newQuestion">New question</h2>
-          <button class="sheet-close" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          <CloseButton data-close />
         </div>
         <form id="q-form" class="add-form quiz-form" novalidate>
           <label for="qf-question" data-i18n="aq.question">Question</label>
-          <textarea id="qf-question" rows="2" maxlength="500"></textarea>
+          <textarea class="input" id="qf-question" rows="2" maxlength="500"></textarea>
           <fieldset class="qf-fieldset">
             <legend data-i18n="aq.answersLegend">Answers – mark the right one</legend>
             <div id="qf-options" class="qf-options"></div>
             <button id="qf-add-option" class="text-btn" type="button" data-i18n="aq.addAnswer">+ Add answer</button>
           </fieldset>
-          <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="hint" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
-          <textarea id="qf-explanation" rows="2" maxlength="1000"></textarea>
+          <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="opt" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
+          <textarea class="input" id="qf-explanation" rows="2" maxlength="1000"></textarea>
           <p id="qf-msg" class="message error" hidden></p>
           <div class="row-actions">
             <button id="qf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
@@ -485,6 +487,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 </Base>
 
 <script>
+  import { setLoading } from '../../lib/ui/button';
+  import { iconSvg } from '../../lib/ui/icons';
   import { initHelpTips, followHelpLink } from '../../lib/help-tip';
   initHelpTips();
   import { supabase } from '../../lib/supabase';
@@ -495,6 +499,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, mk as mkEl, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
   import { personRow, type PersonChip } from '../../lib/ui/person-row';
+  import { STATUS as STATUSES, guestStatus } from '../../lib/ui/status';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
@@ -661,7 +666,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // The same rows as the guests (read-only here; hosts are managed under Settings)
     $('ov-hosts').replaceChildren(...((data ?? []) as H[]).map((h) => personRow({
       name: h.name || h.email, you: h.me ? t('hosts.you') : null, meta: h.name ? [h.email] : [],
-      chips: [h.owner ? { text: t('hosts.owner'), tone: 'accent' } : h.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
+      chips: [h.owner ? { text: t('hosts.owner'), tone: 'strong' } : h.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
     })));
     const manage = $('ov-hosts-manage') as HTMLAnchorElement;
     manage.href = `/t/${slug}/admin/settings/`;
@@ -910,11 +915,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     catch { prompt(t('admin.copyLinkPrompt'), inviteUrl(p)); }
   }
   async function sendInvite(p: P, btn: HTMLButtonElement) {
-    btn.disabled = true;
-    btn.classList.add('loading');
+    setLoading(btn, true);
     const ok = await mailInvite(p);
-    btn.disabled = false;
-    btn.classList.remove('loading');
+    setLoading(btn, false);
     toast(t(ok ? 'inviteMail.sentTo' : 'guestRow.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
     if (ok) renderParticipants();
     return ok;
@@ -926,11 +929,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // On the waiting list: its number in the queue
     const place = p.status === 'waitlist'
       ? participants.filter((x) => x.status === 'waitlist' && (x.waitlisted_at ?? '') <= (p.waitlisted_at ?? '')).length : 0;
-    const tone = ({ yes: 'ok', no: 'no', waitlist: 'wait', invited: '' } as const)[p.status as 'yes'] ?? '';
-    const chips: PersonChip[] = [{ text: place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status, tone }];
-    if (p.status === 'yes' && feeAmount > 0) chips.push(p.tasting_paid ? { text: '✓ ' + t('guestRow.paid'), tone: 'ok' } : { text: t('guestRow.unpaid'), tone: 'warn' });
+    const st = STATUSES[guestStatus(p.status)];
+    const chips: PersonChip[] = [{ text: place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status, tone: st.tone, dashed: (st as { dashed?: boolean }).dashed }];
+    if (p.status === 'yes' && feeAmount > 0) chips.push(p.tasting_paid ? { text: t('guestRow.paid'), tone: 'ok' } : { text: t('guestRow.unpaid'), tone: 'err' });
     if (p.diet) chips.push({ text: p.diet });
-    if (p.note) chips.push({ text: '💬 ' + t('guestRow.note'), title: p.note });
+    if (p.note) chips.push({ text: t('guestRow.note'), title: p.note });
     const n = bottlesOf(p);
     const actions: HTMLElement[] = [];
     // Never invited: its one action in the row (as "Reveal" by a blind wine) – the rest is in the panel
@@ -1000,23 +1003,23 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     let status = p.status;
 
     // The invitation: send (again) and copy the link
-    form.append(mk('p', 'edit-label', t('guestRow.invitation')));
+    form.append(mk('p', 'flabel', t('guestRow.invitation')));
     form.append(mk('p', 'hint guest-inv-when', p.invite_mailed_at ? t('guestRow.mailedLong', { when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }) : t('guestRow.notMailedLong')));
     const inv = mk('div', 'row-actions guest-inv');
     if (p.email) {
-      const send = mk('button', 'btn small ghost', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
+      const send = mk('button', 'btn small secondary', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
       send.type = 'button';
       send.addEventListener('click', async () => { if (await sendInvite(p, send)) guestPanel.close(); });
       inv.append(send);
     }
-    const copy = mk('button', 'btn small ghost', t('admin.copyLink'));
+    const copy = mk('button', 'btn small secondary', t('admin.copyLink'));
     copy.type = 'button';
     copy.addEventListener('click', () => copyInvite(p));
     inv.append(copy);
     form.append(inv);
 
     // Status: the same choice cards as elsewhere (radio, name, what it means)
-    const statusHead = mk('p', 'edit-label', t('admin.status'));
+    const statusHead = mk('p', 'flabel', t('admin.status'));
     statusHead.id = `st-h-${p.id}`;
     form.append(statusHead);
     const cards = mk('div', 'choice-cards');
@@ -1049,10 +1052,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     paidBox.hidden = !(feeAmount > 0 && status === 'yes');
     form.append(paidBox);
 
-    const lab = mk('label', 'edit-label', t('common.email'));
+    const lab = mk('label', '', t('common.email'));
     const id = 'em-' + p.id;
     lab.htmlFor = id;
-    const em = mk('input');
+    const em = mk('input', 'input');
     em.type = 'email';
     em.id = id;
     em.value = p.email ?? '';
@@ -1070,8 +1073,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
     // Remove from this tasting (the guest stays in the guest list): quiet, and asked about first
     const quiet = mk('div', 'guest-remove');
-    const remove = mk('button', 'text-btn danger', t('adminTasting.removeGuest'));
+    const remove = mk('button', 'btn small quiet-danger');
     remove.type = 'button';
+    remove.innerHTML = iconSvg('trash');
+    remove.append(t('adminTasting.removeGuest'));
     remove.addEventListener('click', async () => { if (await removeGuest(p)) guestPanel.close(); });
     quiet.append(remove);
     form.append(quiet);
@@ -1204,7 +1209,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
     for (const o of sorted) {
       const box = document.createElement('div');
-      box.className = 'order-card' + (o.paid ? ' paid' : '');
+      box.className = 'card order-card' + (o.paid ? ' paid' : '');
       const head = document.createElement('div');
       head.className = 'order-head';
       const h = document.createElement('strong');
@@ -1354,7 +1359,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       body.append(mkEl('p', 'wine-meta', g.email ?? t('admin.noEmail')));
       li.append(av, body);
       // The same button either way: disabled ("✓ Invited") when the guest is already in the tasting
-      const b = mkEl('button', 'btn small ghost', invited.has(g.id) ? '✓ ' + t('guestInvite.already') : addLabel(!!g.email));
+      const b = mkEl('button', 'btn small secondary', invited.has(g.id) ? '✓ ' + t('guestInvite.already') : addLabel(!!g.email));
       b.type = 'button';
       if (invited.has(g.id)) b.disabled = true;
       else b.addEventListener('click', () => inviteGuest(g, b));
@@ -1395,23 +1400,22 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     }
     if (!name) { fieldError(giInput, t('guestInvite.nameMissing'), $('gi-fields')); giInput.focus(); return; }
     const btn = $('gi-go') as HTMLButtonElement;
-    btn.disabled = true;
-    btn.classList.add('loading');
+    setLoading(btn, true);
     try {
       // A new guest goes into the guest list too
       const { data: g, error: ge } = await supabase.from('guests').insert({ host_id: host!.id, name, email }).select('id, name, email').single();
       if (ge || !g) { toast(t('admin.guestNotAdded'), { kind: 'error' }); return; }
       library.push(g as G);
       await inviteGuest(g as G);
-    } finally { btn.disabled = false; btn.classList.remove('loading'); }
+    } finally { setLoading(btn, false); }
   }
 
   /** Puts a guest from the guest list into the tasting – and mails the invitation when chosen */
   async function inviteGuest(g: G, btn?: HTMLButtonElement) {
-    if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+    if (btn) setLoading(btn, true);
     const { data, error } = await supabase.from('participants')
       .insert({ name: g.name, email: g.email, tasting_id: tasting!.id, guest_id: g.id }).select().single();
-    if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+    if (btn) setLoading(btn, false);
     if (error || !data) { toast(error?.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded'), { kind: 'error', ms: 7000 }); return; }
     const p = data as P;
     participants.push(p);

@@ -69,7 +69,7 @@ export function wineChecks(form: HTMLFormElement) {
       m.hidden = true;
       // After the field, or after the row the field sits in
       const el = input(id);
-      const after = el.closest('.inline-form, .with-unit') ?? el;
+      const after = el.closest('.field-row') ?? el.closest('.inline-form, .affix') ?? el;
       after.after(m);
     }
     return m;

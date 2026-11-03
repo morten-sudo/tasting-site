@@ -3,7 +3,9 @@
 // edited), a line with email and more, status as small chips, something on the right (e.g. bottles), and the row's
 // actions as icons. Read-only lists simply leave out onOpen and actions.
 
-export interface PersonChip { text: string; tone?: 'ok' | 'wait' | 'no' | 'warn' | 'accent' | ''; title?: string; href?: string }
+import { chip, type ChipTone } from './status';
+
+export interface PersonChip { text: string; tone?: ChipTone; dashed?: boolean; title?: string; href?: string }
 
 export interface PersonRowOptions {
   name: string;                    // shown name (falls back to the email at the caller)
@@ -15,8 +17,6 @@ export interface PersonRowOptions {
   onOpen?: () => void;             // the name opens the side panel
   id?: string;                     // data-person
 }
-
-const TONE: Record<string, string> = { ok: 'vis-shown', wait: 'st-wait', no: 'ord-no', warn: 'st-unpaid', accent: 'tone-accent', '': '' };
 
 /** "Anna Holm" → "AH"; "peter@example.dk" → "P" */
 export function initials(name: string): string {
@@ -50,14 +50,8 @@ export function personRow(o: PersonRowOptions): HTMLLIElement {
     main.append(p);
   }
   if (o.chips?.length) {
-    const chips = el('div', 'tw-chips');
-    for (const c of o.chips) {
-      const chip = c.href ? Object.assign(el('a', 'tw-chip', c.text), { href: c.href }) : el('span', 'tw-chip', c.text);
-      const tone = TONE[c.tone ?? ''];
-      if (tone) chip.classList.add(tone);
-      if (c.title) chip.title = c.title;
-      chips.append(chip);
-    }
+    const chips = el('div', 'chips');
+    for (const c of o.chips) chips.append(chip(c.text, c.tone, { dashed: c.dashed, title: c.title, href: c.href }));
     main.append(chips);
   }
   li.append(main);

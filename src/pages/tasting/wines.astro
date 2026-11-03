@@ -1,4 +1,5 @@
 ---
+import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
 ---
 <Base title="page.wines" tasting>
@@ -13,7 +14,7 @@ import Base from '../../layouts/Base.astro';
       <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
       <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
     </div>
-    <p id="loading" class="hint loading-line"><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
     <p id="no-wines" class="message" hidden data-i18n="wines.none">The host has not shown any wines yet.</p>
     <p id="load-error" class="message error" hidden data-i18n="wines.loadError">
       The wines could not be loaded. Check your connection and reload the page.
@@ -22,13 +23,9 @@ import Base from '../../layouts/Base.astro';
     <div id="wine-list" class="carousel" role="region" aria-roledescription="carousel" aria-label="Wines" data-i18n-attr="aria-roledescription=wines.carousel;aria-label=page.wines" tabindex="0"></div>
 
     <div id="carousel-nav" class="carousel-nav" hidden>
-      <button type="button" id="prev" class="nav-btn" aria-label="Previous wine" data-i18n-attr="aria-label=wines.prevWine">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      <button type="button" id="prev" class="icon-act lg" aria-label="Previous wine" data-i18n-attr="aria-label=wines.prevWine"><Icon name="left" /></button>
       <p id="counter" class="counter" aria-live="polite"></p>
-      <button type="button" id="next" class="nav-btn" aria-label="Next wine" data-i18n-attr="aria-label=wines.nextWine">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
+      <button type="button" id="next" class="icon-act lg" aria-label="Next wine" data-i18n-attr="aria-label=wines.nextWine"><Icon name="right" /></button>
     </div>
   </section>
 
@@ -313,10 +310,7 @@ import Base from '../../layouts/Base.astro';
   .carousel .track::-webkit-scrollbar { display: none; }
   .carousel .card {
     scroll-snap-align: start;
-    background: #fff;
-    color: var(--paper);
-    border: 1px solid var(--lodge-3);
-    border-radius: 10px;
+    padding: 0;
     overflow: hidden;
     transition: opacity 0.3s;
     opacity: 0.6;
@@ -379,20 +373,6 @@ import Base from '../../layouts/Base.astro';
     padding: 0.75rem var(--gutter) 1.25rem;
   }
   .counter { margin: 0; min-width: 5.5rem; text-align: center; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
-  .nav-btn {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border: 1px solid var(--lodge-3);
-    background: #fff;
-    color: var(--paper);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-  .nav-btn:hover:not(:disabled) { border-color: var(--amber); background: var(--amber); color: #fff; }
-  .nav-btn:disabled { opacity: 0.3; cursor: default; }
 
   .carousel .card-link {
     display: block;

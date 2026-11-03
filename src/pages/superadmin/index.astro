@@ -1,4 +1,5 @@
 ---
+import SearchField from '../../components/ui/SearchField.astro';
 import Base from '../../layouts/Base.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import '../../styles/admin.css';
@@ -9,17 +10,17 @@ import '../../styles/admin.css';
       <h1 class="title" data-i18n="super.tenantsNav">Tenants</h1>
       <!-- Totals across all hosts -->
       <div class="super-stats">
-        <div class="stat"><span id="t-hosts" class="stat-n"></span><span class="stat-label" data-i18n="super.hosts">Hosts</span></div>
-        <div class="stat"><span id="t-tastings" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.tastings">Tastings</span><span id="t-upcoming" class="stat-sub"></span></div>
-        <div class="stat"><span id="t-wines" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.wines">Wines</span></div>
-        <div class="stat"><span id="t-guests" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.guests">Guests</span><span id="t-invited" class="stat-sub"></span></div>
-        <div class="stat"><span id="t-orders" class="stat-n"></span><span class="stat-label" data-i18n="admin.orders">Orders</span><span id="t-amount" class="stat-sub"></span></div>
-        <div class="stat"><span id="t-activity" class="stat-n"></span><span class="stat-label" data-i18n="super.active30">Active last 30 days</span></div>
+        <div class="card stat"><span id="t-hosts" class="stat-n"></span><span class="stat-label" data-i18n="super.hosts">Hosts</span></div>
+        <div class="card stat"><span id="t-tastings" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.tastings">Tastings</span><span id="t-upcoming" class="stat-sub"></span></div>
+        <div class="card stat"><span id="t-wines" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.wines">Wines</span></div>
+        <div class="card stat"><span id="t-guests" class="stat-n"></span><span class="stat-label" data-i18n="adminNav.guests">Guests</span><span id="t-invited" class="stat-sub"></span></div>
+        <div class="card stat"><span id="t-orders" class="stat-n"></span><span class="stat-label" data-i18n="admin.orders">Orders</span><span id="t-amount" class="stat-sub"></span></div>
+        <div class="card stat"><span id="t-activity" class="stat-n"></span><span class="stat-label" data-i18n="super.active30">Active last 30 days</span></div>
       </div>
 
       <div class="guests-head">
         <h2 class="visually-hidden" data-i18n="super.tenants">All accounts</h2>
-        <input id="search" class="search" type="search" autocomplete="off" placeholder="Search" data-i18n-attr="placeholder=adminTasting.search" style="max-width:18rem;margin:0" />
+        <SearchField id="search" label="adminTasting.search" class="head-search" />
       </div>
       <div class="table-wrap super-table">
         <table class="table">

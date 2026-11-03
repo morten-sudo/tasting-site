@@ -1,0 +1,13 @@
+---
+// Component 6 – search field: a magnifier in front, a label for screen readers, full width up to 24rem and the
+// same height as the buttons beside it. label/placeholder are i18n keys (English text as the fallback).
+import Icon from './Icon.astro';
+import { en } from '../../i18n/en';
+interface Props { id: string; label: keyof typeof en; placeholder?: keyof typeof en; class?: string }
+const { id, label, placeholder = label, class: cls } = Astro.props;
+---
+<div class:list={['affix', 'pre', cls]}>
+  <span class="pre-i"><Icon name="search" /></span>
+  <label for={id} class="sr" data-i18n={label}>{en[label]}</label>
+  <input id={id} class="input" type="search" autocomplete="off" placeholder={en[placeholder]} data-i18n-attr={`placeholder=${placeholder}`} />
+</div>

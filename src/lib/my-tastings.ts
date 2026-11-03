@@ -2,13 +2,9 @@
 // Used by the home page, the front page and the profile page.
 import { supabase } from './supabase';
 import { fetchMyTastings, getCodes, tastingUrl, inviteIsMine, forgetCode, type MyTasting } from './guest';
-import { t, formatWhen, type Key } from '../i18n';
+import { t, formatWhen } from '../i18n';
+import { statusChip, guestStatus } from './ui/status';
 
-const STATUS: Record<string, [Key, string]> = {
-  yes: ['status.yes', 'pill-yes'],
-  no: ['status.no', 'pill-no'],
-  invited: ['status.invited', 'pill-invited'],
-};
 
 // Tastings opened with an invite link on this device (no email sign-in needed)
 async function fromStoredCodes(skip: Set<string>): Promise<MyTasting[]> {
@@ -47,7 +43,7 @@ export async function loadAllMyTastings() {
 export function tastingCard(x: MyTasting) {
   const li = document.createElement('li');
   const a = document.createElement('a');
-  a.className = 'tasting-card';
+  a.className = 'card tasting-card';
   a.href = tastingUrl(x.slug);
 
   const head = document.createElement('div');
@@ -55,11 +51,8 @@ export function tastingCard(x: MyTasting) {
   const title = document.createElement('span');
   title.className = 'card-title';
   title.textContent = x.title;
-  const [label, cls] = STATUS[x.status] ?? STATUS.invited;
-  const pill = document.createElement('span');
-  pill.className = `pill ${cls}`;
-  pill.textContent = t(label);
-  head.append(title, pill);
+  // One word and tone per answer – also "Waiting list"
+  head.append(title, statusChip(guestStatus(x.status)));
   a.append(head);
 
   const parts = [x.starts_at ? formatWhen(x.starts_at, { year: true }) : null, x.place].filter(Boolean);

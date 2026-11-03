@@ -1,0 +1,251 @@
+/* Shared components – the ONE place for how buttons, fields, chips, cards … look, on every page
+   (host admin, superadmin, guest pages, public pages). Imported by src/layouts/Base.astro after global.css.
+   Markup built in TypeScript comes from src/lib/ui/*, static markup from src/components/ui/*; both use these classes.
+   Spec: the approved component sheet (design-spec.html). */
+
+:root {
+  --amber-dark: #4f0a16;
+  --line: #d9cfc7;               /* field borders */
+  --soft: #fbf6ee;               /* "being filled in" / current step */
+  --ok-bg: #eef6f0;  --ok-line: #b9d3be;
+  --wait-bg: #fbf3ea; --wait-line: #e2c9ad;
+  --warn: #7a5200; --warn-bg: #fdf6df; --warn-line: #ead48f;
+  --err-bg: #fbf0f1; --err-line: #e3c4c9;
+  --round: 999px;                /* only for things round by nature: chips, switches, avatars */
+  --h: 2.75rem;                  /* normal height: fields and buttons */
+  --h-sm: 2.25rem;               /* small height: fields and buttons in rows and toolbars */
+  --ring: 2px solid var(--amber);
+  --ring-offset: 2px;
+  --pop: 0 10px 28px rgba(36, 28, 27, 0.14);
+}
+
+/* ---------- The one focus ring (also on fields) ---------- */
+:focus-visible { outline: var(--ring); outline-offset: var(--ring-offset); }
+:focus:not(:focus-visible) { outline: none; }
+/* On dark backgrounds (photos) the bordeaux ring cannot be seen: white there */
+.on-dark :focus-visible, .hero :focus-visible, .has-hero .site-header :focus-visible { outline-color: #fff; }
+
+/* ---------- The one spinner: a wine glass that is drunk and filled up again ---------- */
+.spin {
+  display: inline-block; width: 1.25em; height: 1.25em; flex: none; vertical-align: -0.28em;
+  background: url(/img/glass-spinner.svg) center / contain no-repeat;
+}
+.spin.white { background-image: url(/img/glass-spinner-white.svg); }
+.spin.lg { width: 2rem; height: 2rem; }
+
+/* ---------- Icons (src/lib/ui/icons.ts, src/components/ui/Icon.astro) ---------- */
+svg.i { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- 1 Button ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; height: var(--h); padding: 0 1.25rem;
+  font: 500 0.95rem/1 var(--body); border-radius: var(--radius); border: 1px solid var(--amber); background: var(--amber); color: #fff;
+  cursor: pointer; text-decoration: none; white-space: nowrap; flex: none; margin: 0; box-sizing: border-box;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.btn > svg { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.btn:hover { background: var(--amber-dark); border-color: var(--amber-dark); color: #fff; }
+.btn.secondary { background: var(--lodge-2); color: var(--amber); border-color: var(--amber); }
+.btn.secondary:hover { background: var(--err-bg); color: var(--amber-dark); border-color: var(--amber-dark); }
+.btn.danger { background: var(--error); border-color: var(--error); color: #fff; }
+.btn.danger:hover { background: #8f1e18; border-color: #8f1e18; }
+.btn.quiet-danger { background: transparent; border-color: transparent; color: var(--error); padding-inline: 0.75rem; }
+.btn.quiet-danger:hover { background: var(--err-bg); border-color: var(--err-line); color: var(--error); }
+.btn.small { height: var(--h-sm); padding: 0 0.9rem; font-size: 0.88rem; }
+.btn.small.quiet-danger { padding-inline: 0.6rem; }
+.btn.block { width: 100%; }
+/* Not possible right now: grey and flat, no hover – not "busy" */
+.btn:disabled:not(.loading), .btn:disabled:not(.loading):hover {
+  background: var(--lodge-2); border-color: var(--lodge-3); color: var(--muted); cursor: default;
+}
+.btn.quiet-danger:disabled:not(.loading) { background: transparent; border-color: transparent; }
+/* Busy: the spinner in front of the label (setLoading() in src/lib/ui/button.ts) */
+.btn.loading { cursor: progress; }
+.btn.loading .spin { width: 1.15rem; height: 1.15rem; margin-left: -0.15rem; }
+/* On a photo (the front page and login heroes) */
+.btn.on-photo { background: #fff; color: var(--amber); border-color: #fff; }
+.btn.on-photo:hover { background: #f3e9e0; border-color: #f3e9e0; color: var(--amber-dark); }
+.btn.on-photo-2 { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.8); }
+.btn.on-photo-2:hover { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: #fff; }
+
+/* A row of buttons under a form or in a box (component 46 – actions) */
+.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 0.6rem; }
+
+/* ---------- 2 Text button / text link (not underlined; underlined on hover) ---------- */
+.text-btn {
+  display: inline-flex; align-items: center; gap: 0.3rem; background: none; border: 0; padding: 0.35rem 0.15rem; margin: 0;
+  min-height: var(--h-sm); color: var(--amber); font: 500 0.95rem/1.2 var(--body); cursor: pointer; text-decoration: none;
+  border-radius: 4px; text-align: left; white-space: nowrap;
+}
+.text-btn:hover { text-decoration: underline; text-underline-offset: 0.22em; color: var(--amber-dark); }
+.text-btn.danger { color: var(--error); }
+.text-btn.danger:hover { color: #8f1e18; }
+.text-btn.small { font-size: 0.88rem; min-height: 0; padding-block: 0.2rem; }
+.text-btn.wrap { white-space: normal; }
+.text-btn:disabled { color: var(--muted); cursor: default; text-decoration: none; opacity: 0.7; }
+.text-btn > svg { width: 1rem; height: 1rem; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.15s; }
+.text-btn.fwd:hover > svg { transform: translateX(2px); }
+.text-btn.back:hover > svg { transform: translateX(-2px); }
+.text-btn.loading { cursor: progress; color: var(--muted); }
+.text-btn[hidden] { display: none; }
+
+/* ---------- 3 Icon button (src/lib/ui/icon-button.ts, src/components/ui/CloseButton.astro) ---------- */
+.icon-act {
+  position: relative; display: inline-grid; place-items: center; width: var(--h-sm); height: var(--h-sm); padding: 0; margin: 0; flex: none;
+  border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--amber); cursor: pointer;
+  font: inherit; text-decoration: none; box-sizing: border-box;
+}
+.icon-act svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.icon-act.md { width: var(--h); height: var(--h); }
+.icon-act.md svg { width: 1.35rem; height: 1.35rem; }
+.icon-act.lg { width: 3rem; height: 3rem; border-radius: 50%; border-color: var(--lodge-3); background: var(--lodge-2); color: var(--paper); }
+.icon-act.lg svg { width: 1.4rem; height: 1.4rem; }
+.icon-act:hover { background: var(--lodge-2); border-color: var(--lodge-3); }
+.icon-act.lg:hover { border-color: var(--paper); }
+.icon-act.strong { border-color: var(--amber); }
+.icon-act.strong:hover { background: var(--amber); color: #fff; }
+.icon-act.quiet { color: var(--muted); }
+.icon-act.quiet:hover { color: var(--error); background: var(--err-bg); border-color: var(--err-line); }
+.icon-act.close { color: var(--paper); }
+.icon-act:disabled { opacity: 0.4; cursor: default; background: none; border-color: transparent; }
+.icon-act.lg:disabled { border-color: var(--lodge-3); background: var(--lodge-2); }
+.icon-act.loading { cursor: progress; }
+.icon-act.loading svg { visibility: hidden; }
+.icon-act.loading .spin { position: absolute; inset: 0; margin: auto; }
+.icon-act[hidden] { display: none; }
+/* The name as a tip on hover and keyboard focus. It exists only while it shows (a hidden one off the right edge
+   made phones scroll sideways); the last icon in a row opens its tip to the left, inside the screen. */
+.icon-act[data-tip]::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  white-space: nowrap; padding: 0.3rem 0.55rem; border-radius: 6px; background: var(--paper); color: #fff;
+  font: 500 0.78rem/1.2 var(--body); pointer-events: none; display: none; z-index: 5;
+}
+.icon-act[data-tip]:is(:hover, :focus-visible)::after { display: block; animation: tip-in 0.15s 0.25s both; }
+.icon-act[data-tip]:last-child::after { left: auto; right: 0; transform: none; }
+.icon-act[data-tip].tip-below::after, :is(.sheet-head, .wz-top, .side-head) .icon-act[data-tip]::after { bottom: auto; top: calc(100% + 6px); }
+@media (hover: none) { .icon-act[data-tip]:hover:not(:focus-visible)::after { display: none; } }
+@keyframes tip-in { from { opacity: 0; } to { opacity: 1; } }
+/* On a dark surface (the toast) */
+.toast .icon-act.close { color: rgba(255, 255, 255, 0.8); width: 2rem; height: 2rem; }
+.toast .icon-act.close:hover { background: rgba(255, 255, 255, 0.12); border-color: transparent; color: #fff; }
+.toast :focus-visible { outline-color: #fff; }
+
+/* ---------- 4–6 Fields: label over, help and error under ---------- */
+.field { display: grid; gap: 0.35rem; min-width: 0; align-content: start; }
+label, .flabel { display: block; font-size: 0.85rem; font-weight: 500; color: #3d3433; margin: 0 0 0.4rem; }
+.field > label, .field > .flabel { margin: 0; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+.opt { font-weight: 400; color: var(--muted); }
+.req { color: var(--error); font-weight: 600; }
+.help { color: var(--muted); font-size: 0.85rem; margin: 0; }
+.input {
+  display: block; width: 100%; min-width: 0; height: var(--h); padding: 0 0.85rem; margin: 0;
+  border: 1px solid var(--line); border-radius: var(--radius); background: #fff; color: var(--paper);
+  font: 400 1rem/1.2 var(--body); transition: border-color 0.15s; box-shadow: none; box-sizing: border-box; max-width: 36rem;
+}
+.input::placeholder { color: #9b8f8b; }
+.input:hover:not(:disabled):not([readonly]) { border-color: var(--muted); }
+.input:focus { outline: none; }
+.input:focus-visible { outline: var(--ring); outline-offset: var(--ring-offset); border-color: var(--amber); }
+.input[aria-invalid='true'] { border-color: var(--error); }
+.input:disabled, .input[readonly] { background: var(--lodge); color: var(--muted); border-color: var(--lodge-3); }
+.input:disabled { cursor: not-allowed; }
+.input.small { height: var(--h-sm); font-size: 0.92rem; padding: 0 0.7rem; }
+textarea.input { height: auto; min-height: 5.5rem; padding: 0.7rem 0.85rem; line-height: 1.45; resize: vertical; }
+.input.code { font: 500 1.25rem/1 ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: 0.3em; text-transform: uppercase; max-width: 14rem; }
+.input.code::placeholder { letter-spacing: 0.3em; }
+/* Date and time: same width as the other fields (iOS Safari otherwise gives them their own minimum width) */
+.input:is([type='datetime-local'], [type='date'], [type='time']) { -webkit-appearance: none; appearance: none; text-align: left; }
+.input:is([type='datetime-local'], [type='date'])::-webkit-date-and-time-value { text-align: left; margin: 0; }
+.input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; }
+/* The message under a field (fieldError() in src/lib/field-error.ts) */
+.field-error { display: flex; gap: 0.35rem; align-items: flex-start; color: var(--error); font-size: 0.85rem; margin: 0.3rem 0 0; line-height: 1.35; }
+.field > .field-error { margin: 0; }
+.field-error::before {
+  content: ''; flex: none; width: 1rem; height: 1rem; margin-top: 0.05rem; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.8 19.5h18.4z'/%3E%3Cpath d='M12 10v4.5M12 17.3v.2'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4 2.8 19.5h18.4z'/%3E%3Cpath d='M12 10v4.5M12 17.3v.2'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.field-error[hidden] { display: none; }
+
+/* A box that holds a bare input and something beside it (an attached link, a chip): the field look on the box */
+div.input { display: flex; align-items: center; gap: 0.4rem; padding: 0 0.3rem 0 0.85rem; }
+div.input:focus-within { outline: var(--ring); outline-offset: var(--ring-offset); border-color: var(--amber); }
+div.input:has([aria-invalid='true']) { border-color: var(--error); }
+div.input > input { flex: 1; min-width: 0; height: 100%; margin: 0; padding: 0; border: 0; outline: 0; background: transparent; font: inherit; color: inherit; }
+
+/* 5 Number with its unit inside the box: "122,50 kr." – fixed widths, one definition */
+.affix { position: relative; display: flex; align-items: center; min-width: 0; }
+.affix > .input { padding-right: 3.2rem; }
+.affix > .unit { position: absolute; right: 0.85rem; color: var(--muted); font-size: 0.92rem; pointer-events: none; white-space: nowrap; }
+.affix.w-num { width: 9rem; max-width: 100%; flex: none; }
+.affix.w-num > .input { text-align: right; font-variant-numeric: tabular-nums; }
+.affix.w-num.u-long { width: 10.5rem; }
+.affix.w-num.u-long > .input { padding-right: 4.6rem; }
+.affix.w-num.w-qty { width: 4.5rem; }
+.affix.w-num.small > .input { height: var(--h-sm); font-size: 0.92rem; padding-left: 0.6rem; padding-right: 2.2rem; }
+.affix.w-num.small > .unit { right: 0.7rem; font-size: 0.85rem; }
+.affix.w-num.w-qty > .input { padding-inline: 0.5rem; text-align: center; }
+/* 6 Search: an icon in front, a label for screen readers, full width up to 24rem */
+.affix.pre { width: 100%; max-width: 24rem; }
+.affix.pre > .input { padding-left: 2.5rem; padding-right: 0.85rem; }
+.affix > .pre-i { position: absolute; left: 0.8rem; display: flex; color: var(--muted); pointer-events: none; }
+.affix > .pre-i svg { width: 1.1rem; height: 1.1rem; }
+/* A row of fields and words on one line: "From 6 bottles 109,95 kr." */
+.field-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem 0.5rem; min-width: 0; }
+.field-row > span { color: var(--muted); font-size: 0.95rem; }
+
+/* ---------- 18 Chip / status (src/lib/ui/status.ts: one word and one tone per status) ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 0.3rem; font: 400 0.78rem/1 var(--body); padding: 0.32rem 0.6rem;
+  border-radius: var(--round); border: 1px solid var(--lodge-3); background: var(--lodge-2); color: var(--muted);
+  white-space: nowrap; text-decoration: none; flex: none; letter-spacing: 0; text-transform: none; vertical-align: middle;
+}
+.chip svg { width: 0.85rem; height: 0.85rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.chip.ok { color: var(--ok); border-color: var(--ok-line); background: var(--ok-bg); }
+.chip.wait { color: var(--tawny); border-color: var(--wait-line); background: var(--wait-bg); }
+.chip.warn { color: var(--warn); border-color: var(--warn-line); background: var(--warn-bg); }
+.chip.err { color: var(--error); border-color: var(--err-line); background: var(--err-bg); }
+.chip.strong { color: #fff; border-color: var(--paper); background: var(--paper); }
+.chip.dashed { border-style: dashed; background: transparent; }
+a.chip:hover { border-color: var(--muted); color: var(--paper); }
+a.chip.ok:hover { color: var(--ok); border-color: var(--ok); }
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.chips:empty { display: none; }
+
+/* ---------- 41 Card / box: white, 8px radius; a link card gets a red edge on hover ---------- */
+.card {
+  background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 1.1rem 1.2rem; min-width: 0;
+  color: var(--paper); text-decoration: none; box-sizing: border-box;
+}
+:where(.card) { display: block; }
+a.card, button.card { transition: border-color 0.15s; cursor: pointer; font: inherit; text-align: left; }
+a.card:hover, button.card:hover { border-color: var(--amber); color: var(--paper); }
+.card.add {
+  border-style: dashed; background: transparent; display: grid; place-items: center; align-content: center; text-align: center;
+  color: var(--amber); font-weight: 500; min-height: 7rem; cursor: pointer;
+}
+.card.add:hover { border-color: var(--amber); background: var(--lodge-2); }
+.card.tight { padding: 0.8rem 1rem; }
+.card[hidden] { display: none; }
+.card > h3:first-child, .card > h2:first-child { margin-top: 0; }
+/* A card's title in the display face (tastings, orders) */
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.8rem; }
+.card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; min-width: 0; overflow-wrap: anywhere; }
+.card-meta { color: var(--muted); font-size: 0.92rem; }
+.card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+
+/* ---------- 32 Toast: a short message at the bottom after saving or deleting (src/lib/toast.ts) ---------- */
+.toast {
+  position: fixed; left: 50%; bottom: max(1.25rem, env(safe-area-inset-bottom)); z-index: 1000;
+  transform: translate(-50%, 1rem); opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  display: flex; align-items: center; gap: 0.75rem; width: max-content; max-width: min(34rem, calc(100vw - 2rem)); min-height: var(--h);
+  padding: 0.4rem 0.4rem 0.4rem 1rem; border-radius: var(--radius); background: var(--paper); color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22); font-size: 0.95rem;
+}
+.toast.shown { opacity: 1; transform: translate(-50%, 0); }
+.toast.error { background: var(--error); }
+.toast .toast-action { color: #f3d9a4; background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0.3rem 0.4rem; text-decoration: underline; text-underline-offset: 0.2em; white-space: nowrap; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* Inside a side panel the panel sets the width */
+dialog .input { max-width: none; }

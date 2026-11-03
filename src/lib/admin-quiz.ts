@@ -47,12 +47,13 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     radio.name = 'qf-correct';
     radio.checked = correct;
     radio.setAttribute('aria-label', t('aq.markCorrect'));
-    const input = mk('input');
+    const input = mk('input', 'input');
     input.type = 'text';
     input.value = text;
     input.maxLength = 300;
     input.placeholder = t('aq.answerPlaceholder');
     const remove = iconButton('trash', t('aq.removeAnswer'), { quiet: true });
+    remove.dataset.removeAnswer = '';
     remove.addEventListener('click', () => {
       if (optionsBox.children.length <= MIN_OPTIONS) return;
       row.remove();
@@ -67,7 +68,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   function syncOptionButtons() {
     const n = optionsBox.children.length;
     ($('qf-add-option') as HTMLButtonElement).hidden = n >= MAX_OPTIONS;
-    optionsBox.querySelectorAll<HTMLButtonElement>('.icon-only').forEach((b) => (b.disabled = n <= MIN_OPTIONS));
+    optionsBox.querySelectorAll<HTMLButtonElement>('[data-remove-answer]').forEach((b) => (b.disabled = n <= MIN_OPTIONS));
   }
 
   function openForm(q: AdminQuestion | null) {
@@ -108,19 +109,17 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
       body.append(ul);
       if (!q.correct_key) body.append(mk('p', 'q-warn', t('aq.noCorrect')));
 
-      const actions = mk('div', 'wine-actions');
-      const up = mk('button', 'icon-only', '↑');
-      up.type = 'button';
-      up.setAttribute('aria-label', t('aq.moveUp', { n: i + 1 }));
+      const actions = mk('div', 'tw-actions');
+      const up = iconButton('up', t('aq.moveUp', { n: i + 1 }));
+      up.dataset.tip = t('aq.up');
       up.disabled = i === 0;
       up.addEventListener('click', () => move(i, -1));
-      const down = mk('button', 'icon-only', '↓');
-      down.type = 'button';
-      down.setAttribute('aria-label', t('aq.moveDown', { n: i + 1 }));
+      const down = iconButton('down', t('aq.moveDown', { n: i + 1 }));
+      down.dataset.tip = t('aq.down');
       down.disabled = i === questions.length - 1;
       down.addEventListener('click', () => move(i, 1));
-      const edit = mk('button', 'text-btn', t('admin.edit'));
-      edit.type = 'button';
+      const edit = iconButton('edit', `${t('admin.edit')}: ${q.question}`);
+      edit.dataset.tip = t('admin.edit');
       edit.addEventListener('click', () => openForm(q));
       actions.append(up, down, edit);
 

@@ -26,10 +26,11 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { chip } from '../../lib/ui/status';
   import { supabase } from '../../lib/supabase';
   import { t, type Key } from '../../i18n';
   import { requireAdmin, $, mk, cell, timeFmt, tenantUrl } from '../../lib/super-common';
-  import { eventText, eventGroup } from '../../lib/super-events';
+  import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
 
   type Ev = { at: string; kind: string; actor: string | null; tenant_id: string | null; tenant: string | null; detail: Record<string, unknown> };
   const GROUP: Record<string, Key> = { host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' };
@@ -44,7 +45,7 @@ import '../../styles/admin.css';
       const tr = mk('tr');
       const g = eventGroup(e.kind);
       const tag = mk('td');
-      tag.append(mk('span', `ev-kind k-${g}`, t(GROUP[g] ?? 'super.log')));
+      tag.append(chip(t(GROUP[g] ?? 'super.log'), GROUP_TONE[g] ?? 'neutral'));
       const acc = mk('td');
       if (e.tenant_id && e.tenant) {
         const a = mk('a', '', e.tenant) as HTMLAnchorElement;

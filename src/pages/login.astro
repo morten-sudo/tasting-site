@@ -1,4 +1,5 @@
 ---
+import Icon from '../components/ui/Icon.astro';
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.login">
@@ -38,7 +39,7 @@ import Base from '../layouts/Base.astro';
 
     <!-- Right: signing in -->
     <div class="lp-main">
-      <div class="lp-card">
+      <div class="card lp-card">
         <h1 class="title" data-i18n="login.title">Sign in</h1>
         <!-- An invitation for another email, opened while signed in -->
         <div id="other-invite" class="message" hidden>
@@ -48,7 +49,7 @@ import Base from '../layouts/Base.astro';
             <a id="other-stay" class="text-btn" href="/home/" data-i18n="login.otherStay">Stay signed in</a>
           </div>
         </div>
-        <p id="checking" class="lp-checking" hidden><span class="glass-spinner" aria-hidden="true"></span><span data-i18n="login.checking">Signing you in …</span></p>
+        <p id="checking" class="lp-checking" hidden><span class="spin" aria-hidden="true"></span><span data-i18n="login.checking">Signing you in …</span></p>
 
         <div id="forms">
           <!-- Two steps: email, then the code from the email -->
@@ -61,7 +62,7 @@ import Base from '../layouts/Base.astro';
           <form id="mail-form" class="login-form" novalidate>
             <p class="lead" id="mail-lead" data-i18n="login.mailLead">Enter your email and we will send you a code.</p>
             <label for="email" data-i18n="common.email">Email</label>
-            <input id="email" type="email" autocomplete="email" inputmode="email" required />
+            <input class="input" id="email" type="email" autocomplete="email" inputmode="email" required />
             <!-- Remember me: stay signed in on this device and fill in the email next time -->
             <label class="remember"><input id="remember" type="checkbox" checked /> <span data-i18n="login.remember">Remember me on this device</span></label>
             <p id="mail-msg" class="message" hidden></p>
@@ -73,13 +74,13 @@ import Base from '../layouts/Base.astro';
           <form id="otp-form" class="login-form" novalidate hidden>
             <p class="lead"><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
             <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
-            <input id="otp" class="otp" type="text" inputmode="numeric" autocomplete="one-time-code"
+            <input id="otp" class="input code" type="text" inputmode="numeric" autocomplete="one-time-code"
                    pattern="[0-9]*" maxlength="10" required />
             <p id="otp-msg" class="message" hidden></p>
             <button class="btn" type="submit" id="otp-btn" data-i18n="login.submit">Sign in</button>
             <p class="hint small-links">
-              <button id="resend" class="link-btn" type="button" data-i18n="login.resend">Send a new code</button> ·
-              <button id="other-mail" class="link-btn" type="button" data-i18n="login.otherEmail">Use another email</button>
+              <button id="resend" class="text-btn" type="button" data-i18n="login.resend">Send a new code</button> ·
+              <button id="other-mail" class="text-btn" type="button" data-i18n="login.otherEmail">Use another email</button>
             </p>
             <p class="hint lp-fine" data-i18n="login.spamHint">Can't find the email? Check your spam folder. You can also tap the link in the email.</p>
           </form>
@@ -95,7 +96,7 @@ import Base from '../layouts/Base.astro';
             <form id="code-form" class="login-form" novalidate>
               <p data-i18n-html="login.inviteHelp">Paste the link from your invitation, or just the code at the end of the link (after <code>?k=</code>).</p>
               <label for="code" data-i18n="login.inviteLabel">Invitation link or code</label>
-              <input id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
+              <input class="input" id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
               <p id="code-msg" class="message error" hidden></p>
               <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
             </form>
@@ -109,9 +110,9 @@ import Base from '../layouts/Base.astro';
         </div>
       </div>
 
-      <a class="lp-signup" href="/signup/">
+      <a class="card lp-signup" href="/signup/">
         <span><b data-i18n="loginx.newHere">New to Winetastr?</b> <span data-i18n="loginx.newHereText">Create a free account and host your first tasting.</span></span>
-        <span aria-hidden="true">→</span>
+        <Icon name="right" />
       </a>
     </div>
   </section>
@@ -138,6 +139,7 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <script>
+  import { setLoading } from '../lib/ui/button';
   import { supabase, setRememberMe, rememberMe, lastEmail } from '../lib/supabase';
   import { fetchMyTastings, setCode, tastingUrl, signOut as guestSignOut } from '../lib/guest';
   import { landingUrl } from '../lib/landing';
@@ -249,11 +251,9 @@ import Base from '../layouts/Base.astro';
     setRememberMe(($('remember') as HTMLInputElement).checked, email);
 
     const btn = $('mail-btn') as HTMLButtonElement;
-    btn.disabled = true;
-    btn.textContent = t('common.sending');
+    setLoading(btn, true, t('common.sending'));
     const ok = await sendCode();
-    btn.disabled = false;
-    btn.textContent = t('login.sendCode');
+    setLoading(btn, false);
     if (!ok) return;
 
     $('sent-to').textContent = email;
@@ -394,11 +394,7 @@ import Base from '../layouts/Base.astro';
   /* Sign-in side */
   .lp-main { padding: 1.5rem var(--gutter) 2.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: stretch; }
   @media (min-width: 60rem) { .lp-main { justify-content: center; padding: 3rem clamp(2rem, 5vw, 5rem); } }
-  .lp-card {
-    width: 100%; max-width: 28rem; align-self: center; box-sizing: border-box;
-    padding: 1.75rem 1.5rem; background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 1rem;
-    box-shadow: 0 12px 40px rgba(36, 28, 27, 0.07);
-  }
+  .lp-card { width: 100%; max-width: 28rem; align-self: center; padding: 1.75rem 1.5rem; }
   @media (max-width: 30rem) { .lp-card { padding: 1.4rem 1.1rem; margin-top: -2.5rem; position: relative; } }
   .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 9vw, 3rem); line-height: 1; margin: 0 0 1rem; }
   .lp-checking { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); }
@@ -416,21 +412,8 @@ import Base from '../layouts/Base.astro';
   .lead { margin: 0 0 0.3rem; }
   .login-form { display: grid; gap: 0.6rem; }
   .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
-  .login-form input[type='email'], .login-form input[type='text'] {
-    width: 100%; box-sizing: border-box; font: inherit; color: var(--paper); background: #fff;
-    border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 0.75rem 0.85rem;
-  }
-  .login-form input:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(110, 15, 31, 0.12); }
-  .login-form input.otp {
-    font-family: var(--display); font-size: 2.1rem; letter-spacing: 0.4em; text-align: center;
-    padding: 0.45rem 0.8rem; font-variant-numeric: tabular-nums;
-  }
   .lp-fine { font-size: 0.85rem; margin: 0.2rem 0 0; }
   .small-links { margin: 0.2rem 0 0; text-align: center; }
-  .link-btn {
-    font: inherit; color: var(--amber); background: none; border: 0; padding: 0; cursor: pointer;
-    text-decoration: underline; text-underline-offset: 0.22em; text-decoration-thickness: 1px;
-  }
 
   .lp-or { display: flex; align-items: center; gap: 0.75rem; margin: 1.4rem 0 0.6rem; color: var(--muted); font-size: 0.82rem; }
   .lp-or::before, .lp-or::after { content: ''; flex: 1; height: 1px; background: var(--lodge-3); }
@@ -444,16 +427,8 @@ import Base from '../layouts/Base.astro';
   .lp-lost { margin-top: 1.2rem; }
   code { font-size: 0.9em; color: var(--amber); }
 
-  .btn.ghost { background: transparent; color: var(--paper); border-color: var(--lodge-3); }
-  .btn.ghost:hover { border-color: var(--amber); color: var(--amber); }
 
-  .lp-signup {
-    width: 100%; max-width: 28rem; align-self: center; box-sizing: border-box;
-    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-    padding: 1rem 1.25rem; border-radius: 0.8rem; border: 1px dashed var(--lodge-3);
-    color: var(--paper); text-decoration: none; font-size: 0.93rem; line-height: 1.4;
-  }
-  .lp-signup:hover { border-color: var(--amber); }
+  .lp-signup { width: 100%; max-width: 28rem; align-self: center; display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.93rem; line-height: 1.4; }
   .lp-signup b { font-weight: 600; }
-  .lp-signup > span:last-child { color: var(--amber); font-size: 1.2rem; }
+  .lp-signup svg { color: var(--amber); }
 </style>

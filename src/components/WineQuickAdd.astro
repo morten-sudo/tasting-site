@@ -1,4 +1,5 @@
 ---
+import CloseButton from './ui/CloseButton.astro';
 // "New wine" as a new row that slides in at the top of a wine list – see src/lib/wine-quick-add.ts.
 // The page's "+ New wine" button stays where it is and opens the row; below it, rows show wines being read and saved.
 // lead: the tasting's list has a grip and a number before the picture – the new rows keep the same columns.
@@ -15,10 +16,10 @@ const { lead = false } = Astro.props as { lead?: boolean };
         </div>
         <div class="qa-body">
           <label for="qa-input" class="visually-hidden" data-i18n="qa.label">Name, link or photo of the wine</label>
-          <div class="qa-field">
+          <div class="input qa-field">
             <span id="qa-attached" class="qa-attached" hidden>
               <span id="qa-attached-text"></span>
-              <button id="qa-attached-x" type="button" aria-label="Remove" data-i18n-attr="aria-label=qa.dismiss">×</button>
+              <CloseButton id="qa-attached-x" size="small" label="Remove" i18n="qa.dismiss" />
             </span>
             <input id="qa-input" type="text" autocomplete="off" enterkeyhint="go"
               placeholder="Name of the wine, or paste a link" data-i18n-attr="placeholder=qa.placeholder" />
@@ -26,13 +27,13 @@ const { lead = false } = Astro.props as { lead?: boolean };
           <p class="qa-hint"><span data-i18n="qa.hint">A link from a web shop or a photo of the label fills in the rest.</span> <span class="qa-drop" data-i18n="qa.dropHint">You can also drop a picture here.</span></p>
         </div>
         <div class="qa-actions">
-          <button id="qa-photo" class="btn small ghost qa-photo" type="button">
+          <button id="qa-photo" class="btn small secondary qa-photo" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg>
             <span data-i18n="qa.photoBtn">Photo</span>
           </button>
           <input id="qa-file" class="visually-hidden" type="file" accept="image/*" tabindex="-1" />
           <button id="qa-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
-          <button id="qa-close" class="qa-x" type="button" aria-label="Close" data-i18n-attr="aria-label=admin.close">×</button>
+          <CloseButton id="qa-close" />
         </div>
         <!-- Matches from the library: across the row, from the field to the right edge -->
         <ul id="qa-hits" class="qa-hits" hidden></ul>

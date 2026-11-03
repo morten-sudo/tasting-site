@@ -37,6 +37,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { chip } from '../../lib/ui/status';
 
   import { supabase } from '../../lib/supabase';
   import { t } from '../../i18n';
@@ -63,8 +64,9 @@ import '../../styles/admin.css';
       const tr = document.createElement('tr');
       const cell = (text: string, cls = '') => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; return td; };
       const has = !!mapIdFor(r.region);
-      const status = cell(has ? t('super.mapHas') : Number(r.upcoming) > 0 ? t('super.mapMissingSoon') : t('super.mapMissing'));
-      status.className = has ? 'map-ok' : Number(r.upcoming) > 0 ? 'map-need' : 'map-missing';
+      const status = cell('');
+      status.append(chip(has ? t('super.mapHas') : Number(r.upcoming) > 0 ? t('super.mapMissingSoon') : t('super.mapMissing'),
+        has ? 'ok' : Number(r.upcoming) > 0 ? 'warn' : 'neutral', { dashed: !has && !(Number(r.upcoming) > 0) }));
       tr.append(cell(r.region), cell(countryName(r.country) ?? ''), cell(String(r.upcoming), 'num'), cell(String(r.tastings), 'num'),
         cell(String(r.wines), 'num'), cell(String(r.hosts), 'num'), status);
       return tr;

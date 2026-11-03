@@ -1,0 +1,7 @@
+---
+// A line icon from src/lib/ui/icons.ts (the same set as the TypeScript helpers)
+import { ICONS, type IconName } from '../../lib/ui/icons';
+interface Props { name: IconName; class?: string }
+const { name, class: cls } = Astro.props;
+---
+<svg class:list={['i', cls]} viewBox="0 0 24 24" aria-hidden="true" set:html={ICONS[name]} />
