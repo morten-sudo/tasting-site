@@ -9,7 +9,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 import CartBar from '../../components/ui/CartBar.astro';
 ---
 <Base title="page.wines" tasting>
-  <section class="wrap wines-page">
+  <section class="wrap page-pad">
     <PageHeader title="page.wines" lead="wines.intro" leadId="intro" />
 
     <SignInState id="need-login" title="gate.winesTitle" />
@@ -200,6 +200,3 @@ import CartBar from '../../components/ui/CartBar.astro';
   load();
 </script>
 
-<style>
-  .wines-page { padding-top: 2.5rem; padding-bottom: 3rem; }
-</style>

@@ -1,5 +1,6 @@
 // Admin: the host writes the tasting's quiz – questions, 2–6 answers, the right answer and an explanation.
 import { supabase } from './supabase';
+import { $ } from './ui/dom';
 import { t } from '../i18n';
 import { sheetPanel, iconButton } from './admin-common';
 import { confirmModal } from './ui/confirm';
@@ -21,7 +22,6 @@ const KEYS = 'abcdef';
 const MIN_OPTIONS = 2;
 const MAX_OPTIONS = 6;
 
-const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 
 function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
   const e = document.createElement(tag);

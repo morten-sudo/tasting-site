@@ -2,7 +2,7 @@
 // as soon as the field is changed. For forms that check a few fields by hand (wine-validate.ts has its own rules).
 
 /** Shows (text) or clears (null) the message under a field; `after` is the element to put it after. */
-export function fieldError(el: HTMLElement, text: string | null, after: Element = el.closest('.field-row') ?? el.closest('.inline-form, .affix, .wz-money, .dt-row, .wz-pair') ?? el) {
+export function fieldError(el: HTMLElement, text: string | null, after: Element = el.closest('.field-row') ?? el.closest('.inline-form, .affix, .dt-row') ?? el) {
   const id = `${el.id}-error`;
   let m = document.getElementById(id);
   if (!text) {

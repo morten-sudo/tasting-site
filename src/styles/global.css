@@ -52,6 +52,9 @@ p { margin: 0 0 1em; }
   padding: 0 var(--gutter);
 }
 
+/* The air above and under a page's content (guest and public pages; the admin has .admin-page) */
+.page-pad { padding-top: 2.5rem; padding-bottom: 3rem; }
+
 /* Keep text and forms at a readable width on wide pages */
 main p { max-width: 44rem; }
 select { max-width: 36rem; }
@@ -78,17 +81,3 @@ select { max-width: 36rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
-
-/* One-time welcome (e.g. a new co-host) */
-dialog.welcome-modal {
-  width: min(26rem, calc(100vw - 2rem)); padding: 1.75rem 1.5rem 1.4rem; border: 0; border-radius: var(--radius);
-  background: var(--lodge); color: var(--paper); text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-}
-dialog.welcome-modal[open] { animation: welcome-in 0.2s ease-out; }
-dialog.welcome-modal::backdrop { background: rgba(20, 12, 12, 0.45); }
-.welcome-modal .welcome-icon { font-size: 2rem; margin: 0 0 0.3rem; }
-.welcome-modal h2 { margin: 0 0 0.6rem; }
-.welcome-modal .welcome-text { margin: 0 0 0.4rem; }
-.welcome-modal .actions { justify-content: center; margin-top: 1.1rem; }
-@keyframes welcome-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
-

@@ -45,19 +45,19 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
     <SectionTitle text="signup.featuresTitle" />
     <ul class="ld-features">
       <li class="card">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg>
+        <Icon name="camera" />
         <div><h3 data-i18n="signup.f2Title">The wines on every phone</h3><p data-i18n="signup.f2Text">Photos, descriptions and prices. Snap the label or paste a shop link, and the details fill themselves in.</p></div>
       </li>
       <li class="card">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg>
+        <Icon name="cart" />
         <div><h3 data-i18n="signup.f3Title">Orders and payment</h3><p data-i18n="signup.f3Text">Guests order bottles during the evening – with quantity prices – and pay with MobilePay. You get the shopping list.</p></div>
       </li>
       <li class="card">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5" /><path d="M8 20h8M12 16v4M7 12V9M11 12V7M15 12v-2" /></svg>
+        <Icon name="tv" />
         <div><h3 data-i18n="signup.f5Title">Quiz with a live leaderboard</h3><p data-i18n="signup.f5Text">Write your own questions and show the standings on the TV while the answers come in.</p></div>
       </li>
       <li class="card">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.4 2.4 3.5 5.3 3.5 8.5s-1.1 6.1-3.5 8.5c-2.4-2.4-3.5-5.3-3.5-8.5S9.6 5.9 12 3.5z" /></svg>
+        <Icon name="globe" />
         <div><h3 data-i18n="signup.f6Title">In your guests' language</h3><p data-i18n="signup.f6Text">Nine languages. Each tasting has its own, and every guest can switch for themselves.</p></div>
       </li>
     </ul>
@@ -110,7 +110,7 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
   .ld-features { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: 1fr; }
   @media (min-width: 48rem) { .ld-features { grid-template-columns: 1fr 1fr; } }
   .ld-features li { display: flex; gap: 1rem; }
-  .ld-features svg { width: 1.8rem; height: 1.8rem; flex-shrink: 0; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ld-features :global(svg.i) { width: 1.8rem; height: 1.8rem; color: var(--amber); stroke-width: 1.6; }
   .ld-more { margin: 1.2rem 0 0; }
   .ld-final {
     margin-top: 4.5rem; margin-bottom: 3.5rem; padding-top: 2.5rem; padding-bottom: 2.5rem; text-align: center;

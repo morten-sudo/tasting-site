@@ -11,3 +11,6 @@ export function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, 
   if (text != null) e.textContent = text;
   return e;
 }
+
+/** Text made safe to put in HTML or SVG markup built as a string (the maps) */
+export const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);

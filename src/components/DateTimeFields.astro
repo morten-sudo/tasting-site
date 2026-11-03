@@ -1,4 +1,5 @@
 ---
+import Icon from './ui/Icon.astro';
 // Component 13 – date and time: the date (our own calendar, see datetime.ts), start and end time, with quick picks
 // for the start. Styles: src/styles/components.css.
 // `prefix` makes the ids unique (e.g. "wz" → wz-date).
@@ -9,7 +10,7 @@ const quick = ['18:00', '18:30', '19:00', '19:30', '20:00'];
   <div class="dt-date">
     <label for={`${prefix}-date-show`} data-i18n="admin.date">Date</label>
     <button id={`${prefix}-date-show`} class="input dt-field empty" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls={`${prefix}-cal`}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
+      <Icon name="calendar" />
       <span data-i18n="dt.choose">Choose a date</span>
     </button>
     <input id={`${prefix}-date`} type="hidden" />

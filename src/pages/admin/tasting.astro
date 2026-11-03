@@ -253,7 +253,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             { value: 'blind', label: 'blind.blind', hint: 'twe.blindHint' },
             { value: 'hidden', label: 'twe.hidden', hint: 'twe.hiddenHint' }]}><span slot="legend" data-help="guests-see"></span></ChoiceCards>
 
-          <Switch title="admin.orderable" hint="twe.orderableHint" id="twe-orderable" class="twe-switch" />
+          <Switch title="admin.orderable" hint="twe.orderableHint" id="twe-orderable" />
 
           <Fragment slot="quiet">
             <button id="twe-remove" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="twe.remove">Remove from the tasting</span></button>

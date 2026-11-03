@@ -17,19 +17,19 @@ import Disclosure from '../components/ui/Disclosure.astro';
         <div class="lp-role">
           <h2 class="eyebrow" data-i18n="loginx.asGuest">As a guest</h2>
           <ul>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg><span data-i18n="loginx.g1">Reply to the invitation</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2.5h4v4.2c0 .6.3 1.1.7 1.5 1 .9 1.6 2.2 1.6 3.6V20a1.5 1.5 0 0 1-1.5 1.5H9.2A1.5 1.5 0 0 1 7.7 20v-8.2c0-1.4.6-2.7 1.6-3.6.4-.4.7-.9.7-1.5z" /></svg><span data-i18n="loginx.g2">See the wines of the evening</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z" /><path d="M9 7V5.5a3 3 0 0 1 6 0V7" /></svg><span data-i18n="loginx.g3">Order bottles and pay with MobilePay</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg><span data-i18n="loginx.g4">Rate, play the quiz and chat</span></li>
+            <li><Icon name="check" /><span data-i18n="loginx.g1">Reply to the invitation</span></li>
+            <li><Icon name="bottle" /><span data-i18n="loginx.g2">See the wines of the evening</span></li>
+            <li><Icon name="cart" /><span data-i18n="loginx.g3">Order bottles and pay with MobilePay</span></li>
+            <li><Icon name="star" /><span data-i18n="loginx.g4">Rate, play the quiz and chat</span></li>
           </ul>
         </div>
         <div class="lp-role">
           <h2 class="eyebrow" data-i18n="loginx.asHost">As a host</h2>
           <ul>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg><span data-i18n="loginx.h1">Set up a tasting in minutes</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" /><path d="M3 19.5c.8-3.3 3.1-5 6-5s5.2 1.7 6 5" /><circle cx="17" cy="9" r="2.5" /><path d="M16.2 14.2c2.4.1 4 1.6 4.8 4.3" /></svg><span data-i18n="loginx.h2">Invite guests and follow replies</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z" /><circle cx="12" cy="13.5" r="3.5" /></svg><span data-i18n="loginx.h3">Snap the label – the wine fills itself in</span></li>
-            <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg><span data-i18n="loginx.h4">Keep track of orders and payments</span></li>
+            <li><Icon name="calendar" /><span data-i18n="loginx.h1">Set up a tasting in minutes</span></li>
+            <li><Icon name="users" /><span data-i18n="loginx.h2">Invite guests and follow replies</span></li>
+            <li><Icon name="camera" /><span data-i18n="loginx.h3">Snap the label – the wine fills itself in</span></li>
+            <li><Icon name="grid" /><span data-i18n="loginx.h4">Keep track of orders and payments</span></li>
           </ul>
         </div>
       </div>
@@ -133,7 +133,7 @@ import Disclosure from '../components/ui/Disclosure.astro';
   import { i18nReady, lang, t } from '../i18n';
 
   await i18nReady;
-  const $ = (id: string) => document.getElementById(id)!;
+  import { $ } from '../lib/ui/dom';
   const params = new URLSearchParams(location.search);
   // Remember me: the choice from last time, and the email when it was remembered
   ($('remember') as HTMLInputElement).checked = rememberMe();
@@ -352,10 +352,10 @@ import Disclosure from '../components/ui/Disclosure.astro';
   .lp-role h2 { margin: 0 0 0.75rem; }
   .lp-role ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.7rem; }
   .lp-role li { display: flex; gap: 0.65rem; align-items: flex-start; font-size: 0.97rem; line-height: 1.35; }
-  .lp-role svg { width: 1.2rem; height: 1.2rem; flex-shrink: 0; margin-top: 0.05rem; fill: none; stroke: #f3d9c4; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .lp-role :global(svg.i) { width: 1.2rem; height: 1.2rem; margin-top: 0.05rem; color: #f3d9c4; }
 
   .lp-roles.lp-roles-below { display: grid; gap: 1.5rem; width: 100%; max-width: 28rem; align-self: center; margin-top: 1rem; color: var(--paper); }
-  .lp-roles-below svg { stroke: var(--amber); }
+  .lp-roles-below :global(svg.i) { color: var(--amber); }
   @media (min-width: 60rem) { .lp-roles.lp-roles-below { display: none; } }
 
   /* Sign-in side */

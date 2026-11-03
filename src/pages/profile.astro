@@ -9,7 +9,7 @@ import Notice from '../components/ui/Notice.astro';
 import SignInState from '../components/ui/SignInState.astro';
 ---
 <Base title="page.profile">
-  <section class="wrap profile-page">
+  <section class="wrap page-pad profile-page">
     <Loading />
 
     <div id="signed-out" hidden>
@@ -94,7 +94,7 @@ import SignInState from '../components/ui/SignInState.astro';
   import { choiceCards } from '../lib/ui/choice-cards';
 
   await i18nReady;
-  const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
+  import { $ } from '../lib/ui/dom';
   const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 
@@ -219,7 +219,7 @@ import SignInState from '../components/ui/SignInState.astro';
 
 <style is:global>
   .notify-list { margin: 0.75rem 0 0; max-width: 34rem; }
-  .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 48rem; }
+  .profile-page { max-width: 48rem; }
   .profile-page .profile-block { margin-top: 2.5rem; }
   .profile-page .book-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
   .profile-page .book-link svg { color: var(--amber); }

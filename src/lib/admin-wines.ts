@@ -5,6 +5,7 @@ import { setLoading } from './ui/button';
 import { getDropdown, type DropdownEl } from './ui/dropdown';
 import { imagePicker } from './ui/image-picker';
 import { supabase } from './supabase';
+import { $ } from './ui/dom';
 import { STYLES, styleName } from './wines';
 import { t, lang, locale } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
@@ -42,7 +43,6 @@ export type AdminWine = {
 const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(price_dkk, price_tiers, tastings(slug, title))';
 const BUCKET = 'wine-images';
 
-const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 /** A typed web address as https://…, or null. */
 const webUrl = (v: string) => {
   const s = v.trim();

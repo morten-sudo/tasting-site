@@ -22,6 +22,13 @@
   3. Anything I would criticise if someone else had built it is fixed first. Never propose, show or ship something
      that is "good enough for now" – if a page next to the change is also below standard, say so and fix it.
   4. When something is wrong, it is fixed – not offered as a suggestion.
+- **Components.** All UI is built from the shared components: static markup from `src/components/ui/*.astro`, DOM built
+  in TypeScript from `src/lib/ui/*.ts` (both give the same markup); their CSS lives only in `src/styles/components.css`
+  (`global.css` = base and page layout, `admin.css` = the admin's page layout, page `<style>` = that page's layout only).
+  A component that is missing is added there first and shown in all its states on `/dev/components/` – never built as a
+  one-off on a page. `scripts/check-ui.mjs` runs before every build (`npm run build`, also `npm run check:ui`) and must
+  pass: no native `<select>`, no `alert/confirm/prompt`, no `style=""`, no old class names, no form fields in list rows,
+  side panels only through `Sheet.astro`/`sheet()`, no other CSS files.
 - Help: every new feature or change for hosts updates the help in the same commit – `src/lib/help-content.ts`
   (sections in Danish and English; link each step to its place with `t:<section>/…`, `?open=<button id>` or `#<id>`)
   and, for a setting that needs explaining, a `?` tip (`data-help="<key>"` + an entry in `TIPS`).

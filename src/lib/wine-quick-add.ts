@@ -5,7 +5,7 @@
 import { formatKr } from './ui/kr';
 import { setLoading } from './ui/button';
 import { supabase } from './supabase';
-import { mk } from './admin-common';
+import { $, mk } from './ui/dom';
 import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang } from '../i18n';
@@ -41,7 +41,6 @@ type Source = { kind: 'link'; url: string } | { kind: 'photo'; blob: Blob; previ
 type Job = { src: Source; name?: string; li: HTMLLIElement; upload?: Promise<string | null> };
 
 const BUCKET = 'wine-images';
-const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 
 /** A web address typed or pasted (with or without https://), as https://…; else null. */
 export function asLink(text: string): string | null {
@@ -78,7 +77,7 @@ export function initQuickAdd(o: Opts) {
   const input = $<HTMLInputElement>('qa-input');
   const jobs = $<HTMLUListElement>('qa-jobs');
   const attached = $('qa-attached');
-  const lead = !!$('qa-row').querySelector('.grip.ghost');
+  const lead = !!$('qa-row').querySelector('.grip.blank');
   // A link or photo that could not be read: kept here while the host types the name
   let carry: Source | null = null;
 
@@ -197,7 +196,7 @@ export function initQuickAdd(o: Opts) {
     const source = mk('p', 'lmeta qa-src', src.kind === 'link' ? site(src.url) : src.kind === 'photo' ? t('qa.photo') : '');
     source.hidden = src.kind === 'name';
     const li = listRow({
-      grip: lead ? 'ghost' : undefined, no: lead ? '' : undefined,
+      grip: lead ? 'blank' : undefined, no: lead ? '' : undefined,
       pic: wineThumb(src.kind === 'photo' ? src.preview : null),
       // Until the name is read: a quiet "New wine" – the status line below shows that it is being fetched
       title: name ?? t('qa.unnamed'),

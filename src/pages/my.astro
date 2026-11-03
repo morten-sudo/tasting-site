@@ -12,7 +12,7 @@ import SignInState from '../components/ui/SignInState.astro';
 ---
 <!-- The guest's wine book: wines tasted, tastings and orders across all tastings -->
 <Base title="book.title">
-  <section class="wrap book-page">
+  <section class="wrap page-pad book-page">
     <Loading text="gate.loadingBook" />
 
     <div id="signed-out" hidden>
@@ -32,7 +32,7 @@ import SignInState from '../components/ui/SignInState.astro';
         <div class="actions"><a class="btn small secondary" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a></div>
       </Notice>
 
-      <Tabs id="book-tabs" label="My wine book" labelKey="book.title" current="wines" class="book-tabs" items={[
+      <Tabs id="book-tabs" label="My wine book" labelKey="book.title" current="wines" items={[
         { id: 'wines', label: 'book.tabWines', attrs: { id: 'tab-wines', 'aria-controls': 'panel-wines' } },
         { id: 'tastings', label: 'book.tabTastings', attrs: { id: 'tab-tastings', 'aria-controls': 'panel-tastings' } },
         { id: 'orders', label: 'book.tabOrders', attrs: { id: 'tab-orders', 'aria-controls': 'panel-orders' } }]} />
@@ -210,12 +210,12 @@ import SignInState from '../components/ui/SignInState.astro';
 </script>
 
 <style is:global>
-  .book-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 52rem; }
+  .book-page { max-width: 52rem; }
   .book-stats { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
   .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; }
   .book-stats b { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); }
   .book-stats span { font-size: 0.85rem; color: var(--muted); }
-  .book-tabs { margin-bottom: 1.25rem; }
+  #book-tabs { margin-bottom: 1.25rem; }
   .book-panel[hidden] { display: none; }
   .book-panel > .eyebrow:not(:first-child) { margin-top: 1.5rem; }
   .book-tools { display: flex; gap: 0.6rem; margin-bottom: 1rem; }

@@ -1,0 +1,909 @@
+---
+// /dev/components/ – every shared component (src/components/ui/* and the src/lib/ui/* builders) in its states, built
+// with the REAL components and the REAL stylesheet, grouped A–G as in the approved spec. For developers: hosts only
+// (signed in like the admin pages), noindex (Base.astro), not linked from any menu. A missing component is added to
+// src/components/ui or src/lib/ui first and shown here (CLAUDE.md "Components").
+// Hover and focus are shown by forcing them: the page's script copies every :hover / :focus-visible rule of the
+// stylesheets to .is-hover / .is-focus, so the forced states are exactly the real ones.
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import Icon from '../../components/ui/Icon.astro';
+import CloseButton from '../../components/ui/CloseButton.astro';
+import SearchField from '../../components/ui/SearchField.astro';
+import Dropdown from '../../components/ui/Dropdown.astro';
+import ChoiceCards from '../../components/ui/ChoiceCards.astro';
+import Switch from '../../components/ui/Switch.astro';
+import Checkbox from '../../components/ui/Checkbox.astro';
+import DateTimeFields from '../../components/DateTimeFields.astro';
+import AddressFields from '../../components/AddressFields.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Facts from '../../components/ui/Facts.astro';
+import AddRow from '../../components/ui/AddRow.astro';
+import Sheet from '../../components/ui/Sheet.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import Loading from '../../components/ui/Loading.astro';
+import Disclosure from '../../components/ui/Disclosure.astro';
+import Progress from '../../components/ui/Progress.astro';
+import Steps from '../../components/ui/Steps.astro';
+import Tabs from '../../components/ui/Tabs.astro';
+import Hero from '../../components/ui/Hero.astro';
+import Actions from '../../components/ui/Actions.astro';
+import Sr from '../../components/ui/Sr.astro';
+import ChatBox from '../../components/ChatBox.astro';
+import CartBar from '../../components/ui/CartBar.astro';
+import '../../styles/admin.css';
+
+const opts = [
+  { value: 'red', label: 'Red wine' }, { value: 'white', label: 'White wine' }, { value: 'port', label: 'Port' },
+  { value: 'sparkling', label: 'Sparkling' },
+];
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav>
+    <div id="admin-main" class="dv" hidden>
+      <PageHeader title="Components" lead="Every shared component in its states – the real components and the real stylesheet. A missing one is added to src/components/ui or src/lib/ui first and shown here." />
+      <nav class="dv-toc" aria-label="Groups">
+        <a href="#g-a">A. Basics</a><a href="#g-b">B. Choices</a><a href="#g-c">C. Display</a><a href="#g-d">D. Lists and rows</a>
+        <a href="#g-e">E. Panels, messages and states</a><a href="#g-f">F. Page structure</a><a href="#g-g">G. Guest parts</a>
+      </nav>
+
+      <!-- ======================= A ======================= -->
+      <section id="g-a" class="dv-group">
+        <SectionTitle text="A. Basics" />
+
+        <section id="c1" class="dv-comp">
+          <SectionTitle level="h3" text="1 Button" />
+          <p class="help">.btn · button() and setLoading() in src/lib/ui/button.ts</p>
+          <div class="dv-states">
+            <span class="dv-lab">Primary</span>
+            <div class="dv-row"><button class="btn" type="button">Save</button><button class="btn is-hover" type="button">Hover</button><button class="btn is-focus" type="button">Focus</button><button class="btn" type="button" disabled>Disabled</button><span id="b-load"></span><button class="btn" type="button"><Icon name="plus" />With icon</button></div>
+            <span class="dv-lab">Secondary</span>
+            <div class="dv-row"><button class="btn secondary" type="button">Cancel</button><button class="btn secondary is-hover" type="button">Hover</button><button class="btn secondary is-focus" type="button">Focus</button><button class="btn secondary" type="button" disabled>Disabled</button><span id="b-load2"></span><button class="btn secondary grey" type="button">Grey</button></div>
+            <span class="dv-lab">Danger</span>
+            <div class="dv-row"><button class="btn danger" type="button">Delete the tasting</button><button class="btn danger is-hover" type="button">Hover</button><button class="btn quiet-danger" type="button"><Icon name="trash" />Delete</button><button class="btn quiet-danger is-hover" type="button"><Icon name="trash" />Hover</button><button class="btn quiet-danger" type="button" disabled>Disabled</button></div>
+            <span class="dv-lab">Small</span>
+            <div class="dv-row"><button class="btn small" type="button">Save</button><button class="btn small secondary" type="button">Cancel</button><button class="btn small quiet-danger" type="button">Remove</button><span id="b-load3"></span></div>
+            <span class="dv-lab">Block (phones)</span>
+            <div class="dv-row dv-narrow"><button class="btn block" type="button">Open MobilePay</button></div>
+            <span class="dv-lab">On a photo</span>
+            <p class="help">.btn.on-photo and .on-photo-2 – shown on the photo under 44 Hero</p>
+          </div>
+        </section>
+
+        <section id="c2" class="dv-comp">
+          <SectionTitle level="h3" text="2 Text button / text link" />
+          <p class="help">.text-btn · textButton() in src/lib/ui/text-button.ts · links in running text keep their underline</p>
+          <div class="dv-states">
+            <span class="dv-lab">States</span>
+            <div class="dv-row" id="tb-row"><button class="text-btn" type="button">Change</button><button class="text-btn is-hover" type="button">Hover</button><button class="text-btn is-focus" type="button">Focus</button><button class="text-btn" type="button" disabled>Disabled</button><button class="text-btn danger" type="button">Remove</button><button class="text-btn small" type="button">Small</button><button class="text-btn loading" type="button" disabled><span class="spin"></span>Sending again …</button></div>
+            <span class="dv-lab">Built in TS</span>
+            <div class="dv-row" id="tb-ts"></div>
+            <span class="dv-lab">In running text</span>
+            <p class="dv-row">The guest page is at <a href="#c2">winetastr.com/t/portvin-2026/</a> – share it with your guests.</p>
+          </div>
+        </section>
+
+        <section id="c3" class="dv-comp">
+          <SectionTitle level="h3" text="3 Icon button" />
+          <p class="help">.icon-act · iconButton(), closeButton(), setIconLoading() in src/lib/ui/icon-button.ts · CloseButton.astro</p>
+          <div class="dv-states">
+            <span class="dv-lab">Small (rows)</span><div class="dv-row" id="ib-small"></div>
+            <span class="dv-lab">Hover / focus (tip)</span><div class="dv-row dv-tips" id="ib-forced"></div>
+            <span class="dv-lab">Normal, large, close</span><div class="dv-row" id="ib-sizes"><CloseButton /><CloseButton size="small" /></div>
+          </div>
+        </section>
+
+        <section id="c4" class="dv-comp">
+          <SectionTitle level="h3" text="4 Text field" />
+          <p class="help">.field, label, .input, .help · fieldError() in src/lib/field-error.ts</p>
+          <div class="dv-grid">
+            <div class="field"><label for="f-1">Name</label><input class="input" id="f-1" value="Portvin 2026" /></div>
+            <div class="field"><label for="f-2">Hover</label><input class="input is-hover" id="f-2" placeholder="Placeholder" /></div>
+            <div class="field"><label for="f-3">Focus</label><input class="input is-focus" id="f-3" value="Focused" /></div>
+            <div class="field"><label for="f-4">Disabled</label><input class="input" id="f-4" value="Not now" disabled /></div>
+            <div class="field"><label for="f-5">Read-only</label><input class="input" id="f-5" value="From the label" readonly /></div>
+            <div class="field"><label for="f-6">Email <span class="req" aria-hidden="true">*</span></label><input class="input" id="f-6" value="morten@" /></div>
+            <div class="field"><label for="f-7">Note <span class="opt">(optional)</span></label><textarea class="input" id="f-7">Bring something sweet for the end.</textarea><p class="help">Only the hosts see it.</p></div>
+            <div class="field"><label for="f-8">Code</label><input class="input code" id="f-8" placeholder="······" maxlength="6" /></div>
+            <div class="field"><label for="f-9">Small</label><input class="input small" id="f-9" value="In a row" /></div>
+          </div>
+        </section>
+
+        <section id="c5" class="dv-comp">
+          <SectionTitle level="h3" text="5 Number and price field" />
+          <p class="help">.affix.w-num with .unit · .field-row</p>
+          <div class="dv-states">
+            <span class="dv-lab">Price</span><div class="dv-row"><span class="affix w-num"><input class="input" value="149,95" aria-label="Price" /><span class="unit">kr.</span></span><span class="affix w-num u-long"><input class="input" value="13,5" aria-label="Alcohol" /><span class="unit">% vol.</span></span><span class="affix w-num w-qty"><input class="input" value="6" aria-label="Bottles" /></span><span class="affix w-num small"><input class="input" value="99" aria-label="Small" /><span class="unit">kr.</span></span></div>
+            <span class="dv-lab">Error</span><div class="dv-row"><span class="affix w-num"><input class="input" id="f-num-err" value="abc" aria-label="Price" /><span class="unit">kr.</span></span></div>
+            <span class="dv-lab">Field row</span><div class="field-row"><span>From</span><span class="affix w-num w-qty"><input class="input" value="6" aria-label="Bottles" /></span><span>bottles</span><span class="affix w-num"><input class="input" value="109,95" aria-label="Price" /><span class="unit">kr.</span></span><span>each</span></div>
+          </div>
+        </section>
+
+        <section id="c6" class="dv-comp">
+          <SectionTitle level="h3" text="6 Search field" />
+          <p class="help">SearchField.astro</p>
+          <div class="dv-states">
+            <span class="dv-lab">Normal</span><div><SearchField id="dv-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" /></div>
+            <span class="dv-lab">Focus</span><div><SearchField id="dv-search2" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="dv-focus-inner" /></div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ======================= B ======================= -->
+      <section id="g-b" class="dv-group">
+        <SectionTitle text="B. Choices" />
+
+        <section id="c7" class="dv-comp">
+          <SectionTitle level="h3" text="7 Dropdown, one choice" />
+          <p class="help">Dropdown.astro · dropdown() / getDropdown() in src/lib/ui/dropdown.ts · the menu is src/lib/ui/menu.ts</p>
+          <div class="dv-grid">
+            <div class="field"><label for="dd-1-btn">Type</label><Dropdown id="dd-1" options={opts} value="port" /></div>
+            <div class="field"><label for="dd-2-btn">Nothing chosen</label><Dropdown id="dd-2" options={opts} /></div>
+            <div class="field"><label for="dd-3-btn">Disabled</label><Dropdown id="dd-3" options={opts} value="red" /></div>
+            <div class="field"><label for="dd-4-btn">Error</label><Dropdown id="dd-4" options={opts} /></div>
+            <div class="field"><span class="flabel">Small and built in TS (with search)</span><div id="dd-ts"></div></div>
+            <div class="field"><span class="flabel">Bare (the header's menus)</span><div id="dd-bare"></div></div>
+          </div>
+          <div class="dv-states">
+            <span class="dv-lab">Open menu</span><div id="menu-open" class="dv-menu"></div>
+          </div>
+        </section>
+
+        <section id="c8" class="dv-comp">
+          <SectionTitle level="h3" text="8 Filter, several choices" />
+          <p class="help">filterDropdown() in src/lib/filter-dd.ts</p>
+          <div class="dv-row" id="filter-row"></div>
+        </section>
+
+        <section id="c9" class="dv-comp">
+          <SectionTitle level="h3" text="9 Combobox (type and choose)" />
+          <p class="help">combo() in src/lib/combo.ts – type "d" to see the suggestions</p>
+          <div class="field dv-narrow"><label for="combo-in">Region</label><div class="combo"><input class="input" id="combo-in" autocomplete="off" value="Do" /></div></div>
+        </section>
+
+        <section id="c10" class="dv-comp">
+          <SectionTitle level="h3" text="10 Choice cards" />
+          <p class="help">ChoiceCards.astro · choiceCards() in src/lib/ui/choice-cards.ts</p>
+          <div class="dv-grid">
+            <div id="cc-1"></div>
+            <div id="cc-2"></div>
+            <div id="cc-3"></div>
+            <div id="cc-4"></div>
+          </div>
+        </section>
+
+        <section id="c11" class="dv-comp">
+          <SectionTitle level="h3" text="11 Switch" />
+          <p class="help">Switch.astro · switchRow() / bindSwitch() in src/lib/ui/switch.ts – saves straight away</p>
+          <div class="dv-narrow">
+            <Switch title="admin.orderable" hint="twe.orderableHint" id="sw-1" checked />
+            <Switch title="admin.orderable" hint="twe.orderableHint" id="sw-2" />
+            <Switch title="admin.orderable" hint="twe.orderableHint" id="sw-3" disabled class="dv-label-focus" />
+            <div id="sw-ts"></div>
+          </div>
+        </section>
+
+        <section id="c12" class="dv-comp">
+          <SectionTitle level="h3" text="12 Checkbox" />
+          <p class="help">Checkbox.astro · checkbox() in src/lib/ui/checkbox.ts – choose several, and consent</p>
+          <div class="dv-states">
+            <span class="dv-lab">States</span>
+            <div class="dv-col" id="ck-col"><Checkbox label="login.remember" id="ck-1" checked /><Checkbox label="login.remember" id="ck-2" /><Checkbox label="login.remember" id="ck-3" disabled /><Checkbox label="login.remember" id="ck-4" small /></div>
+          </div>
+        </section>
+
+        <section id="c13" class="dv-comp">
+          <SectionTitle level="h3" text="13 Date and time" />
+          <p class="help">DateTimeFields.astro · initWhen() in src/lib/datetime.ts</p>
+          <div class="dv-narrow"><DateTimeFields prefix="dv" /></div>
+        </section>
+
+        <section id="c14" class="dv-comp">
+          <SectionTitle level="h3" text="14 Address" />
+          <p class="help">AddressFields.astro · initAddress() in src/lib/address.ts</p>
+          <div class="dv-narrow"><AddressFields prefix="dva" /></div>
+        </section>
+
+        <section id="c15" class="dv-comp">
+          <SectionTitle level="h3" text="15 Image picker" />
+          <p class="help">imagePicker(), pickButton() in src/lib/ui/image-picker.ts</p>
+          <div class="dv-col dv-narrow" id="pick-grid"></div>
+        </section>
+
+        <section id="c16" class="dv-comp">
+          <SectionTitle level="h3" text="16 Stars" />
+          <p class="help">starsInput(), starsRo() in src/lib/ui/stars.ts</p>
+          <div class="dv-states" id="stars-states"></div>
+        </section>
+
+        <section id="c17" class="dv-comp">
+          <SectionTitle level="h3" text="17 Stepper" />
+          <p class="help">stepper() in src/lib/ui/stepper.ts</p>
+          <div class="dv-row" id="stepper-row"></div>
+        </section>
+      </section>
+
+      <!-- ======================= C ======================= -->
+      <section id="g-c" class="dv-group">
+        <SectionTitle text="C. Display" />
+
+        <section id="c18" class="dv-comp">
+          <SectionTitle level="h3" text="18 Chip / status" />
+          <p class="help">chip(), statusChip() and STATUS in src/lib/ui/status.ts – one word and one tone per status</p>
+          <div class="dv-states">
+            <span class="dv-lab">Tones</span><div class="chips" id="chip-tones"></div>
+            <span class="dv-lab">Every status</span><div class="chips" id="chip-status"></div>
+          </div>
+        </section>
+
+        <section id="c19" class="dv-comp">
+          <SectionTitle level="h3" text="19 Badge" />
+          <p class="help">Badge.astro · badge(), setBadge() in src/lib/ui/badge.ts</p>
+          <div class="dv-row">
+            <span class="dv-badge-host"><Icon name="cart" /><Badge count={3} /></span>
+            <span class="dv-badge-host"><Icon name="cart" /><Badge count="99+" /></span>
+            <span class="dv-badge-host"><Icon name="chat" /><Badge kind="dot" /></span>
+            <span>Waiting list<Badge kind="inline" count={4} /></span>
+            <span>Guests<Badge kind="neutral" count={22} /></span>
+          </div>
+        </section>
+
+        <section id="c20" class="dv-comp">
+          <SectionTitle level="h3" text="20 Avatar and wine thumbnail" />
+          <p class="help">avatar(), wineThumb() in src/lib/ui/thumb.ts</p>
+          <div class="dv-row" id="thumbs"></div>
+        </section>
+
+        <section id="c21" class="dv-comp">
+          <SectionTitle level="h3" text="21 Price" />
+          <p class="help">price() in src/lib/ui/price.ts · every amount by formatKr() in src/lib/ui/kr.ts</p>
+          <div class="dv-row dv-top" id="prices"></div>
+        </section>
+
+        <section id="c22" class="dv-comp">
+          <SectionTitle level="h3" text="22 Facts" />
+          <p class="help">Facts.astro + setFact() · facts() in src/lib/ui/facts.ts – an empty value is left out</p>
+          <div class="dv-grid">
+            <Facts id="facts-static" items={[{ label: 'admin.date', id: 'fs-1', icon: 'calendar' }, { label: 'nav.wines', id: 'fs-2', icon: 'glass' }, { label: 'nav.quiz', id: 'fs-3' }]} />
+            <div id="facts-ts"></div>
+          </div>
+        </section>
+
+        <section id="c23" class="dv-comp">
+          <SectionTitle level="h3" text="23 Map with flag and credit" />
+          <p class="help">drawMap() in src/lib/region-map.ts · .map-box (normal, mini), .map-credit, .map-legend, .flag</p>
+          <div class="dv-grid dv-top">
+            <div><div id="map-normal" class="map-box"></div><p class="map-credit">Natural Earth · OpenStreetMap</p></div>
+            <div><div id="map-mini" class="map-box mini"></div><p class="map-credit">Natural Earth</p><ul class="map-legend"><li><span class="no">3</span><span><b>Douro</b><span class="sub">Wines 1–3</span></span></li><li class="whole"><span class="no">1</span><span><b>Portugal</b><span class="sub">The whole country</span></span></li><li class="other"><span class="no">2</span><span><b>Other places</b><span class="sub">Not on this map</span></span></li></ul><p id="flag-line" class="tb-flag dv-flags"></p></div>
+          </div>
+        </section>
+
+        <section id="c24" class="dv-comp">
+          <SectionTitle level="h3" text="24 Table" />
+          <p class="help">table() in src/lib/ui/table.ts – sortable, numbers right, a card per row on phones; empty: the empty state</p>
+          <div id="tbl"></div>
+          <div class="dv-gap"></div>
+          <div id="tbl-empty"></div>
+        </section>
+      </section>
+
+      <!-- ======================= D ======================= -->
+      <section id="g-d" class="dv-group">
+        <SectionTitle text="D. Lists and rows" />
+
+        <section id="c25" class="dv-comp">
+          <SectionTitle level="h3" text="25 List row and card" />
+          <p class="help">listRow(), personRow() in src/lib/ui/list-row.ts – a list shows, the side panel edits</p>
+          <ul class="list" id="rows"></ul>
+          <SectionTitle level="eyebrow" text="Card variant" class="dv-sub" />
+          <ul class="cards" id="row-cards"></ul>
+        </section>
+
+        <section id="c26" class="dv-comp">
+          <SectionTitle level="h3" text="26 Add row" />
+          <p class="help">AddRow.astro · addRow() in src/lib/ui/add-row.ts – the new row slides in at the top of the list</p>
+          <div class="ph sec"><div class="ph-text"><h3>Wines</h3></div><div class="ph-act"><button id="dv-add-toggle" class="btn small" type="button"><Icon name="plus" />Add wine</button></div></div>
+          <AddRow id="dv-ar" lead>
+            <div class="ar-fields"><input id="dv-ar-name" class="input" placeholder="Name, or paste a link" aria-label="Wine" /></div>
+            <p class="help">Enter adds it. Esc closes.</p>
+            <Fragment slot="actions"><button id="dv-ar-go" class="btn" type="button">Add</button></Fragment>
+          </AddRow>
+          <ul class="list" id="ar-list"></ul>
+        </section>
+
+        <section id="c27" class="dv-comp">
+          <SectionTitle level="h3" text="27 Highlight after saving" />
+          <p class="help">highlight() in src/lib/ui/highlight.ts</p>
+          <ul class="list" id="hl-list"></ul>
+          <Actions tight><button id="hl-go" class="btn small secondary" type="button">Highlight the row</button></Actions>
+        </section>
+
+        <section id="c28" class="dv-comp">
+          <SectionTitle level="h3" text="28 Delete with Undo" />
+          <p class="help">deleteWithUndo() in src/lib/ui/delete-undo.ts – ask first, then a toast with Undo</p>
+          <ul class="list" id="del-list"></ul>
+        </section>
+
+        <section id="c29" class="dv-comp">
+          <SectionTitle level="h3" text="29 Reorder" />
+          <p class="help">reorder() in src/lib/ui/reorder.ts – drag the grip, or focus it and press ↑/↓</p>
+          <ul class="list" id="ro-list"></ul>
+        </section>
+      </section>
+
+      <!-- ======================= E ======================= -->
+      <section id="g-e" class="dv-group">
+        <SectionTitle text="E. Panels, messages and states" />
+
+        <section id="c30" class="dv-comp">
+          <SectionTitle level="h3" text="30 Side panel" />
+          <p class="help">Sheet.astro + sheetPanel() · sheet() in src/lib/ui/sheet.ts – from the right, a bottom sheet on phones</p>
+          <Actions tight><button id="sheet-open" class="btn small secondary" type="button">Open the side panel</button><button id="sheet-ts-open" class="btn small secondary" type="button">Open one built in TS</button></Actions>
+          <Sheet id="dv-sheet" title="section.details" form="dv-sheet-form">
+            <div class="field"><label for="dv-s-name">Name</label><input class="input" id="dv-s-name" value="Portvin 2026" /></div>
+            <div class="field"><label for="dv-s-place">Place <span class="opt">(optional)</span></label><input class="input" id="dv-s-place" /></div>
+            <Switch title="admin.orderable" hint="twe.orderableHint" id="dv-s-sw" />
+            <Fragment slot="quiet"><button class="btn small quiet-danger" type="button"><Icon name="trash" />Delete the wine</button></Fragment>
+            <Fragment slot="foot"><button class="btn" type="submit">Save</button></Fragment>
+          </Sheet>
+        </section>
+
+        <section id="c31" class="dv-comp">
+          <SectionTitle level="h3" text="31 Confirmation" />
+          <p class="help">confirmModal() in src/lib/ui/confirm.ts – the only way the site asks first</p>
+          <Actions tight><button id="cf-open" class="btn small secondary" type="button">Ask (danger)</button><button id="cf-open2" class="btn small secondary" type="button">Ask (normal)</button></Actions>
+        </section>
+
+        <section id="c32" class="dv-comp">
+          <SectionTitle level="h3" text="32 Toast" />
+          <p class="help">toast() in src/lib/ui/toast.ts – after saving, deleting or copying</p>
+          <Actions tight><button id="t-ok" class="btn small secondary" type="button">Saved</button><button id="t-undo" class="btn small secondary" type="button">With Undo</button><button id="t-err" class="btn small secondary" type="button">Error</button></Actions>
+        </section>
+
+        <section id="c33" class="dv-comp">
+          <SectionTitle level="h3" text="33 Notice and status line" />
+          <p class="help">Notice.astro · notice(), setNotice() in src/lib/ui/notice.ts · setStatus() in src/lib/ui/status-line.ts</p>
+          <Notice><p>Guests see the wines when you reveal them.</p></Notice>
+          <Notice tone="warn"><p>Two wines have no price yet.</p></Notice>
+          <Notice tone="error"><p>The changes could not be saved. Try again.</p></Notice>
+          <Notice tone="ok"><p>The invitations are sent.</p></Notice>
+          <div id="notice-ts"></div>
+          <div id="status-lines"></div>
+        </section>
+
+        <section id="c34" class="dv-comp">
+          <SectionTitle level="h3" text="34 Empty state" />
+          <p class="help">EmptyState.astro · emptyState(), setEmpty() in src/lib/ui/empty.ts – always a way forward</p>
+          <div class="dv-grid dv-top">
+            <EmptyState icon="chat" title="chat.emptyTitle" text="chat.emptyText"><button class="btn small" type="button">Write the first message</button></EmptyState>
+            <div id="empty-ts"></div>
+          </div>
+        </section>
+
+        <section id="c35" class="dv-comp">
+          <SectionTitle level="h3" text="35 Loading" />
+          <p class="help">Loading.astro · pageLoading() in src/lib/ui/loading.ts · the one spinner .spin (shown after 350 ms)</p>
+          <Loading id="dv-loading" />
+          <div class="dv-row"><span class="spin"></span><span class="spin lg"></span><span class="dv-dark dv-pad"><span class="spin white"></span></span></div>
+          <div id="loading-ts"></div>
+        </section>
+
+        <section id="c36" class="dv-comp">
+          <SectionTitle level="h3" text="36 Help tip and tooltip" />
+          <p class="help">data-help + initHelpTips() in src/lib/help-tip.ts · tooltip() in src/lib/ui/tooltip.ts</p>
+          <div class="dv-row"><span class="flabel" data-help="blind">Blind tasting</span><button id="tt-target" class="btn small secondary" type="button">Has a tooltip</button></div>
+          <div class="dv-row"><span class="tip small dv-static-tip">A tooltip</span><span class="tip help dv-static-tip"><p>All wines become blind until you press <i>Reveal</i>.</p><a href="/admin/help/#blind">Read more in the help</a></span></div>
+        </section>
+
+        <section id="c37" class="dv-comp">
+          <SectionTitle level="h3" text="37 Fold-out" />
+          <p class="help">Disclosure.astro · disclosure() in src/lib/ui/disclosure.ts</p>
+          <div class="dv-narrow">
+            <Disclosure summary="section.details" icon="info"><p>The content under the line.</p></Disclosure>
+            <Disclosure summary="section.details" optional open><p>Open, with "(optional)" after the summary.</p></Disclosure>
+            <Disclosure summary="section.details" class="boxed"><p>In a box.</p></Disclosure>
+            <Disclosure summary="section.details" class="boxed topic" open><p>A help topic.</p></Disclosure>
+            <div id="disc-ts"></div>
+          </div>
+        </section>
+
+        <section id="c38" class="dv-comp">
+          <SectionTitle level="h3" text="38 Progress" />
+          <p class="help">Progress.astro · progress(), setProgress(), setSteps() in src/lib/ui/progress.ts · Steps.astro</p>
+          <div class="dv-narrow">
+            <div id="prog-ts" class="dv-col"></div>
+            <div class="dv-gap"></div>
+            <Progress id="prog-static" label="getStarted.title" textId="prog-static-text" />
+            <div class="card"><ol class="steps" id="steps-list">
+              <li class="done"><span class="s-ic" aria-hidden="true">1</span><span><b>The wines</b><small>11 wines</small></span></li>
+              <li class="now"><span class="s-ic" aria-hidden="true">2</span><span><b>Invite the guests</b><small>22 guests, 14 invited</small></span><button class="btn small" type="button">Invite</button></li>
+              <li><span class="s-ic" aria-hidden="true">3</span><span><b>Settings</b><small>Payment and quiz</small></span><button class="text-btn" type="button">Open</button></li>
+            </ol></div>
+            <Steps items={[{ label: 'common.email' }, { label: 'login.codeLabel' }]} current={1} />
+          </div>
+        </section>
+      </section>
+
+      <!-- ======================= F ======================= -->
+      <section id="g-f" class="dv-group">
+        <SectionTitle text="F. Page structure" />
+
+        <section id="c39" class="dv-comp">
+          <SectionTitle level="h3" text="39 Page header" />
+          <p class="help">PageHeader.astro – page (h1) and section (h2/h3) with the actions at the right</p>
+          <div class="card">
+            <PageHeader title="adminNav.guests" lead="admin.searchPlaceholder"><Fragment slot="actions"><button class="btn" type="button"><Icon name="plus" />Add guest</button></Fragment></PageHeader>
+            <PageHeader size="section" title="nav.wines"><Fragment slot="actions"><div id="ph-filter"></div><button class="btn small" type="button"><Icon name="plus" />Add wine</button></Fragment></PageHeader>
+            <PageHeader size="section" level={3} title="nav.quiz" />
+          </div>
+        </section>
+
+        <section id="c40" class="dv-comp">
+          <SectionTitle level="h3" text="40 Headings and eyebrow" />
+          <p class="help">SectionTitle.astro · sectionTitle() in src/lib/ui/section-title.ts – one scale</p>
+          <div class="card">
+            <SectionTitle level="eyebrow" text="tastingHome.during" />
+            <SectionTitle text="signup.featuresTitle" />
+            <SectionTitle level="h3" text="landing.howTitle" />
+            <div id="st-ts"></div>
+          </div>
+        </section>
+
+        <section id="c41" class="dv-comp">
+          <SectionTitle level="h3" text="41 Card" />
+          <p class="help">.card (8px radius) · a link card gets a red edge on hover · .card.add · .card.tight</p>
+          <div class="dv-grid dv-top">
+            <div class="card"><h3>A card</h3><p class="help">White, one border.</p></div>
+            <a class="card" href="#c41"><h3>A link card</h3><p class="help">Opens something.</p></a>
+            <a class="card is-hover" href="#c41"><h3>Hover</h3><p class="help">The red edge.</p></a>
+            <button class="card add" type="button">+ New tasting</button>
+            <div class="card tight"><b>Tight</b></div>
+          </div>
+        </section>
+
+        <section id="c42" class="dv-comp">
+          <SectionTitle level="h3" text="42 Tabs" />
+          <p class="help">Tabs.astro · tabs(), tabButton(), setTabCount() in src/lib/ui/tabs.ts – two rows on phones, never cut off</p>
+          <Tabs id="dv-tabs" label="Tabs" current="wines" items={[{ id: 'overview', label: 'adminNav.overview' }, { id: 'wines', label: 'nav.wines', count: 11 }, { id: 'guests', label: 'adminNav.guests', count: 22 }, { id: 'quiz', label: 'nav.quiz' }, { id: 'chat', label: 'nav.chat' }]} />
+          <div class="dv-gap"></div>
+          <Tabs label="Links" current="a" items={[{ id: 'a', label: 'nav.wines', href: '#c42' }, { id: 'b', label: 'nav.quiz', href: '#c42' }, { id: 'c', label: 'nav.chat', href: '#c42', attrs: { class: 'is-hover' } }]} />
+        </section>
+
+        <section id="c43" class="dv-comp">
+          <SectionTitle level="h3" text="43 Navigation" />
+          <p class="help">TopBar.astro (the top of this page, every page) · SideMenu.astro (the menu at the left of this page; "Menu" on phones) · the tasting switcher in TopBar</p>
+        </section>
+
+        <section id="c44" class="dv-comp">
+          <SectionTitle level="h3" text="44 Hero" />
+          <p class="help">Hero.astro – the cellar photo (front page, sign-in) and the guest's tasting</p>
+          <div class="dv-hero"><Hero size="fill" eyebrow="Winetastr" title="loginx.claim" titleTag="p" sizes="40rem"><Fragment slot="actions"><Actions><a class="btn on-photo" href="#c44">Get started</a><a class="btn on-photo-2" href="#c44">Sign in</a><a class="btn on-photo is-hover" href="#c44">Hover</a><a class="btn on-photo-2 is-focus" href="#c44">Focus</a></Actions></Fragment></Hero></div>
+          <div class="dv-gap"></div>
+          <Hero variant="tasting" title="Portvin 2026" titleTag="p" countdownId="dv-count">
+            <li><Icon name="calendar" /><span>Saturday 14 November at 19:00</span></li>
+            <li><Icon name="pin" /><span>Strandvejen 12, Hellerup<button class="text-btn" type="button">Map</button></span></li>
+          </Hero>
+        </section>
+
+        <section id="c45" class="dv-comp">
+          <SectionTitle level="h3" text="45 Footer" />
+          <p class="help">Footer.astro – at the bottom of this page, every page</p>
+        </section>
+
+        <section id="c46" class="dv-comp">
+          <SectionTitle level="h3" text="46 Actions" />
+          <p class="help">Actions.astro – forms and panels: primary first; dialogs (end): primary last, right; stack on phones</p>
+          <div class="card">
+            <Actions><button class="btn" type="button">Save</button><button class="btn secondary" type="button">Cancel</button></Actions>
+            <Actions align="end" stack><button class="btn secondary" type="button">Cancel</button><button class="btn danger" type="button">Delete the tasting</button></Actions>
+            <Actions tight><button class="btn small" type="button">Tight</button><span class="help">A hint beside the buttons</span></Actions>
+          </div>
+        </section>
+
+        <section id="c47" class="dv-comp">
+          <SectionTitle level="h3" text="47 Text for screen readers" />
+          <p class="help">Sr.astro / class "sr" – the next line has hidden text after "Cart":</p>
+          <p>Cart <Sr text="(3 bottles, 447,85 kr.)" /></p>
+        </section>
+      </section>
+
+      <!-- ======================= G ======================= -->
+      <section id="g-g" class="dv-group">
+        <SectionTitle text="G. Guest parts" />
+
+        <section id="c48" class="dv-comp">
+          <SectionTitle level="h3" text="48 Chat" />
+          <p class="help">ChatBox.astro · initChat() in src/lib/chat.ts (sample messages; nothing is sent)</p>
+          <ChatBox prefix="dvc" />
+        </section>
+
+        <section id="c49" class="dv-comp">
+          <SectionTitle level="h3" text="49 Wine carousel and wine page" />
+          <p class="help">listRow() card variant as .wine-card in .carousel, .pager with round icon buttons, styleTag()</p>
+          <div class="dv-clip"><div class="carousel" id="carousel"></div></div>
+          <div class="pager"><a class="icon-act lg" href="#c49" aria-label="Previous" aria-disabled="true"><Icon name="left" /></a><p class="count">1 of 11</p><a class="icon-act lg" href="#c49" aria-label="Next"><Icon name="right" /></a></div>
+        </section>
+
+        <section id="c50" class="dv-comp">
+          <SectionTitle level="h3" text="50 Cart line and cart bar" />
+          <p class="help">listRow() with cls "cart-line", stepper() and price() · CartBar.astro (src/lib/cart-bar.ts)</p>
+          <ul class="list" id="cart-lines"></ul>
+          <div class="cart-sum"><span>Total</span><b>1.049,70 kr.</b></div>
+          <div class="dv-cartbar"><CartBar /></div>
+        </section>
+
+        <section id="c51" class="dv-comp">
+          <SectionTitle level="h3" text="51 Payment box" />
+          <p class="help">payBox() in src/lib/pay.ts (copy buttons with a toast)</p>
+          <div class="card dv-narrow" id="paybox"></div>
+        </section>
+
+        <section id="c52" class="dv-comp">
+          <SectionTitle level="h3" text="52 Quiz" />
+          <p class="help">The answers are choice cards (10), locked with right / wrong after answering; the progress is the bar (38)</p>
+          <div class="card dv-narrow"><div id="quiz-prog"></div><p class="quiz-q">Which grape is not allowed in port?</p><div id="quiz-cc"></div></div>
+        </section>
+
+        <section id="c53" class="dv-comp">
+          <SectionTitle level="h3" text="53 Leaderboard" />
+          <p class="help">renderLeaderboard() in src/lib/leaderboard.ts · .board (and .board.big on the TV)</p>
+          <ol class="board dv-narrow" id="board"></ol>
+        </section>
+      </section>
+    </div>
+    </AdminNav>
+  </section>
+</Base>
+
+<style is:global>
+  /* The page's own layout (global: the script builds parts of it; every class starts with dv-): the groups, one component after the other, a label column for the states */
+  .dv { max-width: 60rem; }
+  .dv-toc { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: -0.5rem 0 1rem; font-size: 0.92rem; }
+  .dv-group { margin-top: 2.5rem; }
+  .dv-comp { padding: 1.5rem 0; border-top: 1px solid var(--lodge-3); scroll-margin-top: 5rem; }
+  .dv-comp > .help { margin: -0.2rem 0 1rem; font-family: ui-monospace, Menlo, monospace; font-size: 0.78rem; }
+  .dv-states { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0.9rem 1rem; align-items: center; }
+  @media (max-width: 40rem) { .dv-states { grid-template-columns: minmax(0, 1fr); gap: 0.3rem; } .dv-states > .dv-row, .dv-states > div { margin-bottom: 0.6rem; } }
+  .dv-lab { font-size: 0.8rem; color: var(--muted); }
+  .dv-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; min-width: 0; margin: 0; }
+  .dv-row.dv-top { align-items: flex-start; gap: 1.5rem; }
+  .dv-col { display: grid; gap: 0.75rem; min-width: 0; }
+  .dv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 1rem 1.25rem; align-items: start; }
+  .dv-narrow { max-width: 30rem; }
+  .dv-gap { height: 1.25rem; }
+  .dv-sub { margin-top: 1.5rem; }
+  .dv-dark { background: #241014; padding: 0.75rem; border-radius: var(--radius); }
+  .dv-clip { overflow: hidden; margin-top: -1.75rem; }
+  .dv-pad { display: inline-grid; place-items: center; }
+  .dv-badge-host { position: relative; display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; color: var(--paper); }
+  .dv-menu { position: relative; max-width: 18rem; }
+  .dv-static-tip { position: static; pointer-events: auto; }
+  .dv-tips { display: grid; grid-template-columns: repeat(auto-fill, 9rem); justify-items: center; gap: 2.6rem 0; padding-top: 2.2rem; }
+  .dv-hero { height: 20rem; display: grid; border-radius: var(--radius); overflow: hidden; }
+  .dv-flags { display: flex; gap: 0.4rem; margin-top: 1rem; }
+  .dv-cartbar .cartbar { position: static; margin: 1rem 0 0; }
+</style>
+
+<script>
+  import { requireHost } from '../../lib/admin-common';
+  import { $, mk } from '../../lib/ui/dom';
+  import { button, setLoading } from '../../lib/ui/button';
+  import { textButton } from '../../lib/ui/text-button';
+  import { iconButton, closeButton, setIconLoading } from '../../lib/ui/icon-button';
+  import { iconSvg } from '../../lib/ui/icons';
+  import { fieldError } from '../../lib/field-error';
+  import { dropdown, getDropdown } from '../../lib/ui/dropdown';
+  import { menuItem, menuGroup } from '../../lib/ui/menu';
+  import { filterDropdown } from '../../lib/filter-dd';
+  import { combo } from '../../lib/combo';
+  import { choiceCards } from '../../lib/ui/choice-cards';
+  import { switchRow, bindSwitch } from '../../lib/ui/switch';
+  import { checkbox } from '../../lib/ui/checkbox';
+  import { initWhen } from '../../lib/datetime';
+  import { initAddress } from '../../lib/address';
+  import { imagePicker } from '../../lib/ui/image-picker';
+  import { starsInput, starsRo } from '../../lib/ui/stars';
+  import { stepper } from '../../lib/ui/stepper';
+  import { chip, statusChip, STATUS, type StatusName } from '../../lib/ui/status';
+  import { avatar, wineThumb } from '../../lib/ui/thumb';
+  import { price } from '../../lib/ui/price';
+  import { formatKr } from '../../lib/ui/kr';
+  import { facts, setFact } from '../../lib/ui/facts';
+  import { loadMap, drawMap, DETAILED_MAPS } from '../../lib/region-map';
+  import { table } from '../../lib/ui/table';
+  import { listRow, personRow } from '../../lib/ui/list-row';
+  import { addRow } from '../../lib/ui/add-row';
+  import { highlight } from '../../lib/ui/highlight';
+  import { deleteWithUndo } from '../../lib/ui/delete-undo';
+  import { reorder } from '../../lib/ui/reorder';
+  import { sheet, sheetPanel } from '../../lib/ui/sheet';
+  import { confirmModal } from '../../lib/ui/confirm';
+  import { toast } from '../../lib/ui/toast';
+  import { notice } from '../../lib/ui/notice';
+  import { setStatus, statusLine } from '../../lib/ui/status-line';
+  import { emptyState } from '../../lib/ui/empty';
+  import { pageLoading } from '../../lib/ui/loading';
+  import { initHelpTips } from '../../lib/help-tip';
+  import { tooltip } from '../../lib/ui/tooltip';
+  import { disclosure } from '../../lib/ui/disclosure';
+  import { progress, setProgress } from '../../lib/ui/progress';
+  import { sectionTitle } from '../../lib/ui/section-title';
+  import { styleTag } from '../../lib/wines';
+  import { initChat, type ChatMessage } from '../../lib/chat';
+  import { setPayee, payBox } from '../../lib/pay';
+  import { renderLeaderboard } from '../../lib/leaderboard';
+  import { FLAGS } from '../../i18n/flags';
+
+  // Forced states: every :hover / :focus-visible / :focus-within rule of the site's stylesheets, again for .is-hover /
+  // .is-focus – so the states shown are exactly the real ones (no copies of the component CSS on this page)
+  function forceStates() {
+    const out: string[] = [];
+    const conv = (sel: string) => sel.replace(/:hover/g, '.is-hover').replace(/:focus-visible|:focus-within/g, '.is-focus');
+    const walk = (rules: CSSRuleList, wrap: (r: string) => string) => {
+      for (const r of [...rules]) {
+        if (r instanceof CSSStyleRule && /:hover|:focus-visible|:focus-within/.test(r.selectorText)) out.push(wrap(`${conv(r.selectorText)} { ${r.style.cssText} }`));
+        else if (r instanceof CSSMediaRule && !/hover:\s*none/.test(r.conditionText)) walk(r.cssRules, (x) => wrap(`@media ${r.conditionText} { ${x} }`));
+      }
+    };
+    for (const s of [...document.styleSheets]) { try { walk(s.cssRules, (x) => x); } catch { /* another origin (fonts) */ } }
+    const st = document.createElement('style');
+    st.textContent = out.join('\n');
+    document.head.append(st);
+  }
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    forceStates();
+    build();
+  }
+
+  function build() {
+    // ---------- A ----------
+    for (const [id, variant, label] of [['b-load', 'primary', 'Saving …'], ['b-load2', 'secondary', 'Sending …'], ['b-load3', 'primary', 'Saving …']] as const) {
+      const b = button('Save', { variant: variant === 'primary' ? undefined : 'secondary', small: id === 'b-load3' });
+      $(id).replaceWith(b);
+      setLoading(b, true, label);
+    }
+    $('tb-ts').append(textButton('All wines', { arrow: 'forward' }), textButton('Back', { arrow: 'back' }), textButton('Remove', { danger: true }), textButton('Help', { href: '/admin/help/' }));
+    const loadingIcon = iconButton('mail', 'Sending');
+    setIconLoading(loadingIcon, true);
+    const disabledIcon = iconButton('edit', 'Edit');
+    disabledIcon.disabled = true;
+    $('ib-small').append(iconButton('edit', 'Edit'), iconButton('mail', 'Invite', { strong: true }), iconButton('reveal', 'Reveal'), iconButton('trash', 'Remove', { quiet: true }), disabledIcon, loadingIcon);
+    const h = iconButton('edit', 'Edit (hover)'); h.classList.add('is-hover');
+    const f = iconButton('mail', 'Invite (focus)', { strong: true }); f.classList.add('is-focus');
+    const q = iconButton('trash', 'Remove (hover)', { quiet: true }); q.classList.add('is-hover');
+    const s = iconButton('mail', 'Strong (hover)', { strong: true }); s.classList.add('is-hover');
+    $('ib-forced').append(h, f, s, q);
+    $('ib-sizes').prepend(iconButton('edit', 'Edit', { size: 'normal' }), iconButton('right', 'Next', { size: 'large' }), closeButton());
+    fieldError($('f-6'), 'Write the whole email address, e.g. name@example.dk');
+    fieldError($('f-num-err'), 'Write an amount, e.g. 149,95');
+    $('dv-search2').classList.add('is-focus');
+
+    // ---------- B ----------
+    getDropdown('dd-1'); getDropdown('dd-2');
+    const d3 = getDropdown('dd-3'); d3.disabled = true;
+    const d4 = getDropdown('dd-4'); d4.button.setAttribute('aria-invalid', 'true'); fieldError(d4.button, 'Choose a type');
+    const countries = ['Portugal', 'Spain', 'France', 'Italy', 'Germany', 'Austria', 'Hungary', 'Greece', 'Chile', 'Argentina', 'South Africa', 'Australia', 'New Zealand', 'USA']
+      .map((c) => ({ value: c, label: c }));
+    $('dd-ts').append(dropdown({ options: countries, value: 'Portugal', small: true, ariaLabel: 'Country' }).el);
+    const bare = dropdown({ options: [{ value: 'da', label: 'Dansk' }, { value: 'en', label: 'English' }], value: 'da', ariaLabel: 'Language' });
+    bare.button.classList.add('bare');
+    $('dd-bare').append(bare.el);
+    const menu = mk('div', 'menu static');
+    menu.setAttribute('role', 'listbox');
+    const active = menuItem('White wine', { role: 'option', check: true });
+    active.dataset.active = '';
+    menu.append(menuGroup('Wines'), menuItem('Red wine', { role: 'option', check: true, selected: true, small: '6' }), active,
+      menuItem('Port', { role: 'option', check: true, small: '3', sub: 'Fortified' }), mk('hr'), menuItem('New tasting', { cls: 'act', lead: iconSvg('plus') }));
+    $('menu-open').append(menu);
+    const fGuests = filterDropdown({ name: 'Guests', onChange: () => {} });
+    fGuests.render([{ value: 'yes', label: 'Coming', n: 14 }, { value: 'wait', label: 'Waiting list', n: 2 }, { value: 'no', label: 'Not coming', n: 3 }, { value: 'inv', label: 'Invited', n: 3 }], new Set(), 22);
+    const fType = filterDropdown({ name: 'Types', single: true, onChange: () => {} });
+    fType.render([{ value: 'red', label: 'Red wine', n: 6 }, { value: 'port', label: 'Port', n: 5 }], new Set(['port']), 11);
+    $('filter-row').append(fGuests.el, fType.el);
+    const fW = filterDropdown({ name: 'Wines', onChange: () => {} });
+    fW.render([{ value: 'shown', label: 'Shown', n: 8 }, { value: 'hidden', label: 'Hidden', n: 3 }], new Set(), 11);
+    $('ph-filter').replaceWith(fW.el);
+    combo($<HTMLInputElement>('combo-in'), () => [{ value: 'Douro', group: 'Portugal' }, { value: 'Dão', group: 'Portugal' }, { value: 'Dolceacqua', hint: 'Liguria', group: 'Italy' }]);
+
+    const levels = [{ value: 'easy', label: 'Easy', hint: 'For guests who are new to wine' }, { value: 'mid', label: 'Medium', hint: 'Some knowledge helps' }, { value: 'hard', label: 'Hard', hint: 'For the experts' }];
+    $('cc-1').append(choiceCards({ legend: 'Difficulty', options: levels, value: 'mid' }).el);
+    $('cc-2').append(choiceCards({ legend: 'Are you coming?', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'maybe', label: 'Maybe' }], value: 'yes', compact: true }).el);
+    const dis = choiceCards({ legend: 'Disabled', options: levels.slice(0, 2), value: 'easy' }); dis.setDisabled(true);
+    $('cc-3').append(dis.el);
+    const err = choiceCards({ legend: 'Error (nothing chosen)', options: levels.slice(0, 2), compact: true }); err.el.classList.add('error');
+    const focus = err.el.querySelector('input'); focus?.classList.add('is-focus');
+    $('cc-4').append(err.el);
+
+    bindSwitch($<HTMLInputElement>('sw-1'), { save: async () => true });
+    bindSwitch($<HTMLInputElement>('sw-2'), { save: async () => true });
+    const saving = switchRow({ title: 'Saving …', hint: 'Built with switchRow(): the spinner while it saves', checked: true, plain: true });
+    saving.el.classList.add('saving');
+    saving.input.disabled = true;
+    saving.el.prepend(Object.assign(mk('span', 'sw-busy'), { innerHTML: '<span class="spin"></span>' }));
+    $('sw-ts').append(saving.el);
+    const ckErr = checkbox('I accept the terms (error)'); ckErr.el.classList.add('error');
+    const ckFocus = checkbox('Focus'); ckFocus.input.classList.add('is-focus');
+    $('ck-col').append(ckErr.el, ckFocus.el);
+    initWhen('dv');
+    initAddress('dva');
+
+    const p1 = imagePicker({ onFile: () => {} });
+    const p2 = imagePicker({ onFile: () => {} }); p2.setImage('/img/cellar-800.jpg', 'kopke-label.jpg', 'Read from the label');
+    const p3 = imagePicker({ onFile: () => {} }); p3.setImage('/img/cellar-800.jpg', 'kopke-label.jpg'); p3.setBusy(true, 'Reading the label …');
+    const p4 = imagePicker({ onFile: () => {} }); p4.el.classList.add('drag');
+    const p5 = imagePicker({ onFile: () => {} }); p5.el.classList.add('err');
+    for (const [p, l] of [[p1, 'Empty'], [p2, 'With a picture'], [p3, 'Busy'], [p4, 'A picture held over it'], [p5, 'Error']] as const) {
+      const box = mk('div', 'field'); box.append(mk('span', 'flabel', l), p.el); $('pick-grid').append(box);
+    }
+    const st = $('stars-states');
+    const add = (label: string, el: Node) => { st.append(mk('span', 'dv-lab', label)); const d = mk('div', 'dv-row'); d.append(el); st.append(d); };
+    add('Rate', starsInput({ value: 4, label: 'Your rating', onRate: () => {} }).el);
+    add('Not rated', starsInput({ label: 'Your rating', onRate: () => {} }).el);
+    const sb = starsInput({ value: 3, label: 'Saving', onRate: () => {} }); sb.setBusy(true); add('Busy', sb.el);
+    add('Disabled', starsInput({ value: 2, label: 'Closed', disabled: true, onRate: () => {} }).el);
+    const ro = mk('span', 'dv-row'); ro.append(starsRo(4.3, '4,3 · 18 ratings'), starsRo(3, '', { chip: true }));
+    add('Read-only', ro);
+    const busyStep = stepper({ value: 3, min: 1, max: 48, label: 'Busy' }); busyStep.setBusy(true);
+    const errStep = stepper({ value: 49, min: 1, max: 48, label: 'Too many' }); errStep.el.setAttribute('aria-invalid', 'true');
+    $('stepper-row').append(stepper({ value: 2, min: 1, max: 48, label: 'Bottles' }).el, stepper({ value: 1, min: 1, max: 48, label: 'At the minimum' }).el,
+      stepper({ value: 6, min: 2, max: 99, small: true, label: 'Small' }).el, busyStep.el, errStep.el);
+
+    // ---------- C ----------
+    $('chip-tones').append(chip('Neutral'), chip('Coming', 'ok'), chip('Waiting list', 'wait'), chip('No price', 'warn'), chip('Not paid', 'err'), chip('Owner', 'strong'), chip('Not coming', 'neutral', { dashed: true }), chip('A link chip', 'neutral', { href: '#c18' }), starsRo(4, '', { chip: true }));
+    $('chip-status').append(...(Object.keys(STATUS) as StatusName[]).map((n) => statusChip(n)));
+    $('thumbs').append(avatar('Morten Hansen', { size: 'small' }), avatar('Morten Hansen'), avatar('Morten Hansen', { size: 'large' }), avatar('Anne Berg', { host: true }), avatar('', { add: true }),
+      wineThumb('/img/cellar-800.jpg', { size: 'small' }), wineThumb(null), wineThumb(null, { blind: true }), wineThumb('/img/cellar-800.jpg', { size: 'large' }));
+    $('prices').append(price({ amount: 149.95 }), price({ amount: 129.95, was: 159.95, tiers: ['From 6 bottles: 119,95 kr. each'] }), price({ amount: null }), price({ amount: 595, size: 'large', was: 695 }), price({ amount: 89.5, align: 'right' }));
+    setFact($('fs-1'), 'Saturday 14 November 2026, 19:00');
+    setFact($('fs-2'), '11 wines');
+    setFact($('fs-3'), null);
+    $('facts-ts').append(facts([{ label: 'Grapes', value: 'Touriga Nacional, Touriga Franca', icon: 'grapes' }, { label: 'Food', value: 'Blue cheese', icon: 'food' }, { label: 'Serving', value: '16–18 °C', icon: 'serving' }, { label: 'Number', value: '12 34 56 78', copy: { text: '12345678', label: 'Copy the number', done: 'Copied: 12 34 56 78' } }], 'card')!);
+    $('flag-line').innerHTML = Object.values(FLAGS).join(' ');
+    loadMap(DETAILED_MAPS[0].id).then((m) => {
+      if (!m) return;
+      $('map-normal').innerHTML = drawMap(m);
+      $('map-mini').innerHTML = drawMap(m);
+      $('map-mini').querySelector('svg')?.classList.add('mini');
+      const b = document.querySelector('#c23 .map-legend b'); if (b) b.textContent = DETAILED_MAPS[0].name;
+    });
+    type O = { who: string; wine: string; n: number; sum: number; when: string };
+    const orders: O[] = [
+      { who: 'Anne Berg', wine: 'Kopke Colheita 2008', n: 2, sum: 899.9, when: '14 Nov' },
+      { who: 'Morten Hansen', wine: 'Quinta do Vesuvio 2019', n: 6, sum: 3570, when: '14 Nov' },
+      { who: 'Jens Holm', wine: 'Taylor’s 20 Year Old Tawny', n: 1, sum: 549.95, when: '15 Nov' },
+    ];
+    $('tbl').append(table<O>({
+      columns: [{ key: 'who', label: 'Guest', sort: (r) => r.who }, { key: 'wine', label: 'Wine', sort: (r) => r.wine, wideOnly: false },
+        { key: 'n', label: 'Bottles', num: true, sort: (r) => r.n }, { key: 'sum', label: 'Amount', num: true, nowrap: true, cell: (r) => formatKr(r.sum), sort: (r) => r.sum, desc: true },
+        { key: 'when', label: 'When', nowrap: true }],
+      rows: orders, sort: { key: 'sum', desc: true }, foot: (rs) => ['Total', '', String(rs.reduce((a, r) => a + r.n, 0)), formatKr(rs.reduce((a, r) => a + r.sum, 0)), ''], caption: 'Orders',
+    }).el);
+    $('tbl-empty').append(table<O>({ columns: [{ key: 'who', label: 'Guest' }], rows: [], empty: { icon: 'cart', title: 'No orders yet', text: 'Orders come in when the guests order bottles.' } }).el);
+
+    // ---------- D ----------
+    const edit = () => iconButton('edit', 'Edit');
+    const remove = () => iconButton('trash', 'Remove', { quiet: true });
+    $('rows').append(
+      listRow({ id: 1, grip: { label: 'Move Kopke Colheita 2008' }, no: 1, pic: wineThumb('/img/cellar-800.jpg'), title: 'Kopke Colheita 2008', onOpen: () => {},
+        meta: [['Port', 'Douro, Portugal']], chips: [{ text: 'Shown', tone: 'ok' }, { text: 'Can be ordered' }], aside: price({ amount: 449.95, align: 'right', tiers: ['6+: 419,95 kr.'] }), actions: [iconButton('reveal', 'Reveal'), edit(), remove()] }),
+      listRow({ id: 2, grip: { label: 'Move Blind wine' }, no: 2, pic: wineThumb(null, { blind: true }), title: 'Blind wine', meta: [['Red wine']], chips: [{ text: 'Blind', tone: 'strong' }, { text: 'Hidden', dashed: true }], aside: price({ amount: null, align: 'right' }), actions: [edit(), remove()] }),
+      personRow({ id: 'p1', name: 'Anne Berg', host: true, meta: ['anne@example.dk'], chips: [{ text: 'Coming', tone: 'ok' }, { text: 'Paid', tone: 'ok' }], actions: [iconButton('mail', 'Invite', { strong: true }), edit()] }),
+      listRow({ id: 4, pic: avatar('Jens Holm'), title: 'Jens Holm', titleNote: 'you', meta: ['jens@example.dk', mk('span', 'note', '"Can’t eat nuts"')], chips: [statusChip('guest.waitlist')], actions: [edit()] }),
+      listRow({ id: 5, pic: avatar('Old guest'), title: 'Muted row (not coming)', cls: 'muted', chips: [statusChip('guest.no')], actions: [edit()] }),
+      listRow({ id: 6, pic: wineThumb(null), title: 'Busy row', cls: 'busy', meta: ['Saving …'], actions: [edit()] }),
+      listRow({ id: 7, title: 'Portvin 2026', cls: 'big', href: '#c25', meta: ['Saturday 14 November · 22 guests'], chips: [{ text: 'Next', tone: 'wait' }] }),
+    );
+    $('row-cards').append(
+      listRow({ variant: 'card', cardHref: '#c25', title: 'Portvin 2026', meta: ['Saturday 14 November at 19:00', 'Strandvejen 12, Hellerup'], chips: [statusChip('guest.yes')], foot: [mk('span', '', '11 wines'), mk('b', '', '22 guests')] }),
+      listRow({ variant: 'card', small: true, pic: wineThumb('/img/cellar-800.jpg'), title: 'Order 14 November', meta: ['3 bottles'], aside: price({ amount: 1049.7, align: 'right' }), chips: [statusChip('order.unpaid')] }),
+    );
+    const go = $<HTMLButtonElement>('dv-ar-go');
+    addRow({ id: 'dv-ar', button: $<HTMLButtonElement>('dv-add-toggle'), fields: [$<HTMLInputElement>('dv-ar-name')], go, onSubmit: () => {
+      const name = $<HTMLInputElement>('dv-ar-name').value.trim();
+      if (!name) return;
+      const row = listRow({ id: Date.now(), no: '+', pic: wineThumb(null), title: name, actions: [edit()] });
+      $('ar-list').prepend(row); highlight(row); toast(`${name} is added`);
+    } });
+    $('ar-list').append(listRow({ id: 11, no: 1, pic: wineThumb('/img/cellar-800.jpg'), title: 'Kopke Colheita 2008', actions: [edit()] }));
+    $('dv-add-toggle').click();
+    const hl = listRow({ id: 21, pic: wineThumb(null), title: 'Graham’s Six Grapes', meta: ['Saved just now'], actions: [edit()] });
+    $('hl-list').append(hl);
+    hl.classList.add('saved');
+    $('hl-go').addEventListener('click', () => highlight(hl));
+    for (const name of ['Dow’s Late Bottled Vintage 2018', 'Niepoort Ruby Dum']) {
+      const b = remove();
+      const row = listRow({ id: name, pic: wineThumb(null), title: name, actions: [b] });
+      b.addEventListener('click', () => deleteWithUndo({ row, label: `${name} is removed`, ask: { title: `Remove ${name}?`, text: 'It goes from the tasting. The library keeps it.', ok: 'Remove' }, commit: async () => true }));
+      $('del-list').append(row);
+    }
+    ['Kopke Fine White', 'Ramos Pinto Lágrima', 'Taylor’s Chip Dry'].forEach((n, i) =>
+      $('ro-list').append(listRow({ id: n, grip: { label: `Move ${n}`, tip: 'Drag or use ↑/↓' }, no: i + 1, pic: wineThumb(null), title: n })));
+    reorder($('ro-list'), { save: async () => true, announce: (pos, total) => `Moved to place ${pos} of ${total}` });
+
+    // ---------- E ----------
+    const dlg = $<HTMLDialogElement>('dv-sheet');
+    sheetPanel(dlg, { dirty: 'form' });
+    $('sheet-open').addEventListener('click', () => dlg.showModal());
+    $('dv-sheet-form').addEventListener('submit', (e) => { e.preventDefault(); dlg.close(); toast('Saved'); });
+    $('sheet-ts-open').addEventListener('click', () => {
+      const f1 = mk('div', 'field'); f1.append(mk('label', '', 'Price'), Object.assign(mk('input', 'input'), { value: '149,95' }));
+      const s2 = sheet({ id: 'dv-sheet-ts', title: 'Built with sheet()', form: true, body: [f1], foot: [Object.assign(button('Save', { type: 'submit' }))] });
+      sheetPanel(s2.dialog, { onClose: () => s2.dialog.remove() });
+      s2.form?.addEventListener('submit', (e) => { e.preventDefault(); s2.dialog.close(); toast('Saved'); });
+      s2.dialog.showModal();
+    });
+    $('cf-open').addEventListener('click', () => confirmModal({ title: 'Delete the tasting?', text: 'The guests lose their invitations. This cannot be undone.', ok: 'Delete the tasting', danger: true }));
+    $('cf-open2').addEventListener('click', () => confirmModal({ title: 'Send the invitations?', text: '14 guests get an email.', ok: 'Send 14 invitations' }));
+    $('t-ok').addEventListener('click', () => toast('Saved'));
+    $('t-undo').addEventListener('click', () => toast('Kopke Fine White is removed', { action: { label: 'Undo', run: () => toast('Put back') } }));
+    $('t-err').addEventListener('click', () => toast('The changes could not be saved', { kind: 'error' }));
+    $('notice-ts').append(notice('warn', { title: 'Built with notice()', text: 'With a title and an action.', actions: [Object.assign(button('Add prices', { small: true }))] }));
+    for (const [state, text] of [['busy', 'Reading the label …'], ['info', 'Fetched from supervin.dk'], ['ok', 'Found: Kopke Colheita 2008'], ['warn', 'No picture on the page'], ['error', 'The link could not be read']] as const) {
+      const l = statusLine(); setStatus(l, state, text); $('status-lines').append(l);
+    }
+    $('empty-ts').append(emptyState({ icon: 'glass', title: 'No wines yet', text: 'Add the first wine with a photo of the label or a link.', actions: [{ label: 'Add wine', icon: 'plus' }, { label: 'From the library', secondary: true }] }));
+    $('loading-ts').append(pageLoading('Fetching the wine …'));
+    initHelpTips($('c36'));
+    tooltip($('tt-target'), 'The name as a tip');
+    $('disc-ts').append(disclosure('Built with disclosure()', [mk('p', '', 'From src/lib/ui/disclosure.ts.')]));
+    const pr = progress({ label: 'Answered', value: 4, max: 12, text: '4 of 12' });
+    const pr2 = progress({ label: 'Mails this month', value: 2700, max: 3000, text: '2.700 of 3.000', tone: 'warn', meter: true });
+    const pr3 = progress({ label: 'Storage', value: 990, max: 1000, text: '99 %', tone: 'err', meter: true });
+    $('prog-ts').append(pr, pr2, pr3);
+    setProgress($('prog-static'), { value: 1, max: 3, text: '1 of 3' });
+    $('prog-static-text').textContent = '1 of 3';
+
+    // ---------- F ----------
+    $('st-ts').append(sectionTitle('eyebrow', 'Built with sectionTitle()'), sectionTitle('h3', 'A sub-heading'));
+    const cd = $('dv-count'); cd.hidden = false; cd.textContent = 'In 11 days';
+
+    // ---------- G ----------
+    const now = Date.now();
+    const sample: ChatMessage[] = [
+      { id: 1, author: 'Anne', body: 'Looking forward to it! Shall I bring cheese?', created_at: new Date(now - 3600e3).toISOString(), from_host: false, mine: false },
+      { id: 2, author: 'Morten', body: 'Yes please – something blue for the vintage port.', created_at: new Date(now - 3000e3).toISOString(), from_host: true, mine: true },
+      { id: 3, author: 'Jens', body: 'I am on the waiting list, fingers crossed 🍷', created_at: new Date(now - 600e3).toISOString(), from_host: false, mine: false },
+    ];
+    let first = true;
+    const queue: ChatMessage[] = [];
+    initChat({ prefix: 'dvc', load: async () => { if (first) { first = false; return sample; } return queue.splice(0); },
+      send: async (body) => { queue.push({ id: Date.now(), author: 'Morten', body, created_at: new Date().toISOString(), from_host: true, mine: true }); return 'ok'; },
+      remove: async () => true }).start();
+    const wineCard = (i: number, name: string, style: string, amount: number) => {
+      const li = listRow({ variant: 'card', cls: 'wine-card', id: i, cardHref: '#c49', no: String(i).padStart(2, '0'), pic: wineThumb(null, { size: 'large' }),
+        kicker: styleTag({ style }), title: name, meta: [['2019', 'Douro, Portugal']],
+        foot: [price({ amount }), Object.assign(mk('span', 'go', 'Read more'), { ariaHidden: 'true' })] });
+      li.querySelector('.thumb')?.classList.add('fill');
+      return li;
+    };
+    const cards = mk('ul', 'cards');
+    cards.append(wineCard(1, 'Kopke Colheita 2008', 'Fortified', 449.95), wineCard(2, 'Quinta do Vesuvio', 'Fortified', 595), wineCard(3, 'Niepoort Redoma Branco', 'WhiteWine', 189.95));
+    cards.firstElementChild?.classList.add('is-current');
+    $('carousel').append(cards);
+    for (const [id, name, n, unit] of [[31, 'Kopke Colheita 2008', 2, 449.95], [32, 'Graham’s Six Grapes', 1, 149.8]] as const) {
+      const aside = document.createDocumentFragment();
+      aside.append(stepper({ value: n, min: 1, max: 48, label: name }).el, price({ amount: n * unit, align: 'right' }));
+      $('cart-lines').append(listRow({ id, pic: wineThumb(null), title: name, cls: 'cart-line', meta: [[`${formatKr(unit)} per bottle`]], aside, actions: [remove()] }));
+    }
+    const bar = document.querySelector<HTMLElement>('.dv-cartbar .cartbar');
+    if (bar) { bar.hidden = false; const b = bar.querySelector('b'); if (b) b.textContent = '3 bottles'; const sm = bar.querySelector('small'); if (sm) sm.textContent = formatKr(1049.7); }
+    setPayee('12345678');
+    $('paybox').append(payBox(1049.7, 'Portvin 2026 – Anne'));
+    $('quiz-prog').append(progress({ label: 'Question 3 of 12', value: 2, max: 12, text: '2 answered' }));
+    const quiz = choiceCards({ options: [{ value: 'a', label: 'Touriga Nacional' }, { value: 'b', label: 'Cabernet Sauvignon' }, { value: 'c', label: 'Tinta Roriz' }], value: 'c' });
+    quiz.el.classList.add('locked');
+    quiz.setDisabled(true);
+    const labels = quiz.el.querySelectorAll('label');
+    labels[1].classList.add('right'); labels[1].append(mk('span', 'res', 'Right answer'));
+    labels[2].classList.add('wrong'); labels[2].append(mk('span', 'res', 'Your answer'));
+    $('quiz-cc').append(quiz.el);
+    renderLeaderboard($<HTMLOListElement>('board'), [{ name: 'Anne', points: 11, answered: 12 }, { name: 'Morten', points: 9, answered: 12 }, { name: 'Jens', points: 9, answered: 10 }, { name: 'Line', points: 6, answered: 7 }], 12, 'Morten');
+  }
+</script>

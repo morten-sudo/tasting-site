@@ -23,7 +23,7 @@ export interface ListRowOptions {
   /** data-id: what highlight(), reorder() and the page find the row by */
   id?: string | number;
   /** A grip to drag the row (reorder.ts wires it); the label names the row ("Move Kopke Fine White") */
-  grip?: { label: string; tip?: string; describedBy?: string } | 'ghost';
+  grip?: { label: string; tip?: string; describedBy?: string } | 'blank';
   no?: string | number;
   pic?: Node | null;
   title: string | Node;
@@ -80,8 +80,8 @@ export function listRow(o: ListRowOptions): HTMLLIElement {
   // Lead: grip, number, picture
   if (o.grip || o.no != null || o.pic) {
     const lead = el('span', 'llead');
-    if (o.grip === 'ghost') {
-      const g = el('span', 'grip ghost');
+    if (o.grip === 'blank') {
+      const g = el('span', 'grip blank');
       g.setAttribute('aria-hidden', 'true');
       lead.append(g);
     } else if (o.grip) {

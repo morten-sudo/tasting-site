@@ -6,7 +6,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 import ChatBox from '../../components/ChatBox.astro';
 ---
 <Base title="page.chat" tasting>
-  <section class="wrap chat-page">
+  <section class="wrap page-pad">
     <PageHeader title="page.chat" />
     <Loading text="gate.loadingChat" />
     <SignInState id="no-code" title="gate.chatTitle" />
@@ -46,6 +46,3 @@ import ChatBox from '../../components/ChatBox.astro';
   }
 </script>
 
-<style>
-  .chat-page { padding-top: 2rem; padding-bottom: 2rem; }
-</style>

@@ -7,7 +7,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 import Progress from '../../components/ui/Progress.astro';
 ---
 <Base title="page.quiz" tasting>
-  <section class="wrap quiz-page">
+  <section class="wrap page-pad quiz-page">
     <PageHeader title="page.quiz" />
 
     <Loading text="gate.loadingQuiz" />
@@ -241,9 +241,7 @@ import Progress from '../../components/ui/Progress.astro';
 </script>
 
 <style>
-  .quiz-page { padding-top: 2.5rem; padding-bottom: 3rem; }
   .quiz-page .rules { margin-bottom: 1rem; }
-  .quiz-page .card { padding: 1.25rem 1.1rem 1.4rem; }
   .quiz-page #q-options :global(.cc) { margin-bottom: 1.2rem; }
   .quiz-page .board-wrap { margin-top: 2.5rem; }
   .quiz-page .board-wrap + #results { margin-top: 2.5rem; }

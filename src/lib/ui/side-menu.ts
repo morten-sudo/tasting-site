@@ -1,6 +1,6 @@
 // Component 43 – the one side menu for hosts and superadmin (SideMenu.astro): a column on the left on larger
 // screens; on phones "Menu" opens it as a panel from the left. One open/close code path for both.
-const $ = (id: string) => document.getElementById(id) as HTMLElement;
+import { $ } from './dom';
 
 export function setSideOpen(on: boolean) {
   const side = $('admin-side');

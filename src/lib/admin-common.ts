@@ -93,20 +93,20 @@ function showCohostWelcome() {
   const rows = takeCohostWelcome();
   if (!rows.length) return;
   const here = location.pathname.match(/^\/t\/([a-z0-9-]+)\/admin\//)?.[1];
+  // The one small dialog (component 31's look): the heading, a line per tasting, the buttons right with the primary last
   const dlg = document.createElement('dialog');
-  dlg.className = 'welcome-modal';
+  dlg.className = 'confirm';
   dlg.setAttribute('aria-labelledby', 'welcome-title');
-  dlg.append(mk('p', 'welcome-icon', '🍷'), Object.assign(mk('h2', '', t('cohost.welcomeTitle')), { id: 'welcome-title' }));
-  for (const r of rows) dlg.append(mk('p', 'welcome-text', t('cohost.welcomeText', { tasting: r.title })));
-  const actions = mk('div', 'actions end');
+  dlg.append(Object.assign(mk('p', 'cf-q', t('cohost.welcomeTitle')), { id: 'welcome-title' }));
+  for (const r of rows) dlg.append(mk('p', 'cf-t', t('cohost.welcomeText', { tasting: r.title })));
+  const actions = mk('div', 'actions stack');
   const other = rows.find((r) => r.slug !== here);
-  // A dialog: the primary action last (on the right)
-  const ok = mk('button', rows.length === 1 && other ? 'btn small secondary' : 'btn small', t('cohost.ok'));
+  const ok = mk('button', rows.length === 1 && other ? 'btn secondary' : 'btn', t('cohost.ok'));
   ok.type = 'button';
   ok.addEventListener('click', () => dlg.close());
   actions.append(ok);
   if (rows.length === 1 && other) {
-    const go = mk('a', 'btn small', t('cohost.goTo'));
+    const go = mk('a', 'btn', t('cohost.goTo'));
     go.href = `/t/${other.slug}/admin/`;
     actions.append(go);
   }

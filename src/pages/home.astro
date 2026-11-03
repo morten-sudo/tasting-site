@@ -6,7 +6,7 @@ import Loading from '../components/ui/Loading.astro';
 import EmptyState from '../components/ui/EmptyState.astro';
 ---
 <Base title="page.home">
-  <section class="wrap home-page">
+  <section class="wrap page-pad home-page">
     <Loading />
 
     <div id="main" hidden>
@@ -23,7 +23,7 @@ import EmptyState from '../components/ui/EmptyState.astro';
         </a>
 
         <a id="ws-host" class="card ws-card" href="/admin/" hidden>
-          <span class="ws-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg></span>
+          <span class="ws-icon"><Icon name="grid" /></span>
           <span class="eyebrow" data-i18n="home2.host">As a host</span>
           <span class="ws-title" data-i18n="page.admin">Admin</span>
           <span id="ws-host-info" class="ws-info"></span>
@@ -31,7 +31,7 @@ import EmptyState from '../components/ui/EmptyState.astro';
         </a>
 
         <a id="ws-super" class="card ws-card" href="/superadmin/" hidden>
-          <span class="ws-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg></span>
+          <span class="ws-icon"><Icon name="verified" /></span>
           <span class="eyebrow">Winetastr</span>
           <span class="ws-title" data-i18n="page.superadmin">Superadmin</span>
           <span id="ws-super-info" class="ws-info"></span>
@@ -74,7 +74,7 @@ import EmptyState from '../components/ui/EmptyState.astro';
   import { i18nReady, t, formatWhen } from '../i18n';
 
   await i18nReady;
-  const $ = (id: string) => document.getElementById(id)!;
+  import { $ } from '../lib/ui/dom';
 
   const { data: s } = await supabase.auth.getSession();
   if (!s.session && Object.keys(getCodes()).length === 0) location.replace('/login/');
@@ -134,11 +134,11 @@ import EmptyState from '../components/ui/EmptyState.astro';
 </script>
 
 <style is:global>
-  .home-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 56rem; }
+  .home-page { max-width: 56rem; }
   .ws-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
   .ws-card { position: relative; display: grid; align-content: start; gap: 0.25rem; padding: 1.3rem 1.3rem 1.2rem; }
   .ws-icon { width: 2.6rem; height: 2.6rem; border-radius: var(--radius); display: grid; place-items: center; background: var(--lodge); color: var(--amber); margin-bottom: 0.6rem; }
-  .ws-icon svg { width: 1.45rem; height: 1.45rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ws-icon svg.i { width: 1.45rem; height: 1.45rem; }
   .ws-icon svg[viewBox='0 0 100 100'] { width: 1.6rem; height: 1.6rem; }
   .ws-card .eyebrow { margin: 0; }
   .ws-title { font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }

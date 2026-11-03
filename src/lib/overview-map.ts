@@ -3,6 +3,7 @@
 // Cloudflare AI found for an appellation not on the list (checked against the country), in the
 // middle of its region (wine_regions) or in the middle of its country. Land and borders come from Natural Earth (scripts/build-overview.py).
 import { supabase } from './supabase';
+import { esc } from './ui/dom';
 import { loadAppellations, loadRegions, matchRegion, normOrigin, countryName } from './origin';
 
 export type OverviewMap = { id: string; w: number; h: number; proj: { lon0: number; lat1: number; k: number; s: number }; land: string; border: string };
@@ -109,7 +110,6 @@ export async function focusFor(places: Place[], close = false): Promise<Box> {
   return { lon0: Math.min(...boxes.map((b) => b[0])), lat0: Math.min(...boxes.map((b) => b[1])), lon1: Math.max(...boxes.map((b) => b[2])), lat1: Math.max(...boxes.map((b) => b[3])) };
 }
 
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 export type Pin = { lon: number; lat: number; label?: string; n?: number };
 

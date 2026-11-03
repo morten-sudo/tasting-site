@@ -7,7 +7,7 @@ import EmptyState from '../../components/ui/EmptyState.astro';
 import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.cart" tasting>
-  <section class="wrap cart-page">
+  <section class="wrap page-pad cart-page">
     <PageHeader title="page.cart" />
 
     <Loading text="gate.loadingCart" />
@@ -227,7 +227,6 @@ import SignInState from '../../components/ui/SignInState.astro';
 </script>
 
 <style>
-  .cart-page { padding-top: 2.5rem; padding-bottom: 3rem; }
   .cart-page :global(.confirm), .cart-page #closed { margin-bottom: 1.5rem; }
   .cart-page .send { margin-bottom: 0.6rem; }
   .cart-page .history { margin-top: 3rem; }

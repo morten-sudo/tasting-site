@@ -2,6 +2,7 @@
 // tasting's wines filled in. The map data (public/maps/<region>.json) is built from open geodata
 // by scripts/build-maps.py.
 import { normOrigin, loadAppellations, type Appellation } from './origin';
+import { esc } from './ui/dom';
 
 export type RegionMap = {
   id: string; name: string; w: number; h: number;
@@ -92,7 +93,6 @@ export async function groupWines<W extends OriginWine & { id: number }>(map: Reg
   return [...groups.values()].sort((a, b) => rank(a) - rank(b) || b.count - a.count || a.title.localeCompare(b.title));
 }
 
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
 type DrawOptions = {
   /** area id → number of wines (filled and numbered) */
