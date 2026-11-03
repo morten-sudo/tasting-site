@@ -147,6 +147,12 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .ta-head > .ph-text { flex: 1 1 auto; }
 .admin-page .ta-head > .ph-act { margin-top: 0; }
 .admin-page .ta-head .t-guest svg { width: 1.35rem; height: 1.35rem; }
+/* With the "Menu" button (below 60rem): the eye goes up in the corner, on the button's line – where the guest page
+   has its gear */
+@media (max-width: 59.99rem) {
+  .admin-page .side-shell { position: relative; }
+  .admin-page .ta-head > .ph-act { position: absolute; top: 0; right: 0; height: var(--h-sm); }
+}
 .admin-page #admin-tabs { margin-bottom: 0.25rem; }
 
 /* Superadmin */
