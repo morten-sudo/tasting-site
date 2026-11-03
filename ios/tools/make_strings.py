@@ -15,6 +15,7 @@ nav.home nav.profile nav.userMenu book.title book.linkText book.statWines book.s
 tastingHome.calendar tastingHome.map tastingHome.during tastingHome.winesSub map.title map.wineNumbers map.wholeRegion map.otherRegion map.source map.zoomIn map.zoomOut guest.feeTitle guest.feeText guest.feePaid pay.feeComment pay.noNumber pay.lead pay.open pay.copyLabel pay.copied pay.number pay.amount pay.message pay.fallback
 wizard.back
 rating.saved rating.notSaved rating.private wine.readLess wine.moreAbout wine.prev wine.next wine.others label.grapes wineFields.food wineFields.serving producer.websiteShort producer.addressShort price.bulk bulk.reached bulk.reachedAll bulk.togetherMore bulk.youMore
+nav.quiz nav.chat page.quiz page.chat tastingHome.quizOpen tastingHome.quizLater tastingHome.quizDone tastingHome.chatSub quiz.closed quiz.rules quiz.lock quiz.locking quiz.done quiz.over quiz.standingsNow quiz.final quiz.count quiz.closedForAnswers quiz.notSaved quiz.unanswered quiz.right quiz.wrong quiz.allAnswered quiz.answeredOf quiz.correctAnswer quiz.yourAnswer board.done board.noAnswers hosts.you chat.intro chat.write chat.send chat.host chat.tooMany chat.notSent chat.emptyTitle chat.emptyText
 style.Red style.WhiteWine style.Rose style.Orange style.Sparkling style.Sweet style.Fortified style.Other'''.split()
 APP = {
  'app.previous': ('Forrige','Previous','Fyrri'),

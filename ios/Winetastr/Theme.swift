@@ -291,8 +291,9 @@ struct TopBar: View {
     }
 }
 
-/// Under the top bar in a tasting: its name and the tabs.
+/// Under the top bar in a tasting: its name and the tabs (the quiz only when the tasting has one, as on the site).
 struct TastingBar: View {
+    @Environment(AppModel.self) private var model
     let title: String
     let tab: TastingTab
     let select: (TastingTab) -> Void
@@ -301,7 +302,7 @@ struct TastingBar: View {
             Rectangle().fill(Color.rule).frame(height: 1)
             Text(title).font(.semibold(16)).foregroundStyle(Color.paper).padding(.top, 10)
             HStack(spacing: 22) {
-                ForEach(TastingTab.allCases, id: \.self) { t in
+                ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
                     Button { select(t) } label: {
                         Text(t.title).font(.body(16.5)).foregroundStyle(t == tab ? Color.bordeaux : Color.muted)
                             .padding(.vertical, 11)
@@ -320,6 +321,8 @@ struct TastingBar: View {
 }
 
 enum TastingTab: CaseIterable, Hashable {
-    case home, wines
-    var title: String { self == .home ? L("nav.tasting") : L("nav.wines") }
+    case home, wines, quiz, chat
+    var title: String {
+        switch self { case .home: L("nav.tasting"); case .wines: L("nav.wines"); case .quiz: L("nav.quiz"); case .chat: L("nav.chat") }
+    }
 }

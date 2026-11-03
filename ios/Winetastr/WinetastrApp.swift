@@ -32,6 +32,8 @@ final class AppModel {
     var tastingTab = TastingTab.home
     /// The menu open in the top bar or on the page (one at a time, as on the site)
     var openMenu: MenuID?
+    /// The open tasting has a quiz: its tab shows
+    var tastingHasQuiz = false
     /// The language shown; changing it redraws every screen in place (the stack of screens is kept)
     private(set) var language = AppLanguage.code
     private let monitor = NWPathMonitor()
@@ -65,6 +67,8 @@ final class AppModel {
         hasCodes = !CodeStore.all().isEmpty
         #if DEBUG
         if let r = UserDefaults.standard.string(forKey: "route"), ["wines", "wine", "blind"].contains(r) { tastingTab = .wines }
+        if UserDefaults.standard.string(forKey: "route") == "quiz" { tastingTab = .quiz }
+        if UserDefaults.standard.string(forKey: "route") == "chat" { tastingTab = .chat }
         #endif
         ready = true
     }

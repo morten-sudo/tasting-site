@@ -22,8 +22,14 @@ struct TastingView: View {
             Group {
                 if let info, let invite {
                     if invite.email == nil { EmailStep(code: tasting.code, name: invite.name) { Task { await load() } } }
-                    else if model.tastingTab == .home { details(info, invite) }
-                    else { WinesView(tasting: tasting) }
+                    else {
+                        switch model.tastingTab {
+                        case .home: details(info, invite)
+                        case .wines: WinesView(tasting: tasting)
+                        case .quiz: QuizView(tasting: tasting)
+                        case .chat: ChatView(tasting: tasting)
+                        }
+                    }
                 } else if failed {
                     ErrorState { Task { await load() } }
                 } else {
@@ -119,6 +125,17 @@ struct TastingView: View {
                             EveningTile(icon: "glass", title: L("nav.wines"), sub: wines.isEmpty ? nil : L("tastingHome.winesSub", ["n": "\(wines.count)"]))
                         }
                         .buttonStyle(.plain)
+                        if (info.quiz_count ?? 0) > 0 {
+                            Button { model.tastingTab = .quiz } label: {
+                                EveningTile(icon: "question", title: L("nav.quiz"),
+                                            sub: L(info.quiz_finished == true ? "tastingHome.quizDone" : info.quiz_open == true ? "tastingHome.quizOpen" : "tastingHome.quizLater"))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        Button { model.tastingTab = .chat } label: {
+                            EveningTile(icon: "chat", title: L("nav.chat"), sub: L("tastingHome.chatSub"))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(16).padding(.top, 8).padding(.bottom, 16)
@@ -174,6 +191,7 @@ struct TastingView: View {
             async let v = Backend.invite(tasting.code)
             let (a, b) = try await (i, v)
             info = a; invite = b; failed = a == nil || b == nil
+            model.tastingHasQuiz = (a?.quiz_count ?? 0) > 0
             payment = try? await Backend.payment(tasting.code)
             if let w = try? await Backend.wines(tasting.code) {
                 wines = w

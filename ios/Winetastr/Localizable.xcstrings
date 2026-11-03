@@ -3477,6 +3477,820 @@
     }
    }
   },
+  "nav.quiz": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quiz"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quiz"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spurningakeppni"
+     }
+    }
+   }
+  },
+  "nav.chat": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Chat"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Chat"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spjall"
+     }
+    }
+   }
+  },
+  "page.quiz": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quiz"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quiz"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spurningakeppni"
+     }
+    }
+   }
+  },
+  "page.chat": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Chat"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Chat"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spjall"
+     }
+    }
+   }
+  },
+  "tastingHome.quizOpen": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quizzen er åben – vær med"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The quiz is open – join in"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spurningakeppnin er opin – vertu með"
+     }
+    }
+   }
+  },
+  "tastingHome.quizLater": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Åbner under smagningen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Opens during the tasting"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Opnar á meðan á smökkun stendur"
+     }
+    }
+   }
+  },
+  "tastingHome.quizDone": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Se resultatet"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "See the results"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sjáðu úrslitin"
+     }
+    }
+   }
+  },
+  "tastingHome.chatSub": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Snak med de andre gæster"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Talk with the other guests"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spjallaðu við hina gestina"
+     }
+    }
+   }
+  },
+  "quiz.closed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quizzen åbner under smagningen. Hold siden åben – den starter af sig selv, når værten åbner."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The quiz opens during the tasting. Keep this page open – it starts by itself when the host opens it."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spurningakeppnin opnast meðan á smökkuninni stendur. Hafðu síðuna opna – hún byrjar sjálfkrafa þegar gestgjafinn opnar."
+     }
+    }
+   }
+  },
+  "quiz.rules": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{total} spørgsmål. Svar i dit eget tempo. Et svar kan ikke ændres, når det er låst."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{total} questions. Answer at your own pace. An answer cannot be changed once it is locked."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{total} spurningar. Svaraðu á þínum hraða. Ekki er hægt að breyta svari eftir að það hefur verið læst."
+     }
+    }
+   }
+  },
+  "quiz.lock": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lås svar"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lock answer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læsa svari"
+     }
+    }
+   }
+  },
+  "quiz.locking": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Låser …"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Locking …"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læsi …"
+     }
+    }
+   }
+  },
+  "quiz.done": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alle dine svar er låst. Følg stillingen herunder – facit og forklaringer kommer, når værten lukker quizzen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "All your answers are locked. Follow the standings below – answers and explanations come when the host closes the quiz."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Öll svörin þín eru læst. Fylgstu með stöðunni hér fyrir neðan – rétt svör og skýringar birtast þegar gestgjafinn lokar keppninni."
+     }
+    }
+   }
+  },
+  "quiz.over": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quizzen er slut. Her er facit og forklaringerne."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The quiz is over. Here are the answers and explanations."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Keppninni er lokið. Hér eru rétt svör og skýringar."
+     }
+    }
+   }
+  },
+  "quiz.standingsNow": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Stillingen lige nu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Standings right now"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Staðan núna"
+     }
+    }
+   }
+  },
+  "quiz.final": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Slutstilling"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Final standings"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lokastaða"
+     }
+    }
+   }
+  },
+  "quiz.count": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spørgsmål {n} af {total}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Question {n} of {total}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spurning {n} af {total}"
+     }
+    }
+   }
+  },
+  "quiz.closedForAnswers": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quizzen er lukket for svar."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The quiz is closed for answers."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lokað er fyrir svör."
+     }
+    }
+   }
+  },
+  "quiz.notSaved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svaret blev ikke gemt. Tjek forbindelsen, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The answer was not saved. Check the connection and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svarið var ekki vistað. Athugaðu tenginguna og reyndu aftur."
+     }
+    }
+   }
+  },
+  "quiz.unanswered": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ikke besvaret"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Not answered"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki svarað"
+     }
+    }
+   }
+  },
+  "quiz.right": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rigtigt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Right"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rétt"
+     }
+    }
+   }
+  },
+  "quiz.wrong": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Forkert"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wrong"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rangt"
+     }
+    }
+   }
+  },
+  "quiz.allAnswered": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alle spørgsmål er besvaret"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "All questions answered"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Öllum spurningum svarað"
+     }
+    }
+   }
+  },
+  "quiz.answeredOf": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} af {total} besvaret"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} of {total} answered"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} af {total} svarað"
+     }
+    }
+   }
+  },
+  "quiz.correctAnswer": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rigtigt svar"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Right answer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rétt svar"
+     }
+    }
+   }
+  },
+  "quiz.yourAnswer": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dit svar"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your answer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þitt svar"
+     }
+    }
+   }
+  },
+  "board.done": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "færdig"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "done"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "búin(n)"
+     }
+    }
+   }
+  },
+  "board.noAnswers": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen har svaret endnu."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No one has answered yet."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enginn hefur svarað enn."
+     }
+    }
+   }
+  },
+  "hosts.you": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "dig"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "you"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "þú"
+     }
+    }
+   }
+  },
+  "chat.intro": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alle inviterede til smagningen og værten kan læse med."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Everyone invited to the tasting and the host can read along."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Allir sem er boðið og gestgjafinn geta lesið með."
+     }
+    }
+   }
+  },
+  "chat.write": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv en besked"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Write a message"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skrifaðu skilaboð"
+     }
+    }
+   }
+  },
+  "chat.send": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Senda"
+     }
+    }
+   }
+  },
+  "chat.host": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "vært"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "host"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "gestgjafi"
+     }
+    }
+   }
+  },
+  "chat.tooMany": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du skriver meget hurtigt. Vent et øjeblik og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You are writing very fast. Wait a moment and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú skrifar mjög hratt. Bíddu aðeins og reyndu aftur."
+     }
+    }
+   }
+  },
+  "chat.notSent": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Beskeden blev ikke sendt. Tjek din forbindelse og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The message was not sent. Check your connection and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skilaboðin voru ekki send. Athugaðu tenginguna og reyndu aftur."
+     }
+    }
+   }
+  },
+  "chat.emptyTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen beskeder endnu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No messages yet"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Engin skilaboð enn"
+     }
+    }
+   }
+  },
+  "chat.emptyText": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv den første besked herunder."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Write the first message below."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skrifaðu fyrstu skilaboðin hér fyrir neðan."
+     }
+    }
+   }
+  },
   "style.Red": {
    "localizations": {
     "da": {

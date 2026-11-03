@@ -73,6 +73,14 @@ struct Wine: Decodable, Hashable, Identifiable {
 /// A quantity price: from qty bottles, price each
 struct PriceTier: Decodable, Hashable { let qty: Int; let price: Double }
 
+struct QuizOption: Decodable, Hashable { let key: String; let text: String }
+struct QuizQuestion: Decodable, Identifiable { let id: Int; let sort_order: Int?; let question: String; let options: [QuizOption]; let correct_key: String?; let explanation: String? }
+struct ChatMessage: Decodable, Identifiable {
+    let id: Int; let author: String; let body: String; let created_at: String; let from_host: Bool; let mine: Bool
+    var date: Date { parseDate(created_at) ?? .now }
+}
+struct BoardRow: Decodable { let name: String; let points: Int; let answered: Int }
+
 struct TastingPayment: Decodable { let amount: Double; let paid: Bool }
 
 struct MyRating: Decodable { let wine_id: Int; let rating: Int?; let note: String? }
@@ -103,6 +111,10 @@ private struct Respond: Encodable, Sendable { let code: String; let attending: B
 private struct Rate: Encodable, Sendable { let code: String; let w_id: Int; let stars: Int?; let note: String? }
 private struct Usage: Encodable, Sendable { let feature: String }
 private struct Codes: Encodable, Sendable { let codes: [String] }
+private struct Answer: Encodable, Sendable { let code: String; let q_id: Int; let a_key: String }
+private struct ChatAfter: Encodable, Sendable { let code: String; let after_id: Int }
+private struct ChatPost: Encodable, Sendable { let code: String; let body: String }
+private struct Board: Encodable, Sendable { let code: String; let slug: String? }
 
 enum Backend {
     private static func decode<T: Decodable>(_ data: Data) throws -> T { try JSONDecoder().decode(T.self, from: data) }
@@ -143,6 +155,26 @@ enum Backend {
         return (try? JSONDecoder().decode(Bool.self, from: data)) ?? true
     }
     static func linkMe() async { _ = try? await supabase.rpc("link_me_tastings").execute() }
+    static func chat(_ code: String, after: Int) async throws -> [ChatMessage] {
+        try decode(try await supabase.rpc("get_chat", params: ChatAfter(code: code, after_id: after)).execute().data)
+    }
+    static func postChat(_ code: String, _ body: String) async throws {
+        try await supabase.rpc("post_chat", params: ChatPost(code: code, body: body)).execute()
+    }
+    static func quiz(_ code: String) async throws -> [QuizQuestion] {
+        try decode(try await supabase.rpc("get_quiz", params: CodeParam(code: code)).execute().data)
+    }
+    static func myAnswers(_ code: String) async throws -> [Int: String] {
+        struct Row: Decodable { let question_id: Int; let answer_key: String }
+        let rows: [Row] = try decode(try await supabase.rpc("get_my_answers", params: CodeParam(code: code)).execute().data)
+        return Dictionary(rows.map { ($0.question_id, $0.answer_key) }, uniquingKeysWith: { $1 })
+    }
+    static func submitAnswer(_ code: String, question: Int, key: String) async throws {
+        try await supabase.rpc("submit_answer", params: Answer(code: code, q_id: question, a_key: key)).execute()
+    }
+    static func leaderboard(_ code: String) async throws -> [BoardRow] {
+        try decode(try await supabase.rpc("tasting_leaderboard", params: Board(code: code, slug: nil)).execute().data)
+    }
     /// The tasting's own price for the guest, when the host has set one
     static func payment(_ code: String) async throws -> TastingPayment? {
         let rows: [TastingPayment] = try decode(try await supabase.rpc("get_tasting_payment", params: CodeParam(code: code)).execute().data)
