@@ -1,13 +1,13 @@
-// A text field with suggestions (instead of the browser's own <datalist>, which cannot be styled and shows the
-// same extra text on every line). Free text is still allowed; the list only helps. Arrow keys, Enter, Esc and
-// clicking work; the list follows what is typed.
+// Component 9 – combobox: a text field with suggestions (instead of the browser's own <datalist>, which cannot be
+// styled and shows the same extra text on every line). Free text is still allowed; the list only helps. Arrow keys,
+// Enter, Esc and clicking work; the list follows what is typed. The list is the one menu (.menu, .opt-i, .m-group).
 import { normOrigin } from './origin';
 
 export type ComboOption = { value: string; hint?: string; group?: string };
 
 export function combo(input: HTMLInputElement, options: () => ComboOption[], onPick?: (value: string) => void) {
   const list = document.createElement('ul');
-  list.className = 'combo-list';
+  list.className = 'menu';
   list.id = `${input.id}-list`;
   list.setAttribute('role', 'listbox');
   list.hidden = true;
@@ -41,7 +41,7 @@ export function combo(input: HTMLInputElement, options: () => ComboOption[], onP
       if (!q && o.group && o.group !== group) {
         group = o.group;
         const g = document.createElement('li');
-        g.className = 'combo-group';
+        g.className = 'm-group';
         g.setAttribute('role', 'presentation');
         g.textContent = o.group;
         out.push(g);
@@ -49,7 +49,8 @@ export function combo(input: HTMLInputElement, options: () => ComboOption[], onP
       const li = document.createElement('li');
       li.id = `${list.id}-${i}`;
       li.setAttribute('role', 'option');
-      li.className = 'combo-option';
+      li.className = 'opt-i';
+      li.setAttribute('aria-selected', 'false');
       const b = document.createElement('span');
       b.textContent = o.value;
       li.append(b);
@@ -85,7 +86,7 @@ export function combo(input: HTMLInputElement, options: () => ComboOption[], onP
   function move(d: number) {
     if (list.hidden) { open(); return; }
     active = (active + d + shown.length) % shown.length;
-    list.querySelectorAll('.combo-option').forEach((li, i) => li.setAttribute('aria-selected', String(i === active)));
+    list.querySelectorAll('.opt-i').forEach((li, i) => { li.setAttribute('aria-selected', String(i === active)); li.toggleAttribute('data-active', i === active); });
     const li = list.querySelector<HTMLElement>(`#${list.id}-${active}`);
     li?.scrollIntoView({ block: 'nearest' });
     if (li) input.setAttribute('aria-activedescendant', li.id);

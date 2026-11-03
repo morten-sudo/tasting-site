@@ -1,5 +1,6 @@
 // The host's page for one wine, /admin/wines/<id>/: picture, facts, origin with map, the tastings
 // it is in and the guests' ratings there. Editing happens in the usual side panel (admin-wines.ts).
+import { starsRo } from './ui/stars';
 import { iconButton } from './ui/icon-button';
 import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
@@ -139,8 +140,8 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     const left = mk('div');
     left.append(a, mk('span', 'wd-t-sub', sub));
     const r = ratings[i];
-    const score = mk('span', 'wd-score', r ? `★ ${r.average.toLocaleString(locale(), { minimumFractionDigits: 1 })}` : '–');
-    if (r) score.title = t(r.votes === 1 ? 'wineAdmin.voteOne' : 'wineAdmin.votes', { n: r.votes });
+    // The read-only stars (src/lib/ui/stars.ts) with the average
+    const score = r ? starsRo(r.average, ' ' + r.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })) : mk('span', 'wd-score', '–');
     const votes = mk('span', 'wd-votes', r ? t(r.votes === 1 ? 'wineAdmin.voteOne' : 'wineAdmin.votes', { n: r.votes }) : t('wineAdmin.noRatings'));
     const right = mk('div', 'wd-t-rating');
     right.append(score, votes);

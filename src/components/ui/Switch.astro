@@ -1,0 +1,10 @@
+---
+// Component 11 – a switch row (on/off, saves straight away): bindSwitch() in src/lib/ui/switch.ts connects the saving.
+// title/hint are i18n keys (English as the fallback); help: a "?" tip key; any other attribute goes on the input
+// (id, data-key …). The slot comes after the title (e.g. a help tip).
+import { en } from '../../i18n/en';
+interface Props { title: keyof typeof en; hint?: keyof typeof en; help?: string; plain?: boolean; last?: boolean; class?: string; [attr: string]: unknown }
+const { title, hint, help, plain = false, last = false, class: cls, ...rest } = Astro.props;
+---
+<label class:list={['sw-row', { plain, last }, cls]}><input class="switch" type="checkbox" role="switch" {...rest} />
+  <span><b><span data-i18n={title}>{en[title]}</span>{help && <span data-help={help}></span>}</b>{hint && <small data-i18n={hint}>{en[hint]}</small>}</span></label>

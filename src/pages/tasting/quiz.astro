@@ -25,7 +25,7 @@ import Base from '../../layouts/Base.astro';
       <div id="question" class="card">
         <p id="q-count" class="q-count"></p>
         <h2 id="q-text" class="q-text"></h2>
-        <div id="q-options" class="options" role="radiogroup"></div>
+        <div id="q-options"></div>
         <p id="q-error" class="message error" hidden></p>
         <button id="q-lock" class="btn block" type="button" disabled data-i18n="quiz.lock">Lock answer</button>
       </div>
@@ -50,6 +50,7 @@ import Base from '../../layouts/Base.astro';
 
 <script>
   import { supabase } from '../../lib/supabase';
+  import { choiceCards } from '../../lib/ui/choice-cards';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t as tr } from '../../i18n';
 
@@ -129,28 +130,13 @@ import Base from '../../layouts/Base.astro';
     $('rules').textContent = tr('quiz.rules', { total: questions.length });
     $('q-text').textContent = q.question;
     $('q-error').hidden = true;
-    const box = $('q-options');
-    box.replaceChildren();
-    for (const o of q.options) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'option';
-      b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', 'false');
-      const k = document.createElement('span');
-      k.className = 'key';
-      k.textContent = o.key;
-      const t = document.createElement('span');
-      t.textContent = o.text;
-      b.append(k, t);
-      b.addEventListener('click', () => {
-        selected = o.key;
-        box.querySelectorAll('.option').forEach((el) => el.setAttribute('aria-checked', 'false'));
-        b.setAttribute('aria-checked', 'true');
-        ($('q-lock') as HTMLButtonElement).disabled = false;
-      });
-      box.append(b);
-    }
+    // The answers: the choice cards (one answer among a few); the question names the group
+    const cards = choiceCards({
+      name: `q-${q.id}`, options: q.options.map((o) => ({ value: o.key, label: o.text })),
+      onChange: (key) => { selected = key; ($('q-lock') as HTMLButtonElement).disabled = false; },
+    });
+    cards.el.setAttribute('aria-labelledby', 'q-text');
+    $('q-options').replaceChildren(cards.el);
     ($('q-lock') as HTMLButtonElement).disabled = true;
   }
 
@@ -308,43 +294,8 @@ import Base from '../../layouts/Base.astro';
     letter-spacing: 0;
     margin-bottom: 1.1rem;
   }
-  .quiz-page .options { display: grid; gap: 0.6rem; margin-bottom: 1.2rem; }
-  .quiz-page .option {
-    display: flex;
-    gap: 0.8rem;
-    align-items: flex-start;
-    text-align: left;
-    width: 100%;
-    font: inherit;
-    color: var(--paper);
-    background: var(--lodge);
-    border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
-    padding: 0.9rem 1rem;
-    cursor: pointer;
-    min-height: 3.25rem;
-  }
-  .quiz-page .option .key {
-    flex-shrink: 0;
-    width: 1.6rem;
-    height: 1.6rem;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--lodge-3);
-    color: var(--muted);
-    font-size: 0.9rem;
-    line-height: 1;
-  }
-  .quiz-page .option[aria-checked='true'] {
-    border-color: var(--amber);
-    box-shadow: inset 4px 0 0 var(--amber);
-  }
-  .quiz-page .option[aria-checked='true'] .key {
-    background: var(--amber);
-    border-color: var(--amber);
-    color: var(--lodge);
-  }
+  /* The answers are the choice cards (component 10); only the space under them is the page's */
+  .quiz-page #q-options .cc { margin-bottom: 1.2rem; }
   .quiz-page #q-error { margin-bottom: 1rem; }
 
   .quiz-page .board-wrap { margin-top: 2.5rem; }

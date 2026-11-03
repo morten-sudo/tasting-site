@@ -2,6 +2,9 @@
 import Icon from '../../components/ui/Icon.astro';
 import SearchField from '../../components/ui/SearchField.astro';
 import CloseButton from '../../components/ui/CloseButton.astro';
+import Switch from '../../components/ui/Switch.astro';
+import ChoiceCards from '../../components/ui/ChoiceCards.astro';
+import Checkbox from '../../components/ui/Checkbox.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
@@ -118,7 +121,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <div class="row-actions">
             <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="d-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-            <span id="d-msg" class="hint" aria-live="polite"></span>
           </div>
         </form>
         </dialog>
@@ -130,18 +132,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <!-- Settings: switches that save straight away; values with an "Edit" that opens the side panel -->
       <section id="controls" class="block set-card" data-section="settings">
         <h2 data-i18n="set.guestsCan">The guests can</h2>
-        <label class="set-switch"><input type="checkbox" role="switch" data-key="signup_open" />
-          <span><b data-i18n="wizard.signupTitle">Reply to the invitation</b><small data-i18n="wizard.signupHint">Guests can say yes or no and add a note.</small></span></label>
-        <label class="set-switch"><input type="checkbox" role="switch" data-key="quiz_open" />
-          <span><b><span data-i18n="set.quizOpen">Answer the quiz</span><span data-help="quiz"></span></b><small data-i18n="set.quizOpenHint">The questions are open for answers on the guests’ phones.</small></span></label>
-        <label class="set-switch"><input type="checkbox" role="switch" data-key="quiz_finished" />
-          <span><b data-i18n="set.quizDone">See the quiz answers</b><small data-i18n="set.quizDoneHint">The quiz is closed and the right answers and explanations are shown.</small></span></label>
+        <Switch title="wizard.signupTitle" hint="wizard.signupHint" data-key="signup_open" />
+        <Switch title="set.quizOpen" hint="set.quizOpenHint" help="quiz" data-key="quiz_open" />
+        <Switch title="set.quizDone" hint="set.quizDoneHint" data-key="quiz_finished" />
       </section>
 
       <section class="block set-card" data-section="settings">
         <h2 data-i18n="set.tasting">The tasting</h2>
-        <label class="set-switch"><input type="checkbox" role="switch" data-key="blind" />
-          <span><b><span data-i18n="wizard.blindTitle">Blind tasting</span><span data-help="blind"></span></b><small data-i18n="wizard.blindHint">Guests see only the number and colour of each wine until you reveal it.</small></span></label>
+        <Switch title="wizard.blindTitle" hint="wizard.blindHint" help="blind" data-key="blind" />
         <div id="max-guests-row" class="set-row">
           <span><b><span data-i18n="wizard.maxGuests">Max. number of guests</span><span data-help="max-guests"></span></b><small id="max-guests-view"></small></span>
           <button id="max-guests-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
@@ -191,8 +189,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <label for="fee-amount" data-i18n="set.feePer">Each guest pays</label>
           <div class="field-row"><div class="affix w-num"><input id="fee-amount" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div><span data-i18n="unit.perPerson">per person</span></div>
           <p class="hint" data-i18n="set.feePerHint">Leave it empty to use the suggestion above.</p>
-          <label class="set-switch"><input id="fee-open" type="checkbox" role="switch" />
-            <span><b data-i18n="wizard.feeShowTitle">Show the fee to the guests</b><small data-i18n="wizard.feeShowHint">Guests who are coming see the amount and can pay with MobilePay.</small></span></label>
+          <Switch title="wizard.feeShowTitle" hint="wizard.feeShowHint" id="fee-open" />
           <div class="row-actions"><button class="btn small" type="submit" data-i18n="common.save">Save</button><button class="text-btn" type="button" data-close data-i18n="common.cancel">Cancel</button></div>
         </form>
       </dialog>
@@ -240,12 +237,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block wines-admin" data-section="wines">
         <div class="guests-head">
           <h2 data-i18n="page.wines">Wines</h2>
-          <button id="tw-add-toggle" class="btn small" type="button" data-i18n="adminTasting.addWineBtn">+ Add wine</button>
+          <button id="tw-add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="adminTasting.addWineBtn">Add wine</span></button>
         </div>
         <!-- Add a wine: a new row that slides in at the top of the list – search the library, paste a link or add a photo -->
         <WineQuickAdd lead />
         <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
         <ol id="tw-list" class="tw-list"></ol>
+        <p id="tw-move-help" class="sr" aria-live="polite"></p>
         <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
 
         <dialog id="tw-edit" class="sheet" aria-labelledby="twe-title">
@@ -276,23 +274,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
               <legend data-i18n="twe.tiersTitle">Quantity prices</legend>
               <p class="hint" data-i18n="twe.tiersHint">A lower price per bottle when a guest buys several.</p>
               <div id="twe-tiers" class="twe-tiers"></div>
-              <button id="twe-add-tier" class="text-btn" type="button" data-i18n="twe.addTier">+ Add quantity price</button>
+              <button id="twe-add-tier" class="text-btn" type="button"><Icon name="plus" /><span data-i18n="twe.addTier">Add quantity price</span></button>
             </fieldset>
 
-            <fieldset class="twe-group">
-              <legend><span data-i18n="blind.guestsSee">Guests see</span><span data-help="guests-see"></span></legend>
-              <div class="twe-choice">
-                <label><input type="radio" name="twe-vis" value="shown" /> <span><b data-i18n="blind.shown">The wine</b><small data-i18n="twe.shownHint">Name, picture, price and description.</small></span></label>
-                <label><input type="radio" name="twe-vis" value="blind" /> <span><b data-i18n="blind.blind">Blind</b><small data-i18n="twe.blindHint">Only the number and colour, until you reveal it.</small></span></label>
-                <label><input type="radio" name="twe-vis" value="hidden" /> <span><b data-i18n="twe.hidden">Hidden</b><small data-i18n="twe.hiddenHint">Not shown to the guests yet.</small></span></label>
-              </div>
-            </fieldset>
+            <!-- What the guests see: the choice cards (component 10) -->
+            <ChoiceCards name="twe-vis" legend="blind.guestsSee" class="twe-group" options={[
+              { value: 'shown', label: 'blind.shown', hint: 'twe.shownHint' },
+              { value: 'blind', label: 'blind.blind', hint: 'twe.blindHint' },
+              { value: 'hidden', label: 'twe.hidden', hint: 'twe.hiddenHint' }]}><span slot="legend" data-help="guests-see"></span></ChoiceCards>
 
-            <label class="wz-switch twe-switch"><input id="twe-orderable" type="checkbox" role="switch" />
-              <span><b data-i18n="admin.orderable">Can be ordered</b><small data-i18n="twe.orderableHint">Guests can put it in the cart when ordering is open.</small></span></label>
-
-            <label for="twe-pos" data-i18n="twe.position">Place in the order</label>
-            <select id="twe-pos" class="twe-pos"></select>
+            <Switch title="admin.orderable" hint="twe.orderableHint" id="twe-orderable" class="twe-switch" />
 
             <p id="twe-msg" class="message error" hidden></p>
             <div class="row-actions">
@@ -312,23 +303,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div class="guests-head">
           <h2 data-i18n="admin.guests">Guests</h2>
           <div class="head-actions">
-            <!-- Show: the admin's filter drop-down (same look as src/lib/filter-dd.ts; statuses together, "Missing email" narrows them) -->
-            <div class="filter-dd" id="g-filter-dd">
-              <button id="g-filter-btn" class="btn small secondary filter-dd-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="g-filter-menu">
-                <span id="g-filter-label"></span>
-                <svg class="filter-dd-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
-              </button>
-              <div id="g-filter-menu" class="filter-dd-menu" hidden>
-                <label class="filter-all"><input type="checkbox" value="all" /> <span data-i18n="admin.fAll">All</span> <small></small></label>
-                <label><input type="checkbox" value="yes" /> <span data-i18n="admin.fYes">Coming</span> <small></small></label>
-                <label><input type="checkbox" value="waitlist" /> <span data-i18n="status.waitlist">Waiting list</span> <small></small></label>
-                <label><input type="checkbox" value="invited" /> <span data-i18n="status.invited">No reply yet</span> <small></small></label>
-                <label><input type="checkbox" value="no" /> <span data-i18n="status.no">Not attending</span> <small></small></label>
-                <hr />
-                <label><input type="checkbox" value="noemail" /> <span data-i18n="admin.fNoEmail">Missing email</span> <small></small></label>
-              </div>
-            </div>
-            <button id="g-invite-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
+            <!-- Who is shown: the one filter menu (src/lib/filter-dd.ts), made in the script -->
+            <div id="g-filter-slot" class="filter-slot"></div>
+            <button id="g-invite-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
           </div>
         </div>
         <!-- Guests are invited to wines: at least one wine in the tasting first -->
@@ -354,14 +331,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
                       <input id="gi-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
                     </div>
                   </div>
-                  <label class="gi-mail" data-help="invite-mail"><input id="g-send-mail" type="checkbox" checked /> <span data-i18n="inviteMail.sendOnInvite">Send the invitation by email (to guests with an email)</span></label>
+                  <Checkbox label="inviteMail.sendOnInvite" id="g-send-mail" checked small class="gi-mail" help="invite-mail" />
                 </div>
                 <div class="qa-actions">
                   <button id="gi-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
                   <CloseButton id="gi-close" />
                 </div>
                 <!-- Matches from the library: across the row, from the field to the right edge -->
-                <ul id="gi-hits" class="qa-hits" hidden></ul>
+                <ul id="gi-hits" class="qa-hits menu static" hidden></ul>
               </div>
             </div>
           </div>
@@ -382,16 +359,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section class="block" data-section="orders">
         <h2 data-i18n="admin.orders">Orders</h2>
         <!-- Ordering: the switch and, when a wine has a quantity price, who counts towards it -->
-        <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="orders_open" />
-          <span><b><span data-i18n="wizard.ordersTitle">Order wine</span><span data-help="orders-open"></span></b><small data-i18n="wizard.ordersHint">Guests can put the wines you allow in a cart and send an order.</small></span></label>
+        <Switch title="wizard.ordersTitle" hint="wizard.ordersHint" help="orders-open" data-key="orders_open" class="tab-switch" />
         <!-- Quantity prices: only when a wine in the tasting has one – who counts towards it (the host decides) -->
         <div id="bulk-mode" class="bulk-choice" hidden>
-          <p id="bulk-q" class="bulk-q"></p>
-          <!-- The same choice cards as everywhere else (radio, name, what it means) -->
-          <div class="choice-cards" role="radiogroup" aria-labelledby="bulk-q">
-            <label><input type="radio" name="bulk-mode" value="guest" /> <span><b data-i18n="bulk.segGuest">Each guest</b><small id="bulk-ex-guest"></small></span></label>
-            <label><input type="radio" name="bulk-mode" value="pooled" /> <span><b data-i18n="bulk.segPooled">All guests together</b><small id="bulk-ex-pooled"></small></span></label>
-          </div>
+          <!-- The same choice cards as everywhere else (radio, name, what it means); the script fills the question and examples -->
+          <ChoiceCards name="bulk-mode" legendId="bulk-q" options={[
+            { value: 'guest', label: 'bulk.segGuest', hintId: 'bulk-ex-guest' },
+            { value: 'pooled', label: 'bulk.segPooled', hintId: 'bulk-ex-pooled' }]} />
           <p id="bulk-example" class="bulk-example"></p>
           <p id="bulk-msg" class="hint" aria-live="polite"></p>
         </div>
@@ -422,21 +396,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <button id="q-add-toggle" class="btn small secondary" type="button" data-i18n="aq.add">Add question</button>
         </div>
         <div class="tab-switches">
-          <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="quiz_open" />
-            <span><b><span data-i18n="set.quizOpen">Answer the quiz</span><span data-help="quiz"></span></b><small data-i18n="set.quizOpenHint">The questions are open for answers on the guests’ phones.</small></span></label>
-          <label class="set-switch tab-switch"><input type="checkbox" role="switch" data-key="quiz_finished" />
-            <span><b data-i18n="set.quizDone">See the quiz answers</b><small data-i18n="set.quizDoneHint">The quiz is closed, and the right answers and explanations are shown.</small></span></label>
+          <Switch title="set.quizOpen" hint="set.quizOpenHint" help="quiz" data-key="quiz_open" class="tab-switch" />
+          <Switch title="set.quizDone" hint="set.quizDoneHint" data-key="quiz_finished" class="tab-switch" />
         </div>
         <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
 
         <!-- Suggestions from AI: shown here, added one by one only when the host chooses -->
         <div class="ai-quiz">
           <div class="ai-quiz-bar" data-help="ai-quiz">
-            <div class="segmented" role="radiogroup" aria-label="Difficulty" data-i18n-attr="aria-label=aiQuiz.level">
-              <label><input type="radio" name="q-ai-level" value="easy" /> <span data-i18n="aiQuiz.easy">Easy</span></label>
-              <label><input type="radio" name="q-ai-level" value="medium" checked /> <span data-i18n="aiQuiz.medium">Medium</span></label>
-              <label><input type="radio" name="q-ai-level" value="expert" /> <span data-i18n="aiQuiz.expert">Expert</span></label>
-            </div>
+            <ChoiceCards name="q-ai-level" legend="aiQuiz.level" srLegend compact class="ai-level" options={[
+              { value: 'easy', label: 'aiQuiz.easy' }, { value: 'medium', label: 'aiQuiz.medium', checked: true }, { value: 'expert', label: 'aiQuiz.expert' }]} />
             <button id="q-ai" class="btn small secondary" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.suggest">Suggestions from AI</span></button>
           </div>
           <p id="q-ai-status" class="hint" aria-live="polite" hidden></p>
@@ -457,7 +426,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <fieldset class="qf-fieldset">
             <legend data-i18n="aq.answersLegend">Answers – mark the right one</legend>
             <div id="qf-options" class="qf-options"></div>
-            <button id="qf-add-option" class="text-btn" type="button" data-i18n="aq.addAnswer">+ Add answer</button>
+            <button id="qf-add-option" class="text-btn" type="button"><Icon name="plus" /><span data-i18n="aq.addAnswer">Add answer</span></button>
           </fieldset>
           <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="opt" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
           <textarea class="input" id="qf-explanation" rows="2" maxlength="1000"></textarea>
@@ -488,6 +457,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
 <script>
   import { setLoading } from '../../lib/ui/button';
+  import { bindSwitch, switchRow } from '../../lib/ui/switch';
+  import { choiceCards } from '../../lib/ui/choice-cards';
+  import { filterDropdown, NONE } from '../../lib/filter-dd';
   import { iconSvg } from '../../lib/ui/icons';
   import { initHelpTips, followHelpLink } from '../../lib/help-tip';
   initHelpTips();
@@ -498,7 +470,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, mk as mkEl, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
-  import { personRow, type PersonChip } from '../../lib/ui/person-row';
+  import { personRow, initials, type PersonChip } from '../../lib/ui/person-row';
+  import { menuGroup, menuHit } from '../../lib/ui/menu';
   import { STATUS as STATUSES, guestStatus } from '../../lib/ui/status';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
@@ -653,7 +626,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const detailsPanel = sheetPanel($('details-panel') as HTMLDialogElement);
   $('details-edit').addEventListener('click', () => {
     fillDetailsForm();
-    $('d-msg').textContent = '';
     detailsPanel.open();
   });
   $('d-cancel').addEventListener('click', () => detailsPanel.close());
@@ -678,7 +650,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   $('details').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!tasting) return;
-    const msg = $('d-msg');
     const title = ($('d-title') as HTMLInputElement).value.trim();
     if (!title) { fieldError($('d-title'), t('admin.titleEmpty')); focusField($('d-title')); return; }
     if (!checkWhen('d', false)) { const bad = document.querySelector<HTMLElement>('#details [aria-invalid]'); if (bad) focusField(bad); return; }
@@ -690,14 +661,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       ...readAddress('d'),
     };
     const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
-    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
-    if (!error) {
+    // A toast says how it went (the panel closes when it is saved)
+    if (error) toast(t('admin.changesNotSaved'), { kind: 'error' });
+    else {
       // Read it back: the database composes the place line from the address
       const { data: fresh } = await supabase.from('tastings').select('*').eq('id', tasting.id).maybeSingle();
       Object.assign(tasting, fresh ?? patch);
       $('ta-title').textContent = title;
       renderDetails();
       detailsPanel.close();
+      toast(t('common.saved'), { kind: 'ok' });
     }
   });
 
@@ -758,34 +731,32 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     });
     document.querySelectorAll<HTMLInputElement>('input[name="bulk-mode"]').forEach((r) => (r.checked = r.value === tasting!.bulk_mode));
   }
-  document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
-    box.addEventListener('change', async () => {
-      if (!tasting) return;
-      const { error } = await supabase.from('tastings')
-        .update({ [box.dataset.key!]: box.checked }).eq('id', tasting.id);
+  // The switches save straight away (the one switch, src/lib/ui/switch.ts: spinner, put back on an error, toast)
+  document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => bindSwitch(box, {
+    save: async (on) => {
+      if (!tasting) return false;
+      const { error } = await supabase.from('tastings').update({ [box.dataset.key!]: on }).eq('id', tasting.id);
       if (error) {
-        box.checked = !box.checked;
         // Ordering with quantity prices needs the host's choice first
-        if (error.message.includes('bulk_mode_needed')) {
-          // The choice is right under the switch on this tab: show it, say so, and point to it
-          renderBulk();
-          $('bulk-mode').hidden = false;
-          $('bulk-msg').textContent = t('bulk.chooseFirst');
-          $('bulk-mode').classList.add('help-flash');
-          $('bulk-mode').scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => $('bulk-mode').classList.remove('help-flash'), 2400);
-        } else toast(t('admin.changeNotSaved'), { kind: 'error' });
-        return;
+        if (!error.message.includes('bulk_mode_needed')) return false;
+        // The choice is right under the switch on this tab: show it, say so, and point to it
+        renderBulk();
+        $('bulk-mode').hidden = false;
+        $('bulk-msg').textContent = t('bulk.chooseFirst');
+        $('bulk-mode').classList.add('help-flash');
+        $('bulk-mode').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => $('bulk-mode').classList.remove('help-flash'), 2400);
+        return '';
       }
-      tasting[box.dataset.key!] = box.checked;
-      toast(t('common.saved'), { kind: 'ok', ms: 2000 });
+      tasting[box.dataset.key!] = on;
       // The same switch on another tab follows
-      document.querySelectorAll<HTMLInputElement>(`input[data-key="${box.dataset.key}"]`).forEach((b) => (b.checked = box.checked));
+      document.querySelectorAll<HTMLInputElement>(`input[data-key="${box.dataset.key}"]`).forEach((b) => (b.checked = on));
       $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
       // Blind tasting changes every wine in it: show them again
       if (box.dataset.key === 'blind') await tastingWines?.load();
-    });
-  });
+      return true;
+    },
+  }));
 
   /** Quantity prices: shown only when a wine has one, with an example that follows the choice. */
   function renderBulk() {
@@ -808,8 +779,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     r.addEventListener('change', async () => {
       if (!tasting) return;
       const { error } = await supabase.from('tastings').update({ bulk_mode: r.value }).eq('id', tasting.id);
-      $('bulk-msg').textContent = error ? t('admin.changeNotSaved') : '';
-      if (!error) { tasting.bulk_mode = r.value; renderBulk(); toast(t('common.saved'), { kind: 'ok', ms: 2000 }); }
+      if (error) {
+        // Put the choice back and say so
+        document.querySelectorAll<HTMLInputElement>('input[name="bulk-mode"]').forEach((x) => (x.checked = x.value === tasting!.bulk_mode));
+        toast(t('admin.changeNotSaved'), { kind: 'error' });
+        return;
+      }
+      $('bulk-msg').textContent = '';
+      tasting.bulk_mode = r.value; renderBulk(); toast(t('common.saved'), { kind: 'ok', ms: 2000 });
     });
   });
 
@@ -1018,39 +995,19 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     inv.append(copy);
     form.append(inv);
 
-    // Status: the same choice cards as elsewhere (radio, name, what it means)
-    const statusHead = mk('p', 'flabel', t('admin.status'));
-    statusHead.id = `st-h-${p.id}`;
-    form.append(statusHead);
-    const cards = mk('div', 'choice-cards');
-    cards.setAttribute('role', 'radiogroup');
-    cards.setAttribute('aria-labelledby', statusHead.id);
-    for (const v of ['yes', 'waitlist', 'invited', 'no']) {
-      const lab = mk('label');
-      const r = mk('input');
-      r.type = 'radio';
-      r.name = `st-${p.id}`;
-      r.value = v;
-      r.checked = v === status;
-      r.addEventListener('change', () => { status = v; paidBox.hidden = !(feeAmount > 0 && status === 'yes'); });
-      const text = mk('span');
-      text.append(mk('b', '', STATUS[v]), mk('small', '', t(`guestStatus.${v}Hint` as Key)));
-      lab.append(r, text);
-      cards.append(lab);
-    }
-    form.append(cards);
+    // Status: the choice cards (radio, name, what it means)
+    const cards = choiceCards({
+      name: `st-${p.id}`, legend: t('admin.status'), value: status,
+      options: ['yes', 'waitlist', 'invited', 'no'].map((v) => ({ value: v, label: STATUS[v], hint: t(`guestStatus.${v}Hint` as Key) })),
+      onChange: (v) => { status = v; paid.el.hidden = !(feeAmount > 0 && status === 'yes'); },
+    });
+    form.append(cards.el);
 
-    // The fee: paid or not (only for guests who come, when there is a fee)
-    const paidBox = mk('label', 'set-switch guest-paid');
-    const paid = mk('input');
-    paid.type = 'checkbox';
-    paid.setAttribute('role', 'switch');
-    paid.checked = p.tasting_paid;
-    const paidText = mk('span');
-    paidText.append(mk('b', '', t('guestRow.feePaid')), mk('small', '', t('guestRow.feePaidHint', { amount: money(feeAmount) })));
-    paidBox.append(paid, paidText);
-    paidBox.hidden = !(feeAmount > 0 && status === 'yes');
-    form.append(paidBox);
+    // The fee: paid or not (only for guests who come, when there is a fee) – saved with the panel
+    const paid = switchRow({ title: t('guestRow.feePaid'), hint: t('guestRow.feePaidHint', { amount: money(feeAmount) }), checked: p.tasting_paid });
+    paid.el.classList.add('guest-paid');
+    paid.el.hidden = !(feeAmount > 0 && status === 'yes');
+    form.append(paid.el);
 
     const lab = mk('label', '', t('common.email'));
     const id = 'em-' + p.id;
@@ -1087,7 +1044,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { fieldError(em, t('guest.emailBad')); em.focus(); return; }
       save.disabled = true;
       const patch: Partial<P> = { status, email };
-      if (feeAmount > 0 && status === 'yes') patch.tasting_paid = paid.checked;
+      if (feeAmount > 0 && status === 'yes') patch.tasting_paid = paid.input.checked;
       const ok = await saveGuest(p, patch);
       save.disabled = false;
       if (!ok) return;
@@ -1126,39 +1083,25 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       no: participants.filter((p) => p.status === 'no').length,
       noemail: participants.filter((p) => !p.email).length,
     };
+    // The one filter menu: the statuses ("All" ticks them all) and "Missing email", which narrows them
     const all = ALL_STATUSES.every((v) => guestStatuses.has(v));
-    document.querySelectorAll<HTMLInputElement>('#g-filter-menu input').forEach((x) => {
-      x.closest('label')!.querySelector('small')!.textContent = String(count[x.value]);
-      x.checked = x.value === 'noemail' ? onlyNoEmail : x.value === 'all' ? all : guestStatuses.has(x.value);
-    });
-    // The button says what is shown: "All · 22", or the chosen ones with how many
-    const names = all ? [t('admin.fAll')] : ALL_STATUSES.filter((v) => guestStatuses.has(v)).map((v) => STATUS[v]);
-    if (onlyNoEmail) names.push(t('admin.fNoEmail'));
-    const shown = participants.filter(matchesFilter).length;
-    // One choice by name; several as "3 chosen" – the count always shows
-    const what = !names.length ? t('guestFilter.none') : names.length === 1 ? names[0] : t('guestFilter.chosen', { n: names.length });
-    $('g-filter-label').textContent = `${what} · ${shown}`;
-    $('g-filter-btn').title = names.join(', ');
-    $('g-filter-btn').classList.toggle('on', !all || onlyNoEmail);
+    guestFilter.render(
+      [...ALL_STATUSES.map((v) => ({ value: v, label: v === 'yes' ? t('admin.fYes') : STATUS[v], n: count[v] })),
+        { value: 'noemail', label: t('admin.fNoEmail'), n: count.noemail, extra: true }],
+      all ? new Set() : guestStatuses.size ? new Set(guestStatuses) : new Set([NONE]), count.all,
+      { extras: onlyNoEmail ? new Set(['noemail']) : new Set(), shown: participants.filter(matchesFilter).length });
     renderFee();
   }
 
-  // The drop-down: opens under its button, closes on a click outside or Escape
-  const fBtn = $('g-filter-btn'), fMenu = $('g-filter-menu');
-  function filterMenu(open: boolean) {
-    fMenu.hidden = !open;
-    fBtn.setAttribute('aria-expanded', String(open));
-  }
-  fBtn.addEventListener('click', () => filterMenu(fMenu.hidden));
-  document.addEventListener('click', (e) => { if (!fMenu.hidden && !$('g-filter-dd').contains(e.target as Node)) filterMenu(false); });
-  fMenu.addEventListener('keydown', (e) => { if (e.key === 'Escape') { filterMenu(false); fBtn.focus(); } });
-  fMenu.querySelectorAll<HTMLInputElement>('input').forEach((x) => x.addEventListener('change', () => {
-    // "All" ticks (or clears) every status; clearing one status clears "All"
-    if (x.value === 'noemail') onlyNoEmail = x.checked;
-    else if (x.value === 'all') { guestStatuses.clear(); if (x.checked) ALL_STATUSES.forEach((v) => guestStatuses.add(v)); }
-    else if (x.checked) guestStatuses.add(x.value); else guestStatuses.delete(x.value);
+  const guestFilter = filterDropdown({ name: t('admin.guests'), allLabel: t('admin.fAll'), onChange: (chosen, extras) => {
+    guestStatuses.clear();
+    if (!chosen.size) ALL_STATUSES.forEach((v) => guestStatuses.add(v));
+    else chosen.forEach((v) => { if (v !== NONE) guestStatuses.add(v); });
+    onlyNoEmail = extras.has('noemail');
     renderParticipants();
-  }));
+  } });
+  guestFilter.el.id = 'g-filter-dd';
+  $('g-filter-slot').replaceWith(guestFilter.el);
 
   $('guest-search').addEventListener('input', (e) => {
     guestQuery = (e.target as HTMLInputElement).value.trim().toLowerCase();
@@ -1183,6 +1126,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   // ---------- Orders ----------
   const orderTotal = (o: O) => o.order_lines.reduce((t, l) => t + l.quantity * Number(l.unit_price), 0);
 
+  /** "3 orders, 1 not paid (367,50 kr.)" – again when one is marked paid */
+  function ordersSummary() {
+    const p = document.getElementById('orders-summary');
+    if (!p) return;
+    const unpaid = orders.filter((o) => !o.paid);
+    p.textContent = t('admin.ordersSummary', { n: orders.length, unpaid: unpaid.length, amount: kr.format(unpaid.reduce((sum, o) => sum + orderTotal(o), 0)) });
+  }
+
   function renderOrders() {
     const byGuest = $('orders-by-guest');
     byGuest.replaceChildren();
@@ -1199,12 +1150,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     }
 
     const sorted = [...orders].sort((a, b) => b.created_at.localeCompare(a.created_at));
-    const unpaid = sorted.filter((o) => !o.paid);
     if (orders.length) {
       const p = document.createElement('p');
       p.className = 'hint';
-      p.textContent = t('admin.ordersSummary', { n: orders.length, unpaid: unpaid.length, amount: kr.format(unpaid.reduce((sum, o) => sum + orderTotal(o), 0)) });
+      p.id = 'orders-summary';
       byGuest.append(p);
+      ordersSummary();
     }
 
     for (const o of sorted) {
@@ -1230,21 +1181,19 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       }
       box.append(ul);
 
-      const label = document.createElement('label');
-      label.className = 'toggle';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = o.paid;
-      cb.addEventListener('change', async () => {
-        const { error } = await supabase.from('orders').update({ paid: cb.checked }).eq('id', o.id);
-        if (error) { cb.checked = !cb.checked; alert(t('admin.paymentNotSaved')); return; }
-        o.paid = cb.checked;
-        renderOrders();
+      // Paid or not: the one switch, saved straight away
+      const paid = switchRow({
+        title: t('admin.paidMobilepay'), checked: o.paid, plain: true,
+        save: async (on) => {
+          const { error } = await supabase.from('orders').update({ paid: on }).eq('id', o.id);
+          if (error) return t('admin.paymentNotSaved');
+          o.paid = on;
+          box.classList.toggle('paid', on);
+          ordersSummary();
+          return true;
+        },
       });
-      const span = document.createElement('span');
-      span.textContent = t('admin.paidMobilepay');
-      label.append(cb, span);
-      box.append(label);
+      box.append(paid.el);
       byGuest.append(box);
     }
 
@@ -1349,22 +1298,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     giHits.replaceChildren();
     giHits.hidden = !found.length;
     if (!found.length) return;
-    giHits.append(mkEl('li', 'qa-hits-head', head ?? t('guestInvite.fromList')));
+    // The one menu's look: a heading, then a row per guest with the same button as the row's ("Add" / "Add and invite")
+    giHits.append(menuGroup(head ?? t('guestInvite.fromList'), 'li'));
     const invited = invitedIds();
     for (const g of found) {
-      const li = mkEl('li', 'qa-hit');
-      const av = mkEl('span', 'guest-av small', g.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase());
-      const body = mkEl('div', 'wine-body');
-      body.append(mkEl('p', 'wine-name', g.name));
-      body.append(mkEl('p', 'wine-meta', g.email ?? t('admin.noEmail')));
-      li.append(av, body);
-      // The same button either way: disabled ("✓ Invited") when the guest is already in the tasting
-      const b = mkEl('button', 'btn small secondary', invited.has(g.id) ? '✓ ' + t('guestInvite.already') : addLabel(!!g.email));
+      const b = mkEl('button', 'btn small secondary');
       b.type = 'button';
-      if (invited.has(g.id)) b.disabled = true;
-      else b.addEventListener('click', () => inviteGuest(g, b));
-      li.append(b);
-      giHits.append(li);
+      // Disabled ("✓ Added") when the guest is already in the tasting
+      if (invited.has(g.id)) { b.disabled = true; b.innerHTML = iconSvg('check'); b.append(t('guestInvite.already')); }
+      else { b.textContent = addLabel(!!g.email); b.addEventListener('click', () => inviteGuest(g, b)); }
+      giHits.append(menuHit(mkEl('span', 'guest-av small', initials(g.name)), g.name, g.email ?? t('admin.noEmail'), b));
     }
   }
   for (const el of [giInput, giEmail]) {

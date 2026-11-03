@@ -44,7 +44,8 @@ import Base from '../../layouts/Base.astro';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t, plural } from '../../i18n';
-  import { fetchMyRatings, starsText, type MyRating } from '../../lib/rating';
+  import { fetchMyRatings, type MyRating } from '../../lib/rating';
+  import { starsRo } from '../../lib/ui/stars';
 
   let myRatings = new Map<number, MyRating>();
 
@@ -137,7 +138,7 @@ import Base from '../../layouts/Base.astro';
     }
     const mine = myRatings.get(w.id)?.rating;
     if (mine) {
-      const my = el('span', 'my-stars', starsText(mine));
+      const my = starsRo(mine);
       my.setAttribute('aria-label', t('rating.yours', { n: mine }));
       foot.append(my);
     }
@@ -408,7 +409,6 @@ import Base from '../../layouts/Base.astro';
   }
   .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
   .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
-  .carousel .my-stars { color: var(--amber); letter-spacing: 0.05em; font-size: 0.95rem; }
   .carousel .go {
     color: var(--amber);
     font-size: 0.7rem;

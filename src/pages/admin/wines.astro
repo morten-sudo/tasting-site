@@ -1,5 +1,6 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
+import Dropdown from '../../components/ui/Dropdown.astro';
 import SearchField from '../../components/ui/SearchField.astro';
 import CloseButton from '../../components/ui/CloseButton.astro';
 import Base from '../../layouts/Base.astro';
@@ -64,7 +65,7 @@ import '../../styles/admin.css';
       <section class="block wines-admin">
         <div class="guests-head">
           <SearchField id="wine-search" label="adminTasting.search" class="head-search" />
-          <button id="wine-add-toggle" class="btn small" type="button" data-i18n="wineLib.newWineBtn">+ New wine</button><span id="wine-add-help" data-help="new-wine"></span>
+          <button id="wine-add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="wineLib.newWineBtn">New wine</span></button><span id="wine-add-help" data-help="new-wine"></span>
         </div>
 
         <!-- Filters: country → region (linked), type, tasting – drop-downs with checkboxes, made in admin-wines.ts -->
@@ -121,20 +122,9 @@ import '../../styles/admin.css';
           <div id="wf-similar" class="wf-similar" hidden aria-live="polite"></div>
           <p class="flabel" data-i18n="admin.image">Image</p>
           <div class="wf-image" id="wf-image-box">
-            <!-- Click or drop a picture; with a picture: the picture, "Change" and "Remove" -->
-            <input id="wf-image" class="visually-hidden" type="file" accept="image/*" />
-            <label id="wf-image-drop" class="image-drop" for="wf-image">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></svg>
-              <span class="image-drop-text"><b data-i18n="image.choose">Choose a picture</b><span data-i18n="image.dropHint">or drop it here – a photo of the label fills in the form</span></span>
-            </label>
-            <div id="wf-image-shown" class="image-shown" hidden>
-              <img id="wf-preview" alt="" hidden />
-              <div class="image-actions">
-                <label for="wf-image" class="btn small secondary" data-i18n="image.change">Change picture</label>
-                <button id="wf-image-remove" class="text-btn" type="button" hidden data-i18n="admin.removeImage">Remove image</button>
-                <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
-              </div>
-            </div>
+            <!-- The one image picker (src/lib/ui/image-picker.ts): choose, drop or paste; with a picture: "Change" and the trash -->
+            <div id="wf-pick"></div>
+            <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
             <p id="wf-label-status" class="label-status" hidden aria-live="polite"></p>
             <!-- An official picture from the producer's website: the host picks the right one -->
             <button id="wf-find-image" class="text-btn find-image" type="button" data-i18n="image.findOfficial">Find an official picture</button>
@@ -147,8 +137,8 @@ import '../../styles/admin.css';
           <p id="wf-producer-busy" class="producer-status" hidden aria-live="polite"></p>
           <div class="wf-pair">
             <div>
-              <label for="wf-style" data-i18n="admin.style">Type</label>
-              <select id="wf-style"></select>
+              <label for="wf-style-btn" data-i18n="admin.style">Type</label>
+              <Dropdown id="wf-style" placeholder="admin.choose" />
             </div>
             <div>
               <label for="wf-vintage" data-i18n="admin.vintage">Vintage</label>
@@ -170,8 +160,8 @@ import '../../styles/admin.css';
           <!-- Origin: country → region → appellation; each list narrows the next, and a known appellation fills in the rest -->
           <div class="wf-pair">
             <div>
-              <label for="wf-country" data-i18n="origin.country">Country</label>
-              <select id="wf-country"></select>
+              <label for="wf-country-btn" data-i18n="origin.country">Country</label>
+              <Dropdown id="wf-country" placeholder="admin.choose" search />
             </div>
             <div>
               <label for="wf-region" data-i18n="origin.region">Region</label>

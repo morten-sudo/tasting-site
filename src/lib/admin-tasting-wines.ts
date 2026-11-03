@@ -1,8 +1,11 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
 // and whether guests can see (fully, or blind) and order them. Ratings from the guests are shown per wine.
-import { statusChip, chip } from './ui/status';
+import { statusChip } from './ui/status';
+import { starsRo } from './ui/stars';
 import { supabase } from './supabase';
 import { $, mk, sheetPanel, iconButton } from './admin-common';
+import { iconSvg } from './ui/icons';
+import { stepper, type Stepper } from './ui/stepper';
 import { styleName } from './wines';
 import { initHelpTips } from './help-tip';
 import { t, locale, money } from '../i18n';
@@ -49,7 +52,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'blind' | 'sort_order' | 'price_tiers'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)
       .eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
-    if (error) { alert(t('admin.changeNotSaved')); return false; }
+    if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return false; }
     Object.assign(r, patch);
     emit();
     return true;
@@ -68,10 +71,13 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const w = r.wines;
       const li = mk('li', 'tw-item');
       li.dataset.wine = String(r.wine_id);
-      // Drag to reorder (larger screens); the panel has the place too
-      li.draggable = true;
-      const grip = mk('span', 'tw-grip', '⋮⋮');
-      grip.setAttribute('aria-hidden', 'true');
+      // The grip moves the wine: drag it (mouse or finger), or ↑/↓ when it has the focus
+      const grip = mk('button', 'tw-grip');
+      grip.type = 'button';
+      grip.setAttribute('aria-label', t('twe.move', { name: w.name }));
+      grip.title = t('twe.moveHint');
+      grip.setAttribute('aria-describedby', 'tw-move-help');
+      grip.innerHTML = iconSvg('grip');
       const no = mk('span', 'tw-no', String(i + 1));
 
       const main = mk('div', 'tw-main');
@@ -88,7 +94,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const rating = ratings.get(r.wine_id);
       if (rating) {
         const avg = rating.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        chips.append(chip(t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes })));
+        chips.append(starsRo(rating.average, ' ' + t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes }), { chip: true }));
       }
       main.append(chips);
 
@@ -118,36 +124,67 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       actions.append(editBtn, del);
 
       li.append(grip, no, thumb(w), main, price, actions);
-      wireDrag(li);
+      wireDrag(li, grip);
       list.append(li);
     });
     emit();
   }
 
-  // ---------- Reorder by dragging ----------
+  // ---------- Reorder: drag the grip (pointer events – mouse, pen and finger), or ↑/↓ on it ----------
   let dragged: HTMLElement | null = null;
-  function wireDrag(li: HTMLElement) {
-    li.addEventListener('dragstart', (e) => { dragged = li; li.classList.add('dragging'); e.dataTransfer?.setData('text/plain', li.dataset.wine!); });
-    li.addEventListener('dragend', () => { li.classList.remove('dragging'); dragged = null; saveOrderFromList(); });
-    li.addEventListener('dragover', (e) => {
-      if (!dragged || dragged === li) return;
+  function wireDrag(li: HTMLElement, grip: HTMLButtonElement) {
+    grip.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
       e.preventDefault();
-      const box = li.getBoundingClientRect();
-      li.parentElement!.insertBefore(dragged, e.clientY < box.top + box.height / 2 ? li : li.nextSibling);
+      dragged = li;
+      li.classList.add('dragging');
+      try { grip.setPointerCapture(e.pointerId); } catch { /* a synthetic event */ }
+    });
+    grip.addEventListener('pointermove', (e) => {
+      if (dragged !== li) return;
+      const over = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.tw-item');
+      if (!over || over === li || over.parentElement !== list) return;
+      const box = over.getBoundingClientRect();
+      list.insertBefore(li, e.clientY < box.top + box.height / 2 ? over : over.nextSibling);
+    });
+    const end = () => {
+      if (dragged !== li) return;
+      li.classList.remove('dragging');
+      dragged = null;
+      saveOrderFromList(Number(li.dataset.wine));
+    };
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+    grip.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      e.preventDefault();
+      const ids = rows.map((r) => r.wine_id);
+      const id = Number(li.dataset.wine);
+      const i = ids.indexOf(id);
+      const to = i + (e.key === 'ArrowUp' ? -1 : 1);
+      if (to < 0 || to >= ids.length) return;
+      ids.splice(i, 1);
+      ids.splice(to, 0, id);
+      placeRows(ids, id);
     });
   }
-  async function saveOrderFromList() {
+  async function saveOrderFromList(moved: number) {
     const ids = [...list.querySelectorAll<HTMLElement>('.tw-item')].map((x) => Number(x.dataset.wine));
     if (ids.every((id, i) => rows[i]?.wine_id === id)) return;
-    await placeRows(ids);
+    await placeRows(ids, moved);
   }
-  /** Saves a new order (wine ids top to bottom) and shows it. */
-  async function placeRows(ids: number[]) {
+  /** Saves a new order (wine ids top to bottom) and shows it; the moved wine keeps the focus on its grip. */
+  async function placeRows(ids: number[], moved?: number) {
     const byId = new Map(rows.map((r) => [r.wine_id, r]));
     rows = ids.map((id) => byId.get(id)!).filter(Boolean);
     const changed = rows.filter((r, i) => r.sort_order !== i + 1);
     rows.forEach((r, i) => (r.sort_order = i + 1));
     render();
+    if (moved != null) {
+      list.querySelector<HTMLElement>(`[data-wine="${moved}"] .tw-grip`)?.focus();
+      const r = rows.find((x) => x.wine_id === moved);
+      if (r) $('tw-move-help').textContent = t('twe.moved', { name: r.wines.name, n: rows.indexOf(r) + 1 });
+    }
     const res = await Promise.all(changed.map((r) =>
       supabase.from('tasting_wines').update({ sort_order: r.sort_order }).eq('tasting_id', tastingId).eq('wine_id', r.wine_id)));
     if (res.some((x) => x.error)) toast(t('admin.changeNotSaved'), { kind: 'error' });
@@ -156,13 +193,12 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   // ---------- Edit one wine in the side panel ----------
   const editPanel = sheetPanel($<HTMLDialogElement>('tw-edit'));
   let editing: Row | null = null;
-  let tierRows: { qty: HTMLInputElement; price: HTMLInputElement }[] = [];
-  function tierRow(qty = '', price = '') {
-    const row = mk('div', 'field-row twe-tier');
-    const q = mk('input');
-    q.type = 'text'; q.inputMode = 'numeric'; q.className = 'input'; q.value = qty; q.placeholder = '6'; q.autocomplete = 'off';
-    q.id = `twe-q-${Math.random().toString(36).slice(2, 8)}`;
-    q.setAttribute('aria-label', t('adminTasting.bulkQty'));
+  let tierRows: { qty: Stepper; price: HTMLInputElement }[] = [];
+  // "From [− 6 +] bottles: [109,95 kr.] each" – the number of bottles with the stepper, the price with its unit inside
+  function tierRow(qty = 6, price = '') {
+    const row = mk('div', 'twe-tier');
+    const line = mk('div', 'twe-tier-line');
+    const q = stepper({ value: qty, min: 2, max: 99, small: true, label: t('adminTasting.bulkQty') });
     const p = mk('input');
     p.type = 'text'; p.inputMode = 'decimal'; p.className = 'input'; p.value = price; p.autocomplete = 'off';
     p.id = `twe-p-${Math.random().toString(36).slice(2, 8)}`;
@@ -170,17 +206,19 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     const del = iconButton('trash', t('twe.removeTier'), { quiet: true });
     const entry = { qty: q, price: p };
     del.addEventListener('click', () => { tierRows = tierRows.filter((x) => x !== entry); row.remove(); });
-    // "From [6] bottles: [109,95 kr.] each" – the numbers in boxes with their unit inside
-    const qBox = mk('div', 'affix w-num w-qty small');
-    qBox.append(q);
     const pBox = mk('div', 'affix w-num small');
     pBox.append(p, mk('span', 'unit', t('unit.kr')));
-    row.append(mk('span', '', t('twe.from')), qBox, mk('span', '', t('twe.bottles')), pBox, mk('span', '', t('unit.each')), del);
+    const from = mk('span', 'twe-tier-part');
+    from.append(mk('span', '', t('twe.from')), q.el, mk('span', '', t('twe.bottles')));
+    const each = mk('span', 'twe-tier-part');
+    each.append(pBox, mk('span', '', t('unit.each')));
+    line.append(from, each);
+    row.append(line, del);
     tierRows.push(entry);
     $('twe-tiers').append(row);
     return entry;
   }
-  $('twe-add-tier').addEventListener('click', () => tierRow().qty.focus());
+  $('twe-add-tier').addEventListener('click', () => tierRow().price.focus());
 
   function edit(r: Row) {
     editing = r;
@@ -195,12 +233,9 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     retail.value = amountText(w.retail_price_dkk, locale());
     $('twe-tiers').replaceChildren();
     tierRows = [];
-    for (const x of tiersOf(r)) tierRow(String(x.qty), amountText(x.price, locale()));
+    for (const x of tiersOf(r)) tierRow(x.qty, amountText(x.price, locale()));
     document.querySelectorAll<HTMLInputElement>('input[name="twe-vis"]').forEach((x) => (x.checked = x.value === visOf(r)));
     $<HTMLInputElement>('twe-orderable').checked = r.orderable;
-    const pos = $<HTMLSelectElement>('twe-pos');
-    pos.replaceChildren(...rows.map((_, i) => new Option(t('twe.positionOf', { n: i + 1, total: rows.length }), String(i))));
-    pos.value = String(rows.indexOf(r));
     for (const el of [price, retail]) fieldError(el, null);
     $('twe-msg').hidden = true;
     editPanel.open();
@@ -222,11 +257,11 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     if (retail != null && (Number.isNaN(retail) || retail < 0)) { fieldError(retailEl, t('wineCheck.price')); ok = false; }
     const tiers = new Map<number, number>();
     for (const x of tierRows) {
-      const qt = x.qty.value.trim(), pt = x.price.value.trim();
-      if (!qt && !pt) continue;
-      const q = Number(qt), p = parseAmount(pt);
-      const row = x.qty.closest('.twe-tier')!;
-      if (!/^\d+$/.test(qt) || q < 2 || q > 99) { fieldError(x.qty, t('wineCheck.offerQty'), row); ok = false; continue; }
+      const q = x.qty.value, pt = x.price.value.trim();
+      // A row without a price is left out (the stepper always has a number)
+      if (!pt) continue;
+      const p = parseAmount(pt);
+      const row = x.price.closest('.twe-tier')!;
       if (p == null || Number.isNaN(p) || p < 0) { fieldError(x.price, t('wineCheck.price'), row); ok = false; continue; }
       tiers.set(q, p);
     }
@@ -250,16 +285,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     }
     save.disabled = false;
     if (!done) return;
-    // A new place in the order
-    const to = Number($<HTMLSelectElement>('twe-pos').value);
-    const from = rows.indexOf(r);
     editPanel.close();
-    if (to !== from) {
-      const ids = rows.map((x) => x.wine_id);
-      ids.splice(from, 1);
-      ids.splice(to, 0, r.wine_id);
-      await placeRows(ids);
-    } else render();
+    render();
     toast(t('twe.saved', { name: r.wines.name }), { kind: 'ok' });
     list.querySelector<HTMLElement>(`[data-wine="${r.wine_id}"]`)?.classList.add('just-saved');
   });

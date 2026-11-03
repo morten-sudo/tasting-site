@@ -1,6 +1,8 @@
 // Admin, wine library: the host's wines across all tastings – add, edit and delete one at a time,
 // filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
 import { setLoading } from './ui/button';
+import { getDropdown, type DropdownEl } from './ui/dropdown';
+import { imagePicker } from './ui/image-picker';
 import { supabase } from './supabase';
 import { STYLES, styleName, kr } from './wines';
 import { t, lang, locale } from '../i18n';
@@ -81,19 +83,24 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   const list = $<HTMLUListElement>('wine-admin-list');
   const checks = wineChecks(form);
   const AMOUNTS = ['wf-abv', 'wf-retail', 'wf-offer-price'];
-  const field = <E extends HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id: string) => $<E>(id);
+  const field = <E extends HTMLInputElement | HTMLTextAreaElement>(id: string) => $<E>(id);
+
+  // The picture: the one image picker (choose, drop or paste)
+  const picker = imagePicker({
+    onFile: (f) => useImage(f, 'wf-label-status'),
+    onRemove: () => { pendingImage = null; linkImage = null; removeImage = true; setPreview(null); labelStatus(''); },
+  });
+  $('wf-pick').replaceWith(picker.el);
 
   // Style options
-  const styleSelect = field<HTMLSelectElement>('wf-style');
-  styleSelect.replaceChildren(new Option(t('admin.choose'), ''));
-  for (const key of STYLES) styleSelect.append(new Option(styleName(key), key));
+  // The one dropdown (src/lib/ui/dropdown.ts); the box works like a <select> (.value, "change")
+  const styleSelect = getDropdown('wf-style', { placeholder: t('admin.choose'), options: STYLES.map((key) => ({ value: key, label: styleName(key) })) }).el;
 
   // ---------- Origin: country → region → appellation ----------
   // Each choice narrows the next list; a known appellation fills in region and country.
-  const countrySelect = field<HTMLSelectElement>('wf-country');
-  countrySelect.replaceChildren(new Option(t('admin.choose'), ''),
-    ...WINE_COUNTRIES.map((c) => new Option(countryName(c) ?? c, c))
-      .sort((a, b) => a.text.localeCompare(b.text, lang())));
+  // A long list: the dropdown gets a search field
+  const countrySelect = getDropdown('wf-country', { placeholder: t('admin.choose'), search: true,
+    options: WINE_COUNTRIES.map((c) => ({ value: c, label: countryName(c) ?? c })).sort((a, b) => a.label.localeCompare(b.label, lang())) }).el;
   const appInput = field<HTMLInputElement>('wf-appellation');
   const regionInput = field<HTMLInputElement>('wf-region');
   // Suggestions under the region and appellation fields (filled by fillLists)
@@ -241,7 +248,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const btn = $<HTMLButtonElement>('wf-read-label');
     statusTarget = target;
     busyButton(btn, true);
-    $('wf-image-box').classList.add('busy');
+    picker.setBusy(true);
     labelStatus(t('label.reading'), 'busy');
     try {
       const image = await labelDataUrl(pendingImage);
@@ -259,7 +266,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       labelStatus(t('label.failed'), 'error');
     } finally {
       busyButton(btn, false);
-      $('wf-image-box').classList.remove('busy');
+      picker.setBusy(false);
     }
   }
 
@@ -269,7 +276,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   type Change = { id: string; apply: () => void };
   /** The field's label without its hint, e.g. "Vintage". */
   const fieldName = (id: string) => {
-    const label = form.querySelector<HTMLElement>(`label[for="${id}"]`);
+    if (id === 'wf-image') return t('admin.image');
+    const label = form.querySelector<HTMLElement>(`label[for="${id}"], label[for="${id}-btn"]`);
     const first = label?.querySelector('span:not(.hint)') ?? label;
     return (first?.textContent ?? id).replace(/\s*\(.*\)\s*$/, '').trim();
   };
@@ -282,14 +290,14 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function filler() {
     let filled = 0;
     const changes: Change[] = [];
-    const set = (el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, v: string) => {
+    const set = (el: HTMLInputElement | HTMLTextAreaElement | DropdownEl, v: string) => {
       el.value = v;
       el.classList.add('from-label');
       if (el.id === 'wf-name' || el.id === 'wf-vintage') queueMicrotask(showSimilar);
     };
     const put = (id: string, value: string | number | null | undefined) => {
       if (value == null || value === '') return;
-      const el = field<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(id);
+      const el = field<HTMLInputElement | HTMLTextAreaElement>(id) as HTMLInputElement | HTMLTextAreaElement | DropdownEl;
       const v = typeof value === 'number' && AMOUNTS.includes(id) ? amountText(value, locale())
         : AMOUNTS.includes(id) && parseAmount(String(value)) != null && !Number.isNaN(parseAmount(String(value))) ? amountText(parseAmount(String(value)), locale())
         : String(value);
@@ -363,9 +371,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       }
       if (r.image && !pendingImage) {
         const useImage = () => { linkImage = r.image; removeImage = false; setPreview(r.image); };
-        const preview = $<HTMLImageElement>('wf-preview');
-        if (preview.hidden) { useImage(); f.bump(); }
-        else if (preview.src !== r.image) f.add({ id: 'wf-image', apply: useImage });
+        if (!previewUrl) { useImage(); f.bump(); }
+        else if (previewUrl !== r.image) f.add({ id: 'wf-image', apply: useImage });
       }
       // The page's other pictures: our guess may be the back label or a detail – the host can pick another
       const others = (r.images ?? []).filter((u) => u !== r.image);
@@ -391,13 +398,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     }
   }
 
-  function setPreview(url: string | null) {
-    const img = $<HTMLImageElement>('wf-preview');
-    img.hidden = !url;
-    if (url) img.src = url;
-    $('wf-image-shown').hidden = !url;
-    $('wf-image-drop').hidden = !!url;
-    $('wf-image-remove').hidden = !url;
+  let previewUrl: string | null = null;
+  function setPreview(url: string | null, name = '') {
+    previewUrl = url;
+    picker.setImage(url, name);
     $('wf-read-label').hidden = !pendingImage;
   }
 
@@ -545,7 +549,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     // "Not in a tasting" last, after a line
     const none = tc.get('none') ?? 0;
     if (none || filter.tasting.has('none')) tOpts.push({ value: 'none', label: t('wineLib.unused'), n: none, sep: tOpts.length > 0 });
-    dds.tasting.render(tOpts, filter.tasting, tRows.length);
+    // A wine can be in several tastings: count the wines, not the tastings
+    dds.tasting.render(tOpts, filter.tasting, tRows.length, { shown: tRows.filter((w) => matches(w)).length });
     const any = anyFilter() || !!filter.q;
     $('wl-count').textContent = any ? t('wineLib.showing', { n: shown, total: wines.length }) : '';
     $('wl-clear').hidden = !anyFilter();
@@ -683,17 +688,13 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   // ---------- Events ----------
   $('wf-cancel').addEventListener('click', closeForm);
 
-  async function useImage(input: HTMLInputElement, status: StatusId) {
-    const file = input.files?.[0];
-    if (!file) return;
+  async function useImage(file: File, status: StatusId) {
     pendingImage = await shrinkImage(file);
     removeImage = false;
-    setPreview(URL.createObjectURL(pendingImage));
-    input.value = '';
+    setPreview(URL.createObjectURL(pendingImage), file.name);
     // A new wine: read the label straight away
     if (!editing) readLabel(status);
   }
-  field<HTMLInputElement>('wf-image').addEventListener('change', (e) => useImage(e.target as HTMLInputElement, 'wf-label-status'));
   // An official picture from the producer's website (find-image): the best candidates, the host picks one
   $('wf-find-image').addEventListener('click', async () => {
     const btn = $<HTMLButtonElement>('wf-find-image');
@@ -725,7 +726,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function showImageOptions(images: { url: string; page?: string }[]) {
     const box = $('wf-image-options');
     // The choices stay after picking one (the chosen one is marked); each can be removed with ×
-    const current = $<HTMLImageElement>('wf-preview').hidden ? null : $<HTMLImageElement>('wf-preview').src;
+    const current = previewUrl;
     box.replaceChildren(...images.map((im) => {
       const cell = mk('div', 'image-cell');
       const b = mk('button', 'image-option');
@@ -755,21 +756,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     box.hidden = false;
   }
 
-  // Drop a picture on the image field (or on the picture shown)
-  const imageBox = $('wf-image-box');
-  imageBox.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); imageBox.classList.add('dragging'); } });
-  imageBox.addEventListener('dragleave', (e) => { if (!imageBox.contains(e.relatedTarget as Node)) imageBox.classList.remove('dragging'); });
-  imageBox.addEventListener('drop', (e) => {
-    imageBox.classList.remove('dragging');
-    const file = [...(e.dataTransfer?.files ?? [])].find((f) => f.type.startsWith('image/'));
-    if (!file) return;
-    e.preventDefault();
-    const input = field<HTMLInputElement>('wf-image');
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
-    useImage(input, 'wf-label-status');
-  });
   /** "Fetched from <site>" above the name, when the wine came from a link. */
   function showSource() {
     const box = $('wf-source');
@@ -802,14 +788,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (e.key === 'Enter') { e.preventDefault(); readLink(); }
   });
 
-  $('wf-image-remove').addEventListener('click', () => {
-    pendingImage = null;
-    linkImage = null;
-    removeImage = true;
-    field<HTMLInputElement>('wf-image').value = '';
-    setPreview(null);
-    labelStatus('');
-  });
+
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

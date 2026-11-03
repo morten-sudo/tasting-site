@@ -1,0 +1,8 @@
+---
+// Component 12 – a checkbox with its text (checkbox() in src/lib/ui/checkbox.ts builds the same). label: i18n key;
+// any other attribute goes on the input (id, checked …); the slot comes after the text (e.g. a help tip).
+import { en } from '../../i18n/en';
+interface Props { label: keyof typeof en; small?: boolean; class?: string; help?: string; [attr: string]: unknown }
+const { label, small = false, class: cls, help, ...rest } = Astro.props;
+---
+<label class:list={['check', { small }, cls]} data-help={help}><input type="checkbox" {...rest} /><span data-i18n={label}>{en[label]}</span><slot /></label>

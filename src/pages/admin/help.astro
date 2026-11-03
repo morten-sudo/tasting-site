@@ -1,5 +1,6 @@
 ---
 import SearchField from '../../components/ui/SearchField.astro';
+import Dropdown from '../../components/ui/Dropdown.astro';
 // Help for hosts: every feature, step by step. Only shown to signed-in hosts (in the admin menu).
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
@@ -12,10 +13,10 @@ import '../../styles/admin.css';
       <h1 class="title" data-i18n="adminNav.help">Help</h1>
       <p class="hint" data-i18n="help.intro">Everything Winetastr can do, and how. Search, or open a topic.</p>
       <SearchField id="help-search" label="help.search" />
-      <p id="help-target" class="help-target" hidden>
-        <label for="help-tasting" data-i18n="help.linksTo">Links to a tasting go to</label>
-        <select id="help-tasting"></select>
-      </p>
+      <div id="help-target" class="help-target" hidden>
+        <label for="help-tasting-btn" data-i18n="help.linksTo">Links to a tasting go to</label>
+        <Dropdown id="help-tasting" full={false} />
+      </div>
       <nav id="help-toc" class="help-toc" aria-label="Topics" data-i18n-attr="aria-label=help.topics"></nav>
       <div id="help-list" class="help-list"></div>
       <p id="help-none" class="hint" hidden data-i18n="help.noMatch">Nothing found. Try another word.</p>
@@ -26,6 +27,7 @@ import '../../styles/admin.css';
 
 <script>
   import { supabase } from '../../lib/supabase';
+  import { getDropdown } from '../../lib/ui/dropdown';
   import { requireHost, $ } from '../../lib/admin-common';
   import { HELP, pick } from '../../lib/help-content';
   import { formatWhen } from '../../i18n';
@@ -53,16 +55,12 @@ import '../../styles/admin.css';
     let saved: string | null = null;
     try { saved = localStorage.getItem(KEY); } catch { /* private mode */ }
     slug = tastings.find((x) => x.slug === saved)?.slug ?? tastings[0]?.slug ?? null;
-    const sel = $('help-tasting') as HTMLSelectElement;
-    sel.replaceChildren(...tastings.map((x) => {
-      const o = document.createElement('option');
-      o.value = x.slug;
-      o.textContent = x.starts_at ? `${x.title} · ${formatWhen(x.starts_at)}` : x.title;
-      return o;
-    }));
+    // The one dropdown: the tasting with its date under it
+    const sel = getDropdown('help-tasting', { search: tastings.length > 12,
+      options: tastings.map((x) => ({ value: x.slug, label: x.title, hint: x.starts_at ? formatWhen(x.starts_at) : undefined })) });
     if (slug) sel.value = slug;
     $('help-target').hidden = tastings.length < 2;
-    sel.addEventListener('change', () => {
+    sel.el.addEventListener('change', () => {
       slug = sel.value;
       try { localStorage.setItem(KEY, slug); } catch { /* private mode */ }
       resolveLinks();

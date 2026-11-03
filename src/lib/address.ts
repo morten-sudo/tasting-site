@@ -3,6 +3,7 @@
 // through /api/postal – and the code is tidied into the country's format.
 import { t } from '../i18n';
 import { countryBy, normalisePostal, DEFAULT_COUNTRY } from './countries';
+import { getDropdown } from './ui/dropdown';
 
 export type Address = {
   country: string; region: string | null; street: string | null; house_number: string | null; postal_code: string | null; city: string | null;
@@ -30,8 +31,10 @@ const val = (el: HTMLInputElement) => el.value.trim() || null;
 
 /** Wires up the country choice, postal code format and city lookup. */
 export function initAddress(prefix: string) {
-  const country = field(prefix, 'country') as unknown as HTMLSelectElement;
-  const region = field(prefix, 'region') as unknown as HTMLSelectElement;
+  // Country and state: the one dropdown (src/lib/ui/dropdown.ts) – the box works like a <select>
+  const country = getDropdown(`${prefix}-country`).el;
+  const regionDd = getDropdown(`${prefix}-region`, { search: true });
+  const region = regionDd.el;
   const regionBox = document.getElementById(`${prefix}-region-box`)!;
   const postal = field(prefix, 'postal');
   const city = field(prefix, 'city');
@@ -48,8 +51,8 @@ export function initAddress(prefix: string) {
     // States / provinces for the countries that use them
     const keep = region.value;
     regionBox.hidden = !c.regions;
-    region.replaceChildren(new Option('', ''), ...(c.regions ?? []).map(([code, name]) => new Option(`${name} (${code})`, code)));
-    if (c.regions?.some(([code]) => code === keep)) region.value = keep;
+    regionDd.setOptions((c.regions ?? []).map(([code, name]) => ({ value: code, label: `${name} (${code})` })),
+      c.regions?.some(([code]) => code === keep) ? keep : '');
     setHint();
   }
 
@@ -84,11 +87,11 @@ export function initAddress(prefix: string) {
 }
 
 export function readAddress(prefix: string): Address {
-  const c = countryBy(field(prefix, 'country').value);
+  const c = countryBy(getDropdown(`${prefix}-country`).value);
   const raw = field(prefix, 'postal').value;
   return {
     country: c.code,
-    region: c.regions ? (field(prefix, 'region').value || null) : null,
+    region: c.regions ? (getDropdown(`${prefix}-region`).value || null) : null,
     street: val(field(prefix, 'street')),
     house_number: val(field(prefix, 'number')),
     postal_code: raw.trim() ? normalisePostal(c, raw) : null,
@@ -103,8 +106,8 @@ export function writeAddress(prefix: string, a: Partial<Address> & { place?: str
   field(prefix, 'number').value = a.house_number ?? '';
   field(prefix, 'postal').value = a.postal_code ?? '';
   field(prefix, 'city').value = a.city ?? '';
-  const country = field(prefix, 'country') as unknown as HTMLSelectElement;
+  const country = getDropdown(`${prefix}-country`).el;
   country.value = countryBy(a.country ?? DEFAULT_COUNTRY).code;
   country.dispatchEvent(new Event('change'));   // placeholder, keyboard and states for the country
-  field(prefix, 'region').value = a.region ?? '';
+  getDropdown(`${prefix}-region`).value = a.region ?? '';
 }

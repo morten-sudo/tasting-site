@@ -44,7 +44,7 @@ import Base from '../../layouts/Base.astro';
 </Base>
 
 <script>
-  import { iconButton } from '../../lib/ui/icon-button';
+  import { stepper } from '../../lib/ui/stepper';
   import { statusChip } from '../../lib/ui/status';
   import { setLoading } from '../../lib/ui/button';
   import { supabase } from '../../lib/supabase';
@@ -110,20 +110,23 @@ import Base from '../../layouts/Base.astro';
       if (note) info.append(el('p', 'line-bulk', note));
 
       const ctrl = el('div', 'line-ctrl');
-      const minus = iconButton('minus', t('cart.oneLess', { name: w.name }), { size: 'normal', tip: false });
-      const count = el('output', 'count', String(n));
-      const plus = iconButton('plus', t('cart.oneMore', { name: w.name }), { size: 'normal', tip: false });
-      plus.disabled = n >= MAX_PER_WINE;
-      minus.addEventListener('click', () => { setQty(id, n - 1); renderCart(); });
-      plus.addEventListener('click', () => { setQty(id, n + 1); renderCart(); });
-      const stepper = el('div', 'stepper');
-      stepper.append(minus, count, plus);
+      // The one stepper (src/lib/ui/stepper.ts): 1 up to what may be ordered; "Remove" takes the line away
+      const step = stepper({ value: n, min: 1, max: MAX_PER_WINE, label: w.name,
+        lessLabel: t('cart.oneLess', { name: w.name }), moreLabel: t('cart.oneMore', { name: w.name }),
+        onChange: (v) => {
+          const which = document.activeElement === step.el.lastElementChild ? 'last' : 'first';
+          setQty(id, v); renderCart();
+          // Keep the focus on the same button after the list is drawn again
+          const again = ul.querySelector<HTMLElement>(`[data-line="${id}"] .stepper button:${which}-of-type`);
+          (again && !(again as HTMLButtonElement).disabled ? again : ul.querySelector<HTMLElement>(`[data-line="${id}"] .stepper button:not(:disabled)`))?.focus();
+        } });
+      li.dataset.line = String(id);
 
       const remove = el('button', 'text-btn danger small', t('cart.remove'));
       remove.type = 'button';
       remove.addEventListener('click', () => { setQty(id, 0); renderCart(); });
 
-      ctrl.append(stepper, el('span', 'line-total', kr.format(n * price)), remove);
+      ctrl.append(step.el, el('span', 'line-total', kr.format(n * price)), remove);
       li.append(info, ctrl);
       ul.append(li);
     }
@@ -257,16 +260,6 @@ import Base from '../../layouts/Base.astro';
   .cart-page .line-bulk { margin: -0.3rem 0 0.6rem; color: var(--amber); font-size: 0.88rem; }
   .cart-page .line-ctrl { display: flex; align-items: center; gap: 1rem; }
   .cart-page .line-total { margin-left: auto; font-variant-numeric: tabular-nums; }
-
-  .cart-page .stepper {
-    display: flex;
-    align-items: center;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: #fff;
-  }
-  .cart-page .stepper .icon-act:hover:not(:disabled) { border-color: transparent; background: var(--lodge); }
-  .cart-page .count { min-width: 1.5rem; text-align: center; font-weight: 500; font-variant-numeric: tabular-nums; }
 
   .cart-page .sum {
     display: flex;

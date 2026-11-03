@@ -1,6 +1,7 @@
 ---
 import Icon from '../components/ui/Icon.astro';
 import CloseButton from '../components/ui/CloseButton.astro';
+import Switch from '../components/ui/Switch.astro';
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.profile">
@@ -66,20 +67,20 @@ import Base from '../layouts/Base.astro';
       <!-- Hosts: what they want an email about (all tastings they host) -->
       <section id="notify" class="profile-block" hidden>
         <h2 data-i18n="notify.title">Email me when a guest …</h2>
-        <div class="notify-list">
-          <label class="toggle"><input type="checkbox" data-notify="notify_yes" /> <span data-i18n="notify.yes">says yes (or goes on the waiting list)</span></label>
-          <label class="toggle"><input type="checkbox" data-notify="notify_no" /> <span data-i18n="notify.no">says no</span></label>
-          <label class="toggle"><input type="checkbox" data-notify="notify_note" /> <span data-i18n="notify.note">writes a note or a diet</span></label>
-          <label class="toggle"><input type="checkbox" data-notify="notify_chat" /> <span data-i18n="notify.chat">writes in the chat</span></label>
-          <label class="toggle"><input type="checkbox" data-notify="notify_order" /> <span data-i18n="notify.order">orders wine</span></label>
-        </div>
         <p class="hint" data-i18n="notify.hint">For all tastings you host. Several things at once come in one email per tasting.</p>
-        <p id="notify-msg" class="hint" aria-live="polite"></p>
+        <!-- Each is on or off and saved straight away: the one switch (component 11) -->
+        <div class="notify-list">
+          <Switch title="notify.yes" data-notify="notify_yes" />
+          <Switch title="notify.no" data-notify="notify_no" />
+          <Switch title="notify.note" data-notify="notify_note" />
+          <Switch title="notify.chat" data-notify="notify_chat" />
+          <Switch title="notify.order" data-notify="notify_order" last />
+        </div>
       </section>
 
       <section class="profile-block">
         <h2 data-i18n="profile.language">Language</h2>
-        <ul id="lang-buttons" class="lang-list" role="list"></ul>
+        <div id="lang-buttons" class="lang-list"></div>
       </section>
 
       <button id="sign-out" class="btn secondary" type="button" data-i18n="nav.signOut">Sign out</button>
@@ -90,8 +91,10 @@ import Base from '../layouts/Base.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { loadMe, signOut, getCodes, tastingUrl } from '../lib/guest';
-  import { i18nReady, t, LANGS, lang, setLang, money, locale } from '../i18n';
+  import { i18nReady, t, LANGS, lang, setLang, money, locale, type Lang } from '../i18n';
   import { FLAGS } from '../i18n/flags';
+  import { bindSwitch } from '../lib/ui/switch';
+  import { choiceCards } from '../lib/ui/choice-cards';
 
   await i18nReady;
   const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
@@ -203,35 +206,19 @@ import Base from '../layouts/Base.astro';
     $('notify').hidden = false;
     document.querySelectorAll<HTMLInputElement>('input[data-notify]').forEach((box) => {
       box.checked = row[box.dataset.notify!] === true;
-      box.addEventListener('change', async () => {
-        const { error } = await supabase.from('hosts').update({ [box.dataset.notify!]: box.checked }).eq('id', hostId);
-        if (error) box.checked = !box.checked;
-        $('notify-msg').textContent = error ? t('admin.changeNotSaved') : t('common.saved');
-        setTimeout(() => ($('notify-msg').textContent = ''), 2000);
-      });
+      bindSwitch(box, { save: async (on) => !(await supabase.from('hosts').update({ [box.dataset.notify!]: on }).eq('id', hostId)).error });
     });
     if (location.hash === '#notify') $('notify').scrollIntoView({ block: 'start' });
   }
 
-  // Languages as a quiet list: flag, name and a tick on the current one
-  for (const l of LANGS) {
-    const li = document.createElement('li');
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'lang-option';
-    b.lang = l.code;
-    b.innerHTML = FLAGS[l.code];
-    const name = document.createElement('span');
-    name.textContent = l.name;
-    b.append(name);
-    if (l.code === lang()) {
-      b.setAttribute('aria-current', 'true');
-      b.insertAdjacentHTML('beforeend', '<svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>');
-    }
-    b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); });
-    li.append(b);
-    $('lang-buttons').append(li);
-  }
+  // Languages: the choice cards, compact (flag and name); choosing one switches straight away
+  const langs = choiceCards({
+    name: 'language', legend: t('profile.language'), compact: true, value: lang(),
+    options: LANGS.map((l) => ({ value: l.code, label: l.name, lead: FLAGS[l.code], lang: l.code })),
+    onChange: (code) => setLang(code as Lang),
+  });
+  langs.el.querySelector('legend')!.className = 'sr';
+  $('lang-buttons').append(langs.el);
 
   $('sign-out').addEventListener('click', () => {
     signOut();
@@ -240,9 +227,7 @@ import Base from '../layouts/Base.astro';
 </script>
 
 <style is:global>
-  .notify-list { display: grid; gap: 0.5rem; margin: 0.5rem 0 0.75rem; }
-  .notify-list .toggle { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
-  .notify-list input { width: 1.1rem; height: 1.1rem; accent-color: var(--ruby, #6e0f1f); }
+  .notify-list { margin: 0.75rem 0 0; max-width: 34rem; }
   .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 48rem; }
   .profile-page .title {
     font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4.5rem);
@@ -267,20 +252,7 @@ import Base from '../layouts/Base.astro';
   .profile-page .book-link svg { color: var(--amber); }
   .profile-page .book-link b { display: block; font-size: 1.1rem; }
   .profile-page .book-link span span { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
-  .profile-page .lang-list {
-    list-style: none; margin: 0; padding: 0; max-width: 34rem;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.4rem;
-  }
-  .profile-page .lang-list .lang-option {
-    display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.6rem 0.75rem;
-    font: inherit; font-size: 0.95rem; color: var(--paper); text-align: left; cursor: pointer;
-    background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius);
-    transition: border-color 0.15s;
-  }
-  .profile-page .lang-list .lang-option:hover { border-color: var(--muted); }
-  .profile-page .lang-list .lang-option[aria-current='true'] { border-color: var(--amber); box-shadow: inset 0 0 0 1px var(--amber); font-weight: 600; }
-  .profile-page .lang-list .lang-option span { flex: 1; }
-  .profile-page .lang-list .flag { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); flex-shrink: 0; }
-  .profile-page .lang-list .tick { width: 1rem; height: 1rem; fill: none; stroke: var(--amber); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .profile-page .lang-list { max-width: 34rem; }
+  .profile-page .lang-list .cc.compact { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
   .profile-page #sign-out { margin-top: 2.5rem; }
 </style>

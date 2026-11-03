@@ -16,7 +16,7 @@ import '../../styles/admin.css';
       <section class="block guests">
         <div class="guests-head">
           <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="head-search" />
-          <button id="add-toggle" class="btn small" type="button" data-i18n="guestLib.addBtn">+ Add guest</button>
+          <button id="add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
         </div>
 
         <!-- New guest: a new row that slides in at the top of the list – name and email -->
@@ -42,7 +42,7 @@ import '../../styles/admin.css';
                   <CloseButton id="gl-close" />
                 </div>
                 <!-- Matches from the library: across the row, from the field to the right edge -->
-                <ul id="gl-hits" class="qa-hits" hidden></ul>
+                <ul id="gl-hits" class="qa-hits menu static" hidden></ul>
               </div>
             </div>
           </div>
@@ -83,6 +83,7 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
   import { personRow } from '../../lib/ui/person-row';
+  import { menuGroup, menuHit } from '../../lib/ui/menu';
   import { fieldError } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
   import { confirmModal } from '../../lib/confirm';
@@ -183,16 +184,13 @@ import '../../styles/admin.css';
     hits.replaceChildren();
     hits.hidden = !found.length;
     if (!found.length) return;
-    hits.append(mk('li', 'qa-hits-head', t('guestLib.already')));
+    // The one menu's look: a heading, then a row per guest with "Edit"
+    hits.append(menuGroup(t('guestLib.already'), 'li'));
     for (const g of found) {
-      const li = mk('li', 'qa-hit');
-      const body = mk('div', 'wine-body');
-      body.append(mk('p', 'wine-name', g.name), mk('p', 'wine-meta', g.email ?? t('admin.noEmail')));
-      const open = mk('button', 'text-btn', t('admin.edit'));
+      const open = mk('button', 'btn small secondary', t('admin.edit'));
       open.type = 'button';
       open.addEventListener('click', () => openForm(g));
-      li.append(mk('span', 'guest-av small', initials(g.name)), body, open);
-      hits.append(li);
+      hits.append(menuHit(mk('span', 'guest-av small', initials(g.name)), g.name, g.email ?? t('admin.noEmail'), open));
     }
   }
   for (const el of [nameIn, emailIn]) {

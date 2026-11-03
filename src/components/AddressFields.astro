@@ -1,14 +1,15 @@
 ---
-// Country, street, house number, postal code and city for a tasting. `prefix` makes the ids unique (e.g. "wz" → wz-street).
-import { COUNTRIES } from '../lib/countries';
+// Component 14 – address: country, street, house number, postal code and city for a tasting (src/lib/address.ts).
+// `prefix` makes the ids unique (e.g. "wz" → wz-street). The country (and a state where one is needed) is the one
+// dropdown (7) with a search field. Styles: src/styles/components.css.
+import Dropdown from './ui/Dropdown.astro';
+import { COUNTRIES, DEFAULT_COUNTRY } from '../lib/countries';
 const { prefix } = Astro.props as { prefix: string };
 ---
 <div class="address-fields" data-address={prefix}>
   <div class="addr-country">
-    <label for={`${prefix}-country`} data-i18n="address.country">Country</label>
-    <select id={`${prefix}-country`} autocomplete="country">
-      {COUNTRIES.map((c) => <option value={c.code}>{c.name}</option>)}
-    </select>
+    <label for={`${prefix}-country-btn`} data-i18n="address.country">Country</label>
+    <Dropdown id={`${prefix}-country`} options={COUNTRIES.map((c) => ({ value: c.code, label: c.name }))} value={DEFAULT_COUNTRY} search />
   </div>
   <div class="addr-row addr-street">
     <div>
@@ -33,18 +34,7 @@ const { prefix } = Astro.props as { prefix: string };
   <p id={`${prefix}-postal-hint`} class="addr-hint" hidden aria-live="polite"></p>
   <!-- State / province: only for countries whose addresses need one (USA, Canada) -->
   <div id={`${prefix}-region-box`} class="addr-region" hidden>
-    <label for={`${prefix}-region`} data-i18n="address.region">State / province</label>
-    <select id={`${prefix}-region`} autocomplete="address-level1"></select>
+    <label for={`${prefix}-region-btn`} data-i18n="address.region">State / province</label>
+    <Dropdown id={`${prefix}-region`} search />
   </div>
 </div>
-
-<style>
-  .addr-country, .addr-region { display: flex; flex-direction: column; }
-  .addr-region[hidden] { display: none; }
-  .addr-hint { margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--muted); }
-  .addr-row { display: grid; gap: 0.75rem; }
-  .addr-street { grid-template-columns: minmax(0, 1fr) 5.5rem; }
-  .addr-city { grid-template-columns: 7.5rem minmax(0, 1fr); }
-  .addr-row > div { min-width: 0; display: flex; flex-direction: column; }
-  .addr-row input { width: 100%; min-width: 0; box-sizing: border-box; }
-</style>

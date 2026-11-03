@@ -14,12 +14,12 @@ import '../../styles/admin.css';
       <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
 
       <div class="guests-head">
-        <!-- Mine: the tastings I host myself; All: everything on the account -->
-        <div id="t-filter" class="filters" role="tablist" hidden>
-          <button type="button" role="tab" data-f="mine" aria-selected="true"><b data-i18n="roles.mine">I host</b> <span id="n-mine"></span></button>
-          <button type="button" role="tab" data-f="all" aria-selected="false"><b data-i18n="roles.all">All</b> <span id="n-all"></span></button>
-        </div>
+        <h2 class="sr" data-i18n="adminNav.tastings">Tastings</h2>
+        <!-- Mine: the tastings I host myself; All: everything on the account – the one filter menu (made in the script) -->
+        <div class="head-actions">
+          <div id="t-filter" hidden></div>
         <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
+        </div>
       </div>
 
 
@@ -38,6 +38,7 @@ import '../../styles/admin.css';
 
 <script>
   import { chip } from '../../lib/ui/status';
+  import { filterDropdown } from '../../lib/filter-dd';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, formatWhen } from '../../i18n';
@@ -87,15 +88,14 @@ import '../../styles/admin.css';
     rows = (data ?? []) as Row[];
     // The filter only matters when the account has tastings I do not host
     const mine = rows.filter((r) => hosting.has(r.id)).length;
-    $('n-mine').textContent = String(mine);
-    $('n-all').textContent = String(rows.length);
     $('t-filter').hidden = mine === rows.length;
     filter = mine > 0 ? 'mine' : 'all';
+    counts = { mine, all: rows.length };
     render();
   }
 
   function render() {
-    document.querySelectorAll<HTMLButtonElement>('#t-filter button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.f === filter)));
+    whose.render([{ value: 'mine', label: t('roles.mine'), n: counts.mine }, { value: 'all', label: t('roles.all'), n: counts.all }], new Set([filter]), counts.all);
     const shown = rows.filter((r) => filter === 'all' || hosting.has(r.id));
     const cutoff = Date.now() - 24 * 3600 * 1000;
     const upcoming = shown.filter((r) => !r.starts_at || new Date(r.starts_at).getTime() >= cutoff);
@@ -107,10 +107,10 @@ import '../../styles/admin.css';
     $('intro').hidden = rows.length > 0;
   }
 
-  document.querySelectorAll<HTMLButtonElement>('#t-filter button').forEach((b) => b.addEventListener('click', () => {
-    filter = b.dataset.f as 'mine' | 'all';
-    render();
-  }));
+  // "I host · 3" / "All · 5": the one filter menu, one choice
+  let counts = { mine: 0, all: 0 };
+  const whose = filterDropdown({ name: t('adminNav.tastings'), single: true, onChange: (v) => { filter = [...v][0] as 'mine' | 'all'; render(); } });
+  $('t-filter').append(whose.el);
 
   // ---------- New tasting: the four-step guide ----------
   let wizard: ReturnType<typeof initWizard> | null = null;

@@ -60,6 +60,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { starsRo } from '../../lib/ui/stars';
   import { iconSvg } from '../../lib/ui/icons';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
@@ -91,13 +92,15 @@ import '../../styles/admin.css';
     return rtf.format(Math.round(s / div), unit);
   }
 
-  function activity(icon: string, label: Key, text: string, meta: string, href: string | null) {
+  function activity(icon: string, label: Key, text: string | Node[], meta: string, href: string | null) {
     const li = mk('li');
     const el = href ? mk('a', 'dash-item') : mk('div', 'dash-item');
     if (href) (el as HTMLAnchorElement).href = href;
     el.append(mk('span', 'dash-icon', icon));
     const body = mk('span', 'dash-body');
-    body.append(mk('span', 'dash-label', t(label)), mk('span', 'dash-text', text), mk('span', 'dash-meta', meta));
+    const line = mk('span', 'dash-text');
+    line.append(...(typeof text === 'string' ? [text] : text));
+    body.append(mk('span', 'dash-label', t(label)), line, mk('span', 'dash-meta', meta));
     el.append(body);
     li.append(el);
     return li;
@@ -185,7 +188,7 @@ import '../../styles/admin.css';
       : activity('🛒', 'dash.latestOrder', t('dash.none'), '', null));
     const r = d.latest_rating;
     list.append(r
-      ? activity('★', 'dash.latestRating', `${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)} ${r.wine}`, [r.tasting, ago(r.at)].join(' · '), adminUrl(r.slug, 'wines/'))
+      ? activity('★', 'dash.latestRating', [starsRo(r.rating), ' ' + r.wine], [r.tasting, ago(r.at)].join(' · '), adminUrl(r.slug, 'wines/'))
       : activity('★', 'dash.latestRating', t('dash.none'), '', null));
   }
 

@@ -1,5 +1,6 @@
 ---
 import SearchField from '../components/ui/SearchField.astro';
+import Dropdown from '../components/ui/Dropdown.astro';
 import Base from '../layouts/Base.astro';
 ---
 <!-- The guest's wine book: wines tasted, tastings and orders across all tastings -->
@@ -35,11 +36,8 @@ import Base from '../layouts/Base.astro';
       <section id="panel-wines" role="tabpanel" aria-labelledby="tab-wines" class="book-panel">
         <div class="book-tools">
           <SearchField id="w-search" label="adminTasting.search" />
-          <select id="w-sort" aria-label="Sort" data-i18n-attr="aria-label=book.sort">
-            <option value="recent" data-i18n="book.sortRecent">Newest first</option>
-            <option value="rating" data-i18n="book.sortRating">Best rated</option>
-            <option value="name" data-i18n="book.sortName">Name</option>
-          </select>
+          <Dropdown id="w-sort" full={false} right ariaLabel="book.sort" value="recent"
+            options={[{ value: 'recent', label: 'book.sortRecent', i18n: true }, { value: 'rating', label: 'book.sortRating', i18n: true }, { value: 'name', label: 'book.sortName', i18n: true }]} />
         </div>
         <ul id="wine-list" class="book-wines"></ul>
         <p id="no-wines" class="hint" hidden data-i18n="book.noWines">When you have been to a tasting, or rated a wine, it appears here – with your stars and notes.</p>
@@ -72,7 +70,8 @@ import Base from '../layouts/Base.astro';
   import { loadOrders, orderCards } from '../lib/my-orders';
   import { originLine, normOrigin } from '../lib/origin';
   import { styleName } from '../lib/wines';
-  import { starsText } from '../lib/rating';
+  import { starsRo } from '../lib/ui/stars';
+  import { getDropdown } from '../lib/ui/dropdown';
   import { i18nReady, t, money, lang, locale } from '../i18n';
 
   await i18nReady;
@@ -138,9 +137,13 @@ import Base from '../layouts/Base.astro';
     stat('st-wines', new Set(tasted.map((w) => w.wine_id)).size, 'book.statWines');
     $('no-wines').hidden = all.length > 0;
     $('w-search').parentElement!.hidden = all.length < 4;
+    // Nothing to sort before there are two wines
+    $('w-sort').hidden = all.length < 2;
+    // The one dropdown: "Sort: Newest first"
+    const sortDd = getDropdown('w-sort', { prefix: `${t('book.sort')}: ` });
     const render = () => {
       const q = normOrigin($<HTMLInputElement>('w-search').value);
-      const sort = $<HTMLSelectElement>('w-sort').value;
+      const sort = sortDd.value;
       const rows = all.filter((w) => !q || normOrigin([w.name, w.producer, w.appellation, w.region, w.title].join(' ')).includes(q));
       if (sort === 'rating') rows.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0) || a.name.localeCompare(b.name, lang()));
       else if (sort === 'name') rows.sort((a, b) => a.name.localeCompare(b.name, lang()));
@@ -188,7 +191,7 @@ import Base from '../layouts/Base.astro';
     body.append(where);
     const side = el('span', 'bw-side');
     if (w.rating) {
-      const s = el('span', 'bw-stars', starsText(w.rating));
+      const s = starsRo(w.rating);
       s.setAttribute('aria-label', t('rating.yours', { n: w.rating }));
       side.append(s);
     }
@@ -249,10 +252,7 @@ import Base from '../layouts/Base.astro';
   .book-tools { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
   .book-tools[hidden] { display: none; }
   .book-tools .affix { flex: 1; max-width: none; }
-  .book-tools select {
-    flex: none; width: auto; cursor: pointer; font: inherit; font-size: 0.95rem; color: var(--paper); background: #fff;
-    border: 1px solid var(--line); border-radius: var(--radius); padding: 0 0.8rem; height: var(--h);
-  }
+  .book-tools .dd { flex: none; }
   .book-wines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
   .book-wine { display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.9rem; align-items: center; padding: 0.75rem 0.9rem; }
   .bw-pic { width: 3.4rem; height: 4.4rem; border-radius: 0.45rem; background: linear-gradient(160deg, #a3213a, #b8742e); overflow: hidden; display: flex; }
@@ -263,7 +263,6 @@ import Base from '../layouts/Base.astro';
   .bw-note { font-size: 0.9rem; font-style: italic; color: var(--paper); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .bw-where { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
   .bw-side { display: grid; justify-items: end; gap: 0.35rem; align-self: start; }
-  .bw-stars { color: var(--amber); letter-spacing: 0.05em; white-space: nowrap; }
   #orders-sum { margin: 0 0 1rem; }
   @media (max-width: 30rem) {
     .book-stats b { font-size: 1.6rem; }

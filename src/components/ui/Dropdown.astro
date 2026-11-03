@@ -1,0 +1,33 @@
+---
+// Component 7 – dropdown, one choice (dropdown() in src/lib/ui/dropdown.ts builds the same markup; getDropdown(id)
+// connects this one). id goes on the box (which works like a <select>: .value and "change"); the button is `${id}-btn`,
+// so a <label for={`${id}-btn`}> names it. options: value + label (or i18n key with i18n: true); search: a search field
+// at the top (long lists); placeholder: an i18n key shown while nothing is chosen.
+import Icon from './Icon.astro';
+import { en } from '../../i18n/en';
+type K = keyof typeof en;
+interface Props {
+  id: string; options?: { value: string; label: string; i18n?: boolean }[]; value?: string; placeholder?: K;
+  search?: boolean; full?: boolean; small?: boolean; right?: boolean; ariaLabel?: K; class?: string;
+}
+const { id, options = [], value, placeholder, search = false, full = true, small = false, right = false, ariaLabel, class: cls } = Astro.props;
+const cur = options.find((o) => o.value === value);
+---
+<div class:list={['dd', { full }, cls]} id={id} data-dd data-value={value} data-search={search ? '' : undefined}
+  data-placeholder={placeholder ? en[placeholder] : undefined} data-i18n-attr={placeholder ? `data-placeholder=${placeholder}` : undefined}>
+  <button type="button" class:list={['dd-btn', { small }]} id={`${id}-btn`} aria-haspopup="listbox" aria-expanded="false"
+    aria-label={ariaLabel ? en[ariaLabel] : undefined} data-i18n-attr={ariaLabel ? `aria-label=${ariaLabel}` : undefined}>
+    <span class="dd-val">{cur ? <span data-i18n={cur.i18n ? cur.label : undefined}>{cur.i18n ? en[cur.label as K] : cur.label}</span> : <span class="muted">{placeholder ? en[placeholder] : ''}</span>}</span>
+    <Icon name="chev" class="chev" />
+  </button>
+  <div class:list={['menu', { right }]} hidden>
+    <div class="m-list" role="listbox">
+      {options.map((o) => (
+        <button type="button" class="opt-i" role="option" data-value={o.value} aria-selected={String(o.value === value)}>
+          <Icon name="check" class="ck" /><span data-i18n={o.i18n ? o.label : undefined}>{o.i18n ? en[o.label as K] : o.label}</span>
+        </button>
+      ))}
+    </div>
+    <div class="m-empty" hidden></div>
+  </div>
+</div>

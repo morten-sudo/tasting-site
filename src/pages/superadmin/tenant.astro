@@ -3,6 +3,7 @@
 // The parts (hosts, tastings, guests, wines, payments, log) are chosen in the menu on the left.
 import Base from '../../layouts/Base.astro';
 import SuperNav from '../../components/SuperNav.astro';
+import Dropdown from '../../components/ui/Dropdown.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.superadmin">
@@ -14,9 +15,9 @@ import '../../styles/admin.css';
         <div class="tenant-meta">
           <span id="tn-owner"></span>
           <span id="tn-created"></span>
-          <label class="tn-plan"><span data-i18n="super.plan">Plan</span>
-            <select id="tn-plan"><option value="free">Free</option><option value="pro">Pro</option><option value="commercial">Commercial</option></select>
-          </label>
+          <span class="tn-plan"><label for="tn-plan-btn" data-i18n="super.plan">Plan</label>
+            <Dropdown id="tn-plan" full={false} small options={[{ value: 'free', label: 'Free' }, { value: 'pro', label: 'Pro' }, { value: 'commercial', label: 'Commercial' }]} />
+          </span>
         </div>
 
         <h2 id="sec-title"></h2>
@@ -81,6 +82,8 @@ import '../../styles/admin.css';
 
 <script>
   import { chip } from '../../lib/ui/status';
+  import { getDropdown } from '../../lib/ui/dropdown';
+  import { toast } from '../../lib/toast';
   import { supabase } from '../../lib/supabase';
   import { t, money, type Key } from '../../i18n';
   import { requireAdmin, $, mk, cell, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
@@ -226,11 +229,15 @@ import '../../styles/admin.css';
       document.title = `${tn.name} – Superadmin`;
       $('tn-owner').textContent = `${t('super.owner')}: ${tn.owner_name ?? ''} <${tn.owner_email}>`;
       $('tn-created').textContent = `${t('super.created')} ${date.format(new Date(tn.created_at))}`;
-      const plan = $<HTMLSelectElement>('tn-plan');
+      // The one dropdown; saved straight away, put back with a message on an error
+      const plan = getDropdown('tn-plan');
       plan.value = tn.plan;
-      plan.addEventListener('change', async () => {
+      plan.el.addEventListener('change', async () => {
+        plan.disabled = true;
         const { error } = await supabase.rpc('admin_set_plan', { tn: id, p: plan.value });
-        if (error) plan.value = tn.plan; else { tn.plan = plan.value; loaded.delete('log'); }
+        plan.disabled = false;
+        if (error) { plan.value = tn.plan; toast(t('admin.changeNotSaved'), { kind: 'error' }); }
+        else { tn.plan = plan.value; loaded.delete('log'); toast(t('common.saved'), { kind: 'ok', ms: 2000 }); }
       });
       const section = TENANT_SECTIONS.some((s) => s.id === m?.[2]) ? m![2] : 'hosts';
       showTenantInMenu(id, tn.name, section);

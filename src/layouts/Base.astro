@@ -55,12 +55,13 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           <a href={tasting ? '/home/' : '/'} class="mark" id="mark">{SITE_NAME}</a>
         </div>
         <div class="tools">
-          <div class="lang-pick">
-            <button id="lang-btn" class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;title=profile.language" title="Language">
+          <!-- The header's menus are the one menu (src/lib/ui/menu.ts, .menu in components.css) -->
+          <div class="dd lang-pick">
+            <button id="lang-btn" class="dd-btn bare" type="button" aria-haspopup="menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;title=profile.language" title="Language">
               <span id="lang-current" class="lang-current"></span>
-              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+              <Icon name="chev" class="chev" />
             </button>
-            <ul id="lang-menu" class="lang-menu" hidden></ul>
+            <div id="lang-menu" class="menu right lang-menu" role="menu" hidden></div>
           </div>
           {tasting && (
             <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below cart-link" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
@@ -70,19 +71,20 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           )}
           <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->
           <div id="user-in" class="user-in" hidden>
-            <button id="user-btn" type="button" class:list={['user-name', { current: path.startsWith('/profile') }]} aria-haspopup="true" aria-expanded="false" aria-controls="user-menu" title="Account menu" data-i18n-attr="title=nav.userMenu">
+            <button id="user-btn" type="button" class:list={['dd-btn', 'bare', 'user-name', { current: path.startsWith('/profile') }]} aria-haspopup="menu" title="Account menu" data-i18n-attr="title=nav.userMenu">
               <span id="user-name" class="user-name-text"></span>
-              <svg class="user-icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
-              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+              <Icon name="user" class="user-icon" />
+              <Icon name="chev" class="chev" />
             </button>
-            <ul id="user-menu" class="pop-menu" hidden>
-              <li><a href="/home/" data-i18n="nav.home">Home</a></li>
-              <li id="um-admin" hidden><a href="/admin/" data-i18n="nav.admin">Admin</a></li>
-              <li id="um-super" hidden><a href="/superadmin/" data-i18n="nav.superadmin">Superadmin</a></li>
-              <li><a href="/my/" data-i18n="book.title">My wine book</a></li>
-              <li><a href="/profile/" data-i18n="nav.profile">My profile</a></li>
-              <li class="sep"><button id="logout" type="button" data-i18n="nav.signOut">Sign out</button></li>
-            </ul>
+            <div id="user-menu" class="menu right" role="menu" hidden>
+              <a class="opt-i" role="menuitem" href="/home/" data-i18n="nav.home">Home</a>
+              <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden data-i18n="nav.admin">Admin</a>
+              <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden data-i18n="nav.superadmin">Superadmin</a>
+              <a class="opt-i" role="menuitem" href="/my/" data-i18n="book.title">My wine book</a>
+              <a class="opt-i" role="menuitem" href="/profile/" data-i18n="nav.profile">My profile</a>
+              <hr />
+              <button id="logout" class="opt-i quiet" role="menuitem" type="button" data-i18n="nav.signOut">Sign out</button>
+            </div>
           </div>
           <a id="user-out" href="/login/" class="icon-act md close tip-below" aria-label="Sign in" data-tip="Sign in" data-i18n-attr="aria-label=nav.signIn;data-tip=nav.signIn" hidden><Icon name="user" /></a>
         </div>
@@ -91,9 +93,9 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         <div class="ctx">
           <!-- Tasting context: which tasting (with a switcher), its tabs, and the way between guest page and admin -->
           <div class="ctx-bar">
-            <button id="t-switch" type="button" class="t-switch" aria-haspopup="true" aria-expanded="false" aria-controls="t-menu" disabled>
+            <button id="t-switch" type="button" class="t-switch" aria-haspopup="menu" disabled>
               <span id="t-title" class="t-title"></span>
-              <svg class="chev" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 10l5 5 5-5" /></svg>
+              <Icon name="chev" class="chev" />
             </button>
             <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
               <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
@@ -104,11 +106,13 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             </nav>
             <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
           </div>
-          <div id="t-backdrop" class="t-backdrop" hidden></div>
-          <div id="t-menu" class="pop-menu t-menu" role="menu" hidden>
-            <p class="t-menu-head" data-i18n="nav.switchTasting">Switch tasting</p>
-            <ul id="t-list"></ul>
-            <a id="t-all" class="t-all" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
+          <div id="t-backdrop" class="menu-backdrop" hidden></div>
+          <!-- Phones: a bottom sheet (.sheet-sm) -->
+          <div id="t-menu" class="menu sheet-sm t-menu" role="menu" hidden>
+            <div class="m-group" role="presentation" data-i18n="nav.switchTasting">Switch tasting</div>
+            <div id="t-list" class="m-list t-list"></div>
+            <hr />
+            <a id="t-all" class="opt-i act" role="menuitem" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
           </div>
         </div>
       )}
@@ -124,41 +128,26 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       import { loadAllMyTastings } from '../lib/my-tastings';
       import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
       import { FLAGS } from '../i18n/flags';
+      import { bindMenu, menuItem } from '../lib/ui/menu';
+      import { initDropdowns } from '../lib/ui/dropdown';
 
       await i18nReady;
       const titleKey = document.body.dataset.title as Key | undefined;
       if (titleKey) document.title = `${t(titleKey)} – Winetastr`;
 
-      // Language picker in the top right corner: the current flag opens a small list
-      const langBtn = document.getElementById('lang-btn')!;
+      // Language picker in the top right corner: the current flag opens the one menu, with a check by the current
       const langMenu = document.getElementById('lang-menu')!;
       document.getElementById('lang-current')!.innerHTML = FLAGS[lang()];
       for (const l of LANGS) {
-        const li = document.createElement('li');
-        const b = document.createElement('button');
-        b.type = 'button';
+        const b = menuItem(l.name, { role: 'menuitemradio', check: true, selected: l.code === lang(), lead: FLAGS[l.code] });
         b.lang = l.code;
-        b.innerHTML = FLAGS[l.code];
-        b.append(document.createTextNode(l.name));
-        if (l.code === lang()) b.setAttribute('aria-current', 'true');
-        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else toggleLangs(false); });
-        li.append(b);
-        langMenu.append(li);
+        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else langs.close(); });
+        langMenu.append(b);
       }
-      function toggleLangs(open: boolean) {
-        langMenu.hidden = !open;
-        langBtn.setAttribute('aria-expanded', String(open));
-        if (open) (langMenu.querySelector('[aria-current]') as HTMLElement | null)?.focus();
-      }
-      langBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        // Only one menu open at a time
-        document.querySelectorAll<HTMLElement>('.pop-menu, .t-backdrop').forEach((el) => { el.hidden = true; });
-        document.body.classList.remove('sheet-open');
-        toggleLangs(langMenu.hidden);
-      });
-      document.addEventListener('click', (e) => { if (!langMenu.hidden && !langMenu.contains(e.target as Node)) toggleLangs(false); });
-      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !langMenu.hidden) { toggleLangs(false); langBtn.focus(); } });
+      const langs = bindMenu(document.getElementById('lang-btn')!, langMenu);
+
+      // Every static dropdown on the page works, also before a page's own script asks for it
+      initDropdowns();
 
       const inTasting = document.body.dataset.tasting === '1';
       const slug = currentSlug();
@@ -212,36 +201,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         }
       }
 
-      // ---------- Dropdown menus (user menu and tasting switcher) ----------
-      type Menu = { btn: HTMLElement; menu: HTMLElement; backdrop?: HTMLElement };
-      const menus: Menu[] = [];
-      function setOpen(m: Menu, open: boolean) {
-        m.menu.hidden = !open;
-        if (m.backdrop) m.backdrop.hidden = !open;
-        m.btn.setAttribute('aria-expanded', String(open));
-        // Phones: the tasting switcher is a bottom sheet, so the page behind should not scroll
-        if (m.backdrop) document.body.classList.toggle('sheet-open', open);
-      }
-      function addMenu(m: Menu) {
-        menus.push(m);
-        m.btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const open = m.menu.hidden;
-          menus.forEach((o) => setOpen(o, false));
-          document.getElementById('lang-menu')!.hidden = true;
-          setOpen(m, open);
-          if (open) m.menu.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });
-        });
-        m.backdrop?.addEventListener('click', () => setOpen(m, false));
-      }
-      document.addEventListener('click', (e) => {
-        menus.forEach((m) => { if (!m.menu.hidden && !m.menu.contains(e.target as Node)) setOpen(m, false); });
-      });
-      document.addEventListener('keydown', (e) => {
-        if (e.key !== 'Escape') return;
-        menus.forEach((m) => { if (!m.menu.hidden) { setOpen(m, false); m.btn.focus(); } });
-      });
-      addMenu({ btn: document.getElementById('user-btn')!, menu: document.getElementById('user-menu')! });
+      // ---------- The account menu and the tasting switcher: the one menu (src/lib/ui/menu.ts) ----------
+      bindMenu(document.getElementById('user-btn')!, document.getElementById('user-menu')!);
 
       // Switch to another of my tastings, staying on the same tab
       type SwitchItem = { slug: string; title: string; starts_at: string | null };
@@ -255,24 +216,12 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         if (!btn || !slug || items.length < 2) return;
         const list = document.getElementById('t-list')!;
         list.replaceChildren(...items.map((x) => {
-          const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.href = hrefFor(x.slug);
-          a.setAttribute('role', 'menuitem');
-          const name = document.createElement('span');
-          name.className = 't-name';
-          name.textContent = x.title;
-          a.append(name);
-          if (x.starts_at) {
-            const when = document.createElement('span');
-            when.className = 't-when';
-            when.textContent = formatWhen(x.starts_at, { year: new Date(x.starts_at).getFullYear() !== new Date().getFullYear() });
-            a.append(when);
-          }
+          // The tasting with its date under it; a check by the one shown now
+          const a = menuItem(x.title, { href: hrefFor(x.slug), role: 'menuitem', check: true,
+            sub: x.starts_at ? formatWhen(x.starts_at, { year: new Date(x.starts_at).getFullYear() !== new Date().getFullYear() }) : undefined });
           a.dataset.slug = x.slug;
           if (x.slug === slug) a.setAttribute('aria-current', 'page');
-          li.append(a);
-          return li;
+          return a;
         }));
         // The link is worked out again on click (an admin page can change section without reloading)
         list.addEventListener('click', (e) => {
@@ -282,7 +231,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         btn.disabled = false;
         btn.classList.add('can-switch');
         btn.title = t('nav.switchTasting');
-        addMenu({ btn, menu: document.getElementById('t-menu')!, backdrop: document.getElementById('t-backdrop')! });
+        bindMenu(btn, document.getElementById('t-menu')!, { backdrop: document.getElementById('t-backdrop')! });
       }
 
 
@@ -407,47 +356,19 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   .tools { display: flex; align-items: center; gap: 0.25rem; flex: 0 0 auto; }
   .tools [hidden] { display: none !important; }
   .tools .icon-act :global(svg) { width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
+  /* The account and language menus: the one menu (components.css); the buttons are quiet in the header */
   .user-in { position: relative; display: inline-flex; align-items: center; min-width: 0; }
-  .user-name {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-    min-height: 2.75rem;
-    color: var(--muted);
-    background: none;
-    border: 0;
-    border-radius: 0.5rem;
-    padding: 0 0.45rem;
-    font: inherit;
-    font-size: 0.88rem;
-    cursor: pointer;
-  }
+  .tools .dd-btn.bare { height: var(--h); font-size: 0.88rem; }
   .user-name-text { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
-  .user-icon { display: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
-  .chev { flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tools .dd-btn > :global(.user-icon) { display: none; width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
   /* Phones: a profile icon instead of the name */
   @media (max-width: 40rem) {
-    .user-name { padding: 0 0.2rem; color: var(--paper); }
+    .tools .user-name { padding: 0 0.2rem; color: var(--paper); }
     .user-name-text { display: none; }
-    .user-icon { display: block; }
+    .tools .dd-btn > :global(.user-icon) { display: block; }
   }
-  .user-name:hover, .user-name.current, .user-name[aria-expanded='true'] { color: var(--paper); }
-  /* Dropdown menus */
-  .pop-menu {
-    position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 12rem;
-    list-style: none; margin: 0; padding: 0.35rem; background: var(--lodge-2);
-    border: 1px solid var(--lodge-3); border-radius: 0.6rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  }
-  .pop-menu[hidden], .t-backdrop[hidden] { display: none; }
-  .pop-menu ul { list-style: none; margin: 0; padding: 0; }
-  .pop-menu a, .pop-menu button {
-    display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.55rem 0.7rem;
-    background: none; border: 0; border-radius: 0.4rem; font: inherit; font-size: 0.92rem;
-    color: var(--paper); text-decoration: none; cursor: pointer; text-align: left;
-  }
-  .pop-menu a:hover, .pop-menu button:hover, .pop-menu a:focus-visible, .pop-menu button:focus-visible { background: var(--lodge); outline: none; }
-  .pop-menu .sep { margin-top: 0.3rem; padding-top: 0.3rem; border-top: 1px solid var(--lodge-3); }
-  .pop-menu #logout { color: var(--muted); }
+  .tools .user-name.current { color: var(--paper); }
+  .tools .menu { top: calc(100% + 0.25rem); min-width: 12rem; }
   /* Tasting context bar under the top row */
   .header-inner { position: relative; }
   .ctx-bar {
@@ -462,30 +383,19 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     color: var(--paper); cursor: default;
   }
   .t-switch:disabled { opacity: 1; }
-  .t-switch .chev { display: none; }
+  .t-switch > :global(.chev) { display: none; width: 0.9rem; height: 0.9rem; transition: transform 0.15s; }
   .t-switch.can-switch { cursor: pointer; }
-  .t-switch.can-switch .chev { display: block; color: var(--muted); }
-  .t-switch.can-switch:hover .chev, .t-switch[aria-expanded='true'] .chev { color: var(--amber); }
+  .t-switch.can-switch > :global(.chev) { display: block; color: var(--muted); }
+  .t-switch.can-switch:hover > :global(.chev), .t-switch[aria-expanded='true'] > :global(.chev) { color: var(--amber); }
+  .t-switch[aria-expanded='true'] > :global(.chev) { transform: rotate(180deg); }
   .t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; }
   .t-title:empty::before { content: '…'; color: var(--muted); }
   nav { display: flex; gap: 0 1.5rem; flex: none; }
   .t-admin { margin-left: auto; }
   .t-admin[hidden] { display: none; }
-  .t-menu { left: var(--gutter); right: auto; top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); padding: 0.35rem; }
-  .t-menu-head { margin: 0.35rem 0.7rem 0.25rem; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-  .t-menu ul { max-height: 50vh; overflow-y: auto; }
-  .t-menu :global(a) { flex-direction: column; align-items: flex-start; gap: 0.05rem; }
-  /* The list is built in the script, so its items need global selectors */
-  .t-menu ul :global(a) {
-    display: flex; width: 100%; padding: 0.55rem 0.7rem; border-radius: 0.4rem;
-    color: var(--paper); text-decoration: none; font-size: 0.92rem;
-  }
-  .t-menu ul :global(a:hover), .t-menu ul :global(a:focus-visible) { background: var(--lodge); outline: none; }
-  .t-menu :global(.t-when) { font-size: 0.8rem; color: var(--muted); }
-  .t-menu :global(a[aria-current='page']) { background: var(--lodge); }
-  .t-menu :global(a[aria-current='page'] .t-name) { font-weight: 600; color: var(--amber); }
-  .t-menu .t-all { margin-top: 0.3rem; border-top: 1px solid var(--lodge-3); border-radius: 0 0 0.4rem 0.4rem; color: var(--amber); flex-direction: row; }
-  .t-backdrop { display: none; }
+  /* The tasting switcher: the one menu under the tasting's name (a bottom sheet on phones, .sheet-sm) */
+  .t-menu { left: var(--gutter); top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
+  .t-menu .t-list { max-height: 50vh; }
   /* Phones: the switcher opens as a bottom sheet */
   @media (max-width: 40rem) {
     /* Two rows: the tasting (and Admin) on top, the tabs below – scrolling sideways if they do not fit */
@@ -500,15 +410,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     nav::-webkit-scrollbar { display: none; }
     /* A backdrop filter would make the fixed bottom sheet position itself inside the header */
     .site-header { -webkit-backdrop-filter: none; backdrop-filter: none; }
-    .t-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(20, 12, 12, 0.45); }
-    .t-menu {
-      position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 41; max-width: none; min-width: 0;
-      border-radius: 1rem 1rem 0 0; padding: 0.6rem 0.6rem calc(0.8rem + env(safe-area-inset-bottom));
-      animation: sheet-up 0.22s ease-out;
-    }
-    .t-menu ul :global(a) { padding: 0.75rem 0.8rem; }
+    .t-menu .t-list { max-height: none; }
   }
-  :global(body.sheet-open) { overflow: hidden; }
   .badge {
     position: absolute;
     top: 0.2rem;
@@ -566,26 +469,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
     .footer-row { flex-direction: column-reverse; text-align: center; }
     .footer-links { justify-content: center; }
   }
-  /* Language picker (top right) */
-  .lang-pick { position: relative; }
-  .lang-btn {
-    display: inline-flex; align-items: center; gap: 0.2rem; height: 2.75rem; padding: 0 0.45rem;
-    background: none; border: 0; cursor: pointer; color: var(--muted); border-radius: 0.5rem;
-  }
-  .lang-btn:hover { color: var(--paper); }
+  /* Language picker (top right): the current flag */
   .lang-current { display: grid; }
   .lang-current :global(.flag) { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
-  .lang-menu {
-    position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 10.5rem;
-    list-style: none; margin: 0; padding: 0.35rem; background: var(--lodge-2);
-    border: 1px solid var(--lodge-3); border-radius: 0.6rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  }
-  .lang-menu[hidden] { display: none; }
-  .lang-menu :global(button) {
-    display: flex; align-items: center; gap: 0.6rem; width: 100%; padding: 0.5rem 0.6rem;
-    background: none; border: 0; border-radius: 0.4rem; font: inherit; font-size: 0.92rem; color: var(--paper); cursor: pointer; text-align: left;
-  }
-  .lang-menu :global(button:hover), .lang-menu :global(button:focus-visible) { background: var(--lodge); outline: none; }
-  .lang-menu :global(button[aria-current='true']) { font-weight: 600; }
-  .lang-menu :global(.flag) { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); flex-shrink: 0; }
+  .lang-menu { min-width: 10.5rem; }
 </style>

@@ -1,5 +1,6 @@
 ---
 import Icon from '../components/ui/Icon.astro';
+import Checkbox from '../components/ui/Checkbox.astro';
 import Base from '../layouts/Base.astro';
 ---
 <Base title="page.login">
@@ -64,7 +65,7 @@ import Base from '../layouts/Base.astro';
             <label for="email" data-i18n="common.email">Email</label>
             <input class="input" id="email" type="email" autocomplete="email" inputmode="email" required />
             <!-- Remember me: stay signed in on this device and fill in the email next time -->
-            <label class="remember"><input id="remember" type="checkbox" checked /> <span data-i18n="login.remember">Remember me on this device</span></label>
+            <Checkbox label="login.remember" id="remember" checked />
             <p id="mail-msg" class="message" hidden></p>
             <button class="btn" type="submit" id="mail-btn" data-i18n="login.sendCode">Send code</button>
             <p class="hint lp-fine" data-i18n="loginx.noPassword">No password needed – we email you a one-time code.</p>

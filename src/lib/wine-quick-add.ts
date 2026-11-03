@@ -11,6 +11,9 @@ import { t, lang, money } from '../i18n';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { fieldError } from './field-error';
+import { attachImageInput } from './ui/image-picker';
+import { menuGroup, menuHit } from './ui/menu';
+import { iconSvg } from './ui/icons';
 
 export type QuickWine = { id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
   image_url: string | null; source_url?: string | null };
@@ -72,7 +75,6 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 export function initQuickAdd(o: Opts) {
   const bar = $('qa-bar');
   const input = $<HTMLInputElement>('qa-input');
-  const file = $<HTMLInputElement>('qa-file');
   const hits = $<HTMLUListElement>('qa-hits');
   const jobs = $<HTMLUListElement>('qa-jobs');
   const attached = $('qa-attached');
@@ -150,22 +152,20 @@ export function initQuickAdd(o: Opts) {
     hits.replaceChildren();
     hits.hidden = !found.length;
     if (!found.length) return;
-    hits.append(mk('li', 'qa-hits-head', head ?? t(o.pick ? 'qa.fromLibrary' : 'qa.inLibrary')));
+    // The one menu's look (components.css): a heading, then a row per wine with its own button
+    hits.append(menuGroup(head ?? t(o.pick ? 'qa.fromLibrary' : 'qa.inLibrary'), 'li'));
     const here = o.inHere?.() ?? new Set<number>();
     for (const w of found) {
-      const li = mk('li', 'qa-hit');
-      const body = mk('div', 'wine-body');
-      const name = mk('a', 'wine-name', w.name);
+      const name = mk('a', 'opt-name', w.name);
       name.href = o.href(w);
-      body.append(name);
-      const m = metaOf(w);
-      if (m) body.append(mk('p', 'wine-meta', m));
-      li.append(thumb(w.image_url), body);
+      const li = menuHit(thumb(w.image_url), name, metaOf(w) || null, null);
       if (here.has(w.id)) {
         // The same button as "Add", disabled: the wine is already in the tasting
-        const b = mk('button', 'btn small secondary', '✓ ' + t('qa.alreadyHere'));
+        const b = mk('button', 'btn small secondary');
         b.type = 'button';
         b.disabled = true;
+        b.innerHTML = iconSvg('check');
+        b.append(t('qa.alreadyHere'));
         li.append(b);
       } else if (o.pick) {
         const add = mk('button', 'btn small secondary', t('admin.add'));
@@ -245,27 +245,18 @@ export function initQuickAdd(o: Opts) {
     const blob = await shrinkImage(f);
     start({ kind: 'photo', blob, preview: URL.createObjectURL(blob) });
   }
-  $('qa-photo').addEventListener('click', () => file.click());
-  file.addEventListener('change', () => { photo(file.files?.[0]); file.value = ''; });
-  bar.addEventListener('dragover', (e) => { if (e.dataTransfer?.types.includes('Files')) { e.preventDefault(); bar.classList.add('dragging'); } });
-  bar.addEventListener('dragleave', (e) => { if (!bar.contains(e.relatedTarget as Node)) bar.classList.remove('dragging'); });
-  bar.addEventListener('drop', (e) => {
-    bar.classList.remove('dragging');
-    const f = [...(e.dataTransfer?.files ?? [])].find((x) => x.type.startsWith('image/'));
-    if (!f) return;
-    e.preventDefault();
-    photo(f);
-  });
-  input.addEventListener('paste', (e) => {
-    const f = [...(e.clipboardData?.files ?? [])].find((x) => x.type.startsWith('image/'));
-    if (f) { e.preventDefault(); photo(f); }
+  // The image picker's button, drop on the row and paste in the field (src/lib/ui/image-picker.ts)
+  attachImageInput({
+    button: $('qa-photo'), drop: bar, paste: input,
+    onFile: (f) => photo(f),
+    onError: (m) => fieldError(input, m, $('qa-row')),
   });
 
   // ---------- The card: what comes in ----------
   function card(src: Source, name?: string): HTMLLIElement {
     const li = mk('li', 'qa-item qa-job');
     // The tasting's list has a grip and a number first: keep the columns (empty here)
-    if (lead) li.append(Object.assign(mk('span', 'tw-grip qa-ghost', '⋮⋮'), { ariaHidden: 'true' }), mk('span', 'tw-no qa-plus'));
+    if (lead) li.append(Object.assign(mk('span', 'tw-grip qa-ghost'), { ariaHidden: 'true' }), mk('span', 'tw-no qa-plus'));
     const pic = thumb(src.kind === 'photo' ? src.preview : null);
     const body = mk('div', 'wine-body');
     const title = mk('p', 'wine-name');

@@ -438,18 +438,9 @@ import Base from '../../layouts/Base.astro';
   .wine-page .rating-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .wine-page .rating-head h2 { font-size: 1.5rem; margin: 0; }
   .wine-page .rating-status { color: var(--muted); font-size: 0.85rem; }
-  .wine-page .stars { display: flex; gap: 0.25rem; margin: 0.6rem 0 1.1rem; }
-  .wine-page .star {
-    font-size: 2rem; line-height: 1; padding: 0.2rem; background: none; border: 0; cursor: pointer;
-    color: var(--lodge-3); transition: color 0.15s, transform 0.15s;
-  }
-  .wine-page .star.on { color: var(--amber); }
-  .wine-page .star:active { transform: scale(0.9); }
-  .wine-page .rating-note {
-    width: 100%; font: inherit; color: var(--paper); background: transparent;
-    border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 0.7rem 0.8rem; resize: vertical;
-  }
-  .wine-page .rating-note:focus { outline: none; border-color: var(--amber); }
+  /* The stars are the shared component (components.css); only the space around them is the page's */
+  .wine-page .my-rating .stars { margin: 0.4rem 0 0.9rem -0.55rem; }
+  .wine-page .my-rating .note-label { margin-bottom: 0.4rem; }
   .wine-page .rating-hint { font-size: 0.85rem; margin-top: 0.4rem; }
   .wine-page .details {
     margin: 1.5rem 0 0;

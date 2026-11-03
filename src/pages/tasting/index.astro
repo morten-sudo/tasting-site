@@ -1,4 +1,5 @@
 ---
+import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Base from '../../layouts/Base.astro';
 ---
 <Base title="page.tasting" tasting>
@@ -58,13 +59,8 @@ import Base from '../../layouts/Base.astro';
             <p id="full-hint" class="help" hidden data-i18n="guest.fullHint">The tasting is full. If you say yes, you go on the waiting list.</p>
 
             <form id="rsvp-form" class="rsvp" novalidate>
-              <fieldset class="seg-row">
-                <legend data-i18n="guest.coming">Are you coming?</legend>
-                <div class="seg">
-                  <label><input type="radio" name="attending" value="yes" required /><span data-i18n="common.yes">Yes</span></label>
-                  <label><input type="radio" name="attending" value="no" /><span data-i18n="common.no">No</span></label>
-                </div>
-              </fieldset>
+              <!-- The choice cards, compact (component 10) -->
+              <ChoiceCards id="attending" name="attending" legend="guest.coming" compact options={[{ value: 'yes', label: 'common.yes' }, { value: 'no', label: 'common.no' }]} />
 
               <div class="field">
                 <label for="email" data-i18n="common.email">Email</label>
@@ -136,6 +132,7 @@ import Base from '../../layouts/Base.astro';
 <script>
   import { statusChip, guestStatus } from '../../lib/ui/status';
   import { toast } from '../../lib/toast';
+  import { fieldError } from '../../lib/field-error';
   import { setLoading } from '../../lib/ui/button';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
@@ -469,8 +466,9 @@ import Base from '../../layouts/Base.astro';
     formError.hidden = true;
     const choice = (form.elements.namedItem('attending') as RadioNodeList).value;
     if (!choice) {
-      formError.textContent = t('guest.chooseYesNo');
-      formError.hidden = false;
+      // The error under the choice, which goes as soon as one is picked
+      fieldError($('attending'), t('guest.chooseYesNo'));
+      form.querySelector<HTMLInputElement>('input[name="attending"]')?.focus();
       return;
     }
     const emailEl = $<HTMLInputElement>('email');
@@ -616,40 +614,6 @@ import Base from '../../layouts/Base.astro';
 
   /* Form */
   .rsvp { display: grid; gap: 1.25rem; }
-  .seg-row {
-    border: 0;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-  .seg-row legend { float: left; padding: 0; font-weight: 500; }
-  .seg {
-    display: inline-flex;
-    padding: 0.2rem;
-    border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
-  }
-  .seg label { margin: 0; font-weight: 400; cursor: pointer; }
-  .seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-  .seg span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 4rem;
-    min-height: 2.5rem;
-    padding: 0 1rem;
-    border-radius: var(--radius);
-    color: var(--muted);
-    transition: background-color 0.15s, color 0.15s;
-  }
-  .seg label:hover span { color: var(--paper); }
-  .seg input:checked + span { background: var(--amber); color: var(--lodge); font-weight: 500; }
-  .seg input:focus-visible + span { outline: 2px solid var(--amber); outline-offset: 2px; }
-
-
   .note summary {
     cursor: pointer;
     color: var(--amber);
