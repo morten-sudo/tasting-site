@@ -162,3 +162,6 @@ export async function loadMe(): Promise<Me | null> {
   cacheName(row.name);
   return { name: row.name, email: row.email ?? null, isHost: false, signedIn: false };
 }
+
+/** Where the newest chat message a guest has seen in a tasting is kept on the device (the chat page writes it, the home page counts the new ones) */
+export const chatSeenKey = (slug: string) => `wt-chat-seen:${slug}`;

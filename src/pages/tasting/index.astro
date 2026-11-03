@@ -129,6 +129,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
 <script>
   import { $, mk } from '../../lib/ui/dom';
   import { statusChip, guestStatus } from '../../lib/ui/status';
+  import { countdown } from '../../lib/ui/ago';
   import { toast } from '../../lib/toast';
   import { fieldError } from '../../lib/field-error';
   import { setLoading } from '../../lib/ui/button';
@@ -312,14 +313,6 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     $('f-coming').hidden = count === 0;
   }
 
-  // "In 21 days", "Tomorrow", "Today" – in the page's language
-  function countdown(iso: string): string | null {
-    const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-    const days = Math.round((day(new Date(iso)) - day(new Date())) / 86400000);
-    if (days < 0 || days > 60) return null;
-    const text = new Intl.RelativeTimeFormat(lang(), { numeric: 'auto' }).format(days, 'day');
-    return text.charAt(0).toUpperCase() + text.slice(1);
-  }
 
   // A calendar file (.ics) the phone or computer can open in its calendar
   function downloadIcs(title: string, startsAt: string, place: string | null, endsAt: string | null = null) {

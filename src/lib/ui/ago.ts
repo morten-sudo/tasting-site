@@ -11,3 +11,12 @@ export function ago(iso: string) {
   for (const [u, d] of steps) if (Math.abs(s) >= d) { unit = u; div = d; }
   return rtf.format(Math.round(s / div), unit);
 }
+
+/** "In 21 days", "Tomorrow", "Today" – for a date up to 60 days ahead, in the active language; null otherwise */
+export function countdown(iso: string): string | null {
+  const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((day(new Date(iso)) - day(new Date())) / 86400000);
+  if (days < 0 || days > 60) return null;
+  const text = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' }).format(days, 'day');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

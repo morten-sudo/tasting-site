@@ -22,10 +22,10 @@ import SignInState from '../components/ui/SignInState.astro';
 
     <div id="book" hidden>
       <PageHeader title="book.title" />
-      <ul class="book-stats">
-        <li class="card"><b id="st-wines">0</b><span data-i18n="book.statWines">wines tasted</span></li>
-        <li class="card"><b id="st-tastings">0</b><span data-i18n="book.statTastings">tastings</span></li>
-        <li class="card"><b id="st-bottles">0</b><span data-i18n="book.statBottles">bottles bought</span></li>
+      <ul class="stats book-stats">
+        <li class="card stat"><b id="st-wines" class="stat-n">0</b><span class="stat-label" data-i18n="book.statWines">wines tasted</span></li>
+        <li class="card stat"><b id="st-tastings" class="stat-n">0</b><span class="stat-label" data-i18n="book.statTastings">tastings</span></li>
+        <li class="card stat"><b id="st-bottles" class="stat-n">0</b><span class="stat-label" data-i18n="book.statBottles">bottles bought</span></li>
       </ul>
       <Notice id="link-only" hidden>
         <p data-i18n="book.linkOnly">You only see the tastings opened with an invitation link on this device. Sign in with your email to see everything, on any device.</p>
@@ -79,24 +79,14 @@ import SignInState from '../components/ui/SignInState.astro';
   import { loadMe, getCodes, tastingUrl } from '../lib/guest';
   import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
   import { loadOrders, orderCards } from '../lib/my-orders';
-  import { originLine, normOrigin } from '../lib/origin';
-  import { styleName } from '../lib/wines';
-  import { starsRo } from '../lib/ui/stars';
-  import { listRow } from '../lib/ui/list-row';
-  import { chip } from '../lib/ui/status';
-  import { $, mk } from '../lib/ui/dom';
-  import { wineThumb } from '../lib/ui/thumb';
+  import { wineItem, type BookWine } from '../lib/wine-book';
+  import { normOrigin } from '../lib/origin';
+  import { $ } from '../lib/ui/dom';
   import { getDropdown } from '../lib/ui/dropdown';
-  import { i18nReady, t, lang, locale } from '../i18n';
+  import { i18nReady, t, lang } from '../i18n';
 
   await i18nReady;
 
-  type BookWine = {
-    wine_id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
-    image_url: string | null; appellation: string | null; region: string | null; country: string | null;
-    slug: string; title: string; starts_at: string | null; sort_order: number;
-    rating: number | null; note: string | null; rated_at: string | null; bought: number;
-  };
 
   const me = await loadMe();
   $('loading').hidden = true;
@@ -155,29 +145,6 @@ import SignInState from '../components/ui/SignInState.astro';
     render();
   }
 
-  // A wine as the card variant of the one list row: picture, name, what it is, origin, my note, where I tasted it –
-  // and on the right my stars and what I bought. The card opens the wine's page.
-  function wineItem(w: BookWine) {
-    const where = w.starts_at
-      ? t('book.tastedAt', { tasting: w.title, when: new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(w.starts_at)) })
-      : w.title;
-    const side = document.createDocumentFragment();
-    if (w.rating) {
-      const s = starsRo(w.rating);
-      s.setAttribute('aria-label', t('rating.yours', { n: w.rating }));
-      side.append(s);
-    }
-    if (w.bought > 0) side.append(chip(t('book.bought', { n: w.bought })));
-    const note = w.note?.trim() ? mk('p', 'lmeta note', `“${w.note.trim()}”`) : null;
-    return listRow({
-      variant: 'card',
-      // By number: the wine page turns it into the name address (unique also for two vintages of one wine)
-      cardHref: tastingUrl(w.slug, `wines/${w.wine_id}/`), pic: wineThumb(w), title: w.name,
-      meta: [[w.style ? styleName(w.style) : null, w.vintage, w.producer].filter((x, i, arr) => x && arr.indexOf(x) === i), originLine(w), note, where],
-      aside: side.childNodes.length ? side : null,
-    });
-  }
-
   /** A number in the stats with its label in the right form ("1 tasting", "3 tastings"). */
   function stat(id: string, n: number, key: 'book.statWines' | 'book.statTastings' | 'book.statBottles') {
     $(id).textContent = String(n);
@@ -211,10 +178,7 @@ import SignInState from '../components/ui/SignInState.astro';
 
 <style is:global>
   .book-page { max-width: 52rem; }
-  .book-stats { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
-  .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; }
-  .book-stats b { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); }
-  .book-stats span { font-size: 0.85rem; color: var(--muted); }
+  .book-stats { margin-bottom: 1.5rem; }
   #book-tabs { margin-bottom: 1.25rem; }
   .book-panel[hidden] { display: none; }
   .book-panel > .eyebrow:not(:first-child) { margin-top: 1.5rem; }
@@ -223,7 +187,4 @@ import SignInState from '../components/ui/SignInState.astro';
   .book-tools .affix { flex: 1; max-width: none; }
   .book-tools .dd { flex: none; }
   #orders-sum { margin: 0 0 1rem; }
-  @media (max-width: 30rem) {
-    .book-stats b { font-size: 1.6rem; }
-  }
 </style>

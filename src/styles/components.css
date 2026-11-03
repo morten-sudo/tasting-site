@@ -710,6 +710,13 @@ dialog .input { max-width: none; }
 .region-map.background .rm-river, .region-map.background .rm-coast, .region-map.background .rm-border { stroke: currentColor; }
 /* Small, on one wine */
 
+/* ---------- 55 Stat tiles (<ul class="stats"> with <li class="card stat">): a number and what it counts – the wine book, the home page ---------- */
+.stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+.stats > .stat { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; }
+.stats .stat-n { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); font-variant-numeric: lining-nums; }
+.stats .stat-label { font-size: 0.85rem; color: var(--muted); }
+@media (max-width: 30rem) { .stats .stat-n { font-size: 1.6rem; } }
+
 /* ---------- 24 Table (src/lib/ui/table.ts): sortable headers, numbers right-aligned, a card per row on phones ---------- */
 .tbl { min-width: 0; }
 .tscroll { overflow-x: auto; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: #fff; }

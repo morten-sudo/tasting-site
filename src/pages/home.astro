@@ -4,24 +4,17 @@ import Base from '../layouts/Base.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import Loading from '../components/ui/Loading.astro';
 import EmptyState from '../components/ui/EmptyState.astro';
+import SectionTitle from '../components/ui/SectionTitle.astro';
 ---
 <Base title="page.home">
   <section class="wrap page-pad home-page">
     <Loading />
 
     <div id="main" hidden>
-      <PageHeader lead="home2.lead"><Fragment slot="title"><span data-i18n="home2.hello">Hello</span><span id="hello-name"></span></Fragment></PageHeader>
+      <PageHeader lead="home2.lead" leadId="home-lead"><Fragment slot="title"><span data-i18n="home2.hello">Hello</span><span id="hello-name"></span></Fragment></PageHeader>
 
       <!-- Workspaces: guest, host and (for administrators) superadmin -->
-      <div class="ws-grid">
-        <a id="ws-guest" class="card ws-card" href="#my-tastings" hidden>
-          <span class="ws-icon"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="ws-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" clip-path="url(#ws-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg></span>
-          <span class="eyebrow" data-i18n="home2.guest">As a guest</span>
-          <span class="ws-title" data-i18n="nav.myTastings">My tastings</span>
-          <span id="ws-guest-info" class="ws-info"></span>
-          <Icon name="right" class="ws-go" />
-        </a>
-
+      <div id="ws-grid" class="ws-grid" hidden>
         <a id="ws-host" class="card ws-card" href="/admin/" hidden>
           <span class="ws-icon"><Icon name="grid" /></span>
           <span class="eyebrow" data-i18n="home2.host">As a host</span>
@@ -46,19 +39,60 @@ import EmptyState from '../components/ui/EmptyState.astro';
         </a>
       </div>
 
-      <!-- The guest's tastings (this replaces the old "My tastings" page) -->
-      <div id="my-tastings">
-        <section id="upcoming-block" class="home-section" hidden>
-          <h2 data-i18n="home.upcomingMany">Upcoming tastings</h2>
-          <ul id="upcoming" class="cards"></ul>
+      <!-- The guest's home (src/lib/guest-home.ts): the next tasting large, what is waiting, the wine book in short,
+           where the wines come from, and the tastings they have been to -->
+      <div id="my-tastings" class="guest-home">
+        <!-- 1. The next tasting: the map of its wines behind, the countdown and the answer, one button -->
+        <section id="next-block" class="card next-card has-map-bg" hidden>
+          <div id="next-map" class="hero-bg" aria-hidden="true"></div>
+          <SectionTitle level="eyebrow" as="h2" text="dash.next" />
+          <div id="next-chips" class="chips"></div>
+          <p class="next-title"><a id="next-open" href="/home/"><span id="next-title"></span></a></p>
+          <ul class="hero-when">
+            <li id="next-f-when" hidden><Icon name="calendar" /><span id="next-when"></span></li>
+            <li id="next-f-place" hidden><Icon name="pin" /><span id="next-place"></span></li>
+          </ul>
+          <div class="actions"><a id="next-go" class="btn" href="/home/"></a></div>
         </section>
+
+        <!-- 2. Waiting for you: only when something is -->
+        <section id="waiting-block" class="home-section" hidden>
+          <SectionTitle level="eyebrow" as="h2" text="home3.waiting" />
+          <ul id="waiting-list" class="list"></ul>
+        </section>
+
+        <section id="other-block" class="home-section" hidden>
+          <SectionTitle level="eyebrow" as="h2" text="home3.otherUpcoming" />
+          <ul id="other-list" class="cards"></ul>
+        </section>
+
+        <!-- 3. The wine book in short -->
+        <section id="book-block" class="home-section" hidden>
+          <SectionTitle level="eyebrow" as="h2" text="book.title" />
+          <ul class="stats">
+            <li class="card stat"><b id="hs-wines" class="stat-n">0</b><span class="stat-label" data-i18n="book.statWines">wines tasted</span></li>
+            <li class="card stat"><b id="hs-tastings" class="stat-n">0</b><span class="stat-label" data-i18n="book.statTastings">tastings</span></li>
+            <li class="card stat"><b id="hs-bottles" class="stat-n">0</b><span class="stat-label" data-i18n="book.statBottles">bottles bought</span></li>
+          </ul>
+          <h3 id="fav-h" class="fav-h" data-i18n="home3.favourites" hidden>Your favourites</h3>
+          <ul id="fav-list" class="cards"></ul>
+          <p class="book-more"><a class="text-btn fwd" href="/my/"><span data-i18n="home3.allBook">See your whole wine book</span><Icon name="right" /></a></p>
+        </section>
+
+        <!-- 4. Where the wines come from -->
+        <section id="map-block" class="home-section" hidden>
+          <SectionTitle level="eyebrow" as="h2" text="home3.mapTitle" />
+          <div id="home-map" class="map-box"></div>
+          <p id="home-map-source" class="map-credit"></p>
+        </section>
+
+        <!-- 5. The tastings they have been to -->
         <section id="past-block" class="home-section" hidden>
-          <h2 data-i18n="tastings.past">Past</h2>
-          <ul id="past" class="cards"></ul>
+          <SectionTitle level="eyebrow" as="h2" text="home3.memories" />
+          <ul id="past-list" class="cards"></ul>
         </section>
       </div>
 
-      <p class="book-more"><a class="text-btn fwd wrap" href="/my/"><span data-i18n="book.homeLink">My wine book – wines, tastings and purchases</span><Icon name="right" /></a></p>
       <EmptyState id="none" icon="calendar" title="tastings.none" text="tastings.noneHint" hidden>
         <a class="btn small secondary" href="/login/?next=/home/" data-i18n="home.otherEmail">Sign in with another email</a>
       </EmptyState>
@@ -69,10 +103,11 @@ import EmptyState from '../components/ui/EmptyState.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { storedWorkspace } from '../lib/workspace';
-  import { loadMe, getCodes, tastingUrl } from '../lib/guest';
-  import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
+  import { loadMe, getCodes } from '../lib/guest';
+  import { loadAllMyTastings } from '../lib/my-tastings';
+  import { showGuestHome } from '../lib/guest-home';
   import { landingUrl } from '../lib/landing';
-  import { i18nReady, t, formatWhen } from '../i18n';
+  import { i18nReady, t } from '../i18n';
 
   await i18nReady;
   import { $ } from '../lib/ui/dom';
@@ -97,21 +132,9 @@ import EmptyState from '../components/ui/EmptyState.astro';
   const first = (me?.name ?? '').split(' ')[0];
   if (first) $('hello-name').textContent = `, ${first}`;
 
-  // Guest
+  // Guest: the home of their tastings (src/lib/guest-home.ts)
   const { all, upcoming, past } = mine;
-  if (all.length) {
-    const g = $('ws-guest') as HTMLAnchorElement;
-    g.hidden = false;
-    g.href = all.length === 1 ? tastingUrl(all[0].slug) : '#my-tastings';
-    const next = upcoming[0];
-    $('ws-guest-info').textContent = next
-      ? [next.title, next.starts_at ? formatWhen(next.starts_at) : ''].filter(Boolean).join(' · ')
-      : t('home2.tastingsCount', { n: all.length });
-  }
-  $('upcoming').replaceChildren(...upcoming.map(tastingCard));
-  $('upcoming-block').hidden = upcoming.length === 0;
-  $('past').replaceChildren(...past.map(tastingCard));
-  $('past-block').hidden = past.length === 0;
+  const guestHome = showGuestHome({ upcoming, past, signedIn: !!me?.signedIn });
 
   // Host
   type Dash = { tastings: number; upcoming: number; next: { title: string; starts_at: string | null; coming: number; invited: number } | null };
@@ -133,6 +156,17 @@ import EmptyState from '../components/ui/EmptyState.astro';
   }
 
   $('none').hidden = all.length > 0 || !!dash;
+  // The places to go (host, superadmin, "host your own") only when there are any; the line over them with them
+  const anyWs = ['ws-host', 'ws-super'].some((id) => !$(id).hidden);
+  $('ws-grid').hidden = !anyWs;
+  $('home-lead').hidden = !anyWs;
+  // A guest who is no host: "Host your own?" goes last, after their tastings
+  if (!anyWs && !$('ws-become').hidden) {
+    const end = Object.assign(document.createElement('section'), { className: 'home-section become-end' });
+    end.append($('ws-become'));
+    $('my-tastings').after(end);
+  }
+  await guestHome;
 </script>
 
 <style is:global>
@@ -148,6 +182,21 @@ import EmptyState from '../components/ui/EmptyState.astro';
   .ws-go { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--amber); }
   .ws-soft { place-items: stretch; text-align: left; font-weight: 400; color: var(--paper); }
   #my-tastings { scroll-margin-top: 5rem; }
-  .book-more { margin: 1.5rem 0 0; }
-  .home-section { margin-top: 2.75rem; }
+  .book-more { margin: 1rem 0 0; }
+  .home-section { margin-top: 2.5rem; }
+  .home-section > .eyebrow { margin-bottom: 0.8rem; }
+  .ws-grid[hidden] { display: none; }
+  .ws-grid:not([hidden]) + .guest-home { margin-top: 2.5rem; }
+  /* The next tasting: large, the map of its wines faint in the corner */
+  .next-card { display: grid; gap: 0.7rem; justify-items: start; padding: 1.4rem 1.4rem 1.5rem; }
+  .next-card > .eyebrow { margin: 0; }
+  .next-card .chips { margin: 0; }
+  .next-title { margin: 0; font-family: var(--display); font-size: clamp(2rem, 7vw, 2.8rem); line-height: 1.05; }
+  .next-title a { color: var(--paper); text-decoration: none; }
+  .next-title a:hover { color: var(--amber); }
+  .next-card .actions { margin-top: 0.3rem; }
+  .waiting-row .laside .btn { white-space: nowrap; }
+  .fav-h { margin: 1.4rem 0 0.7rem; font-size: 1rem; font-weight: 600; }
+  .lmeta.memory { color: var(--amber); }
+  .become-end > .ws-card { max-width: 26rem; }
 </style>

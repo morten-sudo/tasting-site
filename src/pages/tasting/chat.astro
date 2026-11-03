@@ -20,7 +20,7 @@ import ChatBox from '../../components/ChatBox.astro';
 <script>
   import { $ } from '../../lib/ui/dom';
   import { supabase } from '../../lib/supabase';
-  import { resolveGuestCode } from '../../lib/guest';
+  import { resolveGuestCode, currentSlug, chatSeenKey } from '../../lib/guest';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady } from '../../i18n';
 
@@ -35,7 +35,13 @@ import ChatBox from '../../components/ChatBox.astro';
       prefix: 'g',
       load: async (after) => {
         const { data, error } = await supabase.rpc('get_chat', { code, after_id: after });
-        return error ? null : (data as ChatMessage[]);
+        if (error) return null;
+        const list = data as ChatMessage[];
+        // The newest message seen here, so the home page can say how many are new
+        const newest = Math.max(0, ...list.map((m) => Number(m.id)));
+        const slug = currentSlug();
+        if (slug && newest) try { localStorage.setItem(chatSeenKey(slug), String(newest)); } catch { /* private mode: no count */ }
+        return list;
       },
       send: async (body) => {
         const { error } = await supabase.rpc('post_chat', { code, body });
