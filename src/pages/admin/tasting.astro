@@ -83,13 +83,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           { label: 'admin.title', id: 'v-title' }, { label: 'admin.when', id: 'v-when' },
           { label: 'admin.place', id: 'v-place' }, { label: 'admin.intro', id: 'v-intro', class: 'pre' }]} />
 
-        <!-- Who hosts the tasting -->
-        <PageHeader size="section" title="hosts.title" class="ov-hosts-head">
-          <Fragment slot="actions">
-          <a id="ov-hosts-manage" class="text-btn" href="settings/" data-section="settings" hidden data-i18n="hosts.manage">Manage hosts</a>
-          </Fragment>
-        </PageHeader>
-        <ul id="ov-hosts" class="list"></ul>
+        <!-- Who hosts the tasting: the owner adds and removes co-hosts here -->
+        <div id="hosts">
+          <PageHeader size="section" title="hosts.title" class="ov-hosts-head">
+            <Fragment slot="actions">
+            <button id="host-open" class="btn small secondary" type="button" hidden data-i18n="hosts.add">Add host</button>
+            </Fragment>
+          </PageHeader>
+          <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
+          <ul id="hosts-list" class="list"></ul>
+        </div>
 
         <Sheet id="details-panel" title="section.details" titleId="details-panel-title" wide form="details" formClass="tasting-form">
           <label for="d-title" data-i18n="admin.title">Title</label>
@@ -139,17 +142,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <span><b data-i18n="set.tv">Leaderboard for the TV</b><small><a id="tv-link" href="/" target="_blank"></a></small></span>
           <button id="tv-copy" class="icon-act strong" type="button" aria-label="Copy link" data-tip="Copy link" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
         </div>
-      </section>
-
-      <!-- Hosts: the owner gives others the host role for this tasting -->
-      <section id="hosts" class="block set-card" data-section="settings">
-        <PageHeader size="section" title="hosts.title">
-          <Fragment slot="actions">
-          <button id="host-open" class="btn small secondary" type="button" hidden data-i18n="hosts.add">Add host</button>
-          </Fragment>
-        </PageHeader>
-        <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
-        <ul id="hosts-list" class="list"></ul>
       </section>
 
       <!-- Tasting fee -->
@@ -479,7 +471,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a[data-apath]').forEach((a) => { a.href = `/t/${slug}/admin/${a.dataset.apath}`; });
 
     renderDetails();
-    loadOverviewHosts(slug, tasting.host_id === host.id || (host.tenant_owner && tasting.tenant_id === host.tenant_id));
 
     const tv = $('tv-link') as HTMLAnchorElement;
     tv.href = `/t/${tasting.slug}/leaderboard/`;
@@ -569,21 +560,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     fillDetailsForm();
     detailsPanel.open();
   });
-
-  // ---------- Hosts on the overview ----------
-  async function loadOverviewHosts(slug: string, canManage: boolean) {
-    if (!tasting) return;
-    const { data } = await supabase.rpc('tasting_cohosts', { t_id: tasting.id });
-    type H = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
-    // The same rows as the guests (read-only here; hosts are managed under Settings)
-    $('ov-hosts').replaceChildren(...((data ?? []) as H[]).map((h) => personRow({
-      name: h.name || h.email, you: h.me ? t('hosts.you') : null, meta: h.name ? [h.email] : [],
-      chips: [h.owner ? { text: t('hosts.owner'), tone: 'strong' } : h.pending ? { text: t('hosts.pending'), tone: 'wait' } : { text: t('hosts.cohost') }],
-    })));
-    const manage = $('ov-hosts-manage') as HTMLAnchorElement;
-    manage.href = `/t/${slug}/admin/settings/`;
-    manage.hidden = !canManage;
-  }
 
   initAddress('d');
   initWhen('d');

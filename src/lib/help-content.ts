@@ -58,7 +58,7 @@ export const HELP: HelpSection[] = [
 <h4 id="max-guests"><a href="t:settings/#max-guests">Max antal gæster og venteliste</a></h4>
 <p>Tryk <i>Rediger</i> ved <i>Maks. antal gæster</i>, og skriv et tal. Når smagningen er fuld, kommer gæster, der siger ja, på venteliste i den rækkefølge, de svarede. Melder en, der kommer, fra – eller hæver du loftet – rykker den første på ventelisten automatisk op. Tomt felt betyder intet loft. Gæsterne ser ikke, hvor mange pladser der er tilbage.</p>
 <h4>Medværter</h4>
-<p>Under <a href="t:settings/#hosts">Indstillinger → Værter</a> trykker du <i>Tilføj vært</i> og skriver e-mailen. De får en mail og kan rette smagningen, vinene og gæsterne, men ikke slette smagningen eller styre værterne.</p>
+<p>På smagningens <a href="t:#hosts">Overblik → Værter</a> trykker du <i>Tilføj vært</i> og skriver e-mailen. De får en mail og kan rette smagningen, vinene og gæsterne, men ikke slette smagningen eller styre værterne.</p>
 <h4 id="fee"><a href="t:settings/#fee">Deltagergebyr</a></h4>
 <p>Tryk <i>Rediger</i> under <i>Betaling for smagningen</i>, og skriv, hvad smagningen koster i alt – så foreslås et beløb pr. gæst ud fra antallet, der kommer. Slå <i>Vis gebyret for gæsterne</i> til, når de skal se det. Du markerer selv, hvem der har betalt.</p>`,
       en: `<p>A tasting has its own page with tabs: <a href="t:">Overview</a>, <a href="t:wines/">Wines</a>, <a href="t:guests/">Guests</a>, <a href="t:orders/">Orders</a>, <a href="t:quiz/">Quiz</a>, <a href="t:chat/">Chat</a> and <a href="t:settings/">Settings</a>. See them all under <a href="/admin/tastings/">Tastings</a>. Every host on the account can see and edit every tasting. When there are tastings you do not host yourself, the filter button above the list chooses between <i>I host</i> and <i>All</i> – with the number by each.</p>
@@ -78,7 +78,7 @@ export const HELP: HelpSection[] = [
 <h4 id="max-guests"><a href="t:settings/#max-guests">Max number of guests and the waiting list</a></h4>
 <p>Press <i>Edit</i> by <i>Max. number of guests</i> and enter a number. When the tasting is full, guests who say yes go on the waiting list in the order they replied. When someone who is coming drops out – or you raise the limit – the first on the list moves up automatically. An empty field means no limit. Guests do not see how many places are left.</p>
 <h4>Co-hosts</h4>
-<p>Under <a href="t:settings/#hosts">Settings → Hosts</a> press <i>Add host</i> and enter the email. They get an email and can edit the tasting, its wines and guests, but cannot delete the tasting or manage its hosts.</p>
+<p>On the tasting's <a href="t:#hosts">Overview → Hosts</a> press <i>Add host</i> and enter the email. They get an email and can edit the tasting, its wines and guests, but cannot delete the tasting or manage its hosts.</p>
 <h4 id="fee"><a href="t:settings/#fee">Tasting fee</a></h4>
 <p>Press <i>Edit</i> under <i>Tasting fee</i> and enter what the tasting costs in all – an amount per guest is suggested from the number who are coming. Turn on <i>Show the fee to the guests</i> when they should see it. You mark yourself who has paid.</p>`,
     },
