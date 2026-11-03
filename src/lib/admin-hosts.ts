@@ -9,6 +9,7 @@ import { copyText } from './ui/copy';
 import { setLoading } from './ui/button';
 import { fieldError } from './field-error';
 import { t, lang } from '../i18n';
+import { dailyLimitOf } from './daily-limit';
 
 type HostRow = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
 
@@ -75,8 +76,10 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
         headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
         body: JSON.stringify({ tasting_id: tastingId, email, name: name || null, lang: lang() }),
       });
-      return res.ok && ((await res.json()) as { sent?: boolean }).sent === true;
-    } catch { return false; }
+      const out = (await res.json().catch(() => ({}))) as { sent?: boolean };
+      // Not sent because of the account's daily limit: its words go with the link to pass on
+      return { sent: res.ok && out.sent === true, limit: dailyLimitOf(res.status, out) };
+    } catch { return { sent: false, limit: null }; }
   }
 
   /** The name this email already has as a guest – of this tasting or in the host's guest list. */
@@ -103,14 +106,14 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     }
     const added = data === 'active' ? t('hosts.addedActive', { email }) : t('hosts.addedPending', { email });
     load();
-    const sent = await sendInvite(email, name);
+    const { sent, limit } = await sendInvite(email, name);
     setLoading(btn, false);
     input.value = '';
     $<HTMLInputElement>('host-name').value = '';
     panel.markClean();
     // Sent: done – the panel closes and says so. Not sent: the panel stays with the link to pass on.
     if (sent) { panel.close(); toast(`${added} ${t('hosts.mailSent', { email })}`); }
-    else { toast(added); showLink(email); }
+    else { toast(limit ? `${added} ${limit}` : added, limit ? { kind: 'error' } : {}); showLink(email); }
   }
 
   form.addEventListener('submit', async (e) => {

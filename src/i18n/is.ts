@@ -1583,6 +1583,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "signup.guestGo": "Fara í smakkanirnar mínar",
   "signup.guestHost": "Stofna gestgjafaaðgang samt",
   "pay.how": "Opnaðu MobilePay í símanum, veldu Senda og notaðu númerið, upphæðina og skilaboðin hér fyrir neðan – hvert hefur afritunarhnapp.",
+  "limit.aiDaily": "Reikningurinn hefur notað sjálfvirkar uppflettingar dagsins. Fylltu út handvirkt eða reyndu aftur á morgun.",
+  "limit.mailDaily": "Reikningurinn hefur sent tölvupósta dagsins. Afritaðu hlekkinn og sendu hann sjálf/ur, eða reyndu aftur á morgun.",
   "guestLib.lastLink": "opnaði hlekkinn {when}",
   "ev.login.link": "{guest} opnaði boðshlekkinn – {tasting}",
   "count.tastings": "{n} smakkanir",

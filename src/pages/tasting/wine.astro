@@ -217,7 +217,7 @@ import CartBar from '../../components/ui/CartBar.astro';
 
     // More about the wine and the producer: the producer's website and address, and the wine's details ("Label: text")
     {
-      const site = w.producer_website ? (() => {
+      const site = w.producer_website && /^https?:\/\//i.test(w.producer_website) ? (() => {
         const a = mk('a', '', (() => { try { return new URL(w.producer_website!).hostname.replace(/^www\./, ''); } catch { return w.producer_website!; } })());
         a.href = w.producer_website!;
         a.target = '_blank';

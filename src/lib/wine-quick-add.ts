@@ -19,6 +19,7 @@ import { addRow, hitButton, type Hit } from './ui/add-row';
 import { listRow } from './ui/list-row';
 import { wineThumb, setThumb } from './ui/thumb';
 import { setStatus, statusLine, type StatusState } from './ui/status-line';
+import { throwIfDailyLimit, limitOr } from './daily-limit';
 
 export type QuickWine = { id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
   image_url: string | null; source_url?: string | null; bottle_cl?: number | null };
@@ -80,7 +81,7 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(String(res.status));
+  if (!res.ok) { await throwIfDailyLimit(res); throw new Error(String(res.status)); }
   return res.json() as Promise<T>;
 }
 
@@ -281,8 +282,8 @@ export function initQuickAdd(o: Opts) {
         r = src.kind === 'link'
           ? await post<LinkResult>('/api/read-link', { url: src.url, lang: lang() })
           : await post<LabelResult>('/api/read-label', { image: await labelDataUrl(src.blob) });
-      } catch {
-        failed(job, t(src.kind === 'link' ? 'qa.linkFailed' : 'qa.labelFailed'));
+      } catch (e) {
+        failed(job, limitOr(e, t(src.kind === 'link' ? 'qa.linkFailed' : 'qa.labelFailed')));
         return;
       }
     }

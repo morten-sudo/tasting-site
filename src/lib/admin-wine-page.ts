@@ -72,7 +72,8 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   }
   fillFacts($('wd-notes'), notes);
   $('wd-notes-block').hidden = !notes.length;
-  if (w.producer_website) {
+  // Links only to web addresses (the database allows nothing else; a link never runs script)
+  if (w.producer_website && /^https?:\/\//i.test(w.producer_website)) {
     const a = mk('a');
     a.href = w.producer_website;
     a.target = '_blank';
@@ -83,7 +84,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     facts.push({ label: t('producer.websiteShort'), value: box });
   }
   if (w.producer_address) facts.push({ label: t('producer.addressShort'), value: w.producer_address });
-  if (w.source_url) {
+  if (w.source_url && /^https?:\/\//i.test(w.source_url)) {
     const box = mk('span', 'wd-source');
     const a = mk('a');
     a.href = w.source_url;

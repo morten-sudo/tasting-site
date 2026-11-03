@@ -1582,6 +1582,8 @@ export const en = {
   "signup.guestGo": "Go to my tastings",
   "signup.guestHost": "Create a host account anyway",
   "pay.how": "Open MobilePay on your phone, choose Send, and use the number, amount and message below – each has a copy button.",
+  "limit.aiDaily": "Your account has used today's automatic look-ups. Fill in by hand, or try again tomorrow.",
+  "limit.mailDaily": "Your account has sent today's emails. Copy the link and send it yourself, or try again tomorrow.",
   "guestLib.lastLink": "opened the link {when}",
   "ev.login.link": "{guest} opened the invitation link – {tasting}",
   "count.tastings": "{n} tastings",

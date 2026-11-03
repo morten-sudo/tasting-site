@@ -454,6 +454,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
   import { nameWithSize } from '../../lib/bottle';
+  import { dailyLimitOf } from '../../lib/daily-limit';
 
   await i18nReady;
 
@@ -546,7 +547,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       });
       const out = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
       if (!res.ok || !out.text) {
-        setStatus(status, 'error', t(out.error === 'no_wines' ? 'aiIntro.noWines' : 'aiIntro.failed'));
+        setStatus(status, 'error', dailyLimitOf(res.status, out) ?? t(out.error === 'no_wines' ? 'aiIntro.noWines' : 'aiIntro.failed'));
         return;
       }
       aiDraft = out.text.trim();
@@ -845,9 +846,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const copyInvite = (p: P) => copyText(inviteUrl(p), t('admin.linkCopiedFor', { name: p.name }));
   async function sendInvite(p: P, btn: HTMLButtonElement) {
     setLoading(btn, true);
-    const ok = await mailInvite(p);
+    const { ok, limit } = await mailInvite(p);
     setLoading(btn, false);
-    toast(t(ok ? 'inviteMail.sentTo' : 'guestRow.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
+    toast(limit ?? t(ok ? 'inviteMail.sentTo' : 'guestRow.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
     if (ok) renderParticipants();
     return ok;
   }
@@ -1055,8 +1056,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   }
 
   // ---------- Invitation by email ----------
-  /** Emails the guest their invitation; true when it was sent */
-  async function mailInvite(p: P): Promise<boolean> {
+  /** Emails the guest their invitation: ok when it was sent; limit = the words when the account's daily limit stopped it */
+  async function mailInvite(p: P): Promise<{ ok: boolean; limit: string | null }> {
     try {
       const { data: s } = await supabase.auth.getSession();
       const res = await fetch('/api/invite-guest', {
@@ -1065,9 +1066,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         body: JSON.stringify({ participant_id: p.id, lang: lang() }),
       });
       const out = (await res.json().catch(() => ({}))) as { sent?: boolean; at?: string };
-      if (res.ok && out.sent) { p.invite_mailed_at = out.at ?? new Date().toISOString(); return true; }
+      if (res.ok && out.sent) { p.invite_mailed_at = out.at ?? new Date().toISOString(); return { ok: true, limit: null }; }
+      return { ok: false, limit: dailyLimitOf(res.status, out) };
     } catch { /* below */ }
-    return false;
+    return { ok: false, limit: null };
   }
   // ---------- Orders ----------
   const orderTotal = (o: O) => o.order_lines.reduce((t, l) => t + l.quantity * Number(l.unit_price), 0);
@@ -1273,8 +1275,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (matchMedia('(min-width: 48rem)').matches) giInput.focus({ preventScroll: true });
     if (p.email && ($('g-send-mail') as HTMLInputElement).checked) {
       toast(t('guestInvite.mailing', { name: p.name }), {});
-      const ok = await mailInvite(p);
-      toast(t(ok ? 'guestInvite.mailed' : 'guestInvite.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
+      const { ok, limit } = await mailInvite(p);
+      toast(limit ?? t(ok ? 'guestInvite.mailed' : 'guestInvite.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
       renderParticipants();
     } else {
       toast(t(p.email ? 'guestInvite.added' : 'guestInvite.addedNoMail', { name: p.name }), { kind: 'ok' });

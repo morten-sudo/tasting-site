@@ -79,6 +79,7 @@ import '../../styles/admin.css';
   import { setLoading } from '../../lib/ui/button';
   import { copyText } from '../../lib/ui/copy';
   import { t, lang } from '../../i18n';
+  import { dailyLimitOf } from '../../lib/daily-limit';
 
   type Member = { email: string; name: string | null; owner: boolean; me: boolean; pending: boolean };
 
@@ -171,8 +172,10 @@ import '../../styles/admin.css';
         headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
         body: JSON.stringify({ tenant_id: host!.tenant_id, email, name: name || null, lang: lang() }),
       });
-      return res.ok && ((await res.json()) as { sent?: boolean }).sent === true;
-    } catch { return false; }
+      const out = (await res.json().catch(() => ({}))) as { sent?: boolean };
+      // Not sent because of the account's daily limit: its words go with the link to pass on
+      return { sent: res.ok && out.sent === true, limit: dailyLimitOf(res.status, out) };
+    } catch { return { sent: false, limit: null }; }
   }
 
   $('member-form').addEventListener('submit', async (e) => {
@@ -194,7 +197,7 @@ import '../../styles/admin.css';
     }
     const added = data === 'active' ? t('ws.addedActive', { email }) : t('ws.addedPending', { email });
     loadMembers();
-    const sent = await sendInvite(email, $<HTMLInputElement>('member-name').value.trim());
+    const { sent, limit } = await sendInvite(email, $<HTMLInputElement>('member-name').value.trim());
     setLoading(btn, false);
     emailInput.value = '';
     $<HTMLInputElement>('member-name').value = '';
@@ -202,7 +205,7 @@ import '../../styles/admin.css';
     // Sent: done – the panel closes and says so. Not sent: the panel stays with the link to pass on.
     if (sent) { memberPanel.close(); toast(`${added} ${t('hosts.mailSent', { email })}`); }
     else {
-      toast(added);
+      toast(limit ? `${added} ${limit}` : added, limit ? { kind: 'error' } : {});
       $('member-link').hidden = false;
       $('member-link-text').textContent = t('ws.sendLink', { email });
       $<HTMLInputElement>('member-link-url').value = linkFor();
