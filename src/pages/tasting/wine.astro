@@ -72,6 +72,7 @@ import CartBar from '../../components/ui/CartBar.astro';
   import { wineThumb } from '../../lib/ui/thumb';
   import { price } from '../../lib/ui/price';
   import { facts } from '../../lib/ui/facts';
+  import { detailIcon } from '../../lib/ui/detail-icon';
   import { $, mk } from '../../lib/ui/dom';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t } from '../../i18n';
@@ -223,9 +224,9 @@ import CartBar from '../../components/ui/CartBar.astro';
       })() : null;
       const lines = (w.details ?? '').split('\n').map((l) => l.trim()).filter(Boolean).map((line) => {
         const i = line.indexOf(':');
-        return i > 0 && i < 30 ? { label: line.slice(0, i), value: line.slice(i + 1).trim() } : { label: '', value: line };
+        return i > 0 && i < 30 ? { label: line.slice(0, i), value: line.slice(i + 1).trim(), icon: detailIcon(line.slice(0, i)) } : { label: '', value: line };
       });
-      const list = facts([{ label: t('producer.websiteShort'), value: site }, { label: t('producer.addressShort'), value: w.producer_address }, ...lines]);
+      const list = facts([{ label: t('producer.websiteShort'), value: site, icon: 'globe' }, { label: t('producer.addressShort'), value: w.producer_address, icon: 'pin' }, ...lines]);
       if (list) {
         $('details').replaceChildren(list);
         $('details-box').hidden = false;

@@ -278,6 +278,8 @@ const opts = [
           </div>
           <p class="help">.ruled – a hairline between the pairs, for long values (a wine's notes); on phones the label goes above its value</p>
           <div id="facts-ruled"></div>
+          <p class="help">A wine's details: each heading gets its icon from its words (detailIcon()), the info icon when none fits</p>
+          <div id="facts-icons"></div>
         </section>
 
         <section id="c23" class="dv-comp">
@@ -635,6 +637,7 @@ const opts = [
   import { price } from '../../lib/ui/price';
   import { formatKr } from '../../lib/ui/kr';
   import { facts, setFact } from '../../lib/ui/facts';
+  import { detailIcon } from '../../lib/ui/detail-icon';
   import { loadMap, drawMap, DETAILED_MAPS } from '../../lib/region-map';
   import { table } from '../../lib/ui/table';
   import { listRow, personRow, activityRow } from '../../lib/ui/list-row';
@@ -792,6 +795,9 @@ const opts = [
     setFact($('fs-2'), '11 wines');
     setFact($('fs-3'), null);
     $('facts-ruled').append(facts([{ label: 'Style', value: 'Tawny with an age statement – a blend of several vintages averaging about 10 years.' }, { label: 'Ageing', value: 'Oxidatively matured in oak casks.' }, { label: 'Nose', value: 'Ripe fruit, light caramel, dried fig and walnut.' }, { label: '', value: 'A line without a label spans the whole width.' }], 'ruled card')!);
+    // A wine's details with the icon each heading gets (detailIcon() in src/lib/ui/detail-icon.ts)
+    $('facts-icons').append(facts(['Hjemmeside', 'Adresse', 'Område', 'Producent', 'Vinmark', 'Året', 'Druer', 'Stil', 'Farve', 'Duft', 'Smag', 'Balance', 'Produktion', 'Lagring', 'Udvikling', 'Alkohol', 'Flaske', 'Anmeldelser', 'Sammenlignet', 'Sjældenhed', 'Mad', 'Servering', 'Alt andet']
+      .map((label) => ({ label, value: 'Lorem ipsum dolor sit amet.', icon: detailIcon(label) })), 'ruled card')!);
     $('facts-ts').append(facts([{ label: 'Grapes', value: 'Touriga Nacional, Touriga Franca', icon: 'grapes' }, { label: 'Food', value: 'Blue cheese', icon: 'food' }, { label: 'Serving', value: '16–18 °C', icon: 'serving' }, { label: 'Number', value: '12 34 56 78', copy: { text: '12345678', label: 'Copy the number', done: 'Copied: 12 34 56 78' } }], 'card')!);
     $('flag-line').innerHTML = Object.values(FLAGS).join(' ');
     loadMap(DETAILED_MAPS[0].id).then((m) => {

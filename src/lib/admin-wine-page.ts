@@ -12,6 +12,7 @@ import { wineMap, showMapCredit } from './wine-map';
 import { mapZoom } from './ui/map-zoom';
 import { $, mk } from './ui/dom';
 import { fillFacts, type Fact } from './ui/facts';
+import { detailIcon } from './ui/detail-icon';
 import { wineThumb } from './ui/thumb';
 import { fetchedWhen, type AdminWine } from './admin-wines';
 import { tooltip } from './ui/tooltip';
@@ -66,7 +67,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   const notes: Fact[] = [];
   for (const line of (w.details ?? '').split('\n').map((l) => l.trim()).filter(Boolean)) {
     const [k, ...v] = line.split(':');
-    notes.push(v.length && k.length <= 30 ? { label: k.trim(), value: v.join(':').trim() } : { label: '', value: line });
+    notes.push(v.length && k.length <= 30 ? { label: k.trim(), value: v.join(':').trim(), icon: detailIcon(k) } : { label: '', value: line });
   }
   fillFacts($('wd-notes'), notes);
   $('wd-notes-block').hidden = !notes.length;
