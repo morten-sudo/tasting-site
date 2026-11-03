@@ -22,7 +22,8 @@ function hide() {
 
 function show(el: HTMLElement) {
   const text = el.dataset.tipText;
-  if (!text || owner === el) return;
+  // An open menu's button: the menu is in view, so no tip over it
+  if (!text || owner === el || el.getAttribute('aria-expanded') === 'true') return;
   hide();
   const b = document.createElement('div');
   b.className = 'tip small';
@@ -55,7 +56,8 @@ if (typeof document !== 'undefined') {
     if (!el) { if (owner && (e as PointerEvent).pointerType !== 'touch') hide(); return; }
     clearTimeout(timer);
     // A short wait on hover, so tips do not flicker when the pointer passes; a tap shows it at once for a while
-    if ((e as PointerEvent).pointerType === 'touch') { show(el); timer = window.setTimeout(hide, 3000); }
+    // (a menu button opens its menu on the tap – that says what it is)
+    if ((e as PointerEvent).pointerType === 'touch') { if (!el.hasAttribute('aria-haspopup')) { show(el); timer = window.setTimeout(hide, 3000); } }
     else timer = window.setTimeout(() => show(el), 250);
   });
   document.addEventListener('pointerout', (e) => {

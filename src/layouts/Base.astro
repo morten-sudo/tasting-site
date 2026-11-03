@@ -79,16 +79,31 @@ const site = 'https://winetastr.com';
       const titleKey = document.body.dataset.title as Key | undefined;
       if (titleKey) document.title = `${t(titleKey)} – Winetastr`;
 
-      // Language picker in the top right corner: the current flag opens the one menu, with a check by the current
+      // ---------- The account menu (the one menu, src/lib/ui/menu.ts): the places, and the language as a second view ----------
+      const umMain = document.getElementById('um-main')!;
+      const umLangs = document.getElementById('um-langs')!;
+      const showView = (langs: boolean) => { umMain.hidden = langs; umLangs.hidden = !langs; };
+      const account = bindMenu(document.getElementById('user-btn')!, document.getElementById('user-menu')!, { onOpen: () => showView(false) });
+      const current = LANGS.find((l) => l.code === lang());
+      document.getElementById('um-lang-now')!.textContent = current?.name ?? '';
       const langMenu = document.getElementById('lang-menu')!;
-      document.getElementById('lang-current')!.innerHTML = FLAGS[lang()];
       for (const l of LANGS) {
         const b = menuItem(l.name, { role: 'menuitemradio', check: true, selected: l.code === lang(), lead: FLAGS[l.code] });
         b.lang = l.code;
-        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else langs.close(); });
+        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else account.close(); });
         langMenu.append(b);
       }
-      const langs = bindMenu(document.getElementById('lang-btn')!, langMenu);
+      // "Language ›" shows the languages in the same menu; "‹ Back" (or ←) goes back to the places
+      // (the focus follows only with the keys – a tap leaves no focus ring)
+      document.getElementById('um-lang')!.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showView(true);
+        if (e.detail === 0) langMenu.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true });
+      });
+      const back = (keys: boolean) => { showView(false); if (keys) document.getElementById('um-lang')!.focus({ preventScroll: true }); };
+      document.getElementById('um-back')!.addEventListener('click', (e) => { e.stopPropagation(); back(e.detail === 0); });
+      umLangs.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); back(true); } });
+      umMain.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' && document.activeElement?.id === 'um-lang') { e.preventDefault(); (document.activeElement as HTMLElement).click(); } });
 
       // Every static dropdown on the page works, also before a page's own script asks for it
       initDropdowns();
@@ -121,9 +136,13 @@ const site = 'https://winetastr.com';
       window.addEventListener('cart-change', sync);
       sync();
 
-      const userIn = document.getElementById('user-in')!;
-      const userOut = document.getElementById('user-out')!;
       const userName = document.getElementById('user-name')!;
+      // Signed in: the places and "Sign out"; not signed in: "Sign in" (the language is there either way)
+      function signedIn(yes: boolean) {
+        document.querySelectorAll<HTMLElement>('#user-menu .um-in').forEach((el) => { el.hidden = !yes; });
+        document.getElementById('um-login')!.hidden = yes;
+        userName.hidden = !yes;
+      }
 
       // Tasting title in the context bar, date and time in the footer
       async function showTasting(c: string) {
@@ -143,7 +162,6 @@ const site = 'https://winetastr.com';
       }
 
       // ---------- The account menu and the tasting switcher: the one menu (src/lib/ui/menu.ts) ----------
-      bindMenu(document.getElementById('user-btn')!, document.getElementById('user-menu')!);
 
       // Switch to another of my tastings, staying on the same tab
       type SwitchItem = { slug: string; title: string; starts_at: string | null };
@@ -211,8 +229,7 @@ const site = 'https://winetastr.com';
       function showName(name: string | null) {
         userName.textContent = name || t('nav.profile');
         document.getElementById('user-btn')!.setAttribute('aria-label', name ? `${name} – ${t('nav.userMenu')}` : t('nav.userMenu'));
-        userIn.hidden = false;
-        userOut.hidden = true;
+        signedIn(true);
       }
       const early = cachedName();
       if (early) showName(early);
@@ -234,11 +251,11 @@ const site = 'https://winetastr.com';
               showRoles(true, who.isHost);
               return;
             }
-            userIn.hidden = true; userOut.hidden = false; return;
+            signedIn(false); return;
           }
           const { data } = await supabase.rpc('get_invite', { code });
           const row = Array.isArray(data) ? data[0] : null;
-          if (!row) { userIn.hidden = true; userOut.hidden = false; return; }
+          if (!row) { signedIn(false); return; }
           showTasting(code);
           const who = await me;
           showName(who?.signedIn && who.name ? who.name : row.name);
@@ -256,7 +273,7 @@ const site = 'https://winetastr.com';
           // Signed in: the logo leads to the user's home
           (document.getElementById('mark') as HTMLAnchorElement).href = '/home/';
           showRoles(who.signedIn, who.isHost);
-        } else { userIn.hidden = true; userOut.hidden = false; }
+        } else { signedIn(false); }
       }
       initUser();
 

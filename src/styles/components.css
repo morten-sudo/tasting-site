@@ -257,6 +257,12 @@ dialog .dd.full { max-width: none; }
 .menu .opt-i .opt-txt > small { color: var(--muted); font-size: 0.8rem; font-weight: 400; overflow-wrap: anywhere; }
 .menu .opt-i .flag { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); flex: none; }
 .menu hr { border: 0; border-top: 1px solid var(--lodge-3); margin: 0.3rem 0; }
+/* A menu with a second view (the account menu's languages): one view at a time; an item that opens the next view
+   ends in its value and a chevron */
+.menu .m-view[hidden] { display: none; }
+.menu .opt-i > .m-next { width: 1rem; height: 1rem; color: var(--muted); flex: none; margin-left: auto; }
+.menu .opt-i > small + .m-next { margin-left: 0.15rem; }
+.menu .opt-i > small:has(+ .m-next) { margin-left: auto; padding-left: 0.75rem; }
 .menu .m-search { padding: 0.2rem 0.2rem 0.35rem; }
 .menu .m-search .affix.pre { max-width: none; }
 .menu .m-list { max-height: 15rem; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
@@ -1030,12 +1036,13 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .tb-right .dd { position: relative; }
 .tb-right .dd-btn.bare { height: var(--h); font-size: 0.9rem; }
 .tb-right .menu { top: calc(100% + 0.25rem); min-width: 12rem; }
-.tb-right .lang-menu { min-width: 10.5rem; }
 .tb-flag { display: grid; }
 .tb-flag .flag { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
 .tb-name { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
 .tb-user > .tb-user-i { display: none; width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
 .tb-user[aria-current='page'] { color: var(--paper); }
+/* Not signed in: the person icon, also on large screens */
+.tb-user:has(> .tb-name[hidden]) > .tb-user-i { display: block; }
 /* Phones: a person icon instead of the name */
 @media (max-width: 40rem) {
   .tb-user { padding: 0 0.2rem; color: var(--paper); }

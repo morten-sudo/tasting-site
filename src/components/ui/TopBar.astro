@@ -1,6 +1,6 @@
 ---
-// Component 43 – the one top bar on every page: the logo, the language, the cart (in a tasting) and the account
-// (the one menu, src/lib/ui/menu.ts) or "Sign in". In a tasting a second row: the tasting (a switcher), its tabs
+// Component 43 – the one top bar on every page: the logo, the cart (in a tasting) and the account menu (the one
+// menu, src/lib/ui/menu.ts) – with the language as its second view, and "Sign in" when not signed in. In a tasting a second row: the tasting (a switcher), its tabs
 // (the one tab bar, Tabs.astro) and, for its hosts, the way to its admin. Base.astro's script fills it in.
 import Badge from './Badge.astro';
 import Icon from './Icon.astro';
@@ -17,38 +17,42 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
   <div class="wrap topbar">
     <a href={tasting ? '/home/' : '/'} class="logo" id="mark"><Fragment set:html={LOGO} /><span>{SITE_NAME}</span></a>
     <div class="tb-right">
-      <div class="dd">
-        <button id="lang-btn" class="dd-btn bare" type="button" aria-haspopup="menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;data-tip-text=profile.language" data-tip-text="Language">
-          <span id="lang-current" class="tb-flag"></span>
-          <Icon name="chev" class="chev" />
-        </button>
-        <div id="lang-menu" class="menu right lang-menu" role="menu" hidden></div>
-      </div>
       {tasting && (
         <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
           <Icon name="cart" />
           <Badge id="nav-cart-count" hidden />
         </a>
       )}
-      <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->
-      <div id="user-in" class="dd" hidden>
-        <button id="user-btn" type="button" class="dd-btn bare tb-user" aria-current={path.startsWith('/profile') ? 'page' : undefined} aria-haspopup="menu" data-tip-text="Account menu" data-i18n-attr="data-tip-text=nav.userMenu">
-          <span id="user-name" class="tb-name"></span>
+      <!-- The account menu, signed in or not: the person's places, the language (a second view of the same menu) and
+           signing in or out. Signed in, the name (phones: the person icon) opens it. -->
+      <div id="user-in" class="dd">
+        <button id="user-btn" type="button" class="dd-btn bare tb-user" aria-current={path.startsWith('/profile') ? 'page' : undefined} aria-haspopup="menu" aria-label="Account menu" data-tip-text="Account menu" data-i18n-attr="aria-label=nav.userMenu;data-tip-text=nav.userMenu">
+          <span id="user-name" class="tb-name" hidden></span>
           <Icon name="user" class="tb-user-i" />
           <Icon name="chev" class="chev" />
         </button>
         <div id="user-menu" class="menu right" role="menu" hidden>
-          <!-- Each place with its icon (the same icons as in the menus and buttons elsewhere) -->
-          <a class="opt-i" role="menuitem" href="/home/"><Icon name="home" /><span data-i18n="nav.home">Home</span></a>
-          <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden><Icon name="gear" /><span data-i18n="nav.admin">Admin</span></a>
-          <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden><Icon name="shield" /><span data-i18n="nav.superadmin">Superadmin</span></a>
-          <a class="opt-i" role="menuitem" href="/my/"><Icon name="book" /><span data-i18n="book.title">My wine book</span></a>
-          <a class="opt-i" role="menuitem" href="/profile/"><Icon name="user" /><span data-i18n="nav.profile">My profile</span></a>
-          <hr />
-          <button id="logout" class="opt-i quiet" role="menuitem" type="button"><Icon name="logout" /><span data-i18n="nav.signOut">Sign out</span></button>
+          <div id="um-main" class="m-view">
+            <a id="um-login" class="opt-i" role="menuitem" href="/login/" data-login><Icon name="user" /><span data-i18n="nav.signIn">Sign in</span></a>
+            <!-- Each place with its icon (the same icons as in the menus and buttons elsewhere) -->
+            <a class="opt-i um-in" role="menuitem" href="/home/" hidden><Icon name="home" /><span data-i18n="nav.home">Home</span></a>
+            <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden><Icon name="gear" /><span data-i18n="nav.admin">Admin</span></a>
+            <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden><Icon name="shield" /><span data-i18n="nav.superadmin">Superadmin</span></a>
+            <a class="opt-i um-in" role="menuitem" href="/my/" hidden><Icon name="book" /><span data-i18n="book.title">My wine book</span></a>
+            <a class="opt-i um-in" role="menuitem" href="/profile/" hidden><Icon name="user" /><span data-i18n="nav.profile">My profile</span></a>
+            <hr />
+            <button id="um-lang" class="opt-i" role="menuitem" type="button" aria-haspopup="menu"><Icon name="globe" /><span data-i18n="profile.language">Language</span><small id="um-lang-now"></small><Icon name="right" class="m-next" /></button>
+            <hr class="um-in" hidden />
+            <button id="logout" class="opt-i quiet um-in" role="menuitem" type="button" hidden><Icon name="logout" /><span data-i18n="nav.signOut">Sign out</span></button>
+          </div>
+          <!-- The language: the same menu shows the languages, with the way back on top -->
+          <div id="um-langs" class="m-view" hidden>
+            <button id="um-back" class="opt-i quiet" role="menuitem" type="button"><Icon name="left" /><span data-i18n="wizard.back">Back</span></button>
+            <hr />
+            <div id="lang-menu" role="group" aria-label="Language" data-i18n-attr="aria-label=profile.language"></div>
+          </div>
         </div>
       </div>
-      <a id="user-out" href="/login/" class="icon-act md close tip-below" aria-label="Sign in" data-tip="Sign in" data-i18n-attr="aria-label=nav.signIn;data-tip=nav.signIn" hidden><Icon name="user" /></a>
     </div>
   </div>
   {tasting && (
