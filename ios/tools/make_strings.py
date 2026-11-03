@@ -3,8 +3,8 @@
 import json, re, urllib.request
 BASE = 'https://raw.githubusercontent.com/morten-sudo/tasting-site/main/src/i18n/%s.ts'
 SITE = '''common.email common.save common.saved common.cancel common.continue nav.myTastings nav.wines nav.signOut
-home.upcomingMany tastings.past tastingHome.about tastingHome.yourAnswer tastingHome.change tastingHome.coming tastingHome.host
-tastingHome.closedHint guest.fullHint guest.statusWaitlist guest.statusYes guest.statusNo guest.coming guest.note guest.canChange
+home.upcomingMany tastings.past tastingHome.about tastingHome.yourAnswer tastingHome.change tastingHome.coming tastingHome.host tastingHome.hosts
+tastingHome.closedHint guest.fullHint guest.coming guest.note guest.canChange
 guest.welcome guest.emailLead guest.yourEmail guest.emailBad guest.emailMissing guest.emailTaken guest.emailLocked guest.emailNotSaved
 guest.chooseYesNo guest.answerNotSaved guest.signupClosed status.yes status.no status.waitlist rating.title rating.note blind.blind blind.hint
 login.mailLead login.sendCode login.sentTo login.enterIt login.codeLabel login.submit login.resend login.otherEmail login.inviteSummary

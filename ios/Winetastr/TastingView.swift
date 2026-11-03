@@ -42,17 +42,35 @@ struct TastingView: View {
         .toast($toast)
     }
 
+    private func answered(_ invite: Invite) -> Bool { ["yes", "no", "waitlist"].contains(invite.status ?? "") }
+
     private func details(_ info: TastingInfo, _ invite: Invite) -> some View {
-        ScrollView {
+        let open = info.signup_open ?? true
+        let done = answered(invite)
+        let countdown = info.start.flatMap(countdownText)
+        return ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 10) {
-                    if let d = info.start, let c = countdownText(d) { Chip(text: c, tone: .wait) }
+                    // The countdown and, once answered, the answer as its chip with "Change answer" beside it
+                    if countdown != nil || done {
+                        FlowRow(spacing: 8) {
+                            if let countdown { Chip(text: countdown, tone: .wait) }
+                            if done, let s = statusText(invite.status) {
+                                Chip(text: s, tone: statusTone(invite.status), dashed: invite.status == "no")
+                                if open {
+                                    Button(L("tastingHome.change")) { editing = true }
+                                        .buttonStyle(TextButton(size: 14.4)).accessibilityIdentifier("change-answer")
+                                }
+                            }
+                        }
+                    }
                     Text(info.title).font(.display(44, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
                     if let d = info.start { factLine("calendar", whenText(d)) }
                     if let p = info.place, !p.isEmpty { factLine("pin", p) }
-                    if let h = info.hosts { factLine("user", L("tastingHome.host", ["name": h])) }
+                    if let h = info.hostLine { factLine("user", h) }
+                    if let n = info.coming, n > 0 { factLine("users", L("tastingHome.coming", ["n": "\(n)"])) }
                 }
-                answerCard(info, invite)
+                if !done { answerCard(info, open: open) }
                 if let intro = info.intro, !intro.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: L("tastingHome.about"))
@@ -72,27 +90,13 @@ struct TastingView: View {
         }
     }
 
-    private func answerCard(_ info: TastingInfo, _ invite: Invite) -> some View {
-        let open = info.signup_open ?? true
-        let answered = invite.status == "yes" || invite.status == "no" || invite.status == "waitlist"
-        return Card {
+    /// Not answered yet: the card with the one primary action (or, when sign-up is closed, why not)
+    private func answerCard(_ info: TastingInfo, open: Bool) -> some View {
+        Card {
             Text(L("tastingHome.yourAnswer")).font(.semibold(17)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
-            if answered, let s = statusText(invite.status) { Chip(text: s, tone: statusTone(invite.status)) }
-            switch invite.status {
-            case "yes": Text(L("guest.statusYes")).font(.body()).foregroundStyle(Color.paper)
-            case "no": Text(L("guest.statusNo")).font(.body()).foregroundStyle(Color.paper)
-            case "waitlist": Text(L("guest.statusWaitlist")).font(.body()).foregroundStyle(Color.paper)
-            default: Text(L("guest.coming")).font(.body()).foregroundStyle(Color.paper)
-            }
-            if let note = invite.note, !note.isEmpty { Text(note).font(.body(14.4)).foregroundStyle(Color.muted) }
-            if let n = info.coming, n > 0 { Text(L("tastingHome.coming", ["n": "\(n)"])).font(.body(14.4)).foregroundStyle(Color.muted) }
             if open {
-                if answered {
-                    Button(L("tastingHome.change")) { editing = true }.buttonStyle(TextButton())
-                } else {
-                    if info.full == true { Text(L("guest.fullHint")).font(.body(14.4)).foregroundStyle(Color.muted) }
-                    Button(L("app.answer")) { editing = true }.buttonStyle(PrimaryButton())
-                }
+                if info.full == true { Text(L("guest.fullHint")).font(.body(14.4)).foregroundStyle(Color.muted) }
+                Button(L("app.answer")) { editing = true }.buttonStyle(PrimaryButton())
             } else {
                 Text(L("tastingHome.closedHint")).font(.body(14.4)).foregroundStyle(Color.muted)
             }

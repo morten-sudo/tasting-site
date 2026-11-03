@@ -20,6 +20,12 @@ struct TastingInfo: Decodable {
         let names = (host_names ?? [host_name].compactMap { $0 }).filter { !$0.isEmpty }
         return names.isEmpty ? nil : names.formatted(.list(type: .and).locale(appLocale))
     }
+    /// "Host: Morten" or "Hosts: Morten and Erlingur"
+    var hostLine: String? {
+        guard let h = hosts else { return nil }
+        let many = (host_names ?? []).filter { !$0.isEmpty }.count > 1
+        return many ? L("tastingHome.hosts", ["names": h]) : L("tastingHome.host", ["name": h])
+    }
 }
 
 struct MyTasting: Decodable, Hashable, Identifiable {

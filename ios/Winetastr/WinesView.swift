@@ -131,7 +131,8 @@ struct PriceLine: View {
     var big = false
     var body: some View {
         if let price = wine.price_dkk {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            // The tasting's price on its own line, the struck-through regular price on the line below
+            VStack(alignment: .leading, spacing: 2) {
                 Text(krText(price)).font(big ? .display(34, light: false, relativeTo: .title) : .medium(size)).foregroundStyle(Color.paper)
                 if let r = wine.retail_price_dkk, r > price {
                     Text(krText(r)).font(.body(14.4)).strikethrough().foregroundStyle(Color.muted)

@@ -331,6 +331,28 @@
     }
    }
   },
+  "tastingHome.hosts": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Værter: {names}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hosts: {names}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gestgjafar: {names}"
+     }
+    }
+   }
+  },
   "tastingHome.closedHint": {
    "localizations": {
     "da": {
@@ -371,72 +393,6 @@
      "stringUnit": {
       "state": "translated",
       "value": "Smökkunin er full. Ef þú segir já ferðu á biðlistann."
-     }
-    }
-   }
-  },
-  "guest.statusWaitlist": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Du står på ventelisten. Bliver der en plads, rykker du automatisk op – det kan du se her."
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "You are on the waiting list. If a place becomes free, you move up automatically – you will see it here."
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Þú ert á biðlistanum. Ef pláss losnar færist þú sjálfkrafa upp – þú sérð það hér."
-     }
-    }
-   }
-  },
-  "guest.statusYes": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Du kommer. Vi ses!"
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "You're coming. See you there!"
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Þú mætir. Sjáumst!"
-     }
-    }
-   }
-  },
-  "guest.statusNo": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Du har meldt fra."
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "You have declined."
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Þú hefur afboðað."
      }
     }
    }

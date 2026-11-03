@@ -91,7 +91,7 @@ struct TastingRow: View {
                 Text(tasting.title).font(.display(26, light: false, relativeTo: .title2)).foregroundStyle(Color.paper).multilineTextAlignment(.leading)
                 if let d = tasting.start { Text(whenText(d)).font(.body(14.4)).foregroundStyle(Color.muted) }
                 if let p = tasting.place, !p.isEmpty { Text(p).font(.body(14.4)).foregroundStyle(Color.muted) }
-                if let s = statusText(tasting.status) { Chip(text: s, tone: statusTone(tasting.status)).padding(.top, 4) }
+                if let s = statusText(tasting.status) { Chip(text: s, tone: statusTone(tasting.status), dashed: tasting.status == "no").padding(.top, 4) }
             }
             Spacer()
             SiteIcon("right", size: 18).foregroundStyle(Color.muted).padding(.top, 8)

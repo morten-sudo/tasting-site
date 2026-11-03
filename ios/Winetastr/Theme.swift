@@ -22,6 +22,8 @@ extension Color {
     static let waitBg = hex(0xFBF3EA)
     static let waitLine = hex(0xE2C9AD)
     static let errorText = hex(0xB3261E)
+    static let errBg = hex(0xFBF0F1)
+    static let errLine = hex(0xE3C4C9)
     static let placeholder = hex(0x9B8F8B)
     static func styleTone(_ key: String?) -> Color {
         switch key {
@@ -80,9 +82,42 @@ struct PrimaryButton: ButtonStyle {
 
 /// .text-btn
 struct TextButton: ButtonStyle {
+    var size: CGFloat = 15.2
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.medium(15.2)).foregroundStyle(Color.bordeaux).opacity(configuration.isPressed ? 0.6 : 1)
+        configuration.label.font(.medium(size)).foregroundStyle(Color.bordeaux).opacity(configuration.isPressed ? 0.6 : 1)
             .frame(minHeight: 44).contentShape(Rectangle())
+    }
+}
+
+/// Items in a row that wrap onto the next line when there is no room (like flex-wrap on the site)
+struct FlowRow: Layout {
+    var spacing: CGFloat = 8
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = arrange(proposal.width ?? .infinity, subviews)
+        return CGSize(width: rows.map(\.width).max() ?? 0, height: rows.reduce(0) { $0 + $1.height } + spacing * CGFloat(max(0, rows.count - 1)))
+    }
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in arrange(bounds.width, subviews) {
+            var x = bounds.minX
+            for i in row.items {
+                let s = subviews[i].sizeThatFits(.unspecified)
+                subviews[i].place(at: CGPoint(x: x, y: y + (row.height - s.height) / 2), proposal: ProposedViewSize(s))
+                x += s.width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+    private func arrange(_ width: CGFloat, _ subviews: Subviews) -> [(items: [Int], width: CGFloat, height: CGFloat)] {
+        var rows: [(items: [Int], width: CGFloat, height: CGFloat)] = []
+        var cur: [Int] = []; var w: CGFloat = 0; var h: CGFloat = 0
+        for (i, v) in subviews.enumerated() {
+            let s = v.sizeThatFits(.unspecified)
+            if !cur.isEmpty && w + spacing + s.width > width { rows.append((cur, w, h)); cur = []; w = 0; h = 0 }
+            w += (cur.isEmpty ? 0 : spacing) + s.width; h = max(h, s.height); cur.append(i)
+        }
+        if !cur.isEmpty { rows.append((cur, w, h)) }
+        return rows
     }
 }
 
@@ -124,15 +159,20 @@ struct FieldError: View {
 
 /// .chip
 struct Chip: View {
-    enum Tone { case neutral, ok, wait }
+    enum Tone { case neutral, ok, wait, err }
     let text: String
     var tone = Tone.neutral
+    /// .chip.dashed: an answer, not an error ("Not coming")
+    var dashed = false
+    private var fg: Color { switch tone { case .ok: .okText; case .wait: .tawny; case .err: .errorText; case .neutral: .muted } }
+    private var bg: Color { dashed ? .clear : { switch tone { case .ok: .okBg; case .wait: .waitBg; case .err: .errBg; case .neutral: .surface } }() }
+    private var line: Color { switch tone { case .ok: .okLine; case .wait: .waitLine; case .err: .errLine; case .neutral: .rule } }
     var body: some View {
         Text(text).font(.body(12.5))
-            .foregroundStyle(tone == .ok ? Color.okText : tone == .wait ? Color.tawny : Color.muted)
+            .foregroundStyle(fg)
             .padding(.horizontal, 10).padding(.vertical, 5)
-            .background(tone == .ok ? Color.okBg : tone == .wait ? Color.waitBg : Color.surface, in: Capsule())
-            .overlay(Capsule().strokeBorder(tone == .ok ? Color.okLine : tone == .wait ? Color.waitLine : Color.rule))
+            .background(bg, in: Capsule())
+            .overlay(Capsule().strokeBorder(line, style: StrokeStyle(lineWidth: 1, dash: dashed ? [3, 2] : [])))
     }
 }
 

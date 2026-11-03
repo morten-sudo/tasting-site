@@ -56,7 +56,10 @@ final class GuestFlowTests: XCTestCase {
         (change.exists ? change : answer).tap()
         a.buttons["Ja, jeg kommer"].tap()
         a.buttons["Gem"].tap()
-        XCTAssertTrue(a.staticTexts["Du kommer. Vi ses!"].waitForExistence(timeout: 15), "status yes")
+        // Answered: the answer is a chip beside the countdown, with "Ret svar" next to it – no answer card
+        XCTAssertTrue(a.staticTexts["Kommer"].waitForExistence(timeout: 15), "status chip yes")
+        XCTAssertTrue(a.buttons["Ret svar"].exists, "change answer beside the chip")
+        XCTAssertFalse(a.staticTexts["Dit svar"].exists, "no answer card once answered")
     }
 
     func testRatingIsSavedAndKept() {
