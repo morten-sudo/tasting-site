@@ -140,6 +140,8 @@ export interface PersonRowOptions {
   name: string;
   you?: string | null;
   meta?: Part[];
+  /** A second meta line (e.g. the last sign-in, shown on phones only) */
+  more?: Part[];
   chips?: RowChip[];
   side?: Node | null;
   actions?: HTMLElement[];
@@ -154,7 +156,7 @@ export interface PersonRowOptions {
 export function personRow(o: PersonRowOptions): HTMLLIElement {
   return listRow({
     id: o.id, pic: avatar(o.name, { host: o.host }), title: o.name, titleNote: o.you, onOpen: o.onOpen, href: o.href,
-    meta: o.meta?.length ? [o.meta] : [], chips: o.chips, aside: o.side ?? null, actions: o.actions, cls: 'person',
+    meta: [...(o.meta?.length ? [o.meta] : []), ...(o.more?.some(Boolean) ? [o.more] : [])], chips: o.chips, aside: o.side ?? null, actions: o.actions, cls: 'person',
   });
 }
 

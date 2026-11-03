@@ -450,6 +450,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, formatWhen, type Key } from '../../i18n';
+  import { ago } from '../../lib/ui/ago';
+  import { tooltip } from '../../lib/ui/tooltip';
 
   await i18nReady;
 
@@ -848,6 +850,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   // One row per guest, the same as the wines: a "picture" (initials), name, a line with email and invitation,
   // status as small chips, what they ordered on the right – and "Edit". The rest is in the side panel.
+  let lastLogins = new Map<string, string>();
   function guestCard(p: P, cols = { mail: true, link: true }) {
     // On the waiting list: its number in the queue
     const place = p.status === 'waitlist'
@@ -868,7 +871,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     });
     const link = iconButton('link', t('admin.copyLink'));
     link.addEventListener('click', () => copyInvite(p));
-    const actions: HTMLElement[] = [...(cols.mail ? [mail] : []), ...(cols.link ? [link] : [])];
+    // Last sign-in: a column of its own just left of the icons (empty when never – the columns stay in line)
+    const seenAt = p.guest_id ? lastLogins.get(p.guest_id) : undefined;
+    const seen = mk('span', 'last-in', seenAt ? t('guestLib.lastLogin', { when: ago(seenAt, true) }) : '');
+    if (seenAt) tooltip(seen, new Date(seenAt).toLocaleString(locale()));
+    // (phones: a line under the name instead – the icons have the bottom line to themselves)
+    const seenLine = seenAt ? mk('span', 'm-last', t('guestLib.lastLogin', { when: ago(seenAt) })) : null;
+    const actions: HTMLElement[] = [seen, ...(cols.mail ? [mail] : []), ...(cols.link ? [link] : [])];
     const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
     edit.dataset.tip = t('admin.edit');
     edit.addEventListener('click', () => openGuestPanel(p));
@@ -881,6 +890,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       name: p.name, onOpen: () => openGuestPanel(p),
       meta: [p.email ?? missing(),
         p.invite_mailed_at ? t('guestRow.mailed', { when: mailedWhen(p.invite_mailed_at) }) : t('guestRow.notMailed')],
+      more: [seenLine],
       chips, side: n ? mk('b', '', t('guestRow.bottles', { n })) : null, actions, id: p.id,
     });
     return li;
@@ -1378,6 +1388,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       supabase.from('quiz_questions').select('id', { count: 'exact', head: true }).eq('tasting_id', tasting.id),
     ]);
     participants = (p.data ?? []) as P[];
+    // When each guest last signed in (the account's guests); the list shows it when it comes
+    supabase.rpc('guest_last_logins').then(({ data }) => {
+      lastLogins = new Map(((data ?? []) as { guest_id: string; last_sign_in_at: string }[]).map((r) => [r.guest_id, r.last_sign_in_at]));
+      if (lastLogins.size) renderParticipants();
+    });
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
     quizTotal = q.count ?? 0;

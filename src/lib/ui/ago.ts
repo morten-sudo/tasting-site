@@ -1,8 +1,9 @@
 // "2 hours ago", "yesterday", "3 weeks ago" … in the active language (Intl.RelativeTimeFormat)
 import { locale } from '../../i18n';
 
-export function ago(iso: string) {
-  const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' });
+/** short: "12 min. ago" (for a narrow column) */
+export function ago(iso: string, short = false) {
+  const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto', style: short ? 'short' : 'long' });
   const s = (new Date(iso).getTime() - Date.now()) / 1000;
   const steps: [Intl.RelativeTimeFormatUnit, number][] = [['minute', 60], ['hour', 3600], ['day', 86400], ['week', 604800], ['month', 2629800], ['year', 31557600]];
   if (Math.abs(s) < 60) return rtf.format(0, 'minute');
