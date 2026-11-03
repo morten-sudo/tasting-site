@@ -63,7 +63,9 @@ export function bindMenu(button: HTMLElement, menu: HTMLElement, opts: MenuOptio
       if (refocus) button.focus({ preventScroll: true });
     },
   };
-  button.addEventListener('click', (e) => { e.stopPropagation(); if (menu.hidden) h.open(); else h.close(); });
+  // Opened with a tap or click (detail > 0) the focus stays on the button – no focus ring on the first item;
+  // opened with Enter or Space (detail 0) the focus moves into the menu as before
+  button.addEventListener('click', (e) => { e.stopPropagation(); if (menu.hidden) h.open(e.detail === 0); else h.close(); });
   button.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); h.open(); if (e.key === 'ArrowUp') items().at(-1)?.focus(); }
   });
