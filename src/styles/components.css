@@ -577,6 +577,8 @@ dialog .input { max-width: none; }
 .av.lg { width: 3.6rem; height: 3.6rem; font-size: 1.1rem; }
 .av.add { border-style: dashed; background: transparent; color: var(--amber); font-size: 1.2rem; font-weight: 400; }
 .av.host { border-color: var(--amber); color: var(--amber); }
+/* activityRow(): a sign in a circle – one line of what happened (the dashboard, a guest's page) */
+.av.act-icon { width: 2rem; height: 2rem; color: var(--amber); background: var(--lodge); font-size: 0.95rem; font-weight: 400; }
 .thumb {
   width: 3rem; height: 3.6rem; border-radius: var(--radius); background: #fff; border: 1px solid var(--lodge-3); box-sizing: border-box;
   display: grid; place-items: center; flex: none; overflow: hidden; position: relative;

@@ -4,6 +4,7 @@
 //   lead:   grip (drag to reorder, src/lib/ui/reorder.ts) · number · picture (wineThumb() or avatar())
 //   main:   title (a link, or a button that opens the side panel) · meta lines · chips · extra content
 //   aside:  price, bottles … (right; under the title in a narrow list)
+//   activityRow(): an icon in a circle as the picture – one line of what happened (dashboard, a guest's page)
 //   actions: icon buttons (iconButton()) – the row's actions; no form fields in a row.
 // The list is <ul class="list"> (rows) or <ul class="cards"> (cards).
 import { chip, type ChipTone } from './status';
@@ -143,16 +144,39 @@ export interface PersonRowOptions {
   side?: Node | null;
   actions?: HTMLElement[];
   onOpen?: () => void;
+  /** The name is a link to the person's own page instead (the guest library) */
+  href?: string;
   id?: string;
   host?: boolean;
 }
 
-/** A person: avatar, the name (opens the panel when it can be edited), one meta line, chips, aside and icons */
+/** A person: avatar, the name (opens the panel when it can be edited, or the person's page), one meta line, chips, aside and icons */
 export function personRow(o: PersonRowOptions): HTMLLIElement {
   return listRow({
-    id: o.id, pic: avatar(o.name, { host: o.host }), title: o.name, titleNote: o.you, onOpen: o.onOpen,
+    id: o.id, pic: avatar(o.name, { host: o.host }), title: o.name, titleNote: o.you, onOpen: o.onOpen, href: o.href,
     meta: o.meta?.length ? [o.meta] : [], chips: o.chips, aside: o.side ?? null, actions: o.actions, cls: 'person',
   });
+}
+
+// ---------- Activity: what happened – the dashboard's latest activity, a guest's page ----------
+export interface ActivityRowOptions {
+  /** A short sign in the circle (✓, 🛒, ★ …) */
+  icon: string;
+  /** What happened – text, or nodes (e.g. stars and the wine's name) */
+  title: string | (string | Node)[];
+  /** Where it happened and when; joined with " · " */
+  meta?: Part[];
+  /** The title is a link to where it happened */
+  href?: string | null;
+}
+
+/** One line of activity: an icon in a circle (the row's picture), what happened (the link), where and when */
+export function activityRow(o: ActivityRowOptions): HTMLLIElement {
+  const pic = el('span', 'av act-icon', o.icon);
+  pic.setAttribute('aria-hidden', 'true');
+  const title = document.createDocumentFragment();
+  title.append(...(typeof o.title === 'string' ? [o.title] : o.title));
+  return listRow({ pic, title, href: o.href ?? undefined, meta: o.meta?.length ? [o.meta] : [], cls: 'activity' });
 }
 
 /** "(missing)" in a meta line: red, e.g. "No email" */

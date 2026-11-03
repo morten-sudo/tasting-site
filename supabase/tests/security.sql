@@ -164,6 +164,10 @@ begin
   assert failed, 'host A can reset host B''s quiz';
   failed := false; begin perform admin_delete_person('guest-b@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'a host can delete a person';
+  failed := false; begin perform admin_tenant_id('x'); exception when others then failed := true; end;
+  assert failed, 'a host can look up accounts by slug';
+  failed := false; begin perform * from admin_tenant_slugs(); exception when others then failed := true; end;
+  assert failed, 'a host can list the accounts'' slugs';
   -- The admin overview only counts A's own data
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';
@@ -181,6 +185,60 @@ begin
   select count(*) into n from my_tasting_roles() where hosting and can_manage;                              assert n = 1, 'host A''s roles are wrong';
 end $$;
 reset role;
+
+-- ---------- A guest's page (guest_profile): the guest's own account only ----------
+-- On A's account: guests with the emails of host B (who owns another account and is invited there too),
+-- co-host C and account host D; B also signs in on both accounts
+insert into guests (id, host_id, name, email) values
+  ('00000000-0000-4000-c100-00000000000b', '00000000-0000-4000-a000-00000000000a', 'B as guest', 'host-b@selftest.invalid'),
+  ('00000000-0000-4000-c100-00000000000c', '00000000-0000-4000-a000-00000000000a', 'C as guest', 'host-c@selftest.invalid'),
+  ('00000000-0000-4000-c100-00000000000d', '00000000-0000-4000-a000-00000000000a', 'D as guest', 'host-d@selftest.invalid');
+insert into participants (id, tasting_id, name, email, invite_code, status) values
+  ('00000000-0000-4000-d100-00000000000a', '00000000-0000-4000-b000-00000000000a', 'B as guest', 'host-b@selftest.invalid', 'selftestpa', 'invited'),
+  ('00000000-0000-4000-d100-00000000000b', '00000000-0000-4000-b000-00000000000b', 'B on B', 'host-b@selftest.invalid', 'selftestpb', 'yes');
+insert into chat_messages (tasting_id, participant_id, author, body) values
+  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-d100-00000000000b', 'B on B', 'B''s own chat');
+insert into events (kind, tenant_id, actor) values
+  ('login.guest', (select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a'), 'host-b@selftest.invalid'),
+  ('login.host', (select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000b'), 'host-b@selftest.invalid');
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare p jsonb;
+begin
+  p := guest_profile('00000000-0000-4000-c100-00000000000b');
+  assert p is not null, 'host A cannot open a guest''s page';
+  assert jsonb_array_length(p -> 'tastings') = 1 and p -> 'tastings' -> 0 ->> 'slug' = 'selftest-a', 'a guest''s page shows another account''s tasting';
+  assert not exists (select 1 from jsonb_array_elements(p -> 'activity') x where x ->> 'slug' is distinct from 'selftest-a' and x ->> 'kind' <> 'signin'),
+    'a guest''s page shows activity from another account';
+  assert (select count(*) from jsonb_array_elements(p -> 'activity') x where x ->> 'kind' = 'signin') = 1, 'a guest''s page shows sign-ins on another account';
+  assert p -> 'roles' ->> 'account' is null and jsonb_array_length(p -> 'roles' -> 'cohost') = 0, 'a guest''s page reveals the guest''s own account elsewhere';
+  assert p::text not like '%selftest-b%' and p::text not like '%Test B%', 'a guest''s page mentions another account';
+  p := guest_profile('00000000-0000-4000-c100-00000000000c');
+  assert jsonb_array_length(p -> 'roles' -> 'cohost') = 1 and p -> 'roles' -> 'cohost' -> 0 ->> 'slug' = 'selftest-a', 'a co-host is not shown on the guest''s page';
+  assert guest_profile('00000000-0000-4000-c100-00000000000d') -> 'roles' ->> 'account' = 'host', 'a host on the account is not shown on the guest''s page';
+  assert jsonb_array_length(guest_profile('00000000-0000-4000-c000-00000000000a') -> 'tastings') = 1, 'host A cannot see own guest''s tastings';
+  assert guest_profile('00000000-0000-4000-c000-00000000000b') is null, 'host A opens the page of host B''s guest';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000b","email":"host-b@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert guest_profile('00000000-0000-4000-c100-00000000000b') is null, 'host B opens a page on host A''s account';
+  assert guest_profile('00000000-0000-4000-c000-00000000000a') is null, 'host B opens the page of host A''s guest';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$ declare failed boolean := false; begin
+  begin perform guest_profile('00000000-0000-4000-c000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can open a guest''s page';
+end $$;
+reset role;
+delete from chat_messages where body = 'B''s own chat';
+delete from participants where id::text like '00000000-0000-4000-d100-%';
+delete from guests where id::text like '00000000-0000-4000-c100-%';
+delete from events where actor = 'host-b@selftest.invalid' and kind in ('login.guest', 'login.host');
 
 -- ---------- Host D, a host on A's account ----------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000d","email":"host-d@selftest.invalid","role":"authenticated"}', true);
@@ -466,6 +524,10 @@ begin
   assert failed, 'anyone can look up a person';
   failed := false; begin perform admin_delete_person('guest-a@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'anyone can delete a person';
+  failed := false; begin perform admin_tenant_id('x'); exception when others then failed := true; end;
+  assert failed, 'anyone can look up accounts by slug';
+  failed := false; begin perform * from admin_tenant_slugs(); exception when others then failed := true; end;
+  assert failed, 'anyone can list the accounts'' slugs';
   -- Acting with code A on tasting B is refused
   failed := false; begin perform place_order('selftestaa', '[{"wine_id":-1002,"qty":1}]'); exception when others then failed := true; end;
   assert failed, 'code A can order wine B';

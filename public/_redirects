@@ -26,3 +26,5 @@
 # Host admin: one wine in the library, /admin/wines/<country>/<region>/<appellation>/<name>/<vintage>/
 # (served by the wines page, which finds the wine from the address)
 /admin/wines/*            /admin/wines/              200
+# Host admin: one guest in the library, /admin/guests/<name>/ (served by the guests page, which finds the guest from the address)
+/admin/guests/*           /admin/guests/             200

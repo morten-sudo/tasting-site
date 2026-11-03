@@ -69,7 +69,7 @@ import '../../styles/admin.css';
   import { ago } from '../../lib/ui/ago';
   import { formatKr } from '../../lib/ui/kr';
   import { emptyState } from '../../lib/ui/empty';
-  import { listRow } from '../../lib/ui/list-row';
+  import { listRow, activityRow } from '../../lib/ui/list-row';
   import { starsRo } from '../../lib/ui/stars';
   import { iconSvg } from '../../lib/ui/icons';
   import { supabase } from '../../lib/supabase';
@@ -94,11 +94,7 @@ import '../../styles/admin.css';
 
   // One line of the dashboard (the one list row): an icon in a circle, what happened (the link), and what kind and when
   function activity(icon: string, label: Key, text: string | Node[], meta: string, href: string | null) {
-    const pic = mk('span', 'av dash-icon', icon);
-    pic.setAttribute('aria-hidden', 'true');
-    const title = document.createDocumentFragment();
-    title.append(...(typeof text === 'string' ? [text] : text));
-    return listRow({ pic, title, href: href ?? undefined, meta: [[t(label), meta]] });
+    return activityRow({ icon, title: text, href, meta: [t(label), meta] });
   }
 
   /** Awaiting payment, one line per tasting, each going straight to that tasting's orders or guests. */

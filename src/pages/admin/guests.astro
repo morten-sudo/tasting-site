@@ -5,6 +5,8 @@ import Sheet from '../../components/ui/Sheet.astro';
 import AddRow from '../../components/ui/AddRow.astro';
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
 ---
@@ -12,6 +14,44 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="guests">
     <div id="admin-main" hidden>
+      <!-- One guest: /admin/guests/<name>/ (the same page, shown instead of the list) – this account only -->
+      <section id="guest-detail" class="guest-detail" hidden>
+        <a class="text-btn back wd-back" href="/admin/guests/"><Icon name="left" /><span data-i18n="person.back">All guests</span></a>
+        <EmptyState id="gd-missing" icon="search" title="person.notFound" hidden>
+          <a class="btn small" href="/admin/guests/" data-i18n="person.back">All guests</a>
+        </EmptyState>
+        <div id="gd-main">
+          <div class="wd-head">
+            <div id="gd-pic" class="wd-pic"></div>
+            <PageHeader id="gd-name" class="wd-ph">
+              <p id="gd-meta" class="wd-meta"></p>
+              <button slot="actions" id="gd-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+            </PageHeader>
+          </div>
+          <div class="wd-grid">
+            <div>
+              <section class="wd-block">
+                <SectionTitle level="eyebrow" as="h2" text="person.tastings" />
+                <ul id="gd-tastings" class="card list flush wd-tastings"></ul>
+                <div id="gd-tastings-empty" class="empty-state" hidden></div>
+              </section>
+              <section class="wd-block">
+                <SectionTitle level="eyebrow" as="h2" text="person.roles" />
+                <ul id="gd-roles" class="card list flush wd-tastings"></ul>
+                <div id="gd-roles-empty" class="empty-state" hidden></div>
+              </section>
+            </div>
+            <section class="wd-block">
+              <SectionTitle level="eyebrow" as="h2" text="person.activity" />
+              <ul id="gd-activity" class="card list flush wd-tastings"></ul>
+              <p id="gd-more" class="gd-more"></p>
+              <div id="gd-activity-empty" class="empty-state" hidden></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <div id="guest-list-view">
       <PageHeader title="adminNav.guests" lead="guestLib.intro">
         <button slot="actions" id="add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
       </PageHeader>
@@ -35,8 +75,10 @@ import '../../styles/admin.css';
         </AddRow>
         <ul id="guest-list" class="list"></ul>
         <div id="guest-empty" class="empty-state" hidden></div>
+      </section>
+      </div>
 
-        <!-- Edit a guest: side panel on larger screens, bottom sheet on phones -->
+        <!-- Edit a guest: side panel on larger screens, bottom sheet on phones (outside the list, so it also opens on a guest's page) -->
         <Sheet id="guest-panel" title="guestLib.editGuest" titleId="gf-title" form="guest-form">
           <label for="gf-name" data-i18n="admin.name">Name</label>
           <input class="input" id="gf-name" type="text" autocomplete="off" required />
@@ -45,7 +87,6 @@ import '../../styles/admin.css';
           <button slot="quiet" id="gf-delete" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="guestLib.delete">Delete guest</span></button>
           <button slot="foot" id="gf-save" class="btn" type="submit" data-i18n="common.save">Save</button>
         </Sheet>
-      </section>
     </div>
     </AdminNav>
   </section>
@@ -69,11 +110,13 @@ import '../../styles/admin.css';
   import { t } from '../../i18n';
   import { ago } from '../../lib/ui/ago';
   import { tooltip } from '../../lib/ui/tooltip';
+  import { confirmModal } from '../../lib/ui/confirm';
+  import { guestPaths, guestIdFromPath, onGuestPage, showGuestPage } from '../../lib/admin-guest-page';
 
   // The guest list: one row per guest, the same as a tasting's guests – initials, name, email, the tastings they are
   // invited to as chips, and icons to edit and delete. A new guest comes in as a new row at the top.
   type Invite = { id: string; status: string; tastings: { slug: string; title: string } | null };
-  type G = { id: string; name: string; email: string | null; participants: Invite[] };
+  type G = { id: string; name: string; email: string | null; created_at: string; participants: Invite[] };
 
   const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   let guests: G[] = [];
@@ -85,7 +128,7 @@ import '../../styles/admin.css';
 
   async function load() {
     const { data } = await supabase.from('guests')
-      .select('id, name, email, participants(id, status, tastings(slug, title))')
+      .select('id, name, email, created_at, participants(id, status, tastings(slug, title))')
       .eq('tenant_id', host!.tenant_id).order('name');
     guests = ((data ?? []) as unknown as G[]).map((g) => ({ ...g, participants: g.participants ?? [] }));
     render();
@@ -93,7 +136,10 @@ import '../../styles/admin.css';
 
   const norm = (x: string) => x.trim().toLowerCase().replace(/\s+/g, ' ');
 
+  // Each guest's own address, /admin/guests/<name>/ (-2, -3 … for the same name)
+  let paths = new Map<string, string>();
   function render() {
+    paths = guestPaths(guests);
     const q = $<HTMLInputElement>('guest-search').value.trim().toLowerCase();
     const shown = guests.filter((g) => !pendingDelete.has(g.id) && (!q || `${g.name} ${g.email ?? ''}`.toLowerCase().includes(q)));
     // None yet: how to start; none found: the search is cleared with one press
@@ -116,8 +162,9 @@ import '../../styles/admin.css';
         const st: Status = STATUSES[guestStatus(p.status)];
         return { text: `${p.tastings!.title} · ${t(st.key)}`, tone: st.tone, dashed: st.dashed, href: `/t/${p.tastings!.slug}/admin/guests/` };
       });
+      // The name opens the guest's own page (tastings, activity, roles); editing is the pencil and the panel
       const li = personRow({
-        name: g.name, onOpen: () => openForm(g),
+        name: g.name, href: paths.get(g.id) ?? `/admin/guests/${g.id}/`,
         meta: [g.email ?? missing(), lastSeen(g.id)],
         chips: chips.length ? chips : [{ text: t('guestLib.notInvited') }],
         actions: [edit, del], id: g.id,
@@ -210,23 +257,29 @@ import '../../styles/admin.css';
     }
     panel.close();
     await load();
-    highlight(g.id);
+    if (pageId) await showPage(); else highlight(g.id);
     toast(t('guestRow.saved', { name }), { kind: 'ok' });
   });
   $('gf-delete').addEventListener('click', async () => {
     if (!editing) return;
     const g = editing;
+    // On the guest's own page: asked here, then back to the list, which deletes the guest (with Undo)
+    if (pageId) {
+      if (await confirmModal({ ...deleteQuestion(g), danger: true })) { panel.close(); location.href = `/admin/guests/?deleted=${g.id}`; }
+      return;
+    }
     if (await deleteGuest(g)) panel.close();
   });
 
   // ---------- Delete: asked about first, then gone with "Undo" for a while (the one delete with Undo) ----------
   // A guest who is invited is removed from those tastings too (with their answers there)
-  function deleteGuest(g: G): Promise<boolean> {
-    const n = g.participants.length;
+  const deleteQuestion = (g: G) => ({ title: t('guestLib.deleteQ', { name: g.name }), ok: t('guestLib.delete'),
+    text: g.participants.length ? t('guestLib.deleteNoteIn', { n: g.participants.length }) : undefined });
+  function deleteGuest(g: G, ask = true): Promise<boolean> {
     const ids = g.participants.map((p) => p.id);
     return deleteWithUndo({
       label: t('guestLib.deleted', { name: g.name }),
-      ask: { title: t('guestLib.deleteQ', { name: g.name }), ok: t('guestLib.delete'), text: n ? t('guestLib.deleteNoteIn', { n }) : undefined },
+      ask: ask ? deleteQuestion(g) : null,
       hide: () => { pendingDelete.add(g.id); render(); },
       restore: () => { pendingDelete.delete(g.id); render(); highlight(g.id); },
       restored: t('guestRow.restored', { name: g.name }),
@@ -244,13 +297,38 @@ import '../../styles/admin.css';
     });
   }
 
+  // ---------- A guest's own page: /admin/guests/<name>/ (this account only) ----------
+  let pageId: string | null = null;
+  async function showPage() {
+    // The address follows the guest's name (also after a rename, or from the address with the guest's id)
+    const path = paths.get(pageId!);
+    if (path && path !== location.pathname) history.replaceState(null, '', path);
+    const g = guests.find((x) => x.id === pageId);
+    await showGuestPage(g ? g.id : '', { edit: () => { if (g) openForm(g); }, lastLogin: () => (g ? lastLogins.get(g.id) ?? null : null), owner: host!.tenant_owner });
+  }
+
   // Start (last, so everything above is defined)
   const host = await requireHost();
   if (host) {
     $('admin-main').hidden = false;
     await load();
-    loadLastLogins();
-    if (new URLSearchParams(location.search).has('new') || !guests.length) openAdd(false);
+    const params = new URLSearchParams(location.search);
+    if (onGuestPage()) {
+      pageId = guestIdFromPath(paths);
+      await loadLastLogins();
+      await showPage();
+    } else {
+      loadLastLogins();
+      // Deleted on the guest's own page: hidden here with "Undo" before it is deleted for real
+      const deleted = params.get('deleted');
+      if (deleted) {
+        params.delete('deleted');
+        history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : ''));
+        const g = guests.find((x) => x.id === deleted);
+        if (g) deleteGuest(g, false);
+      }
+      if (params.has('new') || !guests.length) openAdd(false);
+    }
     followHelpLink();
   }
 </script>

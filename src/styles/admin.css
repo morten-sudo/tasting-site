@@ -155,8 +155,6 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .super-shell .tn-plan { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; font-weight: 400; color: var(--muted); }
 .super-shell .tn-plan label { margin: 0; font-weight: 400; color: var(--muted); }
 
-/* The dashboard's lines: an icon in a circle (the list row's picture) */
-.admin-page .av.dash-icon { width: 2rem; height: 2rem; color: var(--amber); background: var(--lodge); font-size: 0.95rem; font-weight: 400; }
 .admin-page #mine { margin-bottom: 0.4rem; }
 
 /* A tasting's details, read-only (edited in the side panel) */
@@ -188,6 +186,12 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .wd-tastings:empty { display: none; }
 .admin-page #wd-facts-strip > .facts { margin-bottom: 1.5rem; }
 .admin-page .wd-origin-text { margin: 0 0 0.75rem; }
+
+/* One guest: /admin/guests/<name>/ – the wine page's layout; "Show n more" under the activity */
+.admin-page .gd-more { margin: 0.5rem 0 0; }
+.admin-page .gd-more:empty { display: none; }
+/* The empty sections sit on white like the cards beside them (the page's map shows behind this page) */
+.admin-page .guest-detail .empty-state { background: #fff; margin-top: 0; }
 
 /* The wine panel: its steps laid out like the form's grid */
 .admin-page .wine-form .wf-step { display: grid; gap: 0.4rem; min-width: 0; }

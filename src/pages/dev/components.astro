@@ -306,6 +306,8 @@ const opts = [
           <SectionTitle level="h3" text="25 List row and card" />
           <p class="help">listRow(), personRow() in src/lib/ui/list-row.ts – a list shows, the side panel edits</p>
           <ul class="list" id="rows"></ul>
+          <SectionTitle level="eyebrow" text="Activity rows – activityRow()" class="dv-sub" />
+          <ul class="list" id="act-rows"></ul>
           <SectionTitle level="eyebrow" text="Card variant" class="dv-sub" />
           <ul class="cards" id="row-cards"></ul>
         </section>
@@ -635,7 +637,7 @@ const opts = [
   import { facts, setFact } from '../../lib/ui/facts';
   import { loadMap, drawMap, DETAILED_MAPS } from '../../lib/region-map';
   import { table } from '../../lib/ui/table';
-  import { listRow, personRow } from '../../lib/ui/list-row';
+  import { listRow, personRow, activityRow } from '../../lib/ui/list-row';
   import { addRow } from '../../lib/ui/add-row';
   import { highlight } from '../../lib/ui/highlight';
   import { deleteWithUndo } from '../../lib/ui/delete-undo';
@@ -819,11 +821,19 @@ const opts = [
       listRow({ id: 1, grip: { label: 'Move Kopke Colheita 2008' }, no: 1, pic: wineThumb('/img/cellar-800.jpg'), title: 'Kopke Colheita 2008', onOpen: () => {},
         meta: [['Port', 'Douro, Portugal']], chips: [{ text: 'Shown', tone: 'ok' }, { text: 'Can be ordered' }], aside: price({ amount: 449.95, align: 'right', tiers: ['6+: 419,95 kr.'] }), actions: [iconButton('reveal', 'Reveal'), edit(), remove()] }),
       listRow({ id: 2, grip: { label: 'Move Blind wine' }, no: 2, pic: wineThumb(null, { blind: true }), title: 'Blind wine', meta: [['Red wine']], chips: [{ text: 'Blind', tone: 'strong' }, { text: 'Hidden', dashed: true }], aside: price({ amount: null, align: 'right' }), actions: [edit(), remove()] }),
+      personRow({ id: 'p0', name: 'Mette Kjær', href: '#c25', meta: ['mette@example.dk', 'signed in 2 days ago'], chips: [{ text: 'Portvin 2026 · Coming', tone: 'ok', href: '#c25' }], actions: [edit(), remove()] }),
       personRow({ id: 'p1', name: 'Anne Berg', host: true, meta: ['anne@example.dk'], chips: [{ text: 'Coming', tone: 'ok' }, { text: 'Paid', tone: 'ok' }], actions: [iconButton('mail', 'Invite', { strong: true }), edit()] }),
       listRow({ id: 4, pic: avatar('Jens Holm'), title: 'Jens Holm', titleNote: 'you', meta: ['jens@example.dk', mk('span', 'note', '"Can’t eat nuts"')], chips: [statusChip('guest.waitlist')], actions: [edit()] }),
       listRow({ id: 5, pic: avatar('Old guest'), title: 'Muted row (not coming)', cls: 'muted', chips: [statusChip('guest.no')], actions: [edit()] }),
       listRow({ id: 6, pic: wineThumb(null), title: 'Busy row', cls: 'busy', meta: ['Saving …'], actions: [edit()] }),
       listRow({ id: 7, title: 'Portvin 2026', cls: 'big', href: '#c25', meta: ['Saturday 14 November · 22 guests'], chips: [{ text: 'Next', tone: 'wait' }] }),
+    );
+    // Activity: a sign in a circle, what happened (a link, or plain text when there is nowhere to go), where and when
+    $('act-rows').append(
+      activityRow({ icon: '✓', title: 'Said yes to Portvin 2026', href: '#c25', meta: ['Portvin 2026', '2 hours ago'] }),
+      activityRow({ icon: '🛒', title: 'Ordered 6 bottles (1.134,00 kr.)', href: '#c25', meta: ['Portvin 2026', 'Awaiting payment', 'yesterday'] }),
+      activityRow({ icon: '★', title: [starsRo(4), ' Quinta do Noval LBV'], href: '#c25', meta: ['Portvin 2026', '3 days ago'] }),
+      activityRow({ icon: '→', title: 'Signed in', meta: ['last week'] }),
     );
     $('row-cards').append(
       listRow({ variant: 'card', cardHref: '#c25', title: 'Portvin 2026', meta: ['Saturday 14 November at 19:00', 'Strandvejen 12, Hellerup'], chips: [statusChip('guest.yes')], foot: [mk('span', '', '11 wines'), mk('b', '', '22 guests')] }),
