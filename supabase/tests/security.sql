@@ -630,6 +630,116 @@ do $$ begin
           and actor = (select lower(email) from participants where invite_code = 'selftestaa')) = 1, 'opening the invitation is not logged once';
 end $$;
 
+-- ---------- Security batch (A01-002, A05-001, A05-002, A06-001, A07-001): addresses, links, limits and codes ----------
+-- Email addresses never hold a line break, a control character, < or > (they would reach mail headers and SMTP commands)
+do $$
+declare failed boolean;
+begin
+  failed := false; begin insert into guests (host_id, name, email) values ('00000000-0000-4000-a000-00000000000a', 'x', e'x@selftest.invalid\r\nBcc: y@selftest.invalid'); exception when check_violation then failed := true; end;
+  assert failed, 'a guest''s email can hold a line break';
+  failed := false; begin update participants set email = 'x@selftest.invalid>' where invite_code = 'selftestaa'; exception when check_violation then failed := true; end;
+  assert failed, 'an invitation''s email can hold >';
+  failed := false; begin update hosts set email = '<x@selftest.invalid' where id = '00000000-0000-4000-a000-00000000000b'; exception when check_violation then failed := true; end;
+  assert failed, 'a host''s email can hold <';
+  failed := false; begin insert into tasting_hosts (tasting_id, email) values ('00000000-0000-4000-b000-00000000000a', 'x@selftest.invalid>'); exception when check_violation then failed := true; end;
+  assert failed, 'a co-host''s email can hold >';
+  failed := false; begin insert into workspace_invites (tenant_id, email) values ((select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a'), e'x@selftest.invalid\n'); exception when check_violation then failed := true; end;
+  assert failed, 'an account invitation''s email can hold a line break';
+  failed := false; begin insert into admins (email) values ('x@selftest.invalid<'); exception when check_violation then failed := true; end;
+  assert failed, 'an admin''s email can hold <';
+  -- The shop link a wine was read from is a web address, nothing else (as the producer's website)
+  failed := false; begin update wines set source_url = 'javascript:alert(1)' where id = -1001; exception when check_violation then failed := true; end;
+  assert failed, 'a wine''s shop link can be something that is not a web address';
+  update wines set source_url = 'https://shop.example.com/wine?id=1' where id = -1001;
+  update wines set source_url = null where id = -1001;
+  -- New invitations get long codes (80 bits); the old 10-character ones keep working
+  insert into participants (tasting_id, name, invite_code) values ('00000000-0000-4000-b000-00000000000b', 'Code check', default);
+  assert (select length(invite_code) from participants where name = 'Code check') = 20, 'a new invitation does not get a 20-character code';
+  delete from participants where name = 'Code check';
+  -- A rated wine for code A's wine book (below)
+  insert into wine_ratings (participant_id, wine_id, rating) values ('00000000-0000-4000-d000-00000000000a', -1001, 4);
+  -- Account A has used up today's AI look-ups (the limit is the database's)
+  insert into daily_quota_use (tenant_id, day, kind, n)
+  values ((select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a'), (now() at time zone 'UTC')::date, 'ai', daily_quota_limit('ai'));
+  -- Many sign-in checks from many connections this hour (earlier, all together blocked everyone's sign-in at 300)
+  insert into login_checks (ip, at) select '198.51.100.' || (i % 200), now() - interval '10 minutes' from generate_series(1, 400) i;
+  perform set_config('selftest.quota_tb', (select tenant_id::text from hosts where id = '00000000-0000-4000-a000-00000000000b'), true);
+end $$;
+
+-- A01-002: host A cannot link an invitation to another account's guest card (whose name and email would follow it)
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare j jsonb; failed boolean;
+begin
+  insert into participants (tasting_id, name, email, guest_id, invite_code)
+  values ('00000000-0000-4000-b000-00000000000a', 'Hijack', 'hijack@selftest.invalid', '00000000-0000-4000-c000-00000000000b', 'selftesthj');
+  assert (select guest_id from participants where invite_code = 'selftesthj') is null, 'an invitation is linked to another account''s guest';
+  update participants set guest_id = '00000000-0000-4000-c000-00000000000b' where invite_code = 'selftestaa';
+  assert (select guest_id from participants where invite_code = 'selftestaa') is distinct from '00000000-0000-4000-c000-00000000000b',
+    'an invitation can be moved to another account''s guest';
+  update participants set name = 'Renamed by A' where invite_code in ('selftesthj', 'selftestaa');
+  -- A06-001: daily limits per account – mail is counted against the tasting's account, AI against A's (used up above)
+  j := use_daily_quota('mail', 1, '00000000-0000-4000-b000-00000000000a');
+  assert (j ->> 'ok')::boolean and (j ->> 'used')::int = 1 and (j ->> 'limit')::int = daily_quota_limit('mail'), 'a host cannot send an invitation';
+  j := use_daily_quota('ai');
+  assert not (j ->> 'ok')::boolean and (j ->> 'used')::int = daily_quota_limit('ai'), 'the daily AI limit does not stop host A';
+  failed := false; begin perform use_daily_quota('mail', 1, '00000000-0000-4000-b000-00000000000b'); exception when others then failed := true; end;
+  assert failed, 'host A can use host B''s mail limit';
+  failed := false; begin perform use_daily_quota('ai', 1, null, current_setting('selftest.quota_tb')::uuid); exception when others then failed := true; end;
+  assert failed, 'host A can use host B''s AI limit';
+  failed := false; begin perform use_daily_quota('sms'); exception when others then failed := true; end;
+  assert failed, 'an unknown kind is counted';
+  failed := false; begin perform count(*) from daily_quota_use; exception when others then failed := true; end;
+  assert failed, 'the daily counts are readable';
+end $$;
+reset role;
+
+-- Co-host C counts against the tasting's account (A's), not C's own
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000c","email":"host-c@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert (use_daily_quota('mail', 1, '00000000-0000-4000-b000-00000000000a') ->> 'used')::int = 2, 'a co-host''s mail is not counted on the tasting''s account';
+  assert (use_daily_quota('ai') ->> 'ok')::boolean, 'host C''s own account is limited by host A''s use';
+end $$;
+reset role;
+
+do $$ begin
+  assert (select name from guests where id = '00000000-0000-4000-c000-00000000000b') = 'Guest B', 'host A renamed another account''s guest card';
+  assert (select n from daily_quota_use where kind = 'ai' and tenant_id = (select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a'))
+         = daily_quota_limit('ai'), 'a refused AI look-up is counted';
+end $$;
+
+-- Not signed in: the limits and the wine book
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare failed boolean; n int;
+begin
+  failed := false; begin perform use_daily_quota('ai'); exception when others then failed := true; end;
+  assert failed, 'anyone can use an account''s daily limit';
+  -- A07-001: the wine book reads at most 200 codes, so it cannot be used to try codes in bulk
+  select count(*) into n from my_wine_book(array['selftestaa']) w where w.wine_id = -1001;             assert n = 1, 'code A''s rated wine is not in the wine book';
+  select count(*) into n from my_wine_book(array(select 'nocode' || i from generate_series(1, 200) i) || array['selftestaa']);
+  assert n = 0, 'the wine book reads more than 200 codes';
+  -- login_email_known: one connection is limited, the others can still sign in (no limit shared by everybody)
+  perform set_config('request.headers', '{"cf-connecting-ip":"203.0.113.7"}', true);
+  assert login_email_known('host-a@selftest.invalid'), 'a known email is not known';
+  for i in 1..14 loop perform login_email_known('nobody@selftest.invalid'); end loop;
+  failed := false; begin perform login_email_known('host-a@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'one connection can check emails without limit';
+  -- IPv6: counted per /64, so a connection cannot rotate its addresses
+  for i in 1..15 loop perform set_config('request.headers', format('{"cf-connecting-ip":"2001:db8:1:2::%s"}', to_hex(i)), true); perform login_email_known('nobody@selftest.invalid'); end loop;
+  perform set_config('request.headers', '{"cf-connecting-ip":"2001:db8:1:2::ff"}', true);
+  failed := false; begin perform login_email_known('host-a@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'an IPv6 connection can check emails without limit by rotating its address';
+  perform set_config('request.headers', '{"cf-connecting-ip":"192.0.2.1"}', true);
+  assert login_email_known('host-a@selftest.invalid'), 'checks from other connections block everybody''s sign-in';
+  perform set_config('request.headers', '', true);
+end $$;
+reset role;
+delete from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
+
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
 select set_config('request.jwt.claims', '', true);

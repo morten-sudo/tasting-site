@@ -25,7 +25,7 @@ const blindBody = blind.slice(0, blind.findIndex((l, i) => i > 0 && l.startsWith
 
 const fixtures = section('Fixtures');
 const parts = [
-  ['Host A', "A guest's page", 'Host D', 'Host A removes D'],
+  ['Host A', "A guest's page", 'Host D', 'Host A removes D', 'Security batch'],
   ['Host D', 'Host A removes D', 'Host E', 'Host C', 'A signed-in guest'],
   ['Host A', 'Not signed in', 'Blind tasting'],
 ];
