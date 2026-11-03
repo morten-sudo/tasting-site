@@ -1329,4 +1329,10 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "super.showAll": "Mostrar todas las cuentas",
   "twe.tierTwice": "Ya hay un precio para este número de botellas",
   "board.noAnswers": "Nadie ha respondido todavía.",
+  "map.zoomIn": "Acercar",
+  "map.zoomOut": "Alejar",
+  "signup.beta": "Beta",
+  "signup.proUnlimited": "Catas, vinos e invitados ilimitados",
+  "signup.comErp": "Integración con ERP y CRM",
+  "signup.comClub": "Integración con el club de clientes",
 };

@@ -22,7 +22,10 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
     // The producer's exact place as a pin on top of its appellation
     const pin = w.producer_lat != null && w.producer_lon != null && mapPoint(map, w.producer_lon, w.producer_lat)
       ? [{ lon: w.producer_lon, lat: w.producer_lat, title: w.producer ?? '' }] : [];
-    const svg = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[appellationId!, 1]]) : new Map(), wholeRegion: !inMap, pins: pin });
+    // The same map as the tasting's: the wine's appellation filled and named (no number), or the whole region lit
+    const name = inMap ? map.areas[appellationId!].title ?? w.appellation ?? '' : '';
+    const svg = drawMap(map, { counts: inMap ? new Map([[appellationId!, 1]]) : new Map(), titles: inMap && name ? new Map([[appellationId!, name]]) : new Map(),
+      badges: false, wholeRegion: !inMap, pins: pin });
     // An appellation on the list that is not an area covers the whole region (e.g. Porto)
     return { svg, how: pin.length ? 'producer' : inMap ? 'area' : appellationId ? 'regionWide' : 'region', sources: map.sources };
   }
@@ -34,7 +37,7 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
   const small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14;
   const margin = Math.max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35;
   const detail = small ? await loadDetail({ lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin }) : null;
-  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini', detail), how: place.how, sources: OVERVIEW_SOURCES };
+  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'full', detail), how: place.how, sources: OVERVIEW_SOURCES };
 }
 
 /** Where the overview maps come from */

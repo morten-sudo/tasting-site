@@ -47,7 +47,7 @@ import CartBar from '../../components/ui/CartBar.astro';
         <button id="desc-more" class="text-btn" type="button" hidden aria-expanded="false" aria-controls="desc" data-i18n="wine.readMore">Read more</button>
       </div>
       <div id="facts" class="w-facts"></div>
-      <div id="mini-map" class="map-box mini" hidden></div>
+      <div id="mini-map" class="map-box" hidden></div>
       <Disclosure id="details-box" class="w-details" summary="wine.moreAbout" hidden>
         <div id="details"></div>
       </Disclosure>
@@ -84,6 +84,7 @@ import CartBar from '../../components/ui/CartBar.astro';
   import { originFull } from '../../lib/origin';
   import { bulkNote } from '../../lib/bulk';
   import { wineMap, showMapCredit } from '../../lib/wine-map';
+  import { mapZoom } from '../../lib/ui/map-zoom';
 
   // The wine from the address: its name (/wines/rivesaltes-ambre-1966/) or, on old links, its number
   const part = decodeURIComponent(location.pathname.match(/\/wines\/([^/]+)/)?.[1] ?? new URLSearchParams(location.search).get('id') ?? '');
@@ -99,6 +100,7 @@ import CartBar from '../../components/ui/CartBar.astro';
     box.innerHTML = m.svg;
     tooltip(box, originFull(w) ?? '');
     box.hidden = false;
+    mapZoom(box);
     showMapCredit(box, m);
   }
 

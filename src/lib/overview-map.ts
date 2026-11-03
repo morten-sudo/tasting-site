@@ -114,7 +114,7 @@ export async function focusFor(places: Place[], close = false): Promise<Box> {
 export type Pin = { lon: number; lat: number; label?: string; n?: number };
 
 /** The overview map, cut to `focus`, with a pin (and label or number) for each place. */
-export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'mini' | 'inset' = 'full', detail: Detail | null = null): string {
+export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'inset' = 'full', detail: Detail | null = null): string {
   const { lon0, lat1, k, s } = map.proj;
   const xy = (lon: number, lat: number) => [(lon - lon0) * k * s, (lat1 - lat) * s];
   let [x0, y0] = xy(focus.lon0, focus.lat1);
@@ -152,7 +152,7 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
       parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#6e0f1f" stroke="#fff" stroke-width="${(u * 0.5).toFixed(2)}"/>`);
     }
     if (p.label && mode !== 'inset') {
-      const fs = u * (mode === 'mini' ? 5.2 : 3.4);
+      const fs = u * 3.4;
       parts.push(`<text class="rm-badge-title" x="${(x + u * 3.4).toFixed(1)}" y="${(y - u * 1.2).toFixed(1)}" style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.25).toFixed(1)}px">${esc(p.label)}</text>`);
     }
   }

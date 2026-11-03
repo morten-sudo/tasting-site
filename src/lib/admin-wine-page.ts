@@ -9,6 +9,7 @@ import { t, formatWhen, locale } from '../i18n';
 import { styleName, wineSlug, wineFacts } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
 import { wineMap, showMapCredit } from './wine-map';
+import { mapZoom } from './ui/map-zoom';
 import { $, mk } from './ui/dom';
 import { fillFacts, type Fact } from './ui/facts';
 import { wineThumb } from './ui/thumb';
@@ -109,6 +110,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   const map = await wineMap(w);
   $('wd-map').innerHTML = map?.svg ?? '';
   $('wd-map').hidden = !map;
+  if (map) mapZoom($('wd-map'));
   showMapCredit($('wd-map'), map);
 
   // Only a name so far: say so, with a way to fill in the rest (a shop link or a label photo – or by hand)

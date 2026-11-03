@@ -1443,4 +1443,10 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "super.showAll": "Vis alle konti",
   "twe.tierTwice": "Der er allerede en pris for det antal flasker",
   "board.noAnswers": "Ingen har svaret endnu.",
+  "map.zoomIn": "Zoom ind",
+  "map.zoomOut": "Zoom ud",
+  "signup.beta": "Beta",
+  "signup.proUnlimited": "Ubegrænset antal smagninger, vine og gæster",
+  "signup.comErp": "Integration til ERP og CRM",
+  "signup.comClub": "Integration til kundeklub",
 };

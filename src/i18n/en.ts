@@ -1442,4 +1442,10 @@ export const en = {
   "super.showAll": "Show all accounts",
   "twe.tierTwice": "There is already a price for this number of bottles",
   "board.noAnswers": "No one has answered yet.",
+  "map.zoomIn": "Zoom in",
+  "map.zoomOut": "Zoom out",
+  "signup.beta": "Beta",
+  "signup.proUnlimited": "Unlimited tastings, wines and guests",
+  "signup.comErp": "Integration with ERP and CRM",
+  "signup.comClub": "Integration with your customer club",
 } as const;

@@ -1,0 +1,5 @@
+---
+// A corner ribbon across a card's top right corner ("Beta"). The card needs the class "has-ribbon".
+const { text = 'Beta', i18n } = Astro.props as { text?: string; i18n?: string };
+---
+<span class="ribbon" data-i18n={i18n}>{text}</span>

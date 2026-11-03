@@ -133,6 +133,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   import { i18nReady, t, formatWhen, lang, type Key } from '../../i18n';
   import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from '../../lib/region-map';
   import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from '../../lib/overview-map';
+  import { mapZoom } from '../../lib/ui/map-zoom';
   import { countryName } from '../../lib/origin';
   import { setMapCredit, OVERVIEW_SOURCES } from '../../lib/wine-map';
 
@@ -236,6 +237,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     // Shown before zooming: sizes can only be measured on a visible map
     $('origin-block').hidden = false;
     if (matchMedia('(max-width: 40rem)').matches) fitToAreas(box.querySelector('svg')!, map);
+    mapZoom(box);
     // The legend: number of wines per appellation, with their numbers in the evening
     const no = new Map(wines.map((w, i) => [w.id, i + 1]));
     const byId = new Map(wines.map((w) => [w.id, w]));
@@ -278,6 +280,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     if (!ov) return;
     const pins = list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.wines.length, label: g.p.label }));
     $('origin-map').innerHTML = drawOverview(ov, pins, focus, 'full');
+    mapZoom($('origin-map'));
     $('hero-map').innerHTML = '';
     const no = new Map(wines.map((w, i) => [w.id, i + 1]));
     $('origin-legend').replaceChildren(...list.map((g) => {

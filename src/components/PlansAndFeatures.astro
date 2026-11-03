@@ -1,5 +1,6 @@
 ---
 import Icon from './ui/Icon.astro';
+import Ribbon from './ui/Ribbon.astro';
 // Features and plans: on the sign-up page and on /plans/ (which signed-in hosts can open too).
 // `cta`: where "Get started" goes – the form on the sign-up page, or the sign-up page itself.
 const { cta = '#signup' } = Astro.props as { cta?: string };
@@ -45,7 +46,8 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
     <section class="su-section">
       <h2 class="pf-h2" data-i18n="signup.plansTitle">Plans</h2>
       <div class="su-plans">
-        <article class="card su-plan current">
+        <article class="card su-plan current has-ribbon">
+          <Ribbon i18n="signup.beta" />
           <h3>Free</h3>
           <p class="su-price" data-i18n="signup.freePrice">0 kr.</p>
           <p class="su-plan-lead" data-i18n="signup.freeLead">For private tastings with friends and family.</p>
@@ -61,6 +63,7 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
           <h3>Pro <span class="chip dashed" data-i18n="signup.soon">Coming soon</span></h3>
           <p class="su-plan-lead" data-i18n="signup.proLead">For the keen host who holds tastings often.</p>
           <ul>
+            <li data-i18n="signup.proUnlimited">Unlimited tastings, wines and guests</li>
             <li data-i18n="signup.proA">Your own logo and colours</li>
             <li data-i18n="signup.proC">Statistics across your tastings</li>
           </ul>
@@ -72,6 +75,8 @@ const { cta = '#signup' } = Astro.props as { cta?: string };
             <li data-i18n="signup.comA">Ticket sales for public tastings</li>
             <li data-i18n="signup.comB">Several staff accounts</li>
             <li data-i18n="signup.comC">Your own payment and invoicing</li>
+            <li data-i18n="signup.comErp">Integration with ERP and CRM</li>
+            <li data-i18n="signup.comClub">Integration with your customer club</li>
           </ul>
         </article>
       </div>

@@ -34,6 +34,7 @@ import Actions from '../../components/ui/Actions.astro';
 import Sr from '../../components/ui/Sr.astro';
 import ChatBox from '../../components/ChatBox.astro';
 import CartBar from '../../components/ui/CartBar.astro';
+import Ribbon from '../../components/ui/Ribbon.astro';
 import '../../styles/admin.css';
 
 const opts = [
@@ -238,6 +239,8 @@ const opts = [
             <span class="dv-lab">Tones</span><div class="chips" id="chip-tones"></div>
             <span class="dv-lab">Every status</span><div class="chips" id="chip-status"></div>
           </div>
+          <p class="help">Ribbon.astro – a corner band on a card (class "has-ribbon")</p>
+          <div class="card has-ribbon dv-ribbon"><Ribbon text="Beta" /><b>Free</b><span class="help">A plan card with the ribbon</span></div>
         </section>
 
         <section id="c19" class="dv-comp">
@@ -278,7 +281,7 @@ const opts = [
           <p class="help">drawMap() in src/lib/region-map.ts · .map-box (normal, mini), .map-credit, .map-legend, .flag</p>
           <div class="dv-grid dv-top">
             <div><div id="map-normal" class="map-box"></div><p class="map-credit">Natural Earth · OpenStreetMap</p></div>
-            <div><div id="map-mini" class="map-box mini"></div><p class="map-credit">Natural Earth</p><ul class="map-legend"><li><span class="no">3</span><span><b>Douro</b><span class="sub">Wines 1–3</span></span></li><li class="whole"><span class="no">1</span><span><b>Portugal</b><span class="sub">The whole country</span></span></li><li class="other"><span class="no">2</span><span><b>Other places</b><span class="sub">Not on this map</span></span></li></ul><p id="flag-line" class="tb-flag dv-flags"></p></div>
+            <div><div id="map-mini" class="map-box"></div><p class="map-credit">Natural Earth</p><ul class="map-legend"><li><span class="no">3</span><span><b>Douro</b><span class="sub">Wines 1–3</span></span></li><li class="whole"><span class="no">1</span><span><b>Portugal</b><span class="sub">The whole country</span></span></li><li class="other"><span class="no">2</span><span><b>Other places</b><span class="sub">Not on this map</span></span></li></ul><p id="flag-line" class="tb-flag dv-flags"></p></div>
           </div>
         </section>
 
@@ -586,6 +589,7 @@ const opts = [
   .dv-hero { height: 20rem; display: grid; border-radius: var(--radius); overflow: hidden; }
   .dv-flags { display: flex; gap: 0.4rem; margin-top: 1rem; }
   .dv-cartbar .cartbar { position: static; margin: 1rem 0 0; }
+.dv-ribbon { max-width: 18rem; min-height: 6rem; }
 </style>
 
 <script>
@@ -770,7 +774,6 @@ const opts = [
       if (!m) return;
       $('map-normal').innerHTML = drawMap(m);
       $('map-mini').innerHTML = drawMap(m);
-      $('map-mini').querySelector('svg')?.classList.add('mini');
       const b = document.querySelector('#c23 .map-legend b'); if (b) b.textContent = DETAILED_MAPS[0].name;
     });
     type O = { who: string; wine: string; n: number; sum: number; when: string };

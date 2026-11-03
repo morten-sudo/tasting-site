@@ -1329,4 +1329,10 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "super.showAll": "Alle accounts tonen",
   "twe.tierTwice": "Er is al een prijs voor dit aantal flessen",
   "board.noAnswers": "Nog niemand heeft geantwoord.",
+  "map.zoomIn": "Inzoomen",
+  "map.zoomOut": "Uitzoomen",
+  "signup.beta": "Bèta",
+  "signup.proUnlimited": "Onbeperkt proeverijen, wijnen en gasten",
+  "signup.comErp": "Koppeling met ERP en CRM",
+  "signup.comClub": "Koppeling met de klantenclub",
 };

@@ -99,8 +99,10 @@ type DrawOptions = {
   counts?: Map<string, number>;
   /** fill every area lightly (wines from a region-wide appellation such as Porto) */
   wholeRegion?: boolean;
-  /** 'full': the map card; 'mini': small locator; 'background': faint, no labels */
-  mode?: 'full' | 'mini' | 'background';
+  /** 'full': the map (the tasting's and a wine's); 'background': faint, no labels, behind a heading */
+  mode?: 'full' | 'background';
+  /** false: no numbered badges – the filled area's name only (a wine's own map) */
+  badges?: boolean;
   /** area id → label shown next to the badge */
   titles?: Map<string, string>;
   /** producers' exact places */
@@ -109,7 +111,7 @@ type DrawOptions = {
 
 /** The map as an SVG string. */
 export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
-  const { counts = new Map(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [] } = opts;
+  const { counts = new Map(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [], badges: numbered = true } = opts;
   const max = Math.max(1, ...counts.values());
   const lines = mode === 'background';
   const parts: string[] = [];
@@ -136,17 +138,17 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
     const taken: Box[] = [];
     const hits = (b: Box) => taken.some((t) => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
     const badges = [...counts].filter(([id, n]) => n && map.areas[id]).map(([id, n]) => ({ id, n, x: map.areas[id].label[0], y: map.areas[id].label[1] }));
-    for (const b of badges) taken.push({ x0: b.x - 15, y0: b.y - 15, x1: b.x + 15, y1: b.y + 15 });
+    if (numbered) for (const b of badges) taken.push({ x0: b.x - 15, y0: b.y - 15, x1: b.x + 15, y1: b.y + 15 });
     const titleSvg: string[] = [];
     for (const b of badges) {
       const title = titles.get(b.id) ?? map.areas[b.id].title ?? '';
       if (!title) continue;
       const w = title.length * 8.6, h = 18;
       // Right, left, below, above – the first spot that is free
-      const spots: [number, number, string][] = [
+      const spots: [number, number, string][] = numbered ? [
         [b.x + 18, b.y + 6, 'start'], [b.x - 18, b.y + 6, 'end'], [b.x, b.y + 32, 'middle'], [b.x, b.y - 22, 'middle'],
         [b.x + 18, b.y + 30, 'start'], [b.x - 18, b.y - 18, 'end'],
-      ];
+      ] : [[b.x, b.y + 6, 'middle']];
       const box = ([x, y, anchor]: [number, number, string]): Box => {
         const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
         return { x0, y0: y - h + 4, x1: x0 + w, y1: y + 4 };
@@ -172,14 +174,14 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
       }
     }
     parts.push(...titleSvg);
-    for (const b of badges) {
+    if (numbered) for (const b of badges) {
       parts.push(`<g class="rm-badge" transform="translate(${b.x} ${b.y})"><circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text></g>`);
     }
   }
   if (mode !== 'background') {
     for (const p of pins) {
       const at = mapPoint(map, p.lon, p.lat);
-      if (at) parts.push(pinSvg(at[0], at[1], p.title, mode === 'mini' ? 1.6 : 1.2));
+      if (at) parts.push(pinSvg(at[0], at[1], p.title, 1.2));
     }
   }
   parts.push('</svg>');
