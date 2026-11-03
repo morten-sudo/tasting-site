@@ -1063,7 +1063,8 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .t-switch.can-switch > .chev { display: block; }
 .t-switch.can-switch:hover > .chev, .t-switch[aria-expanded='true'] > .chev { color: var(--amber); }
 .t-switch[aria-expanded='true'] > .chev { transform: rotate(180deg); }
-.t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; min-width: 0; }
+/* The tasting's name in the heading's typeface (the display font), smaller */
+.t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 18rem; min-width: 0; font-family: var(--display); font-weight: 500; font-size: 1.35rem; line-height: 1.2; letter-spacing: 0.005em; }
 .t-title:empty::before { content: '…'; color: var(--muted); }
 .t-admin { margin-left: auto; align-self: center; }
 .ctx { position: relative; }
