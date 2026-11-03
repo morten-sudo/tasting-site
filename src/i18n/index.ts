@@ -129,8 +129,6 @@ export async function setLang(l: Lang) {
 }
 
 // Shared formatters for the active language
-export const money = (amount: number) =>
-  new Intl.NumberFormat(locale(), { style: 'currency', currency: 'DKK' }).format(amount);
 
 export function formatWhen(iso: string, opts: { year?: boolean; end?: string | null } = {}) {
   const d = new Date(iso);

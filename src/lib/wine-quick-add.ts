@@ -2,12 +2,13 @@
 // paste a link from a web shop, or add a photo of the label. A link or a photo is read straight away; a card above
 // the list shows what comes in (name, type, origin, price, the producer), and when it is done the wine moves into
 // the list. Used on the wine library and on a tasting's Wines tab (where a wine also goes into the tasting).
+import { formatKr } from './ui/kr';
 import { setLoading } from './ui/button';
 import { supabase } from './supabase';
 import { mk } from './admin-common';
 import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
-import { t, lang, money } from '../i18n';
+import { t, lang } from '../i18n';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { attachImageInput } from './ui/image-picker';
@@ -281,7 +282,7 @@ export function initQuickAdd(o: Opts) {
     if (r.image && src.kind === 'link') setThumb(p.pic, r.image);
     fact(li, metaOf({ style, vintage, producer: r.producer ?? null }) || null);
     fact(li, originLine({ appellation: r.appellation ?? null, region: r.region ?? null, country }));
-    if (r.price != null) fact(li, t('qa.price', { price: money(r.price) }));
+    if (r.price != null) fact(li, t('qa.price', { price: formatKr(r.price) }));
 
     // The same wine is in the library already (same name and vintage): use that one
     const twin = o.library().find((w) => norm(w.name) === norm(name) && (w.vintage ?? '') === (vintage ?? ''));

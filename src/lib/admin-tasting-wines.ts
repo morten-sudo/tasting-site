@@ -1,10 +1,12 @@
 // Admin, one tasting: which library wines are in it, in what order, at what guest price,
 // and whether guests can see (fully, or blind) and order them. Ratings from the guests are shown per wine.
+import { formatKr } from './ui/kr';
 import { statusChip } from './ui/status';
 import { starsRo } from './ui/stars';
 import { supabase } from './supabase';
 import { $, mk, sheetPanel, iconButton } from './admin-common';
-import { listRow, rowPrice } from './ui/list-row';
+import { listRow } from './ui/list-row';
+import { price } from './ui/price';
 import { wineThumb } from './ui/thumb';
 import { highlight } from './ui/highlight';
 import { deleteWithUndo } from './ui/delete-undo';
@@ -12,7 +14,7 @@ import { reorder } from './ui/reorder';
 import { stepper, type Stepper } from './ui/stepper';
 import { styleName } from './wines';
 import { initHelpTips } from './help-tip';
-import { t, locale, money } from '../i18n';
+import { t, locale } from '../i18n';
 import { amountText, parseAmount } from './wine-validate';
 import { fieldError } from './field-error';
 import { toast } from './toast';
@@ -51,7 +53,6 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   }
 
   /** "409,95 kr." and "from 6 bottles 249,95 kr." – how the price reads in the list */
-  const kr = (n: number) => money(n);
   const tiersOf = (r: Row) => [...(r.price_tiers ?? [])].sort((a, b) => a.qty - b.qty);
   const visOf = (r: Row): 'shown' | 'blind' | 'hidden' => (!r.revealed ? 'hidden' : r.blind ? 'blind' : 'shown');
 
@@ -96,7 +97,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       return listRow({
         id: r.wine_id, grip: { label: t('twe.move', { name: w.name }), tip: t('twe.moveHint') }, no: i + 1, pic: wineThumb(w),
         title: w.name, href: wineHref(w.id), meta: [meta(w)], chips,
-        aside: rowPrice(r.price_dkk != null ? kr(r.price_dkk) : t('twe.noPrice'), tiersOf(r).map((x) => t('twe.tierLine', { n: x.qty, price: kr(x.price) }))),
+        aside: price({ amount: r.price_dkk, none: t('twe.noPrice'), align: 'right', tiers: tiersOf(r).map((x) => t('twe.tierLine', { n: x.qty, price: formatKr(x.price) })) }),
         actions,
       });
     }));

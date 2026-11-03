@@ -23,7 +23,7 @@ import '../../styles/admin.css';
         </EmptyState>
         <div id="wd-main">
           <div class="wd-head">
-            <div id="wd-pic" class="wd-pic" hidden></div>
+            <div id="wd-pic" class="wd-pic"></div>
             <PageHeader id="wd-name" class="wd-ph">
               <p id="wd-meta" class="wd-meta"></p>
               <p id="wd-overall" class="wd-overall" hidden></p>
@@ -41,7 +41,7 @@ import '../../styles/admin.css';
               <div id="wd-facts-strip"></div>
               <section id="wd-facts-block" class="wd-block" hidden>
                 <SectionTitle level="eyebrow" as="h2" text="wineAdmin.facts" />
-                <dl id="wd-facts" class="card wd-facts"></dl>
+                <dl id="wd-facts" class="facts card"></dl>
               </section>
               <section class="wd-block">
                 <SectionTitle level="eyebrow" as="h2" text="wineAdmin.tastings" />
@@ -52,7 +52,7 @@ import '../../styles/admin.css';
             <section id="wd-origin" class="wd-block" hidden>
               <SectionTitle level="eyebrow" as="h2" text="wineAdmin.origin" />
               <p id="wd-origin-text" class="wd-origin-text"></p>
-              <div id="wd-map" class="card wd-map" hidden></div>
+              <div id="wd-map" class="map-box" hidden></div>
             </section>
           </div>
         </div>
@@ -168,7 +168,7 @@ import '../../styles/admin.css';
           <input class="input" id="wf-appellation" type="text" autocomplete="off" />
           <p id="wf-app-status" class="status" hidden aria-live="polite"></p>
           <div id="wf-map" class="wf-map" hidden>
-            <div class="wf-map-col"><div id="wf-map-svg" class="wf-map-svg"></div></div>
+            <div class="wf-map-col"><div id="wf-map-svg" class="map-box"></div></div>
             <p id="wf-map-note" class="hint"></p>
           </div>
           <!-- The producer's website and address: found as soon as the producer is known (link, label or typed), or typed here -->

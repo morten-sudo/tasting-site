@@ -4,6 +4,7 @@ import PageHeader from '../../components/ui/PageHeader.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import SignInState from '../../components/ui/SignInState.astro';
+import Progress from '../../components/ui/Progress.astro';
 ---
 <Base title="page.quiz" tasting>
   <section class="wrap quiz-page">
@@ -20,11 +21,9 @@ import SignInState from '../../components/ui/SignInState.astro';
       <p class="hint rules" id="rules">
         Answer at your own pace. An answer cannot be changed once it is locked.
       </p>
-      <ol id="dots" class="dots" aria-label="Your answers" data-i18n-attr="aria-label=quiz.yourAnswers"></ol>
-
       <div id="question" class="card">
-        <p id="q-count" class="q-count"></p>
-        <h2 id="q-text" class="q-text"></h2>
+        <Progress id="q-prog" tone="amber" />
+        <h2 id="q-text" class="quiz-q"></h2>
         <div id="q-options"></div>
         <button id="q-lock" class="btn block" type="button" disabled data-i18n="quiz.lock">Lock answer</button>
       </div>
@@ -35,7 +34,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     <!-- Quiz finished -->
     <div id="results" hidden>
       <p data-i18n="quiz.over">The quiz is over. Here are the answers and explanations.</p>
-      <ol id="result-list" class="results"></ol>
+      <ul id="result-list" class="list results"></ul>
     </div>
 
     <section id="board-wrap" class="board-wrap" hidden>
@@ -47,7 +46,10 @@ import SignInState from '../../components/ui/SignInState.astro';
 
 <script>
   import { supabase } from '../../lib/supabase';
-  import { tooltip } from '../../lib/ui/tooltip';
+  import { setProgress } from '../../lib/ui/progress';
+  import { listRow } from '../../lib/ui/list-row';
+  import { chip } from '../../lib/ui/status';
+  import { $, mk } from '../../lib/ui/dom';
   import { toast } from '../../lib/ui/toast';
   import { setLoading } from '../../lib/ui/button';
   import { choiceCards } from '../../lib/ui/choice-cards';
@@ -63,7 +65,6 @@ import SignInState from '../../components/ui/SignInState.astro';
     correct_key: string | null; explanation: string | null;
   };
 
-  const $ = (id: string) => document.getElementById(id)!;
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
 
@@ -76,12 +77,13 @@ import SignInState from '../../components/ui/SignInState.astro';
 
   function show(id: string, on: boolean) { $(id).hidden = !on; }
 
-  let quizTotal = 13;
+  // The number of questions: from the tasting (also before they are loaded), else the ones loaded
+  let quizTotal = 0;
 
   async function readSettings() {
     const { data } = await supabase.rpc('get_tasting', { code });
     const s = (data ?? {}) as Record<string, unknown>;
-    quizTotal = Number(s.quiz_count) || questions.length || 13;
+    quizTotal = Number(s.quiz_count) || questions.length;
     if (s.quiz_finished === true) return 'finished';
     if (s.quiz_open === true) return 'open';
     return 'closed';
@@ -104,23 +106,16 @@ import SignInState from '../../components/ui/SignInState.astro';
     return i === -1 ? questions.length : i;
   }
 
-  function renderDots() {
-    const ol = $('dots');
-    ol.replaceChildren();
-    questions.forEach((q, i) => {
-      const li = document.createElement('li');
-      li.className = 'dot';
-      if (answers.has(q.id)) li.classList.add('answered');
-      if (i === current) li.classList.add('current');
-      const what = tr(answers.has(q.id) ? 'quiz.dotAnswered' : 'quiz.dot', { n: i + 1 });
-      tooltip(li, what);
-      li.append(Object.assign(document.createElement('span'), { className: 'sr', textContent: what }));
-      ol.append(li);
-    });
+  // Where the guest is: "Question 4 of 12" and the bar (component 38), "3 of 12 answered" at the right
+  function renderProgress() {
+    const total = questions.length;
+    const done = questions.filter((q) => answers.has(q.id)).length;
+    const label = current < total ? tr('quiz.count', { n: current + 1, total }) : tr('quiz.allAnswered');
+    setProgress($('q-prog'), { label, value: done, max: total, text: tr('quiz.answeredOf', { n: done, total }) });
   }
 
   function renderQuestion() {
-    renderDots();
+    renderProgress();
     const all = current >= questions.length;
     show('question', !all);
     show('done', all);
@@ -128,7 +123,6 @@ import SignInState from '../../components/ui/SignInState.astro';
 
     const q = questions[current];
     selected = null;
-    $('q-count').textContent = tr('quiz.count', { n: current + 1, total: questions.length });
     $('rules').textContent = tr('quiz.rules', { total: questions.length });
     $('q-text').textContent = q.question;
     // The answers: the choice cards (one answer among a few); the question names the group
@@ -161,48 +155,37 @@ import SignInState from '../../components/ui/SignInState.astro';
   });
 
   // ---------- Answers ----------
+  // One row per question (the list row, 25): its number, the question, a chip with how it went, the answers as
+  // locked choice cards (the right one green, a wrong pick red) and the explanation
   function renderResults() {
-    const ol = $('result-list');
-    ol.replaceChildren();
-    for (const q of questions) {
+    $('result-list').replaceChildren(...questions.map((q, i) => {
       const mine = answers.get(q.id);
-      const li = document.createElement('li');
-      li.className = 'result ' + (!mine ? 'skipped' : mine === q.correct_key ? 'right' : 'wrong');
-
-      const h = document.createElement('h3');
-      h.textContent = q.question;
-      li.append(h);
-
-      const ul = document.createElement('ul');
+      const verdict = !mine ? chip(tr('quiz.unanswered'), 'neutral', { dashed: true })
+        : mine === q.correct_key ? chip(tr('quiz.right'), 'ok') : chip(tr('quiz.wrong'), 'err');
+      const cc = mk('fieldset', 'cc locked');
+      cc.append(mk('legend', 'sr', tr('quiz.answers')));
       for (const o of q.options) {
-        const item = document.createElement('li');
-        item.textContent = `${o.key}) ${o.text}`;
-        if (o.key === q.correct_key) item.classList.add('correct');
-        if (o.key === mine) item.classList.add('mine');
-        ul.append(item);
+        const right = o.key === q.correct_key;
+        const picked = o.key === mine;
+        const lab = mk('label', right ? 'right' : picked ? 'wrong' : '');
+        lab.append(Object.assign(mk('input'), { type: 'radio', name: `r-${q.id}`, checked: picked, disabled: true }));
+        const text = mk('span');
+        text.append(mk('b', '', o.text));
+        lab.append(text);
+        if (right || picked) lab.append(mk('span', 'res', right ? (picked ? tr('quiz.right') : tr('quiz.correctAnswer')) : tr('quiz.yourAnswer')));
+        cc.append(lab);
       }
-      li.append(ul);
-
-      const verdict = document.createElement('p');
-      verdict.className = 'verdict';
-      verdict.textContent = !mine ? tr('quiz.unanswered') : mine === q.correct_key ? tr('quiz.right') : tr('quiz.wrong');
-      li.append(verdict);
-
-      if (q.explanation) {
-        const p = document.createElement('p');
-        p.className = 'explanation';
-        p.textContent = q.explanation;
-        li.append(p);
-      }
-      ol.append(li);
-    }
+      const body: Node[] = [cc];
+      if (q.explanation) body.push(mk('p', 'lmeta explanation', q.explanation));
+      return listRow({ no: i + 1, title: q.question, chips: [verdict], body });
+    }));
   }
 
   // ---------- Leaderboard ----------
   async function refreshBoard() {
     const rows = await fetchLeaderboard({ code });
     if (!rows) return;
-    renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal, myName);
+    renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal || questions.length, myName);
   }
 
   // ---------- Start ----------
@@ -257,57 +240,13 @@ import SignInState from '../../components/ui/SignInState.astro';
   init();
 </script>
 
-<style is:global>
+<style>
   .quiz-page { padding-top: 2.5rem; padding-bottom: 3rem; }
   .quiz-page .rules { margin-bottom: 1rem; }
-
-  .quiz-page .dots {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(13, 1fr);
-    gap: 4px;
-    margin: 0 0 1.25rem;
-    padding: 0;
-  }
-  .quiz-page .dot { height: 6px; border-radius: 3px; background: var(--lodge-3); }
-  .quiz-page .dot.answered { background: var(--tawny); }
-  .quiz-page .dot.current { background: var(--amber); }
-
   .quiz-page .card { padding: 1.25rem 1.1rem 1.4rem; }
-  .quiz-page .q-count { color: var(--muted); font-size: 0.92rem; margin-bottom: 0.4rem; }
-  .quiz-page .q-text {
-    font-family: var(--body);
-    font-weight: 500;
-    font-size: 1.3rem;
-    line-height: 1.35;
-    letter-spacing: 0;
-    margin-bottom: 1.1rem;
-  }
-  /* The answers are the choice cards (component 10); only the space under them is the page's */
-  .quiz-page #q-options .cc { margin-bottom: 1.2rem; }
-
+  .quiz-page #q-options :global(.cc) { margin-bottom: 1.2rem; }
   .quiz-page .board-wrap { margin-top: 2.5rem; }
   .quiz-page .board-wrap + #results { margin-top: 2.5rem; }
-  .quiz-page .result.skipped .verdict { color: var(--muted); }
-
-  .quiz-page .results { list-style: none; margin: 1.5rem 0 0; padding: 0; }
-  .quiz-page .result {
-    padding: 1.1rem 0 1.25rem;
-    border-bottom: 1px solid var(--lodge-3);
-  }
-  .quiz-page .result h3 {
-    font-family: var(--body);
-    font-size: 1.05rem;
-    font-weight: 500;
-    line-height: 1.4;
-    margin-bottom: 0.6rem;
-  }
-  .quiz-page .result ul { list-style: none; margin: 0 0 0.6rem; padding: 0; }
-  .quiz-page .result ul li { padding: 0.15rem 0; color: var(--muted); }
-  .quiz-page .result ul li.correct { color: var(--ok); font-weight: 500; }
-  .quiz-page .result ul li.mine:not(.correct) { color: var(--error); text-decoration: line-through; }
-  .quiz-page .verdict { font-weight: 500; margin-bottom: 0.4rem; }
-  .quiz-page .result.right .verdict { color: var(--ok); }
-  .quiz-page .result.wrong .verdict { color: var(--error); }
-  .quiz-page .explanation { margin: 0; font-size: 0.95rem; }
+  .quiz-page .results { margin-top: 1.5rem; }
+  .quiz-page .results :global(.explanation) { color: var(--paper); margin-top: 0.6rem; }
 </style>

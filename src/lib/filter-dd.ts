@@ -4,6 +4,7 @@
 // ("Missing email") narrows the chosen ones on its own. single: one choice (radio-like items with a check), e.g.
 // "I host / All". Used by the wine library, a tasting's guest list and the tastings list.
 import { t } from '../i18n';
+import { badge } from './ui/badge';
 import { iconSvg } from './ui/icons';
 import { bindMenu, type MenuHandle } from './ui/menu';
 import { tooltip } from './ui/tooltip';
@@ -57,7 +58,7 @@ export function filterDropdown(opts: FilterOptions) {
     l.className = 'opt-i' + (cls ? ' ' + cls : '');
     l.tabIndex = -1;
     const box = Object.assign(document.createElement('input'), { type: 'checkbox', value, checked, tabIndex: -1 });
-    l.append(box, Object.assign(document.createElement('span'), { textContent: text }), Object.assign(document.createElement('small'), { textContent: n == null ? '' : String(n) }));
+    l.append(box, Object.assign(document.createElement('span'), { textContent: text }), badge(n, 'neutral'));
     box.addEventListener('change', () => {
       if (extra) { if (box.checked) extras.add(value); else extras.delete(value); fire(); return; }
       // "All" ticks everything – or clears everything
@@ -82,7 +83,7 @@ export function filterDropdown(opts: FilterOptions) {
     b.setAttribute('role', 'menuitemradio');
     b.setAttribute('aria-checked', String(on));
     b.innerHTML = iconSvg('check', 'ck');
-    b.append(Object.assign(document.createElement('span'), { textContent: o.label }), Object.assign(document.createElement('small'), { textContent: String(o.n) }));
+    b.append(Object.assign(document.createElement('span'), { textContent: o.label }), badge(o.n, 'neutral'));
     b.addEventListener('click', () => { chosen = new Set([o.value]); handle.close(); fire(); });
     return b;
   }

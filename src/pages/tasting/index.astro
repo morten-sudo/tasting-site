@@ -9,6 +9,7 @@ import Actions from '../../components/ui/Actions.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import SignInState from '../../components/ui/SignInState.astro';
+import Disclosure from '../../components/ui/Disclosure.astro';
 ---
 <Base title="page.tasting" tasting>
   <section class="wrap page">
@@ -61,10 +62,9 @@ import SignInState from '../../components/ui/SignInState.astro';
                 <p id="email-hint" class="help" data-i18n="guest.emailHint">For signing in with a code by email.</p>
               </div>
 
-              <details id="note-box" class="note">
-                <summary data-i18n="guest.note">Message to the host</summary>
+              <Disclosure id="note-box" summary="guest.note" optional>
                 <textarea class="input" id="note" name="note" maxlength="1000" aria-label="Message to the host" data-i18n-attr="aria-label=guest.note"></textarea>
-              </details>
+              </Disclosure>
 
 
               <Actions tight>
@@ -93,9 +93,9 @@ import SignInState from '../../components/ui/SignInState.astro';
           <!-- Where the wines come from: the region's map with their appellations -->
           <section id="origin-block" class="origin-block" hidden>
             <SectionTitle level="eyebrow" as="h2" text="map.title" />
-            <div id="origin-map" class="origin-map"></div>
-            <ul id="origin-legend" class="origin-legend"></ul>
-            <p id="map-source" class="map-source"></p>
+            <div id="origin-map" class="map-box origin-map"></div>
+            <ul id="origin-legend" class="map-legend"></ul>
+            <p id="map-source" class="map-credit"></p>
           </section>
 
           <section>
@@ -122,6 +122,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 </Base>
 
 <script>
+  import { $, mk } from '../../lib/ui/dom';
   import { statusChip, guestStatus } from '../../lib/ui/status';
   import { toast } from '../../lib/toast';
   import { fieldError } from '../../lib/field-error';
@@ -133,10 +134,10 @@ import SignInState from '../../components/ui/SignInState.astro';
   import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from '../../lib/region-map';
   import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from '../../lib/overview-map';
   import { countryName } from '../../lib/origin';
+  import { setMapCredit, OVERVIEW_SOURCES } from '../../lib/wine-map';
 
   await i18nReady;
 
-  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
@@ -196,11 +197,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     setComing(info.coming);
     // The host's introduction: plain text, blank lines separate paragraphs
     const intro = typeof info.intro === 'string' ? info.intro.trim() : '';
-    $('h-intro').replaceChildren(...intro.split(/\n\s*\n/).map((para) => {
-      const el = document.createElement('p');
-      el.textContent = para.trim();
-      return el;
-    }));
+    $('h-intro').replaceChildren(...intro.split(/\n\s*\n/).map((para) => mk('p', '', para.trim())));
     $('intro-block').hidden = !intro;
     // Tiles for the evening
     ($('tile-wines') as HTMLAnchorElement).href = tastingUrl(slug, 'wines/');
@@ -252,8 +249,7 @@ import SignInState from '../../components/ui/SignInState.astro';
         if (places.length) {
           const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
           if (ov) {
-            const inset = document.createElement('span');
-            inset.className = 'inset';
+            const inset = mk('span', 'map-box');
             inset.innerHTML = drawOverview(ov, places.map((p) => ({ lon: p.lon, lat: p.lat })), focus, 'inset');
             li.querySelector('.txt')!.append(inset);
           }
@@ -261,7 +257,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       }
       return li;
     })));
-    $('map-source').textContent = t('map.source', { sources: map.sources });
+    setMapCredit($('origin-map'), map.sources, pins.length > 0, $('map-source'));
     $('origin-block').hidden = false;
   }
 
@@ -289,25 +285,16 @@ import SignInState from '../../components/ui/SignInState.astro';
       const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((w) => no.get(w.id) ?? 0)) });
       return legendItem('in-map', g.wines.length, g.p.label, [where, nums].filter(Boolean).join(' · '));
     }));
-    $('map-source').textContent = t('map.source', { sources: 'Natural Earth' });
+    setMapCredit($('origin-map'), OVERVIEW_SOURCES, false, $('map-source'));
     $('origin-block').hidden = false;
   }
 
+  // One line of the map's legend (component 23): the number of wines in a circle, the place, what it covers
   function legendItem(kind: string, count: number, titleText: string, subText: string) {
-    const li = document.createElement('li');
-    li.className = kind;
-    const n = document.createElement('span');
-    n.className = 'n';
-    n.textContent = String(count);
-    const text = document.createElement('span');
-    text.className = 'txt';
-    const title = document.createElement('b');
-    title.textContent = titleText;
-    const sub = document.createElement('span');
-    sub.className = 'sub';
-    sub.textContent = subText;
-    text.append(title, sub);
-    li.append(n, text);
+    const li = mk('li', kind);
+    const text = mk('span', 'txt');
+    text.append(mk('b', '', titleText), mk('span', 'sub', subText));
+    li.append(mk('span', 'no', String(count)), text);
     return li;
   }
 
@@ -499,24 +486,14 @@ import SignInState from '../../components/ui/SignInState.astro';
 
   /* The tasting at a glance */
   .t-home { overflow-x: clip; }
-  .origin-map :global(svg) { display: block; }
-  .origin-map { border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; background: #fbf6ee; }
   /* Larger screens: the map at half width with the legend beside it */
   @media (min-width: 40rem) {
     .origin-block:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.25rem; align-items: start; }
-    .origin-block > h2, .origin-block .map-source { grid-column: 1 / -1; }
-    .origin-block .origin-legend { margin-top: 0; grid-template-columns: 1fr; }
+    .origin-block > h2 { grid-column: 1 / -1; }
+    .origin-block > .map-box { grid-column: 1; grid-row: 2; }
+    .origin-block > .map-credit { grid-column: 1; grid-row: 3; }
+    .origin-block > .map-legend { grid-column: 2; grid-row: 2 / span 2; margin-top: 0; grid-template-columns: 1fr; }
   }
-  .origin-legend { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; gap: 0.45rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
-  .origin-legend :global(li) { display: flex; gap: 0.6rem; align-items: flex-start; }
-  .origin-legend :global(.n) { flex: none; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--amber); color: #fff; font-size: 0.8rem; font-weight: 600; }
-  .origin-legend :global(li.whole .n) { background: #b07a85; }
-  .origin-legend :global(li.other .n) { background: transparent; color: var(--amber); box-shadow: inset 0 0 0 1.5px var(--amber); }
-  .origin-legend :global(b) { display: block; font-weight: 600; font-size: 0.95rem; }
-  .origin-legend :global(.inset) { display: block; width: 9rem; margin-top: 0.4rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
-  .origin-legend :global(.inset svg) { display: block; }
-  .origin-legend :global(.sub) { display: block; font-size: 0.82rem; color: var(--muted); }
-  .map-source { margin: 0.6rem 0 0; font-size: 0.72rem; color: var(--muted); }
 
   /* Two columns on large screens: the evening on the left, your answer on the right */
   .t-grid { display: grid; gap: 2.25rem; }
@@ -553,18 +530,6 @@ import SignInState from '../../components/ui/SignInState.astro';
 
   /* Form */
   .rsvp { display: grid; gap: 1.25rem; }
-  .note summary {
-    cursor: pointer;
-    color: var(--amber);
-    font-size: 0.95rem;
-    list-style: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    min-height: 2.5rem;
-  }
-  .note summary::-webkit-details-marker { display: none; }
-  .note summary::before { content: '+'; font-size: 1.1rem; line-height: 1; }
-  .note[open] summary::before { content: '–'; }
-  .note textarea { margin-top: 0.4rem; min-height: 4.5rem; }
+  :global(#note-box) { margin-top: -0.4rem; }
+  :global(#note-box) textarea { min-height: 4.5rem; margin-top: 0.1rem; }
 </style>

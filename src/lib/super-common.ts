@@ -3,13 +3,8 @@ import { supabase } from './supabase';
 import { i18nReady, t, locale, type Key } from '../i18n';
 import { initSideMenu, setSideOpen } from './ui/side-menu';
 
-export const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
-export function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (text != null) e.textContent = text;
-  return e;
-}
+export { $, mk } from './ui/dom';
+import { $, mk } from './ui/dom';
 export function cell(text: string, cls = '') {
   const td = mk('td', cls, text);
   return td;

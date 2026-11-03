@@ -21,46 +21,57 @@ import '../../styles/admin.css';
 
       <h2 class="sr" data-i18n="super.tenants">All accounts</h2>
       <SearchField id="search" label="adminTasting.search" class="list-search" />
-      <div class="table-wrap super-table">
-        <table class="table">
-          <thead>
-            <tr>
-              <th data-sort="name" data-i18n="super.tenant">Account</th>
-              <th data-sort="created_at" data-i18n="super.created">Created</th>
-              <th data-sort="members" class="num" data-i18n="super.hosts">Hosts</th>
-              <th data-sort="tastings" class="num" data-i18n="adminNav.tastings">Tastings</th>
-              <th data-sort="wines" class="num" data-i18n="adminNav.wines">Wines</th>
-              <th data-sort="guests" class="num" data-i18n="adminNav.guests">Guests</th>
-              <th data-sort="invited" class="num" data-i18n="super.invited">Invited</th>
-              <th data-sort="orders" class="num" data-i18n="admin.orders">Orders</th>
-              <th data-sort="ratings" class="num" data-i18n="super.ratings">Ratings</th>
-              <th data-sort="chat_messages" class="num" data-i18n="page.chat">Chat</th>
-              <th data-sort="last_activity" data-i18n="super.lastActive">Last active</th>
-            </tr>
-          </thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-
+      <div id="tenants"></div>
 
     </SuperNav>
   </section>
 </Base>
 
 <script>
-
+  import { formatKr } from '../../lib/ui/kr';
+  import { table } from '../../lib/ui/table';
   import { supabase } from '../../lib/supabase';
-  import { t, money } from '../../i18n';
-  import { requireAdmin, $, mk, cell, dateFmt, tenantUrl } from '../../lib/super-common';
+  import { t, i18nReady } from '../../i18n';
+  import { requireAdmin, $, mk, dateFmt, tenantUrl } from '../../lib/super-common';
 
   type Tenant = { id: string; name: string | null; email: string; plan: string; created_at: string;
     members: number; tastings: number; upcoming: number; wines: number; guests: number; invited: number; coming: number;
     orders: number; order_amount: number; ratings: number; chat_messages: number; last_activity: string };
 
   let tenants: Tenant[] = [];
-  let sortKey: keyof Tenant = 'last_activity';
-  let desc = true;
   const date = dateFmt();
+
+  // The one table (24): every column sorts; the newest activity first to begin with
+  await i18nReady;
+  const list = table<Tenant>({
+    caption: t('super.tenants'),
+    sort: { key: 'last_activity', desc: true },
+    empty: { icon: 'search', title: t('super.noTenantMatch'), action: { label: t('super.showAll'), secondary: true, onClick: () => {
+      const f = $<HTMLInputElement>('search');
+      f.value = '';
+      render();
+      f.focus();
+    } } },
+    columns: [
+      { key: 'name', label: t('super.tenant'), sort: (x) => (x.name ?? '').toLowerCase(), cell: (x) => {
+        // The account's name (or its owner's) opens the tenant; the owner's email below
+        const a = mk('a', '', x.name || '—');
+        a.href = tenantUrl(x.id);
+        return [a, mk('p', 'lmeta', x.email)];
+      } },
+      { key: 'created_at', label: t('super.created'), nowrap: true, wideOnly: true, sort: (x) => x.created_at, desc: true, cell: (x) => date.format(new Date(x.created_at)) },
+      { key: 'members', label: t('super.hosts'), num: true, sort: (x) => x.members, desc: true },
+      { key: 'tastings', label: t('adminNav.tastings'), num: true, sort: (x) => x.tastings, desc: true, cell: (x) => (x.upcoming ? `${x.tastings} (${x.upcoming})` : String(x.tastings)) },
+      { key: 'wines', label: t('adminNav.wines'), num: true, sort: (x) => x.wines, desc: true },
+      { key: 'guests', label: t('adminNav.guests'), num: true, sort: (x) => x.guests, desc: true },
+      { key: 'invited', label: t('super.invited'), num: true, sort: (x) => x.invited, desc: true, cell: (x) => (x.invited ? `${x.invited} (${x.coming})` : '0') },
+      { key: 'orders', label: t('admin.orders'), num: true, sort: (x) => x.order_amount, desc: true, cell: (x) => (x.orders ? `${x.orders} · ${formatKr(x.order_amount)}` : '0') },
+      { key: 'ratings', label: t('super.ratings'), num: true, wideOnly: true, sort: (x) => x.ratings, desc: true },
+      { key: 'chat_messages', label: t('page.chat'), num: true, wideOnly: true, sort: (x) => x.chat_messages, desc: true },
+      { key: 'last_activity', label: t('super.lastActive'), nowrap: true, sort: (x) => x.last_activity, desc: true, cell: (x) => date.format(new Date(x.last_activity)) },
+    ],
+  });
+  $('tenants').replaceChildren(list.el);
 
   if (await requireAdmin()) {
     const { data } = await supabase.rpc('admin_tenants');
@@ -81,52 +92,15 @@ import '../../styles/admin.css';
     $('t-guests').textContent = String(sum('guests'));
     $('t-invited').textContent = t('super.invitedSub', { n: sum('invited'), coming: sum('coming') });
     $('t-orders').textContent = String(sum('orders'));
-    $('t-amount').textContent = money(sum('order_amount'));
+    $('t-amount').textContent = formatKr(sum('order_amount'));
     const month = Date.now() - 30 * 86400000;
     $('t-activity').textContent = String(tenants.filter((x) => new Date(x.last_activity).getTime() >= month).length);
   }
 
   function render() {
     const q = $<HTMLInputElement>('search').value.trim().toLowerCase();
-    const rows = tenants
-      .filter((x) => !q || `${x.name ?? ''} ${x.email}`.toLowerCase().includes(q))
-      .sort((a, b) => {
-        const va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
-        const c = typeof va === 'number' && typeof vb === 'number' ? va - vb : String(va).localeCompare(String(vb));
-        return desc ? -c : c;
-      });
-    $('rows').replaceChildren(...rows.map((x) => {
-      const tr = mk('tr');
-      // The account's name (or its owner's) opens the tenant; the owner's email below
-      const who = mk('td');
-      const link = mk('a', 'row-link');
-      link.href = tenantUrl(x.id);
-      link.append(mk('strong', '', x.name || '—'));
-      who.append(link, mk('br'), mk('span', 'super-mail', x.email));
-      tr.append(who,
-        cell(date.format(new Date(x.created_at))),
-        cell(String(x.members), 'num'),
-        cell(x.upcoming ? `${x.tastings} (${x.upcoming})` : String(x.tastings), 'num'),
-        cell(String(x.wines), 'num'),
-        cell(String(x.guests), 'num'),
-        cell(x.invited ? `${x.invited} (${x.coming})` : '0', 'num'),
-        cell(x.orders ? `${x.orders} · ${money(x.order_amount)}` : '0', 'num'),
-        cell(String(x.ratings), 'num'),
-        cell(String(x.chat_messages), 'num'),
-        cell(date.format(new Date(x.last_activity))));
-      return tr;
-    }));
-    document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
-      th.setAttribute('aria-sort', th.dataset.sort === sortKey ? (desc ? 'descending' : 'ascending') : 'none');
-    });
+    list.setRows(tenants.filter((x) => !q || `${x.name ?? ''} ${x.email}`.toLowerCase().includes(q)));
   }
 
   $('search').addEventListener('input', render);
-  document.querySelectorAll<HTMLElement>('th[data-sort]').forEach((th) => {
-    th.addEventListener('click', () => {
-      const k = th.dataset.sort as keyof Tenant;
-      if (k === sortKey) desc = !desc; else { sortKey = k; desc = k !== 'name'; }
-      render();
-    });
-  });
 </script>

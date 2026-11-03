@@ -1,14 +1,17 @@
 // The host's page for one wine, /admin/wines/<id>/: picture, facts, origin with map, the tastings
 // it is in and the guests' ratings there. Editing happens in the usual side panel (admin-wines.ts).
+import { formatKr } from './ui/kr';
 import { starsRo } from './ui/stars';
 import { listRow } from './ui/list-row';
 import { iconButton } from './ui/icon-button';
 import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
-import { styleName, kr, wineSlug, wineFacts } from './wines';
+import { styleName, wineSlug, wineFacts } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
 import { wineMap, showMapCredit } from './wine-map';
-import { mk } from './admin-common';
+import { $, mk } from './ui/dom';
+import { fillFacts, type Fact } from './ui/facts';
+import { wineThumb } from './ui/thumb';
 import { fetchedWhen, type AdminWine } from './admin-wines';
 import { tooltip } from './ui/tooltip';
 
@@ -16,7 +19,6 @@ type Detail = Omit<AdminWine, 'tasting_wines'> & {
   tasting_wines: { price_dkk: number | null; tastings: { id: string; slug: string; title: string; starts_at: string | null } | null }[];
 };
 
-const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 
 export { winePaths, type PathWine } from './wine-paths';
 
@@ -45,30 +47,23 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   document.title = `${w.name} – ${document.title.split(' – ').pop()}`;
 
   // Head: picture, name, type · vintage · producer
-  const pic = $('wd-pic');
-  pic.replaceChildren();
-  if (w.image_url) {
-    const img = mk('img');
-    img.src = w.image_url;
-    img.alt = '';
-    pic.append(img);
-  }
-  pic.hidden = !w.image_url;
+  // The one wine picture (20), large; without one the quiet bottle outline
+  $('wd-pic').replaceChildren(wineThumb(w, { size: 'large' }));
   $('wd-name').textContent = w.name;
   $('wd-meta').textContent = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
   $('wd-edit').onclick = actions.edit;
 
   // Facts
-  const facts: [string, string | Node][] = [];
-  if (w.abv != null) facts.push([t('admin.abv').replace(/\s*\(%\)/, ''), `${String(w.abv).replace('.', ',')} %`]);
-  if (w.retail_price_dkk != null) facts.push([t('admin.retail').replace(/\s*\(.*\)/, ''), kr.format(w.retail_price_dkk)]);
+  const facts: Fact[] = [];
+  if (w.abv != null) facts.push({ label: t('admin.abv').replace(/\s*\(%\)/, ''), value: `${String(w.abv).replace('.', ',')} %` });
+  if (w.retail_price_dkk != null) facts.push({ label: t('admin.retail').replace(/\s*\(.*\)/, ''), value: formatKr(w.retail_price_dkk) });
   if (w.offer_price_dkk != null) {
-    facts.push([t('wineLib.offer'), t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
-      { price: kr.format(w.offer_price_dkk), n: w.offer_quantity ?? 1 }).replace(/^[^:]*:\s*/, '')]);
+    facts.push({ label: t('wineLib.offer'), value: t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
+      { price: formatKr(w.offer_price_dkk), n: w.offer_quantity ?? 1 }).replace(/^[^:]*:\s*/, '') });
   }
   for (const line of (w.details ?? '').split('\n').map((l) => l.trim()).filter(Boolean)) {
     const [k, ...v] = line.split(':');
-    facts.push(v.length ? [k.trim(), v.join(':').trim()] : [t('admin.details'), line]);
+    facts.push(v.length ? { label: k.trim(), value: v.join(':').trim() } : { label: t('admin.details'), value: line });
   }
   if (w.producer_website) {
     const a = mk('a');
@@ -78,9 +73,9 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     try { a.textContent = new URL(w.producer_website).hostname.replace(/^www\./, ''); } catch { a.textContent = w.producer_website; }
     const box = mk('span', 'wd-source');
     box.append(a);
-    facts.push([t('producer.websiteShort'), box]);
+    facts.push({ label: t('producer.websiteShort'), value: box });
   }
-  if (w.producer_address) facts.push([t('producer.addressShort'), w.producer_address]);
+  if (w.producer_address) facts.push({ label: t('producer.addressShort'), value: w.producer_address });
   if (w.source_url) {
     const box = mk('span', 'wd-source');
     const a = mk('a');
@@ -94,10 +89,9 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     box.append(a);
     if (w.source_fetched_at) box.append(' ', mk('span', 'source-when', `(${fetchedWhen(w.source_fetched_at)})`));
     box.append(' ', btn);
-    facts.push([t('source.from'), box]);
+    facts.push({ label: t('source.from'), value: box });
   }
-  const dl = $('wd-facts');
-  dl.replaceChildren(...facts.flatMap(([k, v]) => [mk('dt', '', k), (() => { const dd = mk('dd'); dd.append(v); return dd; })()]));
+  fillFacts($('wd-facts'), facts);
   $('wd-facts-block').hidden = !facts.length;
   $('wd-description').textContent = w.description ?? '';
   $('wd-description').hidden = !w.description;
@@ -115,7 +109,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   const map = await wineMap(w);
   $('wd-map').innerHTML = map?.svg ?? '';
   $('wd-map').hidden = !map;
-  showMapCredit($('wd-map'), map?.how);
+  showMapCredit($('wd-map'), map);
 
   // Only a name so far: say so, with a way to fill in the rest (a shop link or a label photo – or by hand)
   const empty = !w.image_url && !facts.length && !w.description && !strip && !where.length && !w.producer && !w.style;
@@ -142,7 +136,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
       mk('small', '', r ? t(r.votes === 1 ? 'wineAdmin.voteOne' : 'wineAdmin.votes', { n: r.votes }) : t('wineAdmin.noRatings')));
     return listRow({
       title: tt.title, href: `/t/${tt.slug}/admin/wines/`,
-      meta: [[tt.starts_at ? formatWhen(tt.starts_at, { year: true }) : null, x.price_dkk != null ? t('wineAdmin.guestPrice', { price: kr.format(x.price_dkk) }) : null]],
+      meta: [[tt.starts_at ? formatWhen(tt.starts_at, { year: true }) : null, x.price_dkk != null ? t('wineAdmin.guestPrice', { price: formatKr(x.price_dkk) }) : null]],
       aside,
     });
   }));

@@ -1,5 +1,6 @@
 ---
 import Icon from './ui/Icon.astro';
+import Disclosure from './ui/Disclosure.astro';
 import EmptyState from './ui/EmptyState.astro';
 import SideMenu, { type SideGroup } from './ui/SideMenu.astro';
 // The host admin's shell: the one side menu (SideMenu.astro) with the host's groups, and the "not a host" notice.
@@ -23,10 +24,9 @@ const groups: SideGroup[] = [
     <button id="logout2" class="btn small secondary" type="button" data-i18n="nav.signOut">Sign out</button>
   </EmptyState>
   <Fragment slot="tastings">
-    <details id="side-past" class="sm-more" hidden>
-      <summary data-i18n="adminNav.past">Past</summary>
+    <Disclosure id="side-past" class="in-menu" summary="adminNav.past" hidden>
       <ul id="side-past-list" class="sm-list"></ul>
-    </details>
+    </Disclosure>
     <a class="sm-add" href="/admin/tastings/?new=1"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></a>
   </Fragment>
   <slot />

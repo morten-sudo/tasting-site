@@ -1,0 +1,8 @@
+---
+// Component 19 – the one badge, static (src/lib/ui/badge.ts sets the number: setBadge(el, n), hidden at 0).
+//   kind: count (on an icon, the cart) · dot (new / yours) · inline (after a word) · neutral (a quiet count)
+interface Props { id?: string; kind?: 'count' | 'dot' | 'inline' | 'neutral'; count?: number | string; hidden?: boolean }
+const { id, kind = 'count', count, hidden } = Astro.props;
+const cls = { count: 'badge', dot: 'badge dot', inline: 'badge inline', neutral: 'badge inline neutral' }[kind];
+---
+<span id={id} class={cls} aria-hidden={kind === 'count' || kind === 'dot' ? 'true' : undefined} hidden={hidden}>{kind !== 'dot' && count}</span>

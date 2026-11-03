@@ -1,5 +1,8 @@
+// Component 53 – the leaderboard: place, name, how far (answered of all) and points; the guest's own line marked.
+// The same list on the quiz page, in the host's quiz tab and – larger (.big) – on the big screen.
 import { supabase } from './supabase';
 import { t } from '../i18n';
+import { mk } from './ui/dom';
 
 export type Row = { name: string; points: number; answered: number };
 
@@ -12,33 +15,21 @@ export async function fetchLeaderboard(opts: { code?: string | null; slug?: stri
   return data as Row[];
 }
 
-// Renders the leaderboard into an <ol>. Tied places share the same rank.
+/** Renders the leaderboard into an <ol class="board">. Tied places share the same rank; total is the number of
+ *  questions (0 when not known: the progress is left out). */
 export function renderLeaderboard(list: HTMLOListElement, rows: Row[], total: number, me?: string) {
-  list.replaceChildren();
   let rank = 0;
   let prev = -1;
-  rows.forEach((r, i) => {
+  list.replaceChildren(...rows.map((r, i) => {
     if (r.points !== prev) { rank = i + 1; prev = r.points; }
-    const li = document.createElement('li');
-    if (me && r.name === me) li.classList.add('me');
-
-    const pos = document.createElement('span');
-    pos.className = 'pos';
-    pos.textContent = String(rank);
-
-    const who = document.createElement('span');
-    who.className = 'who';
-    who.textContent = r.name;
-
-    const progress = document.createElement('span');
-    progress.className = 'progress';
-    progress.textContent = r.answered >= total ? t('board.done') : `${r.answered}/${total}`;
-
-    const pts = document.createElement('span');
-    pts.className = 'pts';
-    pts.textContent = String(r.points);
-
-    li.append(pos, who, progress, pts);
-    list.append(li);
-  });
+    const mine = !!me && r.name === me;
+    const li = mk('li', mine ? 'me' : '');
+    if (mine) li.setAttribute('aria-current', 'true');
+    const who = mk('span', 'who', r.name);
+    if (mine) who.append(mk('span', 'you', ` (${t('hosts.you')})`));
+    li.append(mk('span', 'pos', String(rank)), who,
+      mk('span', 'pr', !total ? '' : r.answered >= total ? t('board.done') : `${r.answered}/${total}`),
+      mk('span', 'pts', String(r.points)));
+    return li;
+  }));
 }

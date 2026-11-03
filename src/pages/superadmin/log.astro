@@ -3,7 +3,6 @@
 import Base from '../../layouts/Base.astro';
 import Tabs from '../../components/ui/Tabs.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
-import EmptyState from '../../components/ui/EmptyState.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import '../../styles/admin.css';
 ---
@@ -14,12 +13,7 @@ import '../../styles/admin.css';
       <Tabs id="log-filters" label="Log" items={[
             { id: 'all', label: 'super.logFilterAll' }, { id: 'host', label: 'super.logFilterHost' }, { id: 'guest', label: 'super.logFilterGuest' },
             { id: 'login', label: 'super.logFilterLogin' }, { id: 'admin', label: 'super.logFilterAdmin' }]} current="all" />
-      <div class="table-wrap"><table class="table">
-        <thead><tr><th data-i18n="super.logWhen">When</th><th></th><th data-i18n="super.logWhat">What</th>
-          <th data-i18n="super.tenant">Account</th><th data-i18n="super.logWho">By</th></tr></thead>
-        <tbody id="log"></tbody>
-      </table></div>
-      <EmptyState id="log-none" icon="info" title="super.logNone" hidden />
+      <div id="log"></div>
     </SuperNav>
   </section>
 </Base>
@@ -28,8 +22,9 @@ import '../../styles/admin.css';
   import { tabs } from '../../lib/ui/tabs';
   import { chip } from '../../lib/ui/status';
   import { supabase } from '../../lib/supabase';
-  import { t, type Key } from '../../i18n';
-  import { requireAdmin, $, mk, cell, timeFmt, tenantUrl } from '../../lib/super-common';
+  import { t, i18nReady, type Key } from '../../i18n';
+  import { requireAdmin, $, mk, timeFmt, tenantUrl } from '../../lib/super-common';
+  import { table } from '../../lib/ui/table';
   import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
 
   type Ev = { at: string; kind: string; actor: string | null; tenant_id: string | null; tenant: string | null; detail: Record<string, unknown> };
@@ -37,24 +32,29 @@ import '../../styles/admin.css';
   const time = timeFmt();
   let kind = '';
 
+  // The one table (24), newest first; the kind as a chip
+  await i18nReady;
+  const list = table<Ev>({
+    caption: t('super.log'),
+    empty: { icon: 'info', title: t('super.logNone') },
+    columns: [
+      { key: 'at', label: t('super.logWhen'), nowrap: true, cell: (e) => time.format(new Date(e.at)) },
+      { key: 'kind', label: t('super.kind'), cell: (e) => { const g = eventGroup(e.kind); return chip(t(GROUP[g] ?? 'super.log'), GROUP_TONE[g] ?? 'neutral'); } },
+      { key: 'what', label: t('super.logWhat'), cell: (e) => eventText(e.kind, e.detail) },
+      { key: 'tenant', label: t('super.tenant'), cell: (e) => {
+        if (!e.tenant_id || !e.tenant) return '—';
+        const a = mk('a', '', e.tenant);
+        a.href = tenantUrl(e.tenant_id, 'log');
+        return a;
+      } },
+      { key: 'actor', label: t('super.logWho'), cell: (e) => e.actor ?? '' },
+    ],
+  });
+  $('log').replaceChildren(list.el);
+
   async function load() {
     const { data } = await supabase.rpc('admin_events', { lim: 1000, grp: kind || null });
-    const rows = (data ?? []) as Ev[];
-    $('log-none').hidden = rows.length > 0;
-    $('log').replaceChildren(...rows.map((e) => {
-      const tr = mk('tr');
-      const g = eventGroup(e.kind);
-      const tag = mk('td');
-      tag.append(chip(t(GROUP[g] ?? 'super.log'), GROUP_TONE[g] ?? 'neutral'));
-      const acc = mk('td');
-      if (e.tenant_id && e.tenant) {
-        const a = mk('a', '', e.tenant) as HTMLAnchorElement;
-        a.href = tenantUrl(e.tenant_id, 'log');
-        acc.append(a);
-      } else acc.textContent = '—';
-      tr.append(cell(time.format(new Date(e.at))), tag, cell(eventText(e.kind, e.detail)), acc, cell(e.actor ?? ''));
-      return tr;
-    }));
+    list.setRows((data ?? []) as Ev[]);
   }
 
   // The kinds of entries: the one tab bar (arrow keys move between them)

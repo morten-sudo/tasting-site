@@ -53,10 +53,11 @@ const site = 'https://winetastr.com';
     </main>
     <script>
       import { getCart, cartCount } from '../lib/cart';
+      import { setBadge } from '../lib/ui/badge';
       import { supabase } from '../lib/supabase';
       import { currentSlug, tastingUrl, resolveGuestCode, signOut, loadMe, cachedName } from '../lib/guest';
       import { loadAllMyTastings } from '../lib/my-tastings';
-      import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
+      import { i18nReady, LANGS, lang, setLang, t, plural, formatWhen, type Key } from '../i18n';
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
       import { sheetPanel } from '../lib/ui/sheet';
@@ -106,8 +107,9 @@ const site = 'https://winetastr.com';
       const sync = () => {
         if (!cartLink || !badge) return;
         const n = cartCount(getCart());
-        badge.textContent = String(n);
-        badge.hidden = n === 0;
+        setBadge(badge, n);
+        // The number is for the eye; the link says it in its name ("Cart, 3 bottles in the cart")
+        cartLink.setAttribute('aria-label', n ? `${t('nav.cart')}, ${plural(n, 'wines.bottlesOne', 'wines.bottlesMany')}` : t('nav.cart'));
         if (n > 0) cartLink.hidden = false;
       };
       window.addEventListener('cart-change', sync);

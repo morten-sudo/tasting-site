@@ -5,6 +5,7 @@ import { iconButton } from './ui/icon-button';
 import { confirmModal } from './ui/confirm';
 import { toast } from './ui/toast';
 import { fieldError } from './field-error';
+import { mk } from './ui/dom';
 
 export type ChatMessage = { id: number; author: string; body: string; created_at: string; from_host: boolean; mine: boolean };
 
@@ -30,34 +31,26 @@ export function initChat({ prefix, load, send, remove }: Options) {
 
   const nearBottom = () => list.scrollHeight - list.scrollTop - list.clientHeight < 80;
 
+  // One message: who (not on your own), the bubble – with the host's quiet trash beside it – and the time
   function item(m: ChatMessage) {
-    const li = document.createElement('li');
-    li.className = 'chat-msg' + (m.mine ? ' mine' : '') + (m.from_host ? ' host' : '');
+    const li = mk('li', 'msg' + (m.mine ? ' mine' : '') + (m.from_host ? ' host' : ''));
     li.dataset.id = String(m.id);
-    if (!m.mine) {
-      const who = document.createElement('span');
-      who.className = 'chat-who';
-      who.textContent = m.author + (m.from_host ? ` · ${t('chat.host')}` : '');
-      li.append(who);
-    }
-    const bubble = document.createElement('p');
-    bubble.className = 'chat-bubble';
-    bubble.textContent = m.body;
-    const time = document.createElement('time');
-    time.dateTime = m.created_at;
-    time.textContent = timeFmt.format(new Date(m.created_at));
-    li.append(bubble, time);
+    if (!m.mine) li.append(mk('span', 'who', m.author + (m.from_host ? ` · ${t('chat.host')}` : '')));
+    const bubble = mk('div', 'bubble');
+    bubble.append(mk('p', '', m.body));
     if (remove) {
       // Remove a message: a quiet icon, asked about first
       const del = iconButton('trash', t('chat.delete'), { quiet: true });
-      del.classList.add('chat-del');
       del.addEventListener('click', async () => {
         if (!(await confirmModal({ title: t('chat.deleteQ'), ok: t('chat.delete'), danger: true }))) return;
         if (await remove(m.id)) { li.remove(); toast(t('chat.deleted')); }
         else toast(t('chat.notDeleted'), { kind: 'error' });
       });
-      li.append(del);
+      bubble.append(del);
     }
+    const time = mk('time', '', timeFmt.format(new Date(m.created_at)));
+    time.dateTime = m.created_at;
+    li.append(bubble, time);
     return li;
   }
 
@@ -68,11 +61,8 @@ export function initChat({ prefix, load, send, remove }: Options) {
       if (list.querySelector(`[data-id="${m.id}"]`)) continue;
       const day = new Date(m.created_at).toDateString();
       if (day !== lastDay) {
-        const sep = document.createElement('li');
-        sep.className = 'chat-day';
         const d = dayFmt.format(new Date(m.created_at));
-        sep.textContent = d[0].toUpperCase() + d.slice(1);
-        list.append(sep);
+        list.append(mk('li', 'chat-day', d[0].toUpperCase() + d.slice(1)));
         lastDay = day;
       }
       list.append(item(m));
@@ -96,7 +86,7 @@ export function initChat({ prefix, load, send, remove }: Options) {
   // Grow the box with the text; Enter sends, Shift+Enter makes a new line
   input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 160) + 'px'; });
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('form').requestSubmit(); }
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $<HTMLFormElement>('form').requestSubmit(); }
   });
 
   $('form').addEventListener('submit', async (e) => {

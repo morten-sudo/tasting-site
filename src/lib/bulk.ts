@@ -1,5 +1,6 @@
 // Quantity prices that count over orders: a line for the guest on how far they (or all the guests together) are.
-import { t, money } from '../i18n';
+import { formatKr } from './ui/kr';
+import { t } from '../i18n';
 import type { PriceTier } from './wines';
 
 type W = { price_tiers?: PriceTier[] | null; ordered?: number };
@@ -12,8 +13,8 @@ export function bulkNote(w: W, mode: 'guest' | 'pooled' | null, inCart = 0): str
   const have = (w.ordered ?? 0) + inCart;
   const next = tiers.find((x) => x.qty > have);
   const pooled = mode === 'pooled';
-  if (!next) return t(pooled ? 'bulk.reachedAll' : 'bulk.reached', { price: money(Number(tiers[tiers.length - 1].price)) });
-  const vars = { have, need: next.qty, more: next.qty - have, price: money(Number(next.price)) };
+  if (!next) return t(pooled ? 'bulk.reachedAll' : 'bulk.reached', { price: formatKr(Number(tiers[tiers.length - 1].price)) });
+  const vars = { have, need: next.qty, more: next.qty - have, price: formatKr(Number(next.price)) };
   if (pooled) return t('bulk.togetherMore', vars);
   return (w.ordered ?? 0) > 0 ? t('bulk.youMore', vars) : null;
 }

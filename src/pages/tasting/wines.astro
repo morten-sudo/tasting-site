@@ -6,12 +6,11 @@ import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import SignInState from '../../components/ui/SignInState.astro';
+import CartBar from '../../components/ui/CartBar.astro';
 ---
 <Base title="page.wines" tasting>
   <section class="wrap wines-page">
     <PageHeader title="page.wines" lead="wines.intro" leadId="intro" />
-
-    <Notice id="order-status" hidden><p></p><div class="actions"><a class="btn small secondary" href="/login/" data-login data-i18n="login.submit">Sign in</a></div></Notice>
 
     <SignInState id="need-login" title="gate.winesTitle" />
     <Loading text="gate.loadingWines" />
@@ -25,175 +24,110 @@ import SignInState from '../../components/ui/SignInState.astro';
 
     <div id="wine-list" class="carousel" role="region" aria-roledescription="carousel" aria-label="Wines" data-i18n-attr="aria-roledescription=wines.carousel;aria-label=page.wines" tabindex="0"></div>
 
-    <div id="carousel-nav" class="carousel-nav" hidden>
-      <button type="button" id="prev" class="icon-act lg" aria-label="Previous wine" data-i18n-attr="aria-label=wines.prevWine"><Icon name="left" /></button>
-      <p id="counter" class="counter" aria-live="polite"></p>
-      <button type="button" id="next" class="icon-act lg" aria-label="Next wine" data-i18n-attr="aria-label=wines.nextWine"><Icon name="right" /></button>
+    <div id="carousel-nav" class="pager" hidden>
+      <button type="button" id="prev" class="icon-act lg" aria-label="Previous wine" data-i18n-attr="aria-label=wines.prevWine;data-tip=wines.prevWine" data-tip="Previous wine"><Icon name="left" /></button>
+      <p id="counter" class="count" aria-live="polite"></p>
+      <button type="button" id="next" class="icon-act lg" aria-label="Next wine" data-i18n-attr="aria-label=wines.nextWine;data-tip=wines.nextWine" data-tip="Next wine"><Icon name="right" /></button>
     </div>
   </section>
 
-  <a id="basket" class="basket" href="/home/" data-tpath="cart/" hidden>
-    <div class="wrap basket-inner">
-      <div>
-        <span id="basket-count"></span>
-        <strong id="basket-total"></strong>
-      </div>
-      <span class="basket-go" data-i18n="wines.toCart">Go to cart</span>
-    </div>
-  </a>
+  <CartBar />
 </Base>
 
 <script>
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
-  import { i18nReady, t, plural } from '../../i18n';
+  import { i18nReady, t } from '../../i18n';
   import { fetchMyRatings, type MyRating } from '../../lib/rating';
   import { starsRo } from '../../lib/ui/stars';
+  import { listRow } from '../../lib/ui/list-row';
+  import { chip } from '../../lib/ui/status';
+  import { wineThumb } from '../../lib/ui/thumb';
+  import { price } from '../../lib/ui/price';
+  import { iconSvg } from '../../lib/ui/icons';
+  import { $, mk } from '../../lib/ui/dom';
+  import { initCartBar } from '../../lib/cart-bar';
+  import { type Wine, wineSlugs, styleTag, vintageLabel, tierLabels, nameBlind, watchBlind } from '../../lib/wines';
+  import { originLine } from '../../lib/origin';
 
   let myRatings = new Map<number, MyRating>();
 
   await i18nReady;
-  import { getCart, cartCount } from '../../lib/cart';
-
-  import { type Wine, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, nameBlind, blindBottle, watchBlind } from '../../lib/wines';
-  import { originLine } from '../../lib/origin';
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  const $ = (id: string) => document.getElementById(id)!;
 
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
   let wines: Wine[] = [];
   let slugs = new Map<number, string>();
-  let ordering = false;
+  let drawCartBar: (() => void) | null = null;
 
-  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  }
-
-  function renderBasket() {
-    if (!ordering) return;
-    const cart = getCart();
-    let total = 0;
-    for (const w of wines) total += (cart[w.id] ?? 0) * unitPrice(w, cart[w.id] ?? 0);
-    const bottles = cartCount(cart);
-    $('basket').hidden = bottles === 0;
-    $('basket-count').textContent = plural(bottles, 'wines.bottlesOne', 'wines.bottlesMany') + ', ';
-    $('basket-total').textContent = kr.format(total);
-  }
-
+  // One wine as a card: the list row's card variant (25) with the wine's picture (20), price (21) and stars (16)
   function wineCard(w: Wine, index: number, total: number) {
-    const li = el('li', 'card');
-    li.dataset.style = w.style ?? 'Other';
-    li.setAttribute('aria-roledescription', 'vin');
-    li.setAttribute('aria-label', t('wines.position', { n: index + 1, total }));
-
-    const link = el('a', 'card-link');
-    link.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
-
-    const pic = el('div', 'pic');
-    if (w.blind) {
-      pic.classList.add('blind');
-      pic.insertAdjacentHTML('beforeend', blindBottle(w.style));
-    } else if (w.image_url) {
-      const img = el('img');
-      img.src = w.image_url;
-      img.alt = '';
-      img.loading = index < 2 ? 'eager' : 'lazy';
-      img.decoding = 'async';
-      img.referrerPolicy = 'no-referrer';
-      img.addEventListener('error', () => pic.classList.add('empty'));
-      pic.append(img);
-    } else {
-      pic.classList.add('empty');
-    }
-    const no = el('span', 'no', String(index + 1).padStart(2, '0'));
-    no.setAttribute('aria-hidden', 'true');
-    pic.append(no);
-    link.append(pic);
-
-    const info = el('div', 'info');
-    const tag = el('p', 'eyebrow style-tag', styleLabel(w));
-    tag.style.setProperty('--tone', styleTone(w));
-    info.append(tag);
-    info.append(el('h3', 'name', w.name));
-    if (w.blind) info.append(el('p', 'meta blind-hint', t('blind.hint')));
-    const vin = vintageLabel(w);
-    if (vin) info.append(el('p', 'meta', vin));
-    const origin = originLine(w);
-    if (origin) info.append(el('p', 'meta origin', origin));
-
-    const foot = el('div', 'foot');
-    if (w.price_dkk != null) {
-      const price = el('p', 'price');
-      price.append(el('span', 'ours', kr.format(w.price_dkk)));
-      if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
-        const normal = el('span', 'normal');
-        normal.append(t('wines.normalPrice') + ' ', el('s', '', kr.format(w.retail_price_dkk)));
-        price.append(normal);
-      }
-      for (const label of tierLabels(w)) price.append(el('span', 'bulk', label));
-      foot.append(price);
-    }
+    const foot: Node[] = [];
+    // A blind wine says so; its price comes with it when the host reveals it
+    foot.push(w.blind ? chip(t('blind.blind'), 'strong') : price({ amount: w.price_dkk, was: w.retail_price_dkk, tiers: tierLabels(w) }));
     const mine = myRatings.get(w.id)?.rating;
     if (mine) {
       const my = starsRo(mine);
       my.setAttribute('aria-label', t('rating.yours', { n: mine }));
-      foot.append(my);
+      foot.push(my);
     }
-    const go = el('span', 'eyebrow go', t('wines.readMore'));
+    const go = mk('span', 'go', t('wines.readMore'));
+    go.insertAdjacentHTML('beforeend', iconSvg('right'));
     go.setAttribute('aria-hidden', 'true');
-    foot.append(go);
-    info.append(foot);
-
-    link.append(info);
-    li.append(link);
+    foot.push(go);
+    const li = listRow({
+      variant: 'card', cls: 'wine-card', id: w.id, cardHref: tastingUrl(slug, `wines/${slugs.get(w.id)}/`),
+      no: String(index + 1).padStart(2, '0'), pic: wineThumb(w, { size: 'large', blind: w.blind }),
+      kicker: styleTag(w), title: w.name,
+      meta: [w.blind ? mk('span', 'note', t('blind.hint')) : null, [vintageLabel(w), originLine(w)]],
+      foot,
+    });
+    li.querySelector('.thumb')?.classList.add('fill');
+    li.querySelector('.lno')?.setAttribute('aria-hidden', 'true');
+    li.setAttribute('aria-roledescription', t('wines.slide'));
+    li.setAttribute('aria-label', t('wines.position', { n: index + 1, total }));
     return li;
   }
 
   let cards: HTMLElement[] = [];
   let current = 0;
+  const track = () => $('wine-list').querySelector<HTMLElement>('.cards');
+  const leftOf = (tr: HTMLElement, card: HTMLElement) => card.offsetLeft - tr.offsetLeft - (parseFloat(getComputedStyle(tr).scrollPaddingLeft) || 0);
 
   function scrollToCard(i: number) {
-    const track = $('wine-list').querySelector('.track') as HTMLElement;
+    const tr = track();
     const card = cards[Math.max(0, Math.min(cards.length - 1, i))];
-    if (!track || !card) return;
-    const pad = parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0;
-    track.scrollTo({ left: card.offsetLeft - track.offsetLeft - pad, behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (!tr || !card) return;
+    tr.scrollTo({ left: leftOf(tr, card), behavior: reduceMotion ? 'auto' : 'smooth' });
   }
 
   function setCurrent(i: number) {
     current = i;
     $('counter').textContent = t('wines.position', { n: i + 1, total: cards.length });
-    ($('prev') as HTMLButtonElement).disabled = i === 0;
-    ($('next') as HTMLButtonElement).disabled = i === cards.length - 1;
+    $<HTMLButtonElement>('prev').disabled = i === 0;
+    $<HTMLButtonElement>('next').disabled = i === cards.length - 1;
     cards.forEach((c, n) => c.classList.toggle('is-current', n === i));
   }
 
   function render() {
     const list = $('wine-list');
-    list.replaceChildren();
-    const track = el('ul', 'track');
+    const tr = mk('ul', 'cards');
     cards = wines.map((w, i) => wineCard(w, i, wines.length));
-    track.append(...cards);
-    list.append(track);
-
+    tr.append(...cards);
+    list.replaceChildren(tr);
     $('carousel-nav').hidden = cards.length < 2;
 
     let ticking = false;
-    track.addEventListener('scroll', () => {
+    tr.addEventListener('scroll', () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
         ticking = false;
-        const x = track.scrollLeft;
         let best = 0, dist = Infinity;
         cards.forEach((c, n) => {
-          const d = Math.abs(c.offsetLeft - track.offsetLeft - (parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0) - x);
+          const d = Math.abs(leftOf(tr, c) - tr.scrollLeft);
           if (d < dist) { dist = d; best = n; }
         });
         if (best !== current) setCurrent(best);
@@ -210,7 +144,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     }
 
     setCurrent(0);
-    renderBasket();
+    drawCartBar?.();
   }
 
   $('prev').addEventListener('click', () => scrollToCard(current - 1));
@@ -228,9 +162,9 @@ import SignInState from '../../components/ui/SignInState.astro';
     wines = nameBlind(await fetchWines());
     slugs = wineSlugs(wines);
     render();
-    const track = $('wine-list').querySelector('.track') as HTMLElement;
+    const tr = track();
     const card = cards[Math.min(at, cards.length - 1)];
-    if (track && card) track.scrollLeft = card.offsetLeft - track.offsetLeft - (parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0);
+    if (tr && card) tr.scrollLeft = leftOf(tr, card);
     if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, refresh);
   }
 
@@ -256,17 +190,9 @@ import SignInState from '../../components/ui/SignInState.astro';
     if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, refresh);
 
     const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
-    const status = $('order-status');
-
     if (settings.orders_open === true) {
-      if (code) {
-        ordering = true;
-        $('intro').textContent = t('wines.introOrder');
-        window.addEventListener('cart-change', renderBasket);
-      } else {
-        status.querySelector('p')!.textContent = t('wines.orderNeedsLogin');
-        status.hidden = false;
-      }
+      $('intro').textContent = t('wines.introOrder');
+      drawCartBar = initCartBar(() => wines);
     }
     render();
   }
@@ -274,158 +200,6 @@ import SignInState from '../../components/ui/SignInState.astro';
   load();
 </script>
 
-<style is:global>
-  .bulk { display: block; color: var(--amber); font-size: 0.9rem; margin-top: 0.15rem; }
-  /* The wines page uses the full screen width */
-  .wines-page { padding-top: 2.5rem; padding-bottom: 5rem; }
-
-  /* Carousel: one wine at a time, the next one peeks in at the edge */
-  /* The carousel sits on a full-width white band */
-  .carousel {
-    margin: 1.75rem calc(-1 * var(--gutter)) 0;
-    padding-top: 0.25rem;
-    outline-offset: -2px;
-  }
-  .carousel .track {
-    list-style: none;
-    margin: 0;
-    padding: 0.25rem var(--gutter) 0.5rem;
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: min(84%, 22rem);
-    gap: 0.9rem;
-    align-items: start;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-padding-left: var(--gutter);
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-  }
-  .carousel .track::-webkit-scrollbar { display: none; }
-  .carousel .card {
-    scroll-snap-align: start;
-    padding: 0;
-    overflow: hidden;
-    transition: opacity 0.3s;
-    opacity: 0.6;
-  }
-  .carousel .card.is-current { opacity: 1; }
-  /* Large screens: several wines at a time, all at full opacity */
-  @media (min-width: 640px) {
-    .carousel .card { opacity: 1; }
-  }
-  .carousel .pic {
-    position: relative;
-    height: 18rem;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.25rem;
-  }
-  .carousel .pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .carousel .pic.empty { background: linear-gradient(180deg, var(--ruby), var(--tawny)); }
-  .carousel .pic.empty img { display: none; }
-  .carousel .pic.blind { background: var(--lodge-2); }
-  .blind-bottle { height: 100%; width: auto; max-height: 15rem; }
-  .blind-hint { font-style: italic; }
-  .carousel .no {
-    position: absolute;
-    top: 0.6rem;
-    left: 0.85rem;
-    font-family: var(--display);
-    font-weight: 400;
-    font-style: italic;
-    font-size: 1.5rem;
-    line-height: 1;
-    color: #8a7f72;
-  }
-  .carousel .style-tag { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.4rem; }
-  .carousel .style-tag::before {
-    content: '';
-    width: 1.5rem;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--tone);
-  }
-
-  .carousel-nav {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin: 0 calc(-1 * var(--gutter));
-    padding: 0.75rem var(--gutter) 1.25rem;
-  }
-  .counter { margin: 0; min-width: 5.5rem; text-align: center; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; }
-
-  .carousel .card-link {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .carousel .card-link:focus-visible { outline-offset: -3px; border-radius: var(--radius); }
-  /* Text sits in the same white box as the bottle */
-  .carousel .info { min-width: 0; padding: 0.4rem 1.25rem 1.3rem; }
-  .carousel .name {
-    font-family: var(--display);
-    font-size: 1.55rem;
-    font-weight: 400;
-    line-height: 1.15;
-    margin: 0 0 0.3rem;
-  }
-  .carousel .meta { margin: 0; color: var(--muted); font-size: 0.9rem; }
-  .carousel .foot {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 0.9rem;
-  }
-  .carousel .price {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    line-height: 1.3;
-  }
-  .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
-  .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
-  .carousel .go {
-    margin: 0;
-    color: var(--amber);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    white-space: nowrap;
-  }
-  .carousel .go::after {
-    content: '';
-    width: 0.45rem;
-    height: 0.45rem;
-    border-right: 2px solid currentColor;
-    border-top: 2px solid currentColor;
-    transform: rotate(45deg);
-  }
-  .carousel .card-link:hover .go { color: var(--paper); }
-  .carousel .card-link:focus-visible { outline-color: var(--amber); outline-offset: 3px; }
-
-  .basket {
-    display: block;
-    color: var(--paper);
-    text-decoration: none;
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    background: var(--lodge-2);
-    border-top: 2px solid var(--amber);
-    padding: 0.9rem 0 calc(0.9rem + env(safe-area-inset-bottom));
-  }
-  .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-  #basket-total { font-size: 1.15rem; }
-  .basket-go { color: var(--amber); font-weight: 500; white-space: nowrap; }
-  .basket:hover .basket-go { color: var(--paper); }
-  /* No wines to show (not signed in) → no empty band */
-  .wines-page .carousel:empty { display: none; }
+<style>
+  .wines-page { padding-top: 2.5rem; padding-bottom: 3rem; }
 </style>

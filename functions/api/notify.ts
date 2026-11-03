@@ -7,6 +7,7 @@ import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
 import { json, logUsage } from '../../src/server/wine-ai';
 import { sendMail, type MailEnv } from '../../src/server/smtp';
 import { updatesMail } from '../../src/server/mail-texts';
+import { formatKr } from '../../src/lib/ui/kr';
 
 type Env = MailEnv;
 type Batch = { to: string; name: string | null; lang: string; title: string; slug: string;
@@ -30,8 +31,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
     // The most fitting part of the tasting's admin: chat, orders or guests
     const kinds = new Set(b.items.map((i) => i.kind));
     const part = kinds.size === 1 && kinds.has('chat') ? 'chat/' : kinds.size === 1 && kinds.has('order') ? 'orders/' : 'guests/';
-    const money = (n: number) => new Intl.NumberFormat(b.lang, { style: 'currency', currency: 'DKK', maximumFractionDigits: 0 }).format(n);
-    const texts = updatesMail(b.lang, { tasting: b.title, items: b.items, link: `${origin}/t/${b.slug}/admin/${part}`, settings: `${origin}/profile/#notify`, money });
+    const texts = updatesMail(b.lang, { tasting: b.title, items: b.items, link: `${origin}/t/${b.slug}/admin/${part}`, settings: `${origin}/profile/#notify`, money: formatKr });
     try {
       if (await sendMail(env, (hostname, port) => connect({ hostname, port }, { secureTransport: 'on', allowHalfOpen: false }),
         { to: b.to, fromName: SITE_NAME, replyTo: null, ...texts })) sent++;

@@ -3,6 +3,7 @@ import Base from '../layouts/Base.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import SectionTitle from '../components/ui/SectionTitle.astro';
 import Loading from '../components/ui/Loading.astro';
+import Steps from '../components/ui/Steps.astro';
 import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 ---
 <Base title="page.signup">
@@ -21,6 +22,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       <div id="signup" class="card su-card">
         <SectionTitle level="h3" as="h2" text="signup.formTitle" />
         <Loading id="checking" text="host.creating" hidden />
+        <!-- Two steps, as when signing in: name and email, then the code from the email -->
+        <Steps id="su-steps" label="Create account" labelKey="signup.formTitle" items={[{ label: 'signup.stepYou' }, { label: 'loginx.code' }]} />
 
         <!-- Step 1: name and email -->
         <form id="start-form" class="login-form" novalidate>
@@ -63,6 +66,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
 <script>
   import { setLoading } from '../lib/ui/button';
+  import { setSteps } from '../lib/ui/progress';
+  import { $ } from '../lib/ui/dom';
   import { toast } from '../lib/ui/toast';
   import { fieldError } from '../lib/field-error';
   import { supabase } from '../lib/supabase';
@@ -70,7 +75,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
   await i18nReady;
 
-  const $ = (id: string) => document.getElementById(id)!;
+  const step = (i: number) => setSteps($('su-steps'), i);
   const NAME_KEY = 'wt_host_name';
   let email = '';
 
@@ -88,12 +93,15 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     busy = true;
     $('start-form').hidden = true;
     $('otp-form').hidden = true;
+    $('su-steps').hidden = true;
     $('checking').hidden = false;
     const { error } = await supabase.rpc('become_host', { host_name: name });
     if (error) {
       busy = false;
       $('checking').hidden = true;
       $('start-form').hidden = false;
+      $('su-steps').hidden = false;
+      step(0);
       failed(t('host.failed'));
       return;
     }
@@ -112,8 +120,9 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     if (hostId) { location.replace('/admin/'); return; }
     const pending = remembered();
     if (pending) { finish(pending); return; }
-    // Signed in (e.g. as a guest) but no name yet: only ask for the name
+    // Signed in (e.g. as a guest) but no name yet: only ask for the name – one step, no steps to show
     $('email-wrap').hidden = true;
+    $('su-steps').hidden = true;
     ($('start-btn') as HTMLButtonElement).textContent = t('signup.create');
     ($('start-form') as HTMLFormElement).dataset.signedIn = '1';
   }
@@ -153,6 +162,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     $('sent-to').textContent = email;
     $('start-form').hidden = true;
     $('otp-form').hidden = false;
+    step(1);
     ($('otp') as HTMLInputElement).focus();
   });
 
@@ -180,6 +190,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
   $('back').addEventListener('click', () => {
     $('otp-form').hidden = true;
     $('start-form').hidden = false;
+    step(0);
   });
 
   start();

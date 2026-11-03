@@ -6,6 +6,8 @@ import Hero from '../components/ui/Hero.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import Loading from '../components/ui/Loading.astro';
 import Notice from '../components/ui/Notice.astro';
+import Steps from '../components/ui/Steps.astro';
+import Disclosure from '../components/ui/Disclosure.astro';
 ---
 <Base title="page.login">
   <section class="login-page">
@@ -49,10 +51,7 @@ import Notice from '../components/ui/Notice.astro';
 
         <div id="forms">
           <!-- Two steps: email, then the code from the email -->
-          <ol class="lp-steps" aria-label="Sign in">
-            <li id="step-mail" class="current"><span>1</span><b data-i18n="common.email">Email</b></li>
-            <li id="step-code"><span>2</span><b data-i18n="loginx.code">Code</b></li>
-          </ol>
+          <Steps id="login-steps" label="Sign in" labelKey="login.submit" items={[{ label: 'common.email', id: 'step-mail' }, { label: 'loginx.code', id: 'step-code' }]} />
 
           <!-- Step 1: email -->
           <form id="mail-form" class="login-form" novalidate>
@@ -82,18 +81,14 @@ import Notice from '../components/ui/Notice.astro';
           <p class="lp-or"><span data-i18n="loginx.or">or</span></p>
 
           <!-- Invite link or code -->
-          <details class="alt" id="alt-invite">
-            <summary>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.2 1.2" /><path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.2-1.2" /></svg>
-              <span data-i18n="login.inviteSummary">Have your invitation link instead?</span>
-            </summary>
+          <Disclosure id="alt-invite" class="boxed" icon="link" summary="login.inviteSummary">
             <form id="code-form" class="login-form" novalidate>
               <p data-i18n-html="login.inviteHelp">Paste the link from your invitation, or just the code at the end of the link (after <code>?k=</code>).</p>
               <label for="code" data-i18n="login.inviteLabel">Invitation link or code</label>
               <input class="input" id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
               <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
             </form>
-          </details>
+          </Disclosure>
 
 
           <p class="hint lp-fine lp-lost" data-i18n="login.lostHint">
@@ -112,14 +107,11 @@ import Notice from '../components/ui/Notice.astro';
 </Base>
 
 <script>
+  import { setSteps } from '../lib/ui/progress';
   // The step indicator follows which form is showing
   {
     const otpForm = document.getElementById('otp-form')!;
-    const sync = () => {
-      const code = !otpForm.hidden;
-      document.getElementById('step-mail')!.className = code ? 'done' : 'current';
-      document.getElementById('step-code')!.className = code ? 'current' : '';
-    };
+    const sync = () => setSteps(document.getElementById('login-steps')!, otpForm.hidden ? 0 : 1);
     new MutationObserver(sync).observe(otpForm, { attributes: true, attributeFilter: ['hidden'] });
     // On phones the "what you can do" lists follow below the sign-in card
     const roles = document.querySelector('.lp-roles');
@@ -373,16 +365,6 @@ import Notice from '../components/ui/Notice.astro';
   @media (max-width: 30rem) { .lp-card { padding: 1.4rem 1.1rem; margin-top: -2.5rem; position: relative; } }
   .lp-card :global(.ph) { margin-bottom: 1rem; }
 
-  .lp-steps { list-style: none; display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1.1rem; padding: 0; font-size: 0.85rem; color: var(--muted); }
-  .lp-steps li { display: flex; align-items: center; gap: 0.4rem; }
-  .lp-steps li + li::before { content: ''; width: 1.5rem; height: 1px; background: var(--lodge-3); margin-right: 0.1rem; }
-  .lp-steps span { display: grid; place-items: center; width: 1.45rem; height: 1.45rem; border-radius: 50%; border: 1.5px solid var(--lodge-3); font-size: 0.75rem; font-weight: 600; }
-  .lp-steps b { font-weight: 500; }
-  .lp-steps .current { color: var(--paper); }
-  .lp-steps .current span { background: var(--amber); border-color: var(--amber); color: #fff; }
-  .lp-steps .done span { border-color: var(--ok); color: var(--ok); font-size: 0; }
-  .lp-steps .done span::after { content: '✓'; font-size: 0.8rem; }
-
   .lp-lead { margin: 0 0 0.3rem; }
   .login-form { display: grid; gap: 0.6rem; }
   .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
@@ -391,13 +373,7 @@ import Notice from '../components/ui/Notice.astro';
 
   .lp-or { display: flex; align-items: center; gap: 0.75rem; margin: 1.4rem 0 0.6rem; color: var(--muted); font-size: 0.82rem; }
   .lp-or::before, .lp-or::after { content: ''; flex: 1; height: 1px; background: var(--lodge-3); }
-  .alt { border: 1px solid var(--lodge-3); border-radius: var(--radius); }
-  .alt summary { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; padding: 0.7rem 0.85rem; font-size: 0.95rem; list-style: none; }
-  .alt summary::-webkit-details-marker { display: none; }
-  .alt summary::after { content: '›'; margin-left: auto; color: var(--muted); transition: transform 0.15s; }
-  .alt[open] summary::after { transform: rotate(90deg); }
-  .alt summary svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: var(--amber); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-  .alt .login-form { padding: 0 0.85rem 0.9rem; }
+  #alt-invite .login-form { padding-bottom: 0.2rem; }
   .lp-lost { margin-top: 1.2rem; }
   code { font-size: 0.9em; color: var(--amber); }
 

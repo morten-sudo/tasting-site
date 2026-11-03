@@ -6,6 +6,8 @@ import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import SignInState from '../../components/ui/SignInState.astro';
+import Disclosure from '../../components/ui/Disclosure.astro';
+import CartBar from '../../components/ui/CartBar.astro';
 ---
 <Base title="page.wine" tasting>
   <article class="wine-page">
@@ -19,19 +21,22 @@ import SignInState from '../../components/ui/SignInState.astro';
     </div>
 
     <div id="wine" class="layout" hidden>
-      <div id="pic" class="pic"><span id="no" class="no" aria-hidden="true"></span></div>
+      <div id="pic" class="pic"><span id="no" class="lno" aria-hidden="true"></span></div>
       <div class="text">
 
-      <p id="style-tag" class="eyebrow style-tag"></p>
+      <p id="style-tag" class="style-tag lg"></p>
       <PageHeader id="name" class="wine-ph">
         <p id="meta" class="meta"></p>
-        <p id="origin" class="origin" hidden></p>
+        <p id="origin" class="origin" hidden><Icon name="pin" /><span id="origin-text"></span></p>
       </PageHeader>
 
       <!-- What the guest does here comes first: price and cart, then their own rating; reading after -->
-      <div class="buy">
-        <p id="price" class="price"></p>
-        <button id="add" type="button" class="btn" hidden data-i18n="wine.add">Add to cart</button>
+      <div id="buy" class="buy">
+        <div id="price"></div>
+        <div id="add-row" class="buy-act" hidden>
+          <span id="qty"></span>
+          <button id="add" type="button" class="btn" data-i18n="wine.add">Add to cart</button>
+        </div>
       </div>
       <Notice id="order-status" hidden><p data-i18n="wine.orderNeedsLogin"></p><div class="actions"><a class="btn small secondary" href="/login/" data-login data-i18n="login.submit">Sign in</a></div></Notice>
 
@@ -41,53 +46,44 @@ import SignInState from '../../components/ui/SignInState.astro';
         <p id="desc" class="desc"></p>
         <button id="desc-more" class="text-btn" type="button" hidden aria-expanded="false" aria-controls="desc" data-i18n="wine.readMore">Read more</button>
       </div>
-      <div id="facts"></div>
-      <div id="mini-map" class="mini-map" hidden></div>
-      <details id="details-box" class="details-box" hidden>
-        <summary data-i18n="wine.moreAbout">More about the wine and the producer</summary>
-        <dl id="details" class="details" hidden></dl>
-      </details>
+      <div id="facts" class="w-facts"></div>
+      <div id="mini-map" class="map-box mini" hidden></div>
+      <Disclosure id="details-box" class="w-details" summary="wine.moreAbout" hidden>
+        <div id="details"></div>
+      </Disclosure>
 
-      <nav class="pager" aria-label="Other wines" data-i18n-attr="aria-label=wine.others">
-        <a id="prev" class="pager-link prev" hidden></a>
-        <a id="next" class="pager-link next" hidden></a>
+      <nav id="pager" class="pager" aria-label="Other wines" data-i18n-attr="aria-label=wine.others" hidden>
+        <a id="prev" class="icon-act lg" aria-disabled="true"><Icon name="left" /></a>
+        <p id="pager-count" class="count"></p>
+        <a id="next" class="icon-act lg" aria-disabled="true"><Icon name="right" /></a>
       </nav>
       </div>
     </div>
   </article>
 
-  <a id="basket" class="basket" href="/home/" data-tpath="cart/" hidden>
-    <div class="wrap basket-inner">
-      <div>
-        <span id="basket-count"></span>
-        <strong id="basket-total"></strong>
-      </div>
-      <span class="basket-go" data-i18n="wines.toCart">Go to cart</span>
-    </div>
-  </a>
+  <CartBar />
 </Base>
 
 <script>
   import { supabase } from '../../lib/supabase';
   import { tooltip } from '../../lib/ui/tooltip';
+  import { toast } from '../../lib/ui/toast';
+  import { stepper } from '../../lib/ui/stepper';
+  import { wineThumb } from '../../lib/ui/thumb';
+  import { price } from '../../lib/ui/price';
+  import { facts } from '../../lib/ui/facts';
+  import { $, mk } from '../../lib/ui/dom';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
-  import { i18nReady, t, plural } from '../../i18n';
+  import { i18nReady, t } from '../../i18n';
   import { fetchMyRatings, ratingBox } from '../../lib/rating';
+  import { initCartBar } from '../../lib/cart-bar';
 
   await i18nReady;
-  import { getCart, addToCart, cartCount } from '../../lib/cart';
-  import { type Wine, wineSlug, wineSlugs, styleLabel, styleTone, vintageLabel, kr, unitPrice, tierLabels, wineFacts, nameBlind, blindBottle, watchBlind } from '../../lib/wines';
+  import { getCart, addToCart, MAX_PER_WINE } from '../../lib/cart';
+  import { type Wine, wineSlug, wineSlugs, styleTag, vintageLabel, tierLabels, wineFacts, nameBlind, watchBlind } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
   import { bulkNote } from '../../lib/bulk';
   import { wineMap, showMapCredit } from '../../lib/wine-map';
-
-  const $ = (id: string) => document.getElementById(id)!;
-  const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) => {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  };
 
   // The wine from the address: its name (/wines/rivesaltes-ambre-1966/) or, on old links, its number
   const part = decodeURIComponent(location.pathname.match(/\/wines\/([^/]+)/)?.[1] ?? new URLSearchParams(location.search).get('id') ?? '');
@@ -96,16 +92,6 @@ import SignInState from '../../components/ui/SignInState.astro';
   let wines: Wine[] = [];
   let slugs = new Map<number, string>();
 
-  function renderBasket() {
-    const cart = getCart();
-    let total = 0;
-    for (const w of wines) total += (cart[w.id] ?? 0) * unitPrice(w, cart[w.id] ?? 0);
-    const bottles = cartCount(cart);
-    $('basket').hidden = bottles === 0;
-    $('basket-count').textContent = plural(bottles, 'wines.bottlesOne', 'wines.bottlesMany') + ', ';
-    $('basket-total').textContent = kr.format(total);
-  }
-
   async function showMiniMap(w: Wine) {
     const box = $('mini-map');
     const m = await wineMap(w);
@@ -113,14 +99,30 @@ import SignInState from '../../components/ui/SignInState.astro';
     box.innerHTML = m.svg;
     tooltip(box, originFull(w) ?? '');
     box.hidden = false;
-    showMapCredit(box, m.how);
+    showMapCredit(box, m);
   }
 
-  function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {
-    if (!w) return;
-    a.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
-    a.append(el('span', 'eyebrow dir', label), el('span', 'to', w.name));
-    a.hidden = false;
+  // Previous and next: the round icon buttons around "2 of 11"; the wine's name is their name and tip
+  function pager(index: number) {
+    const link = (a: HTMLAnchorElement, w: Wine | undefined, dir: string) => {
+      if (!w) { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); a.setAttribute('aria-label', dir); return; }
+      a.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
+      a.removeAttribute('aria-disabled');
+      a.setAttribute('aria-label', `${dir}: ${w.name}`);
+      a.dataset.tip = `${dir}: ${w.name}`;
+    };
+    link($('prev') as HTMLAnchorElement, wines[index - 1], t('wine.prev'));
+    link($('next') as HTMLAnchorElement, wines[index + 1], t('wine.next'));
+    $('pager-count').textContent = t('wines.position', { n: index + 1, total: wines.length });
+    $('pager').hidden = wines.length < 2;
+  }
+
+  function head(w: Wine, index: number) {
+    $('pic').append(wineThumb(w, { size: 'large', blind: w.blind }));
+    $('pic').querySelector('.thumb')!.classList.add('fill');
+    $('no').textContent = String(index + 1).padStart(2, '0');
+    $('style-tag').replaceWith(Object.assign(styleTag(w, true), { id: 'style-tag' }));
+    $('name').textContent = w.name;
   }
 
   async function load() {
@@ -147,21 +149,14 @@ import SignInState from '../../components/ui/SignInState.astro';
     if (location.pathname !== canonical) history.replaceState(null, '', canonical + location.search);
 
     document.title = `${w.name} – Winetastr`;
+    head(w, index);
+    pager(index);
 
-    // A blind wine: its number, style colour and the guest's own rating – the rest comes when the host reveals it
+    // A blind wine: its number, type and the guest's own rating – the rest comes when the host reveals it
     if (w.blind) {
-      $('pic').classList.add('blind');
-      $('pic').insertAdjacentHTML('afterbegin', blindBottle(w.style));
-      $('no').textContent = String(index + 1).padStart(2, '0');
-      const tag = $('style-tag');
-      tag.textContent = styleLabel(w);
-      tag.style.setProperty('--tone', styleTone(w));
-      $('name').textContent = w.name;
       $('meta').textContent = t('blind.hint');
-      document.querySelector('.buy')?.setAttribute('hidden', '');
+      $('buy').hidden = true;
       $('desc').hidden = true;
-      pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], t('wine.prev'));
-      pagerLink($('next') as HTMLAnchorElement, wines[index + 1], t('wine.next'));
       const mine = await fetchMyRatings(code);
       $('my-rating').replaceChildren(ratingBox(code, w.id, mine.get(w.id)));
       $('wine').hidden = false;
@@ -174,23 +169,6 @@ import SignInState from '../../components/ui/SignInState.astro';
       return;
     }
 
-    const pic = $('pic');
-    if (w.image_url) {
-      const img = el('img');
-      img.src = w.image_url;
-      img.alt = w.name;
-      img.referrerPolicy = 'no-referrer';
-      img.addEventListener('error', () => pic.classList.add('empty'));
-      pic.prepend(img);
-    } else {
-      pic.classList.add('empty');
-    }
-    $('no').textContent = String(index + 1).padStart(2, '0');
-
-    const tag = $('style-tag');
-    tag.textContent = styleLabel(w);
-    tag.style.setProperty('--tone', styleTone(w));
-    $('name').textContent = w.name;
     $('meta').textContent = [
       vintageLabel(w),
       w.producer,
@@ -198,26 +176,18 @@ import SignInState from '../../components/ui/SignInState.astro';
     ].filter(Boolean).join(' · ');
     const origin = originFull(w);
     if (origin) {
-      $('origin').textContent = origin;
+      $('origin-text').textContent = origin;
       $('origin').hidden = false;
     }
     // Small map: the detailed region map with the appellation filled in, or else the overview map
     // with a pin at the appellation (or in the middle of the country)
     showMiniMap(w);
 
-    const price = $('price');
-    if (w.price_dkk != null) {
-      price.append(el('span', 'ours', kr.format(w.price_dkk)));
-      if (w.retail_price_dkk != null && w.retail_price_dkk > w.price_dkk) {
-        const normal = el('span', 'normal');
-        normal.append(t('wines.normalPrice') + ' ', el('s', '', kr.format(w.retail_price_dkk)));
-        price.append(normal);
-      }
-      for (const label of tierLabels(w)) price.append(el('span', 'bulk', label));
-      // How far the guest (or all the guests together) is towards the quantity price
-      const note = bulkNote(w, ((settingsRes.data ?? {}) as { bulk_mode?: 'guest' | 'pooled' | null }).bulk_mode ?? null);
-      if (note) price.append(el('span', 'bulk bulk-progress', note));
-    }
+    // The price (21): ours, the regular one struck through, the quantity prices – and how far the guest (or all the
+    // guests together) is towards one
+    const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
+    const note = w.price_dkk != null ? bulkNote(w, (settings.bulk_mode as 'guest' | 'pooled' | null) ?? null) : null;
+    $('price').replaceChildren(price({ amount: w.price_dkk, was: w.retail_price_dkk, size: 'large', tiers: [...tierLabels(w), ...(note ? [note] : [])] }));
 
     if (w.description) {
       $('desc').textContent = w.description;
@@ -236,74 +206,60 @@ import SignInState from '../../components/ui/SignInState.astro';
         } else d.classList.remove('folded');
       });
     } else $('desc').hidden = true;
-    // Grapes, food and serving – each with its icon
-    const facts = wineFacts(w);
-    $('facts').replaceChildren(...(facts ? [facts] : []));
+    // Grapes, food and serving – each with its icon (the facts list, 22)
+    const strip = wineFacts(w);
+    $('facts').replaceChildren(...(strip ? [strip] : []));
 
-    // The producer: website to read more, and where it is
+    // More about the wine and the producer: the producer's website and address, and the wine's details ("Label: text")
     {
-      const dl = $('details');
-      if (w.producer_website) {
-        const a = el('a', 'producer-link', (() => { try { return new URL(w.producer_website).hostname.replace(/^www\./, ''); } catch { return w.producer_website; } })()) as HTMLAnchorElement;
-        a.href = w.producer_website;
+      const site = w.producer_website ? (() => {
+        const a = mk('a', '', (() => { try { return new URL(w.producer_website!).hostname.replace(/^www\./, ''); } catch { return w.producer_website!; } })());
+        a.href = w.producer_website!;
         a.target = '_blank';
         a.rel = 'noopener';
-        const dd = el('dd');
-        dd.append(a);
-        dl.append(el('dt', 'eyebrow', t('producer.websiteShort')), dd);
-      }
-      if (w.producer_address) dl.append(el('dt', 'eyebrow', t('producer.addressShort')), el('dd', '', w.producer_address));
-      if (w.producer_website || w.producer_address) { dl.hidden = false; $('details-box').hidden = false; }
-    }
-
-    if (w.details) {
-      const dl = $('details');
-      for (const line of w.details.split('\n')) {
+        return a;
+      })() : null;
+      const lines = (w.details ?? '').split('\n').map((l) => l.trim()).filter(Boolean).map((line) => {
         const i = line.indexOf(':');
-        if (i > 0 && i < 30) {
-          dl.append(el('dt', 'eyebrow', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
-        } else if (line.trim()) {
-          dl.append(el('dd', '', line.trim()));
-        }
+        return i > 0 && i < 30 ? { label: line.slice(0, i), value: line.slice(i + 1).trim() } : { label: '', value: line };
+      });
+      const list = facts([{ label: t('producer.websiteShort'), value: site }, { label: t('producer.addressShort'), value: w.producer_address }, ...lines]);
+      if (list) {
+        $('details').replaceChildren(list);
+        $('details-box').hidden = false;
+        // On larger screens there is room: the details start open
+        if (matchMedia('(min-width: 900px)').matches) ($('details-box') as HTMLDetailsElement).open = true;
       }
-      dl.hidden = false;
-      $('details-box').hidden = false;
     }
-    // On larger screens there is room: the details start open
-    if (matchMedia('(min-width: 900px)').matches) ($('details-box') as HTMLDetailsElement).open = true;
 
-    // Ordering
-    const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
-    const status = $('order-status');
-    if (settings.orders_open === true && code && w.orderable) {
+    // Ordering: how many (the stepper, 17) and "Add to cart"; the cart bar at the bottom follows
+    if (settings.orders_open === true && w.orderable) {
       const btn = $('add') as HTMLButtonElement;
+      const qty = stepper({ value: 1, min: 1, max: MAX_PER_WINE, label: t('wine.qty') });
+      $('qty').replaceWith(qty.el);
       const sync = () => {
         const n = getCart()[w.id] ?? 0;
         btn.textContent = n ? t('wine.addMore', { n }) : t('wine.add');
         btn.classList.toggle('secondary', n > 0);
+        qty.setMax(Math.max(1, MAX_PER_WINE - n));
+        btn.disabled = n >= MAX_PER_WINE;
       };
       btn.addEventListener('click', () => {
-        addToCart(w.id);
-        sync();
-        btn.classList.remove('pop');
-        void btn.offsetWidth;
-        btn.classList.add('pop');
+        addToCart(w.id, qty.value);
+        qty.set(1);
+        // The cart bar at the bottom shows the new count and leads to the cart
+        toast(t('wine.added'));
       });
-      window.addEventListener('cart-change', () => { sync(); renderBasket(); });
+      window.addEventListener('cart-change', sync);
       sync();
-      btn.hidden = false;
-      renderBasket();
+      $('add-row').hidden = false;
+      initCartBar(() => wines);
     } else if (settings.orders_open === true) {
-      status.hidden = false;
+      $('order-status').hidden = false;
     }
 
-    pagerLink($('prev') as HTMLAnchorElement, wines[index - 1], t('wine.prev'));
-    pagerLink($('next') as HTMLAnchorElement, wines[index + 1], t('wine.next'));
-
-    if (code) {
-      const mine = await fetchMyRatings(code);
-      $('my-rating').replaceChildren(ratingBox(code, w.id, mine.get(w.id)));
-    }
+    const mine = await fetchMyRatings(code);
+    $('my-rating').replaceChildren(ratingBox(code, w.id, mine.get(w.id)));
 
     $('wine').hidden = false;
   }
@@ -312,169 +268,47 @@ import SignInState from '../../components/ui/SignInState.astro';
 </script>
 
 <style is:global>
-  .bulk { display: block; color: var(--amber); font-size: 0.9rem; margin-top: 0.15rem; }
-  /* The wine page uses the full screen width:
-     the image runs edge to edge, and on large screens image and text sit side by side */
-  .wine-page { padding-top: 0.5rem; padding-bottom: 6rem; }
-  .wine-page .text { padding: 0 var(--gutter); }
-  @media (min-width: 900px) {
-    .wine-page .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-      align-items: start;
-    }
-    .wine-page .layout .pic {
-      position: sticky;
-      top: 6rem;
-      height: calc(100vh - 9rem);
-      max-height: none;
-      margin: 0 0 0 var(--gutter);
-      border-radius: var(--radius);
-    }
-    .wine-page .text { max-width: 40rem; padding-left: clamp(2rem, 5vw, 5rem); }
-    .wine-page .style-tag { display: flex; align-items: center; gap: 0.5rem; margin: 1.4rem 0 0.5rem; }
-  }
-  .wine-page > .back, .wine-page .back { margin-left: -0.15rem; }
-
+  /* The wine page uses the full screen width: the picture runs edge to edge, and on large screens picture and text
+     sit side by side */
+  .wine-page { padding-top: 0.5rem; padding-bottom: 3rem; }
+  .wine-page .text { padding: 0 var(--gutter); min-width: 0; }
   .wine-page .pic {
-    position: relative;
-    margin-top: 0.25rem;
+    position: relative; margin-top: 0.25rem; background: #fff; display: grid; place-items: center; padding: 1.5rem; overflow: hidden;
     /* Phones: a smaller picture, so name, price, cart and rating come up near the top */
-    height: 34vh;
-    min-height: 13rem;
-    max-height: 20rem;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    overflow: hidden;
+    height: 34vh; min-height: 13rem; max-height: 20rem;
   }
-  .wine-page .pic img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .wine-page .pic.empty { background: linear-gradient(180deg, var(--ruby), var(--tawny)); }
-  .wine-page .pic.empty img { display: none; }
-  .wine-page .pic.blind { background: var(--lodge-2); }
-  .wine-page .blind-bottle { height: 80%; width: auto; max-height: 24rem; }
-  .wine-page .no {
-    position: absolute;
-    top: 0.7rem;
-    left: 0.95rem;
-    font-family: var(--display);
-    font-weight: 400;
-    font-style: italic;
-    font-size: 1.8rem;
-    line-height: 1;
-    color: #8a7f72;
+  .wine-page .pic > .lno { position: absolute; top: 0.7rem; left: 0.95rem; z-index: 1; min-width: 0; }
+  @media (min-width: 900px) {
+    .wine-page .layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
+    .wine-page .pic { position: sticky; top: 6rem; height: calc(100vh - 9rem); min-height: 0; max-height: none; margin: 0 0 0 var(--gutter); border-radius: var(--radius); }
+    .wine-page .text { max-width: 40rem; padding-left: clamp(2rem, 5vw, 5rem); }
   }
-
-  .wine-page .style-tag { display: flex; align-items: center; gap: 0.5rem; margin: 1.4rem 0 0.5rem; }
-  .wine-page .style-tag::before {
-    content: '';
-    width: 1.5rem;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--tone);
-  }
+  .wine-page .style-tag { margin: 1.4rem 0 0.5rem; }
   .wine-page .wine-ph { margin: 0; }
   .wine-page .meta { margin: 0.5rem 0 0; color: var(--muted); }
-  .wine-page .mini-map { width: min(100%, 12rem); margin: 0.6rem 0 0; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
-  .wine-page .mini-map[hidden] { display: none; }
   .wine-page .origin { margin: 0.3rem 0 0; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
-  .wine-page .origin::before {
-    content: ''; flex: none; width: 0.95rem; height: 0.95rem; background: currentColor;
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Cpath d='M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z'/%3E%3Ccircle cx='12' cy='10' r='2.3'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8'%3E%3Cpath d='M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z'/%3E%3Ccircle cx='12' cy='10' r='2.3'/%3E%3C/svg%3E") center / contain no-repeat;
-  }
+  .wine-page .origin svg.i { width: 1rem; height: 1rem; }
 
   .wine-page .buy {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-    padding: 1rem 0;
-    border-top: 1px solid var(--lodge-3);
-    border-bottom: 1px solid var(--lodge-3);
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.9rem 1rem;
+    margin-top: 1.25rem; padding: 1rem 0; border-top: 1px solid var(--lodge-3); border-bottom: 1px solid var(--lodge-3);
   }
-  .wine-page .price {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.3;
-  }
-  .wine-page .price .ours { font-weight: 400; font-size: 1.2rem; letter-spacing: 0.02em; }
-  .wine-page .price .normal { color: var(--muted); font-size: 0.88rem; }
-  .wine-page #add.pop { animation: pop 0.25s ease-out; }
-  @keyframes pop { 50% { transform: scale(1.06); } }
+  .wine-page .buy-act { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 30rem) { .wine-page .buy-act { width: 100%; } .wine-page .buy-act .btn { flex: 1; } }
 
   .wine-page .desc { margin: 1.6rem 0 0; font-size: 1.02rem; line-height: 1.8; }
   .wine-page .desc.folded { display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
-  .wine-page .details-box { margin-top: 1.5rem; border-top: 1px solid var(--lodge-3); padding-top: 0.6rem; }
-  .wine-page .details-box[hidden] { display: none; }
-  .wine-page .details-box summary { cursor: pointer; font-weight: 500; padding: 0.5rem 0; min-height: 2.25rem; }
-  .wine-page .details-box .details { margin-top: 0.6rem; }
-  .wine-page .mini-map { margin-top: 1.2rem !important; }
-  .wine-page #my-rating .my-rating { margin-top: 1.25rem; padding-top: 1.25rem; }
-  @media (min-width: 900px) {
-    .wine-page .pic { height: calc(100vh - 9rem); min-height: 0; max-height: none; }
-  }
-  .wine-page .my-rating { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--lodge-3); }
+  .wine-page .w-facts { margin-top: 1.25rem; }
+  .wine-page .map-box { margin-top: 1.25rem; }
+  .wine-page .w-details { margin-top: 1.5rem; }
+  .wine-page .my-rating { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--lodge-3); }
+  /* Right under the price and cart (which has its line): no second line */
+  .wine-page #buy:not([hidden]) + #order-status[hidden] + #my-rating .my-rating { border-top: 0; padding-top: 0.25rem; }
   .wine-page .rating-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .wine-page .rating-head h2 { margin: 0; }
   /* The stars are the shared component (components.css); only the space around them is the page's */
   .wine-page .my-rating .stars { margin: 0.4rem 0 0.9rem -0.55rem; }
   .wine-page .my-rating .note-label { margin-bottom: 0.4rem; }
   .wine-page .rating-hint { font-size: 0.85rem; margin-top: 0.4rem; }
-  .wine-page .details {
-    margin: 1.5rem 0 0;
-    padding: 0;
-    line-height: 1.5;
-  }
-  .wine-page .details dt {
-    margin: 0 0 0.2rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid var(--lodge-3);
-  }
-  .wine-page .details dt:first-child { padding-top: 0; border-top: 0; }
-  .wine-page .details dd { margin: 0 0 0.7rem; }
-  .wine-page .details dd:last-child { margin-bottom: 0; }
-
-  .wine-page .pager {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-top: 2rem;
-  }
-  .wine-page .pager-link {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.85rem 1rem;
-    border: 1px solid var(--lodge-3);
-    border-radius: var(--radius);
-    color: var(--paper);
-    text-decoration: none;
-    min-width: 0;
-  }
-  .wine-page .pager-link.next { grid-column: 2; text-align: right; }
-  .wine-page .pager-link:hover { border-color: var(--amber); }
-  .wine-page .pager-link .dir { margin: 0; }
-  .wine-page .pager-link .to { font-family: var(--display); font-size: 1.15rem; line-height: 1.25; }
-
-  .basket {
-    display: block;
-    color: var(--paper);
-    text-decoration: none;
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    background: var(--lodge-2);
-    border-top: 2px solid var(--amber);
-    padding: 0.9rem 0 calc(0.9rem + env(safe-area-inset-bottom));
-  }
-  .basket-inner { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-  #basket-total { font-size: 1.15rem; }
-  .basket-go { color: var(--amber); font-weight: 500; white-space: nowrap; }
-  .basket:hover .basket-go { color: var(--paper); }
+  .wine-page .pager { margin-top: 2rem; }
 </style>

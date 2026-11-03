@@ -4,6 +4,7 @@
 // to two rows – never hidden off to the right.
 //   items: { id, label (i18n key), href?, count?, hidden?, attrs? }; current: the chosen id
 import { en } from '../../i18n/en';
+import Badge from './Badge.astro';
 interface Item { id: string; label: string; href?: string; count?: number | string; hidden?: boolean; attrs?: Record<string, string> }
 interface Props { items: Item[]; current?: string; id?: string; label?: string; labelKey?: string; class?: string; [attr: string]: unknown }
 const { items, current, id, label, labelKey, class: cls, ...rest } = Astro.props;
@@ -15,8 +16,8 @@ const Wrap = links ? 'nav' : 'div';
   data-i18n-attr={labelKey ? `aria-label=${labelKey}` : undefined} data-tabs {...rest}>
   {items.map((it) => links
     ? <a href={it.href} data-tab={it.id} aria-current={it.id === current ? 'page' : undefined} hidden={it.hidden} {...it.attrs}>
-        <span data-i18n={it.label}>{tr(it.label)}</span>{it.count != null && <span class="n">{it.count}</span>}</a>
+        <span data-i18n={it.label}>{tr(it.label)}</span>{it.count != null && <Badge kind="neutral" count={it.count} />}</a>
     : <button type="button" role="tab" data-tab={it.id} aria-selected={it.id === current ? 'true' : 'false'}
         tabindex={it.id === current ? 0 : -1} hidden={it.hidden} {...it.attrs}>
-        <span data-i18n={it.label}>{tr(it.label)}</span>{it.count != null && <span class="n">{it.count}</span>}</button>)}
+        <span data-i18n={it.label}>{tr(it.label)}</span>{it.count != null && <Badge kind="neutral" count={it.count} />}</button>)}
 </Wrap>

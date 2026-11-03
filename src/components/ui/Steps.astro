@@ -1,0 +1,15 @@
+---
+// Component 38 – the one steps list, horizontal: "1 Email – 2 Code" on sign-in and sign-up. setSteps(list, i) in
+// src/lib/ui/progress.ts marks the steps before i done (✓) and i the current one.
+//   items: { label (i18n key), id? }
+import { en } from '../../i18n/en';
+interface Item { label: string; id?: string }
+interface Props { items: Item[]; id?: string; label?: string; labelKey?: string; current?: number; class?: string }
+const { items, id, label, labelKey, current = 0, class: cls } = Astro.props;
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+---
+<ol id={id} class:list={['hsteps', cls]} aria-label={label} data-i18n-attr={labelKey ? `aria-label=${labelKey}` : undefined}>
+  {items.map((it, i) => <li id={it.id} class:list={[i < current && 'done', i === current && 'now']} aria-current={i === current ? 'step' : undefined}>
+    <span class="s-ic" aria-hidden="true">{i < current ? '✓' : i + 1}</span><span data-i18n={it.label}>{tr(it.label)}</span>
+  </li>)}
+</ol>

@@ -1,10 +1,11 @@
 // Admin, wine library: the host's wines across all tastings – add, edit and delete one at a time,
 // filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
+import { formatKr } from './ui/kr';
 import { setLoading } from './ui/button';
 import { getDropdown, type DropdownEl } from './ui/dropdown';
 import { imagePicker } from './ui/image-picker';
 import { supabase } from './supabase';
-import { STYLES, styleName, kr } from './wines';
+import { STYLES, styleName } from './wines';
 import { t, lang, locale } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
@@ -216,7 +217,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       // How the wine was placed; an unknown appellation is looked up when the wine is saved
       const pending = (m.how === 'country' || m.how === 'regionCentre') && !!origin.appellation && !knownApp();
       $('wf-map-note').textContent = t(pending ? 'wineMap.pending' : `wineMap.${m.how}`);
-      showMapCredit($('wf-map-svg'), m.how);
+      showMapCredit($('wf-map-svg'), m);
     }, 250);
   }
   appInput.addEventListener('input', syncOrigin);
@@ -379,7 +380,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       showSource();
       statusTarget = 'wf-source-status';
       const offer = r.offer
-        ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: kr.format(r.offer.price), n: r.offer.quantity })
+        ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: formatKr(r.offer.price), n: r.offer.quantity })
         : '';
       const foreign = r.foreign_currency && !field<HTMLInputElement>('wf-retail').value.trim()
         ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
@@ -459,8 +460,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     list.replaceChildren(...rows.map((x) => {
       const li = mk('li');
       const name = mk('span', 'wf-it-name', x.tastings!.title);
-      const tiers = (x.price_tiers ?? []).map((y) => t('twe.tierLine', { n: y.qty, price: kr.format(Number(y.price)) }));
-      const price = mk('span', 'wf-it-price', [x.price_dkk != null ? kr.format(Number(x.price_dkk)) : t('twe.noPrice'), ...tiers].join(' · '));
+      const tiers = (x.price_tiers ?? []).map((y) => t('twe.tierLine', { n: y.qty, price: formatKr(Number(y.price)) }));
+      const price = mk('span', 'wf-it-price', [x.price_dkk != null ? formatKr(Number(x.price_dkk)) : t('twe.noPrice'), ...tiers].join(' · '));
       const go = mk('a', 'text-btn', t('wineLib.changeInTasting'));
       go.href = `/t/${x.tastings!.slug}/admin/wines/?edit=${w.id}`;
       li.append(name, price, go);
@@ -594,12 +595,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     // the tastings it is in as chips – and the pencil
     list.replaceChildren(...shown.map((w) => {
       const offer = w.offer_price_dkk != null ? t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
-        { price: kr.format(w.offer_price_dkk), n: w.offer_quantity ?? 1 }) : null;
+        { price: formatKr(w.offer_price_dkk), n: w.offer_quantity ?? 1 }) : null;
       // Which tastings the wine is in, with the wine's guest price there (separate from the shop's price)
       const ts = tastingsOf(w);
       const chips = ts.map((tt) => {
         const p = (w.tasting_wines ?? []).find((x) => x.tastings?.slug === tt.slug)?.price_dkk;
-        return { text: p != null ? `${tt.title} · ${kr.format(Number(p))}` : tt.title, href: `/t/${tt.slug}/admin/` };
+        return { text: p != null ? `${tt.title} · ${formatKr(Number(p))}` : tt.title, href: `/t/${tt.slug}/admin/` };
       });
       const edit = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
       edit.dataset.tip = t('admin.edit');
@@ -607,7 +608,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       return listRow({
         id: w.id, pic: wineThumb(w), title: w.name, href: paths().get(w.id) ?? '/admin/wines/',
         meta: [[w.style ? styleName(w.style) : null, w.vintage, w.producer], originLine(w),
-          [w.retail_price_dkk != null ? t('admin.normally', { price: kr.format(w.retail_price_dkk) }) : null, offer]],
+          [w.retail_price_dkk != null ? t('admin.normally', { price: formatKr(w.retail_price_dkk) }) : null, offer]],
         chips: chips.length ? chips : [{ text: t('wineLib.unused'), dashed: true }],
         actions: [edit],
       });

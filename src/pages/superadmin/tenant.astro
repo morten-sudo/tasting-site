@@ -33,48 +33,26 @@ import '../../styles/admin.css';
         </section>
 
         <section data-sec="tastings" hidden>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th data-i18n="admin.title">Title</th><th data-i18n="super.when">When</th><th data-i18n="super.createdBy">Created by</th>
-              <th class="num" data-i18n="super.coHosts">Co-hosts</th><th class="num" data-i18n="super.invited">Invited</th>
-              <th class="num" data-i18n="adminNav.wines">Wines</th><th class="num" data-i18n="admin.orders">Orders</th></tr></thead>
-            <tbody id="tastings"></tbody>
-          </table></div>
+          <div id="tastings"></div>
         </section>
 
         <section data-sec="guests" hidden>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th data-i18n="admin.name">Name</th><th data-i18n="common.email">Email</th>
-              <th class="num" data-i18n="super.invitations">Invitations</th><th class="num" data-i18n="admin.fYes">Coming</th>
-              <th class="num" data-i18n="admin.orders">Orders</th><th data-i18n="super.created">Created</th></tr></thead>
-            <tbody id="guests"></tbody>
-          </table></div>
+          <div id="guests"></div>
         </section>
 
         <section data-sec="wines" hidden>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th></th><th data-i18n="admin.name">Name</th><th data-i18n="admin.producer">Producer</th><th data-i18n="origin.region">Region</th>
-              <th class="num" data-i18n="admin.retail">Regular price</th><th class="num" data-i18n="super.used">Used</th>
-              <th class="num" data-i18n="super.ratings">Ratings</th></tr></thead>
-            <tbody id="wines"></tbody>
-          </table></div>
+          <div id="wines"></div>
         </section>
 
         <section data-sec="payments" hidden>
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th data-i18n="super.when">When</th><th data-i18n="super.kind">Type</th><th data-i18n="page.tasting">Tasting</th>
-              <th data-i18n="admin.name">Name</th><th class="num" data-i18n="super.amount">Amount</th><th data-i18n="super.paid">Paid</th></tr></thead>
-            <tbody id="payments"></tbody>
-          </table></div>
+          <div id="payments"></div>
         </section>
 
         <section data-sec="log" hidden>
           <Tabs id="log-filters" label="Log" items={[
             { id: 'all', label: 'super.logFilterAll' }, { id: 'host', label: 'super.logFilterHost' }, { id: 'guest', label: 'super.logFilterGuest' },
             { id: 'login', label: 'super.logFilterLogin' }, { id: 'admin', label: 'super.logFilterAdmin' }]} current="all" />
-          <div class="table-wrap"><table class="table">
-            <thead><tr><th data-i18n="super.logWhen">When</th><th></th><th data-i18n="super.logWhat">What</th><th data-i18n="super.logWho">By</th></tr></thead>
-            <tbody id="log"></tbody>
-          </table></div>
+          <div id="log"></div>
         </section>
         <EmptyState id="none" icon="info" title="super.noRows" hidden />
       </div>
@@ -83,16 +61,19 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { formatKr } from '../../lib/ui/kr';
   import { tabs } from '../../lib/ui/tabs';
   import { chip } from '../../lib/ui/status';
   import { getDropdown } from '../../lib/ui/dropdown';
   import { toast } from '../../lib/toast';
   import { supabase } from '../../lib/supabase';
-  import { t, money, type Key } from '../../i18n';
-  import { requireAdmin, $, mk, cell, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
+  import { t, type Key } from '../../i18n';
+  import { requireAdmin, $, mk, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
   import { personRow } from '../../lib/ui/list-row';
   import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
   import { styleName } from '../../lib/wines';
+  import { table, type Column } from '../../lib/ui/table';
+  import { wineThumb } from '../../lib/ui/thumb';
 
   const m = location.pathname.match(/^\/superadmin\/tenants\/([0-9a-f-]{36})\/(?:([a-z]+)\/?)?$/);
   const id = m?.[1] ?? '';
@@ -124,10 +105,17 @@ import '../../styles/admin.css';
     markTenantSection(s.id);
     $('none').hidden = true;
     if (!loaded.has(s.id)) { loaded.add(s.id); await LOADERS[s.id](); }
-    else $('none').hidden = $(s.id).children.length > 0;
+    else $('none').hidden = (counts.get(s.id) ?? 0) > 0;
   }
 
-  const none = (list: HTMLElement) => { $('none').hidden = list.children.length > 0; };
+  // How many rows each part has: none says so (the empty state under the heading)
+  const counts = new Map<string, number>();
+  const none = (section: string, n: number) => { counts.set(section, n); $('none').hidden = n > 0; };
+  /** A part's rows as the one table (24) */
+  const fillTable = <R,>(section: string, rows: R[], columns: Column<R>[]) => {
+    $(section).replaceChildren(table<R>({ rows, columns, caption: $('sec-title').textContent ?? '' }).el);
+    none(section, rows.length);
+  };
 
   const LOADERS: Record<string, () => Promise<void>> = {
     async hosts() {
@@ -137,61 +125,65 @@ import '../../styles/admin.css';
         name: r.name || r.email, meta: [r.name ? r.email : '', r.created_at ? date.format(new Date(r.created_at)) : ''],
         chips: [r.owner ? { text: t('account.owner'), tone: 'strong' } : { text: t('account.host') }],
       })));
-      none($('hosts'));
+      none('hosts', rows.length);
     },
     async tastings() {
       const { data } = await supabase.rpc('admin_tenant_tastings', { tn: id });
       type R = { slug: string; title: string; starts_at: string | null; created_by: string | null; cohosts: number; invited: number; coming: number; wines: number; orders: number; order_amount: number };
-      $('tastings').replaceChildren(...((data ?? []) as R[]).map((r) => {
-        const tr = mk('tr');
-        const title = mk('td');
-        const a = mk('a', '', r.title);
-        a.href = `/t/${r.slug}/admin/`;
-        title.append(a);
-        tr.append(title, cell(r.starts_at ? date.format(new Date(r.starts_at)) : '—'), cell(r.created_by ?? '—'),
-          cell(String(r.cohosts), 'num'), cell(`${r.invited} (${r.coming})`, 'num'), cell(String(r.wines), 'num'),
-          cell(Number(r.orders) ? `${r.orders} · ${money(Number(r.order_amount))}` : '0', 'num'));
-        return tr;
-      }));
-      none($('tastings'));
+      fillTable<R>('tastings', (data ?? []) as R[], [
+        { key: 'title', label: t('admin.title'), sort: (r) => r.title, cell: (r) => { const a = mk('a', '', r.title); a.href = `/t/${r.slug}/admin/`; return a; } },
+        { key: 'when', label: t('super.when'), nowrap: true, sort: (r) => r.starts_at ?? '', desc: true, cell: (r) => (r.starts_at ? date.format(new Date(r.starts_at)) : '—') },
+        { key: 'created_by', label: t('super.createdBy'), cell: (r) => r.created_by ?? '—' },
+        { key: 'cohosts', label: t('super.coHosts'), num: true, sort: (r) => Number(r.cohosts), desc: true },
+        { key: 'invited', label: t('super.invited'), num: true, sort: (r) => Number(r.invited), desc: true, cell: (r) => `${r.invited} (${r.coming})` },
+        { key: 'wines', label: t('adminNav.wines'), num: true, sort: (r) => Number(r.wines), desc: true },
+        { key: 'orders', label: t('admin.orders'), num: true, sort: (r) => Number(r.order_amount), desc: true, cell: (r) => (Number(r.orders) ? `${r.orders} · ${formatKr(r.order_amount)}` : '0') },
+      ]);
     },
     async guests() {
       const { data } = await supabase.rpc('admin_tenant_guests', { tn: id });
       type R = { name: string; email: string | null; created_at: string; invitations: number; coming: number; orders: number };
-      $('guests').replaceChildren(...((data ?? []) as R[]).map((r) => {
-        const tr = mk('tr');
-        tr.append(cell(r.name), cell(r.email ?? '—'), cell(String(r.invitations), 'num'), cell(String(r.coming), 'num'),
-          cell(String(r.orders), 'num'), cell(date.format(new Date(r.created_at))));
-        return tr;
-      }));
-      none($('guests'));
+      fillTable<R>('guests', (data ?? []) as R[], [
+        { key: 'name', label: t('admin.name'), sort: (r) => r.name },
+        { key: 'email', label: t('common.email'), sort: (r) => r.email ?? '', cell: (r) => r.email ?? '—' },
+        { key: 'invitations', label: t('super.invitations'), num: true, sort: (r) => Number(r.invitations), desc: true },
+        { key: 'coming', label: t('admin.fYes'), num: true, sort: (r) => Number(r.coming), desc: true },
+        { key: 'orders', label: t('admin.orders'), num: true, sort: (r) => Number(r.orders), desc: true },
+        { key: 'created_at', label: t('super.created'), nowrap: true, sort: (r) => r.created_at, desc: true, cell: (r) => date.format(new Date(r.created_at)) },
+      ]);
     },
     async wines() {
       const { data } = await supabase.rpc('admin_tenant_wines', { tn: id });
       type R = { name: string; producer: string | null; vintage: string | null; style: string | null; region: string | null; image_url: string | null; retail_price_dkk: number | null; tastings: number; ratings: number };
-      $('wines').replaceChildren(...((data ?? []) as R[]).map((r) => {
-        const tr = mk('tr');
-        const pic = mk('td');
-        if (r.image_url) { const img = mk('img', 'wine-mini'); img.src = r.image_url; img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; pic.append(img); }
-        const name = [r.name, r.vintage].filter(Boolean).join(' ');
-        tr.append(pic, cell(r.style ? `${name} · ${styleName(r.style)}` : name), cell(r.producer ?? '—'), cell(r.region ?? '—'),
-          cell(r.retail_price_dkk != null ? money(Number(r.retail_price_dkk)) : '—', 'num'), cell(String(r.tastings), 'num'), cell(String(r.ratings), 'num'));
-        return tr;
-      }));
-      none($('wines'));
+      const name = (r: R) => [r.name, r.vintage].filter(Boolean).join(' ');
+      fillTable<R>('wines', (data ?? []) as R[], [
+        // The wine with its picture (the one thumbnail, 20, small) and its type under the name
+        { key: 'name', label: t('admin.name'), sort: (r) => name(r), cell: (r) => {
+          const box = mk('span', 'cell-wine');
+          const text = mk('span');
+          text.append(name(r));
+          if (r.style) text.append(mk('p', 'lmeta', styleName(r.style)));
+          box.append(wineThumb(r, { size: 'small' }), text);
+          return box;
+        } },
+        { key: 'producer', label: t('admin.producer'), sort: (r) => r.producer ?? '', cell: (r) => r.producer ?? '—' },
+        { key: 'region', label: t('origin.region'), sort: (r) => r.region ?? '', cell: (r) => r.region ?? '—' },
+        { key: 'retail', label: t('admin.retail'), num: true, sort: (r) => Number(r.retail_price_dkk ?? -1), desc: true, cell: (r) => (r.retail_price_dkk != null ? formatKr(r.retail_price_dkk) : '—') },
+        { key: 'tastings', label: t('super.used'), num: true, sort: (r) => Number(r.tastings), desc: true },
+        { key: 'ratings', label: t('super.ratings'), num: true, sort: (r) => Number(r.ratings), desc: true },
+      ]);
     },
     async payments() {
       const { data } = await supabase.rpc('admin_tenant_payments', { tn: id });
       type R = { kind: string; at: string; tasting: string; guest: string; bottles: number; amount: number; paid: boolean };
-      $('payments').replaceChildren(...((data ?? []) as R[]).map((r) => {
-        const tr = mk('tr');
-        const what = r.kind === 'order' ? `${t('super.order')} · ${r.bottles} fl.` : t('super.fee');
-        const paid = mk('td');
-        paid.append(chip(r.paid ? t('super.paid') : t('super.unpaid'), r.paid ? 'ok' : 'err'));
-        tr.append(cell(date.format(new Date(r.at))), cell(what), cell(r.tasting), cell(r.guest), cell(money(Number(r.amount)), 'num'), paid);
-        return tr;
-      }));
-      none($('payments'));
+      fillTable<R>('payments', (data ?? []) as R[], [
+        { key: 'at', label: t('super.when'), nowrap: true, sort: (r) => r.at, desc: true, cell: (r) => date.format(new Date(r.at)) },
+        { key: 'kind', label: t('super.kind'), cell: (r) => (r.kind === 'order' ? `${t('super.order')} · ${r.bottles} fl.` : t('super.fee')) },
+        { key: 'tasting', label: t('page.tasting'), sort: (r) => r.tasting },
+        { key: 'guest', label: t('admin.name'), sort: (r) => r.guest },
+        { key: 'amount', label: t('super.amount'), num: true, sort: (r) => Number(r.amount), desc: true, cell: (r) => formatKr(r.amount) },
+        { key: 'paid', label: t('super.paid'), sort: (r) => Number(r.paid), cell: (r) => chip(r.paid ? t('super.paid') : t('super.unpaid'), r.paid ? 'ok' : 'err') },
+      ]);
     },
     async log() {
       const { data } = await supabase.rpc('admin_tenant_events', { tn: id, lim: 500 });
@@ -201,16 +193,12 @@ import '../../styles/admin.css';
   };
 
   function renderLog() {
-    const rows = events.filter((e) => !logKind || eventGroup(e.kind) === logKind);
-    $('log').replaceChildren(...rows.map((e) => {
-      const tr = mk('tr');
-      const g = eventGroup(e.kind);
-      const tag = mk('td');
-      tag.append(chip(t(({ host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' } as Record<string, Key>)[g] ?? 'super.log'), GROUP_TONE[g] ?? 'neutral'));
-      tr.append(cell(time.format(new Date(e.at))), tag, cell(eventText(e.kind, e.detail)), cell(e.actor ?? ''));
-      return tr;
-    }));
-    none($('log'));
+    fillTable<Ev>('log', events.filter((e) => !logKind || eventGroup(e.kind) === logKind), [
+      { key: 'at', label: t('super.logWhen'), nowrap: true, cell: (e) => time.format(new Date(e.at)) },
+      { key: 'kind', label: t('super.kind'), cell: (e) => { const g = eventGroup(e.kind); return chip(t(({ host: 'super.logFilterHost', guest: 'super.logFilterGuest', login: 'super.logFilterLogin', admin: 'super.logFilterAdmin' } as Record<string, Key>)[g] ?? 'super.log'), GROUP_TONE[g] ?? 'neutral'); } },
+      { key: 'what', label: t('super.logWhat'), cell: (e) => eventText(e.kind, e.detail) },
+      { key: 'actor', label: t('super.logWho'), cell: (e) => e.actor ?? '' },
+    ]);
   }
   // The kinds of entries: the one tab bar (arrow keys move between them)
   tabs($('log-filters'), { onChange: (id) => { logKind = id === 'all' ? '' : id; renderLog(); } });

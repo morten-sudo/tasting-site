@@ -18,13 +18,13 @@ import ChatBox from '../../components/ChatBox.astro';
 </Base>
 
 <script>
+  import { $ } from '../../lib/ui/dom';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode } from '../../lib/guest';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady } from '../../i18n';
 
   await i18nReady;
-  const $ = (id: string) => document.getElementById(id)!;
   const code = await resolveGuestCode();
   $('loading').hidden = true;
   if (!code) {

@@ -195,7 +195,7 @@ export const HELP: HelpSection[] = [
     id: 'orders',
     title: { da: 'Bestillinger og betaling', en: 'Orders and payment' },
     body: {
-      da: `<p>Når <a href="t:settings/#controls">Bestilling åben</a> er slået til, kan gæsterne lægge de vine i kurven, der kan bestilles, og sende bestillingen. Mængdepriser gælder automatisk.</p>
+      da: `<p>Når <a href="t:settings/#controls">Bestilling åben</a> er slået til, kan gæsterne lægge de vine i kurven, der kan bestilles, og sende bestillingen. På vinens side vælger gæsten antal flasker med − og + og trykker <i>Læg i kurv</i>; en bjælke nederst viser, hvor mange flasker der er i kurven, og hvad de koster, med vej til kurven. Mængdepriser gælder automatisk. Alle beløb skrives på samme måde på alle sprog, fx 1.393,90 kr.</p>
 <h4 id="bulk">Mængderabat – hver gæst eller alle samlet</h4>
 <p>Har en vin en mængdepris (fx "fra 6 flasker 359,95 kr."), vælger du under <a href="t:orders/#bulk-mode">Bestillinger → Bestille vin</a>, hvem der tæller med – valget vises kun, når en vin i smagningen har mængdepris. Du skal vælge, før du kan åbne for bestillinger:</p>
 <ul>
@@ -205,7 +205,7 @@ export const HELP: HelpSection[] = [
 <p>Når grænsen er nået, gælder den billige pris for alle flasker – også dem ud over 6. Betalte bestillinger beholder deres pris.</p>
 <p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger – én række pr. bestilling med <i>Betalt</i> eller <i>Ikke betalt</i>. Fluebenet i rækken markerer den betalt (pilen tilbage gør den ikke betalt igen), og du kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
 <p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne får så en knap, der åbner MobilePay med beløb og besked udfyldt – både til bestillinger og deltagergebyr.</p>`,
-      en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. Quantity prices apply automatically.</p>
+      en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. On a wine's page the guest chooses the number of bottles with − and + and presses <i>Add to cart</i>; a bar at the bottom shows how many bottles are in the cart and what they cost, with the way to the cart. Quantity prices apply automatically. Every amount is written the same way in all languages, e.g. 1.393,90 kr.</p>
 <h4 id="bulk">Quantity prices – each guest or everyone together</h4>
 <p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:orders/#bulk-mode">Orders → Order wine</a> who counts – the choice only shows when a wine in the tasting has a quantity price. You must choose before you can open ordering:</p>
 <ul>
@@ -238,6 +238,7 @@ export const HELP: HelpSection[] = [
       da: `<ul>
 <li><b><a href="g:">Invitationen</a></b> – om aftenen, tid og sted, "Tilføj til kalender", svar ja/nej med kost og note, og et kort over hvor vinene kommer fra.</li>
 <li><b>Vinene</b> – én vin ad gangen, med karakter og noter; kurv og bestilling når det er åbent.</li>
+<li><b>Quizzen</b> – ét spørgsmål ad gangen med en bjælke, der viser hvor langt gæsten er ("Spørgsmål 4 af 12"); når quizzen er afsluttet, ser gæsten hvert spørgsmål med det rigtige svar og sit eget.</li>
 <li><b>Quiz, stilling og chat</b> under aftenen.</li>
 <li><b>Min vinbog</b> – de vine gæsten har smagt, egne karakterer og køb på tværs af smagninger (når gæsten logger ind med sin e-mail).</li>
 </ul>
@@ -245,6 +246,7 @@ export const HELP: HelpSection[] = [
       en: `<ul>
 <li><b><a href="g:">The invitation</a></b> – about the evening, time and place, "Add to calendar", reply yes/no with diet and note, and a map of where the wines come from.</li>
 <li><b>The wines</b> – one wine at a time, with rating and notes; cart and ordering when it is open.</li>
+<li><b>The quiz</b> – one question at a time with a bar showing how far the guest is ("Question 4 of 12"); when the quiz is finished, the guest sees each question with the right answer and their own.</li>
 <li><b>Quiz, standings and chat</b> during the evening.</li>
 <li><b>My wine book</b> – the wines the guest has tasted, their own ratings and purchases across tastings (when the guest signs in with their email).</li>
 </ul>

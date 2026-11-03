@@ -2,6 +2,8 @@
 // or Enter chooses one, ← → Home End move between them (roving tabindex), onChange gets the chosen id. A bar of links
 // (switching pages) gets the same arrow keys; selectTab() marks the current one (also after switching without reloading).
 
+import { badge } from './badge';
+
 export interface TabsOptions { onChange?: (id: string) => void }
 
 const items = (bar: HTMLElement) => [...bar.querySelectorAll<HTMLElement>(':scope > [data-tab]')].filter((b) => !b.hidden);
@@ -41,10 +43,11 @@ export function tabButton(id: string, label: string, count?: number | string): H
 
 /** The number after a tab's name ("Coming 14") */
 export function setTabCount(tab: HTMLElement, count: number | string | null) {
-  let n = tab.querySelector<HTMLElement>('.n');
+  let n = tab.querySelector<HTMLElement>('.badge');
   if (count == null) { n?.remove(); return; }
-  if (!n) { n = document.createElement('span'); n.className = 'n'; tab.append(n); }
+  if (!n) { n = badge(null, 'neutral'); tab.append(n); }
   n.textContent = String(count);
+  n.hidden = false;
 }
 
 const handlers = new WeakMap<HTMLElement, ((id: string) => void)[]>();

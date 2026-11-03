@@ -12,6 +12,9 @@ import Base from '../../layouts/Base.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import Loading from '../../components/ui/Loading.astro';
+import Actions from '../../components/ui/Actions.astro';
+import Facts from '../../components/ui/Facts.astro';
+import Progress from '../../components/ui/Progress.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
@@ -47,30 +50,25 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <!-- Tasting details -->
       <section class="block" data-section="overview">
         <!-- Get started: wines, guests, payment – each with the button that does it. Gone when wines and guests are in. -->
-        <div id="setup-card" class="card setup-card start-card" hidden>
-          <div class="start-head">
-            <p class="setup-title" data-i18n="getStarted.title">Get started</p>
-            <span class="start-head-right">
-              <span id="start-progress" class="start-progress"></span>
-              <button id="start-hide" class="text-btn" type="button" data-i18n="getStarted.hide">Hide</button>
-            </span>
-          </div>
-          <div class="start-bar" aria-hidden="true"><i id="start-bar"></i></div>
+        <div id="setup-card" class="card setup-card" hidden>
+          <Progress id="start-prog" label="getStarted.title" textId="start-progress">
+            <button slot="head" id="start-hide" class="text-btn small" type="button" data-i18n="getStarted.hide">Hide</button>
+          </Progress>
           <!-- One row per step: ✓ when done, its number when not; only the next step has a (red) button -->
-          <ol class="start-steps">
+          <ol class="steps">
             <li id="start-wines">
-              <span class="start-ic" aria-hidden="true">1</span>
-              <span class="start-label"><b data-i18n="getStarted.winesTitle">The wines</b><small id="start-wines-info"></small></span>
+              <span class="s-ic" aria-hidden="true">1</span>
+              <span><b data-i18n="getStarted.winesTitle">The wines</b><small id="start-wines-info"></small></span>
               <button id="start-wines-btn" class="text-btn" type="button" data-go="wines" data-open="tw-add-toggle"></button>
             </li>
             <li id="start-guests">
-              <span class="start-ic" aria-hidden="true">2</span>
-              <span class="start-label"><b data-i18n="getStarted.guests">Invite the guests</b><small id="start-guests-info"></small></span>
+              <span class="s-ic" aria-hidden="true">2</span>
+              <span><b data-i18n="getStarted.guests">Invite the guests</b><small id="start-guests-info"></small></span>
               <button id="start-guests-btn" class="text-btn" type="button" data-go="guests" data-open="g-invite-toggle"></button>
             </li>
             <li id="start-setup">
-              <span class="start-ic" aria-hidden="true">3</span>
-              <span class="start-label"><b data-i18n="getStarted.setup">Payment and ordering</b><small id="start-setup-info"></small></span>
+              <span class="s-ic" aria-hidden="true">3</span>
+              <span><b data-i18n="getStarted.setup">Payment and ordering</b><small id="start-setup-info"></small></span>
               <button id="start-setup-btn" class="text-btn" type="button" data-go="settings" data-i18n="getStarted.settings">Settings</button>
             </li>
           </ol>
@@ -81,12 +79,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </Fragment>
         </PageHeader>
         <!-- Read-only; changed in the side panel ("Edit") -->
-        <dl id="details-view" class="details-view">
-          <dt data-i18n="admin.title">Title</dt><dd id="v-title"></dd>
-          <dt data-i18n="admin.when">Date and time</dt><dd id="v-when"></dd>
-          <dt data-i18n="admin.place">Place</dt><dd id="v-place"></dd>
-          <dt data-i18n="admin.intro">Introduction</dt><dd id="v-intro" class="v-intro"></dd>
-        </dl>
+        <Facts id="details-view" class="ov-details" items={[
+          { label: 'admin.title', id: 'v-title' }, { label: 'admin.when', id: 'v-when' },
+          { label: 'admin.place', id: 'v-place' }, { label: 'admin.intro', id: 'v-intro', class: 'pre' }]} />
 
         <!-- Who hosts the tasting -->
         <PageHeader size="section" title="hosts.title" class="ov-hosts-head">
@@ -328,13 +323,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div id="orders-by-guest"></div>
         <div id="orders-total">
         <h3 data-i18n="admin.totalPurchase">Total purchase</h3>
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr><th data-i18n="page.wine">Wine</th><th class="num" data-i18n="admin.bottles">Bottles</th><th class="num" data-i18n="pay.amount">Amount</th></tr></thead>
-            <tbody id="orders-by-wine"></tbody>
-          </table>
-        </div>
-        <button id="csv" class="btn small secondary" type="button" data-i18n="admin.csv">Download orders as CSV</button>
+        <div id="orders-by-wine"></div>
+        <Actions><button id="csv" class="btn small secondary" type="button" data-i18n="admin.csv">Download orders as CSV</button></Actions>
         </div>
       </section>
 
@@ -405,6 +395,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 </Base>
 
 <script>
+  import { formatKr } from '../../lib/ui/kr';
+  import { table } from '../../lib/ui/table';
+  import { setFact } from '../../lib/ui/facts';
+  import { setProgress, setStep } from '../../lib/ui/progress';
+  import { $, mk } from '../../lib/ui/dom';
   import { setLoading } from '../../lib/ui/button';
   import { selectTab } from '../../lib/ui/tabs';
   import { setStatus } from '../../lib/ui/status-line';
@@ -423,7 +418,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
-  import { requireHost, mk as mkEl, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
+  import { requireHost, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
   import { personRow, listRow, missing, type RowChip } from '../../lib/ui/list-row';
   import { avatar } from '../../lib/ui/thumb';
   import { addRow, hitButton } from '../../lib/ui/add-row';
@@ -440,12 +435,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { confirmModal } from '../../lib/confirm';
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
-  import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
+  import { i18nReady, t, lang, locale, formatWhen, type Key } from '../../i18n';
 
   await i18nReady;
 
-  const $ = (id: string) => document.getElementById(id)!;
-  const kr = { format: money };
   const STATUS: Record<string, string> = { yes: t('admin.fYes'), waitlist: t('status.waitlist'), no: t('status.no'), invited: t('status.invited') };
 
   type P = { id: string; name: string; email: string | null; status: string; diet: string | null; note: string | null; invite_code: string; tasting_paid: boolean; waitlisted_at?: string | null; invite_mailed_at?: string | null };
@@ -459,17 +452,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   let wines: W[] = [];
   let orders: O[] = [];
 
-  function cell(text: string, cls?: string) {
-    const td = document.createElement('td');
-    td.textContent = text;
-    if (cls) td.className = cls;
-    return td;
-  }
-
   // ---------- Controls (stored on the tasting) ----------
   type T = { id: string; slug: string; title: string; quiz_count?: number } & Record<string, unknown>;
   let tasting: T | null = null;
-  let quizTotal = 13;
+  let quizTotal = 0;
   let feeTotal = 0;
   let feeAmount = 0;
 
@@ -571,11 +557,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   });
   function renderDetails() {
     if (!tasting) return;
-    const dash = '—';
-    $('v-title').textContent = tasting.title;
-    $('v-when').textContent = tasting.starts_at ? formatWhen(tasting.starts_at as string, { year: true, end: tasting.ends_at as string | null }) : dash;
-    $('v-place').textContent = (tasting.place as string) || dash;
-    $('v-intro').textContent = (tasting.intro as string) || dash;
+    // An empty value is left out (the facts list, 22); "Edit" fills it in
+    setFact($('v-title'), tasting.title);
+    setFact($('v-when'), tasting.starts_at ? formatWhen(tasting.starts_at as string, { year: true, end: tasting.ends_at as string | null }) : null);
+    setFact($('v-place'), tasting.place as string | null);
+    setFact($('v-intro'), tasting.intro as string | null);
   }
   const detailsPanel = sheetPanel($('details-panel') as HTMLDialogElement, { dirty: 'form' });
   $('details-edit').addEventListener('click', () => {
@@ -744,12 +730,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const coming = participants.filter((p) => p.status === 'yes');
     const total = toNumber(($('fee-total') as HTMLInputElement).value) ?? 0;
     $('fee-suggest').textContent = total && coming.length
-      ? t('admin.feeSuggest', { n: coming.length, price: kr.format(Math.ceil(total / coming.length)) })
+      ? t('admin.feeSuggest', { n: coming.length, price: formatKr(Math.ceil(total / coming.length)) })
       : t('admin.feeComing', { n: coming.length });
     const paid = coming.filter((p) => p.tasting_paid);
-    $('fee-view').textContent = feeAmount ? t('set.feeView', { price: kr.format(feeAmount) }) : t('set.noFee');
+    $('fee-view').textContent = feeAmount ? t('set.feeView', { price: formatKr(feeAmount) }) : t('set.noFee');
     $('fee-summary').textContent = feeAmount
-      ? [t('admin.feePaidSummary', { paid: paid.length, n: coming.length, got: kr.format(paid.length * feeAmount), all: kr.format(coming.length * feeAmount) }),
+      ? [t('admin.feePaidSummary', { paid: paid.length, n: coming.length, got: formatKr(paid.length * feeAmount), all: formatKr(coming.length * feeAmount) }),
          tasting?.tasting_fee_open ? t('set.feeShown') : t('set.feeNotShown')].join(' · ')
       : t('set.feeNone');
   }
@@ -802,13 +788,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('p-panel-title').textContent = p.name;
     $('p-panel-body').replaceChildren(...editPanel(p));
     guestPanel.open();
-  }
-
-  function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
   }
 
   function matches(p: P) {
@@ -932,7 +911,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     out.push(cards.el);
 
     // The fee: paid or not (only for guests who come, when there is a fee) – saved with the panel
-    const paid = switchRow({ title: t('guestRow.feePaid'), hint: t('guestRow.feePaidHint', { amount: money(feeAmount) }), checked: p.tasting_paid });
+    const paid = switchRow({ title: t('guestRow.feePaid'), hint: t('guestRow.feePaidHint', { amount: formatKr(feeAmount) }), checked: p.tasting_paid });
     paid.el.hidden = !(feeAmount > 0 && status === 'yes');
     out.push(paid.el);
 
@@ -1053,7 +1032,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const p = document.getElementById('orders-summary');
     if (!p) return;
     const unpaid = orders.filter((o) => !o.paid);
-    p.textContent = t('admin.ordersSummary', { n: orders.length, unpaid: unpaid.length, amount: kr.format(unpaid.reduce((sum, o) => sum + orderTotal(o), 0)) });
+    p.textContent = t('admin.ordersSummary', { n: orders.length, unpaid: unpaid.length, amount: formatKr(unpaid.reduce((sum, o) => sum + orderTotal(o), 0)) });
   }
 
   function renderOrders() {
@@ -1079,11 +1058,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
     // One row per order (the one list row): the guest, number and time, the lines, the amount and whether it is paid.
     // Marking it paid is the row's action (an icon), saved straight away with a toast.
-    const list = mkEl('ul', 'list order-list');
+    const list = mk('ul', 'list order-list');
     for (const o of sorted) {
-      const lines = mkEl('ul', 'order-lines');
+      const lines = mk('ul', 'order-lines');
       for (const l of o.order_lines) {
-        lines.append(mkEl('li', '', t('admin.orderLine', { qty: l.quantity, wine: wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'), price: kr.format(Number(l.unit_price)) })));
+        lines.append(mk('li', '', t('admin.orderLine', { qty: l.quantity, wine: wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'), price: formatKr(Number(l.unit_price)) })));
       }
       const name = pById.get(o.participant_id)?.name ?? t('admin.unknownGuest');
       const mark = o.paid
@@ -1105,30 +1084,31 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         id: o.id, pic: avatar(name), title: name,
         meta: [[t('pay.orderComment', { id: o.id }), when.format(new Date(o.created_at))]],
         body: [lines], chips: [statusChipFor(o.paid ? 'order.paid' : 'order.notPaid')],
-        aside: mkEl('b', '', kr.format(orderTotal(o))), actions: [mark],
+        aside: mk('b', '', formatKr(orderTotal(o))), actions: [mark],
       }));
     }
     if (sorted.length) byGuest.append(list);
 
-    const tbody = $('orders-by-wine');
-    tbody.replaceChildren();
-    let bottles = 0, amount = 0;
+    // The total per wine: the one table (24), with the total at the bottom
+    type Sum = { name: string; n: number; sum: number };
+    const sums: Sum[] = [];
     for (const w of [...wines].sort((a, b) => a.sort_order - b.sort_order)) {
       let n = 0, sum = 0;
       for (const o of orders) for (const l of o.order_lines) {
         if (l.wine_id === w.id) { n += l.quantity; sum += l.quantity * Number(l.unit_price); }
       }
-      if (!n) continue;
-      bottles += n;
-      amount += sum;
-      const tr = document.createElement('tr');
-      tr.append(cell(w.name), cell(String(n), 'num'), cell(kr.format(sum), 'num'));
-      tbody.append(tr);
+      if (n) sums.push({ name: w.name, n, sum });
     }
-    const tr = document.createElement('tr');
-    tr.className = 'total';
-    tr.append(cell(t('cart.total')), cell(String(bottles), 'num'), cell(kr.format(amount), 'num'));
-    tbody.append(tr);
+    $('orders-by-wine').replaceChildren(table<Sum>({
+      caption: t('admin.totalPurchase'),
+      columns: [
+        { key: 'name', label: t('page.wine'), sort: (r) => r.name },
+        { key: 'n', label: t('admin.bottles'), num: true, sort: (r) => r.n, desc: true },
+        { key: 'sum', label: t('pay.amount'), num: true, cell: (r) => formatKr(r.sum), sort: (r) => r.sum, desc: true },
+      ],
+      rows: sums,
+      foot: (rs) => [t('cart.total'), String(rs.reduce((a, r) => a + r.n, 0)), formatKr(rs.reduce((a, r) => a + r.sum, 0))],
+    }).el);
   }
 
   $('csv').addEventListener('click', () => {
@@ -1312,13 +1292,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const order = ['wines', 'guests', 'setup'] as const;
     const next = order.find((k) => !done[k]) ?? null;
     const n = order.filter((k) => done[k]).length;
-    $('start-progress').textContent = t('getStarted.progress', { n, total: order.length });
-    $('start-bar').style.width = `${(n / order.length) * 100}%`;
+    setProgress($('start-prog'), { value: n, max: order.length, text: t('getStarted.progress', { n, total: order.length }) });
     order.forEach((k, i) => {
-      const li = $(`start-${k}`);
-      li.classList.toggle('done', done[k]);
-      li.classList.toggle('now', k === next);
-      li.querySelector('.start-ic')!.textContent = done[k] ? '✓' : String(i + 1);
+      setStep($(`start-${k}`), i + 1, done[k] ? 'done' : k === next ? 'now' : 'todo');
       $(`start-${k}-btn`).className = k === next ? 'btn small' : 'text-btn';
     });
     $('start-wines-info').textContent = done.wines ? t('tastingsAdmin.wines', { n: wines.length }) : t('getStarted.winesHint');
@@ -1373,13 +1349,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     participants = (p.data ?? []) as P[];
     orders = (o.data ?? []) as O[];
     library = (g.data ?? []) as G[];
-    quizTotal = q.count || 1;
+    quizTotal = q.count ?? 0;
     tastingWines = initTastingWines(tasting.id, host!.id, host!.tenant_id, (list) => { wines = list; renderOrders(); gateInvite(); renderSetup(); renderBulk(); });
     $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
     // The wines and the quiz at the same time, not one after the other
     await Promise.all([
       tastingWines.load(),
-      initQuizAdmin(tasting.id, (list) => { quizTotal = list.length || 1; $('board-block').hidden = list.length === 0; },
+      initQuizAdmin(tasting.id, (list) => { quizTotal = list.length; $('board-block').hidden = list.length === 0; },
         () => (tasting?.language as string | null) ?? lang()).load(),
     ]);
     // Settings first: the guest rows show whether the fee is paid

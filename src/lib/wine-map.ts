@@ -3,6 +3,7 @@
 import { loadMap, mapIdFor, drawMap, mapPoint } from './region-map';
 import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
 import { loadAppellations, matchAppellation } from './origin';
+import { t } from '../i18n';
 
 export type WineOrigin = { appellation?: string | null; appellation_id?: string | null; region?: string | null; country?: string | null;
   producer?: string | null; producer_lat?: number | null; producer_lon?: number | null };
@@ -10,7 +11,7 @@ export type WineOrigin = { appellation?: string | null; appellation_id?: string 
 export type MapHow = 'area' | 'regionWide' | 'region' | Place['how'];
 
 /** The map as an SVG string and how the wine was placed, or null when not even the country is known. */
-export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow } | null> {
+export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow; sources: string } | null> {
   // A typed appellation that is on the list counts as chosen (the database links it when saving)
   let appellationId = w.appellation_id ?? null;
   if (!appellationId && w.appellation) appellationId = matchAppellation(await loadAppellations(), w.appellation)?.id ?? null;
@@ -23,7 +24,7 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
       ? [{ lon: w.producer_lon, lat: w.producer_lat, title: w.producer ?? '' }] : [];
     const svg = drawMap(map, { mode: 'mini', counts: inMap ? new Map([[appellationId!, 1]]) : new Map(), wholeRegion: !inMap, pins: pin });
     // An appellation on the list that is not an area covers the whole region (e.g. Porto)
-    return { svg, how: pin.length ? 'producer' : inMap ? 'area' : appellationId ? 'regionWide' : 'region' };
+    return { svg, how: pin.length ? 'producer' : inMap ? 'area' : appellationId ? 'regionWide' : 'region', sources: map.sources };
   }
   const place = await placeOf({ ...w, appellation_id: appellationId });
   if (!place) return null;
@@ -33,18 +34,31 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
   const small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14;
   const margin = Math.max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35;
   const detail = small ? await loadDetail({ lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin }) : null;
-  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini', detail), how: place.how };
+  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'mini', detail), how: place.how, sources: OVERVIEW_SOURCES };
 }
 
-/** A producer's pin may come from OpenStreetMap's address search, which asks to be credited where it is shown:
- *  "© OpenStreetMap" just below the map, at the right (outside its frame). */
-export function showMapCredit(map: HTMLElement, how: MapHow | null | undefined) {
-  let p = map.nextElementSibling as HTMLElement | null;
+/** Where the overview maps come from */
+export const OVERVIEW_SOURCES = 'Natural Earth';
+
+/** The one credit line under a map (component 23): "Map: Natural Earth; DGT (CAOP)", and "© OpenStreetMap" when a
+ *  producer's pin came from its address search (it asks to be credited where it is shown). Just below the map, at the
+ *  right; `line` is a <p class="map-credit"> in the page, else the one after the map is used (made when missing). */
+export function setMapCredit(map: HTMLElement, sources: string | null, osm = false, line?: HTMLElement | null) {
+  let p = line ?? (map.nextElementSibling as HTMLElement | null);
   if (!p?.classList.contains('map-credit')) {
     p = document.createElement('p');
     p.className = 'map-credit';
-    p.innerHTML = '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
     map.after(p);
   }
-  p.hidden = how !== 'producer' || map.hidden;
+  p.replaceChildren();
+  if (sources) p.append(t('map.source', { sources }));
+  if (osm) {
+    const a = Object.assign(document.createElement('a'), { href: 'https://www.openstreetmap.org/copyright', target: '_blank', rel: 'noopener', textContent: 'OpenStreetMap' });
+    p.append(sources ? '; © ' : '© ', a);
+  }
+  p.hidden = map.hidden || (!sources && !osm);
 }
+
+/** The credit for a wine's own map (wineMap()) */
+export const showMapCredit = (map: HTMLElement, m: { how: MapHow; sources: string } | null | undefined) =>
+  setMapCredit(map, m?.sources ?? null, m?.how === 'producer');

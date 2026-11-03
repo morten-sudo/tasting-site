@@ -11,6 +11,7 @@ import { iconSvg } from './icons';
 import { tooltip } from './tooltip';
 import { avatar } from './thumb';
 import { t } from '../../i18n';
+import { mk } from './dom';
 
 export interface RowChip { text: string; tone?: ChipTone; dashed?: boolean; title?: string; href?: string }
 type Part = string | Node | null | undefined | false;
@@ -26,6 +27,8 @@ export interface ListRowOptions {
   no?: string | number;
   pic?: Node | null;
   title: string | Node;
+  /** A small line above the title (a wine's type: the style tag) */
+  kicker?: Node | null;
   /** Shown after the title in a quieter voice, e.g. "(you)" */
   titleNote?: string | null;
   /** The title is a link … */
@@ -47,12 +50,7 @@ export interface ListRowOptions {
   cls?: string;
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (text != null) e.textContent = text;
-  return e;
-}
+const el = mk;
 
 function metaLine(line: MetaLine): HTMLElement | null {
   const parts = (Array.isArray(line) ? line : [line]).filter((x): x is string | Node => x !== '' && x != null && x !== false);
@@ -110,6 +108,7 @@ export function listRow(o: ListRowOptions): HTMLLIElement {
   if (o.titleNote) title.append(el('span', 'you', ` (${o.titleNote})`));
   const chips = o.chips?.length ? el('div', 'chips') : null;
   chips?.append(...o.chips!.map(chipEl));
+  if (o.kicker) main.append(o.kicker);
   if (card) {
     const top = el('div', 'lc-top');
     top.append(title);
@@ -133,13 +132,6 @@ export function listRow(o: ListRowOptions): HTMLLIElement {
     box.append(a);
   }
   return li;
-}
-
-/** The row's price: "409,95 kr." with lines under it ("from 6 bottles 249,95 kr.") */
-export function rowPrice(main: string, lines: string[] = []): DocumentFragment {
-  const f = document.createDocumentFragment();
-  f.append(el('b', '', main), ...lines.map((x) => el('small', '', x)));
-  return f;
 }
 
 // ---------- People: guests, hosts – the same row with initials for a picture ----------

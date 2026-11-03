@@ -1,0 +1,20 @@
+---
+// Component 37 – the one fold-out (<details class="disc">): a line with the summary and a chevron that turns, the
+// content under it. For a message to the host, other ways to pay, more about a wine, the help topics, a menu's
+// past tastings and the login's other ways in. src/lib/ui/disclosure.ts builds the same markup in TypeScript.
+//   summary: i18n key · optional: "(optional)" after it · icon: a line icon before it · size: "topic" (the help page)
+import { en } from '../../i18n/en';
+import { ICONS, type IconName } from '../../lib/ui/icons';
+interface Props { summary: string; id?: string; summaryId?: string; open?: boolean; optional?: boolean; icon?: IconName; class?: string; hidden?: boolean; bodyClass?: string; [attr: string]: unknown }
+const { summary, id, summaryId, open, optional, icon, class: cls, hidden, bodyClass, ...rest } = Astro.props;
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+---
+<details id={id} class:list={['disc', cls]} open={open} hidden={hidden} {...rest}>
+  <summary id={summaryId}>
+    {icon && <svg class="i lead" viewBox="0 0 24 24" aria-hidden="true" set:html={ICONS[icon]} />}
+    <span data-i18n={summary}>{tr(summary)}</span>
+    {optional && <small data-i18n="dt.optional">{tr('dt.optional')}</small>}
+    <svg class="i chev" viewBox="0 0 24 24" aria-hidden="true" set:html={ICONS.chev} />
+  </summary>
+  <div class:list={['d-body', bodyClass]}><slot /></div>
+</details>

@@ -1,10 +1,12 @@
 // A guest's orders across all tastings: with an email sign-in from the database,
 // otherwise from the invite links stored on this device. Used by "My wine book".
+import { formatKr } from './ui/kr';
 import { supabase } from './supabase';
 import { getCodes, tastingUrl } from './guest';
 import { statusChip } from './ui/status';
 import { listRow } from './ui/list-row';
-import { t, money, locale } from '../i18n';
+import { t, locale } from '../i18n';
+import { mk } from './ui/dom';
 
 export type OrderLine = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
   wine_name: string; quantity: number; unit_price: number };
@@ -37,14 +39,13 @@ export function orderCards(lines: OrderLine[]): HTMLElement[] {
   return [...byOrder.values()].map((ls) => {
     const first = ls[0];
     const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
-    const ul = document.createElement('ul');
-    for (const l of ls) ul.append(Object.assign(document.createElement('li'), { textContent: `${l.quantity} × ${l.wine_name}` }));
-    const sum = Object.assign(document.createElement('b'), { textContent: `${t('cart.total')} ${money(total)}` });
+    const ul = mk('ul');
+    for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${l.wine_name}`));
     return listRow({
       variant: 'card', small: true, cardHref: tastingUrl(first.slug, 'cart/'),
       title: `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`,
       chips: [statusChip(first.paid ? 'order.paid' : 'order.unpaid')],
-      meta: [date.format(new Date(first.created_at))], body: [ul], foot: [sum],
+      meta: [date.format(new Date(first.created_at))], body: [ul], foot: [mk('span', '', t('cart.total')), mk('b', '', formatKr(total))],
     });
   });
 }

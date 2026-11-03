@@ -9,14 +9,8 @@ import { linkMe, takeCohostWelcome } from './link-me';
 export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null;
   tenant_id: string; tenant_owner: boolean };
 
-export const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
-
-export function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (text != null) e.textContent = text;
-  return e;
-}
+export { $, mk } from './ui/dom';
+import { $, mk } from './ui/dom';
 
 export { iconButton, closeButton, type IconName } from './icons';
 import { closeButton } from './ui/icon-button';

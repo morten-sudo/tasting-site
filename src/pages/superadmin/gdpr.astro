@@ -3,7 +3,6 @@ import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import Notice from '../../components/ui/Notice.astro';
-import EmptyState from '../../components/ui/EmptyState.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.superadmin">
@@ -26,13 +25,7 @@ import '../../styles/admin.css';
 
       <section class="block">
         <h2 data-i18n="super.actionsTitle">Superadmin actions</h2>
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr><th data-i18n="super.logWhen">When</th><th data-i18n="super.logWhat">What</th><th data-i18n="super.tenant">Account</th><th data-i18n="super.logWho">By</th></tr></thead>
-            <tbody id="actions"></tbody>
-          </table>
-        </div>
-        <EmptyState id="actions-none" icon="info" title="super.logNone" hidden />
+        <div id="actions"></div>
       </section>
 
     </SuperNav>
@@ -40,10 +33,10 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
-
+  import { table } from '../../lib/ui/table';
   import { supabase } from '../../lib/supabase';
   import { t } from '../../i18n';
-  import { requireAdmin, $, mk, cell, timeFmt } from '../../lib/super-common';
+  import { requireAdmin, $, mk, timeFmt } from '../../lib/super-common';
   import { eventText } from '../../lib/super-events';
   import { confirmModal } from '../../lib/ui/confirm';
   import { toast } from '../../lib/ui/toast';
@@ -52,17 +45,22 @@ import '../../styles/admin.css';
 
   if (await requireAdmin()) loadActions();
 
+  // The superadmin's own actions: the one table (24), newest first
   async function loadActions() {
     const { data } = await supabase.rpc('admin_actions', { lim: 100 });
     type A = { at: string; kind: string; actor: string | null; tenant: string | null; detail: Record<string, unknown> };
-    const rows = (data ?? []) as A[];
-    $('actions-none').hidden = rows.length > 0;
     const time = timeFmt();
-    $('actions').replaceChildren(...rows.map((r) => {
-      const tr = mk('tr');
-      tr.append(cell(time.format(new Date(r.at))), cell(eventText(r.kind, r.detail)), cell(r.tenant ?? '—'), cell(r.actor ?? ''));
-      return tr;
-    }));
+    $('actions').replaceChildren(table<A>({
+      caption: t('super.actionsTitle'),
+      rows: (data ?? []) as A[],
+      empty: { icon: 'info', title: t('super.logNone') },
+      columns: [
+        { key: 'at', label: t('super.logWhen'), nowrap: true, cell: (r) => time.format(new Date(r.at)) },
+        { key: 'what', label: t('super.logWhat'), cell: (r) => eventText(r.kind, r.detail) },
+        { key: 'tenant', label: t('super.tenant'), cell: (r) => r.tenant ?? '—' },
+        { key: 'actor', label: t('super.logWho'), cell: (r) => r.actor ?? '' },
+      ],
+    }).el);
   }
 
   // ---------- GDPR ----------
@@ -86,7 +84,7 @@ import '../../styles/admin.css';
     if (sum.library_entries) rows.push(t('super.gdprLibrary', { n: sum.library_entries }));
     if (sum.account) rows.push(t('super.gdprAccount'));
     if (!rows.length) { gdprMsg(t('super.gdprNothing')); return; }
-    $('gdpr-list').replaceChildren(...rows.map((r) => { const li = document.createElement('li'); li.textContent = r; return li; }));
+    $('gdpr-list').replaceChildren(...rows.map((r) => mk('li', '', r)));
     const del = $('gdpr-delete') as HTMLButtonElement;
     // Administrators and account owners cannot be deleted
     del.hidden = sum.is_admin || sum.tenant_owner;

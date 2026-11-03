@@ -2,8 +2,6 @@
 .admin-page { padding-top: 2.5rem; padding-bottom: 3rem; }
 .admin-page .login { display: grid; gap: 0.6rem; max-width: 26rem; }
 .admin-page .login .btn { margin-top: 0.4rem; justify-self: start; }
-.admin-page .pw-box summary { cursor: pointer; color: var(--amber); }
-.admin-page .pw-box .login { margin-top: 0.8rem; }
 .admin-page .block { margin-top: 2.25rem; }
 .admin-page :is(section, div) > h3:not(:first-child) { margin-top: 1.5rem; }
 
@@ -111,7 +109,6 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* Set-up status on a tasting's overview */
 .setup-card { margin: 0 0 1.75rem; max-width: 40rem; }
 .setup-card[hidden] { display: none; }
-.setup-title { margin: 0 0 0.4rem; font-weight: 600; }
 #new-toggle { display: inline-flex; align-items: center; gap: 0.3rem; }
 
 /* Admin overview */
@@ -146,8 +143,6 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .wf-map { display: flex; gap: 0.8rem; align-items: center; margin: 0.3rem 0 0.4rem; }
 .wf-map[hidden] { display: none; }
 .wf-map-col { flex: 0 0 11rem; min-width: 0; }
-.wf-map-svg { border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; line-height: 0; }
-.wf-map-svg svg { width: 100%; height: auto; display: block; }
 .wf-map .hint { margin: 0; }
 
 /* A tasting's admin: its name and the guest page, then its tabs */
@@ -157,22 +152,13 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* Superadmin */
 .super-shell .super-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 2rem; }
   .super-shell .stat { display: grid; gap: 0.1rem; padding: 0.9rem 1rem; }
-  .super-shell th[data-sort] { cursor: pointer; user-select: none; white-space: nowrap; }
-  .super-shell th[aria-sort='ascending']::after { content: ' ▲'; font-size: 0.7em; }
-  .super-shell th[aria-sort='descending']::after { content: ' ▼'; font-size: 0.7em; }
-  .super-shell .super-table td { vertical-align: top; white-space: nowrap; }
-  .super-shell .super-mail { font-size: 0.85rem; color: var(--muted); }
-  .super-shell .table-wrap { overflow-x: auto; }
   .super-shell .gdpr { margin-top: 3rem; max-width: 40rem; }
   .super-shell .gdpr .inline-form { display: flex; gap: 0.5rem; }
   .super-shell .gdpr-list { margin: 1rem 0; padding-left: 1.2rem; }
   .maps-block h3 { font-family: var(--body); font-size: 1rem; margin: 1.5rem 0 0.3rem; }
-.super-shell .row-link { color: inherit; text-decoration: none; }
-.super-shell .row-link:hover strong { color: var(--amber); }
 .super-shell .tenant-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 1.25rem; color: var(--muted); margin: 0.5rem 0 0; }
 .super-shell .tn-plan { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0; font-weight: 400; color: var(--muted); }
 .super-shell .tn-plan label { margin: 0; font-weight: 400; color: var(--muted); }
-.super-shell .wine-mini { width: 2rem; height: 2.6rem; object-fit: contain; background: #fff; border-radius: var(--radius); }
 
 /* "You host": the tastings the signed-in host hosts themselves */
 /* The badge sits in the top right corner; the title keeps clear of it */
@@ -182,15 +168,8 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* Plain rows with a thin line between – no boxes inside the card */
 
 /* A tasting's details, read-only (edited in the side panel) */
-.admin-page .details-view { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 0.55rem 1.25rem; margin: 0.5rem 0 1.25rem; max-width: 46rem; }
-.admin-page .details-view dt { color: var(--muted); font-size: 0.9rem; }
-.admin-page .details-view dd { margin: 0; }
-.admin-page .details-view .v-intro { white-space: pre-line; }
+.admin-page .ov-details { margin: 0.5rem 0 1.25rem; max-width: 46rem; }
 .admin-page .ov-hosts-head { margin-top: 1.75rem; }
-@media (max-width: 30rem) {
-  .admin-page .details-view { grid-template-columns: 1fr; gap: 0.1rem; }
-  .admin-page .details-view dd { margin-bottom: 0.6rem; }
-}
 
 /* Filling from a label or link: the fields that already hold something else, and the button that takes them */
 .admin-page .status .fill-diff { flex-basis: 100%; color: var(--paper); }
@@ -205,26 +184,18 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* One wine: /admin/wines/<id>/ */
 .admin-page .wd-head { display: flex; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.5rem; }
 .admin-page .wd-head > .ph { flex: 1 1 0; margin: 0; }
-.admin-page .wd-pic { flex: none; }
-.admin-page .wd-pic { width: 7.5rem; height: 11rem; display: block; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
-.admin-page .wd-pic img { display: block; width: 100%; height: 100%; padding: 0.4rem; box-sizing: border-box; object-fit: contain; }
+.admin-page .wd-pic { flex: none; display: flex; }
 .admin-page .wd-meta { margin: 0.35rem 0 0; color: var(--muted); }
 .admin-page .wd-overall { margin: 0.6rem 0 0; font-weight: 500; }
 .admin-page .wd-grid { display: grid; gap: 1.5rem; }
 @media (min-width: 56rem) { .admin-page .wd-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; } }
 .admin-page .wd-description { margin: 0 0 1.25rem; line-height: 1.6; }
 .admin-page .wd-block { margin-bottom: 1.5rem; }
-.admin-page .wd-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 0.45rem 1.25rem; margin: 0; padding: 0.9rem 1rem; }
-.admin-page .wd-facts dt { color: var(--muted); }
-.admin-page .wd-facts dd { margin: 0; overflow-wrap: anywhere; }
 .admin-page .wd-source a { color: var(--amber); }
 .admin-page .wd-tastings { padding: 0.4rem 1rem; }
+.admin-page .wd-tastings:empty { display: none; }
+.admin-page #wd-facts-strip > .facts { margin-bottom: 1.5rem; }
 .admin-page .wd-origin-text { margin: 0 0 0.75rem; }
-.admin-page .wd-map { padding: 0; overflow: hidden; }
-.admin-page .wd-map svg { display: block; width: 100%; height: auto; }
-@media (max-width: 40rem) {
-  .admin-page .wd-pic { width: 5.5rem; height: 8rem; }
-}
 
 /* The wine panel: its steps laid out like the form's grid */
 .admin-page .wine-form .wf-step { display: grid; gap: 0.4rem; min-width: 0; }
@@ -258,14 +229,11 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .help-toc { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 1rem 0 1.5rem; }
 .admin-page .help-toc a { color: var(--amber); font-size: 0.95rem; }
 .admin-page .help-list { display: grid; gap: 0.6rem; }
-.admin-page .help-topic { border: 1px solid var(--lodge-3); border-radius: var(--radius); background: #fff; }
-.admin-page .help-topic > summary { cursor: pointer; padding: 0.9rem 1.1rem; font-family: var(--display); font-size: 1.3rem; list-style-position: inside; }
-.admin-page .help-topic[open] > summary { border-bottom: 1px solid var(--lodge-3); }
-.admin-page .help-body { padding: 0.4rem 1.1rem 1.1rem; line-height: 1.55; max-width: 44rem; }
+.admin-page .help-body { max-width: 44rem; }
 .admin-page .help-body h4 { margin: 1.1rem 0 0.3rem; font-size: 1rem; scroll-margin-top: 6rem; }
 .admin-page .help-body ol, .admin-page .help-body ul { padding-left: 1.3rem; }
 .admin-page .help-body li { margin: 0.3rem 0; }
-.admin-page .help-topic { scroll-margin-top: 6rem; }
+.admin-page #help-list > .disc { scroll-margin-top: 6rem; }
 
 .admin-page .help-target { margin: 0 0 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .admin-page .help-target label { margin: 0; }
@@ -327,36 +295,7 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .tab-switches { display: grid; max-width: 46rem; margin-bottom: 0.8rem; }
 .admin-page .tab-switches .tab-switch { margin: 0; }
 .admin-page #orders-total[hidden] { display: none; }
-
-/* "Get started" on a new tasting's overview: a checklist where only the next step has a (red) button */
-.start-card { display: block; padding-bottom: 0.4rem; }
-.start-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-.start-head-right { display: flex; align-items: baseline; gap: 0.9rem; }
-.start-progress { color: var(--muted); font-size: 0.85rem; }
-.start-bar { height: 6px; border-radius: 99px; background: var(--lodge-2); overflow: hidden; margin: 0.35rem 0 0.6rem; }
-.start-bar i { display: block; height: 100%; width: 0; background: var(--ok); border-radius: 99px; transition: width 0.4s ease-out; }
-.start-steps { list-style: none; margin: 0; padding: 0; }
-.start-steps li {
-  display: grid; grid-template-columns: 1.5rem minmax(0, 1fr) auto; gap: 0.4rem 0.8rem; align-items: center;
-  padding: 0.75rem 0; border-top: 1px solid var(--lodge-2);
-}
-.start-steps li.now { background: #fbf6ee; margin: 0 -1.1rem; padding: 0.85rem 1.1rem; }
-.start-ic {
-  width: 1.45rem; height: 1.45rem; border-radius: 50%; display: grid; place-items: center; font-size: 0.78rem; font-weight: 600;
-  border: 1.5px solid var(--lodge-3); color: var(--muted); box-sizing: border-box;
-}
-.start-steps li.now .start-ic { background: var(--amber); border-color: var(--amber); color: #fff; }
-.start-steps li.done .start-ic { background: #eef6f0; border: 1px solid #b9d3be; color: var(--ok); }
-.start-label { min-width: 0; }
-.start-label b { display: block; font-weight: 500; }
-.start-label small { display: block; color: var(--muted); font-size: 0.85rem; margin-top: 0.1rem; }
-.start-steps li.done .start-label b { color: var(--muted); font-weight: 400; }
-@media (max-width: 30rem) {
-  .start-steps li { grid-template-columns: 1.5rem minmax(0, 1fr); }
-  .start-steps li > button { grid-column: 2; justify-self: start; }
-}
-/* The one-step "New tasting" dialog: no steps row, a narrower window */
-.start-card[hidden] { display: none; }
+.admin-page #orders-total { margin-top: 1.75rem; }
 
 /* The side panel for one wine */
 .admin-page .twe-form { display: grid; gap: 0.4rem; }
@@ -454,4 +393,5 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* A page header as wide as the content under it (the libraries and the overview are 52rem wide) */
 .admin-page .ph:is(:has(+ :is(.wines-admin, .guests)), :has(~ .dash-grid)) { max-width: 52rem; }
 .super-shell .tabs { margin-bottom: 1rem; }
+.super-shell .list-search + #tenants { margin-top: 0.75rem; }
 .admin-page .ph:has(+ section > .tasting-cards) { max-width: 40rem; }

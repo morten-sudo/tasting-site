@@ -29,6 +29,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { disclosure } from '../../lib/ui/disclosure';
   import { supabase } from '../../lib/supabase';
   import { getDropdown } from '../../lib/ui/dropdown';
   import { requireHost, $ } from '../../lib/admin-common';
@@ -98,11 +99,6 @@ import '../../styles/admin.css';
       return a;
     }));
     $('help-list').replaceChildren(...HELP.map((s) => {
-      const d = document.createElement('details');
-      d.className = 'help-topic';
-      d.id = s.id;
-      const sum = document.createElement('summary');
-      sum.textContent = pick(s.title);
       const body = document.createElement('div');
       body.className = 'help-body';
       body.innerHTML = pick(s.body);
@@ -111,7 +107,9 @@ import '../../styles/admin.css';
         a.dataset.to = a.getAttribute('href')!;
         a.setAttribute('href', '/admin/tastings/');
       });
-      d.append(sum, body);
+      // The one fold-out (component 37), boxed: one topic each
+      const d = disclosure(pick(s.title), [body], { cls: 'boxed topic' });
+      d.id = s.id;
       return d;
     }));
   }
@@ -138,7 +136,7 @@ import '../../styles/admin.css';
   $('help-search').addEventListener('input', () => {
     const q = ($('help-search') as HTMLInputElement).value.trim().toLowerCase();
     let shown = 0;
-    document.querySelectorAll<HTMLDetailsElement>('.help-topic').forEach((d) => {
+    document.querySelectorAll<HTMLDetailsElement>('#help-list > .disc').forEach((d) => {
       const hit = !q || d.textContent!.toLowerCase().includes(q);
       d.hidden = !hit;
       d.open = !!q && hit;

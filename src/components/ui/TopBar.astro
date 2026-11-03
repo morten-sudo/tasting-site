@@ -2,6 +2,7 @@
 // Component 43 – the one top bar on every page: the logo, the language, the cart (in a tasting) and the account
 // (the one menu, src/lib/ui/menu.ts) or "Sign in". In a tasting a second row: the tasting (a switcher), its tabs
 // (the one tab bar, Tabs.astro) and, for its hosts, the way to its admin. Base.astro's script fills it in.
+import Badge from './Badge.astro';
 import Icon from './Icon.astro';
 import Tabs from './Tabs.astro';
 import Sheet from './Sheet.astro';
@@ -26,7 +27,7 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
       {tasting && (
         <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
           <Icon name="cart" />
-          <span id="nav-cart-count" class="tb-badge" aria-hidden="true" hidden></span>
+          <Badge id="nav-cart-count" hidden />
         </a>
       )}
       <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->

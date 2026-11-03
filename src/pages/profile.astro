@@ -80,9 +80,10 @@ import SignInState from '../components/ui/SignInState.astro';
 </Base>
 
 <script>
+  import { formatKr } from '../lib/ui/kr';
   import { supabase } from '../lib/supabase';
   import { loadMe, signOut, getCodes, tastingUrl } from '../lib/guest';
-  import { i18nReady, t, LANGS, lang, setLang, money, locale, type Lang } from '../i18n';
+  import { i18nReady, t, LANGS, lang, setLang, locale, type Lang } from '../i18n';
   import { FLAGS } from '../i18n/flags';
   import { bindSwitch } from '../lib/ui/switch';
   import { sheetPanel } from '../lib/ui/sheet';

@@ -64,13 +64,14 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { formatKr } from '../../lib/ui/kr';
   import { emptyState } from '../../lib/ui/empty';
   import { listRow } from '../../lib/ui/list-row';
   import { starsRo } from '../../lib/ui/stars';
   import { iconSvg } from '../../lib/ui/icons';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
-  import { t, money, locale, formatWhen, type Key } from '../../i18n';
+  import { t, locale, formatWhen, type Key } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
   import { tastingRoles } from '../../lib/admin-side';
 
@@ -125,7 +126,7 @@ import '../../styles/admin.css';
       g.amount += x.order_lines.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
       orders.set(x.tasting_id, g);
     }
-    for (const g of orders.values()) rows.push(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: g.n, amount: money(g.amount) }), g.title, adminUrl(g.slug, 'orders/')));
+    for (const g of orders.values()) rows.push(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: g.n, amount: formatKr(g.amount) }), g.title, adminUrl(g.slug, 'orders/')));
     const fees = new Map<string, { slug: string; title: string; n: number; amount: number }>();
     for (const x of (p.data ?? []) as unknown as P[]) {
       const tt = x.tastings;
@@ -135,7 +136,7 @@ import '../../styles/admin.css';
       g.amount += Number(tt.tasting_fee);
       fees.set(x.tasting_id, g);
     }
-    for (const g of fees.values()) rows.push(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: g.n, amount: money(g.amount) }), g.title, adminUrl(g.slug, 'guests/')));
+    for (const g of fees.values()) rows.push(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: g.n, amount: formatKr(g.amount) }), g.title, adminUrl(g.slug, 'guests/')));
     if (rows.length) $('unpaid').replaceChildren(...rows);
   }
 
@@ -166,8 +167,8 @@ import '../../styles/admin.css';
     // Awaiting payment
     const unpaid = $('unpaid');
     unpaid.replaceChildren();
-    if (d.unpaid_orders?.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: money(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
-    if (d.unpaid_fees?.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: money(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
+    if (d.unpaid_orders?.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: formatKr(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
+    if (d.unpaid_fees?.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: formatKr(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
     $('unpaid-card').hidden = !unpaid.children.length;
     if (unpaid.children.length) showUnpaidByTasting();
 
@@ -182,7 +183,7 @@ import '../../styles/admin.css';
     const o = d.latest_order;
     list.append(o
       ? activity('🛒', 'dash.latestOrder',
-          t('dash.ordered', { name: o.name, n: o.bottles, amount: money(Number(o.amount)) }),
+          t('dash.ordered', { name: o.name, n: o.bottles, amount: formatKr(Number(o.amount)) }),
           [o.tasting, o.paid ? t('cart.paid') : t('cart.awaiting'), ago(o.at)].join(' · '), adminUrl(o.slug, 'orders/'))
       : activity('🛒', 'dash.latestOrder', t('dash.none'), '', null));
     const r = d.latest_rating;

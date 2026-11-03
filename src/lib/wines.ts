@@ -13,7 +13,9 @@ export type Wine = {
   blind?: boolean;
 };
 
-import { t, money, type Key } from '../i18n';
+import { formatKr } from './ui/kr';
+import { t, type Key } from '../i18n';
+import { facts } from './ui/facts';
 
 // Wine styles; the label comes from the dictionaries (style.<key>)
 export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified', 'Other'] as const;
@@ -32,8 +34,6 @@ export const STYLE_TONES: Record<string, string> = {
   Other: '#9a8a7a',
 };
 
-export const styleLabel = (w: Wine) => (w.style ? styleName(w.style) : '');
-export const styleTone = (w: Wine) => STYLE_TONES[w.style ?? ''] ?? 'var(--amber)';
 
 /** "2024" → "Årgang 2024", "10 år" → "10 år", empty → null */
 export function vintageLabel(w: Wine): string | null {
@@ -42,7 +42,6 @@ export function vintageLabel(w: Wine): string | null {
   return /^\d{4}$/.test(w.vintage) ? t('wine.vintage', { year: w.vintage }) : w.vintage;
 }
 
-export const kr = { format: (n: number) => money(n) };
 
 export type PriceTier = { qty: number; price: number };
 
@@ -57,13 +56,13 @@ export function unitPrice(w: Pick<Wine, 'price_dkk' | 'price_tiers'>, n: number)
 
 /** One label per quantity price: "From 6 bottles: 80 kr. each". */
 export function tierLabels(w: Pick<Wine, 'price_tiers'>) {
-  return tiersOf(w).map((x) => t('price.bulk', { n: x.qty, price: money(Number(x.price)) }));
+  return tiersOf(w).map((x) => t('price.bulk', { n: x.qty, price: formatKr(Number(x.price)) }));
 }
 
 /** The next quantity price the guest can reach from n bottles, as a label, or null. */
 export function nextTierLabel(w: Pick<Wine, 'price_tiers'>, n: number) {
   const next = tiersOf(w).find((x) => x.qty > n);
-  return next ? t('price.bulk', { n: next.qty, price: money(Number(next.price)) }) : null;
+  return next ? t('price.bulk', { n: next.qty, price: formatKr(Number(next.price)) }) : null;
 }
 
 /** A wine's name as an address part: "Rivesaltes Ambré 1966" → "rivesaltes-ambre-1966" */
@@ -101,47 +100,28 @@ export function withoutYear(name: string | null, vintage: string | null): string
   return cleaned.length >= 2 ? cleaned : name;
 }
 
-/** Grapes, what the wine goes with and how to serve it: a short list with an icon each, or null when none is known. */
-export function wineFacts(w: { grapes?: string | null; food_pairing?: string | null; serving?: string | null }): HTMLElement | null {
-  const ICONS: Record<string, string> = {
-    grapes: '<circle cx="9" cy="10" r="2.6"/><circle cx="15" cy="10" r="2.6"/><circle cx="12" cy="14.5" r="2.6"/><circle cx="9" cy="19" r="2.6"/><circle cx="15" cy="19" r="2.6"/><path d="M12 7.5V3m0 1.5c1.5-1.8 3.5-2 5-1.5"/>',
-    food: '<path d="M3 17h18M5 17a7 7 0 0 1 14 0M12 8V6.5M10.5 6.5h3"/><path d="M3 20h18"/>',
-    serving: '<path d="M14 14.5V4a2 2 0 0 0-4 0v10.5a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
-  };
-  const rows = ([['grapes', 'label.grapes', w.grapes], ['food', 'wineFields.food', w.food_pairing], ['serving', 'wineFields.serving', w.serving]] as const)
-    .filter(([, , v]) => v && v.trim());
-  if (!rows.length) return null;
-  const ul = document.createElement('ul');
-  ul.className = 'wine-facts';
-  for (const [icon, key, value] of rows) {
-    const li = document.createElement('li');
-    li.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg>`;
-    const text = document.createElement('div');
-    const b = document.createElement('b');
-    b.textContent = t(key as Key);
-    const span = document.createElement('span');
-    span.textContent = value!.trim();
-    text.append(b, span);
-    li.append(text);
-    ul.append(li);
-  }
-  return ul;
+/** Grapes, what the wine goes with and how to serve it: the facts list (22) with an icon each, or null when none is known. */
+export function wineFacts(w: { grapes?: string | null; food_pairing?: string | null; serving?: string | null }): HTMLDListElement | null {
+  return facts([
+    { icon: 'grapes', label: t('label.grapes'), value: w.grapes },
+    { icon: 'food', label: t('wineFields.food'), value: w.food_pairing },
+    { icon: 'serving', label: t('wineFields.serving'), value: w.serving },
+  ]);
+}
+
+/** The wine's type as the small line above its name, in the style's colour ("— TAWNY") */
+export function styleTag(w: Pick<Wine, 'style'>, large = false): HTMLElement {
+  const p = document.createElement('p');
+  p.className = 'style-tag' + (large ? ' lg' : '');
+  p.textContent = w.style ? styleName(w.style) : '';
+  p.style.setProperty('--tone', STYLE_TONES[w.style ?? ''] ?? 'var(--amber)');
+  return p;
 }
 
 /** Blind wines get "Wine 3" (their place in the evening) as name; the rest is not sent by the database. */
 export function nameBlind<T extends Pick<Wine, 'name' | 'blind'>>(wines: T[]): T[] {
   wines.forEach((w, i) => { if (w.blind) w.name = t('blind.name', { n: i + 1 }); });
   return wines;
-}
-
-/** A bottle silhouette in the colour of the wine's style, for a blind wine. Sparkling wine gets a foil top. */
-export function blindBottle(style: string | null): string {
-  const tone = STYLE_TONES[style ?? ''] ?? '#9a8a7a';
-  const foil = style === 'Sparkling' ? '<path d="M26 4h12v22H26z" fill="#c9b27a"/>' : '';
-  return `<svg class="blind-bottle" viewBox="0 0 64 200" aria-hidden="true">`
-    + `<path d="M27 4h10v38c0 9 15 16 15 34v114c0 4-3 6-6 6H18c-3 0-6-2-6-6V76c0-18 15-25 15-34z" fill="${tone}"/>`
-    + `${foil}<path d="M18 108h28v44H18z" fill="#fff" opacity=".22"/>`
-    + `<text x="32" y="138" text-anchor="middle" font-size="22" fill="#fff" opacity=".9" font-family="Georgia, serif">?</text></svg>`;
 }
 
 /** Calls back when the host reveals (or blinds) a wine: checks every 15 seconds while the page is open. */

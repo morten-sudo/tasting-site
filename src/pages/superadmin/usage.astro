@@ -20,7 +20,7 @@ import '../../styles/admin.css';
           <h2 data-i18n="usage.aiTitle">Cloudflare AI</h2>
           <div id="u-ai-meter"></div>
           <div id="u-ai-days" class="u-days" aria-hidden="true"></div>
-          <table class="table u-table"><thead><tr><th data-i18n="usage.feature">Feature</th><th class="num" data-i18n="usage.calls">Calls</th><th class="num">Neurons</th></tr></thead><tbody id="u-ai"></tbody></table>
+          <div id="u-ai" class="u-list"></div>
           <p class="hint" data-i18n="usage.aiNote">Counted by us at each call. Neurons are worked out from Cloudflare's price per model; Cloudflare's own figure is on its dashboard under Workers AI.</p>
         </section>
 
@@ -29,7 +29,7 @@ import '../../styles/admin.css';
           <h2 data-i18n="usage.mailTitle">Emails (Resend)</h2>
           <div id="u-mail-meter"></div>
           <div id="u-mail-month"></div>
-          <table class="table u-table"><thead><tr><th data-i18n="usage.kind">Kind</th><th class="num" data-i18n="usage.last30">Last 30 days</th></tr></thead><tbody id="u-mail"></tbody></table>
+          <div id="u-mail" class="u-list"></div>
           <p class="hint" data-i18n="usage.mailNote">Free plan: 100 a day and 3,000 a month. Each recipient counts.</p>
         </section>
 
@@ -64,7 +64,9 @@ import '../../styles/admin.css';
 <script>
   import { supabase } from '../../lib/supabase';
   import { t, locale } from '../../i18n';
-  import { requireAdmin, $, mk, cell, dateFmt } from '../../lib/super-common';
+  import { requireAdmin, $, mk, dateFmt } from '../../lib/super-common';
+  import { progress } from '../../lib/ui/progress';
+  import { table } from '../../lib/ui/table';
   import { tooltip } from '../../lib/ui/tooltip';
   import { notice } from '../../lib/ui/notice';
 
@@ -77,22 +79,13 @@ import '../../styles/admin.css';
   const today = () => new Date().toISOString().slice(0, 10); // UTC, like the quotas
   const mb = (b: number) => `${nf().format(Math.round(b / 1e5) / 10)} MB`;
 
-  /** A bar with "used of limit" and the share; amber from 60 %, red from 85 %. */
+  /** A quota as the one progress bar (38): "used / limit · share"; amber from 60 %, red from 85 % */
   function meter(label: string, used: number, limit: number, text = `${nf().format(used)} / ${nf().format(limit)}`) {
     const share = limit ? used / limit : 0;
-    const box = mk('div', 'u-meter');
-    const head = mk('div', 'u-meter-head');
-    head.append(mk('span', '', label), mk('b', '', `${text} · ${nf().format(Math.round(share * 1000) / 10)} %`));
-    const bar = mk('div', 'u-bar' + (share >= 0.85 ? ' high' : share >= 0.6 ? ' mid' : ''));
-    const fill = mk('span');
-    fill.style.width = `${Math.min(100, share * 100)}%`;
-    bar.append(fill);
-    bar.setAttribute('role', 'meter');
-    bar.setAttribute('aria-valuenow', String(used));
-    bar.setAttribute('aria-valuemax', String(limit));
-    bar.setAttribute('aria-label', label);
-    box.append(head, bar);
-    return box;
+    const bar = progress({ label, value: used, max: limit, meter: true, text: `${text} · ${nf().format(Math.round(share * 1000) / 10)} %`,
+      tone: share >= 0.85 ? 'err' : share >= 0.6 ? 'warn' : 'ok' });
+    bar.classList.add('u-meter');
+    return bar;
   }
 
   /** 30 small columns, one per day (UTC), against the day's limit. */
@@ -136,18 +129,16 @@ import '../../styles/admin.css';
     }
     $('u-ai-meter').replaceChildren(meter(t('usage.today'), Math.round(aiByDay.get(today()) ?? 0), 10000));
     $('u-ai-days').replaceChildren(days(aiByDay, 10000));
-    $('u-ai').replaceChildren(...[...aiByFeature].sort((a, b) => b[1].neurons - a[1].neurons).map(([f, v]) => {
-      const tr = mk('tr');
-      tr.append(cell(name(f)), cell(nf().format(v.calls), 'num'), cell(nf().format(Math.round(v.neurons)), 'num'));
-      return tr;
-    }));
-    if (!aiByFeature.size) {
-      const tr = mk('tr');
-      const td = cell(t('usage.none'));
-      td.colSpan = 3;
-      tr.append(td);
-      $('u-ai').replaceChildren(tr);
-    }
+    $('u-ai').replaceChildren(table<[string, { calls: number; neurons: number }]>({
+      caption: t('usage.aiTitle'),
+      rows: [...aiByFeature], sort: { key: 'neurons', desc: true },
+      empty: { icon: 'chart', title: t('usage.none') },
+      columns: [
+        { key: 'feature', label: t('usage.feature'), cell: ([f]) => name(f), sort: ([f]) => name(f) },
+        { key: 'calls', label: t('usage.calls'), num: true, cell: ([, v]) => nf().format(v.calls), sort: ([, v]) => v.calls, desc: true },
+        { key: 'neurons', label: 'Neurons', num: true, cell: ([, v]) => nf().format(Math.round(v.neurons)), sort: ([, v]) => v.neurons, desc: true },
+      ],
+    }).el);
 
     // Mails
     const mailToday = u.mail_days.filter((r) => r.day === today()).reduce((s, r) => s + Number(r.mails), 0);
@@ -155,11 +146,15 @@ import '../../styles/admin.css';
     $('u-mail-month').replaceChildren(meter(t('usage.thisMonth'), Number(u.mail_month), 3000));
     const mailByFeature = new Map<string, number>();
     for (const r of u.mail_days) mailByFeature.set(r.feature, (mailByFeature.get(r.feature) ?? 0) + Number(r.mails));
-    $('u-mail').replaceChildren(...[...mailByFeature].sort((a, b) => b[1] - a[1]).map(([f, n]) => {
-      const tr = mk('tr');
-      tr.append(cell(name(f)), cell(nf().format(n), 'num'));
-      return tr;
-    }));
+    $('u-mail').replaceChildren(table<[string, number]>({
+      caption: t('usage.mailTitle'),
+      rows: [...mailByFeature], sort: { key: 'n', desc: true },
+      empty: { icon: 'mail', title: t('usage.none') },
+      columns: [
+        { key: 'kind', label: t('usage.kind'), cell: ([f]) => name(f), sort: ([f]) => name(f) },
+        { key: 'n', label: t('usage.last30'), num: true, cell: ([, n]) => nf().format(n), sort: ([, n]) => n, desc: true },
+      ],
+    }).el);
 
     // Supabase
     $('u-db').replaceChildren(meter(t('usage.db'), u.db_bytes, 500e6, `${mb(u.db_bytes)} / 500 MB`));
@@ -192,16 +187,11 @@ import '../../styles/admin.css';
   .usage-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); align-items: start; }
   .usage-card h2 { margin-top: 0; }
   :global(.u-meter) { margin: 0.4rem 0 0.9rem; }
-  :global(.u-meter-head) { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.9rem; margin-bottom: 0.3rem; flex-wrap: wrap; }
-  :global(.u-meter-head b) { font-weight: 500; font-variant-numeric: tabular-nums; }
-  :global(.u-bar) { height: 0.6rem; border-radius: 999px; background: var(--lodge); border: 1px solid var(--lodge-3); overflow: hidden; }
-  :global(.u-bar span) { display: block; height: 100%; background: var(--ok); }
-  :global(.u-bar.mid span) { background: var(--tawny); }
-  :global(.u-bar.high span) { background: var(--error); }
   :global(.u-days) { height: 3rem; margin: 0 0 1rem; }
   :global(.u-days-in) { display: flex; align-items: flex-end; gap: 2px; height: 100%; border-bottom: 1px solid var(--lodge-3); }
   :global(.u-days-in span) { flex: 1; background: var(--amber); opacity: 0.75; border-radius: 2px 2px 0 0; min-width: 2px; }
-  .u-table { margin-bottom: 0.6rem; }
+  .u-list { margin-bottom: 0.6rem; }
+  .u-list :global(.empty-state) { padding: 1rem; }
   .u-setup ol { padding-left: 1.2rem; display: grid; gap: 0.4rem; }
   .u-setup code { font-size: 0.85rem; background: var(--lodge); padding: 0.05rem 0.3rem; border-radius: 4px; }
 </style>

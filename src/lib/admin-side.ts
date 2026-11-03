@@ -1,6 +1,8 @@
 // The admin menu on the left: the host's tastings (the tasting's own sections are tabs in the bar at the top),
 // the libraries and settings. On phones the same menu opens as a drawer.
 import { supabase } from './supabase';
+import { badge } from './ui/badge';
+import { $, mk } from './ui/dom';
 import { t, type Key } from '../i18n';
 import { tooltip } from './ui/tooltip';
 import { initSideMenu, setSideOpen } from './ui/side-menu';
@@ -29,13 +31,7 @@ export function currentAdmin() {
 type Row = { id: string; slug: string; title: string; starts_at: string | null };
 export type TastingRole = { tasting_id: string; hosting: boolean; can_manage: boolean };
 
-const $ = (id: string) => document.getElementById(id) as HTMLElement;
-function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: string) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (text != null) e.textContent = text;
-  return e;
-}
+
 
 
 /** Marks the current section in the menu (also after switching section without reloading) */
@@ -53,6 +49,7 @@ function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>, hosting: 
   // The tastings I host myself are marked (the account may have many)
   if (hosting.has(r.id)) {
     a.classList.add('mine');
+    a.append(badge(null, 'mark'));
     tooltip(a, t('roles.youHost'));
   }
   a.href = adminUrl(r.slug);

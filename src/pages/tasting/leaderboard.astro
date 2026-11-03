@@ -1,5 +1,6 @@
 ---
 import '../../styles/global.css';
+import '../../styles/components.css';
 ---
 <!doctype html>
 <html lang="en" class="i18n-pending">
@@ -27,7 +28,7 @@ import '../../styles/global.css';
       <div class="spectrum" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
-      <ol id="board" class="board tv-board"></ol>
+      <ol id="board" class="board big tv-board"></ol>
     </main>
 
     <script>
@@ -47,11 +48,11 @@ import '../../styles/global.css';
         const { data } = await supabase.rpc('get_tasting', { slug });
         const s = (data ?? {}) as Record<string, unknown>;
         if (typeof s.title === 'string') document.getElementById('tv-title')!.textContent = s.title;
-        const TOTAL = Number(s.quiz_count) || 13;
+        const TOTAL = Number(s.quiz_count) || 0;
         const rows = await fetchLeaderboard({ slug });
         if (!rows) return;
         renderLeaderboard(board, rows, TOTAL);
-        const done = rows.filter((r) => r.answered >= TOTAL).length;
+        const done = TOTAL ? rows.filter((r) => r.answered >= TOTAL).length : 0;
         if (s.quiz_finished === true) status.textContent = t('quiz.final');
         else if (s.quiz_open === true) status.textContent = t('board.doneCount', { done, total: rows.length });
         else status.textContent = t('board.notStarted');
@@ -83,13 +84,11 @@ import '../../styles/global.css';
       }
       #tv-status { color: var(--muted); font-size: clamp(1rem, 2.2vw, 1.8rem); margin: 0; }
       .tv-main .spectrum { margin: 3vh 0 2vh; }
-      .tv-board li {
-        grid-template-columns: 3em 1fr auto 3em;
-        font-size: clamp(1.1rem, 2.6vw, 2.3rem);
-        padding: 1.4vh 0;
-      }
+      /* The big screen: the leaderboard (components.css) scaled to the screen */
+      .tv-board > li { grid-template-columns: 3em minmax(0, 1fr) auto 3em; font-size: clamp(1.1rem, 2.6vw, 2.3rem); padding-block: 1.4vh; }
+      .tv-board .who { font-size: 1em; }
       .tv-board .pts { font-size: 1.5em; }
-      .tv-board .progress { font-size: 0.7em; }
+      .tv-board .pr { font-size: 0.7em; }
     </style>
   </body>
 </html>

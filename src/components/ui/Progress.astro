@@ -1,0 +1,11 @@
+---
+// Component 38 – the one progress bar, static (src/lib/ui/progress.ts: setProgress() moves it, progress() builds one).
+interface Props { id?: string; label?: string; labelId?: string; textId?: string; tone?: 'ok' | 'amber' | 'warn' | 'err'; class?: string; hidden?: boolean }
+const { id, label, labelId, textId, tone, class: cls, hidden } = Astro.props;
+import { en } from '../../i18n/en';
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+---
+<div id={id} class:list={['prog', cls]} hidden={hidden}>
+  <div class="prog-h"><b id={labelId} data-i18n={label}>{label && tr(label)}</b><span id={textId}></span><slot name="head" /></div>
+  <div class:list={['bar', tone && tone !== 'ok' && tone]} role="progressbar" aria-valuemin="0" aria-valuenow="0"><i></i></div>
+</div>

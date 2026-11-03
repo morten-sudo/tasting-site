@@ -13,20 +13,7 @@ import '../../styles/admin.css';
       <section class="block maps-block">
                 <p class="hint" data-i18n="super.mapsHint">The regions the wines in all tastings come from. Regions without a detailed map are shown on the overview map – the most used ones are the next candidates for a detailed map.</p>
         <p id="maps-have" class="hint"></p>
-        <div class="table-wrap">
-          <table class="table">
-            <thead><tr>
-              <th data-i18n="super.mapRegion">Region</th>
-              <th data-i18n="origin.country">Country</th>
-              <th class="num" data-i18n="super.mapUpcoming">Upcoming tastings</th>
-              <th class="num" data-i18n="adminNav.tastings">Tastings</th>
-              <th class="num" data-i18n="adminNav.wines">Wines</th>
-              <th class="num" data-i18n="super.hosts">Hosts</th>
-              <th data-i18n="super.mapDetail">Detailed map</th>
-            </tr></thead>
-            <tbody id="map-rows"></tbody>
-          </table>
-        </div>
+        <div id="map-rows"></div>
         <h3 data-i18n="super.guessesTitle">Places found by Cloudflare AI</h3>
         <p class="hint" data-i18n="super.guessesHint">Appellations that are not on the list, placed by Cloudflare AI and checked against the country. Check the place; delete a wrong one and it is looked up again the next time a host saves the wine.</p>
         <ul id="guess-rows" class="list"></ul>
@@ -44,6 +31,7 @@ import '../../styles/admin.css';
   import { toast } from '../../lib/ui/toast';
   import { listRow } from '../../lib/ui/list-row';
   import { iconButton } from '../../lib/ui/icon-button';
+  import { table } from '../../lib/ui/table';
 
   import { supabase } from '../../lib/supabase';
   import { t } from '../../i18n';
@@ -66,17 +54,25 @@ import '../../styles/admin.css';
       .map((m) => ({ region: m.name, country: m.country, wines: 0, tastings: 0, upcoming: 0, hosts: 0 }));
     $('maps-have').textContent = t('super.mapsHave', { n: DETAILED_MAPS.length, list: DETAILED_MAPS.map((m) => m.name).join(', ') });
     const rows = [...((demand ?? []) as D[]), ...unused].sort((a, b) => Number(!!mapIdFor(a.region)) - Number(!!mapIdFor(b.region)) || b.upcoming - a.upcoming || b.tastings - a.tastings);
-    $('map-rows').replaceChildren(...rows.map((r) => {
-      const tr = document.createElement('tr');
-      const cell = (text: string, cls = '') => { const td = document.createElement('td'); td.textContent = text; if (cls) td.className = cls; return td; };
+    // The one table (24): sorts by any column; regions without a detailed map and with upcoming tastings first
+    const status = (r: D) => {
       const has = !!mapIdFor(r.region);
-      const status = cell('');
-      status.append(chip(has ? t('super.mapHas') : Number(r.upcoming) > 0 ? t('super.mapMissingSoon') : t('super.mapMissing'),
-        has ? 'ok' : Number(r.upcoming) > 0 ? 'warn' : 'neutral', { dashed: !has && !(Number(r.upcoming) > 0) }));
-      tr.append(cell(r.region), cell(countryName(r.country) ?? ''), cell(String(r.upcoming), 'num'), cell(String(r.tastings), 'num'),
-        cell(String(r.wines), 'num'), cell(String(r.hosts), 'num'), status);
-      return tr;
-    }));
+      return chip(has ? t('super.mapHas') : Number(r.upcoming) > 0 ? t('super.mapMissingSoon') : t('super.mapMissing'),
+        has ? 'ok' : Number(r.upcoming) > 0 ? 'warn' : 'neutral', { dashed: !has && !(Number(r.upcoming) > 0) });
+    };
+    $('map-rows').replaceChildren(table<D>({
+      caption: t('super.mapsTitle'),
+      rows,
+      columns: [
+        { key: 'region', label: t('super.mapRegion'), sort: (r) => r.region },
+        { key: 'country', label: t('origin.country'), sort: (r) => countryName(r.country) ?? '', cell: (r) => countryName(r.country) ?? '' },
+        { key: 'upcoming', label: t('super.mapUpcoming'), num: true, sort: (r) => Number(r.upcoming), desc: true },
+        { key: 'tastings', label: t('adminNav.tastings'), num: true, sort: (r) => Number(r.tastings), desc: true },
+        { key: 'wines', label: t('adminNav.wines'), num: true, sort: (r) => Number(r.wines), desc: true },
+        { key: 'hosts', label: t('super.hosts'), num: true, sort: (r) => Number(r.hosts), desc: true },
+        { key: 'detail', label: t('super.mapDetail'), cell: status, sort: (r) => Number(!!mapIdFor(r.region)) },
+      ],
+    }).el);
     type G = { key: string; name: string; country: string; lat: number; lon: number };
     const gs = (guesses ?? []) as G[];
     $('guesses-none').hidden = gs.length > 0;

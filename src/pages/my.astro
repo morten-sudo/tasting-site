@@ -73,6 +73,7 @@ import SignInState from '../components/ui/SignInState.astro';
 </Base>
 
 <script>
+  import { formatKr } from '../lib/ui/kr';
   import { tabs, selectTab } from '../lib/ui/tabs';
   import { supabase } from '../lib/supabase';
   import { loadMe, getCodes, tastingUrl } from '../lib/guest';
@@ -82,12 +83,13 @@ import SignInState from '../components/ui/SignInState.astro';
   import { styleName } from '../lib/wines';
   import { starsRo } from '../lib/ui/stars';
   import { listRow } from '../lib/ui/list-row';
+  import { chip } from '../lib/ui/status';
+  import { $, mk } from '../lib/ui/dom';
   import { wineThumb } from '../lib/ui/thumb';
   import { getDropdown } from '../lib/ui/dropdown';
-  import { i18nReady, t, money, lang, locale } from '../i18n';
+  import { i18nReady, t, lang, locale } from '../i18n';
 
   await i18nReady;
-  const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 
   type BookWine = {
     wine_id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
@@ -153,13 +155,6 @@ import SignInState from '../components/ui/SignInState.astro';
     render();
   }
 
-  function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  }
-
   // A wine as the card variant of the one list row: picture, name, what it is, origin, my note, where I tasted it –
   // and on the right my stars and what I bought. The card opens the wine's page.
   function wineItem(w: BookWine) {
@@ -172,8 +167,8 @@ import SignInState from '../components/ui/SignInState.astro';
       s.setAttribute('aria-label', t('rating.yours', { n: w.rating }));
       side.append(s);
     }
-    if (w.bought > 0) side.append(el('span', 'chip', t('book.bought', { n: w.bought })));
-    const note = w.note?.trim() ? el('p', 'lmeta note', `“${w.note.trim()}”`) : null;
+    if (w.bought > 0) side.append(chip(t('book.bought', { n: w.bought })));
+    const note = w.note?.trim() ? mk('p', 'lmeta note', `“${w.note.trim()}”`) : null;
     return listRow({
       variant: 'card',
       // By number: the wine page turns it into the name address (unique also for two vintages of one wine)
@@ -209,7 +204,7 @@ import SignInState from '../components/ui/SignInState.astro';
     stat('st-bottles', bottles, 'book.statBottles');
     $('order-list').replaceChildren(...orderCards(lines));
     $('no-orders').hidden = lines.length > 0;
-    $('orders-sum').textContent = lines.length ? t('book.ordersSum', { n: bottles, total: money(total) }) : '';
+    $('orders-sum').textContent = lines.length ? t('book.ordersSum', { n: bottles, total: formatKr(total) }) : '';
     $('orders-sum').hidden = !lines.length;
   }
 </script>
