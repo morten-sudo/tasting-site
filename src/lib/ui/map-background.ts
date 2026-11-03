@@ -24,10 +24,11 @@ export async function winesBackground(box: HTMLElement, wines: W[], corner = fal
 }
 
 /** Every page (Base.astro): a faint region map in the top right corner – picked from the page's address, so a page
- *  always gets the same one and pages differ. Left out where the page has a map of its own already (behind its heading or a card), or the
+ *  always gets the same one and pages differ. Left out where the page has a map of its own already behind its heading, or the
  *  cellar photo. */
 export async function pageBackground(box: HTMLElement) {
-  if (document.querySelector('.hero-bg:not(.page-bg), .hero')) return;
+  // A map inside a card (the overview's next tasting) does not count: the page still gets its own
+  if (document.querySelector('.hero-bg:not(.page-bg):not(.card > .hero-bg), .hero')) return;
   // The tasting's own pages share one address pattern (/t/<slug>/…): the part after the slug picks the map
   const path = location.pathname.replace(/^\/t\/[^/]+/, '/t').replace(/\/(\d+|[0-9a-f-]{36})\/?$/, '/:id/');
   let h = 0;
