@@ -2,6 +2,7 @@
 // paste a link from a web shop, or add a photo of the label. A link or a photo is read straight away; a card above
 // the list shows what comes in (name, type, origin, price, the producer), and when it is done the wine moves into
 // the list. Used on the wine library and on a tasting's Wines tab (where a wine also goes into the tasting).
+import { knownProducer, shareProducer } from './producers';
 import { formatKr } from './ui/kr';
 import { setLoading } from './ui/button';
 import { supabase } from './supabase';
@@ -334,13 +335,18 @@ export function initQuickAdd(o: Opts) {
     if (row.producer) {
       say(li, t('qa.findingProducer', { producer: row.producer }), 'busy');
       try {
-        const f = await post<{ website: string | null; address: string | null; location: { lat: number; lon: number; source: string } | null }>(
-          '/api/find-producer', { producer: row.producer, wine: name, appellation: row.appellation, region: row.region, country: row.country, website: null });
+        // What another host has already found for the producer comes first; else the producer's own website
+        const known = await knownProducer(row.producer);
+        const f = known && (known.website || known.lat != null)
+          ? { website: known.website, address: known.address, location: known.lat != null && known.lon != null ? { lat: known.lat, lon: known.lon, source: known.source ?? 'shared' } : null }
+          : await post<{ website: string | null; address: string | null; location: { lat: number; lon: number; source: string } | null }>(
+            '/api/find-producer', { producer: row.producer, wine: name, appellation: row.appellation, region: row.region, country: row.country, website: null });
         await supabase.from('wines').update({
           producer_website: f.website, producer_address: f.address,
           producer_lat: f.location?.lat ?? null, producer_lon: f.location?.lon ?? null,
           producer_source: f.location ? f.location.source : 'none', producer_checked_at: new Date().toISOString(),
         }).eq('id', id);
+        await shareProducer(row.producer, { website: f.website, address: f.address, lat: f.location?.lat ?? null, lon: f.location?.lon ?? null, source: f.location?.source ?? null }, id);
         if (f.website || f.address) fact(li, t('qa.producerFound', { what: [f.website ? site(f.website) : null, f.address].filter(Boolean).join(' · ') }));
       } catch { /* the wine form looks again when the wine is opened */ }
     }

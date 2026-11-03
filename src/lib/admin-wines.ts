@@ -1,5 +1,6 @@
 // Admin, wine library: the host's wines across all tastings – add, edit and delete one at a time,
 // filled in from a label photo or a shop link. Prices and visibility per tasting live on the tasting page.
+import { knownProducer, shareProducer } from './producers';
 import { formatKr } from './ui/kr';
 import { setLoading } from './ui/button';
 import { getDropdown, type DropdownEl } from './ui/dropdown';
@@ -847,6 +848,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     setLoading(save, false);
     if (error) { toast(t('admin.wineNotSaved'), { kind: 'error' }); return; }
     const newId = (saved as { id: number } | null)?.id;
+    // The producer's facts belong to every wine by the producer: the account's other wines get the ones they miss
+    await shareProducer(row.producer, { website: row.producer_website, address: row.producer_address,
+      ...(fresh && fresh.lat != null ? { lat: fresh.lat, lon: fresh.lon, source: fresh.source } : {}) }, newId);
     // A wine that came into a tasting before it had a price gets the price there now (an offer on 1 bottle first)
     const start = row.offer_quantity === 1 && row.offer_price_dkk != null ? row.offer_price_dkk : row.retail_price_dkk;
     if (before && start != null) await supabase.from('tasting_wines').update({ price_dkk: start }).eq('wine_id', before.id).is('price_dkk', null);
@@ -876,6 +880,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const same = !w.producer ? null : wines.find((x) => x.id !== skipId && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
       && (!w.producer_website || x.producer_website === w.producer_website));
     if (same) return { website: same.producer_website ?? null, address: same.producer_address ?? null, lat: same.producer_lat ?? null, lon: same.producer_lon ?? null, source: same.producer_source ?? null };
+    // …or what another host has already found for the producer (unless the host typed another website)
+    const known = await knownProducer(w.producer);
+    if (known && (!w.producer_website || !known.website || webUrl(known.website) === w.producer_website)
+      && (known.website || known.lat != null)) return known;
     try {
       const { data } = await supabase.auth.getSession();
       const res = await fetch('/api/find-producer', {
@@ -1049,6 +1057,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       producer_source: found.lat == null ? 'none' : found.source,
       producer_checked_at: new Date().toISOString(),
     }).eq('id', id);
+    if (!error) await shareProducer(w.producer, { website: w.producer_website ?? webUrl(found.website ?? ''), address: w.producer_address ?? found.address,
+      lat: found.lat, lon: found.lon, source: found.source }, id);
     return !error;
   }
 
