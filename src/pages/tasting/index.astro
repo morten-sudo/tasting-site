@@ -1,18 +1,14 @@
 ---
 import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Base from '../../layouts/Base.astro';
+import Loading from '../../components/ui/Loading.astro';
+import Notice from '../../components/ui/Notice.astro';
+import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.tasting" tasting>
   <section class="wrap page">
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
-
-    <div id="invalid" class="message error" hidden>
-      <p><strong data-i18n="guest.notSignedIn">You are not signed in.</strong></p>
-      <p data-i18n-html="guest.notSignedInHelp">
-        <a href="/login/">Sign in</a> with your email or with the link from your
-        invitation. If that doesn't work, contact the host.
-      </p>
-    </div>
+    <Loading text="gate.loadingTasting" />
+    <SignInState id="invalid" title="gate.tastingTitle" />
 
     <!-- First visit: email required before continuing -->
     <form id="email-step" class="email-step" hidden novalidate>
@@ -20,7 +16,6 @@ import Base from '../../layouts/Base.astro';
       <p class="lead" data-i18n="guest.emailLead">Before you continue, we need your email. You use it to sign in with a code – for example if you switch phones.</p>
       <label for="step-email" data-i18n="guest.yourEmail">Your email</label>
       <input class="input" id="step-email" type="email" autocomplete="email" inputmode="email" maxlength="200" required />
-      <p id="step-error" class="message error" hidden></p>
       <button class="btn" type="submit" id="step-btn" data-i18n="common.continue">Continue</button>
     </form>
 
@@ -73,7 +68,6 @@ import Base from '../../layouts/Base.astro';
                 <textarea class="input" id="note" name="note" maxlength="1000" aria-label="Message to the host" data-i18n-attr="aria-label=guest.note"></textarea>
               </details>
 
-              <p id="form-error" class="message error" hidden></p>
 
               <div class="actions">
                 <button type="submit" class="btn small" id="submit" data-i18n="common.save">Save</button>
@@ -84,7 +78,7 @@ import Base from '../../layouts/Base.astro';
 
           <section id="fee" class="card fee" hidden>
             <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
-            <p id="fee-paid" class="message ok" hidden data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p>
+            <Notice id="fee-paid" tone="ok" hidden><p data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p></Notice>
             <div id="fee-due" hidden>
               <p data-i18n="guest.feeText">The price for the evening is based on purchases and the number of guests.</p>
               <div id="fee-pay"></div>
@@ -150,7 +144,6 @@ import Base from '../../layouts/Base.astro';
   const slug = currentSlug() ?? '';
   const form = $<HTMLFormElement>('rsvp-form');
   const current = $('current');
-  const formError = $('form-error');
   const submit = $<HTMLButtonElement>('submit');
 
   let guestName = '';
@@ -433,27 +426,21 @@ import Base from '../../layouts/Base.astro';
 
   $('email-step').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const err = $('step-error');
-    err.hidden = true;
-    const val = $<HTMLInputElement>('step-email').value.trim();
+    const stepEmail = $<HTMLInputElement>('step-email');
+    const val = stepEmail.value.trim();
     if (!EMAIL_RE.test(val)) {
-      err.textContent = val ? t('guest.emailBad') : t('guest.emailMissing');
-      err.hidden = false;
+      fieldError(stepEmail, val ? t('guest.emailBad') : t('guest.emailMissing'));
+      stepEmail.focus();
       return;
     }
     const btn = $<HTMLButtonElement>('step-btn');
-    btn.disabled = true;
-    btn.textContent = t('common.saving');
+    setLoading(btn, true, t('common.saving'));
     const { error } = await supabase.rpc('set_my_email', { code, e: val });
-    btn.disabled = false;
-    btn.textContent = t('common.continue');
+    setLoading(btn, false);
     if (error) {
-      err.textContent = error.message.includes('bruges allerede')
-        ? t('guest.emailTakenLong')
-        : error.message.includes('Ugyldig')
-        ? t('guest.emailBad')
-        : t('guest.emailNotSaved');
-      err.hidden = false;
+      if (error.message.includes('bruges allerede')) fieldError(stepEmail, t('guest.emailTakenLong'));
+      else if (error.message.includes('Ugyldig')) fieldError(stepEmail, t('guest.emailBad'));
+      else toast(t('guest.emailNotSaved'), { kind: 'error' });
       return;
     }
     $<HTMLInputElement>('email').value = val.toLowerCase();
@@ -463,7 +450,6 @@ import Base from '../../layouts/Base.astro';
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    formError.hidden = true;
     const choice = (form.elements.namedItem('attending') as RadioNodeList).value;
     if (!choice) {
       // The error under the choice, which goes as soon as one is picked
@@ -474,9 +460,8 @@ import Base from '../../layouts/Base.astro';
     const emailEl = $<HTMLInputElement>('email');
     const emailVal = emailEl.value.trim();
     if (!emailEl.readOnly && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailVal)) {
-      formError.textContent = emailVal ? t('guest.emailBad') : t('guest.emailMissing');
-      formError.hidden = false;
-      $<HTMLInputElement>('email').focus();
+      fieldError(emailEl, emailVal ? t('guest.emailBad') : t('guest.emailMissing'));
+      emailEl.focus();
       return;
     }
     setLoading(submit, true, t('common.sending'));
@@ -484,12 +469,9 @@ import Base from '../../layouts/Base.astro';
     const mail = emailEl.readOnly ? { error: null } : await supabase.rpc('set_my_email', { code, e: emailVal });
     if (mail.error) {
       setLoading(submit, false);
-      formError.textContent = mail.error.message.includes('bruges allerede')
-        ? t('guest.emailTaken')
-        : mail.error.message.includes('Ugyldig')
-        ? t('guest.emailBad')
-        : t('guest.answerNotSaved');
-      formError.hidden = false;
+      if (mail.error.message.includes('bruges allerede')) fieldError(emailEl, t('guest.emailTaken'));
+      else if (mail.error.message.includes('Ugyldig')) fieldError(emailEl, t('guest.emailBad'));
+      else toast(t('guest.answerNotSaved'), { kind: 'error' });
       return;
     }
     const { data, error } = await supabase.rpc('respond_invite', {
@@ -500,10 +482,7 @@ import Base from '../../layouts/Base.astro';
     });
     setLoading(submit, false);
     if (error) {
-      formError.textContent = error.message.includes('lukket')
-        ? t('guest.signupClosed')
-        : t('guest.answerNotSaved');
-      formError.hidden = false;
+      toast(error.message.includes('lukket') ? t('guest.signupClosed') : t('guest.answerNotSaved'), { kind: 'error' });
       return;
     }
     showCurrent(data as string);
@@ -518,7 +497,7 @@ import Base from '../../layouts/Base.astro';
 
 <style>
   .page { padding-top: 2rem; padding-bottom: 2rem; }
-  #email-step, #invalid, #loading { max-width: 34rem; }
+  #email-step, #invalid { max-width: 34rem; }
 
   /* The tasting at a glance */
   .t-home { overflow-x: clip; }
@@ -609,7 +588,6 @@ import Base from '../../layouts/Base.astro';
   /* Payment */
   .fee { padding: 0.9rem 1.25rem; margin-top: 1rem; }
   .fee h2 { font-family: var(--body); font-size: 1rem; font-weight: 500; margin: 0 0 0.3rem; }
-  .fee #fee-paid { margin: 0; padding: 0; background: none; border: 0; color: var(--ok); }
   .fee #fee-due p { font-size: 0.92rem; color: var(--muted); }
 
   /* Form */
@@ -631,5 +609,4 @@ import Base from '../../layouts/Base.astro';
 
   .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
   .actions .hint { font-size: 0.85rem; }
-  #form-error { margin: 0; }
 </style>

@@ -1,6 +1,6 @@
 import { t, money } from '../i18n';
 import { iconButton } from './ui/icon-button';
-import { toast } from './toast';
+import { copyText } from './ui/copy';
 // Host's MobilePay number, set from the tasting (setPayee).
 let mobilepay = '';
 export function setPayee(number: unknown) {
@@ -37,10 +37,7 @@ export function payBox(amount: number, comment: string) {
     const dd = el('dd');
     dd.append(el('span', '', shown));
     const b = iconButton('copy', t('pay.copyLabel', { what: label.toLowerCase() }));
-    b.addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(copy); toast(`${t('pay.copied')}: ${shown}`, { kind: 'ok' }); }
-      catch { toast(copy); }
-    });
+    b.addEventListener('click', () => copyText(copy, `${t('pay.copied')}: ${shown}`));
     dd.append(b);
     dl.append(el('dt', '', label), dd);
   };

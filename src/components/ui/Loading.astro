@@ -1,0 +1,8 @@
+---
+// Component 35 – page loading: the one spinner and a line, shown after 350 ms (src/lib/ui/loading.ts builds the same)
+import { en } from '../../i18n/en';
+type K = keyof typeof en;
+interface Props { id?: string; text?: K; class?: string; hidden?: boolean }
+const { id = 'loading', text = 'common.loading', class: cls, hidden = false } = Astro.props;
+---
+<p id={id} class:list={['page-loading', cls]} role="status" hidden={hidden}><span class="spin lg" aria-hidden="true"></span><span data-i18n={text}>{en[text]}</span></p>

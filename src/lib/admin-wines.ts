@@ -9,10 +9,13 @@ import { t, lang, locale } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
-import { iconButton, closeButton } from './admin-common';
+import { iconButton, closeButton, sheetPanel } from './admin-common';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
-import { toast } from './toast';
-import { fieldError } from './field-error';
+import { toast } from './ui/toast';
+import { tooltip } from './ui/tooltip';
+import { confirmModal } from './ui/confirm';
+import { setStatus, type StatusState } from './ui/status-line';
+import { fieldError, focusField } from './field-error';
 import { combo, type ComboOption } from './combo';
 import { filterDropdown, type DdOption } from './filter-dd';
 import { SUPABASE_URL, SUPABASE_KEY } from './config';
@@ -77,9 +80,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   const form = $<HTMLFormElement>('wine-form');
   const panel = $<HTMLDialogElement>('wine-panel');
-  // Editing a wine: the side panel (new wines come in through the line above the list, wine-quick-add.ts)
-  $('wf-close').addEventListener('click', () => closeForm());
-  panel.addEventListener('close', () => { editing = null; });
+  // Editing a wine: the side panel (new wines come in through the line above the list, wine-quick-add.ts).
+  // Closing with changes asks "Discard changes?" first – also a new picture counts.
+  const sheet = sheetPanel(panel, {
+    onClose: () => { editing = null; },
+    dirty: () => !!editing && (sheet.changed() || !!pendingImage || !!linkImage || removeImage),
+  });
   const list = $<HTMLUListElement>('wine-admin-list');
   const checks = wineChecks(form);
   const AMOUNTS = ['wf-abv', 'wf-retail', 'wf-offer-price'];
@@ -94,12 +100,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   // Style options
   // The one dropdown (src/lib/ui/dropdown.ts); the box works like a <select> (.value, "change")
-  const styleSelect = getDropdown('wf-style', { placeholder: t('admin.choose'), options: STYLES.map((key) => ({ value: key, label: styleName(key) })) }).el;
+  const styleSelect = getDropdown('wf-style', { placeholder: t('admin.choose'), notSet: true, options: STYLES.map((key) => ({ value: key, label: styleName(key) })) }).el;
 
   // ---------- Origin: country → region → appellation ----------
   // Each choice narrows the next list; a known appellation fills in region and country.
   // A long list: the dropdown gets a search field
-  const countrySelect = getDropdown('wf-country', { placeholder: t('admin.choose'), search: true,
+  const countrySelect = getDropdown('wf-country', { placeholder: t('admin.choose'), search: true, notSet: true,
     options: WINE_COUNTRIES.map((c) => ({ value: c, label: countryName(c) ?? c })).sort((a, b) => a.label.localeCompare(b.label, lang())) }).el;
   const appInput = field<HTMLInputElement>('wf-appellation');
   const regionInput = field<HTMLInputElement>('wf-region');
@@ -152,12 +158,9 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function syncOrigin() {
     const text = appInput.value.trim();
     const known = knownApp();
-    const status = $('wf-app-status');
-    status.hidden = !text || !appellations.length;
-    status.classList.toggle('known', !!known);
-    status.textContent = known
-      ? '✓ ' + t('origin.known', { name: known.name, where: [known.subregion, known.region, countryName(known.country)].filter(Boolean).join(', ') })
-      : t('origin.unknown');
+    setStatus($('wf-app-status'), !text || !appellations.length ? null : known ? 'ok' : 'info', known
+      ? t('origin.known', { name: known.name, where: [known.subregion, known.region, countryName(known.country)].filter(Boolean).join(', ') })
+      : t('origin.unknown'));
     if (known) {
       regionInput.value = known.region;
       countrySelect.value = known.country;
@@ -220,25 +223,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   regionInput.addEventListener('change', regionChanged);
   countrySelect.addEventListener('change', countryChanged);
 
-  function showMsg(text: string, ok = false) {
-    const m = $('wf-msg');
-    m.textContent = text;
-    m.className = 'message ' + (ok ? 'ok' : 'error');
-    m.hidden = !text;
-  }
-
   // ---------- Read the label (Cloudflare Workers AI via /api/read-label) ----------
   // Status line under the link field or under the photo, with a spinner while working
   type StatusId = 'wf-label-status' | 'wf-link-status' | 'wf-source-status';
   let statusTarget: StatusId = 'wf-label-status';
-  function labelStatus(text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    for (const id of ['wf-label-status', 'wf-link-status', 'wf-source-status']) {
-      const el = $(id);
-      const mine = id === statusTarget;
-      el.textContent = mine ? text : '';
-      el.className = 'label-status' + (mine && kind ? ' ' + kind : '');
-      el.hidden = !mine || !text;
-    }
+  function labelStatus(text: string, kind: StatusState | null = null) {
+    for (const id of ['wf-label-status', 'wf-link-status', 'wf-source-status']) setStatus($(id), id === statusTarget ? kind : null, text);
     form.classList.toggle('reading', kind === 'busy');
   }
   const busyButton = (btn: HTMLButtonElement, on: boolean) => setLoading(btn, on);
@@ -327,11 +317,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   function fillStatus(f: Filler, done: string, nothing: string, extra = '') {
     const n = f.count();
     const text = (n ? done.replace('{n}', String(n)) : f.changes.length ? '' : nothing) + extra;
-    labelStatus(text.trim(), n ? 'ok' : f.changes.length ? '' : 'error');
+    const names = [...new Set(f.changes.map((c) => fieldName(c.id)))];
+    const differs = t('fill.differs', { n: names.length, fields: names.join(', ') });
+    labelStatus(text.trim() || differs, n ? 'ok' : f.changes.length ? 'warn' : 'error');
     if (!f.changes.length) return;
     const el = $(statusTarget);
-    const names = [...new Set(f.changes.map((c) => fieldName(c.id)))];
-    const line = mk('span', 'fill-diff', t('fill.differs', { n: names.length, fields: names.join(', ') }));
+    const line = mk('span', 'fill-diff', differs);
     const btn = mk('button', 'btn small secondary fill-use', t('fill.useNew'));
     btn.type = 'button';
     btn.addEventListener('click', () => {
@@ -339,8 +330,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       syncOrigin();
       labelStatus(t('fill.applied', { n: names.length }), 'ok');
     });
-    el.append(...(text.trim() ? [document.createTextNode(' ')] : []), line, ' ', btn);
-    el.hidden = false;
+    // Under the line: what differs (when something was also filled) and the button that takes the new values
+    el.append(...(text.trim() ? [line] : []), btn);
   }
 
   // ---------- Fetch from a shop link (/api/read-link) ----------
@@ -378,7 +369,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const others = (r.images ?? []).filter((u) => u !== r.image);
       if (others.length && !pendingImage) {
         showImageOptions([r.image, ...others].filter((u): u is string => !!u).map((url) => ({ url })));
-        producerStatus(t('image.fromSource'), '', 'wf-image-status');
+        producerStatus(t('image.fromSource'), 'ok', 'wf-image-status');
       }
       sourceUrl = r.source_url;
       sourceFetchedAt = new Date().toISOString();
@@ -409,7 +400,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     editing = w;
     checks.clear();
     $('wf-similar').hidden = true;
-    $('wf-producer-busy').hidden = true;
+    setStatus($('wf-producer-busy'), null);
     pendingImage = null;
     removeImage = false;
     linkImage = null;
@@ -424,9 +415,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     form.reset();
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
-    showMsg('');
-    $('wf-actions').hidden = false;
-    $('wf-delete-confirm').hidden = true;
     field<HTMLInputElement>('wf-name').value = w.name ?? '';
     field<HTMLInputElement>('wf-producer').value = w.producer ?? '';
     field<HTMLInputElement>('wf-producer-website').value = w.producer_website ?? '';
@@ -452,8 +440,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     showSource();
     showLinkBox(!sourceUrl);
     if (w.producer && !w.producer_checked_at && (!w.producer_website || !w.producer_address)) fillProducer();
-    panel.showModal();
-    panel.scrollTop = 0;
+    sheet.open();
     // On phones the keyboard would cover the sheet, so only focus a field on larger screens
     if (matchMedia('(min-width: 48rem)').matches) field<HTMLInputElement>('wf-name').focus({ preventScroll: true });
     else (document.activeElement as HTMLElement | null)?.blur();
@@ -478,9 +465,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     }));
   }
 
+  /** Closes after saving or deleting (nothing to ask) */
   function closeForm() {
     editing = null;
-    if (panel.open) panel.close();
+    sheet.close();
   }
 
   // Filters on the list: country → region (a region belongs to its country), type, tasting – and the search box.
@@ -519,10 +507,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
   const byLabel = (opts: DdOption[]) => opts.sort((a, b) => a.label.localeCompare(b.label, locale()));
   const dds = filterBox ? {
-    country: filterDropdown({ name: t('wineLib.country'), allLabel: t('wineLib.allCountries'), onChange: (v) => setFilter('country', v) }),
-    region: filterDropdown({ name: t('wineLib.region'), allLabel: t('wineLib.allRegions'), onChange: (v) => setFilter('region', v) }),
-    style: filterDropdown({ name: t('wineLib.type'), allLabel: t('wineLib.allStyles'), onChange: (v) => setFilter('style', v) }),
-    tasting: filterDropdown({ name: t('wineLib.tasting'), allLabel: t('wineLib.allTastings'), onChange: (v) => setFilter('tasting', v) }),
+    country: filterDropdown({ name: t('wineLib.country'), allLabel: t('wineLib.allCountries'), allShort: t('wineLib.countriesShort'), onChange: (v) => setFilter('country', v) }),
+    region: filterDropdown({ name: t('wineLib.region'), allLabel: t('wineLib.allRegions'), allShort: t('wineLib.regionsShort'), onChange: (v) => setFilter('region', v) }),
+    style: filterDropdown({ name: t('wineLib.type'), allLabel: t('wineLib.allStyles'), allShort: t('wineLib.stylesShort'), onChange: (v) => setFilter('style', v) }),
+    tasting: filterDropdown({ name: t('wineLib.tasting'), allLabel: t('wineLib.allTastings'), allShort: t('wineLib.tastingsShort'), onChange: (v) => setFilter('tasting', v) }),
   } : null;
   if (filterBox && dds) filterBox.prepend(...FKEYS.map((k) => dds[k].el));
   function renderFilters(shown: number) {
@@ -581,10 +569,20 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     filter.q = (e.target as HTMLInputElement).value.trim().toLowerCase();
     render();
   });
+  // Nothing matches: one button clears the filters and the search
+  document.getElementById('wine-no-match-clear')?.addEventListener('click', () => {
+    for (const k of FKEYS) filter[k] = new Set();
+    filter.q = '';
+    const q = document.getElementById('wine-search') as HTMLInputElement | null;
+    if (q) { q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true })); }
+    saveFilter();
+    render();
+  });
 
   function render() {
     list.replaceChildren();
     $('wine-empty').hidden = wines.length > 0;
+    list.hidden = !wines.length;
     const shown = wines.filter((w) => !pendingDelete.has(w.id) && matches(w));
     renderFilters(shown.length);
     const noMatch = document.getElementById('wine-no-match');
@@ -686,7 +684,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
 
   // ---------- Events ----------
-  $('wf-cancel').addEventListener('click', closeForm);
+  $('wf-cancel').addEventListener('click', () => sheet.requestClose());
 
   async function useImage(file: File, status: StatusId) {
     pendingImage = await shrinkImage(file);
@@ -702,8 +700,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const website = webUrl(field<HTMLInputElement>('wf-producer-website').value);
     const name = field<HTMLInputElement>('wf-name').value.trim();
     box.hidden = true;
-    if (!website) { producerStatus(t('image.needWebsite'), '', 'wf-image-status'); return; }
-    if (!name) { producerStatus(t('admin.wineNameMissing'), '', 'wf-image-status'); return; }
+    if (!website) { producerStatus(t('image.needWebsite'), 'warn', 'wf-image-status'); return; }
+    if (!name) { producerStatus(t('admin.wineNameMissing'), 'warn', 'wf-image-status'); return; }
     btn.disabled = true;
     producerStatus(t('image.searching'), 'busy', 'wf-image-status');
     let images: { url: string; page: string }[] = [];
@@ -717,8 +715,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       if (res.ok) images = ((await res.json()) as { images: typeof images }).images ?? [];
     } catch {}
     btn.disabled = false;
-    if (!images.length) { producerStatus(t('image.noneFound'), '', 'wf-image-status'); return; }
-    producerStatus(t('image.pick'), '', 'wf-image-status');
+    if (!images.length) { producerStatus(t('image.noneFound'), 'warn', 'wf-image-status'); return; }
+    producerStatus(t('image.pick'), 'info', 'wf-image-status');
     showImageOptions(images);
   });
 
@@ -731,7 +729,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const cell = mk('div', 'image-cell');
       const b = mk('button', 'image-option');
       b.type = 'button';
-      if (im.page) b.title = im.page;
+      if (im.page) tooltip(b, im.page);
       b.setAttribute('aria-pressed', String(im.url === current));
       const img = mk('img');
       img.src = im.url;
@@ -763,7 +761,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!sourceUrl) return;
     const a = $<HTMLAnchorElement>('wf-source-link');
     a.href = sourceUrl;
-    a.title = sourceUrl;
+    tooltip(a, sourceUrl);
     try {
       const u = new URL(sourceUrl);
       a.textContent = u.hostname.replace(/^www\./, '') + (u.pathname.length > 1 ? decodeURIComponent(u.pathname) : '');
@@ -798,8 +796,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!checks.checkWithin(form) || !name) {
       if (!name) checks.check('wf-name');
       const bad = form.querySelector<HTMLElement>('[aria-invalid]');
-      bad?.focus();
-      showMsg(t('wineCheck.fix'));
+      if (bad) focusField(bad);
       return;
     }
 
@@ -808,13 +805,11 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     const twin = wines.find((w) => w.id !== editing?.id && normOrigin(w.name) === normOrigin(name) && (w.vintage ?? '') === vintageNow);
     if (twin) {
       fieldError(field<HTMLInputElement>('wf-name'), t('wineCheck.twin'));
-      field<HTMLInputElement>('wf-name').focus();
-      showMsg(t('wineCheck.fix'));
+      focusField(field<HTMLInputElement>('wf-name'));
       return;
     }
     const save = $<HTMLButtonElement>('wf-save');
-    save.disabled = true;
-    save.textContent = t('common.saving');
+    setLoading(save, true, t('common.saving'));
 
     let image_url = editing?.image_url ?? null;
     if (linkImage) image_url = linkImage;
@@ -822,9 +817,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (pendingImage) {
       const url = await uploadImage(pendingImage);
       if (!url) {
-        save.disabled = false;
-        save.textContent = t('common.save');
-        showMsg(t('admin.imageFailed'));
+        setLoading(save, false);
+        toast(t('admin.imageFailed'), { kind: 'error' });
         return;
       }
       image_url = url;
@@ -871,9 +865,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       ? await supabase.from('wines').update({ ...row, ...place }).eq('id', before.id).select('id').single()
       : await supabase.from('wines').insert({ ...row, ...place, host_id: hostId }).select('id').single();
 
-    save.disabled = false;
-    save.textContent = t('common.save');
-    if (error) { showMsg(t('admin.wineNotSaved')); return; }
+    setLoading(save, false);
+    if (error) { toast(t('admin.wineNotSaved'), { kind: 'error' }); return; }
     const newId = (saved as { id: number } | null)?.id;
     // A wine that came into a tasting before it had a price gets the price there now (an offer on 1 bottle first)
     const start = row.offer_quantity === 1 && row.offer_price_dkk != null ? row.offer_price_dkk : row.retail_price_dkk;
@@ -921,11 +914,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     } catch { return null; }
   }
 
-  function producerStatus(text: string, kind: 'busy' | 'ok' | '' = '', id = 'wf-producer-status') {
-    const el = $(id);
-    el.textContent = text;
-    el.className = 'producer-status' + (kind ? ' ' + kind : '');
-    el.hidden = !text;
+  function producerStatus(text: string, kind: StatusState | '' = '', id = 'wf-producer-status') {
+    setStatus($(id), text ? kind || 'info' : null, text);
   }
 
   /** As soon as the producer is known in the form: find the website and address and fill in the empty fields. */
@@ -959,7 +949,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         websiteEl.value = found.website;
         websiteEl.classList.add('from-label');
         producerStatus(t(found.lat != null ? 'producer.foundPlace' : 'producer.found'), 'ok');
-      } else producerStatus(websiteEl.value.trim() ? '' : t('producer.notFound'));
+      } else producerStatus(websiteEl.value.trim() ? '' : t('producer.notFound'), 'warn');
     }
     // The address
     if (wantAddress) {
@@ -967,10 +957,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         addressEl.value = found.address;
         addressEl.classList.add('from-label');
         producerStatus(t('producer.addressFound'), 'ok', 'wf-address-status');
-      } else producerStatus(addressEl.value.trim() ? '' : t('producer.addressNotFound'), '', 'wf-address-status');
+      } else producerStatus(addressEl.value.trim() ? '' : t('producer.addressNotFound'), 'warn', 'wf-address-status');
     }
     if (found?.address && found.lat == null && addressEl.value.trim() === found.address) {
-      producerStatus(t('producer.addressFound') + ' ' + t('producer.notPrecise'), '', 'wf-address-status');
+      producerStatus(t('producer.addressFound') + ' ' + t('producer.notPrecise'), 'warn', 'wf-address-status');
     }
     showOriginMap();
   }
@@ -989,7 +979,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     siteEl.classList.remove('from-label');
     const addressEl = field<HTMLInputElement>('wf-producer-address');
     const producer = field<HTMLInputElement>('wf-producer').value.trim();
-    if (addressEl.value.trim()) { producerStatus('✓ ' + t('producer.websiteSet'), 'ok'); return; }
+    if (addressEl.value.trim()) { producerStatus(t('producer.websiteSet'), 'ok'); return; }
     // Look for the address from this website
     const turn = ++producerTurn;
     producerStatus(t('producer.websiteSet'), 'ok');
@@ -998,13 +988,13 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       appellation: toText(appInput.value), region: toText(regionInput.value), country: countrySelect.value || null,
       producer_website: url }, editing?.id);
     if (turn !== producerTurn || siteEl.value !== url) return;
-    producerStatus('✓ ' + t('producer.websiteSet'), 'ok');
+    producerStatus(t('producer.websiteSet'), 'ok');
     if (found) foundPlace = { ...found, website: url, producer };
     if (found?.address && !addressEl.value.trim()) {
       addressEl.value = found.address;
       addressEl.classList.add('from-label');
-      producerStatus(t('producer.addressFound') + (found.lat == null ? ' ' + t('producer.notPrecise') : ''), found.lat != null ? 'ok' : '', 'wf-address-status');
-    } else producerStatus(t('producer.addressNotFound'), '', 'wf-address-status');
+      producerStatus(t('producer.addressFound') + (found.lat == null ? ' ' + t('producer.notPrecise') : ''), found.lat != null ? 'ok' : 'warn', 'wf-address-status');
+    } else producerStatus(t('producer.addressNotFound'), 'warn', 'wf-address-status');
     showOriginMap();
   });
 
@@ -1067,7 +1057,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (turn !== geoTurn || addressEl.value.trim() !== address) return;
     foundPlace = { website: webUrl(field<HTMLInputElement>('wf-producer-website').value), address, producer,
       lat: hit?.lat ?? null, lon: hit?.lon ?? null, source: hit?.source ?? null };
-    producerStatus(t(hit ? 'producer.placed' : 'producer.notPrecise'), hit ? 'ok' : '', 'wf-address-status');
+    producerStatus(t(hit ? 'producer.placed' : 'producer.notPrecise'), hit ? 'ok' : 'warn', 'wf-address-status');
     showOriginMap();
   }
   field<HTMLInputElement>('wf-producer-address').addEventListener('change', () => placeAddress());
@@ -1087,23 +1077,18 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     return !error;
   }
 
-  // Delete: a clear question in the panel's foot, then the wine leaves the list with "Undo" for a while
-  $('wf-delete').addEventListener('click', () => {
+  // Delete: asked about first (the one confirmation), then the wine leaves the list with "Undo" for a while
+  $('wf-delete').addEventListener('click', async () => {
     if (!editing) return;
-    const n = tastingsOf(editing).length;
-    $('wf-delete-q').textContent = t(n ? 'wineLib.deleteQIn' : 'wineLib.deleteQ', { name: editing.name, n });
-    $('wf-delete-confirm').hidden = false;
-    $('wf-actions').hidden = true;
-    $('wf-delete-no').focus();
-  });
-  $('wf-delete-no').addEventListener('click', () => { $('wf-delete-confirm').hidden = true; $('wf-actions').hidden = false; });
-  $('wf-delete-yes').addEventListener('click', () => {
-    if (!editing) return;
-    const id = editing.id;
+    const w = editing;
+    const n = tastingsOf(w).length;
+    const ok = await confirmModal({ title: t('wineLib.deleteQ', { name: w.name }), danger: true, ok: t('admin.deleteWine'),
+      text: n ? t('wineLib.deleteTextIn', { n }) : t('wineLib.deleteText') });
+    if (!ok) return;
     closeForm();
     // On a wine's own page: back to the list, which deletes it (with Undo)
-    if (hooks.onDeleted) { hooks.onDeleted(id); return; }
-    deleteLater(id);
+    if (hooks.onDeleted) { hooks.onDeleted(w.id); return; }
+    deleteLater(w.id);
   });
 
   /** Hides a wine and deletes it when the toast goes – unless "Undo" is pressed. */
@@ -1114,7 +1099,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     pendingDelete.set(id, data.session?.access_token ?? '');
     render();
     toast(t('wineLib.deletedToast', { name: [w.name, w.vintage].filter(Boolean).join(' ') }), {
-      ms: 8000,
       action: { label: t('wineLib.undo'), run: () => { pendingDelete.delete(id); render(); toast(t('wineLib.restoredToast'), { kind: 'ok' }); } },
       onTimeout: () => deleteNow(id),
     });
@@ -1123,7 +1107,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     if (!pendingDelete.has(id)) return;
     const { error } = await supabase.from('wines').delete().eq('id', id);
     pendingDelete.delete(id);
-    if (error) { render(); toast(t('admin.wineOrdered'), { kind: 'error', ms: 9000 }); return; }
+    if (error) { render(); toast(t('admin.wineOrdered'), { kind: 'error' }); return; }
     await load();
   }
   // Leaving the page before the toast is gone: delete now (keepalive, so it is sent after the page closes)

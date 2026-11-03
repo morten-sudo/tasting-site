@@ -21,7 +21,9 @@ export const HELP: HelpSection[] = [
 <li><b>Inviter gæsterne.</b> Tryk <a href="t:guests/?open=g-invite-toggle">Gæster → Inviter gæst</a>. Gæster med e-mail får invitationen på mail; ellers kopierer du deres personlige link og sender det selv.</li>
 <li><b>Følg svarene</b> under <a href="t:guests/">Gæster</a>. Du ser, hvem der kommer, hvem der ikke har svaret, og hvem der står på venteliste.</li>
 <li><b>På aftenen</b> åbner du for bestillinger under <a href="t:orders/">Bestillinger</a> og for quizzen under <a href="t:quiz/">Quiz</a>, når det passer – og afslører vinene, hvis det er en blindsmagning.</li>
-</ol>`,
+</ol>
+<h4 id="feedback">Gemt, slettet og spurgt først</h4>
+<p>Du retter altid i panelet fra højre. Når du gemmer, sletter eller kopierer et link, siger en kort besked nederst på skærmen, at det er sket – efter en sletning med <i>Fortryd</i> i nogle sekunder. Sletter du noget (en vin, et spørgsmål, en gæst, en mængdepris eller et svar med tekst), bliver du spurgt først. Lukker du et panel, hvor du har rettet noget uden at gemme, spørger vi, om ændringerne skal kasseres.</p>`,
       en: `<p>From an empty account to a tasting with invited guests:</p>
 <ol>
 <li><b>Add the wines.</b> Go to <a href="/admin/wines/?open=wine-add-toggle">Wines → New wine</a> and type the name, paste a link to the shop or choose a photo of the label – with a link or a photo most of it fills itself in. See <a href="#wines">Wines</a>.</li>
@@ -30,7 +32,9 @@ export const HELP: HelpSection[] = [
 <li><b>Invite the guests.</b> Press <a href="t:guests/?open=g-invite-toggle">Guests → Invite guest</a>. Guests with an email get the invitation by email; for the others, copy their personal link and send it yourself.</li>
 <li><b>Follow the replies</b> under <a href="t:guests/">Guests</a>. You see who is coming, who has not replied and who is on the waiting list.</li>
 <li><b>On the evening</b>, open ordering under <a href="t:orders/">Orders</a> and the quiz under <a href="t:quiz/">Quiz</a> when it suits you – and reveal the wines if it is a blind tasting.</li>
-</ol>`,
+</ol>
+<h4 id="feedback">Saved, deleted and asked first</h4>
+<p>You always edit in the panel from the right. When you save, delete or copy a link, a short message at the bottom of the screen says it is done – after deleting, with <i>Undo</i> for a few seconds. When you delete something (a wine, a question, a guest, a quantity price or an answer with text), you are asked first. When you close a panel where you changed something without saving, you are asked whether to discard the changes.</p>`,
     },
   },
   {

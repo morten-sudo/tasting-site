@@ -1,15 +1,15 @@
 ---
 import Icon from './ui/Icon.astro';
+import EmptyState from './ui/EmptyState.astro';
 // Event chat for one tasting: the message list and a box to write in. Used by guests and the host.
 const { prefix } = Astro.props as { prefix: string };
 ---
 <div class="chat" id={`${prefix}-chat`}>
   <ol id={`${prefix}-messages`} class="chat-list" aria-live="polite"></ol>
-  <p id={`${prefix}-empty`} class="chat-empty hint" hidden data-i18n="chat.empty">No messages yet. Say hello!</p>
+  <EmptyState id={`${prefix}-empty`} class="chat-empty" icon="chat" title="chat.emptyTitle" text="chat.emptyText" hidden />
   <form id={`${prefix}-form`} class="chat-form" novalidate>
     <label for={`${prefix}-input`} class="sr" data-i18n="chat.write">Write a message</label>
     <textarea id={`${prefix}-input`} class="input" rows="1" maxlength="1000" placeholder="Write a message" data-i18n-attr="placeholder=chat.write" enterkeyhint="send"></textarea>
     <button class="btn chat-send" type="submit" aria-label="Send" data-i18n-attr="aria-label=chat.send"><Icon name="send" /></button>
   </form>
-  <p id={`${prefix}-error`} class="message error" hidden></p>
 </div>

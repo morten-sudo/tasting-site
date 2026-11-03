@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import Loading from '../components/ui/Loading.astro';
 import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 ---
 <Base title="page.signup">
@@ -19,7 +20,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
       <div id="signup" class="card su-card">
         <h2 data-i18n="signup.formTitle">Create your free account</h2>
-        <p id="checking" class="hint" hidden data-i18n="host.creating">Setting you up as a host …</p>
+        <Loading id="checking" text="host.creating" hidden />
 
         <!-- Step 1: name and email -->
         <form id="start-form" class="login-form" novalidate>
@@ -29,7 +30,6 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
             <label for="email" data-i18n="common.email">Email</label>
             <input class="input" id="email" type="email" autocomplete="email" inputmode="email" required />
           </div>
-          <p id="start-msg" class="message" hidden></p>
           <button class="btn" type="submit" id="start-btn" data-i18n="login.sendCode">Send code</button>
           <p class="hint su-fine" data-i18n="signup.noPassword">We send you a code by email – no password needed.</p>
           <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
@@ -41,7 +41,6 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
           <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
           <input id="otp" class="input code" type="text" inputmode="numeric" autocomplete="one-time-code"
                  pattern="[0-9]*" maxlength="10" required />
-          <p id="otp-msg" class="message" hidden></p>
           <button class="btn" type="submit" id="otp-btn" data-i18n="signup.create">Create my account</button>
           <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
           <p class="hint">
@@ -64,6 +63,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
 <script>
   import { setLoading } from '../lib/ui/button';
+  import { toast } from '../lib/ui/toast';
+  import { fieldError } from '../lib/field-error';
   import { supabase } from '../lib/supabase';
   import { i18nReady, lang, t } from '../i18n';
 
@@ -73,11 +74,9 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
   const NAME_KEY = 'wt_host_name';
   let email = '';
 
-  function show(el: HTMLElement, text: string, ok: boolean) {
-    el.textContent = text;
-    el.className = 'message ' + (ok ? 'ok' : 'error');
-    el.hidden = false;
-  }
+  // Problems with what was typed go under the field; problems with sending as a toast
+  const bad = (id: string, text: string) => { fieldError($(id), text); $(id).focus(); };
+  const failed = (text: string) => toast(text, { kind: 'error' });
 
   function remember(name: string) { try { localStorage.setItem(NAME_KEY, name); } catch {} }
   function remembered() { try { return localStorage.getItem(NAME_KEY) ?? ''; } catch { return ''; } }
@@ -95,7 +94,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       busy = false;
       $('checking').hidden = true;
       $('start-form').hidden = false;
-      show($('start-msg'), t('host.failed'), false);
+      failed(t('host.failed'));
       return;
     }
     try { localStorage.removeItem(NAME_KEY); } catch {}
@@ -128,8 +127,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       email,
       options: { emailRedirectTo: location.origin + '/signup/', shouldCreateUser: true, data: { lang: lang() } },
     });
-    if (error?.status === 429) { show($('start-msg'), t('login.tooManyMails'), false); return false; }
-    if (error) { show($('start-msg'), t('login.sendFailed'), false); return false; }
+    if (error?.status === 429) { failed(t('login.tooManyMails')); return false; }
+    if (error) { failed(t('login.sendFailed')); return false; }
     // Counted for the superadmin's Usage page (the code is sent through Resend)
     supabase.rpc('log_usage', { feature: 'login' }).then(() => {}, () => {});
     return true;
@@ -137,14 +136,13 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
   $('start-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    $('start-msg').hidden = true;
     const name = ($('name') as HTMLInputElement).value.trim();
-    if (!name) { show($('start-msg'), t('host.nameMissing'), false); return; }
+    if (!name) { bad('name', t('host.nameMissing')); return; }
     remember(name);
     if (($('start-form') as HTMLFormElement).dataset.signedIn) { finish(name); return; }
 
     email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('start-msg'), t('common.invalidEmail'), false); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bad('email', t('common.invalidEmail')); return; }
 
     const btn = $('start-btn') as HTMLButtonElement;
     setLoading(btn, true, t('common.sending'));
@@ -165,15 +163,14 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
   $('otp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = $('otp-msg');
     const token = ($('otp') as HTMLInputElement).value.replace(/\D/g, '');
-    if (token.length < 6) { show(msg, t('login.wholeCode'), false); return; }
+    if (token.length < 6) { bad('otp', t('login.wholeCode')); return; }
     const btn = $('otp-btn') as HTMLButtonElement;
     setLoading(btn, true);
     const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
     setLoading(btn, false);
     if (error) {
-      show(msg, error.status === 429 ? t('login.tooManyTries') : t('login.wrongCode'), false);
+      bad('otp', error.status === 429 ? t('login.tooManyTries') : t('login.wrongCode'));
       return;
     }
     // onAuthStateChange handles the rest

@@ -9,6 +9,7 @@ import { countryName, loadAppellations, matchAppellation, originFull } from './o
 import { wineMap, showMapCredit } from './wine-map';
 import { mk } from './admin-common';
 import { fetchedWhen, type AdminWine } from './admin-wines';
+import { tooltip } from './ui/tooltip';
 
 type Detail = Omit<AdminWine, 'tasting_wines'> & {
   tasting_wines: { price_dkk: number | null; tastings: { id: string; slug: string; title: string; starts_at: string | null } | null }[];
@@ -85,7 +86,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     a.href = w.source_url;
     a.target = '_blank';
     a.rel = 'noopener';
-    a.title = w.source_url;
+    tooltip(a, w.source_url);
     try { a.textContent = new URL(w.source_url).hostname.replace(/^www\./, ''); } catch { a.textContent = w.source_url; }
     const btn = iconButton('refresh', t('source.refresh'));
     btn.addEventListener('click', actions.refresh);

@@ -1,6 +1,7 @@
 ---
 // The log for all accounts in one list: hosts, guests, sign-ins and the superadmin's own actions.
 import Base from '../../layouts/Base.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import '../../styles/admin.css';
 ---
@@ -20,7 +21,7 @@ import '../../styles/admin.css';
           <th data-i18n="super.tenant">Account</th><th data-i18n="super.logWho">By</th></tr></thead>
         <tbody id="log"></tbody>
       </table></div>
-      <p id="log-none" class="hint" hidden data-i18n="super.logNone">Nothing yet.</p>
+      <EmptyState id="log-none" icon="info" title="super.logNone" hidden />
     </SuperNav>
   </section>
 </Base>

@@ -2,6 +2,8 @@
 import Icon from '../components/ui/Icon.astro';
 import Checkbox from '../components/ui/Checkbox.astro';
 import Base from '../layouts/Base.astro';
+import Loading from '../components/ui/Loading.astro';
+import Notice from '../components/ui/Notice.astro';
 ---
 <Base title="page.login">
   <section class="login-page">
@@ -43,14 +45,14 @@ import Base from '../layouts/Base.astro';
       <div class="card lp-card">
         <h1 class="title" data-i18n="login.title">Sign in</h1>
         <!-- An invitation for another email, opened while signed in -->
-        <div id="other-invite" class="message" hidden>
+        <Notice id="other-invite" tone="warn" hidden>
           <p data-i18n="login.otherInvite">This invitation is for another email than the one you are signed in with.</p>
-          <div class="row-actions">
+          <div class="actions">
             <button id="other-signout" class="btn small" type="button" data-i18n="login.otherSignOut">Sign out and open the invitation</button>
             <a id="other-stay" class="text-btn" href="/home/" data-i18n="login.otherStay">Stay signed in</a>
           </div>
-        </div>
-        <p id="checking" class="lp-checking" hidden><span class="spin" aria-hidden="true"></span><span data-i18n="login.checking">Signing you in …</span></p>
+        </Notice>
+        <Loading id="checking" text="login.checking" hidden />
 
         <div id="forms">
           <!-- Two steps: email, then the code from the email -->
@@ -66,7 +68,6 @@ import Base from '../layouts/Base.astro';
             <input class="input" id="email" type="email" autocomplete="email" inputmode="email" required />
             <!-- Remember me: stay signed in on this device and fill in the email next time -->
             <Checkbox label="login.remember" id="remember" checked />
-            <p id="mail-msg" class="message" hidden></p>
             <button class="btn" type="submit" id="mail-btn" data-i18n="login.sendCode">Send code</button>
             <p class="hint lp-fine" data-i18n="loginx.noPassword">No password needed – we email you a one-time code.</p>
           </form>
@@ -77,7 +78,6 @@ import Base from '../layouts/Base.astro';
             <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
             <input id="otp" class="input code" type="text" inputmode="numeric" autocomplete="one-time-code"
                    pattern="[0-9]*" maxlength="10" required />
-            <p id="otp-msg" class="message" hidden></p>
             <button class="btn" type="submit" id="otp-btn" data-i18n="login.submit">Sign in</button>
             <p class="hint small-links">
               <button id="resend" class="text-btn" type="button" data-i18n="login.resend">Send a new code</button> ·
@@ -98,7 +98,6 @@ import Base from '../layouts/Base.astro';
               <p data-i18n-html="login.inviteHelp">Paste the link from your invitation, or just the code at the end of the link (after <code>?k=</code>).</p>
               <label for="code" data-i18n="login.inviteLabel">Invitation link or code</label>
               <input class="input" id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
-              <p id="code-msg" class="message error" hidden></p>
               <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
             </form>
           </details>
@@ -141,6 +140,8 @@ import Base from '../layouts/Base.astro';
 
 <script>
   import { setLoading } from '../lib/ui/button';
+  import { toast } from '../lib/ui/toast';
+  import { fieldError } from '../lib/field-error';
   import { supabase, setRememberMe, rememberMe, lastEmail } from '../lib/supabase';
   import { fetchMyTastings, setCode, tastingUrl, signOut as guestSignOut } from '../lib/guest';
   import { landingUrl } from '../lib/landing';
@@ -159,11 +160,9 @@ import Base from '../layouts/Base.astro';
 
   let email = '';
 
-  function show(el: HTMLElement, text: string, ok: boolean) {
-    el.textContent = text;
-    el.className = 'message ' + (ok ? 'ok' : 'error');
-    el.hidden = false;
-  }
+  // Problems with what was typed go under the field; problems with sending as a toast
+  const bad = (id: string, text: string) => { fieldError($(id), text); $(id).focus(); };
+  const failed = (text: string) => toast(text, { kind: 'error' });
 
   // ---------- After sign-in: send the user to the right place ----------
   let routing = false;
@@ -193,7 +192,7 @@ import Base from '../layouts/Base.astro';
     $('checking').hidden = true;
     $('forms').hidden = false;
     showMailStep();
-    show($('mail-msg'), t('login.notOnList'), false);
+    bad('email', t('login.notOnList'));
     await supabase.auth.signOut({ scope: 'local' });
     return true;
   }
@@ -214,15 +213,14 @@ import Base from '../layouts/Base.astro';
   }
 
   async function sendCode(): Promise<boolean> {
-    const msg = $('mail-msg');
     const { data: known, error: checkError } = await supabase.rpc('login_email_known', { e: email });
     if (checkError) {
       // Too many attempts from this connection (limited so emails cannot be tested in bulk)
-      show(msg, checkError.message.includes('too_many') ? t('login.tooManyChecks') : t('login.sendFailed'), false);
+      failed(checkError.message.includes('too_many') ? t('login.tooManyChecks') : t('login.sendFailed'));
       return false;
     }
     if (!known) {
-      show(msg, wantsAdmin ? t('login.notHost', { email }) : t('login.unknownEmail', { email }), false);
+      bad('email', wantsAdmin ? t('login.notHost', { email }) : t('login.unknownEmail', { email }));
       return false;
     }
     const redirect = location.origin + '/login/' + (next ? '?next=' + encodeURIComponent(next) : '');
@@ -231,11 +229,11 @@ import Base from '../layouts/Base.astro';
       options: { emailRedirectTo: redirect, shouldCreateUser: true, data: { lang: lang() } },
     });
     if (error?.status === 429) {
-      show(msg, t('login.tooManyMails'), false);
+      failed(t('login.tooManyMails'));
       return false;
     }
     if (error) {
-      show(msg, t('login.sendFailed'), false);
+      failed(t('login.sendFailed'));
       return false;
     }
     // Counted for the superadmin's Usage page (the code is sent through Resend)
@@ -245,9 +243,8 @@ import Base from '../layouts/Base.astro';
 
   $('mail-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    $('mail-msg').hidden = true;
     email = ($('email') as HTMLInputElement).value.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show($('mail-msg'), t('common.invalidEmail'), false); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bad('email', t('common.invalidEmail')); return; }
     // Chosen before signing in, so the session is kept where the guest wants it
     setRememberMe(($('remember') as HTMLInputElement).checked, email);
 
@@ -260,7 +257,7 @@ import Base from '../layouts/Base.astro';
     $('sent-to').textContent = email;
     $('mail-form').hidden = true;
     $('otp-form').hidden = false;
-    $('otp-msg').hidden = true;
+    fieldError($('otp'), null);
     ($('otp') as HTMLInputElement).value = '';
     ($('otp') as HTMLInputElement).focus();
   });
@@ -268,34 +265,28 @@ import Base from '../layouts/Base.astro';
   // ---------- Step 2: verify the code ----------
   $('otp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = $('otp-msg');
     const token = ($('otp') as HTMLInputElement).value.replace(/\D/g, '');
-    if (token.length < 6) { show(msg, t('login.wholeCode'), false); return; }
+    if (token.length < 6) { bad('otp', t('login.wholeCode')); return; }
 
     const btn = $('otp-btn') as HTMLButtonElement;
-    btn.disabled = true;
-    btn.textContent = t('login.checkingCode');
+    setLoading(btn, true, t('login.checkingCode'));
     const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-    btn.disabled = false;
-    btn.textContent = t('login.submit');
+    setLoading(btn, false);
     if (error) {
-      show(msg, error.status === 429
-        ? t('login.tooManyTries')
-        : t('login.wrongCode'), false);
+      bad('otp', error.status === 429 ? t('login.tooManyTries') : t('login.wrongCode'));
       return;
     }
     route();
   });
 
   $('resend').addEventListener('click', async () => {
-    const msg = $('otp-msg');
     const ok = await sendCode();
-    if (ok) show(msg, t('login.resent'), true);
+    if (ok) toast(t('login.resent'));
     else { $('otp-form').hidden = true; $('mail-form').hidden = false; }
   });
 
   $('other-mail').addEventListener('click', () => {
-    $('mail-msg').hidden = true;
+    fieldError($('email'), null);
     showMailStep();
   });
 
@@ -314,20 +305,14 @@ import Base from '../layouts/Base.astro';
 
   $('code-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const msg = $('code-msg');
-    msg.hidden = true;
     const code = extractCode(($('code') as HTMLInputElement).value);
-    if (!code) { msg.textContent = t('login.pasteCode'); msg.hidden = false; return; }
+    if (!code) { bad('code', t('login.pasteCode')); return; }
     const { data } = await supabase.rpc('get_invite', { code });
     const row = Array.isArray(data) ? data[0] : null;
-    if (!row) {
-      msg.textContent = t('login.codeNotFound');
-      msg.hidden = false;
-      return;
-    }
-    const { data: t } = await supabase.rpc('get_tasting', { code });
-    const slug = (t as { slug?: string } | null)?.slug;
-    if (!slug) { msg.textContent = t('login.codeNotFound'); msg.hidden = false; return; }
+    if (!row) { bad('code', t('login.codeNotFound')); return; }
+    const { data: info } = await supabase.rpc('get_tasting', { code });
+    const slug = (info as { slug?: string } | null)?.slug;
+    if (!slug) { bad('code', t('login.codeNotFound')); return; }
     setCode(slug, code);
     location.href = tastingUrl(slug);
   });
@@ -398,7 +383,6 @@ import Base from '../layouts/Base.astro';
   .lp-card { width: 100%; max-width: 28rem; align-self: center; padding: 1.75rem 1.5rem; }
   @media (max-width: 30rem) { .lp-card { padding: 1.4rem 1.1rem; margin-top: -2.5rem; position: relative; } }
   .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.4rem, 9vw, 3rem); line-height: 1; margin: 0 0 1rem; }
-  .lp-checking { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); }
 
   .lp-steps { list-style: none; display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1.1rem; padding: 0; font-size: 0.85rem; color: var(--muted); }
   .lp-steps li { display: flex; align-items: center; gap: 0.4rem; }

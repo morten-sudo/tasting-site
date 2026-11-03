@@ -6,6 +6,7 @@
 import { t } from '../i18n';
 import { iconSvg } from './ui/icons';
 import { bindMenu, type MenuHandle } from './ui/menu';
+import { tooltip } from './ui/tooltip';
 
 export interface DdOption { value: string; label: string; n: number; sep?: boolean; extra?: boolean }
 
@@ -17,6 +18,8 @@ export interface FilterOptions {
   /** What is filtered, read out for the button ("Guests") */
   name: string;
   allLabel?: string;
+  /** Shorter word for "All" where the buttons are narrow (the wine library's four filters on a phone): "Countries" */
+  allShort?: string;
   single?: boolean;
   /** The choice is a Set of values; an empty Set means "All" (no filter), {NONE} that nothing is ticked.
    *  extras: the extra items that are ticked. Single: the Set holds the one value. */
@@ -117,8 +120,13 @@ export function filterDropdown(opts: FilterOptions) {
       const shown = o.shown ?? (none ? total : main.filter((x) => chosen.has(x.value)).reduce((s, x) => s + x.n, 0));
       // One choice by name; several as "3 chosen" – the count always shows
       const what = !names.length || chosen.has(NONE) && !extras.size ? t('guestFilter.none') : names.length === 1 ? names[0] : t('guestFilter.chosen', { n: names.length });
-      label.textContent = `${what} · ${shown}`;
-      btn.title = none && !extras.size ? '' : names.join(', ');
+      const short = none && !extras.size && opts.allShort ? opts.allShort : what;
+      label.replaceChildren(Object.assign(document.createElement('span'), { className: 'dd-txt' }));
+      const txt = label.firstElementChild!;
+      txt.append(Object.assign(document.createElement('span'), { className: 'dd-long', textContent: `${what} · ${shown}` }),
+        Object.assign(document.createElement('span'), { className: 'dd-short', textContent: short }));
+      // Several chosen: their names as a tip
+      tooltip(btn, none && !extras.size || names.length < 2 ? '' : names.join(', '));
       btn.classList.toggle('on', !none || extras.size > 0);
       btn.disabled = total === 0 && none && !extras.size;
     },

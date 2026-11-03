@@ -34,6 +34,8 @@ export interface DropdownOptions {
   prefix?: string;
   /** The name read out for the button when no <label> points at it */
   ariaLabel?: string;
+  /** A first choice "Not set" (value ''), so a form field can be cleared; while it is chosen the placeholder shows */
+  notSet?: boolean;
   small?: boolean;
   full?: boolean;
   right?: boolean;
@@ -97,20 +99,20 @@ export function dropdownFrom(root: HTMLElement, o: DropdownOptions = {}): Dropdo
   list.id ||= `${root.id || 'dd'}-list-${Math.random().toString(36).slice(2, 7)}`;
 
   // The options: given, or read from the static markup
-  let opts: DdOption[] = o.options ?? [...list.querySelectorAll<HTMLElement>('.opt-i')].map((b) => ({ value: b.dataset.value ?? '', label: b.textContent?.trim() ?? '' }));
+  const withNotSet = (l: DdOption[]) => (o.notSet && !l.some((x) => x.value === '') ? [{ value: '', label: t('dd.notSet') }, ...l] : l);
+  let opts: DdOption[] = withNotSet(o.options ?? [...list.querySelectorAll<HTMLElement>('.opt-i')].map((b) => ({ value: b.dataset.value ?? '', label: b.textContent?.trim() ?? '' })));
   let value = o.value ?? root.dataset.value ?? list.querySelector<HTMLElement>('.opt-i[aria-selected="true"]')?.dataset.value ?? '';
   let search: HTMLInputElement | null = null;
   let handle: MenuHandle;
 
   function paintButton() {
-    const cur = opts.find((x) => x.value === value);
+    const cur = o.notSet && value === '' ? undefined : opts.find((x) => x.value === value);
     valBox.replaceChildren();
     if (cur) {
       if (cur.lead) valBox.insertAdjacentHTML('beforeend', cur.lead);
       valBox.append(Object.assign(document.createElement('span'), { textContent: prefix() + cur.label }));
     } else valBox.append(Object.assign(document.createElement('span'), { className: 'muted', textContent: placeholder() }));
     if (o.ariaLabel) btn.setAttribute('aria-label', o.ariaLabel);
-    btn.title = cur ? cur.label : '';
   }
   function renderList() {
     const wantSearch = o.search ?? (root.dataset.search !== undefined || opts.length > 12);
@@ -200,7 +202,7 @@ export function dropdownFrom(root: HTMLElement, o: DropdownOptions = {}): Dropdo
     set value(v: string) { pick(v, false); },
     get disabled() { return btn.disabled; },
     set disabled(on: boolean) { btn.disabled = on; if (on) handle.close(false); },
-    setOptions(list2, v) { opts = list2; if (v !== undefined) value = v; renderList(); paintButton(); },
+    setOptions(list2, v) { opts = withNotSet(list2); if (v !== undefined) value = v; renderList(); paintButton(); },
     options: () => opts,
     label: () => opts.find((x) => x.value === value)?.label ?? '',
     open: () => handle.open(),

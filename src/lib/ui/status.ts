@@ -1,6 +1,7 @@
 // Component 18 – chip / status: one word and one tone per status, everywhere (guests, wines, orders, tastings).
 // "Not coming" and "Hidden" are neutral with a dashed edge – an answer, not an error. Chips are never buttons.
 import { t, type Key } from '../../i18n';
+import { tooltip } from './tooltip';
 
 export type ChipTone = 'neutral' | 'ok' | 'wait' | 'warn' | 'err' | 'strong';
 export interface Status { key: Key; tone: ChipTone; dashed?: boolean }
@@ -46,7 +47,8 @@ export function chip(text: string, tone: ChipTone = 'neutral', opts: { dashed?: 
   const el = opts.href ? Object.assign(document.createElement('a'), { href: opts.href }) : document.createElement('span');
   el.className = chipClass(tone, opts.dashed);
   el.textContent = text;
-  if (opts.title) el.title = opts.title;
+  // A longer explanation (e.g. the guest's note) as the one tip
+  if (opts.title) tooltip(el, opts.title);
   return el;
 }
 

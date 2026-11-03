@@ -12,9 +12,10 @@ import { t, locale, money } from '../i18n';
 import { amountText, parseAmount } from './wine-validate';
 import { fieldError } from './field-error';
 import { toast } from './toast';
-import { confirmModal } from './confirm';
+import { confirmModal } from './ui/confirm';
 import { initQuickAdd } from './wine-quick-add';
 import { winePaths } from './wine-paths';
+import { tooltip } from './ui/tooltip';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   country: string | null; region: string | null; appellation: string | null;
@@ -67,6 +68,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   function render() {
     list.replaceChildren();
     $('tw-empty').hidden = rows.length > 0;
+    $('tw-list').hidden = !rows.length;
     rows.forEach((r, i) => {
       const w = r.wines;
       const li = mk('li', 'tw-item');
@@ -75,7 +77,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const grip = mk('button', 'tw-grip');
       grip.type = 'button';
       grip.setAttribute('aria-label', t('twe.move', { name: w.name }));
-      grip.title = t('twe.moveHint');
+      tooltip(grip, t('twe.moveHint'));
       grip.setAttribute('aria-describedby', 'tw-move-help');
       grip.innerHTML = iconSvg('grip');
       const no = mk('span', 'tw-no', String(i + 1));
@@ -191,7 +193,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   }
 
   // ---------- Edit one wine in the side panel ----------
-  const editPanel = sheetPanel($<HTMLDialogElement>('tw-edit'));
+  const editPanel = sheetPanel($<HTMLDialogElement>('tw-edit'), { dirty: 'form' });
   let editing: Row | null = null;
   let tierRows: { qty: Stepper; price: HTMLInputElement }[] = [];
   // "From [− 6 +] bottles: [109,95 kr.] each" – the number of bottles with the stepper, the price with its unit inside
@@ -205,7 +207,13 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     p.setAttribute('aria-label', t('adminTasting.bulkPrice'));
     const del = iconButton('trash', t('twe.removeTier'), { quiet: true });
     const entry = { qty: q, price: p };
-    del.addEventListener('click', () => { tierRows = tierRows.filter((x) => x !== entry); row.remove(); });
+    // A row with a price is asked about first
+    del.addEventListener('click', async () => {
+      if (p.value.trim() && !(await confirmModal({ title: t('twe.removeTierQ'), ok: t('twe.removeTier'), danger: true,
+        text: t('twe.tierLine', { n: q.value, price: `${p.value.trim()} ${t('unit.kr')}` }).replace(/^./, (c) => c.toUpperCase()) }))) return;
+      tierRows = tierRows.filter((x) => x !== entry);
+      row.remove();
+    });
     const pBox = mk('div', 'affix w-num small');
     pBox.append(p, mk('span', 'unit', t('unit.kr')));
     const from = mk('span', 'twe-tier-part');
@@ -237,12 +245,11 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     document.querySelectorAll<HTMLInputElement>('input[name="twe-vis"]').forEach((x) => (x.checked = x.value === visOf(r)));
     $<HTMLInputElement>('twe-orderable').checked = r.orderable;
     for (const el of [price, retail]) fieldError(el, null);
-    $('twe-msg').hidden = true;
     editPanel.open();
     initHelpTips($('tw-edit'));
   }
 
-  $('twe-cancel').addEventListener('click', () => editPanel.close());
+  $('twe-cancel').addEventListener('click', () => editPanel.requestClose());
   $<HTMLFormElement>('twe-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const r = editing;
@@ -293,14 +300,13 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
 
   // Remove from the tasting – asked first, then with Undo (the wine stays in the library)
   async function removeWine(r: Row): Promise<boolean> {
-    if (!(await confirmModal(t('twe.removeQ', { name: r.wines.name }), t('twe.remove'), t('twe.removeHint')))) return false;
+    if (!(await confirmModal({ title: t('twe.removeQ', { name: r.wines.name }), text: t('twe.removeHint'), ok: t('twe.remove'), danger: true }))) return false;
     const { error } = await supabase.from('tasting_wines').delete().eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
-    if (error) { toast(t('twe.removeFailed', { name: r.wines.name }), { kind: 'error', ms: 8000 }); return false; }
+    if (error) { toast(t('twe.removeFailed', { name: r.wines.name }), { kind: 'error' }); return false; }
     const index = rows.indexOf(r);
     rows = rows.filter((x) => x !== r);
     render();
     toast(t('twe.removed', { name: r.wines.name }), {
-      ms: 8000,
       action: { label: t('wineLib.undo'), run: async () => {
         const back = { tasting_id: tastingId, wine_id: r.wine_id, sort_order: r.sort_order, price_dkk: r.price_dkk,
           price_tiers: r.price_tiers, orderable: r.orderable, revealed: r.revealed, blind: r.blind };
@@ -374,6 +380,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       toast(t('adminTasting.wineAdded', { name }), { kind: 'ok', action: { label: t('wineLib.open'), href: wineHref(id) } });
     },
   });
+  // The empty tasting's button opens the same new-wine line
+  $('tw-empty-add').addEventListener('click', () => quick.open());
 
   async function load() {
     const [tw, lib, r] = await Promise.all([

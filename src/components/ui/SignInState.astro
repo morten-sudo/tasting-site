@@ -1,0 +1,12 @@
+---
+// Component 34 – the ONE "not signed in / no invitation" state on guest pages: an empty state with a way forward.
+// Signed in but not invited to this tasting: Base.astro turns it into "You are not invited …" with a link to the
+// person's tastings. title: an i18n key ("Sign in to see the wines").
+import EmptyState from './EmptyState.astro';
+import { en } from '../../i18n/en';
+interface Props { id?: string; title: keyof typeof en; hidden?: boolean }
+const { id, title, hidden = true } = Astro.props;
+---
+<EmptyState id={id} class="need-login" icon="user" title={title} text="gate.text" hidden={hidden}>
+  <a class="btn small" href="/login/" data-login data-i18n="login.submit">Sign in</a>
+</EmptyState>

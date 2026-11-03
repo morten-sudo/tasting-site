@@ -1,6 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import SuperNav from '../../components/SuperNav.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.superadmin">
@@ -18,7 +20,7 @@ import '../../styles/admin.css';
           <ul id="gdpr-list" class="gdpr-list"></ul>
           <button id="gdpr-delete" class="btn small danger" type="button" data-i18n="super.gdprDelete">Delete everything</button>
         </div>
-        <p id="gdpr-msg" class="message" hidden></p>
+        <Notice id="gdpr-msg" hidden />
       </section>
 
       <section class="block">
@@ -29,7 +31,7 @@ import '../../styles/admin.css';
             <tbody id="actions"></tbody>
           </table>
         </div>
-        <p id="actions-none" class="hint" hidden data-i18n="super.logNone">Nothing yet.</p>
+        <EmptyState id="actions-none" icon="info" title="super.logNone" hidden />
       </section>
 
     </SuperNav>
@@ -42,6 +44,10 @@ import '../../styles/admin.css';
   import { t } from '../../i18n';
   import { requireAdmin, $, mk, cell, timeFmt } from '../../lib/super-common';
   import { eventText } from '../../lib/super-events';
+  import { confirmModal } from '../../lib/ui/confirm';
+  import { toast } from '../../lib/ui/toast';
+  import { setNotice } from '../../lib/ui/notice';
+  import { setLoading } from '../../lib/ui/button';
 
   if (await requireAdmin()) loadActions();
 
@@ -62,43 +68,42 @@ import '../../styles/admin.css';
   type Summary = { email: string; host: { name: string | null; tastings: number; wines: number; guests: number } | null;
     tenant_owner: boolean; invitations: number; orders: number; ratings: number; chat_messages: number; library_entries: number; account: boolean; is_admin: boolean };
   let gdprEmail = '';
-  const gdprMsg = (text: string, ok: boolean) => { const m = $('gdpr-msg'); m.textContent = text; m.className = 'message ' + (ok ? 'ok' : 'error'); m.hidden = !text; };
+  const gdprMsg = (text: string | null, tone: 'info' | 'warn' = 'info') => setNotice($('gdpr-msg'), text, tone);
 
   $('gdpr-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    gdprMsg('', true);
+    gdprMsg(null);
     $('gdpr-result').hidden = true;
     gdprEmail = ($('gdpr-email') as HTMLInputElement).value.trim().toLowerCase();
     if (!gdprEmail) return;
     const { data, error } = await supabase.rpc('admin_person_summary', { e: gdprEmail });
-    if (error || !data) { gdprMsg(t('admin.couldNotSave'), false); return; }
+    if (error || !data) { toast(t('admin.couldNotSave'), { kind: 'error' }); return; }
     const sum = data as Summary;
     const rows: string[] = [];
     if (sum.host) rows.push(t('super.gdprHost', { tastings: sum.host.tastings, wines: sum.host.wines, guests: sum.host.guests }));
     if (sum.invitations) rows.push(t('super.gdprInvites', { n: sum.invitations, orders: sum.orders, ratings: sum.ratings, chat: sum.chat_messages }));
     if (sum.library_entries) rows.push(t('super.gdprLibrary', { n: sum.library_entries }));
     if (sum.account) rows.push(t('super.gdprAccount'));
-    if (!rows.length) { gdprMsg(t('super.gdprNothing'), true); return; }
+    if (!rows.length) { gdprMsg(t('super.gdprNothing')); return; }
     $('gdpr-list').replaceChildren(...rows.map((r) => { const li = document.createElement('li'); li.textContent = r; return li; }));
     const del = $('gdpr-delete') as HTMLButtonElement;
     // Administrators and account owners cannot be deleted
     del.hidden = sum.is_admin || sum.tenant_owner;
-    del.textContent = t('super.gdprDelete');
-    delete del.dataset.armed;
-    if (sum.is_admin) gdprMsg(t('super.gdprAdmin'), false);
-    else if (sum.tenant_owner) gdprMsg(t('super.gdprOwner'), false);
+    if (sum.is_admin) gdprMsg(t('super.gdprAdmin'), 'warn');
+    else if (sum.tenant_owner) gdprMsg(t('super.gdprOwner'), 'warn');
     $('gdpr-result').hidden = false;
   });
 
   $('gdpr-delete').addEventListener('click', async () => {
     const del = $('gdpr-delete') as HTMLButtonElement;
-    if (!del.dataset.armed) { del.dataset.armed = '1'; del.textContent = t('super.gdprConfirm', { email: gdprEmail }); return; }
-    del.disabled = true;
-    const { error } = await supabase.rpc('admin_delete_person', { e: gdprEmail });
-    del.disabled = false;
-    if (error) { gdprMsg(t('admin.couldNotSave'), false); return; }
+    const email = gdprEmail;
+    if (!(await confirmModal({ title: t('super.gdprDeleteQ', { email }), text: t('super.gdprDeleteText'), ok: t('super.gdprDelete'), danger: true }))) return;
+    setLoading(del, true);
+    const { error } = await supabase.rpc('admin_delete_person', { e: email });
+    setLoading(del, false);
+    if (error) { toast(t('admin.couldNotSave'), { kind: 'error' }); return; }
     $('gdpr-result').hidden = true;
-    gdprMsg(t('super.gdprDone', { email: gdprEmail }), true);
+    toast(t('super.gdprDone', { email }));
     loadActions();
   });
 

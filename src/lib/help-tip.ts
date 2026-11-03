@@ -1,4 +1,5 @@
-// Small "?" buttons in admin: a bubble with a short explanation and a link to the right part of the help.
+// Component 36 – the "?" help tip: a bubble (the one tip style, .tip in components.css) with a short explanation and
+// a link to the right part of the help.
 // Mark an element with data-help="<tip>" (a key in TIPS); the button is put at the end of it.
 import { TIPS, pick } from './help-content';
 import { t } from '../i18n';
@@ -18,7 +19,7 @@ function open(btn: HTMLButtonElement, key: string) {
   if (!tip) return;
   close();
   const box = document.createElement('div');
-  box.className = 'help-bubble';
+  box.className = 'tip help';
   box.id = 'help-bubble';
   box.setAttribute('role', 'dialog');
   const text = document.createElement('p');

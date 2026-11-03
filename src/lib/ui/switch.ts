@@ -40,7 +40,7 @@ export function bindSwitch(input: HTMLInputElement, opts: SwitchOptions) {
       return;
     }
     const msg = opts.saved ? opts.saved(on) : t('common.saved');
-    if (msg) toast(msg, { kind: 'ok', ms: 2000 });
+    if (msg) toast(msg, { kind: 'ok' });
   });
 }
 

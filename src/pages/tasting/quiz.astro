@@ -1,19 +1,18 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Loading from '../../components/ui/Loading.astro';
+import Notice from '../../components/ui/Notice.astro';
+import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.quiz" tasting>
   <section class="wrap quiz-page">
     <h1 class="title" data-i18n="page.quiz">Quiz</h1>
 
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <Loading text="gate.loadingQuiz" />
 
-    <div id="no-code" class="message" hidden>
-      <p data-i18n="quiz.noCode">Sign in with your email or open the link from your invitation to join the quiz.</p>
-    </div>
+    <SignInState id="no-code" title="gate.quizTitle" />
 
-    <div id="closed" class="message" hidden>
-      <p data-i18n="quiz.closed">The quiz opens during the tasting. Keep this page open – it starts by itself when the host opens it.</p>
-    </div>
+    <Notice id="closed" hidden><p data-i18n="quiz.closed">The quiz opens during the tasting. Keep this page open – it starts by itself when the host opens it.</p></Notice>
 
     <!-- Quiz in progress -->
     <div id="play" hidden>
@@ -26,13 +25,10 @@ import Base from '../../layouts/Base.astro';
         <p id="q-count" class="q-count"></p>
         <h2 id="q-text" class="q-text"></h2>
         <div id="q-options"></div>
-        <p id="q-error" class="message error" hidden></p>
         <button id="q-lock" class="btn block" type="button" disabled data-i18n="quiz.lock">Lock answer</button>
       </div>
 
-      <div id="done" class="message ok" hidden>
-        <p data-i18n="quiz.done">All your answers are locked. Follow the standings below – answers and explanations come when the host closes the quiz.</p>
-      </div>
+      <Notice id="done" tone="ok" hidden><p data-i18n="quiz.done">All your answers are locked. Follow the standings below – answers and explanations come when the host closes the quiz.</p></Notice>
     </div>
 
     <!-- Quiz finished -->
@@ -50,6 +46,9 @@ import Base from '../../layouts/Base.astro';
 
 <script>
   import { supabase } from '../../lib/supabase';
+  import { tooltip } from '../../lib/ui/tooltip';
+  import { toast } from '../../lib/ui/toast';
+  import { setLoading } from '../../lib/ui/button';
   import { choiceCards } from '../../lib/ui/choice-cards';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t as tr } from '../../i18n';
@@ -112,7 +111,9 @@ import Base from '../../layouts/Base.astro';
       li.className = 'dot';
       if (answers.has(q.id)) li.classList.add('answered');
       if (i === current) li.classList.add('current');
-      li.title = tr(answers.has(q.id) ? 'quiz.dotAnswered' : 'quiz.dot', { n: i + 1 });
+      const what = tr(answers.has(q.id) ? 'quiz.dotAnswered' : 'quiz.dot', { n: i + 1 });
+      tooltip(li, what);
+      li.append(Object.assign(document.createElement('span'), { className: 'sr', textContent: what }));
       ol.append(li);
     });
   }
@@ -129,7 +130,6 @@ import Base from '../../layouts/Base.astro';
     $('q-count').textContent = tr('quiz.count', { n: current + 1, total: questions.length });
     $('rules').textContent = tr('quiz.rules', { total: questions.length });
     $('q-text').textContent = q.question;
-    $('q-error').hidden = true;
     // The answers: the choice cards (one answer among a few); the question names the group
     const cards = choiceCards({
       name: `q-${q.id}`, options: q.options.map((o) => ({ value: o.key, label: o.text })),
@@ -144,16 +144,11 @@ import Base from '../../layouts/Base.astro';
     if (!selected) return;
     const q = questions[current];
     const btn = $('q-lock') as HTMLButtonElement;
-    btn.disabled = true;
-    btn.textContent = tr('quiz.locking');
+    setLoading(btn, true, tr('quiz.locking'));
     const { error } = await supabase.rpc('submit_answer', { code, q_id: q.id, a_key: selected });
-    btn.textContent = tr('quiz.lock');
+    setLoading(btn, false);
     if (error) {
-      $('q-error').textContent = error.message.includes('ikke åben')
-        ? tr('quiz.closedForAnswers')
-        : tr('quiz.notSaved');
-      $('q-error').hidden = false;
-      btn.disabled = false;
+      toast(error.message.includes('ikke åben') ? tr('quiz.closedForAnswers') : tr('quiz.notSaved'), { kind: 'error' });
       if (error.message.includes('ikke åben')) start();
       return;
     }
@@ -296,7 +291,6 @@ import Base from '../../layouts/Base.astro';
   }
   /* The answers are the choice cards (component 10); only the space under them is the page's */
   .quiz-page #q-options .cc { margin-bottom: 1.2rem; }
-  .quiz-page #q-error { margin-bottom: 1rem; }
 
   .quiz-page .board-wrap { margin-top: 2.5rem; }
   .quiz-page .board-wrap + #results { margin-top: 2.5rem; }

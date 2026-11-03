@@ -1,6 +1,7 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
 import '../../styles/admin.css';
@@ -11,7 +12,6 @@ import '../../styles/admin.css';
 
     <div id="admin-main" hidden>
       <h1 class="title" data-i18n="adminNav.tastings">Tastings</h1>
-      <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
 
       <div class="guests-head">
         <h2 class="sr" data-i18n="adminNav.tastings">Tastings</h2>
@@ -28,6 +28,9 @@ import '../../styles/admin.css';
         <ul id="upcoming" class="tasting-cards"></ul>
         <h3 id="past-h" data-i18n="tastings.past" hidden>Past</h3>
         <ul id="past" class="tasting-cards"></ul>
+        <EmptyState id="intro" icon="calendar" title="admin.noTastingsTitle" text="admin.welcomeHost" hidden>
+          <button id="intro-new" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
+        </EmptyState>
       </section>
 
     </div>
@@ -116,6 +119,7 @@ import '../../styles/admin.css';
   let wizard: ReturnType<typeof initWizard> | null = null;
   const openNew = () => wizard?.openNew();
   $('new-toggle').addEventListener('click', openNew);
+  $('intro-new').addEventListener('click', openNew);
   // "+ New tasting" in the menu opens the guide right here
   document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); openNew(); });
 

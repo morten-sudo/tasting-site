@@ -1,24 +1,21 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Loading from '../../components/ui/Loading.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.cart" tasting>
   <section class="wrap cart-page">
     <h1 class="title" data-i18n="page.cart">Cart</h1>
 
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <Loading text="gate.loadingCart" />
 
-    <div id="no-code" class="message" hidden>
-      <p data-i18n="cart.noCode">To order you need to be signed in. Sign in with your email or open the link from your invitation, then come back here.</p>
-    </div>
+    <SignInState id="no-code" title="gate.cartTitle" />
 
-    <p id="closed" class="message" hidden data-i18n="cart.closed">
-      Ordering is not open right now.
-    </p>
+    <Notice id="closed" hidden><p data-i18n="cart.closed">Ordering is not open right now.</p></Notice>
 
-    <div id="confirm" class="message ok confirm" hidden>
-      <p><strong id="confirm-title"></strong></p>
-      <div id="confirm-pay"></div>
-    </div>
+    <Notice id="confirm" tone="ok" class="confirm" hidden><b id="confirm-title" class="n-title"></b><div id="confirm-pay"></div></Notice>
 
     <div id="cart" hidden>
       <ul id="lines" class="lines"></ul>
@@ -26,15 +23,13 @@ import Base from '../../layouts/Base.astro';
         <span data-i18n="cart.total">Total</span>
         <strong id="total"></strong>
       </div>
-      <p id="send-error" class="message error" hidden></p>
       <button id="send" class="btn block send" type="button" data-i18n="cart.send">Send order</button>
       <p class="hint" data-i18n="cart.binding">When you send it, the order is binding. The price is the one shown with the wine now.</p>
     </div>
 
-    <div id="empty" hidden>
-      <p data-i18n="cart.empty">Your cart is empty.</p>
-      <a class="btn" href="/home/" data-tpath="wines/" data-i18n="cart.seeWines">See the wines</a>
-    </div>
+    <EmptyState id="empty" icon="cart" title="cart.empty" text="cart.emptyHelp" hidden>
+      <a class="btn small" href="/home/" data-tpath="wines/" data-i18n="cart.seeWines">See the wines</a>
+    </EmptyState>
 
     <section id="history" class="history" hidden>
       <h2 data-i18n="cart.yourOrders">Your orders</h2>
@@ -47,6 +42,7 @@ import Base from '../../layouts/Base.astro';
   import { stepper } from '../../lib/ui/stepper';
   import { statusChip } from '../../lib/ui/status';
   import { setLoading } from '../../lib/ui/button';
+  import { toast } from '../../lib/ui/toast';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t, money, locale } from '../../i18n';
@@ -182,19 +178,14 @@ import Base from '../../layouts/Base.astro';
 
     const btn = $('send') as HTMLButtonElement;
     setLoading(btn, true, t('common.sending'));
-    $('send-error').hidden = true;
 
     const { data, error } = await supabase.rpc('place_order', { code, items });
     setLoading(btn, false);
     btn.disabled = true;
 
     if (error) {
-      $('send-error').textContent = error.message.includes('lukket')
-        ? t('cart.errClosed')
-        : error.message.includes('kan ikke bestilles')
-        ? t('cart.errWine')
-        : t('cart.errSend');
-      $('send-error').hidden = false;
+      toast(error.message.includes('lukket') ? t('cart.errClosed')
+        : error.message.includes('kan ikke bestilles') ? t('cart.errWine') : t('cart.errSend'), { kind: 'error' });
       btn.disabled = false;
       return;
     }
@@ -251,7 +242,6 @@ import Base from '../../layouts/Base.astro';
     margin-bottom: 1.25rem;
   }
   .cart-page .confirm, .cart-page #closed { margin-bottom: 1.5rem; }
-  .cart-page .confirm p:last-child { margin-bottom: 0; }
 
   .cart-page .lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--lodge-3); }
   .cart-page .line { padding: 1rem 0; border-bottom: 1px solid var(--lodge-2); }
@@ -270,7 +260,6 @@ import Base from '../../layouts/Base.astro';
   }
   .cart-page .sum strong { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
   .cart-page .send { margin-bottom: 0.6rem; }
-  .cart-page #send-error { margin-bottom: 1rem; }
 
   .cart-page .history { margin-top: 3rem; }
   .cart-page .order { padding: 0.9rem 1rem; margin-bottom: 0.75rem; border-left: 3px solid var(--amber); }

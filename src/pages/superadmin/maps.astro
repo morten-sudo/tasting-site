@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import SuperNav from '../../components/SuperNav.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.superadmin">
@@ -28,7 +29,7 @@ import '../../styles/admin.css';
         <h3 data-i18n="super.guessesTitle">Places found by Cloudflare AI</h3>
         <p class="hint" data-i18n="super.guessesHint">Appellations that are not on the list, placed by Cloudflare AI and checked against the country. Check the place; delete a wrong one and it is looked up again the next time a host saves the wine.</p>
         <ul id="guess-rows" class="guess-list"></ul>
-        <p id="guesses-none" class="hint" hidden data-i18n="super.guessesNone">None yet.</p>
+        <EmptyState id="guesses-none" icon="info" title="super.guessesNone" hidden />
       </section>
 
 
@@ -38,6 +39,8 @@ import '../../styles/admin.css';
 
 <script>
   import { chip } from '../../lib/ui/status';
+  import { confirmModal } from '../../lib/ui/confirm';
+  import { toast } from '../../lib/ui/toast';
 
   import { supabase } from '../../lib/supabase';
   import { t } from '../../i18n';
@@ -88,8 +91,12 @@ import '../../styles/admin.css';
       del.className = 'text-btn danger';
       del.textContent = t('super.guessDelete');
       del.addEventListener('click', async () => {
+        if (!(await confirmModal({ title: t('super.guessDeleteQ', { name: g.name }), text: t('super.guessDeleteText'), ok: t('super.guessDelete'), danger: true }))) return;
         const { error } = await supabase.rpc('admin_delete_place_guess', { k: g.key });
-        if (!error) li.remove();
+        if (error) { toast(t('admin.couldNotSave'), { kind: 'error' }); return; }
+        li.remove();
+        $('guesses-none').hidden = !!$('guess-rows').children.length;
+        toast(t('super.guessDeleted', { name: g.name }));
       });
       li.append(text, show, del);
       return li;

@@ -1,14 +1,14 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Loading from '../../components/ui/Loading.astro';
+import SignInState from '../../components/ui/SignInState.astro';
 import ChatBox from '../../components/ChatBox.astro';
 ---
 <Base title="page.chat" tasting>
   <section class="wrap chat-page">
     <h1 class="title" data-i18n="page.chat">Chat</h1>
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
-    <div id="no-code" class="message" hidden>
-      <p data-i18n="chat.noCode">Sign in with your email or open the link from your invitation to join the chat.</p>
-    </div>
+    <Loading text="gate.loadingChat" />
+    <SignInState id="no-code" title="gate.chatTitle" />
     <div id="chat-wrap" hidden>
       <p class="hint" data-i18n="chat.intro">Everyone invited to the tasting and the host can read along.</p>
       <ChatBox prefix="g" />

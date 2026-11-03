@@ -2,6 +2,11 @@
 import { supabase } from './supabase';
 import { t } from '../i18n';
 import { sheetPanel, iconButton } from './admin-common';
+import { confirmModal } from './ui/confirm';
+import { toast } from './ui/toast';
+import { setStatus } from './ui/status-line';
+import { setLoading } from './ui/button';
+import { fieldError, focusField } from './field-error';
 
 export type AdminQuestion = {
   id: number; tasting_id: string; sort_order: number; question: string;
@@ -29,15 +34,12 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   let editing: AdminQuestion | null = null;
 
   const form = $<HTMLFormElement>('q-form');
-  const panel = sheetPanel($<HTMLDialogElement>('q-panel'), () => { editing = null; });
+  const panel = sheetPanel($<HTMLDialogElement>('q-panel'), { onClose: () => { editing = null; }, dirty: 'form' });
   const list = $<HTMLOListElement>('q-admin-list');
   const optionsBox = $('qf-options');
 
-  function showMsg(text: string) {
-    const m = $('qf-msg');
-    m.textContent = text;
-    m.hidden = !text;
-  }
+  // Problems go under the field they are about
+  const clearErrors = () => { fieldError($('qf-question'), null); fieldError(optionsBox, null); };
 
   // One answer row: "right answer" radio + text + remove
   function optionRow(text = '', correct = false) {
@@ -54,10 +56,15 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     input.placeholder = t('aq.answerPlaceholder');
     const remove = iconButton('trash', t('aq.removeAnswer'), { quiet: true });
     remove.dataset.removeAnswer = '';
-    remove.addEventListener('click', () => {
+    remove.addEventListener('click', async () => {
       if (optionsBox.children.length <= MIN_OPTIONS) return;
+      // An answer with text is asked about first
+      const text = input.value.trim();
+      if (text && !(await confirmModal({ title: t('aq.removeAnswerQ'), text: `“${text}”`, ok: t('aq.removeAnswer'), danger: true }))) return;
+      const next = (row.nextElementSibling ?? row.previousElementSibling)?.querySelector<HTMLInputElement>('input[type=text]');
       row.remove();
       syncOptionButtons();
+      next?.focus();
     });
     row.append(radio, input, remove);
     optionsBox.append(row);
@@ -74,12 +81,10 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   function openForm(q: AdminQuestion | null) {
     editing = q;
     form.reset();
-    showMsg('');
+    clearErrors();
     $('qf-title').textContent = q ? t('aq.editQuestion') : t('aq.newQuestion');
     const del = $('qf-delete');
     del.hidden = !q;
-    del.textContent = t('aq.deleteQuestion');
-    delete del.dataset.armed;
     $<HTMLTextAreaElement>('qf-question').value = q?.question ?? '';
     $<HTMLTextAreaElement>('qf-explanation').value = q?.explanation ?? '';
     optionsBox.replaceChildren();
@@ -96,6 +101,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   function render() {
     list.replaceChildren();
     $('q-empty').hidden = questions.length > 0;
+    list.hidden = !questions.length;
     questions.forEach((q, i) => {
       const li = mk('li', 'q-row');
       const body = mk('div', 'q-body');
@@ -150,6 +156,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
 
   // ---------- Events ----------
   $('q-add-toggle').addEventListener('click', () => openForm(null));
+  $('q-empty-add').addEventListener('click', () => openForm(null));
   $('qf-cancel').addEventListener('click', closeForm);
   $('qf-add-option').addEventListener('click', () => {
     if (optionsBox.children.length < MAX_OPTIONS) optionRow().focus();
@@ -158,7 +165,8 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const question = $<HTMLTextAreaElement>('qf-question').value.trim();
-    if (!question) { showMsg(t('aq.questionMissing')); return; }
+    clearErrors();
+    if (!question) { fieldError($('qf-question'), t('aq.questionMissing')); focusField($('qf-question')); return; }
 
     const rows = [...optionsBox.querySelectorAll<HTMLElement>('.qf-option')]
       .map((r) => ({
@@ -166,9 +174,9 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
         correct: (r.querySelector('input[type=radio]') as HTMLInputElement).checked,
       }))
       .filter((r) => r.text);
-    if (rows.length < MIN_OPTIONS) { showMsg(t('aq.tooFewAnswers')); return; }
+    if (rows.length < MIN_OPTIONS) { fieldError(optionsBox, t('aq.tooFewAnswers')); return; }
     const correctIndex = rows.findIndex((r) => r.correct);
-    if (correctIndex < 0) { showMsg(t('aq.pickCorrect')); return; }
+    if (correctIndex < 0) { fieldError(optionsBox, t('aq.pickCorrect')); return; }
 
     const options = rows.map((r, i) => ({ key: KEYS[i], text: r.text }));
     const row = {
@@ -179,7 +187,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     };
 
     const save = $<HTMLButtonElement>('qf-save');
-    save.disabled = true;
+    setLoading(save, true);
     const { error } = editing
       ? await supabase.from('quiz_questions').update(row).eq('id', editing.id)
       : await supabase.from('quiz_questions').insert({
@@ -187,24 +195,22 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
           tasting_id: tastingId,
           sort_order: questions.reduce((m, q) => Math.max(m, q.sort_order), 0) + 1,
         });
-    save.disabled = false;
-    if (error) { showMsg(t('aq.notSaved')); return; }
+    setLoading(save, false);
+    if (error) { toast(t('aq.notSaved'), { kind: 'error' }); return; }
     closeForm();
+    toast(t('aq.saved'));
     await load();
   });
 
-  // Delete in two steps; the guests' answers to the question go with it
+  // Delete: asked about first; the guests' answers to the question go with it
   $('qf-delete').addEventListener('click', async () => {
-    const btn = $<HTMLButtonElement>('qf-delete');
     if (!editing) return;
-    if (!btn.dataset.armed) {
-      btn.dataset.armed = '1';
-      btn.textContent = t('aq.confirmDelete');
-      return;
-    }
-    const { error } = await supabase.from('quiz_questions').delete().eq('id', editing.id);
-    if (error) { showMsg(t('aq.notDeleted')); return; }
+    const q = editing;
+    if (!(await confirmModal({ title: t('aq.deleteQ'), text: t('aq.deleteText'), ok: t('aq.deleteQuestion'), danger: true }))) return;
+    const { error } = await supabase.from('quiz_questions').delete().eq('id', q.id);
+    if (error) { toast(t('aq.notDeleted'), { kind: 'error' }); return; }
     closeForm();
+    toast(t('aq.deleted'));
     await load();
   });
 
@@ -214,9 +220,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
   async function suggest() {
     const status = $('q-ai-status');
     const level = document.querySelector<HTMLInputElement>('input[name="q-ai-level"]:checked')?.value ?? 'medium';
-    status.textContent = t('aiQuiz.writing');
-    status.classList.add('ai-busy');
-    status.hidden = false;
+    setStatus(status, 'busy', t('aiQuiz.writing'));
     $<HTMLButtonElement>('q-ai').disabled = true;
     $<HTMLButtonElement>('q-ai-more').disabled = true;
     try {
@@ -230,18 +234,17 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
       });
       const out = (await res.json().catch(() => ({}))) as { questions?: Suggestion[]; error?: string };
       if (!res.ok || !out.questions?.length) {
-        status.textContent = t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed');
+        setStatus(status, 'error', t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed'));
         return;
       }
       aiList.append(...out.questions.map(suggestionCard));
       aiList.hidden = false;
       $('q-ai-warn').hidden = false;
       $('q-ai-more').hidden = false;
-      status.textContent = t('aiQuiz.pick');
+      setStatus(status, 'ok', t('aiQuiz.pick'));
     } catch {
-      status.textContent = t('aiQuiz.failed');
+      setStatus(status, 'error', t('aiQuiz.failed'));
     } finally {
-      status.classList.remove('ai-busy');
       $<HTMLButtonElement>('q-ai').disabled = false;
       $<HTMLButtonElement>('q-ai-more').disabled = false;
     }
@@ -273,7 +276,8 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
         correct_key: KEYS[sg.correct],
         explanation: sg.explanation,
       });
-      if (error) { add.disabled = false; alert(t('aq.notSaved')); return; }
+      if (error) { add.disabled = false; toast(t('aq.notSaved'), { kind: 'error' }); return; }
+      toast(t('aiQuiz.added'));
       li.remove();
       if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; }
       await load();

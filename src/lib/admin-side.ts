@@ -2,6 +2,7 @@
 // the libraries and settings. On phones the same menu opens as a drawer.
 import { supabase } from './supabase';
 import { t, type Key } from '../i18n';
+import { tooltip } from './ui/tooltip';
 
 /** The parts of a tasting's admin, each with its own address /t/<slug>/admin/<path> */
 export const SECTIONS: { id: string; path: string; label: Key }[] = [
@@ -57,7 +58,7 @@ function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>, hosting: 
   // The tastings I host myself are marked (the account may have many)
   if (hosting.has(r.id)) {
     a.classList.add('mine');
-    a.title = t('roles.youHost');
+    tooltip(a, t('roles.youHost'));
   }
   a.href = adminUrl(r.slug);
   li.append(a);

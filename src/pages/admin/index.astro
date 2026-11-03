@@ -1,6 +1,7 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
 import '../../styles/admin.css';
@@ -16,8 +17,10 @@ import '../../styles/admin.css';
           <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
         </div>
       </div>
-      <!-- The host is also invited somewhere as a guest -->
-      <p id="intro" class="hint" hidden data-i18n="admin.welcomeHost">Welcome as a host. Start by creating your first tasting – you can change everything afterwards.</p>
+      <!-- No tastings yet: how to start -->
+      <EmptyState id="intro" icon="calendar" title="admin.noTastingsTitle" text="admin.welcomeHost" hidden>
+        <button id="intro-new" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
+      </EmptyState>
 
       <!-- Counts -->
       <div class="dash-stats">
@@ -37,7 +40,7 @@ import '../../styles/admin.css';
         <section id="mine-card" class="card dash-card mine-card" hidden>
           <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
           <ul id="mine" class="mine-list"></ul>
-          <p id="mine-none" class="hint" hidden data-i18n="roles.mineNone">You are not a host of any upcoming tasting.</p>
+          <EmptyState id="mine-none" icon="calendar" title="roles.mineNone" hidden />
           <a id="mine-all" class="text-btn fwd" href="/admin/tastings/" hidden></a>
         </section>
 
@@ -60,6 +63,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { emptyState } from '../../lib/ui/empty';
   import { starsRo } from '../../lib/ui/stars';
   import { iconSvg } from '../../lib/ui/icons';
   import { supabase } from '../../lib/supabase';
@@ -161,7 +165,7 @@ import '../../styles/admin.css';
       a.append(chips);
       next.replaceChildren(a);
     } else {
-      next.replaceChildren(mk('p', 'hint', t('dash.noNext')));
+      next.replaceChildren(emptyState({ icon: 'calendar', title: t('dash.noNext'), action: { label: t('admin.newTasting'), icon: 'plus', secondary: true, onClick: () => $('new-toggle').click() } }));
     }
 
     // Awaiting payment
@@ -233,6 +237,7 @@ import '../../styles/admin.css';
     $('admin-main').hidden = false;
     const wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
     $('new-toggle').addEventListener('click', () => wizard.openNew());
+    $('intro-new').addEventListener('click', () => wizard.openNew());
     document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
     showMine();
     const { data } = await supabase.rpc('host_dashboard');

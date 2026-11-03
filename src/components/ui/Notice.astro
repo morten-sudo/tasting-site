@@ -1,0 +1,17 @@
+---
+// Component 33 – notice (src/lib/ui/notice.ts builds the same; setNotice(el, text, tone) fills this one).
+// tone: info | warn | error | ok; title: an i18n key; the slot is the body (paragraphs, links, an .actions row).
+import Icon from './Icon.astro';
+import { en } from '../../i18n/en';
+type K = keyof typeof en;
+interface Props { id?: string; tone?: 'info' | 'warn' | 'error' | 'ok'; title?: K; hidden?: boolean; class?: string }
+const { id, tone = 'info', title, hidden = false, class: cls } = Astro.props;
+const icon = tone === 'info' ? 'info' : tone === 'ok' ? 'check' : 'warn';
+---
+<div id={id} class:list={['notice', tone !== 'info' && tone, cls]} role={tone === 'error' ? 'alert' : 'status'} hidden={hidden}>
+  <Icon name={icon} />
+  <div class="n-body">
+    {title && <b class="n-title" data-i18n={title}>{en[title]}</b>}
+    <slot />
+  </div>
+</div>

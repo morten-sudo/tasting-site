@@ -1,0 +1,17 @@
+---
+// Component 34 – empty state (src/lib/ui/empty.ts builds the same; setEmpty(el, …) refills this one).
+// title / text: i18n keys (textHtml: the text has a link in it); the slot holds the action button(s).
+import Icon from './Icon.astro';
+import { en } from '../../i18n/en';
+import type { IconName } from '../../lib/ui/icons';
+type K = keyof typeof en;
+interface Props { id?: string; icon?: IconName; title: K; text?: K; textHtml?: boolean; hidden?: boolean; class?: string }
+const { id, icon, title, text, textHtml = false, hidden = false, class: cls } = Astro.props;
+const hasActions = Astro.slots.has('default');
+---
+<div id={id} class:list={['empty-state', cls]} hidden={hidden}>
+  {icon && <span class="e-ic" aria-hidden="true"><Icon name={icon} /></span>}
+  <p class="e-title" data-i18n={title}>{en[title]}</p>
+  {text && (textHtml ? <p class="help" data-i18n-html={text} set:html={en[text]} /> : <p class="help" data-i18n={text}>{en[text]}</p>)}
+  {hasActions && <div class="e-actions"><slot /></div>}
+</div>

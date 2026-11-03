@@ -3,6 +3,7 @@ import SearchField from '../../components/ui/SearchField.astro';
 import Dropdown from '../../components/ui/Dropdown.astro';
 // Help for hosts: every feature, step by step. Only shown to signed-in hosts (in the admin menu).
 import Base from '../../layouts/Base.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
 ---
@@ -19,7 +20,9 @@ import '../../styles/admin.css';
       </div>
       <nav id="help-toc" class="help-toc" aria-label="Topics" data-i18n-attr="aria-label=help.topics"></nav>
       <div id="help-list" class="help-list"></div>
-      <p id="help-none" class="hint" hidden data-i18n="help.noMatch">Nothing found. Try another word.</p>
+      <EmptyState id="help-none" icon="search" title="help.noMatch" hidden>
+        <button id="help-clear" class="btn small secondary" type="button" data-i18n="help.showAll">Show all help</button>
+      </EmptyState>
     </div>
     </AdminNav>
   </section>
@@ -126,6 +129,12 @@ import '../../styles/admin.css';
   window.addEventListener('hashchange', openFromHash);
 
   // Search: topics whose text matches open; the rest are hidden
+  $('help-clear').addEventListener('click', () => {
+    const f = $('help-search') as HTMLInputElement;
+    f.value = '';
+    f.dispatchEvent(new Event('input', { bubbles: true }));
+    f.focus();
+  });
   $('help-search').addEventListener('input', () => {
     const q = ($('help-search') as HTMLInputElement).value.trim().toLowerCase();
     let shown = 0;

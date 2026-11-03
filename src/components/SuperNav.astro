@@ -1,5 +1,7 @@
 ---
 import CloseButton from './ui/CloseButton.astro';
+import EmptyState from './ui/EmptyState.astro';
+import Loading from './ui/Loading.astro';
 // Superadmin shell: its own menu on the left (a drawer on phones) – Tenants (with the open
 // tenant's parts underneath), Log (all accounts), Maps and GDPR. Uses the same look as the host's admin menu.
 interface Props { active?: 'tenants' | 'log' | 'usage' | 'maps' | 'gdpr' }
@@ -35,8 +37,10 @@ const cur = (key: string) => (active === key ? 'page' : undefined);
   </aside>
 
   <div class="admin-content">
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
-    <p id="denied" class="message error" hidden data-i18n="super.denied">This page is only for Winetastr administrators.</p>
+    <Loading />
+    <EmptyState id="denied" icon="user" title="super.denied" hidden>
+      <a class="btn small" href="/admin/" data-i18n="super.toHostAdmin">To host admin</a>
+    </EmptyState>
     <div id="super-main" hidden>
       <slot />
     </div>

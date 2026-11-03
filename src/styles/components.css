@@ -218,6 +218,8 @@ dialog .dd.full { max-width: none; }
 .dd-btn:disabled { background: var(--lodge); color: var(--muted); border-color: var(--lodge-3); cursor: not-allowed; }
 .dd-btn[aria-invalid='true'] { border-color: var(--error); }
 .dd-btn .muted { color: #9b8f8b; }
+.dd-btn .dd-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dd-btn .dd-short { display: none; }
 /* A quiet menu button without a box (the header's language and account menus, the tasting switcher) */
 .dd-btn.bare { border-color: transparent; background: none; padding: 0 0.45rem; color: var(--muted); gap: 0.2rem; }
 .dd-btn.bare:hover, .dd-btn.bare[aria-expanded='true'] { color: var(--paper); border-color: transparent; }
@@ -476,18 +478,117 @@ a.card:hover, button.card:hover { border-color: var(--amber); color: var(--paper
 .card-meta { color: var(--muted); font-size: 0.92rem; }
 .card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
 
-/* ---------- 32 Toast: a short message at the bottom after saving or deleting (src/lib/toast.ts) ---------- */
-.toast {
-  position: fixed; left: 50%; bottom: max(1.25rem, env(safe-area-inset-bottom)); z-index: 1000;
-  transform: translate(-50%, 1rem); opacity: 0; transition: opacity 0.2s, transform 0.2s;
-  display: flex; align-items: center; gap: 0.75rem; width: max-content; max-width: min(34rem, calc(100vw - 2rem)); min-height: var(--h);
-  padding: 0.4rem 0.4rem 0.4rem 1rem; border-radius: var(--radius); background: var(--paper); color: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22); font-size: 0.95rem;
+/* ---------- 31 Confirmation (src/lib/ui/confirm.ts): the only way the site asks first ---------- */
+dialog.confirm {
+  width: min(26rem, calc(100vw - 2rem)); padding: 1.3rem 1.3rem 1.1rem; border: 0; border-radius: var(--radius);
+  background: var(--lodge); color: var(--paper); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
-.toast.shown { opacity: 1; transform: translate(-50%, 0); }
+dialog.confirm::backdrop { background: rgba(20, 12, 12, 0.45); }
+dialog.confirm[open] { animation: pop 0.18s ease-out; }
+@keyframes pop { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.cf-q { margin: 0 0 0.35rem; font-weight: 600; font-size: 1.05rem; }
+.cf-t { margin: 0; color: var(--muted); font-size: 0.95rem; }
+/* 46 Actions: a row of buttons; in a dialog the action is last (right), on phones stacked with the action on top */
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1rem; }
+.actions .push { margin-left: auto; }
+dialog.confirm .actions { justify-content: flex-end; margin-top: 1.1rem; }
+@media (max-width: 30rem) {
+  dialog .actions.stack { flex-direction: column-reverse; align-items: stretch; }
+  dialog .actions.stack .btn { width: 100%; }
+}
+
+/* ---------- 32 Toast (src/lib/ui/toast.ts): the only feedback after saving, deleting or copying ---------- */
+.toast-host {
+  position: fixed; left: 0; right: 0; bottom: max(1.25rem, env(safe-area-inset-bottom)); z-index: 1000;
+  display: grid; justify-items: center; pointer-events: none; padding: 0 1rem;
+}
+.toast {
+  display: flex; align-items: center; gap: 0.75rem; max-width: min(34rem, 100%); min-height: var(--h);
+  padding: 0.4rem 0.4rem 0.4rem 1rem; border-radius: var(--radius); background: var(--paper); color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22); font-size: 0.95rem; pointer-events: auto;
+  opacity: 0; transform: translateY(1rem); transition: opacity 0.2s, transform 0.2s;
+}
+.toast.shown { opacity: 1; transform: none; }
 .toast.error { background: var(--error); }
-.toast .toast-action { color: #f3d9a4; background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0.3rem 0.4rem; text-decoration: underline; text-underline-offset: 0.2em; white-space: nowrap; border-radius: 4px; }
+.toast .t-ic { width: 1.1rem; height: 1.1rem; flex: none; fill: none; stroke: #b9d3be; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.toast.error .t-ic { stroke: #fff; }
+.toast .t-msg { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.toast .t-act { color: #f3d9a4; background: none; border: 0; font: inherit; font-weight: 600; cursor: pointer; padding: 0.3rem 0.4rem; text-decoration: underline; text-underline-offset: 0.2em; white-space: nowrap; border-radius: 4px; }
+.toast.error .t-act { color: #fff; }
 @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+
+/* ---------- 33 Notice (src/lib/ui/notice.ts, src/components/ui/Notice.astro) and status line (src/lib/ui/status-line.ts) ---------- */
+.notice {
+  display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.8rem 1rem; border-radius: var(--radius);
+  border: 1px solid var(--lodge-3); background: var(--lodge-2); font-size: 0.95rem; min-width: 0; max-width: 44rem; margin: 0.75rem 0;
+}
+.notice > svg.i { width: 1.15rem; height: 1.15rem; flex: none; margin-top: 0.12rem; color: var(--muted); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.notice > .n-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.notice .n-title { display: block; font-weight: 600; }
+.notice .n-body > p { margin: 0.1rem 0 0; }
+.notice .n-body > p:first-child { margin-top: 0; }
+.notice .actions { margin-top: 0.6rem; }
+.notice.warn { border-color: var(--warn-line); background: var(--warn-bg); }
+.notice.warn > svg.i { color: var(--warn); }
+.notice.error { border-color: var(--err-line); background: var(--err-bg); }
+.notice.error > svg.i { color: var(--error); }
+.notice.ok { border-color: var(--ok-line); background: var(--ok-bg); }
+.notice.ok > svg.i { color: var(--ok); }
+.notice[hidden] { display: none; }
+/* A link to copy by hand, with the copy icon button (src/lib/ui/copy.ts) */
+.copy-row { display: flex; gap: 0.4rem; align-items: center; margin-top: 0.5rem; }
+.copy-row .input { flex: 1; min-width: 0; font-size: 0.85rem; }
+.status { display: flex; flex-wrap: wrap; gap: 0.3rem 0.45rem; align-items: center; font-size: 0.88rem; color: var(--muted); min-height: 1.5rem; margin: 0.4rem 0 0; }
+.status > svg.i { width: 1.05rem; height: 1.05rem; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.status > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); }
+.status.err { color: var(--error); }
+.status[hidden] { display: none; }
+
+/* ---------- 34 Empty state (src/lib/ui/empty.ts, src/components/ui/EmptyState.astro): always a way forward ---------- */
+.empty-state {
+  display: grid; justify-items: center; text-align: center; gap: 0.6rem; padding: 2rem 1.25rem;
+  border: 1px dashed var(--line); border-radius: var(--radius); background: transparent; min-width: 0; margin: 0.5rem 0 0;
+}
+.empty-state .e-ic { width: 3rem; height: 3rem; border-radius: 50%; background: var(--lodge-2); border: 1px solid var(--lodge-3); display: grid; place-items: center; color: var(--amber); }
+.empty-state .e-ic svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.empty-state p { margin: 0; max-width: 26rem; }
+.empty-state .e-title:has(+ .help) { font-weight: 600; }
+.empty-state .help { font-size: 0.92rem; }
+.empty-state .e-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 0.3rem; }
+.empty-state[hidden] { display: none; }
+/* On guest pages: not signed in / not invited – as wide as the text around it */
+.empty-state.need-login { max-width: 34rem; margin: 1rem 0 2rem; }
+
+/* ---------- 35 Loading (src/components/ui/Loading.astro, src/lib/ui/loading.ts): shown after 350 ms ---------- */
+.page-loading { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); padding: 1.5rem 0; margin: 0; animation: late-in 0s 0.35s both; }
+@keyframes late-in { from { visibility: hidden; } to { visibility: visible; } }
+.page-loading[hidden] { display: none; }
+.skel { display: grid; gap: 0.6rem; }
+.skel i { display: block; height: 0.8rem; border-radius: 4px; background: linear-gradient(90deg, var(--lodge-3), #efe8e2, var(--lodge-3)); background-size: 200% 100%; animation: sk 1.4s linear infinite; }
+@keyframes sk { to { background-position: -200% 0; } }
+
+/* ---------- 36 Help tip (src/lib/help-tip.ts) and tooltip (src/lib/ui/tooltip.ts) ---------- */
+.help-q {
+  position: relative; display: inline-grid; place-items: center; width: 1.15rem; height: 1.15rem; border-radius: 50%;
+  border: 1px solid var(--muted); color: var(--muted); font: 600 0.7rem/1 var(--body); background: none; cursor: pointer;
+  padding: 0; margin-left: 0.35rem; vertical-align: 0.05em; flex: none;
+}
+.help-q::before { content: ''; position: absolute; inset: -0.5rem; }
+@media (pointer: coarse) { .help-q::before { inset: -0.7rem; } }
+.help-q:is(:hover, [aria-expanded='true']) { border-color: var(--amber); color: var(--amber); }
+.tip {
+  position: absolute; z-index: 1100; width: max-content; max-width: min(17rem, calc(100vw - 1rem));
+  padding: 0.6rem 0.75rem; border-radius: var(--radius); background: var(--paper); color: #fff;
+  font: 400 0.85rem/1.4 var(--body); text-align: left; box-shadow: var(--pop); pointer-events: none;
+}
+.tip.small { padding: 0.3rem 0.55rem; border-radius: 6px; font: 500 0.78rem/1.2 var(--body); }
+.tip.help { pointer-events: auto; }
+.tip p { margin: 0 0 0.5rem; }
+.tip a { color: #f1c27d; font-weight: 500; }
+/* A spot the help linked to: marked for a moment */
+.help-flash { outline: 3px solid var(--amber); outline-offset: 4px; border-radius: 6px; transition: outline-color 0.6s; }
 
 /* Inside a side panel the panel sets the width */
 dialog .input { max-width: none; }

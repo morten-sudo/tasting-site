@@ -1,9 +1,10 @@
 ---
 // "My tastings" now lives on the home page; this address just forwards there.
 import Base from '../layouts/Base.astro';
+import Loading from '../components/ui/Loading.astro';
 ---
 <Base title="page.home">
-  <section class="wrap" style="padding-top:2.5rem"><p class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p></section>
+  <section class="wrap" style="padding-top:2.5rem"><Loading /></section>
 </Base>
 
 <script>

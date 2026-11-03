@@ -18,7 +18,6 @@ import '../../styles/admin.css';
           <p class="hint" data-i18n="payments.mpHint">Guests get a button that opens MobilePay with the amount and a message filled in. Leave it empty to hide MobilePay.</p>
           <div class="row-actions">
             <button id="mp-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-            <span id="mp-msg" class="hint" aria-live="polite"></span>
           </div>
         </form>
       </section>
@@ -37,6 +36,9 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $ } from '../../lib/admin-common';
   import { t } from '../../i18n';
+  import { toast } from '../../lib/ui/toast';
+  import { setLoading } from '../../lib/ui/button';
+  import { fieldError } from '../../lib/field-error';
 
   const host = await requireHost();
   if (host) {
@@ -48,10 +50,13 @@ import '../../styles/admin.css';
   $('mp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const raw = $<HTMLInputElement>('mp-number').value.replace(/\s/g, '');
-    const msg = $('mp-msg');
-    if (raw && !/^\+?\d{4,15}$/.test(raw)) { msg.textContent = t('payments.badNumber'); return; }
+    const field = $<HTMLInputElement>('mp-number');
+    if (raw && !/^\+?\d{4,15}$/.test(raw)) { fieldError(field, t('payments.badNumber')); field.focus(); return; }
+    const btn = $<HTMLButtonElement>('mp-save');
+    setLoading(btn, true);
     const { error } = await supabase.from('hosts').update({ mobilepay: raw || null }).eq('id', host!.id);
-    msg.textContent = error ? t('admin.changesNotSaved') : t('common.saved');
-    if (!error) setTimeout(() => (msg.textContent = ''), 2000);
+    setLoading(btn, false);
+    if (error) toast(t('admin.changesNotSaved'), { kind: 'error' });
+    else toast(t('common.saved'));
   });
 </script>

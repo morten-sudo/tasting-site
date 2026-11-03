@@ -14,6 +14,7 @@ import { fieldError } from './field-error';
 import { attachImageInput } from './ui/image-picker';
 import { menuGroup, menuHit } from './ui/menu';
 import { iconSvg } from './ui/icons';
+import { setStatus, statusLine, type StatusState } from './ui/status-line';
 
 export type QuickWine = { id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
   image_url: string | null; source_url?: string | null };
@@ -266,8 +267,7 @@ export function initQuickAdd(o: Opts) {
     const source = mk('p', 'wine-meta qa-src', src.kind === 'link' ? site(src.url) : src.kind === 'photo' ? t('qa.photo') : '');
     source.hidden = src.kind === 'name';
     const facts = mk('div', 'qa-facts');
-    const status = mk('p', 'label-status');
-    status.setAttribute('aria-live', 'polite');
+    const status = statusLine();
     const actions = mk('div', 'qa-actions qa-job-actions');
     body.append(title, source, facts, status);
     li.append(pic, body, actions);
@@ -278,13 +278,11 @@ export function initQuickAdd(o: Opts) {
     pic: li.querySelector<HTMLElement>('.wine-thumb')!,
     title: li.querySelector<HTMLElement>('.wine-name')!,
     facts: li.querySelector<HTMLElement>('.qa-facts')!,
-    status: li.querySelector<HTMLElement>('.label-status')!,
+    status: li.querySelector<HTMLElement>('.wine-body > .status')!,
     actions: li.querySelector<HTMLElement>('.qa-job-actions')!,
   });
-  function say(li: HTMLElement, text: string, kind: 'busy' | 'ok' | 'error' | '' = '') {
-    const s = part(li).status;
-    s.textContent = text;
-    s.className = 'label-status' + (kind ? ' ' + kind : '');
+  function say(li: HTMLElement, text: string, kind: StatusState | '' = '') {
+    setStatus(part(li).status, kind || 'info', text);
   }
   function fact(li: HTMLElement, text: string | null) {
     if (text) part(li).facts.append(mk('p', 'wine-meta', text));
@@ -356,7 +354,7 @@ export function initQuickAdd(o: Opts) {
     if (twin) {
       // Never the same wine twice: offer the one in the library instead
       const here = !!o.inHere?.().has(twin.id);
-      say(li, t(here ? 'qa.twinHere' : 'qa.twin'), '');
+      say(li, t(here ? 'qa.twinHere' : 'qa.twin'), 'warn');
       const actions: [string, () => void, string?][] = [];
       if (o.pick && !here) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }]);
       else if (!o.pick) actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }]);
@@ -412,7 +410,7 @@ export function initQuickAdd(o: Opts) {
         if (f.website || f.address) fact(li, t('qa.producerFound', { what: [f.website ? site(f.website) : null, f.address].filter(Boolean).join(' · ') }));
       } catch { /* the wine form looks again when the wine is opened */ }
     }
-    say(li, '✓ ' + t('qa.saved'), 'ok');
+    say(li, t('qa.saved'), 'ok');
     await o.done(id, [name, vintage].filter(Boolean).join(' '));
     setTimeout(() => drop(li), 1200);
   }

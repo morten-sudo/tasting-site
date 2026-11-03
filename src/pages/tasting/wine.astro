@@ -1,20 +1,20 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import Loading from '../../components/ui/Loading.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.wine" tasting>
   <article class="wine-page">
     <div class="wrap top">
       <a href="/home/" data-tpath="wines/" class="text-btn back"><Icon name="left" /><span data-i18n="wine.all">All wines</span></a>
-      <div id="need-login" class="message need-login" hidden>
-        <p><strong data-i18n="wines.signInTitle">Sign in to see the wines.</strong></p>
-        <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
-        <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
-      </div>
-      <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
-      <p id="load-error" class="message error" hidden>
-        <span data-i18n="wine.notFound">The wine could not be found.</span> <a href="/home/" data-tpath="wines/" data-i18n="wine.back">Back to the wines</a>.
-      </p>
+      <SignInState id="need-login" title="gate.winesTitle" />
+      <Loading text="gate.loadingWine" />
+      <EmptyState id="load-error" icon="glass" title="wine.notFound" hidden>
+        <a class="btn small" href="/home/" data-tpath="wines/" data-i18n="wine.back">Back to the wines</a>
+      </EmptyState>
     </div>
 
     <div id="wine" class="layout" hidden>
@@ -31,7 +31,7 @@ import Base from '../../layouts/Base.astro';
         <p id="price" class="price"></p>
         <button id="add" type="button" class="btn" hidden data-i18n="wine.add">Add to cart</button>
       </div>
-      <p id="order-status" class="hint" hidden></p>
+      <Notice id="order-status" hidden><p data-i18n="wine.orderNeedsLogin"></p><div class="actions"><a class="btn small secondary" href="/login/" data-login data-i18n="login.submit">Sign in</a></div></Notice>
 
       <div id="my-rating"></div>
 
@@ -67,6 +67,7 @@ import Base from '../../layouts/Base.astro';
 
 <script>
   import { supabase } from '../../lib/supabase';
+  import { tooltip } from '../../lib/ui/tooltip';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { i18nReady, t, plural } from '../../i18n';
   import { fetchMyRatings, ratingBox } from '../../lib/rating';
@@ -108,7 +109,7 @@ import Base from '../../layouts/Base.astro';
     const m = await wineMap(w);
     if (!m) return;
     box.innerHTML = m.svg;
-    box.title = originFull(w) ?? '';
+    tooltip(box, originFull(w) ?? '');
     box.hidden = false;
     showMapCredit(box, m.how);
   }
@@ -291,7 +292,6 @@ import Base from '../../layouts/Base.astro';
       btn.hidden = false;
       renderBasket();
     } else if (settings.orders_open === true) {
-      status.textContent = t('wine.orderNeedsLogin');
       status.hidden = false;
     }
 
@@ -421,7 +421,6 @@ import Base from '../../layouts/Base.astro';
   .wine-page .price .normal { color: var(--muted); font-size: 0.88rem; }
   .wine-page #add.pop { animation: pop 0.25s ease-out; }
   @keyframes pop { 50% { transform: scale(1.06); } }
-  .wine-page #order-status { margin: 0.6rem 0 0; }
 
   .wine-page .desc { margin: 1.6rem 0 0; font-size: 1.02rem; line-height: 1.8; }
   .wine-page .desc.folded { display: -webkit-box; -webkit-line-clamp: 5; line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
@@ -437,7 +436,6 @@ import Base from '../../layouts/Base.astro';
   .wine-page .my-rating { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--lodge-3); }
   .wine-page .rating-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .wine-page .rating-head h2 { font-size: 1.5rem; margin: 0; }
-  .wine-page .rating-status { color: var(--muted); font-size: 0.85rem; }
   /* The stars are the shared component (components.css); only the space around them is the page's */
   .wine-page .my-rating .stars { margin: 0.4rem 0 0.9rem -0.55rem; }
   .wine-page .my-rating .note-label { margin-bottom: 0.4rem; }

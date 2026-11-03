@@ -1,10 +1,12 @@
 ---
 import Icon from '../components/ui/Icon.astro';
 import Base from '../layouts/Base.astro';
+import Loading from '../components/ui/Loading.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
 ---
 <Base title="page.home">
   <section class="wrap home-page">
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <Loading />
 
     <div id="main" hidden>
       <h1 class="title"><span data-i18n="home2.hello">Hello</span><span id="hello-name"></span></h1>
@@ -57,7 +59,9 @@ import Base from '../layouts/Base.astro';
       </div>
 
       <p class="book-more"><a class="text-btn fwd wrap" href="/my/"><span data-i18n="book.homeLink">My wine book – wines, tastings and purchases</span><Icon name="right" /></a></p>
-      <p id="none" class="hint" hidden data-i18n="tastings.noneHint">If you got a link in an invitation, open it – or sign in with the email the host has.</p>
+      <EmptyState id="none" icon="calendar" title="tastings.none" text="tastings.noneHint" hidden>
+        <a class="btn small secondary" href="/login/?next=/home/" data-i18n="home.otherEmail">Sign in with another email</a>
+      </EmptyState>
     </div>
   </section>
 </Base>

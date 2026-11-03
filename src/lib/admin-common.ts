@@ -94,20 +94,7 @@ export function enableImageZoom(closeLabel: string) {
   });
 }
 
-/**
- * A side panel (<dialog class="sheet">): editing always happens here – from the right on larger
- * screens, from the bottom on phones. Closes with its × button, Escape or a click beside it.
- */
-export function sheetPanel(dialog: HTMLDialogElement, onClose?: () => void) {
-  dialog.querySelector('[data-close]')?.addEventListener('click', () => dialog.close());
-  // A click on the backdrop lands on the dialog element itself
-  dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
-  dialog.addEventListener('close', () => onClose?.());
-  return {
-    open() { dialog.showModal(); dialog.scrollTop = 0; },
-    close() { if (dialog.open) dialog.close(); },
-  };
-}
+export { sheetPanel, formSnapshot, type SheetOptions } from './ui/sheet';
 
 /** One time, right after the sign-in that made me co-host: "You are now co-host of Portvin 2026." */
 function showCohostWelcome() {

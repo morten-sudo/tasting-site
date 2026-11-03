@@ -2,16 +2,19 @@
 import SearchField from '../components/ui/SearchField.astro';
 import Dropdown from '../components/ui/Dropdown.astro';
 import Base from '../layouts/Base.astro';
+import Loading from '../components/ui/Loading.astro';
+import Notice from '../components/ui/Notice.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
+import SignInState from '../components/ui/SignInState.astro';
 ---
 <!-- The guest's wine book: wines tasted, tastings and orders across all tastings -->
 <Base title="book.title">
   <section class="wrap book-page">
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <Loading text="gate.loadingBook" />
 
     <div id="signed-out" hidden>
       <h1 class="title" data-i18n="book.title">My wine book</h1>
-      <p data-i18n="profile.signedOut">You are not signed in.</p>
-      <a class="btn" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a>
+      <SignInState title="gate.bookTitle" hidden={false} />
     </div>
 
     <div id="book" hidden>
@@ -21,10 +24,10 @@ import Base from '../layouts/Base.astro';
         <li class="card"><b id="st-tastings">0</b><span data-i18n="book.statTastings">tastings</span></li>
         <li class="card"><b id="st-bottles">0</b><span data-i18n="book.statBottles">bottles bought</span></li>
       </ul>
-      <div id="link-only" class="message" hidden>
+      <Notice id="link-only" hidden>
         <p data-i18n="book.linkOnly">You only see the tastings opened with an invitation link on this device. Sign in with your email to see everything, on any device.</p>
-        <a class="btn small" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a>
-      </div>
+        <div class="actions"><a class="btn small secondary" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a></div>
+      </Notice>
 
       <div class="book-tabs" role="tablist" aria-label="My wine book" data-i18n-attr="aria-label=book.title">
         <button type="button" role="tab" id="tab-wines" aria-controls="panel-wines" data-tab="wines" data-i18n="book.tabWines">Wines</button>
@@ -40,8 +43,12 @@ import Base from '../layouts/Base.astro';
             options={[{ value: 'recent', label: 'book.sortRecent', i18n: true }, { value: 'rating', label: 'book.sortRating', i18n: true }, { value: 'name', label: 'book.sortName', i18n: true }]} />
         </div>
         <ul id="wine-list" class="book-wines"></ul>
-        <p id="no-wines" class="hint" hidden data-i18n="book.noWines">When you have been to a tasting, or rated a wine, it appears here – with your stars and notes.</p>
-        <p id="no-match" class="hint" hidden data-i18n="book.noMatch">No wines match the search.</p>
+        <EmptyState id="no-wines" icon="glass" title="book.noWinesTitle" text="book.noWines" hidden>
+          <a class="btn small secondary" href="/home/" data-i18n="guest.toMyTastings">My tastings</a>
+        </EmptyState>
+        <EmptyState id="no-match" icon="search" title="book.noMatch" hidden>
+          <button id="no-match-clear" class="btn small secondary" type="button" data-i18n="book.showAll">Show all wines</button>
+        </EmptyState>
       </section>
 
       <!-- Tastings I am invited to or have been to -->
@@ -50,14 +57,14 @@ import Base from '../layouts/Base.astro';
         <ul id="up-list" class="tasting-list"></ul>
         <h2 id="past-h" class="book-h" data-i18n="tastings.past" hidden>Past</h2>
         <ul id="past-list" class="tasting-list"></ul>
-        <p id="no-tastings" class="hint" hidden data-i18n="tastings.none">You are not invited to any tastings with this email yet.</p>
+        <EmptyState id="no-tastings" icon="calendar" title="tastings.none" text="tastings.noneHint" hidden />
       </section>
 
       <!-- Purchases -->
       <section id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" class="book-panel" hidden>
         <p id="orders-sum" class="hint"></p>
         <div id="order-list"></div>
-        <p id="no-orders" class="hint" hidden data-i18n="profile.noOrders">You have no orders yet.</p>
+        <EmptyState id="no-orders" icon="cart" title="profile.noOrders" text="book.noOrdersText" hidden />
       </section>
     </div>
   </section>
@@ -151,6 +158,7 @@ import Base from '../layouts/Base.astro';
       $('no-match').hidden = !all.length || rows.length > 0;
     };
     $('w-search').addEventListener('input', render);
+    $('no-match-clear').addEventListener('click', () => { $<HTMLInputElement>('w-search').value = ''; render(); });
     $('w-sort').addEventListener('change', render);
     render();
   }
@@ -239,7 +247,6 @@ import Base from '../layouts/Base.astro';
   .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; }
   .book-stats b { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); }
   .book-stats span { font-size: 0.85rem; color: var(--muted); }
-  .book-page #link-only { margin-bottom: 1.25rem; }
   .book-tabs { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--lodge-3); margin-bottom: 1.25rem; overflow-x: auto; scrollbar-width: none; }
   .book-tabs button {
     flex: none; padding: 0.7rem 0; background: none; border: 0; font: inherit; font-size: 0.98rem; color: var(--muted); cursor: pointer;

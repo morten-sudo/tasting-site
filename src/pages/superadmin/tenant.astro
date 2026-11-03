@@ -2,6 +2,7 @@
 // One tenant: /superadmin/tenants/<id>/<section>/ (rewritten to this page in public/_redirects).
 // The parts (hosts, tastings, guests, wines, payments, log) are chosen in the menu on the left.
 import Base from '../../layouts/Base.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import Dropdown from '../../components/ui/Dropdown.astro';
 import '../../styles/admin.css';
@@ -9,7 +10,9 @@ import '../../styles/admin.css';
 <Base title="page.superadmin">
   <section class="wrap admin-page">
     <SuperNav active="tenants">
-      <p id="not-found" class="message error" hidden data-i18n="super.notFound">This tenant was not found.</p>
+      <EmptyState id="not-found" icon="search" title="super.notFound" hidden>
+        <a class="btn small" href="/superadmin/" data-i18n="super.tenants">All accounts</a>
+      </EmptyState>
       <div id="tenant" hidden>
         <h1 id="tn-name" class="title"></h1>
         <div class="tenant-meta">
@@ -74,7 +77,7 @@ import '../../styles/admin.css';
             <tbody id="log"></tbody>
           </table></div>
         </section>
-        <p id="none" class="hint" hidden data-i18n="super.noRows">None.</p>
+        <EmptyState id="none" icon="info" title="super.noRows" hidden />
       </div>
     </SuperNav>
   </section>
@@ -237,7 +240,7 @@ import '../../styles/admin.css';
         const { error } = await supabase.rpc('admin_set_plan', { tn: id, p: plan.value });
         plan.disabled = false;
         if (error) { plan.value = tn.plan; toast(t('admin.changeNotSaved'), { kind: 'error' }); }
-        else { tn.plan = plan.value; loaded.delete('log'); toast(t('common.saved'), { kind: 'ok', ms: 2000 }); }
+        else { tn.plan = plan.value; loaded.delete('log'); toast(t('common.saved'), { kind: 'ok' }); }
       });
       const section = TENANT_SECTIONS.some((s) => s.id === m?.[2]) ? m![2] : 'hosts';
       showTenantInMenu(id, tn.name, section);

@@ -3,6 +3,7 @@ import Icon from '../../components/ui/Icon.astro';
 import Dropdown from '../../components/ui/Dropdown.astro';
 import SearchField from '../../components/ui/SearchField.astro';
 import CloseButton from '../../components/ui/CloseButton.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import WineQuickAdd from '../../components/WineQuickAdd.astro';
@@ -15,7 +16,9 @@ import '../../styles/admin.css';
       <!-- One wine: /admin/wines/<id>/ (the same page, shown instead of the list) -->
       <section id="wine-detail" class="wine-detail" hidden>
         <a class="text-btn back wd-back" href="/admin/wines/"><Icon name="left" /><span data-i18n="wineAdmin.back">All wines</span></a>
-        <p id="wd-missing" class="hint" hidden data-i18n="wineAdmin.notFound">The wine was not found.</p>
+        <EmptyState id="wd-missing" icon="search" title="wineAdmin.notFound" hidden>
+          <a class="btn small" href="/admin/wines/" data-i18n="wineAdmin.back">All wines</a>
+        </EmptyState>
         <div id="wd-main">
           <div class="wd-head">
             <div id="wd-pic" class="wd-pic" hidden></div>
@@ -27,14 +30,10 @@ import '../../styles/admin.css';
             <button id="wd-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
           </div>
           <!-- A wine with only a name: a way forward -->
-          <div id="wd-empty" class="card wd-empty" hidden>
-            <p><b data-i18n="wineAdmin.emptyTitle">There is only a name on this wine so far.</b>
-              <span data-i18n="wineAdmin.emptyText">Fetch the rest from a link to a wine shop or a photo of the label – or fill it in yourself.</span></p>
-            <div class="row-actions">
-              <button id="wd-empty-fill" class="btn small" type="button" data-i18n="wineAdmin.emptyFill">Fetch from a link or photo</button>
-              <button id="wd-empty-edit" class="text-btn" type="button" data-i18n="wineAdmin.emptyEdit">Fill in yourself</button>
-            </div>
-          </div>
+          <EmptyState id="wd-empty" icon="glass" title="wineAdmin.emptyTitle" text="wineAdmin.emptyText" hidden>
+            <button id="wd-empty-fill" class="btn small" type="button" data-i18n="wineAdmin.emptyFill">Fetch from a link or photo</button>
+            <button id="wd-empty-edit" class="btn small secondary" type="button" data-i18n="wineAdmin.emptyEdit">Fill in yourself</button>
+          </EmptyState>
           <div class="wd-grid">
             <div>
               <p id="wd-description" class="wd-description" hidden></p>
@@ -46,7 +45,7 @@ import '../../styles/admin.css';
               <section class="wd-block">
                 <h2 data-i18n="wineAdmin.tastings">Tastings</h2>
                 <ul id="wd-tastings" class="card wd-tastings"></ul>
-                <p id="wd-tastings-empty" class="hint" hidden data-i18n="wineLib.unused">Not in any tasting</p>
+                <EmptyState id="wd-tastings-empty" icon="glass" title="wineLib.unused" text="wineAdmin.unusedHelp" hidden />
               </section>
             </div>
             <section id="wd-origin" class="wd-block" hidden>
@@ -77,8 +76,12 @@ import '../../styles/admin.css';
         <!-- New wine: a new row that slides in at the top of the list (name, link or photo) -->
         <WineQuickAdd />
         <ul id="wine-admin-list" class="wine-admin-list"></ul>
-        <p id="wine-empty" class="hint" hidden data-i18n="admin.noWines">No wines yet. Add the first one.</p>
-        <p id="wine-no-match" class="hint" hidden data-i18n="wineLib.noMatch">No wines match the filters.</p>
+        <EmptyState id="wine-empty" icon="glass" title="wineLib.emptyTitle" text="wineLib.emptyText" hidden>
+          <button id="wine-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="wineLib.newWineBtn">New wine</span></button>
+        </EmptyState>
+        <EmptyState id="wine-no-match" icon="filter" title="wineLib.noMatch" hidden>
+          <button id="wine-no-match-clear" class="btn small secondary" type="button" data-i18n="wineLib.showAll">Show all wines</button>
+        </EmptyState>
       </section>
       </div>
       <!-- Outside the list, so it also opens on a wine's own page (where the list is hidden) -->
@@ -100,7 +103,7 @@ import '../../styles/admin.css';
             <input class="input" id="wf-link" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
             <button id="wf-read-link" class="btn small secondary" type="button" data-i18n="link.fetch">Fetch</button>
           </div>
-          <p id="wf-link-status" class="label-status" hidden aria-live="polite"></p>
+          <p id="wf-link-status" class="status" hidden aria-live="polite"></p>
           </div>
           </section>
 
@@ -113,7 +116,7 @@ import '../../styles/admin.css';
               <button id="wf-source-refresh" class="icon-act" type="button" data-tip="Update" aria-label="Update" data-i18n-attr="data-tip=source.refresh;aria-label=source.refresh"><Icon name="refresh" /></button>
             </div>
             <button id="wf-source-other" class="text-btn" type="button" data-i18n="source.other">Use another link</button>
-            <p id="wf-source-status" class="label-status" hidden aria-live="polite"></p>
+            <p id="wf-source-status" class="status" hidden aria-live="polite"></p>
           </div>
           <p class="hint wf-required-note"><span class="req" aria-hidden="true">*</span> <span data-i18n="wineCheck.onlyName">Only the name is needed – the rest you can fill in now or later.</span></p>
           <label for="wf-name"><span data-i18n="admin.name">Name</span> <span class="req" aria-hidden="true">*</span></label>
@@ -125,16 +128,16 @@ import '../../styles/admin.css';
             <!-- The one image picker (src/lib/ui/image-picker.ts): choose, drop or paste; with a picture: "Change" and the trash -->
             <div id="wf-pick"></div>
             <button id="wf-read-label" class="text-btn" type="button" hidden data-i18n="label.read">Fill in from the label</button>
-            <p id="wf-label-status" class="label-status" hidden aria-live="polite"></p>
+            <p id="wf-label-status" class="status" hidden aria-live="polite"></p>
             <!-- An official picture from the producer's website: the host picks the right one -->
             <button id="wf-find-image" class="text-btn find-image" type="button" data-i18n="image.findOfficial">Find an official picture</button>
-            <p id="wf-image-status" class="producer-status" hidden aria-live="polite"></p>
+            <p id="wf-image-status" class="status" hidden aria-live="polite"></p>
             <div id="wf-image-options" class="image-options" hidden></div>
           </div>
           <label for="wf-producer" data-i18n="admin.producer">Producer</label>
           <input class="input" id="wf-producer" type="text" />
           <!-- The producer's website and address are looked up as soon as the producer is known; shown in step 3 -->
-          <p id="wf-producer-busy" class="producer-status" hidden aria-live="polite"></p>
+          <p id="wf-producer-busy" class="status" hidden aria-live="polite"></p>
           <div class="wf-pair">
             <div>
               <label for="wf-style-btn" data-i18n="admin.style">Type</label>
@@ -144,7 +147,7 @@ import '../../styles/admin.css';
               <label for="wf-vintage" data-i18n="admin.vintage">Vintage</label>
               <div class="inline-form">
                 <input class="input" id="wf-vintage" type="text" placeholder="E.g. 2019 or 10 years" data-i18n-attr="placeholder=admin.vintagePlaceholder" />
-                <button id="wf-nv" class="btn small secondary" type="button" title="Non Vintage" data-i18n-attr="title=wine.nv">NV</button>
+                <button id="wf-nv" class="btn small secondary" type="button" data-tip-text="Non Vintage" data-i18n-attr="data-tip-text=wine.nv">NV</button>
               </div>
             </div>
           </div>
@@ -170,7 +173,7 @@ import '../../styles/admin.css';
           </div>
           <label for="wf-appellation"><span data-i18n="origin.appellation">Appellation</span> <span class="opt" data-i18n="origin.appellationHint">(e.g. Saint-Émilion Grand Cru, Porto, Barolo)</span></label>
           <input class="input" id="wf-appellation" type="text" autocomplete="off" />
-          <p id="wf-app-status" class="app-status" hidden aria-live="polite"></p>
+          <p id="wf-app-status" class="status" hidden aria-live="polite"></p>
           <div id="wf-map" class="wf-map" hidden>
             <div class="wf-map-col"><div id="wf-map-svg" class="wf-map-svg"></div></div>
             <p id="wf-map-note" class="hint"></p>
@@ -178,10 +181,10 @@ import '../../styles/admin.css';
           <!-- The producer's website and address: found as soon as the producer is known (link, label or typed), or typed here -->
           <label for="wf-producer-website"><span data-i18n="producer.website">Producer's website</span> <span class="opt" data-i18n="producer.websiteHint">(found automatically from the producer)</span></label>
           <input class="input" id="wf-producer-website" type="url" inputmode="url" placeholder="https://…" autocomplete="off" />
-          <p id="wf-producer-status" class="producer-status" hidden aria-live="polite"></p>
+          <p id="wf-producer-status" class="status" hidden aria-live="polite"></p>
           <label for="wf-producer-address" data-i18n="producer.address">Producer's address</label>
           <input class="input" id="wf-producer-address" type="text" autocomplete="off" />
-          <p id="wf-address-status" class="producer-status" hidden aria-live="polite"></p>
+          <p id="wf-address-status" class="status" hidden aria-live="polite"></p>
           </section>
 
           <!-- 4. Price and description; a new wine can go straight into a tasting -->
@@ -215,12 +218,6 @@ import '../../styles/admin.css';
           </section>
         </div>
         <div class="wf-foot">
-          <p id="wf-msg" class="message error" hidden></p>
-          <div id="wf-delete-confirm" class="wf-discard wf-delete-confirm" hidden>
-            <span id="wf-delete-q"></span>
-            <button id="wf-delete-yes" class="btn small danger" type="button" data-i18n="admin.deleteWine">Delete wine</button>
-            <button id="wf-delete-no" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-          </div>
           <div id="wf-actions" class="row-actions wf-actions">
             <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
@@ -289,6 +286,8 @@ import '../../styles/admin.css';
       history.replaceState(null, '', location.pathname + (params.size ? `?${params}` : ''));
       quick.open();
     } else if (!onWinePage() && !admin.wines().length) quick.open();
+    // The empty library's button puts the cursor in the new-wine line
+    $('wine-empty-add').addEventListener('click', () => quick.open());
     if (onWinePage()) {
       wineId = wineIdFromPath(admin.paths());
       await show();

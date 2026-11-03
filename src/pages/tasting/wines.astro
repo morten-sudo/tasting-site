@@ -1,24 +1,27 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import Loading from '../../components/ui/Loading.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.wines" tasting>
   <section class="wrap wines-page">
     <h1 class="title" data-i18n="page.wines">Wines</h1>
     <p id="intro" class="lead" data-i18n="wines.intro">This is what we are pouring tonight.</p>
 
-    <p id="order-status" class="message" hidden></p>
+    <Notice id="order-status" hidden><p></p><div class="actions"><a class="btn small secondary" href="/login/" data-login data-i18n="login.submit">Sign in</a></div></Notice>
 
-    <div id="need-login" class="message need-login" hidden>
-      <p><strong data-i18n="wines.signInTitle">Sign in to see the wines.</strong></p>
-      <p data-i18n="wines.signInText">Use the link from your invitation or sign in with your email.</p>
-      <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
-    </div>
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
-    <p id="no-wines" class="message" hidden data-i18n="wines.none">The host has not shown any wines yet.</p>
-    <p id="load-error" class="message error" hidden data-i18n="wines.loadError">
-      The wines could not be loaded. Check your connection and reload the page.
-    </p>
+    <SignInState id="need-login" title="gate.winesTitle" />
+    <Loading text="gate.loadingWines" />
+    <EmptyState id="no-wines" icon="glass" title="wines.none" text="wines.noneHelp" hidden>
+      <a class="btn small secondary" href="/home/" data-tpath="" data-i18n="gate.toTasting">To the tasting</a>
+    </EmptyState>
+    <Notice id="load-error" tone="error" hidden>
+      <p data-i18n="wines.loadError">The wines could not be loaded. Check your connection and reload the page.</p>
+      <div class="actions"><button class="btn small secondary" type="button" onclick="location.reload()" data-i18n="gate.reload">Reload</button></div>
+    </Notice>
 
     <div id="wine-list" class="carousel" role="region" aria-roledescription="carousel" aria-label="Wines" data-i18n-attr="aria-roledescription=wines.carousel;aria-label=page.wines" tabindex="0"></div>
 
@@ -261,7 +264,7 @@ import Base from '../../layouts/Base.astro';
         $('intro').textContent = t('wines.introOrder');
         window.addEventListener('cart-change', renderBasket);
       } else {
-        status.textContent = t('wines.orderNeedsLogin');
+        status.querySelector('p')!.textContent = t('wines.orderNeedsLogin');
         status.hidden = false;
       }
     }
@@ -284,7 +287,6 @@ import Base from '../../layouts/Base.astro';
     margin-bottom: 0.75rem;
   }
   .wines-page .lead { font-family: var(--display); font-style: italic; font-size: 1.35rem; color: var(--muted); }
-  .wines-page #order-status { margin: 1.25rem 0 0.5rem; }
 
   /* Carousel: one wine at a time, the next one peeks in at the edge */
   /* The carousel sits on a full-width white band */

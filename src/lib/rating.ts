@@ -1,6 +1,7 @@
 // The guest's own rating (1–5 stars) and private note for a wine. Saved automatically.
 import { supabase } from './supabase';
 import { t } from '../i18n';
+import { toast } from './ui/toast';
 import { starsInput } from './ui/stars';
 
 export type MyRating = { wine_id: number; rating: number | null; note: string | null };
@@ -21,10 +22,7 @@ export function ratingBox(code: string, wineId: number, initial?: MyRating) {
   head.className = 'rating-head';
   const h = document.createElement('h2');
   h.textContent = t('rating.title');
-  const status = document.createElement('span');
-  status.className = 'rating-status';
-  status.setAttribute('aria-live', 'polite');
-  head.append(h, status);
+  head.append(h);
 
   // The one star component (src/lib/ui/stars.ts); tap the chosen star again to clear
   const rate = starsInput({ value: stars, label: t('rating.title'), onRate: (n) => { stars = n; save(); } });
@@ -49,26 +47,27 @@ export function ratingBox(code: string, wineId: number, initial?: MyRating) {
 
   box.append(head, row, label, area, hint);
 
+  // Saved by itself; the toast says so (or that it failed)
   let timer: number | undefined;
+  let pending = false;
   async function save() {
     window.clearTimeout(timer);
-    status.textContent = t('common.saving');
+    pending = false;
     rate.setBusy(true);
     const { error } = await supabase.rpc('rate_wine', { code, w_id: wineId, stars, note: note || null });
     rate.setBusy(false);
-    status.textContent = error ? t('rating.notSaved') : t('common.saved');
-    if (!error) box.dispatchEvent(new CustomEvent('rating-change', { detail: { stars, note }, bubbles: true }));
+    if (error) { toast(t('rating.notSaved'), { kind: 'error' }); return; }
+    toast(t('rating.saved'));
+    box.dispatchEvent(new CustomEvent('rating-change', { detail: { stars, note }, bubbles: true }));
   }
 
   area.addEventListener('input', () => {
     note = area.value;
-    status.textContent = '';
+    pending = true;
     window.clearTimeout(timer);
     timer = window.setTimeout(save, 900);
   });
-  area.addEventListener('blur', () => {
-    if (timer !== undefined && status.textContent === '') save();
-  });
+  area.addEventListener('blur', () => { if (pending) save(); });
 
   return box;
 }

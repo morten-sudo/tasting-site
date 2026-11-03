@@ -57,7 +57,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         <div class="tools">
           <!-- The header's menus are the one menu (src/lib/ui/menu.ts, .menu in components.css) -->
           <div class="dd lang-pick">
-            <button id="lang-btn" class="dd-btn bare" type="button" aria-haspopup="menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;title=profile.language" title="Language">
+            <button id="lang-btn" class="dd-btn bare" type="button" aria-haspopup="menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;data-tip-text=profile.language" data-tip-text="Language">
               <span id="lang-current" class="lang-current"></span>
               <Icon name="chev" class="chev" />
             </button>
@@ -71,7 +71,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
           )}
           <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->
           <div id="user-in" class="user-in" hidden>
-            <button id="user-btn" type="button" class:list={['dd-btn', 'bare', 'user-name', { current: path.startsWith('/profile') }]} aria-haspopup="menu" title="Account menu" data-i18n-attr="title=nav.userMenu">
+            <button id="user-btn" type="button" class:list={['dd-btn', 'bare', 'user-name', { current: path.startsWith('/profile') }]} aria-haspopup="menu" data-tip-text="Account menu" data-i18n-attr="data-tip-text=nav.userMenu">
               <span id="user-name" class="user-name-text"></span>
               <Icon name="user" class="user-icon" />
               <Icon name="chev" class="chev" />
@@ -104,7 +104,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
               <a id="t-quiz-tab" href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} hidden={!path.startsWith('/tasting/quiz')} data-i18n="nav.quiz">Quiz</a>
               <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
             </nav>
-            <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" title="Manage this tasting" data-i18n-attr="title=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
+            <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" data-tip-text="Manage this tasting" data-i18n-attr="data-tip-text=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
           </div>
           <div id="t-backdrop" class="menu-backdrop" hidden></div>
           <!-- Phones: a bottom sheet (.sheet-sm) -->
@@ -130,6 +130,11 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
       import { initDropdowns } from '../lib/ui/dropdown';
+      import { tooltip } from '../lib/ui/tooltip';
+      import { setEmpty } from '../lib/ui/empty';
+
+      // "Sign in" in the not-signed-in state comes back to this page
+      document.querySelectorAll<HTMLAnchorElement>('a[data-login]').forEach((a) => { a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); });
 
       await i18nReady;
       const titleKey = document.body.dataset.title as Key | undefined;
@@ -230,7 +235,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         });
         btn.disabled = false;
         btn.classList.add('can-switch');
-        btn.title = t('nav.switchTasting');
+        tooltip(btn, t('nav.switchTasting'));
         bindMenu(btn, document.getElementById('t-menu')!, { backdrop: document.getElementById('t-backdrop')! });
       }
 
@@ -271,12 +276,10 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             const who = await me;
             if (who?.signedIn) {
               showName(who.name);
-              document.querySelectorAll<HTMLElement>('.need-login, #no-code').forEach((box) => {
-                box.innerHTML = '';
-                const p = document.createElement('p');
-                p.append(Object.assign(document.createElement('strong'), { textContent: t('guest.notInvited') }));
-                const a = Object.assign(document.createElement('a'), { className: 'btn', href: '/home/', textContent: t('guest.toMyTastings') });
-                box.append(p, a);
+              document.querySelectorAll<HTMLElement>('.need-login').forEach((box) => {
+                const shown = !box.hidden;
+                setEmpty(box, { icon: 'user', title: t('guest.notInvited'), text: t('gate.notInvitedText'), action: { label: t('guest.toMyTastings'), href: '/home/' } });
+                box.hidden = !shown;
               });
               showRoles(true, who.isHost);
               return;

@@ -4,6 +4,7 @@
 // database, Cloudflare's requests come from its Analytics API when a token is set up.
 import Base from '../../layouts/Base.astro';
 import SuperNav from '../../components/SuperNav.astro';
+import Loading from '../../components/ui/Loading.astro';
 import '../../styles/admin.css';
 ---
 <Base title="usage.title">
@@ -45,7 +46,7 @@ import '../../styles/admin.css';
         <!-- Cloudflare Pages Functions -->
         <section class="block usage-card">
           <h2 data-i18n="usage.cfTitle">Cloudflare requests</h2>
-          <div id="u-cf"><p class="hint" data-i18n="common.loading">Loading …</p></div>
+          <div id="u-cf"><Loading id="u-cf-loading" /></div>
           <div id="u-cf-setup" class="u-setup" hidden>
             <p data-i18n="usage.cfSetup">Not set up. It needs a read-only key from Cloudflare:</p>
             <ol>
@@ -64,6 +65,8 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { t, locale } from '../../i18n';
   import { requireAdmin, $, mk, cell, dateFmt } from '../../lib/super-common';
+  import { tooltip } from '../../lib/ui/tooltip';
+  import { notice } from '../../lib/ui/notice';
 
   type AiDay = { day: string; feature: string; calls: number; neurons: number; estimated: boolean };
   type MailDay = { day: string; feature: string; mails: number };
@@ -100,7 +103,7 @@ import '../../styles/admin.css';
       const v = values.get(d) ?? 0;
       const col = mk('span');
       col.style.height = `${Math.max(v ? 4 : 0, Math.min(100, (v / limit) * 100))}%`;
-      col.title = `${dateFmt().format(new Date(d))}: ${nf().format(v)}`;
+      tooltip(col, `${dateFmt().format(new Date(d))}: ${nf().format(v)}`);
       box.append(col);
     }
     return box;
@@ -169,9 +172,9 @@ import '../../styles/admin.css';
     const { data: s } = await supabase.auth.getSession();
     const res = await fetch('/api/usage-cloudflare', { method: 'POST', headers: { authorization: `Bearer ${s.session?.access_token ?? ''}` } })
       .then((r) => r.json()).catch(() => null) as { setup?: boolean; error?: string; days?: { day: string; requests: number; errors: number }[] } | null;
-    if (!res) { $('u-cf').replaceChildren(mk('p', 'hint', t('usage.cfFailed'))); return; }
+    if (!res) { $('u-cf').replaceChildren(notice('error', { text: t('usage.cfFailed') })); return; }
     if (res.setup === false) { $('u-cf').replaceChildren(); $('u-cf-setup').hidden = false; return; }
-    if (res.error) { $('u-cf').replaceChildren(mk('p', 'message error', `${t('usage.cfFailed')} (${res.error})`)); return; }
+    if (res.error) { $('u-cf').replaceChildren(notice('error', { text: `${t('usage.cfFailed')} (${res.error})` })); return; }
     const byDay = new Map((res.days ?? []).map((d) => [d.day, d.requests]));
     const month = (res.days ?? []).reduce((s, d) => s + d.requests, 0);
     $('u-cf').replaceChildren(

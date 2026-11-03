@@ -3,15 +3,17 @@ import Icon from '../components/ui/Icon.astro';
 import CloseButton from '../components/ui/CloseButton.astro';
 import Switch from '../components/ui/Switch.astro';
 import Base from '../layouts/Base.astro';
+import Loading from '../components/ui/Loading.astro';
+import Notice from '../components/ui/Notice.astro';
+import SignInState from '../components/ui/SignInState.astro';
 ---
 <Base title="page.profile">
   <section class="wrap profile-page">
-    <p id="loading" class="hint loading-line"><span class="spin" aria-hidden="true"></span><span data-i18n="common.loading">Loading …</span></p>
+    <Loading />
 
     <div id="signed-out" hidden>
       <h1 class="title" data-i18n="page.profile">Profile</h1>
-      <p data-i18n="profile.signedOut">You are not signed in.</p>
-      <a class="btn" href="/login/" data-i18n="login.submit">Sign in</a>
+      <SignInState title="gate.profileTitle" hidden={false} />
     </div>
 
     <div id="me" hidden>
@@ -23,6 +25,8 @@ import Base from '../layouts/Base.astro';
         </div>
         <p id="me-email" class="hint"></p>
       </header>
+      <!-- A new email waits for its confirmation link -->
+      <Notice id="email-pending" hidden />
 
       <!-- Edit panel: from the right on larger screens, a sheet from the bottom on phones -->
       <dialog id="edit-panel" class="sheet" aria-labelledby="edit-title">
@@ -38,7 +42,6 @@ import Base from '../layouts/Base.astro';
         </div>
         <label for="email" data-i18n="common.email">Email</label>
         <input class="input" id="email" type="email" autocomplete="email" inputmode="email" maxlength="200" />
-        <p id="edit-msg" class="message" hidden></p>
         <div class="row">
           <button id="edit-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
           <button id="edit-cancel" class="btn small secondary" type="button" data-i18n="common.cancel">Cancel</button>
@@ -47,10 +50,10 @@ import Base from '../layouts/Base.astro';
       </dialog>
 
       <!-- Only an invite link on this device -->
-      <div id="link-only" class="message" hidden>
+      <Notice id="link-only" hidden>
         <p data-i18n="profile.linkOnly">You are signed in with an invitation link on this device. Sign in with your email to see all your tastings on any device.</p>
-        <a class="btn small" href="/login/" data-i18n="login.submit">Sign in</a>
-      </div>
+        <div class="actions"><a class="btn small secondary" href="/login/?next=/profile/" data-i18n="login.submit">Sign in</a></div>
+      </Notice>
 
       <!-- Tastings, wines and orders live in the wine book -->
       <a class="card book-link" href="/my/">
@@ -94,6 +97,11 @@ import Base from '../layouts/Base.astro';
   import { i18nReady, t, LANGS, lang, setLang, money, locale, type Lang } from '../i18n';
   import { FLAGS } from '../i18n/flags';
   import { bindSwitch } from '../lib/ui/switch';
+  import { sheetPanel } from '../lib/ui/sheet';
+  import { toast } from '../lib/ui/toast';
+  import { setNotice } from '../lib/ui/notice';
+  import { setLoading } from '../lib/ui/button';
+  import { fieldError } from '../lib/field-error';
   import { choiceCards } from '../lib/ui/choice-cards';
 
   await i18nReady;
@@ -114,41 +122,33 @@ import Base from '../layouts/Base.astro';
     $<HTMLInputElement>('name').value = me?.name ?? '';
     $<HTMLInputElement>('email').value = me?.email ?? '';
     $('name-field').hidden = !me?.signedIn; // with only an invite link the host decides the name
-    $('edit-msg').hidden = true;
-    $<HTMLDialogElement>('edit-panel').showModal();
+    for (const id of ['name', 'email']) fieldError($(id), null);
+    panel.open();
     $<HTMLInputElement>(me?.signedIn ? 'name' : 'email').focus();
   }
-  function closeEdit() {
-    $<HTMLDialogElement>('edit-panel').close();
-  }
-  function editMsg(text: string, ok: boolean) {
-    const m = $('edit-msg');
-    m.textContent = text;
-    m.className = 'message ' + (ok ? 'ok' : 'error');
-    m.hidden = false;
-  }
+  // The one side panel: closing with changes asks first
+  const panel = sheetPanel($<HTMLDialogElement>('edit-panel'), { dirty: 'form' });
+  const closeEdit = () => panel.close();
+  const bad = (id: string, text: string) => { fieldError($(id), text); $(id).focus(); };
 
   $('edit-toggle').addEventListener('click', openEdit);
-  $('edit-cancel').addEventListener('click', closeEdit);
-  $('edit-close').addEventListener('click', closeEdit);
-  // Tap outside the panel (on the backdrop) to close
-  $('edit-panel').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeEdit(); });
+  $('edit-cancel').addEventListener('click', () => panel.requestClose());
 
   $('edit-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!me) return;
     const name = $<HTMLInputElement>('name').value.trim();
     const email = $<HTMLInputElement>('email').value.trim().toLowerCase();
-    if (me.signedIn && !name) { editMsg(t('host.nameMissing'), false); return; }
-    if (!EMAIL_RE.test(email)) { editMsg(t('guest.emailBad'), false); return; }
+    if (me.signedIn && !name) { bad('name', t('host.nameMissing')); return; }
+    if (!EMAIL_RE.test(email)) { bad('email', t('guest.emailBad')); return; }
     const btn = $<HTMLButtonElement>('edit-save');
-    btn.disabled = true;
+    setLoading(btn, true);
 
     if (me.signedIn) {
       // Name: on the account (and as host name)
       if (name !== me.name) {
         const { error } = await supabase.auth.updateUser({ data: { name } });
-        if (error) { btn.disabled = false; editMsg(t('admin.changesNotSaved'), false); return; }
+        if (error) { setLoading(btn, false); toast(t('admin.changesNotSaved'), { kind: 'error' }); return; }
         if (me.isHost) {
           const { data: hostId } = await supabase.rpc('current_host_id');
           if (hostId) await supabase.from('hosts').update({ name }).eq('id', hostId);
@@ -161,10 +161,11 @@ import Base from '../layouts/Base.astro';
       if (email !== (me.email ?? '').toLowerCase()) {
         const { error } = await supabase.auth.updateUser(
           { email }, { emailRedirectTo: location.origin + '/profile/' });
-        btn.disabled = false;
-        if (error) { editMsg(error.status === 429 ? t('login.tooManyMails') : t('profile.emailNotChanged'), false); return; }
+        setLoading(btn, false);
+        if (error) { toast(error.status === 429 ? t('login.tooManyMails') : t('profile.emailNotChanged'), { kind: 'error' }); return; }
         showMe();
-        editMsg(t('profile.emailConfirm', { email }), true);
+        closeEdit();
+        setNotice($('email-pending'), t('profile.emailConfirm', { email }));
         return;
       }
     } else {
@@ -172,17 +173,19 @@ import Base from '../layouts/Base.astro';
       for (const code of Object.values(getCodes())) {
         const { error } = await supabase.rpc('set_my_email', { code, e: email });
         if (error) {
-          btn.disabled = false;
-          editMsg(error.message.includes('bruges') ? t('guest.emailTaken')
-            : error.message.includes('email_locked') ? t('guest.emailLocked') : t('guest.emailNotSaved'), false);
+          setLoading(btn, false);
+          if (error.message.includes('bruges')) bad('email', t('guest.emailTaken'));
+          else if (error.message.includes('email_locked')) bad('email', t('guest.emailLocked'));
+          else toast(t('guest.emailNotSaved'), { kind: 'error' });
           return;
         }
       }
       me.email = email;
     }
-    btn.disabled = false;
+    setLoading(btn, false);
     showMe();
     closeEdit();
+    toast(t('common.saved'));
   });
 
   // ---------- Startup ----------
@@ -245,7 +248,6 @@ import Base from '../layouts/Base.astro';
   .profile-page .profile-form #name-field { display: grid; gap: 0.4rem; margin-bottom: 0.4rem; }
   .profile-page .profile-form .hint { margin: 0; font-size: 0.88rem; }
   .profile-page .profile-form .row { display: flex; gap: 0.6rem; margin-top: 0.4rem; }
-  .profile-page #link-only { margin-top: 1.5rem; }
   .profile-page .profile-block { margin-top: 2.5rem; }
   .profile-page .profile-block h2 { font-size: 1.6rem; }
   .profile-page .book-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; }

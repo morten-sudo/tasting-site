@@ -7,6 +7,8 @@ import { $, type Host } from './admin-common';
 import { initAddress, readAddress, writeAddress } from './address';
 import { initWhen, readWhen, readEnd, writeWhen, futureOnly, checkWhen } from './datetime';
 import { fieldError, focusField } from './field-error';
+import { toast } from './ui/toast';
+import { confirmModal } from './ui/confirm';
 
 type Tasting = { id: string; slug: string } & Record<string, unknown>;
 
@@ -19,10 +21,6 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   const val = (id: string) => $<HTMLInputElement>(id).value;
   const FIELDS = ['wz-title-input', 'wz-date-show', 'wz-time', 'wz-end', 'wz-max'];
 
-  // The footer message is for what is not about one field ("could not be created"); it goes when anything changes
-  function msg(text = '') { $('wz-msg').textContent = text; $('wz-msg').hidden = !text; }
-  dialog.addEventListener('input', () => msg());
-  dialog.addEventListener('change', () => msg());
 
   /** Has anything been typed? Then closing asks first. */
   const typed = () => [...dialog.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[type=text], input[type=hidden], textarea')]
@@ -37,8 +35,6 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     $<HTMLTextAreaElement>('wz-intro').value = '';
     writeAddress('wz', {});
     for (const id of FIELDS) fieldError($(id), null);
-    msg();
-    leaving(false);
   }
 
   async function create() {
@@ -58,7 +54,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     const { data, error } = await supabase.rpc('create_tasting', {
       title, place: null, mobilepay: null, starts_at: readWhen('wz'), ...readAddress('wz'),
     });
-    if (error || !data) { msg(t('admin.createFailed')); return; }
+    if (error || !data) { toast(t('admin.createFailed'), { kind: 'error' }); return; }
     const tasting = data as Tasting;
     // What create_tasting does not take
     const intro = $<HTMLTextAreaElement>('wz-intro').value.trim() || null;
@@ -69,22 +65,22 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     dialog.close();
   }
 
-  /** The question in the footer when closing would throw away what was typed. */
-  function leaving(on: boolean) {
-    $('wz-leave').hidden = !on;
-    $('wz-actions').hidden = on;
-    if (on) $('wz-leave-stay').focus();
-  }
-  function requestClose() {
-    if (!$('wz-leave').hidden || !typed()) { dialog.close(); return; } // a second Esc closes
-    leaving(true);
+  /** Closing with something typed asks first (the one confirmation) */
+  let asking = false;
+  async function requestClose() {
+    if (asking) return;
+    if (typed()) {
+      asking = true;
+      const drop = await confirmModal({ title: t('wizard.discardQ'), ok: t('wineWizard.discardYes'), cancel: t('wineWizard.discardNo'), danger: true });
+      asking = false;
+      if (!drop) return;
+    }
+    dialog.close();
   }
   dialog.addEventListener('cancel', (e) => { e.preventDefault(); requestClose(); });
   dialog.addEventListener('close', () => onClose(created));
   $('wz-close').addEventListener('click', requestClose);
   $('wz-cancel').addEventListener('click', requestClose);
-  $('wz-leave-drop').addEventListener('click', () => dialog.close());
-  $('wz-leave-stay').addEventListener('click', () => leaving(false));
   $('wz-create').addEventListener('click', async (e) => {
     const btn = e.currentTarget as HTMLButtonElement;
     setLoading(btn, true);

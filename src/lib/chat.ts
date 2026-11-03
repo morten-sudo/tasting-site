@@ -1,8 +1,10 @@
 // Event chat: renders the conversation, polls for new messages every few seconds while the page
 // is visible, and sends new ones. The same code serves guests (invite code) and the host.
 import { t, locale } from '../i18n';
-import { iconButton } from './icons';
-import { confirmModal } from './confirm';
+import { iconButton } from './ui/icon-button';
+import { confirmModal } from './ui/confirm';
+import { toast } from './ui/toast';
+import { fieldError } from './field-error';
 
 export type ChatMessage = { id: number; author: string; body: string; created_at: string; from_host: boolean; mine: boolean };
 
@@ -19,7 +21,6 @@ export function initChat({ prefix, load, send, remove }: Options) {
   const $ = <E extends HTMLElement>(id: string) => document.getElementById(`${prefix}-${id}`) as E;
   const list = $('messages');
   const input = $<HTMLTextAreaElement>('input');
-  const err = $('error');
   let lastId = 0;
   let lastDay = '';
   let timer: number | undefined;
@@ -51,8 +52,9 @@ export function initChat({ prefix, load, send, remove }: Options) {
       const del = iconButton('trash', t('chat.delete'), { quiet: true });
       del.classList.add('chat-del');
       del.addEventListener('click', async () => {
-        if (!(await confirmModal(t('chat.deleteQ'), t('chat.delete')))) return;
-        if (await remove(m.id)) li.remove();
+        if (!(await confirmModal({ title: t('chat.deleteQ'), ok: t('chat.delete'), danger: true }))) return;
+        if (await remove(m.id)) { li.remove(); toast(t('chat.deleted')); }
+        else toast(t('chat.notDeleted'), { kind: 'error' });
       });
       li.append(del);
     }
@@ -101,7 +103,7 @@ export function initChat({ prefix, load, send, remove }: Options) {
     e.preventDefault();
     const body = input.value.trim();
     if (!body) return;
-    err.hidden = true;
+    fieldError(input, null);
     input.disabled = true;
     const res = await send(body);
     input.disabled = false;
@@ -111,8 +113,8 @@ export function initChat({ prefix, load, send, remove }: Options) {
       await poll();
       list.scrollTop = list.scrollHeight;
     } else {
-      err.textContent = t(res === 'too_many' ? 'chat.tooMany' : 'chat.notSent');
-      err.hidden = false;
+      // The message stays in the field; why it was not sent goes under it
+      fieldError(input, t(res === 'too_many' ? 'chat.tooMany' : 'chat.notSent'), $('form'));
     }
     input.focus();
   });

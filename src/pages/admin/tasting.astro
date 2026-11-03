@@ -6,6 +6,9 @@ import Switch from '../../components/ui/Switch.astro';
 import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Checkbox from '../../components/ui/Checkbox.astro';
 import Base from '../../layouts/Base.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import Loading from '../../components/ui/Loading.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
@@ -27,14 +30,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 <Base title="page.admin" adminTasting>
   <section class="wrap admin-page">
     <AdminNav>
-    <p id="not-found" class="message error" hidden><span data-i18n="adminTasting.notFound">This tasting was not found.</span> <a href="/admin/tastings/" data-i18n="adminTasting.back">All tastings</a></p>
+    <EmptyState id="not-found" icon="search" title="adminTasting.notFound" hidden>
+      <a class="btn small" href="/admin/tastings/" data-i18n="adminTasting.back">All tastings</a>
+    </EmptyState>
 
     <div id="admin-main" hidden>
       <!-- The tasting's name, the way to its guest page, and its sub-menu -->
       <header class="ta-head">
         <div class="ta-top">
           <h1 id="ta-title" class="title"></h1>
-          <a id="t-guestpage" class="btn small secondary" href="/home/" target="_blank" rel="noopener" title="See the tasting as your guests do" data-i18n-attr="title=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span><Icon name="ext" /></a>
+          <a id="t-guestpage" class="btn small secondary" href="/home/" target="_blank" rel="noopener" data-tip-text="See the tasting as your guests do" data-i18n-attr="data-tip-text=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span><Icon name="ext" /></a>
         </div>
         <nav id="admin-tabs" class="ta-tabs" aria-label="Tasting admin" data-i18n-attr="aria-label=adminBar.label">
           {TABS.map((tab) => <a href="/admin/" data-apath={tab.path} data-section={tab.id} data-i18n={tab.key}>{en[tab.key]}</a>)}
@@ -105,7 +110,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <div class="ai-intro" data-help="ai-intro">
             <button id="ai-write" class="text-btn" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiIntro.write">Write a draft with AI</span></button>
             <button id="ai-undo" class="text-btn" type="button" hidden data-i18n="aiIntro.undo">Undo – bring back my text</button>
-            <p id="ai-status" class="hint" aria-live="polite" hidden></p>
+            <p id="ai-status" class="status" aria-live="polite" hidden></p>
             <div id="ai-draft" class="ai-draft" hidden>
               <p class="ai-draft-label" data-i18n="aiIntro.label">Draft from AI – check it before you use it</p>
               <div id="ai-text" class="ai-text"></div>
@@ -146,7 +151,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </div>
         <div class="set-row">
           <span><b data-i18n="set.tv">Leaderboard for the TV</b><small><a id="tv-link" href="/" target="_blank"></a></small></span>
-          <button id="tv-copy" class="btn small secondary" type="button" data-i18n="hosts.copy">Copy</button>
+          <button id="tv-copy" class="icon-act strong" type="button" aria-label="Copy link" data-tip="Copy link" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
         </div>
       </section>
 
@@ -204,15 +209,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <input class="input" id="host-name" type="text" autocomplete="off" maxlength="80" />
           <div class="row-actions"><button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button></div>
         </form>
-        <div id="host-confirm" class="host-confirm" role="alertdialog" aria-live="polite" hidden></div>
-        <p id="host-msg" class="message" hidden></p>
-        <div id="host-link" class="host-link" hidden>
-          <p id="host-link-text" class="hint"></p>
-          <div class="inline-form">
-            <input class="input" id="host-link-url" type="text" readonly />
-            <button id="host-link-copy" class="btn small secondary" type="button" data-i18n="hosts.copy">Copy</button>
+        <!-- The invitation mail could not be sent: the link to pass on yourself -->
+        <Notice id="host-link" tone="warn" title="hosts.mailFailed" hidden>
+          <p id="host-link-text"></p>
+          <div class="copy-row">
+            <input class="input small" id="host-link-url" type="text" readonly aria-labelledby="host-link-text" />
+            <button id="host-link-copy" class="icon-act strong" type="button" aria-label="Copy" data-tip="Copy" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
           </div>
-        </div>
+        </Notice>
       </dialog>
 
       <section class="block quiet-zone" data-section="settings">
@@ -221,16 +225,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <p class="hint" data-i18n="tastingDelete.hint">Removes the tasting with its guest list, answers, orders, quiz and chat. The wines stay in your library. It cannot be undone.</p>
         <button id="td-ask" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="tastingDelete.button">Delete tasting …</span></button>
       </div>
-      <!-- The question, in a small window -->
-      <dialog id="td-confirm" class="confirm-modal" aria-labelledby="td-q">
-        <p id="td-q" class="td-q"></p>
-        <p class="hint" data-i18n="tastingDelete.keepWines">The wines stay in your library. It cannot be undone.</p>
-        <p id="td-msg" class="message error" hidden></p>
-        <div class="row-actions">
-          <button id="td-no" class="btn small secondary" type="button" data-i18n="common.cancel">Cancel</button>
-          <button id="td-yes" class="btn small danger" type="button" data-i18n="tastingDelete.yes">Yes, delete it</button>
-        </div>
-      </dialog>
       </section>
 
       <!-- Wines in this tasting (from the wine library) -->
@@ -244,7 +238,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
         <ol id="tw-list" class="tw-list"></ol>
         <p id="tw-move-help" class="sr" aria-live="polite"></p>
-        <p id="tw-empty" class="hint" hidden data-i18n="adminTasting.noWines">No wines in this tasting yet.</p>
+        <EmptyState id="tw-empty" icon="glass" title="adminTasting.noWinesTitle" text="adminTasting.noWinesText" hidden>
+          <button id="tw-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="adminTasting.addWineBtn">Add wine</span></button>
+        </EmptyState>
 
         <dialog id="tw-edit" class="sheet" aria-labelledby="twe-title">
           <div class="sheet-head">
@@ -285,7 +281,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
             <Switch title="admin.orderable" hint="twe.orderableHint" id="twe-orderable" class="twe-switch" />
 
-            <p id="twe-msg" class="message error" hidden></p>
             <div class="row-actions">
               <button id="twe-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
               <button id="twe-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
@@ -309,7 +304,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
         </div>
         <!-- Guests are invited to wines: at least one wine in the tasting first -->
-        <p id="g-needs-wine" class="message" hidden><span data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</span> <a href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></p>
+        <Notice id="g-needs-wine" tone="warn" hidden>
+          <p data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</p>
+          <div class="actions"><a class="btn small secondary" href="wines/" data-section="wines" data-i18n="adminTasting.toWines">Go to Wines</a></div>
+        </Notice>
 
 
         <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="list-search" />
@@ -352,7 +350,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <div id="p-panel-body"></div>
         </dialog>
-        <p id="guest-empty" class="hint" hidden data-i18n="admin.noMatch">No guests match.</p>
+        <div id="guest-empty" class="empty-state" hidden></div>
       </section>
 
       <!-- Orders -->
@@ -367,7 +365,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             { value: 'guest', label: 'bulk.segGuest', hintId: 'bulk-ex-guest' },
             { value: 'pooled', label: 'bulk.segPooled', hintId: 'bulk-ex-pooled' }]} />
           <p id="bulk-example" class="bulk-example"></p>
-          <p id="bulk-msg" class="hint" aria-live="polite"></p>
+          <p id="bulk-msg" class="status" aria-live="polite" hidden></p>
         </div>
         <div id="orders-by-guest"></div>
         <div id="orders-total">
@@ -399,7 +397,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <Switch title="set.quizOpen" hint="set.quizOpenHint" help="quiz" data-key="quiz_open" class="tab-switch" />
           <Switch title="set.quizDone" hint="set.quizDoneHint" data-key="quiz_finished" class="tab-switch" />
         </div>
-        <p id="q-open-note" class="hint" hidden data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p>
+        <Notice id="q-open-note" hidden><p data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p></Notice>
 
         <!-- Suggestions from AI: shown here, added one by one only when the host chooses -->
         <div class="ai-quiz">
@@ -408,8 +406,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
               { value: 'easy', label: 'aiQuiz.easy' }, { value: 'medium', label: 'aiQuiz.medium', checked: true }, { value: 'expert', label: 'aiQuiz.expert' }]} />
             <button id="q-ai" class="btn small secondary" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.suggest">Suggestions from AI</span></button>
           </div>
-          <p id="q-ai-status" class="hint" aria-live="polite" hidden></p>
-          <p id="q-ai-warn" class="ai-warn" hidden><span data-i18n="aiQuiz.warn">AI can be wrong – especially on Expert. Always check the marked answer before you press Add.</span></p>
+          <p id="q-ai-status" class="status" aria-live="polite" hidden></p>
+          <Notice id="q-ai-warn" tone="warn" hidden><p data-i18n="aiQuiz.warn">AI can be wrong – especially on Expert. Always check the marked answer before you press Add.</p></Notice>
           <ol id="q-ai-list" class="ai-suggestions" hidden></ol>
           <button id="q-ai-more" class="text-btn" type="button" hidden data-i18n="aiQuiz.more">More suggestions</button>
         </div>
@@ -430,7 +428,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </fieldset>
           <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="opt" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
           <textarea class="input" id="qf-explanation" rows="2" maxlength="1000"></textarea>
-          <p id="qf-msg" class="message error" hidden></p>
           <div class="row-actions">
             <button id="qf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
             <button id="qf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
@@ -440,7 +437,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </dialog>
 
         <ol id="q-admin-list" class="q-admin-list"></ol>
-        <p id="q-empty" class="hint" hidden data-i18n="aq.empty">No questions yet. Add the first one.</p>
+        <EmptyState id="q-empty" icon="question" title="aq.emptyTitle" text="aq.emptyText" hidden>
+          <button id="q-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="aq.add">Add question</span></button>
+        </EmptyState>
 
         <!-- Standings only once the quiz has questions -->
         <div id="board-block" hidden>
@@ -457,6 +456,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
 <script>
   import { setLoading } from '../../lib/ui/button';
+  import { setStatus } from '../../lib/ui/status-line';
+  import { copyText } from '../../lib/ui/copy';
+  import { setNotice } from '../../lib/ui/notice';
+  import { setEmpty, emptyState } from '../../lib/ui/empty';
   import { bindSwitch, switchRow } from '../../lib/ui/switch';
   import { choiceCards } from '../../lib/ui/choice-cards';
   import { filterDropdown, NONE } from '../../lib/filter-dd';
@@ -569,9 +572,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   async function writeAiIntro() {
     if (!tasting) return;
     const status = $('ai-status');
-    status.textContent = t('aiIntro.writing');
-    status.classList.add('ai-busy');
-    status.hidden = false;
+    setStatus(status, 'busy', t('aiIntro.writing'));
     ($('ai-write') as HTMLButtonElement).disabled = true;
     ($('ai-again') as HTMLButtonElement).disabled = true;
     try {
@@ -583,17 +584,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       });
       const out = (await res.json().catch(() => ({}))) as { text?: string; error?: string };
       if (!res.ok || !out.text) {
-        status.textContent = t(out.error === 'no_wines' ? 'aiIntro.noWines' : 'aiIntro.failed');
+        setStatus(status, 'error', t(out.error === 'no_wines' ? 'aiIntro.noWines' : 'aiIntro.failed'));
         return;
       }
       aiDraft = out.text.trim();
       $('ai-text').replaceChildren(...aiDraft.split(/\n\s*\n/).map((para) => Object.assign(document.createElement('p'), { textContent: para.trim() })));
       $('ai-draft').hidden = false;
-      status.hidden = true;
+      setStatus(status, null);
     } catch {
-      status.textContent = t('aiIntro.failed');
+      setStatus(status, 'error', t('aiIntro.failed'));
     } finally {
-      status.classList.remove('ai-busy');
       ($('ai-write') as HTMLButtonElement).disabled = false;
       ($('ai-again') as HTMLButtonElement).disabled = false;
     }
@@ -623,12 +623,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     $('v-place').textContent = (tasting.place as string) || dash;
     $('v-intro').textContent = (tasting.intro as string) || dash;
   }
-  const detailsPanel = sheetPanel($('details-panel') as HTMLDialogElement);
+  const detailsPanel = sheetPanel($('details-panel') as HTMLDialogElement, { dirty: 'form' });
   $('details-edit').addEventListener('click', () => {
     fillDetailsForm();
     detailsPanel.open();
   });
-  $('d-cancel').addEventListener('click', () => detailsPanel.close());
+  $('d-cancel').addEventListener('click', () => detailsPanel.requestClose());
 
   // ---------- Hosts on the overview ----------
   async function loadOverviewHosts(slug: string, canManage: boolean) {
@@ -684,10 +684,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   }
 
   // ---------- Settings: side panels for max guests and the fee ----------
-  const mgPanel = sheetPanel($('mg-panel') as HTMLDialogElement);
-  const feePanel = sheetPanel($('fee-panel') as HTMLDialogElement);
-  document.querySelectorAll<HTMLButtonElement>('#mg-panel [data-close], #fee-panel [data-close]').forEach((b) =>
-    b.addEventListener('click', () => (b.closest('dialog') as HTMLDialogElement).close()));
+  const mgPanel = sheetPanel($('mg-panel') as HTMLDialogElement, { dirty: 'form' });
+  const feePanel = sheetPanel($('fee-panel') as HTMLDialogElement, { dirty: 'form' });
   function renderMaxGuests() {
     if (!tasting) return;
     const max = tasting.max_guests as number | null;
@@ -716,10 +714,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     toast(t('common.saved'), { kind: 'ok' });
     await reloadParticipants();
   });
-  $('tv-copy').addEventListener('click', async () => {
-    const url = ($('tv-link') as HTMLAnchorElement).href;
-    try { await navigator.clipboard.writeText(url); toast(t('hosts.copied'), { kind: 'ok' }); } catch { /* the link is there to select */ }
-  });
+  $('tv-copy').addEventListener('click', () => copyText(($('tv-link') as HTMLAnchorElement).href, t('hosts.linkCopied')));
 
   function loadSettings() {
     if (!tasting) return;
@@ -742,13 +737,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         // The choice is right under the switch on this tab: show it, say so, and point to it
         renderBulk();
         $('bulk-mode').hidden = false;
-        $('bulk-msg').textContent = t('bulk.chooseFirst');
+        setStatus($('bulk-msg'), 'warn', t('bulk.chooseFirst'));
         $('bulk-mode').classList.add('help-flash');
         $('bulk-mode').scrollIntoView({ behavior: 'smooth', block: 'center' });
         setTimeout(() => $('bulk-mode').classList.remove('help-flash'), 2400);
         return '';
       }
       tasting[box.dataset.key!] = on;
+      if (box.dataset.key === 'orders_open') renderOrders();
       // The same switch on another tab follows
       document.querySelectorAll<HTMLInputElement>(`input[data-key="${box.dataset.key}"]`).forEach((b) => (b.checked = on));
       $('q-open-note').hidden = !(tasting.quiz_open === true && tasting.quiz_finished !== true);
@@ -785,8 +781,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         toast(t('admin.changeNotSaved'), { kind: 'error' });
         return;
       }
-      $('bulk-msg').textContent = '';
-      tasting.bulk_mode = r.value; renderBulk(); toast(t('common.saved'), { kind: 'ok', ms: 2000 });
+      setStatus($('bulk-msg'), null);
+      tasting.bulk_mode = r.value; renderBulk(); toast(t('common.saved'), { kind: 'ok' });
     });
   });
 
@@ -848,7 +844,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   let onlyNoEmail = false;
   let guestQuery = '';
   // Editing a guest of the tasting happens in a side panel
-  const guestPanel = sheetPanel($('p-panel') as HTMLDialogElement);
+  const guestPanel = sheetPanel($('p-panel') as HTMLDialogElement, { dirty: 'form' });
   function openGuestPanel(p: P) {
     $('p-panel-title').textContent = p.name;
     $('p-panel-body').replaceChildren(editPanel(p));
@@ -874,7 +870,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   async function saveGuest(p: P, patch: Partial<P>) {
     const { error } = await supabase.from('participants').update(patch).eq('id', p.id);
     if (error) {
-      toast(error.code === '23505' ? t('guest.emailTaken') : t('admin.changeNotSaved'), { kind: 'error', ms: 7000 });
+      toast(error.code === '23505' ? t('guest.emailTaken') : t('admin.changeNotSaved'), { kind: 'error' });
       return false;
     }
     Object.assign(p, patch);
@@ -887,10 +883,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const bottlesOf = (p: P) => orders.filter((o) => o.participant_id === p.id).reduce((n, o) => n + o.order_lines.reduce((m, l) => m + l.quantity, 0), 0);
   /** The guest's link to their invitation */
   const inviteUrl = (p: P) => `${location.origin}/t/${tasting!.slug}/?k=${p.invite_code}`;
-  async function copyInvite(p: P) {
-    try { await navigator.clipboard.writeText(inviteUrl(p)); toast(t('admin.linkCopiedFor', { name: p.name }), { kind: 'ok' }); }
-    catch { prompt(t('admin.copyLinkPrompt'), inviteUrl(p)); }
-  }
+  const copyInvite = (p: P) => copyText(inviteUrl(p), t('admin.linkCopiedFor', { name: p.name }));
   async function sendInvite(p: P, btn: HTMLButtonElement) {
     setLoading(btn, true);
     const ok = await mailInvite(p);
@@ -941,15 +934,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   // list with "Undo" for a while – removed in the database when the message goes (or the page is left)
   const pendingRemove = new Map<string, { p: P; token: string }>();
   async function removeGuest(p: P): Promise<boolean> {
-    if (orders.some((o) => o.participant_id === p.id)) { toast(t('adminTasting.guestHasOrders'), { kind: 'error', ms: 7000 }); return false; }
-    if (!(await confirmModal(t('guestRow.removeQ', { name: p.name }), t('adminTasting.removeGuest'), t('guestRow.removeNote')))) return false;
+    if (orders.some((o) => o.participant_id === p.id)) { toast(t('adminTasting.guestHasOrders'), { kind: 'error' }); return false; }
+    if (!(await confirmModal({ title: t('guestRow.removeQ', { name: p.name }), text: t('guestRow.removeNote'), ok: t('adminTasting.removeGuest'), danger: true }))) return false;
     const { data: sess } = await supabase.auth.getSession();
     pendingRemove.set(p.id, { p, token: sess.session?.access_token ?? '' });
     participants = participants.filter((x) => x.id !== p.id);
     renderParticipants();
     renderFee();
     toast(t('guestRow.removed', { name: p.name }), {
-      ms: 8000,
       action: { label: t('wineLib.undo'), run: () => {
         pendingRemove.delete(p.id);
         participants.push(p);
@@ -961,7 +953,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         if (!pendingRemove.has(p.id)) return;
         pendingRemove.delete(p.id);
         const { error } = await supabase.from('participants').delete().eq('id', p.id);
-        if (error) { participants.push(p); renderParticipants(); renderFee(); toast(t('admin.changeNotSaved'), { kind: 'error', ms: 7000 }); }
+        if (error) { participants.push(p); renderParticipants(); renderFee(); toast(t('admin.changeNotSaved'), { kind: 'error' }); }
       },
     });
     return true;
@@ -1067,9 +1059,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         || a.name.localeCompare(b.name, 'da'))
       .filter(matches);
     for (const p of sorted) list.append(guestCard(p));
-    $('guest-empty').hidden = sorted.length > 0;
-    // No guests at all is not "none match": say how to start
-    $('guest-empty').textContent = t(participants.length ? 'admin.noMatch' : 'admin.noGuestsYet');
+    // No guests at all is not "none match": say how to start – or how to see them all again
+    list.hidden = !sorted.length;
+    if (sorted.length) $('guest-empty').hidden = true;
+    else if (participants.length) setEmpty($('guest-empty'), { icon: 'filter', title: t('admin.noMatch'), action: { label: t('adminTasting.showAllGuests'), secondary: true, onClick: showAllGuests } });
+    else setEmpty($('guest-empty'), { icon: 'user', title: t('adminTasting.noGuestsTitle'), text: t('adminTasting.noGuestsText'),
+      action: { label: t('guestLib.addBtn'), icon: 'plus', onClick: () => $('g-invite-toggle').click() } });
     renderSetup();
     renderSummary();
   }
@@ -1107,6 +1102,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     guestQuery = (e.target as HTMLInputElement).value.trim().toLowerCase();
     renderParticipants();
   });
+  /** Clears the filter and the search */
+  function showAllGuests() {
+    ALL_STATUSES.forEach((v) => guestStatuses.add(v));
+    onlyNoEmail = false;
+    guestQuery = '';
+    ($('guest-search') as HTMLInputElement).value = '';
+    renderParticipants();
+  }
 
   // ---------- Invitation by email ----------
   /** Emails the guest their invitation; true when it was sent */
@@ -1143,10 +1146,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // No orders: no empty table or CSV button
     $('orders-total').hidden = orders.length === 0;
     if (orders.length === 0) {
-      const p = document.createElement('p');
-      p.className = 'hint';
-      p.textContent = t('admin.noOrders');
-      byGuest.append(p);
+      byGuest.append(emptyState({ icon: 'cart', title: t('admin.noOrders'), text: t(tasting?.orders_open ? 'admin.noOrdersOpen' : 'admin.noOrdersClosed') }));
     }
 
     const sorted = [...orders].sort((a, b) => b.created_at.localeCompare(a.created_at));
@@ -1359,7 +1359,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const { data, error } = await supabase.from('participants')
       .insert({ name: g.name, email: g.email, tasting_id: tasting!.id, guest_id: g.id }).select().single();
     if (btn) setLoading(btn, false);
-    if (error || !data) { toast(error?.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded'), { kind: 'error', ms: 7000 }); return; }
+    if (error || !data) { toast(error?.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded'), { kind: 'error' }); return; }
     const p = data as P;
     participants.push(p);
     giInput.value = '';
@@ -1372,9 +1372,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (li) { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }
     if (matchMedia('(min-width: 48rem)').matches) giInput.focus({ preventScroll: true });
     if (p.email && ($('g-send-mail') as HTMLInputElement).checked) {
-      toast(t('guestInvite.mailing', { name: p.name }), { ms: 2500 });
+      toast(t('guestInvite.mailing', { name: p.name }), {});
       const ok = await mailInvite(p);
-      toast(t(ok ? 'guestInvite.mailed' : 'guestInvite.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error', ms: ok ? 4000 : 8000 });
+      toast(t(ok ? 'guestInvite.mailed' : 'guestInvite.mailFailed', { name: p.name }), { kind: ok ? 'ok' : 'error' });
       renderParticipants();
     } else {
       toast(t(p.email ? 'guestInvite.added' : 'guestInvite.addedNoMail', { name: p.name }), { kind: 'ok' });
@@ -1476,22 +1476,18 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   }));
 
   // ---------- Delete the tasting ----------
-  $('td-ask').addEventListener('click', () => {
+  // Asked about first (the one confirmation); the button works while it deletes
+  $('td-ask').addEventListener('click', async () => {
     if (!tasting) return;
     const n = participants.length;
-    $('td-q').textContent = t(n ? 'tastingDelete.qGuests' : 'tastingDelete.q', { title: tasting.title, n });
-    $('td-msg').hidden = true;
-    ($('td-confirm') as HTMLDialogElement).showModal();
-    $('td-no').focus();
-  });
-  $('td-no').addEventListener('click', () => ($('td-confirm') as HTMLDialogElement).close());
-  $('td-yes').addEventListener('click', async () => {
-    if (!tasting) return;
-    const btn = $('td-yes') as HTMLButtonElement;
-    btn.disabled = true;
+    const ok = await confirmModal({ title: t('tastingDelete.q', { title: tasting.title }), danger: true, ok: t('tastingDelete.title'),
+      text: (n ? t('tastingDelete.guestsNote', { n }) + ' ' : '') + t('tastingDelete.keepWines') });
+    if (!ok) return;
+    const btn = $('td-ask') as HTMLButtonElement;
+    setLoading(btn, true);
     const { error, count } = await supabase.from('tastings').delete({ count: 'exact' }).eq('id', tasting.id);
-    btn.disabled = false;
-    if (error || !count) { $('td-msg').textContent = t('tastingDelete.failed'); $('td-msg').hidden = false; return; }
+    setLoading(btn, false);
+    if (error || !count) { toast(t('tastingDelete.failed'), { kind: 'error' }); return; }
     location.href = `/admin/tastings/?deleted=${encodeURIComponent(tasting.title)}`;
   });
 

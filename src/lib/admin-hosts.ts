@@ -2,9 +2,12 @@
 // co-hosts see the list. Everything goes through security-definer functions in the database.
 import { supabase } from './supabase';
 import { personRow } from './ui/person-row';
-import { $, mk, sheetPanel, iconButton } from './admin-common';
-import { confirmModal } from './confirm';
-import { toast } from './toast';
+import { $, sheetPanel, iconButton } from './admin-common';
+import { confirmModal } from './ui/confirm';
+import { toast } from './ui/toast';
+import { copyText } from './ui/copy';
+import { setLoading } from './ui/button';
+import { fieldError } from './field-error';
 import { t, lang } from '../i18n';
 
 type HostRow = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
@@ -13,23 +16,18 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
   const list = $('hosts-list');
   const form = $<HTMLFormElement>('host-add');
   const input = $<HTMLInputElement>('host-email');
-  const msg = $('host-msg');
   // Adding hosts: a side panel, opened by the owner's "Add host"
-  const panel = sheetPanel($<HTMLDialogElement>('host-panel'));
+  const panel = sheetPanel($<HTMLDialogElement>('host-panel'), { dirty: 'form' });
   $('host-open').hidden = !isOwner;
   $('host-open').addEventListener('click', () => {
-    say('');
+    fieldError(input, null);
     $('host-link').hidden = true;
-    closeConfirm();
     panel.open();
     if (matchMedia('(min-width: 48rem)').matches) input.focus();
   });
 
-  const say = (text: string, ok = false) => {
-    msg.textContent = text;
-    msg.className = 'message ' + (ok ? 'ok' : 'error');
-    msg.hidden = !text;
-  };
+  // Problems with the email go under the field
+  const say = (text: string) => { fieldError(input, text); input.focus(); };
 
   // The link a new host opens: sign in, then straight to this tasting's admin
   const linkFor = () => `${location.origin}/login/?next=${encodeURIComponent(`/t/${slug}/admin/`)}`;
@@ -38,12 +36,7 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     $('host-link-text').textContent = t('hosts.sendLink', { email });
     $<HTMLInputElement>('host-link-url').value = linkFor();
   }
-  $('host-link-copy').addEventListener('click', async () => {
-    const field = $<HTMLInputElement>('host-link-url');
-    try { await navigator.clipboard.writeText(field.value); } catch { field.select(); document.execCommand('copy'); }
-    $('host-link-copy').textContent = t('hosts.copied');
-    setTimeout(() => ($('host-link-copy').textContent = t('hosts.copy')), 1500);
-  });
+  $('host-link-copy').addEventListener('click', () => copyText($<HTMLInputElement>('host-link-url').value, t('hosts.linkCopied'), $<HTMLInputElement>('host-link-url')));
 
   let hosts: HostRow[] = [];
 
@@ -58,7 +51,7 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
         del.dataset.tip = t('hosts.remove');
         // Asked first, in a small window
         del.addEventListener('click', async () => {
-          if (!(await confirmModal(t('hosts.removeQ', { name: r.name || r.email }), t('hosts.remove')))) return;
+          if (!(await confirmModal({ title: t('hosts.removeQ', { name: r.name || r.email }), ok: t('hosts.remove'), danger: true }))) return;
           const { error } = await supabase.rpc('remove_cohost', { t_id: tastingId, e: r.email });
           if (error) toast(t('hosts.failed'), { kind: 'error' });
           else { toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' }); load(); }
@@ -96,58 +89,44 @@ export function initHosts(tastingId: string, slug: string, isOwner: boolean) {
     return row?.name ?? null;
   }
 
-  const confirmBox = $('host-confirm');
-  function closeConfirm() { confirmBox.hidden = true; confirmBox.replaceChildren(); }
-
   /** Adds the co-host and emails the invitation (or shows the link when the mail cannot be sent). */
   async function addHost(email: string, name: string) {
     const btn = $<HTMLButtonElement>('host-add-btn');
-    btn.disabled = true;
+    setLoading(btn, true);
     const { data, error } = await supabase.rpc('add_cohost', { t_id: tastingId, e: email });
-    btn.disabled = false;
     if (error) {
-      say(error.message.includes('already_owner') ? t('hosts.isOwner')
-        : error.message.includes('too_many') ? t('hosts.tooMany') : t('hosts.failed'));
+      setLoading(btn, false);
+      if (error.message.includes('already_owner')) say(t('hosts.isOwner'));
+      else if (error.message.includes('too_many')) say(t('hosts.tooMany'));
+      else toast(t('hosts.failed'), { kind: 'error' });
       return;
     }
+    const added = data === 'active' ? t('hosts.addedActive', { email }) : t('hosts.addedPending', { email });
+    load();
+    const sent = await sendInvite(email, name);
+    setLoading(btn, false);
     input.value = '';
     $<HTMLInputElement>('host-name').value = '';
-    const added = data === 'active' ? t('hosts.addedActive', { email }) : t('hosts.addedPending', { email });
-    $('host-link').hidden = true;
-    say(added, true);
-    load();
-    btn.disabled = true;
-    const sent = await sendInvite(email, name);
-    btn.disabled = false;
-    if (sent) say(`${added} ${t('hosts.mailSent', { email })}`, true);
-    else { say(`${added} ${t('hosts.mailFailed')}`, true); showLink(email); }
+    panel.markClean();
+    // Sent: done – the panel closes and says so. Not sent: the panel stays with the link to pass on.
+    if (sent) { panel.close(); toast(`${added} ${t('hosts.mailSent', { email })}`); }
+    else { toast(added); showLink(email); }
   }
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    closeConfirm();
     const email = input.value.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say(t('guest.emailBad')); input.focus(); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say(t('guest.emailBad')); return; }
     // Already a host here: no new invitation
     const host = hosts.find((h) => h.email === email);
     if (host) { say(host.owner ? t('hosts.isOwner') : t('hosts.alreadyHost', { email })); return; }
     const typed = $<HTMLInputElement>('host-name').value.trim();
-    say('');
     // Already a guest: ask whether that guest should also be a co-host (under the name they already have)
     const guestName = await existingGuest(email);
     if (!guestName) { await addHost(email, typed); return; }
-    confirmBox.append(mk('p', '', t('hosts.isGuest', { email, name: guestName })));
-    const row = mk('div', 'row-actions');
-    const yes = mk('button', 'btn small', t('hosts.makeCohost', { name: guestName })) as HTMLButtonElement;
-    yes.type = 'button';
-    yes.addEventListener('click', async () => { closeConfirm(); await addHost(email, guestName); });
-    const no = mk('button', 'text-btn', t('common.cancel')) as HTMLButtonElement;
-    no.type = 'button';
-    no.addEventListener('click', closeConfirm);
-    row.append(yes, no);
-    confirmBox.append(row);
-    confirmBox.hidden = false;
-    yes.focus();
+    const ok = await confirmModal({ title: t('hosts.makeCohostQ', { name: guestName }), text: t('hosts.isGuestText', { email, name: guestName }),
+      ok: t('hosts.makeCohostBtn') });
+    if (ok) await addHost(email, guestName);
   });
 
   load();
