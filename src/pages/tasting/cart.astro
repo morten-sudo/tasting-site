@@ -54,7 +54,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   import { $, mk } from '../../lib/ui/dom';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
-  import { i18nReady, t, locale } from '../../i18n';
+  import { i18nReady, t, locale, formatDate } from '../../i18n';
   import { getCart, setQty, clearCart, MAX_PER_WINE } from '../../lib/cart';
   import { payBox, setPayee } from '../../lib/pay';
   import { unitPrice, nextTierLabel, type PriceTier } from '../../lib/wines';
@@ -69,7 +69,6 @@ import SignInState from '../../components/ui/SignInState.astro';
   };
 
   await i18nReady;
-  const date = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
@@ -161,7 +160,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       return listRow({
         variant: 'card', small: true, title: t('pay.orderComment', { id }),
         chips: [statusChip(ls[0].paid ? 'order.paid' : 'order.unpaid')],
-        meta: [date.format(new Date(ls[0].created_at))],
+        meta: [formatDate(ls[0].created_at, { time: true })],
         body, foot: [mk('span', '', t('cart.total')), mk('b', '', formatKr(total))],
       });
     }));

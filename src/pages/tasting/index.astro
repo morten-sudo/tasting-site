@@ -185,7 +185,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     const place = typeof info.place === 'string' && info.place ? info.place : null;
     if (starts) {
       const ends = typeof info.ends_at === 'string' ? info.ends_at : null;
-      $('h-when').textContent = formatWhen(starts, { year: new Date(starts).getFullYear() !== new Date().getFullYear(), end: ends });
+      $('h-when').textContent = formatWhen(starts, { end: ends });
       $('f-when').hidden = false;
       $('h-ics').onclick = () => downloadIcs(title, starts, place, ends);
       const count = countdown(starts);

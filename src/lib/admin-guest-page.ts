@@ -3,7 +3,7 @@
 // guest_profile() gives nothing from other accounts. Editing happens in the guest list's side panel (guests.astro).
 import { supabase } from './supabase';
 import { seenText, type Seen } from './guest-seen';
-import { t, formatWhen, locale, type Key } from '../i18n';
+import { t, formatWhen, formatDate, locale, type Key } from '../i18n';
 import { $, mk } from './ui/dom';
 import { listRow, activityRow, missing } from './ui/list-row';
 import { STATUS, guestStatus, type Status } from './ui/status';
@@ -74,11 +74,11 @@ export interface GuestPageActions {
 const ACT_SHOWN = 12;
 const admin = (slug: string, section = '') => `/t/${slug}/admin/${section}`;
 /** "28 Oct" – as on the tasting's guest list */
-const day = (iso: string) => new Date(iso).toLocaleString(locale(), { day: 'numeric', month: 'short' });
+const day = (iso: string) => formatDate(iso, { month: 'short' });
 /** "2 hours ago", with the date and time as the tip */
 function when(iso: string) {
   const el = mk('span', '', ago(iso));
-  tooltip(el, new Date(iso).toLocaleString());
+  tooltip(el, formatDate(iso, { time: true, year: true }));
   return el;
 }
 
@@ -100,7 +100,7 @@ export async function showGuestPage(id: string, actions: GuestPageActions) {
   const seen = actions.lastLogin();
   if (seen) {
     const el = mk('span', '', seenText(seen));
-    tooltip(el, new Date(seen.at).toLocaleString());
+    tooltip(el, formatDate(seen.at, { time: true, year: true }));
     meta.append(' · ', el);
   }
   $('gd-edit').onclick = actions.edit;

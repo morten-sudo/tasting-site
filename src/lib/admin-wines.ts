@@ -9,7 +9,7 @@ import { supabase } from './supabase';
 import { storeImage, storeLinkedImages } from './wine-image';
 import { $ } from './ui/dom';
 import { STYLES, styleName } from './wines';
-import { t, lang, locale } from '../i18n';
+import { t, lang, locale, formatDate } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
@@ -68,9 +68,7 @@ function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 type GeoHit = { lat: number; lon: number; source: string };
 const toText = (v: string) => v.trim() || null;
 /** "2 Nov 2026, 12:31" – when a wine's link was read. */
-export const fetchedWhen = (iso: string) => new Intl.DateTimeFormat(locale(), {
-  day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen',
-}).format(new Date(iso));
+export const fetchedWhen = (iso: string) => formatDate(iso, { month: 'short', time: true, year: true });
 
 export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved?: () => void; onDeleted?: (id: number) => void } = {}) {
   let wines: AdminWine[] = [];

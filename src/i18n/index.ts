@@ -130,13 +130,32 @@ export async function setLang(l: Lang) {
 
 // Shared formatters for the active language
 
+// Every date on the site goes through formatWhen (a tasting's time) or formatDate (anything else), in Danish time.
+// The year is shown when the date is not in this year – unless year says otherwise.
+const TZ = 'Europe/Copenhagen';
+const yearOf = (d: Date) => new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: TZ }).format(d);
+const withYear = (d: Date, year?: boolean) => year ?? yearOf(d) !== yearOf(new Date());
+
+/** "3. november", "3. nov. 2025", "3. nov., 09.40" – a date, short or long month, optionally with the time */
+export function formatDate(iso: string | Date, o: { month?: 'long' | 'short'; time?: boolean; year?: boolean; weekday?: boolean } = {}) {
+  const d = new Date(iso);
+  return new Intl.DateTimeFormat(locale(), {
+    ...(o.weekday ? { weekday: 'long' } : {}), day: 'numeric', month: o.month ?? 'long',
+    ...(withYear(d, o.year) ? { year: 'numeric' } : {}),
+    ...(o.time ? { hour: '2-digit', minute: '2-digit' } : {}), timeZone: TZ,
+  }).format(d);
+}
+/** "09.40" – the time of day */
+export const formatTime = (iso: string | Date) =>
+  new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: TZ }).format(new Date(iso));
+
 export function formatWhen(iso: string, opts: { year?: boolean; end?: string | null } = {}) {
   const d = new Date(iso);
   const day = new Intl.DateTimeFormat(locale(), {
-    weekday: 'long', day: 'numeric', month: 'long', ...(opts.year ? { year: 'numeric' } : {}),
-    timeZone: 'Europe/Copenhagen',
+    weekday: 'long', day: 'numeric', month: 'long', ...(withYear(d, opts.year) ? { year: 'numeric' } : {}),
+    timeZone: TZ,
   }).format(d);
-  const hm = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Copenhagen' });
+  const hm = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: TZ });
   // With an end: "19:00–23:00"
   const time = hm.format(d) + (opts.end ? `–${hm.format(new Date(opts.end))}` : '');
   return t('when.at', { day: day[0].toUpperCase() + day.slice(1), time });

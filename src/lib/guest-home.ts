@@ -62,7 +62,7 @@ function showNext(x: MyTasting, info: Info) {
   if (count) chips.push(chip(count, 'wait'));
   if (x.status !== 'invited') chips.push(statusChip(guestStatus(x.status)));
   $('next-chips').replaceChildren(...chips);
-  $('next-when').textContent = x.starts_at ? formatWhen(x.starts_at, { year: new Date(x.starts_at).getFullYear() !== new Date().getFullYear() }) : '';
+  $('next-when').textContent = x.starts_at ? formatWhen(x.starts_at) : '';
   $('next-f-when').hidden = !x.starts_at;
   $('next-place').textContent = x.place ?? '';
   $('next-f-place').hidden = !x.place;

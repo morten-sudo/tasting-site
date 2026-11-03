@@ -5,7 +5,7 @@ import { supabase } from './supabase';
 import { getCodes, tastingUrl } from './guest';
 import { statusChip } from './ui/status';
 import { listRow } from './ui/list-row';
-import { t, locale } from '../i18n';
+import { t, formatDate } from '../i18n';
 import { mk } from './ui/dom';
 
 export type OrderLine = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
@@ -35,7 +35,6 @@ export function orderCards(lines: OrderLine[]): HTMLElement[] {
     if (!byOrder.has(l.order_id)) byOrder.set(l.order_id, []);
     byOrder.get(l.order_id)!.push(l);
   }
-  const date = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
   return [...byOrder.values()].map((ls) => {
     const first = ls[0];
     const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
@@ -45,7 +44,7 @@ export function orderCards(lines: OrderLine[]): HTMLElement[] {
       variant: 'card', small: true, cardHref: tastingUrl(first.slug, 'cart/'),
       title: `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`,
       chips: [statusChip(first.paid ? 'order.paid' : 'order.unpaid')],
-      meta: [date.format(new Date(first.created_at))], body: [ul], foot: [mk('span', '', t('cart.total')), mk('b', '', formatKr(total))],
+      meta: [formatDate(first.created_at)], body: [ul], foot: [mk('span', '', t('cart.total')), mk('b', '', formatKr(total))],
     });
   });
 }

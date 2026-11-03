@@ -8,7 +8,7 @@ import { listRow } from './ui/list-row';
 import { chip } from './ui/status';
 import { mk } from './ui/dom';
 import { wineThumb } from './ui/thumb';
-import { t, locale } from '../i18n';
+import { t, locale, formatDate } from '../i18n';
 
 export type BookWine = {
     wine_id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
@@ -21,7 +21,7 @@ export type BookWine = {
 // and on the right my stars and what I bought. The card opens the wine's page.
 export function wineItem(w: BookWine) {
   const where = w.starts_at
-    ? t('book.tastedAt', { tasting: w.title, when: new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(w.starts_at)) })
+    ? t('book.tastedAt', { tasting: w.title, when: formatDate(w.starts_at) })
     : w.title;
   const side = document.createDocumentFragment();
   if (w.rating) {

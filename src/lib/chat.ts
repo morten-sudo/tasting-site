@@ -1,6 +1,6 @@
 // Event chat: renders the conversation, polls for new messages every few seconds while the page
 // is visible, and sends new ones. The same code serves guests (invite code) and the host.
-import { t, locale } from '../i18n';
+import { t, locale, formatDate, formatTime } from '../i18n';
 import { iconButton } from './ui/icon-button';
 import { confirmModal } from './ui/confirm';
 import { toast } from './ui/toast';
@@ -26,8 +26,8 @@ export function initChat({ prefix, load, send, remove }: Options) {
   let lastDay = '';
   let timer: number | undefined;
 
-  const dayFmt = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long' });
-  const timeFmt = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit' });
+  const dayFmt = { format: (d: Date) => formatDate(d, { weekday: true }) };
+  const timeFmt = { format: (d: Date) => formatTime(d) };
 
   const nearBottom = () => list.scrollHeight - list.scrollTop - list.clientHeight < 80;
 

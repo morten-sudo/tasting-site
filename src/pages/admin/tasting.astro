@@ -449,7 +449,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { confirmModal } from '../../lib/confirm';
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
-  import { i18nReady, t, lang, locale, formatWhen, type Key } from '../../i18n';
+  import { i18nReady, t, lang, locale, formatWhen, formatDate, type Key } from '../../i18n';
   import { ago } from '../../lib/ui/ago';
   import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
@@ -466,7 +466,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   type OLine = { wine_id: number; quantity: number; unit_price: number };
   type O = { id: number; participant_id: string; paid: boolean; created_at: string; order_lines: OLine[] };
   const ORDER_SELECT = 'id, participant_id, paid, created_at, order_lines(wine_id, quantity, unit_price)';
-  const when = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   let participants: P[] = [];
   let wines: W[] = [];
@@ -838,7 +837,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   }
 
   /** "28 Oct" – when the invitation was mailed */
-  const mailedWhen = (iso: string) => new Date(iso).toLocaleString(locale(), { day: 'numeric', month: 'short' });
+  const mailedWhen = (iso: string) => formatDate(iso, { month: 'short' });
   /** Bottles a guest has ordered in this tasting */
   const bottlesOf = (p: P) => orders.filter((o) => o.participant_id === p.id).reduce((n, o) => n + o.order_lines.reduce((m, l) => m + l.quantity, 0), 0);
   /** The guest's link to their invitation */
@@ -879,7 +878,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // Last sign-in: a column of its own just left of the icons (empty when never – the columns stay in line)
     const seenAt = p.guest_id ? lastLogins.get(p.guest_id) : undefined;
     const seen = mk('span', 'last-in', seenAt ? seenText(seenAt, true) : '');
-    if (seenAt) tooltip(seen, new Date(seenAt.at).toLocaleString(locale()));
+    if (seenAt) tooltip(seen, formatDate(seenAt.at, { time: true, year: true }));
     // (phones: a line under the name instead – the icons have the bottom line to themselves)
     const seenLine = seenAt ? mk('span', 'm-last', seenText(seenAt)) : null;
     const actions: HTMLElement[] = [seen, ...(cols.mail ? [mail] : []), ...(cols.link ? [link] : [])];
@@ -928,7 +927,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
     // The invitation: send (again) and copy the link
     out.push(mk('p', 'flabel', t('guestRow.invitation')));
-    out.push(mk('p', 'help', p.invite_mailed_at ? t('guestRow.mailedLong', { when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }) : t('guestRow.notMailedLong')));
+    out.push(mk('p', 'help', p.invite_mailed_at ? t('guestRow.mailedLong', { when: formatDate(p.invite_mailed_at, { time: true }) }) : t('guestRow.notMailedLong')));
     const inv = mk('div', 'actions tight guest-inv');
     if (p.email) {
       const send = mk('button', 'btn small secondary', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
@@ -999,12 +998,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // The mail column is only there when a guest in the list has an email
     const cols = { mail: sorted.some((p) => p.email), link: true };
     for (const p of sorted) list.append(guestCard(p, cols));
-    // No guests at all is not "none match": say how to start – or how to see them all again
+    // No guests at all is not "none match": say how to start – or how to see them all again.
+    // Nothing to filter or search before the first guest: only the empty state with its button
+    const none = !participants.length;
+    $('guest-search').closest<HTMLElement>('.affix')!.hidden = none;
+    document.getElementById('g-filter-dd')?.toggleAttribute('hidden', none);
     list.hidden = !sorted.length;
     if (sorted.length) $('guest-empty').hidden = true;
     else if (participants.length) setEmpty($('guest-empty'), { icon: 'filter', title: t('admin.noMatch'), action: { label: t('adminTasting.showAllGuests'), secondary: true, onClick: showAllGuests } });
     else setEmpty($('guest-empty'), { icon: 'user', title: t('adminTasting.noGuestsTitle'), text: t('adminTasting.noGuestsText'),
-      action: { label: t('guestLib.addBtn'), icon: 'plus', onClick: () => $('g-invite-toggle').click() } });
+      action: { label: t('guestLib.addBtn'), icon: 'plus', secondary: true, onClick: () => $('g-invite-toggle').click() } });
     renderSetup();
     renderSummary();
   }
@@ -1124,7 +1127,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       });
       list.append(listRow({
         id: o.id, pic: avatar(name), title: name,
-        meta: [[t('pay.orderComment', { id: o.id }), when.format(new Date(o.created_at))]],
+        meta: [[t('pay.orderComment', { id: o.id }), formatDate(o.created_at, { month: 'short', time: true })]],
         body: [lines], chips: [statusChipFor(o.paid ? 'order.paid' : 'order.notPaid')],
         aside: mk('b', '', formatKr(orderTotal(o))), actions: [mark],
       }));

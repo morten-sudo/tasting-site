@@ -107,7 +107,7 @@ import '../../styles/admin.css';
   import { deleteWithUndo } from '../../lib/ui/delete-undo';
   import { fieldError } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
-  import { t } from '../../i18n';
+  import { t, formatDate } from '../../i18n';
   import { ago } from '../../lib/ui/ago';
   import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
@@ -183,7 +183,7 @@ import '../../styles/admin.css';
     const s = lastLogins.get(id);
     if (!s) return null;
     const el = mk('span', '', seenText(s));
-    tooltip(el, new Date(s.at).toLocaleString());
+    tooltip(el, formatDate(s.at, { time: true, year: true }));
     return el;
   }
   const highlight = (id: string) => highlightRow(document.querySelector(`#guest-list [data-id="${id}"]`));
