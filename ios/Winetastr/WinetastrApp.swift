@@ -33,6 +33,9 @@ final class AppModel {
     var tastingTab = TastingTab.home
     /// The menu open in the top bar or on the page (one at a time, as on the site)
     var openMenu: MenuID?
+    /// The guest's tastings (for the switcher under the tasting's name) and the one open now
+    var myTastings: [MyTasting] = []
+    var currentTasting: String?
     /// The open tasting has a quiz: its tab shows
     var tastingHasQuiz = false
     /// The carts on this device, per tasting: wine → bottles

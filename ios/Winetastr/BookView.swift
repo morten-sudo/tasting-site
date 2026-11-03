@@ -74,23 +74,7 @@ struct BookView: View {
     private var tasted: [BookWine] { wines.filter { $0.rating != nil || (parseDate($0.starts_at).map { $0 <= .now } ?? false) } }
 
     private var stats: some View {
-        HStack(spacing: 9.6) {
-            stat(Set(tasted.map(\.wine_id)).count, L("book.statWines"))
-            stat(tastings.count, L("book.statTastings"))
-            stat(orders.reduce(0) { $0 + $1.quantity }, L("book.statBottles"))
-        }
-        .fixedSize(horizontal: false, vertical: true)
-    }
-    private func stat(_ n: Int, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text("\(n)").font(.display(32, light: false)).foregroundStyle(Color.bordeaux)
-            Text(label).font(.body(13.6)).foregroundStyle(Color.muted).lineLimit(2).minimumScaleFactor(0.85)
-        }
-        .padding(.vertical, 12.8).padding(.horizontal, 14.4)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.surface, in: RoundedRectangle(cornerRadius: 8))
-        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.rule))
-        .accessibilityElement(children: .combine)
+        StatTiles(wines: Set(tasted.map(\.wine_id)).count, tastings: tastings.count, bottles: orders.reduce(0) { $0 + $1.quantity })
     }
 
     // MARK: Wines
@@ -130,37 +114,12 @@ struct BookView: View {
                 empty("search", L("book.noMatch"), nil) { Button(L("book.showAll")) { search = "" }.buttonStyle(SecondaryButton()) }
             }
             ForEach(rows) { w in
-                Button { Task { await open(w) } } label: { wineCard(w) }.buttonStyle(.plain)
+                Button { Task { await open(w) } } label: { BookWineCard(wine: w) }.buttonStyle(.plain)
             }
         }
     }
 
-    private func wineCard(_ w: BookWine) -> some View {
-        let start = parseDate(w.starts_at)
-        let what = [styleName(w.style), w.vintage, w.producer].compactMap { $0 }.filter { !$0.isEmpty }
-        var uniq: [String] = []; for x in what where !uniq.contains(x) { uniq.append(x) }
-        let origin = originLine(w.appellation, w.region, w.country)
-        let note = (w.note ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let meta = [uniq.isEmpty ? nil : uniq.joined(separator: " · "), origin].compactMap { $0 }
-        let whereText = start.map { L("book.tastedAt", ["tasting": w.title, "when": dateText($0)]) } ?? w.title
-        return ListCard(title: w.name, meta: meta, note: note.isEmpty ? nil : "“\(note)”") {
-            WineThumb(url: w.imageURL)
-        } aside: {
-            VStack(alignment: .trailing, spacing: 6) {
-                if let r = w.rating, r > 0 { SmallStars(value: r) }
-                if w.bought > 0 { Chip(text: L("book.bought", ["n": "\(w.bought)"])) }
-            }
-        } content: {
-            Text(whereText).font(.body(14.4)).foregroundStyle(Color.muted)
-        }
-    }
-
-    /// The card opens the wine's page in its tasting
-    private func open(_ w: BookWine) async {
-        guard let t = tastings.first(where: { $0.slug == w.slug }) ?? CodeStore.all()[w.slug].map({ MyTasting(code: $0, slug: w.slug, title: w.title, starts_at: w.starts_at, place: nil, status: nil) }),
-              let list = try? await Backend.wines(t.code), let i = list.firstIndex(where: { $0.id == w.wine_id }) else { return }
-        model.path.append(.wine(t, list[i], i + 1))
-    }
+    private func open(_ w: BookWine) async { await model.openBookWine(w, in: tastings) }
 
     // MARK: Tastings
 
@@ -204,16 +163,7 @@ struct BookView: View {
             async let w = Backend.wineBook(codes)
             let (list, book) = try await (t, w)
             tastings = list; wines = book
-            if model.signedInEmail != nil {
-                orders = (try? await Backend.allMyOrders()) ?? []
-            } else {
-                var out: [OrderLine] = []
-                for (slug, code) in CodeStore.all() {
-                    let title = list.first { $0.slug == slug }?.title ?? slug
-                    for var l in (try? await Backend.myOrders(code)) ?? [] { l.slug = slug; l.title = title; out.append(l) }
-                }
-                orders = out.sorted { $0.created_at > $1.created_at }
-            }
+            orders = await model.loadOrders(list)
             failed = false; loaded = true
         } catch {
             failed = true; loaded = true
@@ -274,4 +224,76 @@ func originLine(_ appellation: String?, _ region: String?, _ country: String?) -
     var parts: [String] = []
     for p in [appellation, region].compactMap({ $0 }) where !p.isEmpty && !parts.contains(where: { normOrigin($0) == normOrigin(p) }) { parts.append(p) }
     return parts.isEmpty ? countryName(country) : parts.joined(separator: " · ")
+}
+
+
+/// The stat tiles (one component on the site): the number in the display face, what it counts under it
+struct StatTiles: View {
+    let wines: Int
+    let tastings: Int
+    let bottles: Int
+    var body: some View {
+        HStack(spacing: 9.6) {
+            tile(wines, L("book.statWines"))
+            tile(tastings, L("book.statTastings"))
+            tile(bottles, L("book.statBottles"))
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    private func tile(_ n: Int, _ label: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("\(n)").font(.display(32, light: false)).foregroundStyle(Color.bordeaux)
+            Text(label).font(.body(13.6)).foregroundStyle(Color.muted).lineLimit(2).minimumScaleFactor(0.85)
+        }
+        .padding(.vertical, 12.8).padding(.horizontal, 14.4)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color.surface, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.rule))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// A wine of the wine book as the card variant of the one list row (wineItem on the site)
+struct BookWineCard: View {
+    let wine: BookWine
+    var body: some View {
+        let w = wine
+        let start = parseDate(w.starts_at)
+        let what = [styleName(w.style), w.vintage, w.producer].compactMap { $0 }.filter { !$0.isEmpty }
+        var uniq: [String] = []; for x in what where !uniq.contains(x) { uniq.append(x) }
+        let origin = originLine(w.appellation, w.region, w.country)
+        let note = (w.note ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let meta = [uniq.isEmpty ? nil : uniq.joined(separator: " · "), origin].compactMap { $0 }
+        let whereText = start.map { L("book.tastedAt", ["tasting": w.title, "when": dateText($0)]) } ?? w.title
+        return ListCard(title: w.name, meta: meta, note: note.isEmpty ? nil : "“\(note)”") {
+            WineThumb(url: w.imageURL)
+        } aside: {
+            VStack(alignment: .trailing, spacing: 6) {
+                if let r = w.rating, r > 0 { SmallStars(value: r) }
+                if w.bought > 0 { Chip(text: L("book.bought", ["n": "\(w.bought)"])) }
+            }
+        } content: {
+            Text(whereText).font(.body(14.4)).foregroundStyle(Color.muted)
+        }
+    }
+}
+
+extension AppModel {
+    /// A wine book card opens the wine's page in its tasting
+    func openBookWine(_ w: BookWine, in tastings: [MyTasting]) async {
+        guard let t = tastings.first(where: { $0.slug == w.slug }) ?? CodeStore.all()[w.slug].map({ MyTasting(code: $0, slug: w.slug, title: w.title, starts_at: w.starts_at, place: nil, status: nil) }),
+              let list = try? await Backend.wines(t.code), let i = list.firstIndex(where: { $0.id == w.wine_id }) else { return }
+        path.append(.wine(t, list[i], i + 1))
+    }
+
+    /// The guest's orders over all tastings: with an email sign-in from the database, otherwise from the links on this device
+    func loadOrders(_ tastings: [MyTasting]) async -> [OrderLine] {
+        if signedInEmail != nil { return (try? await Backend.allMyOrders()) ?? [] }
+        var out: [OrderLine] = []
+        for (slug, code) in CodeStore.all() {
+            let title = tastings.first { $0.slug == slug }?.title ?? slug
+            for var l in (try? await Backend.myOrders(code)) ?? [] { l.slug = slug; l.title = title; out.append(l) }
+        }
+        return out.sorted { $0.created_at > $1.created_at }
+    }
 }

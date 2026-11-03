@@ -26,7 +26,7 @@ final class MenuTests: XCTestCase {
         XCTAssertTrue(a.staticTexts["Sprog"].waitForExistence(timeout: 15), "profile")
         a.buttons["Kontomenu"].tap()
         a.buttons["Hjem"].tap()
-        XCTAssertTrue(a.staticTexts["Mine smagninger"].waitForExistence(timeout: 15), "home")
+        XCTAssertTrue(a.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Hej'")).firstMatch.waitForExistence(timeout: 15), "home")
     }
 
     func testTapOutsideClosesTheMenu() {
@@ -47,10 +47,10 @@ final class MenuTests: XCTestCase {
         a.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sprog'")).firstMatch.tap()
         XCTAssertTrue(a.buttons["Tilbage"].waitForExistence(timeout: 3), "the language list in the same panel")
         a.buttons["English"].tap()
-        XCTAssertTrue(a.staticTexts["My tastings"].waitForExistence(timeout: 10), "English")
+        XCTAssertTrue(a.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Hello'")).firstMatch.waitForExistence(timeout: 10), "English")
         a.buttons["Account menu"].tap()
         a.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Language'")).firstMatch.tap()
         a.buttons["Dansk"].tap()
-        XCTAssertTrue(a.staticTexts["Mine smagninger"].waitForExistence(timeout: 10), "back to Danish")
+        XCTAssertTrue(a.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Hej'")).firstMatch.waitForExistence(timeout: 10), "back to Danish")
     }
 }

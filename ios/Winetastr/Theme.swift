@@ -86,10 +86,13 @@ struct SiteIcon: View {
 /// .btn
 struct PrimaryButton: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
+    /// false: as wide as its text (the next tasting's one button), not the whole row
+    var wide = true
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.medium(15.2))
-            .frame(maxWidth: .infinity, minHeight: 44)
+            .padding(.horizontal, wide ? 0 : 20)
+            .frame(maxWidth: wide ? .infinity : nil, minHeight: 44)
             .foregroundStyle(enabled ? Color.white : Color.muted)
             .background(enabled ? (configuration.isPressed ? Color.bordeauxDark : Color.bordeaux) : Color.surface, in: RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(enabled ? Color.clear : Color.rule))
@@ -316,8 +319,15 @@ struct TastingBar: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Rectangle().fill(Color.rule).frame(height: 1)
-            // The tasting's name in the display face, as the heading below it, only smaller
-            Text(title).font(.display(21.6, light: false, relativeTo: .title3)).foregroundStyle(Color.paper).lineSpacing(1).padding(.top, 9)
+            // The tasting's name in the display face, as the heading below it, only smaller; it opens the switcher
+            if model.myTastings.count > 1 {
+                MenuButton(id: .custom("tasting"), accessibilityLabel: L("nav.switchTasting")) {
+                    Text(title).font(.display(21.6, light: false, relativeTo: .title3)).foregroundStyle(Color.paper).lineLimit(1)
+                }
+                .frame(minHeight: 40).padding(.top, 2)
+            } else {
+                Text(title).font(.display(21.6, light: false, relativeTo: .title3)).foregroundStyle(Color.paper).lineSpacing(1).padding(.top, 9)
+            }
             HStack(spacing: 22) {
                 ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
                     Button { select(t) } label: {

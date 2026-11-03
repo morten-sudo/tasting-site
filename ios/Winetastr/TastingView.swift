@@ -41,7 +41,7 @@ struct TastingView: View {
         .background(Color.lodge)
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
-        .task { await load() }
+        .task { model.currentTasting = tasting.slug; await load() }
         .onChange(of: model.online) { if model.online && failed { Task { await load() } } }
         .sheet(isPresented: $editing) {
             if let invite, let info {

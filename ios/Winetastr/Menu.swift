@@ -28,6 +28,10 @@ struct SiteMenuItem: Identifiable {
     var value: String? = nil
     /// A list the same panel switches to ("Sprog" → the languages), with "Tilbage" at the top
     var submenu: [SiteMenuItem]? = nil
+    /// A second line under the title (a tasting's date in the switcher)
+    var subtitle: String? = nil
+    /// .m-group: a small heading over the items ("SKIFT SMAGNING"), not a button
+    var isHeading = false
     var action: () -> Void = {}
 }
 
@@ -64,7 +68,14 @@ struct MenuPanel: View {
         .shadow(color: Color.paper.opacity(0.14), radius: 14, y: 10)
     }
 
-    private func row(_ item: SiteMenuItem, keepOpen: Bool = false) -> some View {
+    @ViewBuilder private func row(_ item: SiteMenuItem, keepOpen: Bool = false) -> some View {
+        if item.isHeading {
+            Text(item.title.uppercased()).font(.semibold(11.2)).tracking(1.3).foregroundStyle(Color.muted)
+                .padding(.horizontal, 8.8).padding(.top, 8).padding(.bottom, 2.4).accessibilityAddTraits(.isHeader)
+        } else { button(item, keepOpen: keepOpen) }
+    }
+
+    private func button(_ item: SiteMenuItem, keepOpen: Bool) -> some View {
         Button {
             if let s = item.submenu { withAnimation(.easeOut(duration: 0.15)) { sub = s } }
             else { if !keepOpen { close() }; item.action() }
@@ -75,8 +86,11 @@ struct MenuPanel: View {
                 case .flag(let code): FlagImage(code: code)
                 case .none: EmptyView()
                 }
-                Text(item.title).font(item.checked == true ? .medium(14.9) : .body(14.9))
-                    .foregroundStyle(item.quiet ? Color.muted : Color.paper).lineLimit(1)
+                VStack(alignment: .leading, spacing: 1.6) {
+                    Text(item.title).font(item.checked == true ? .medium(14.9) : .body(14.9))
+                        .foregroundStyle(item.quiet ? Color.muted : Color.paper).lineLimit(1)
+                    if let sub = item.subtitle { Text(sub).font(.body(12.8)).foregroundStyle(Color.muted).lineLimit(1) }
+                }
                 Spacer(minLength: 12)
                 if let value = item.value { Text(value).font(.body(14.4)).foregroundStyle(Color.muted).lineLimit(1) }
                 if item.submenu != nil { SiteIcon("right", size: 15).foregroundStyle(Color.muted) }
@@ -148,6 +162,19 @@ extension AppModel {
                     Task { await self?.signOut() }
                 },
             ]
+        case .custom("tasting"):
+            // The tasting switcher (as on the site): each tasting with its date, the current one checked, then all of them
+            let list = myTastings.filter { !$0.isPast }.sorted { ($0.starts_at ?? "9999") < ($1.starts_at ?? "9999") }
+                + myTastings.filter(\.isPast).sorted { ($0.starts_at ?? "") > ($1.starts_at ?? "") }
+            var items = [SiteMenuItem(title: L("nav.switchTasting"), isHeading: true)]
+            for t in list {
+                items.append(SiteMenuItem(title: t.title, checked: t.slug == currentTasting, subtitle: t.start.map(whenText)) { [weak self] in
+                    guard let self, t.slug != self.currentTasting else { return }
+                    self.tastingTab = .home; self.path = [.tasting(t)]
+                })
+            }
+            items.append(SiteMenuItem(title: L("nav.allMyTastings"), dividerBefore: true) { [weak self] in self?.path = [] })
+            return items
         case .account:
             // Not signed in (the sign-in page): only the language
             var row = languageRow; row.dividerBefore = false

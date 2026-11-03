@@ -13,8 +13,9 @@ final class GuestFlowTests: XCTestCase {
         return a
     }
     private func openTasting(_ a: XCUIApplication) {
-        let row = a.staticTexts["App-test"].firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 15), "tasting in list")
+        // The home page: the next tasting's name opens it
+        let row = a.buttons["App-test"].firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "tasting on the home page")
         row.tap()
     }
 
@@ -44,7 +45,7 @@ final class GuestFlowTests: XCTestCase {
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 20))
         field.typeText("https://winetastr.com/t/app-test/?k=\(code)")
         a.buttons["Fortsæt"].tap()
-        XCTAssertTrue(a.staticTexts["App-test"].firstMatch.waitForExistence(timeout: 15), "in after pasting")
+        XCTAssertTrue(a.buttons["App-test"].firstMatch.waitForExistence(timeout: 15), "in after pasting")
     }
 
     func testAnswerInvitation() {

@@ -4973,6 +4973,534 @@
     }
    }
   },
+  "dash.next": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Næste smagning"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Next tasting"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Næsta smökkun"
+     }
+    }
+   }
+  },
+  "home3.waiting": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Venter på dig"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Waiting for you"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bíður þín"
+     }
+    }
+   }
+  },
+  "home3.answer": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svar"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Answer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svara"
+     }
+    }
+   }
+  },
+  "home3.seeWines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Se vinene"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "See the wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sjá vínin"
+     }
+    }
+   }
+  },
+  "home3.openQuiz": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Åbn quizzen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Open the quiz"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Opna spurningakeppnina"
+     }
+    }
+   }
+  },
+  "home3.pay": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Betal"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pay"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Greiða"
+     }
+    }
+   }
+  },
+  "home3.read": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læs"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Read"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lesa"
+     }
+    }
+   }
+  },
+  "home3.answerQ": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svar på invitationen til {title}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Answer the invitation to {title}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svaraðu boðinu í {title}"
+     }
+    }
+   }
+  },
+  "home3.payOrder": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Din bestilling til {title}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your order for {title}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pöntunin þín í {title}"
+     }
+    }
+   }
+  },
+  "home3.payFee": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aftenen i {title}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The evening at {title}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kvöldið í {title}"
+     }
+    }
+   }
+  },
+  "home3.toPay": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{total} mangler at blive betalt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{total} to pay"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{total} ógreitt"
+     }
+    }
+   }
+  },
+  "home3.quizNow": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quizzen i {title} er åben"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The quiz at {title} is open"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Spurningakeppnin í {title} er opin"
+     }
+    }
+   }
+  },
+  "home3.chatOne": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "1 ny besked i {title}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "1 new message in {title}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "1 nýtt skilaboð í {title}"
+     }
+    }
+   }
+  },
+  "home3.chatMany": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} nye beskeder i {title}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} new messages in {title}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} ný skilaboð í {title}"
+     }
+    }
+   }
+  },
+  "home3.favourites": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dine favoritter"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your favourites"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Uppáhaldið þitt"
+     }
+    }
+   }
+  },
+  "home3.allBook": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Se hele din vinbog"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "See your whole wine book"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sjá alla vínbókina"
+     }
+    }
+   }
+  },
+  "home3.mapTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hvor dine vine kommer fra"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Where your wines come from"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hvaðan vínin þín koma"
+     }
+    }
+   }
+  },
+  "home3.winesOne": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "1 vin"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "1 wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "1 vín"
+     }
+    }
+   }
+  },
+  "home3.winesMany": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vine"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vín"
+     }
+    }
+   }
+  },
+  "home3.favourite": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "din favorit: {name}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "your favourite: {name}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "uppáhaldið: {name}"
+     }
+    }
+   }
+  },
+  "home3.otherUpcoming": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Også på vej"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Also coming up"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Einnig á dagskrá"
+     }
+    }
+   }
+  },
+  "home3.memories": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smagninger, du har været med til"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tastings you have been to"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smakkanir sem þú hefur verið á"
+     }
+    }
+   }
+  },
+  "nav.switchTasting": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skift smagning"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Switch tasting"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skipta um smökkun"
+     }
+    }
+   }
+  },
+  "nav.allMyTastings": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alle mine smagninger"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "All my tastings"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Allar mínar smakkanir"
+     }
+    }
+   }
+  },
   "style.Red": {
    "localizations": {
     "da": {
