@@ -61,6 +61,11 @@
 /* The offer line in the wine form */
 .admin-page .offer-row { align-items: center; flex-wrap: wrap; }
 
+/* The vintage field with its NV button beside it, on one line */
+.admin-page .vintage-row { flex-wrap: nowrap; }
+.admin-page .vintage-row > .input { flex: 1 1 auto; min-width: 0; }
+.admin-page .vintage-row > .btn { flex: none; align-self: stretch; }
+
 /* Large image on click */
 .admin-page #wf-preview { cursor: zoom-in; }
 dialog.zoom {
