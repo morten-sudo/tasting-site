@@ -80,6 +80,28 @@ function pickImage(urls: string[]): string | null {
   return seen.find((u) => !NOT_BOTTLE.test(name(u))) ?? seen[0] ?? null;
 }
 
+// Pages without a shared picture (no og:image or structured data, e.g. Drupal shops like viniportugal.dk): the page's
+// own <img>s that look like the product – the file name or alt text shares words with the wine's name, or the path
+// says bottle/product – never logos, icons, flags, payment badges or SVGs. Best match first.
+const SKIP_IMG = /(logo|icon|sprite|flag|flags|payment|mobilepay|visa|mastercard|banner|avatar|placeholder|spinner|loader|badge|trustpilot|facebook|instagram)/i;
+export function pageImages(html: string, base: URL, names: string[]): string[] {
+  const words = new Set(names.join(' ').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter((w) => w.length > 2));
+  const found: { url: string; score: number; i: number }[] = [];
+  let i = 0;
+  for (const m of html.matchAll(/<img\b[^>]*>/gi)) {
+    const tag = m[0];
+    const attr = (n: string) => tag.match(new RegExp(`\\s${n}\\s*=\\s*["']([^"']+)["']`, 'i'))?.[1];
+    const src = attr('data-src') ?? attr('src') ?? attr('srcset')?.split(/\s+/)[0];
+    const url = src && !src.startsWith('data:') ? absolute(decode(src), base) : null;
+    if (!url || /\.svg(\?|$)/i.test(url) || SKIP_IMG.test(url)) continue;
+    const text = (decodeURIComponent(url.split('?')[0]) + ' ' + (attr('alt') ?? '')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const hits = text.split(/[^a-z0-9]+/).filter((w) => words.has(w)).length;
+    const score = hits * 2 + (BOTTLE.test(text) || /(product|produkt|wine|vin|bottle)/.test(text) ? 1 : 0);
+    if (score >= 2) found.push({ url, score, i: i++ });
+  }
+  return found.sort((a, b) => b.score - a.score || a.i - b.i).map((f) => f.url);
+}
+
 function absolute(src: unknown, base: URL) {
   const s = str(typeof src === 'object' && src ? (src as Record<string, unknown>).url : src);
   if (!s) return null;
@@ -194,6 +216,7 @@ ${text}`;
     ...(Array.isArray(product.image) ? product.image : [product.image]),
     ...(shop?.images ?? []).map((i) => i.src),
   ].map((x) => absolute(x, url)).filter(Boolean) as string[];
+  if (!pictures.length) pictures.push(...pageImages(html, url, [title, meta['og:title'], str(product.name), str(answer.name)].filter(Boolean) as string[]).slice(0, 8));
   let image = pickImage(pictures);
   const images = [...new Set(pictures)].filter((u) => !NOT_BOTTLE.test(decodeURIComponent(u.split('/').pop() ?? ''))).slice(0, 8);
   // Vivino shares a close crop of the label (…_pl_375x500.png); the bottle shot (…_pb_x600.png) suits the wine card

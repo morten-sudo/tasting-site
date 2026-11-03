@@ -626,6 +626,8 @@ dialog .input { max-width: none; }
 .facts dd:has(> .icon-act) { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-variant-numeric: tabular-nums; }
 .facts:has(dd > .icon-act) { align-items: center; row-gap: 0.15rem; }
 .facts dd > span { min-width: 0; overflow-wrap: anywhere; }
+/* An icon inside the text (e.g. refresh after "Fetched from"): does not make the line taller than its label */
+.facts dd span > .icon-act { vertical-align: middle; margin-block: -0.5rem; }
 .facts.card { padding: 0.9rem 1rem; }
 /* Phones: the label over its value – not in the payment box, where the labels are short and the copy buttons line up */
 @media (max-width: 26rem) { .facts:not(:has(dd > .icon-act)) { grid-template-columns: minmax(0, 1fr); row-gap: 0.1rem; } .facts:not(:has(dd > .icon-act)) dd { margin-bottom: 0.5rem; } .facts dd:last-child { margin-bottom: 0; } }
