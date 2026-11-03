@@ -618,7 +618,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   async function load() {
     const { data } = await supabase.from('wines').select(COLUMNS).eq('tenant_id', tenantId).order('name');
-    wines = (data ?? []) as AdminWine[];
+    wines = (data ?? []) as unknown as AdminWine[];
     render();
     placeSavedAddresses();
   }

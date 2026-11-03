@@ -222,6 +222,8 @@ dialog .dd.full { max-width: none; }
 /* A quiet menu button without a box (the header's language and account menus, the tasting switcher) */
 .dd-btn.bare { border-color: transparent; background: none; padding: 0 0.45rem; color: var(--muted); gap: 0.2rem; }
 .dd-btn.bare:hover, .dd-btn.bare[aria-expanded='true'] { color: var(--paper); border-color: transparent; }
+/* A menu opened from a button (dropdown, filter) lies over suggestion lists that stay open under it */
+.dd > .menu { z-index: 35; }
 .menu {
   position: absolute; left: 0; top: calc(100% + 6px); z-index: 30; min-width: max(100%, 14rem); max-width: min(20rem, calc(100vw - 2rem));
   margin: 0; padding: 0.35rem; list-style: none; background: #fff; border: 1px solid var(--lodge-3); border-radius: var(--radius);
@@ -990,7 +992,15 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .tabs > :is([aria-selected='true'], [aria-current='page']) { color: var(--amber); border-bottom-color: var(--amber); font-weight: 500; }
 .tabs > :focus-visible { outline-offset: -2px; border-radius: 4px; }
 .tabs > [hidden] { display: none; }
-@media (max-width: 40rem) { .tabs { column-gap: 1.1rem; } }
+/* Phones: one line that scrolls sideways (never two rows of tabs); the edges fade where there is more */
+@media (max-width: 40rem) {
+  .tabs { column-gap: 1.1rem; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent); }
+  .tabs.scrolled { -webkit-mask-image: linear-gradient(90deg, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(90deg, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent); }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs > :is(a, button) { margin-bottom: 0; flex: none; }
+  .tabs > :last-child { margin-right: 1.5rem; }
+}
 
 /* ---------- 43 Navigation: the top bar (TopBar.astro) on every page ---------- */
 .site-header {

@@ -18,7 +18,28 @@ export function selectTab(bar: HTMLElement, id: string) {
       b.setAttribute('aria-selected', String(on));
       b.tabIndex = on ? 0 : -1;
     }
+    if (on) showChosen(bar, b);
   }
+}
+
+/** On a phone the bar scrolls sideways: the chosen tab is brought into view (the page itself does not move) –
+ *  also when the bar is still hidden and gets its size later. */
+function showChosen(bar: HTMLElement, b: HTMLElement) {
+  // Scrolled from the start: the left edge fades too (CSS .tabs.scrolled)
+  if (!bar.dataset.edges) {
+    bar.dataset.edges = '1';
+    bar.addEventListener('scroll', () => bar.classList.toggle('scrolled', bar.scrollLeft > 4), { passive: true });
+  }
+  const go = () => {
+    if (!bar.clientWidth || bar.scrollWidth <= bar.clientWidth) return false;
+    const x = b.getBoundingClientRect().left - bar.getBoundingClientRect().left + bar.scrollLeft;
+    bar.scrollLeft = Math.max(0, x - 16);
+    bar.classList.toggle('scrolled', bar.scrollLeft > 4);
+    return true;
+  };
+  if (go() || bar.clientWidth) return;
+  const ro = new ResizeObserver(() => { if (bar.clientWidth) { ro.disconnect(); go(); } });
+  ro.observe(bar);
 }
 
 /** The id of the chosen tab */
