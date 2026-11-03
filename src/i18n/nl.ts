@@ -1328,4 +1328,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "super.noTenantMatch": "Geen accounts passen bij de zoekopdracht",
   "super.showAll": "Alle accounts tonen",
   "twe.tierTwice": "Er is al een prijs voor dit aantal flessen",
+  "board.noAnswers": "Nog niemand heeft geantwoord.",
 };

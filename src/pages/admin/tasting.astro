@@ -385,6 +385,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div id="board-block" hidden>
           <h3 data-i18n="quiz.standings">Standings</h3>
           <ol id="board" class="board"></ol>
+          <p id="board-empty" class="help" data-i18n="board.noAnswers" hidden>No one has answered yet.</p>
         </div>
       </section>
       </div>
@@ -1369,7 +1370,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderSetup();
     followHelpLink();
     const rows = await fetchLeaderboard({ slug: tasting.slug });
-    if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
+    if (rows) showBoard(rows);
+  }
+
+  /** The standings – or, before anyone has answered, a line saying so (not a heading with nothing under it) */
+  function showBoard(rows: Parameters<typeof renderLeaderboard>[1]) {
+    renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
+    $('board').hidden = !rows.length;
+    $('board-empty').hidden = rows.length > 0;
   }
 
   host = await requireHost();
@@ -1383,7 +1391,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         fetchLeaderboard({ slug: tasting!.slug }),
       ]);
       if (o.data) { orders = o.data as O[]; renderOrders(); }
-      if (rows) renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
+      if (rows) showBoard(rows);
     }, 15000);
   }
 </script>

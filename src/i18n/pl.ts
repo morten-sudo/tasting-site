@@ -1328,4 +1328,5 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "super.noTenantMatch": "Brak kont pasujących do wyszukiwania",
   "super.showAll": "Pokaż wszystkie konta",
   "twe.tierTwice": "Dla tej liczby butelek jest już cena",
+  "board.noAnswers": "Nikt jeszcze nie odpowiedział.",
 };

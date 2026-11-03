@@ -1442,4 +1442,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "super.noTenantMatch": "Engir reikningar passa við leitina",
   "super.showAll": "Sýna alla reikninga",
   "twe.tierTwice": "Það er þegar verð fyrir þennan fjölda flaskna",
+  "board.noAnswers": "Enginn hefur svarað enn.",
 };

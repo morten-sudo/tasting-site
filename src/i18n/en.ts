@@ -1441,4 +1441,5 @@ export const en = {
   "super.noTenantMatch": "No accounts match the search",
   "super.showAll": "Show all accounts",
   "twe.tierTwice": "There is already a price for this number of bottles",
+  "board.noAnswers": "No one has answered yet.",
 } as const;
