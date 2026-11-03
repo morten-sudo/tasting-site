@@ -59,6 +59,13 @@ begin
   assert failed, 'the owner of an account can be deleted';
   failed := false; begin update hosts set tenant_id = null where id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
   assert failed, 'the owner can be moved off the account';
+  -- Every host is a member of their account; the owner's membership cannot be removed or changed
+  assert (select count(*) from memberships m join hosts h on h.id = m.host_id where h.email like 'host-_@selftest.invalid') = 4, 'the hosts are not members of their accounts';
+  assert (select role from memberships where host_id = '00000000-0000-4000-f000-00000000000d') = 'host', 'host D is not a host on A''s account';
+  failed := false; begin delete from memberships where host_id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
+  assert failed, 'the owner''s membership can be removed';
+  failed := false; begin update memberships set role = 'host' where host_id = '00000000-0000-4000-a000-00000000000a'; exception when others then failed := true; end;
+  assert failed, 'the owner can be made a plain host';
   -- An invitation is linked to the guest card with the same email on the tasting's account – never another account's
   insert into guests (id, host_id, name, email) values ('00000000-0000-4000-c000-00000000000e', '00000000-0000-4000-a000-00000000000a', 'Guest E', 'guest-e@selftest.invalid');
   insert into participants (tasting_id, name, email, invite_code) values ('00000000-0000-4000-b000-00000000000a', 'E', 'Guest-E@selftest.invalid', 'selftestlk');
@@ -220,11 +227,146 @@ begin
   select count(*) into n from tastings where slug like 'selftest-%';                                        assert n = 0, 'a removed host still sees the tastings';
   select count(*) into n from wines where id in (-1001, -1004);                                             assert n = 0, 'a removed host still sees the wines';
   select count(*) into n from guests where name = 'Guest by D';                                             assert n = 0, 'a removed host still sees the guests';
+  -- On no account at all: nothing
+  assert my_tenant() is null, 'a host on no account has a default account';
+  select count(*) into n from memberships;                                                                  assert n = 0, 'a host on no account sees memberships';
+  select count(*) into n from tenants;                                                                      assert n = 0, 'a host on no account sees an account';
+  select count(*) into n from tenant_members();                                                             assert n = 0, 'a host on no account sees an account''s hosts';
+  select count(*) into n from my_tasting_roles();                                                           assert n = 0, 'a host on no account has tastings';
+  assert (host_dashboard() ->> 'wines')::int = 0 and (host_dashboard() ->> 'tastings')::int = 0, 'a host on no account gets an overview with data';
 end $$;
 reset role;
 do $$ begin
   assert (select count(*) from guests where name = 'Guest by D') = 1, 'what a removed host made left the account';
 end $$;
+
+-- ---------- Host E: an account of their own, and added by A to A's account too ----------
+insert into hosts (id, email, name) values ('00000000-0000-4000-f000-00000000000e', 'host-e@selftest.invalid', 'Host E');
+insert into wines (id, host_id, name) values (-1005, '00000000-0000-4000-f000-00000000000e', 'Wine E');
+insert into tastings (id, host_id, slug, title) values ('00000000-0000-4000-b000-00000000000e', '00000000-0000-4000-f000-00000000000e', 'selftest-e', 'Test E');
+select set_config('selftest.ta', (select tenant_id::text from hosts where id = '00000000-0000-4000-a000-00000000000a'), true),
+       set_config('selftest.tb', (select tenant_id::text from hosts where id = '00000000-0000-4000-a000-00000000000b'), true),
+       set_config('selftest.te', (select tenant_id::text from hosts where id = '00000000-0000-4000-f000-00000000000e'), true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare failed boolean;
+begin
+  assert add_tenant_member('host-e@selftest.invalid') = 'active', 'an existing host is not added to the account at once';
+  assert add_tenant_member('New-F@selftest.invalid') = 'pending', 'a new email is not invited to the account';
+  failed := false; begin perform add_tenant_member('host-e@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'a host can be added twice';
+  assert (select count(*) from tenant_members() where pending) = 1, 'the invitation is not on the account''s list';
+  failed := false; begin perform add_tenant_member('x@selftest.invalid', current_setting('selftest.te')::uuid); exception when others then failed := true; end;
+  assert failed, 'host A can add a host to an account A is not on';
+  failed := false; begin perform tenant_members(current_setting('selftest.tb')::uuid); exception when others then failed := true; end;
+  assert failed, 'host A can list the hosts of an account A is not on';
+end $$;
+reset role;
+-- The invited email signs in for the first time: a host on A's account (and no account of their own)
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000f1","email":"new-f@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  perform link_me();
+  assert current_host_id() is not null, 'the invited email is not a host after signing in';
+  assert is_member(current_setting('selftest.ta')::uuid), 'the invited host is not on the account';
+  assert (select count(*) from my_tenants()) = 1, 'the invited host got an account of their own too';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000e","email":"host-e@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare n int; failed boolean;
+  ta uuid := current_setting('selftest.ta')::uuid; tb uuid := current_setting('selftest.tb')::uuid; te uuid := current_setting('selftest.te')::uuid;
+begin
+  -- Both accounts, everything in them; nothing of B or C
+  select count(*) into n from my_workspaces();                                                              assert n = 2, 'host E is not on two accounts';
+  assert my_tenant() = te, 'host E''s default account is not their own';
+  select count(*) into n from tenants;                                                                      assert n = 2, 'host E does not see both accounts';
+  select count(*) into n from tastings where slug in ('selftest-a', 'selftest-e');                          assert n = 2, 'host E does not see the tastings of both accounts';
+  select count(*) into n from tastings where slug = 'selftest-b';                                           assert n = 0, 'host E sees host B''s tasting';
+  select count(*) into n from wines where id in (-1001, -1004, -1005);                                      assert n = 3, 'host E does not see the wines of both accounts';
+  select count(*) into n from wines where id in (-1002, -1003);                                             assert n = 0, 'host E sees wines of accounts E is not on';
+  select count(*) into n from guests where id = '00000000-0000-4000-c000-00000000000a';                     assert n = 1, 'host E does not see A''s guests';
+  select count(*) into n from guests where id = '00000000-0000-4000-c000-00000000000b';                     assert n = 0, 'host E sees B''s guests';
+  select count(*) into n from my_tasting_roles() where shared;                                              assert n = 0, 'a tasting of my own account counts as shared';
+  select count(*) into n from my_tasting_roles() where tenant_id = ta;                                      assert n = 1, 'host E''s roles miss A''s tasting';
+  update wines set name = 'Wine A (by E)' where id = -1004; get diagnostics n = row_count;                 assert n = 1, 'host E cannot edit A''s wine';
+  -- New rows go into the account asked for…
+  insert into wines (host_id, tenant_id, name) values ('00000000-0000-4000-f000-00000000000e', ta, 'Wine E in A');
+  select count(*) into n from wines where name = 'Wine E in A' and tenant_id = ta;                          assert n = 1, 'a wine does not go into the account asked for';
+  insert into guests (host_id, tenant_id, name) values ('00000000-0000-4000-f000-00000000000e', ta, 'Guest E in A');
+  select count(*) into n from guests where name = 'Guest E in A' and tenant_id = ta;                        assert n = 1, 'a guest does not go into the account asked for';
+  assert (create_tasting('Selftest E in A', tn => ta)).tenant_id = ta, 'a tasting does not go into the account asked for';
+  assert (create_tasting('Selftest E default')).tenant_id = te, 'a tasting without an account does not go into the default one';
+  insert into guests (host_id, name) values ('00000000-0000-4000-f000-00000000000e', 'Guest E default');
+  select count(*) into n from guests where name = 'Guest E default' and tenant_id = te;                     assert n = 1, 'a guest without an account does not go into the default one';
+  -- …but never into an account E is not on
+  failed := false; begin insert into wines (host_id, tenant_id, name) values ('00000000-0000-4000-f000-00000000000e', tb, 'x'); exception when others then failed := true; end;
+  assert failed, 'host E can put a wine into B''s account';
+  failed := false; begin insert into guests (host_id, tenant_id, name) values ('00000000-0000-4000-f000-00000000000e', tb, 'x'); exception when others then failed := true; end;
+  assert failed, 'host E can put a guest into B''s account';
+  failed := false; begin perform create_tasting('x', tn => tb); exception when others then failed := true; end;
+  assert failed, 'host E can create a tasting in B''s account';
+  failed := false; begin insert into tastings (host_id, tenant_id, slug, title) values ('00000000-0000-4000-f000-00000000000e', tb, 'selftest-x', 'x'); exception when others then failed := true; end;
+  assert failed, 'host E can insert a tasting into B''s account';
+  failed := false; begin perform host_dashboard(tb); exception when others then failed := true; end;
+  assert not failed and (host_dashboard(tb) ->> 'wines')::int = (select count(*) from wines where tenant_id = te), 'the overview of an account E is not on shows something else than the default';
+  -- Moving data between accounts is refused – also between two of E's own
+  failed := false; begin update wines set tenant_id = te where id = -1004; exception when others then failed := true; end;
+  assert failed, 'host E can move A''s wine into E''s account';
+  failed := false; begin update wines set tenant_id = tb where id = -1005; exception when others then failed := true; end;
+  assert failed, 'host E can move a wine into B''s account';
+  failed := false; begin update guests set tenant_id = te where name = 'Guest E in A'; exception when others then failed := true; end;
+  assert failed, 'host E can move a guest between accounts';
+  failed := false; begin update tastings set tenant_id = ta where slug = 'selftest-e'; exception when others then failed := true; end;
+  assert failed, 'host E can move a tasting between accounts';
+  failed := false; begin update tastings set tenant_id = tb where slug = 'selftest-e'; exception when others then failed := true; end;
+  assert failed, 'host E can move a tasting into B''s account';
+  failed := false; begin insert into tasting_wines (tasting_id, wine_id, sort_order) values ('00000000-0000-4000-b000-00000000000a', -1005, 5); exception when others then failed := true; end;
+  assert failed, 'host E can put a wine of one account into a tasting of another';
+  -- Joining an account is never up to the host
+  failed := false; begin update hosts set tenant_id = tb where id = '00000000-0000-4000-f000-00000000000e'; exception when others then failed := true; end;
+  assert failed, 'a host can put themselves on another account';
+  failed := false; begin insert into memberships (tenant_id, host_id) values (tb, '00000000-0000-4000-f000-00000000000e'); exception when others then failed := true; end;
+  assert failed, 'a host can make themselves a member';
+  failed := false; begin perform pick_tenant(tb); exception when others then failed := true; end;
+  assert failed, 'an account E is not on can be picked';
+  -- On A's account E is a host, not the owner
+  assert not is_tenant_owner(ta) and is_tenant_owner(te), 'host E''s ownership is wrong';
+  select count(*) into n from tenant_members(ta);                                                           assert n = 3, 'host E does not see A''s hosts';
+  failed := false; begin perform remove_tenant_member('host-a@selftest.invalid', ta); exception when others then failed := true; end;
+  assert failed, 'host E can remove the owner of A''s account';
+  failed := false; begin perform add_tenant_member('x@selftest.invalid', ta); exception when others then failed := true; end;
+  assert failed, 'host E can add hosts to A''s account';
+  failed := false; begin perform set_tenant_name('hacked', ta); exception when others then failed := true; end;
+  assert failed, 'host E can rename A''s account';
+  assert (host_dashboard(ta) ->> 'wines')::int = (select count(*) from wines where tenant_id = ta), 'the overview of A''s account is wrong';
+  assert (host_dashboard(te) ->> 'wines')::int = (select count(*) from wines where tenant_id = te), 'the overview of E''s own account is wrong';
+end $$;
+reset role;
+-- A removes E (and the invited host) from the account; E keeps their own account and loses A's
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  perform remove_tenant_member('host-e@selftest.invalid');
+  perform remove_tenant_member('new-f@selftest.invalid');
+  assert (select count(*) from tenant_members()) = 1, 'the hosts are not removed from the account';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000e","email":"host-e@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare n int;
+begin
+  select count(*) into n from tastings where slug = 'selftest-a';                                           assert n = 0, 'a removed member still sees the account''s tasting';
+  select count(*) into n from wines where id in (-1001, -1004) or name = 'Wine E in A';                     assert n = 0, 'a removed member still sees the account''s wines';
+  select count(*) into n from guests where name = 'Guest E in A';                                           assert n = 0, 'a removed member still sees the account''s guests';
+  assert not is_member(current_setting('selftest.ta')::uuid), 'a removed member is still a member';
+  select count(*) into n from wines where id = -1005;                                                       assert n = 1, 'a removed member loses their own account';
+  assert my_tenant() = current_setting('selftest.te')::uuid, 'a removed member''s default account is wrong';
+end $$;
+reset role;
 
 -- ---------- Host C, co-host of host A's tasting ----------
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000c","email":"host-c@selftest.invalid","role":"authenticated"}', true);
@@ -372,6 +514,14 @@ begin
   assert failed, 'anyone can list an account''s hosts';
   failed := false; begin perform remove_tenant_member('host-d@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'anyone can remove a host from an account';
+  failed := false; begin perform * from my_workspaces(); exception when others then failed := true; end;
+  assert failed, 'anyone can list accounts';
+  failed := false; begin perform add_tenant_member('x@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can add a host to an account';
+  failed := false; begin perform workspace_invite_info('x@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can read an invitation';
+  begin select count(*) into n from memberships; exception when others then n := 0; end;                     assert n = 0, 'anyone can read the memberships';
+  begin select count(*) into n from workspace_invites; exception when others then n := 0; end;               assert n = 0, 'anyone can read the account invitations';
   failed := false; begin perform * from link_me_tastings(); exception when others then failed := true; end;
   assert failed, 'anyone can call link_me_tastings';
   failed := false; begin perform * from my_tasting_roles(); exception when others then failed := true; end;
