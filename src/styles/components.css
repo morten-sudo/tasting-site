@@ -587,17 +587,17 @@ dialog .input { max-width: none; }
 /* activityRow(): a sign in a circle – one line of what happened (the dashboard, a guest's page) */
 .av.act-icon { width: 2rem; height: 2rem; color: var(--amber); background: var(--lodge); font-size: 0.95rem; font-weight: 400; }
 .thumb {
-  width: 3rem; height: 3.6rem; border-radius: var(--radius); background: #fff; border: 1px solid var(--lodge-3); box-sizing: border-box;
+  --pad: 0.4rem; width: 3.8rem; height: 4.8rem; border-radius: var(--radius); background: #fff; border: 1px solid var(--lodge-3); box-sizing: border-box;
   display: grid; place-items: center; flex: none; overflow: hidden; position: relative;
 }
-.thumb > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+/* The picture sits with white room to the frame (--pad), at every size */
+.thumb > img { position: absolute; inset: var(--pad); width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad)); object-fit: contain; display: block; }
 .thumb > svg { width: 60%; height: 85%; }
-.thumb.sm { width: 2.2rem; height: 2.7rem; }
+.thumb.sm { --pad: 0.2rem; width: 2.4rem; height: 3rem; }
 /* Large: white room around the picture – the frame grows so the picture keeps its size (6 × 8 rem) */
-.thumb.lg { width: 7.4rem; height: 9.4rem; }
-.thumb.lg:not(.fill) > img { inset: 0.7rem; width: calc(100% - 1.4rem); height: calc(100% - 1.4rem); }
+.thumb.lg { --pad: 0.7rem; width: 7.4rem; height: 9.4rem; }
 /* A picture that fills its place (the wine page, the guests' wine cards): the page gives the size */
-.thumb.fill { width: 100%; height: 100%; border: 0; background: transparent; }
+.thumb.fill { --pad: 0; width: 100%; height: 100%; border: 0; background: transparent; }
 .thumb.fill > svg { width: auto; height: 82%; max-height: 22rem; }
 .thumb.none { border-style: dashed; background: transparent; }
 .thumb > .spin { position: absolute; inset: 0; margin: auto; }
@@ -835,7 +835,7 @@ span.ltitle { cursor: default; }
   .lrow:has(> .lacts > :nth-child(3)) { grid-template-areas: 'lead main main' 'lead aside acts'; }
   .lrow:has(> .lacts > :nth-child(3)) > .lacts { align-self: end; margin-right: -0.35rem; }
   .lrow:has(> .lacts > :nth-child(3)) > .laside { align-self: center; }
-  .llead .thumb { width: 2.6rem; height: 3.2rem; }
+  .llead .thumb { --pad: 0.3rem; width: 3.2rem; height: 4rem; }
   .llead .lno { font-size: 1.2rem; }
   .llead .grip { height: 1.75rem; }
 }
@@ -867,7 +867,7 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
   .lcard > .llead { grid-area: lead; align-self: start; }
   .lcard > .lmain { grid-area: main; }
   .lcard > .laside { grid-area: aside; justify-items: start; grid-auto-flow: column; justify-content: start; align-items: center; }
-  .lcard .llead .thumb { width: 2.6rem; height: 3.2rem; }
+  .lcard .llead .thumb { --pad: 0.3rem; width: 3.2rem; height: 4rem; }
 }
 
 /* ---------- 27 Highlight after saving (src/lib/ui/highlight.ts) ---------- */
@@ -907,7 +907,7 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
   .newrow > .llead { gap: 0.7rem; }
   /* Narrow: no empty grip and "+" spaces before the bottle – the fields get the room */
   .newrow > .llead > :is(.grip.blank, .lno.plus) { display: none; }
-  .newrow .llead .thumb { width: 2.6rem; height: 3.2rem; }
+  .newrow .llead .thumb { --pad: 0.3rem; width: 3.2rem; height: 4rem; }
   .newrow .llead .lno { font-size: 1.2rem; }
   .newrow .ar-fields { grid-template-columns: 1fr; }
   .newrow > .ar-acts { grid-column: 2 / -1; justify-content: flex-start; }
