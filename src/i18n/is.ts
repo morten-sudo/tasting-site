@@ -1449,4 +1449,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "signup.proUnlimited": "Ótakmarkaður fjöldi smakkana, vína og gesta",
   "signup.comErp": "Tenging við ERP og CRM",
   "signup.comClub": "Tenging við viðskiptavinaklúbb",
+  "signup.existsTitle": "Þú ert þegar með aðgang",
+  "signup.existsText": "Það er þegar til aðgangur með þessu netfangi. Sláðu inn kóðann úr póstinum til að skrá þig inn.",
 };

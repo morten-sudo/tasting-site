@@ -107,8 +107,8 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* Admin overview */
 .admin-page .dash-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 0.5rem 0 1.5rem; max-width: 52rem; }
 .admin-page .stat { display: grid; gap: 0.1rem; padding: 1rem 1.1rem; }
-.admin-page .stat-n { font-family: var(--display); font-size: clamp(2.2rem, 7vw, 3rem); line-height: 1; }
-.admin-page .stat-label { font-weight: 600; font-size: 0.95rem; }
+.admin-page .stat-n { font-family: var(--display); font-size: clamp(2.2rem, 7vw, 3rem); line-height: 1; margin-bottom: 0.45rem; }
+.admin-page .stat-label { font-size: 1rem; }
 .admin-page .stat-sub { font-size: 0.82rem; color: var(--muted); }
 @media (max-width: 30rem) { .admin-page .stat { padding: 0.8rem; } .admin-page .stat-sub { display: none; } }
 .admin-page .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem; max-width: 52rem; }

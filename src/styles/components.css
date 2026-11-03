@@ -1122,6 +1122,11 @@ html.side-locked { overflow: hidden; }
 .hero-bg.left { right: auto; left: -3rem; top: -1.5rem; bottom: -1.5rem; width: min(50vw, 34rem); }
 .hero-bg.left > svg { width: 100%; height: 100%; }
 @media (max-width: 40rem) { .hero-bg.left { left: -30vw; width: 100vw; bottom: auto; height: 34rem; } }
+/* In a card: the right part of the card, clipped by it */
+.card.has-map-bg { overflow: hidden; }
+.card > .hero-bg { inset: 0; width: auto; opacity: 0.3;
+  -webkit-mask-image: linear-gradient(100deg, transparent 25%, #000 80%); mask-image: linear-gradient(100deg, transparent 25%, #000 80%); }
+.card > .hero-bg > svg { width: 100%; height: 100%; }
 
 /* ---------- 45 Footer (Footer.astro) ---------- */
 .foot { color: var(--muted); font-size: 0.9rem; padding-top: 1.5rem; padding-bottom: 2rem; border-top: 1px solid var(--lodge-3); }

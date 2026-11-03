@@ -1448,4 +1448,6 @@ export const en = {
   "signup.proUnlimited": "Unlimited tastings, wines and guests",
   "signup.comErp": "Integration with ERP and CRM",
   "signup.comClub": "Integration with your customer club",
+  "signup.existsTitle": "You already have an account",
+  "signup.existsText": "There is already an account with this email. Enter the code from the email to sign in.",
 } as const;

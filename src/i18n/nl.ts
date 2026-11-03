@@ -1335,4 +1335,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "signup.proUnlimited": "Onbeperkt proeverijen, wijnen en gasten",
   "signup.comErp": "Koppeling met ERP en CRM",
   "signup.comClub": "Koppeling met de klantenclub",
+  "signup.existsTitle": "Je hebt al een account",
+  "signup.existsText": "Er is al een account met dit e-mailadres. Vul de code uit de e-mail in om in te loggen.",
 };
