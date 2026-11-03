@@ -593,6 +593,8 @@ dialog .input { max-width: none; }
 /* The picture sits with white room to the frame (--pad), at every size */
 .thumb > img { position: absolute; inset: var(--pad); width: calc(100% - 2 * var(--pad)); height: calc(100% - 2 * var(--pad)); object-fit: contain; display: block; }
 .thumb > svg { width: 60%; height: 85%; }
+/* A frame that takes its height from the row: the placeholder bottle must not give it one */
+.llead .thumb > svg { position: absolute; inset: 0; margin: auto; }
 .thumb.sm { --pad: 0.2rem; width: 2.4rem; height: 3rem; }
 /* Large: white room around the picture – the frame grows so the picture keeps its size (6 × 8 rem) */
 .thumb.lg { --pad: 0.7rem; width: 7.4rem; height: 9.4rem; }
@@ -778,13 +780,14 @@ dialog .input { max-width: none; }
 /* A row that is a headline (the next tasting, the tastings you host) */
 .lrow.big .ltitle { font-family: var(--display); font-weight: 400; font-size: 1.45rem; line-height: 1.15; }
 .llead { display: flex; align-items: center; gap: 0.9rem; flex: none; }
-/* A row with a wine's picture: a large picture whose top lines up with the top of the name; the number and the grip
-   sit on the name's line, the price and the icons stay in the middle */
-.llead .thumb { --pad: 0.5rem; width: 6rem; height: 7.6rem; margin-top: 0.2rem; }
-.lrow:has(> .llead > .thumb) { align-items: flex-start; }
+/* A row with a wine's picture: the frame runs from the top of the name to the bottom of the row's last line (the
+   chips), at least 5.6 rem high; the number and the grip sit on the name's line, the price and the icons in the middle */
+.llead .thumb { --pad: 0.5rem; width: 6rem; height: auto; min-height: 5.6rem; margin-top: 0.2rem; }
+.lrow:has(> .llead > .thumb) { align-items: stretch; }
 .lrow:has(> .llead > .thumb) > :is(.laside, .lacts) { align-self: center; }
-.llead:has(> .thumb) { align-items: flex-start; }
-.llead:has(> .thumb) > :is(.lno, .grip) { line-height: 1.4; margin-top: -0.1rem; }
+.lrow:has(> .llead > .thumb) > .lmain { align-self: start; }
+.llead:has(> .thumb) { align-items: stretch; align-self: stretch; }
+.llead:has(> .thumb) > :is(.lno, .grip) { align-self: flex-start; line-height: 1.4; margin-top: -0.1rem; }
 .grip {
   cursor: grab; color: var(--lodge-3); background: none; border: 0; padding: 0; width: 1.4rem; height: var(--h-sm);
   display: grid; place-items: center; border-radius: 4px; touch-action: none; flex: none;
@@ -825,6 +828,10 @@ span.ltitle { cursor: default; }
   .lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'main acts' 'aside aside'; column-gap: 0.7rem; align-items: start; }
   .lrow:has(> .llead) { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'lead main acts' 'lead aside aside'; }
   .lrow > .llead { grid-area: lead; gap: 0.7rem; align-self: start; }
+  .lrow > .llead:has(> .thumb) { align-self: stretch; }
+  /* …but where a price takes the lines under the text, the picture keeps its own height */
+  .lrow:has(> .laside:not(:empty)) > .llead:has(> .thumb) { align-self: start; }
+  .lrow:has(> .laside:not(:empty)) > .llead > .thumb { height: 4.8rem; }
   .lrow > .lmain { grid-area: main; }
   .lrow > .laside { grid-area: aside; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0 0.6rem; text-align: left; }
   .lrow > .laside:empty { display: none; }
@@ -842,7 +849,7 @@ span.ltitle { cursor: default; }
   .lrow:has(> .lacts > :nth-child(3)) { grid-template-areas: 'lead main main' 'lead aside acts'; }
   .lrow:has(> .lacts > :nth-child(3)) > .lacts { align-self: end; margin-right: -0.35rem; }
   .lrow:has(> .lacts > :nth-child(3)) > .laside { align-self: center; }
-  .llead .thumb { --pad: 0.3rem; width: 3.8rem; height: 4.8rem; }
+  .llead .thumb { --pad: 0.3rem; width: 3.8rem; min-height: 4.8rem; }
   .llead .lno { font-size: 1.2rem; }
   .llead .grip { height: 1.75rem; }
 }
@@ -874,7 +881,7 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
   .lcard > .llead { grid-area: lead; align-self: start; }
   .lcard > .lmain { grid-area: main; }
   .lcard > .laside { grid-area: aside; justify-items: start; grid-auto-flow: column; justify-content: start; align-items: center; }
-  .lcard .llead .thumb { --pad: 0.3rem; width: 3.8rem; height: 4.8rem; }
+  .lcard .llead .thumb { --pad: 0.3rem; width: 3.8rem; min-height: 4.8rem; }
 }
 
 /* ---------- 27 Highlight after saving (src/lib/ui/highlight.ts) ---------- */
@@ -914,7 +921,7 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
   .newrow > .llead { gap: 0.7rem; }
   /* Narrow: no empty grip and "+" spaces before the bottle – the fields get the room */
   .newrow > .llead > :is(.grip.blank, .lno.plus) { display: none; }
-  .newrow .llead .thumb { --pad: 0.3rem; width: 3.8rem; height: 4.8rem; }
+  .newrow .llead .thumb { --pad: 0.3rem; width: 3.8rem; min-height: 4.8rem; }
   .newrow .llead .lno { font-size: 1.2rem; }
   .newrow .ar-fields { grid-template-columns: 1fr; }
   .newrow > .ar-acts { grid-column: 2 / -1; justify-content: flex-start; }
