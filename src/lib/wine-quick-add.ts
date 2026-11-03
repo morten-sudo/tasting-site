@@ -92,6 +92,12 @@ export function initQuickAdd(o: Opts) {
   });
   const { open, isOpen } = row;
   const bar = row.bar;
+  // A wine is added: the line closes – unless more is on its way (another wine being read, or text typed meanwhile)
+  function closeWhenDone() {
+    if (input.value.trim() || carry || jobs.querySelector(':scope > li:not(.leaving)')) return;
+    // (the focus goes back to "Add wine" only if it was in the line)
+    row.close(bar.contains(document.activeElement));
+  }
 
   function setCarry(src: Source | null) {
     carry = src;
@@ -144,7 +150,7 @@ export function initQuickAdd(o: Opts) {
     if (!ok) return;
     input.value = '';
     renderHits();
-    if (matchMedia('(min-width: 48rem)').matches) input.focus();
+    closeWhenDone();
   }
 
   function submit() {
@@ -356,6 +362,7 @@ export function initQuickAdd(o: Opts) {
     await o.done(id, [name, vintage].filter(Boolean).join(' '));
     // The wine is in the list now (highlighted): the card goes in the same moment, so the wine is never shown twice
     li.remove();
+    closeWhenDone();
   }
 
   /** Reading failed or found no name: the card says so; "Type the name" keeps the link or photo for the line. */
