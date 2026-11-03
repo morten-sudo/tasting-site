@@ -138,9 +138,15 @@ import Disclosure from '../components/ui/Disclosure.astro';
   // Remember me: the choice from last time, and the email when it was remembered
   ($('remember') as HTMLInputElement).checked = rememberMe();
   { const last = lastEmail(); const el = $('email') as HTMLInputElement; if (last && !el.value) el.value = last; }
-  // Only internal paths are allowed as the post-login target
   const rawNext = params.get('next') ?? '';
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '';
+  // Only a page on this site: read as the browser would (so "/\\evil.example" and "//evil.example" are another site)
+  const next = (() => {
+    if (!rawNext.startsWith('/')) return '';
+    try {
+      const u = new URL(rawNext, location.origin);
+      return u.origin === location.origin ? u.pathname + u.search + u.hash : '';
+    } catch { return ''; }
+  })();
   const wantsAdmin = /^\/(t\/[a-z0-9-]+\/)?admin\//.test(next);
 
   let email = '';

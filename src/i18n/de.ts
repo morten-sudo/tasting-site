@@ -1583,6 +1583,8 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "signup.guestGo": "Zu meinen Verkostungen",
   "signup.guestHost": "Trotzdem Gastgeberkonto anlegen",
   "pay.how": "Öffne MobilePay auf deinem Handy, wähle Senden und nutze Nummer, Betrag und Nachricht unten – jeweils mit Kopier-Button.",
+  "limit.aiDaily": "Ihr Konto hat die automatischen Abfragen für heute verbraucht. Füllen Sie selbst aus oder versuchen Sie es morgen erneut.",
+  "limit.mailDaily": "Ihr Konto hat die E-Mails für heute versendet. Kopieren Sie den Link und senden Sie ihn selbst, oder versuchen Sie es morgen erneut.",
   "guestLib.lastLink": "hat den Link {when} geöffnet",
   "ev.login.link": "{guest} hat den Einladungslink geöffnet – {tasting}",
   "count.tastings": "{n} Verkostungen",

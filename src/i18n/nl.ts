@@ -1583,6 +1583,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "signup.guestGo": "Naar mijn proeverijen",
   "signup.guestHost": "Toch een hostaccount aanmaken",
   "pay.how": "Open MobilePay op je telefoon, kies Versturen en gebruik het nummer, het bedrag en het bericht hieronder – elk met een kopieerknop.",
+  "limit.aiDaily": "Je account heeft de automatische zoekopdrachten van vandaag gebruikt. Vul zelf in of probeer het morgen opnieuw.",
+  "limit.mailDaily": "Je account heeft de e-mails van vandaag verstuurd. Kopieer de link en stuur hem zelf, of probeer het morgen opnieuw.",
   "guestLib.lastLink": "opende de link {when}",
   "ev.login.link": "{guest} opende de uitnodigingslink – {tasting}",
   "count.tastings": "{n} proeverijen",

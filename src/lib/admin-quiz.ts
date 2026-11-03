@@ -11,6 +11,7 @@ import { fieldError, focusField } from './field-error';
 import { listRow } from './ui/list-row';
 import { reorder } from './ui/reorder';
 import { highlight } from './ui/highlight';
+import { dailyLimitOf } from './daily-limit';
 
 export type AdminQuestion = {
   id: number; tasting_id: string; sort_order: number; question: string;
@@ -233,7 +234,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
       });
       const out = (await res.json().catch(() => ({}))) as { questions?: Suggestion[]; error?: string };
       if (!res.ok || !out.questions?.length) {
-        setStatus(status, 'error', t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed'));
+        setStatus(status, 'error', dailyLimitOf(res.status, out) ?? t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed'));
         return;
       }
       aiList.append(...out.questions.map(suggestionCard));

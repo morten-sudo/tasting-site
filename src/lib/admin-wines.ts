@@ -29,6 +29,7 @@ import { deleteWithUndo } from './ui/delete-undo';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { COMMON_CL, STANDARD_CL, bottleText, parseCl } from './bottle';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
+import { dailyLimitText, throwIfDailyLimit, limitOr } from './daily-limit';
 
 export type AdminWine = {
   id: number; host_id: string; name: string; producer: string | null;
@@ -281,12 +282,12 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
         body: JSON.stringify({ image }),
       });
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) { await throwIfDailyLimit(res); throw new Error(String(res.status)); }
       const r = (await res.json()) as LabelResult;
       fillStatus(fillFromLabel(r), t('label.filled', { n: '{n}' }), t('label.nothing'));
       fillProducer();
-    } catch {
-      labelStatus(t('label.failed'), 'error');
+    } catch (e) {
+      labelStatus(limitOr(e, t('label.failed')), 'error');
     } finally {
       busyButton(btn, false);
       picker.setBusy(false);
@@ -391,7 +392,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
         body: JSON.stringify({ url, lang: lang() }),
       });
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) { await throwIfDailyLimit(res); throw new Error(String(res.status)); }
       const r = (await res.json()) as LinkResult;
       const f = fillFromLabel(r);
       f.put('wf-description', r.description);
@@ -424,8 +425,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
       fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + foreign);
       fillProducer();
-    } catch {
-      labelStatus(t('link.failed'), 'error');
+    } catch (e) {
+      labelStatus(limitOr(e, t('link.failed')), 'error');
     } finally {
       busyButton(btn, false);
     }
@@ -726,6 +727,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     btn.disabled = true;
     producerStatus(t('image.searching'), 'busy', 'wf-image-status');
     let images: { url: string; page: string }[] = [];
+    let limit: string | null = null;
     try {
       const { data } = await supabase.auth.getSession();
       const res = await fetch('/api/find-image', {
@@ -734,8 +736,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         body: JSON.stringify({ name, producer: field<HTMLInputElement>('wf-producer').value.trim(), vintage: field<HTMLInputElement>('wf-vintage').value.trim(), website }),
       });
       if (res.ok) images = ((await res.json()) as { images: typeof images }).images ?? [];
+      else limit = await dailyLimitText(res);
     } catch {}
     btn.disabled = false;
+    if (limit) { producerStatus(limit, 'error', 'wf-image-status'); return; }
     if (!images.length) { producerStatus(t('image.noneFound'), 'warn', 'wf-image-status'); return; }
     producerStatus(t('image.pick'), 'info', 'wf-image-status');
     showImageOptions(images);
@@ -922,7 +926,10 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   type ProducerQuery = { name: string; producer: string | null; appellation: string | null; region: string | null; country: string | null; producer_website: string | null; producer_address?: string | null };
   /** The producer's website and place: from another wine by the same producer, else /api/find-producer. */
+  /** The account's daily limit stopped the last lookup: its words, shown instead of "not found" */
+  let producerLimit: string | null = null;
   async function lookupProducer(w: ProducerQuery, skipId?: number): Promise<Found | null> {
+    producerLimit = null;
     const same = !w.producer ? null : wines.find((x) => x.id !== skipId && x.producer_checked_at && normOrigin(x.producer) === normOrigin(w.producer)
       && (!w.producer_website || x.producer_website === w.producer_website));
     if (same) return { website: same.producer_website ?? null, address: same.producer_address ?? null, lat: same.producer_lat ?? null, lon: same.producer_lon ?? null, source: same.producer_source ?? null };
@@ -937,7 +944,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         headers: { 'content-type': 'application/json', authorization: `Bearer ${data.session?.access_token ?? ''}` },
         body: JSON.stringify({ producer: w.producer, wine: w.name, appellation: w.appellation, region: w.region, country: w.country, website: w.producer_website }),
       });
-      if (!res.ok) return null;
+      if (!res.ok) { producerLimit = await dailyLimitText(res); return null; }
       const r = (await res.json()) as { website: string | null; address: string | null; location: { lat: number; lon: number; source: string } | null };
       return { website: r.website, address: r.address, lat: r.location?.lat ?? null, lon: r.location?.lon ?? null, source: r.location?.source ?? null };
     } catch { return null; }
@@ -978,7 +985,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         websiteEl.value = found.website;
         websiteEl.classList.add('from-label');
         producerStatus(t(found.lat != null ? 'producer.foundPlace' : 'producer.found'), 'ok');
-      } else producerStatus(websiteEl.value.trim() ? '' : t('producer.notFound'), 'warn');
+      } else producerStatus(websiteEl.value.trim() ? '' : producerLimit ?? t('producer.notFound'), 'warn');
     }
     // The address
     if (wantAddress) {
@@ -986,7 +993,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         addressEl.value = found.address;
         addressEl.classList.add('from-label');
         producerStatus(t('producer.addressFound'), 'ok', 'wf-address-status');
-      } else producerStatus(addressEl.value.trim() ? '' : t('producer.addressNotFound'), 'warn', 'wf-address-status');
+      } else producerStatus(addressEl.value.trim() ? '' : producerLimit ?? t('producer.addressNotFound'), 'warn', 'wf-address-status');
     }
     if (found?.address && found.lat == null && addressEl.value.trim() === found.address) {
       producerStatus(t('producer.addressFound') + ' ' + t('producer.notPrecise'), 'warn', 'wf-address-status');
@@ -1023,7 +1030,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       addressEl.value = found.address;
       addressEl.classList.add('from-label');
       producerStatus(t('producer.addressFound') + (found.lat == null ? ' ' + t('producer.notPrecise') : ''), found.lat != null ? 'ok' : 'warn', 'wf-address-status');
-    } else producerStatus(t('producer.addressNotFound'), 'warn', 'wf-address-status');
+    } else producerStatus(producerLimit ?? t('producer.addressNotFound'), 'warn', 'wf-address-status');
     showOriginMap();
   });
 
