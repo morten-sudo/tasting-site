@@ -1343,7 +1343,7 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Compte de {name}",
   "ws.shared": "Partagées avec moi",
   "ws.sharedChip": "Partagée avec vous",
-  "ws.addHint": "Les hôtes ajoutés ici voient et modifient tout le compte. Pour qu’une personne n’aide qu’à une dégustation, ajoutez-la comme co-hôte de cette dégustation (Paramètres → Hôtes).",
+  "ws.addHint": "Les hôtes ajoutés ici voient et modifient tout le compte. Pour qu’une personne n’aide qu’à une dégustation, ajoutez-la comme co-hôte de cette dégustation (Aperçu → Hôtes).",
   "ws.ownerAdds": "Seul le propriétaire du compte ajoute et retire des hôtes.",
   "ws.addTitle": "Ajouter un hôte au compte",
   "ws.addIntro": "L’hôte voit et modifie toutes les dégustations, tous les vins et tous les invités du compte. S’il a déjà son propre compte, il est sur les deux et choisit le compte en haut du menu.",
@@ -1358,6 +1358,6 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Un compte peut avoir au plus 25 hôtes.",
   "ws.addedActive": "{email} est maintenant hôte du compte.",
   "ws.addedPending": "{email} rejoint le compte dès sa première connexion avec cette adresse.",
-  "ws.sendLink": "Envoyez ce lien à {email} – il se connecte avec cette adresse et arrive sur {account} :",
+  "ws.sendLink": "Envoyez ce lien à {email} – il se connecte avec cette adresse et arrive directement sur le compte :",
   "guestLib.lastLogin": "connecté {when}",
 };

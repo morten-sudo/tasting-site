@@ -1343,7 +1343,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Cuenta de {name}",
   "ws.shared": "Compartidas conmigo",
   "ws.sharedChip": "Compartida contigo",
-  "ws.addHint": "Los anfitriones que añadas aquí ven y editan todo en la cuenta. Si alguien solo debe ayudar con una cata, añádelo como coanfitrión en esa cata (Ajustes → Anfitriones).",
+  "ws.addHint": "Los anfitriones que añadas aquí ven y editan todo en la cuenta. Si alguien solo debe ayudar con una cata, añádelo como coanfitrión en esa cata (Resumen → Anfitriones).",
   "ws.ownerAdds": "Solo el propietario de la cuenta añade y quita anfitriones.",
   "ws.addTitle": "Añadir anfitrión a la cuenta",
   "ws.addIntro": "El anfitrión ve y edita todas las catas, vinos e invitados de la cuenta. Si ya tiene su propia cuenta, está en ambas y elige la cuenta arriba en el menú.",
@@ -1358,6 +1358,6 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Una cuenta puede tener como máximo 25 anfitriones.",
   "ws.addedActive": "{email} ya es anfitrión de la cuenta.",
   "ws.addedPending": "{email} entra en la cuenta la primera vez que inicie sesión con ese correo.",
-  "ws.sendLink": "Envía este enlace a {email}: inicia sesión con ese correo y llega a {account}:",
+  "ws.sendLink": "Envía este enlace a {email}: inicia sesión con ese correo y llega directamente a la cuenta:",
   "guestLib.lastLogin": "conectado {when}",
 };

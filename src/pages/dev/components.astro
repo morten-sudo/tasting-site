@@ -33,6 +33,7 @@ import MapBackground from '../../components/ui/MapBackground.astro';
 import Hero from '../../components/ui/Hero.astro';
 import Actions from '../../components/ui/Actions.astro';
 import Sr from '../../components/ui/Sr.astro';
+import SideSwitch from '../../components/ui/SideSwitch.astro';
 import ChatBox from '../../components/ChatBox.astro';
 import CartBar from '../../components/ui/CartBar.astro';
 import Ribbon from '../../components/ui/Ribbon.astro';
@@ -482,6 +483,11 @@ const opts = [
         <section id="c43" class="dv-comp">
           <SectionTitle level="h3" text="43 Navigation" />
           <p class="help">TopBar.astro (the top of this page, every page) · SideMenu.astro (the menu at the left of this page; "Menu" on phones) · the tasting switcher in TopBar</p>
+          <p class="help">SideSwitch.astro · sideSwitcher() in src/lib/ui/side-menu.ts – the account choice at the top of the menu, only for a host on more than one account (one account: not shown); open, it is the dropdown of component 7 with the role under each name</p>
+          <div class="dv-states">
+            <span class="dv-lab">Closed</span><div class="dv-side"><SideSwitch id="dv-switch" label="ws.label" /></div>
+            <span class="dv-lab">Long name</span><div class="dv-side"><SideSwitch id="dv-switch3" label="ws.label" /></div>
+          </div>
         </section>
 
         <section id="c44" class="dv-comp">
@@ -590,6 +596,7 @@ const opts = [
   .dv-pad { display: inline-grid; place-items: center; }
   .dv-badge-host { position: relative; display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; color: var(--paper); }
   .dv-menu { position: relative; max-width: 18rem; }
+  .dv-side { width: 14.5rem; min-height: 4.5rem; }
   .dv-static-tip { position: static; pointer-events: auto; }
   .dv-tips { display: grid; grid-template-columns: repeat(auto-fill, 9rem); justify-items: center; gap: 2.6rem 0; padding-top: 2.2rem; }
   .dv-hero { height: 20rem; display: grid; border-radius: var(--radius); overflow: hidden; }
@@ -610,6 +617,7 @@ const opts = [
   import { fieldError } from '../../lib/field-error';
   import { dropdown, getDropdown } from '../../lib/ui/dropdown';
   import { menuItem, menuGroup } from '../../lib/ui/menu';
+  import { sideSwitcher } from '../../lib/ui/side-menu';
   import { filterDropdown } from '../../lib/filter-dd';
   import { combo } from '../../lib/combo';
   import { choiceCards } from '../../lib/ui/choice-cards';
@@ -696,6 +704,11 @@ const opts = [
     fieldError($('f-6'), 'Write the whole email address, e.g. name@example.dk');
     fieldError($('f-num-err'), 'Write an amount, e.g. 149,95');
     $('dv-search2').classList.add('is-focus');
+
+    // 43: the account choice at the top of the side menu
+    const accounts = [{ value: 'a', label: 'Din konto', hint: 'Ejer' }, { value: 'b', label: 'Holte Vinklub', hint: 'Vært' }, { value: 'c', label: 'Anna Holms konto', hint: 'Vært' }];
+    sideSwitcher(accounts, 'b', () => {}, 'dv-switch');
+    sideSwitcher([{ value: 'x', label: 'Vinklubben for Nordsjællands Portvinsvenner', hint: 'Vært' }, ...accounts], 'x', () => {}, 'dv-switch3');
 
     // ---------- B ----------
     getDropdown('dd-1'); getDropdown('dd-2');

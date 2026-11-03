@@ -3,12 +3,15 @@ import Icon from './ui/Icon.astro';
 import Disclosure from './ui/Disclosure.astro';
 import EmptyState from './ui/EmptyState.astro';
 import SideMenu, { type SideGroup } from './ui/SideMenu.astro';
-// The host admin's shell: the one side menu (SideMenu.astro) with the host's groups, and the "not a host" notice.
+// The host admin's shell: the one side menu (SideMenu.astro) with the host's groups and accounts (the choice at the
+// top, shown when the host is on more than one), and the "not a host" notice.
 interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'account' | 'payments' | 'help' }
 const { active } = Astro.props;
 const groups: SideGroup[] = [
   { icon: 'grid', label: 'adminNav.overview', href: '/admin/', current: active === 'overview' },
   { icon: 'glass', label: 'adminNav.tastings', href: '/admin/tastings/', current: active === 'tastings', listId: 'side-tastings', slot: 'tastings' },
+  // Tastings others share with me (co-host of one tasting on an account I am not on) – whatever account is chosen
+  { icon: 'users', label: 'ws.shared', listId: 'side-shared', id: 'side-shared-g', hidden: true },
   { icon: 'book', label: 'adminNav.library', links: [
     { href: '/admin/wines/', label: 'adminNav.wines', current: active === 'wines' },
     { href: '/admin/guests/', label: 'adminNav.guests', current: active === 'guests' }] },
@@ -18,7 +21,7 @@ const groups: SideGroup[] = [
   { icon: 'question', label: 'adminNav.help', href: '/admin/help/', current: active === 'help' },
 ];
 ---
-<SideMenu label="Admin" groups={groups}>
+<SideMenu label="Admin" groups={groups} switcher={{ label: 'ws.label' }}>
   <EmptyState slot="top" id="not-host" icon="user" title="admin.notHostTitle" text="admin.notHostText" hidden>
     <a class="btn small" href="/signup/" data-i18n="admin.becomeHost">Become a host</a>
     <button id="logout2" class="btn small secondary" type="button" data-i18n="nav.signOut">Sign out</button>

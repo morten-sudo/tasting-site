@@ -1343,7 +1343,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Account van {name}",
   "ws.shared": "Met mij gedeeld",
   "ws.sharedChip": "Met jou gedeeld",
-  "ws.addHint": "Gastheren die je hier toevoegt, zien en bewerken alles in het account. Moet iemand maar bij één proeverij helpen, voeg hem dan toe als medegastheer van die proeverij (Instellingen → Gastheren).",
+  "ws.addHint": "Gastheren die je hier toevoegt, zien en bewerken alles in het account. Moet iemand maar bij één proeverij helpen, voeg hem dan toe als medegastheer van die proeverij (Overzicht → Gastheren).",
   "ws.ownerAdds": "Alleen de eigenaar van het account voegt gastheren toe en verwijdert ze.",
   "ws.addTitle": "Gastheer aan het account toevoegen",
   "ws.addIntro": "De gastheer ziet en bewerkt alle proeverijen, wijnen en gasten van het account. Heeft hij al een eigen account, dan zit hij in beide en kiest hij het account bovenaan in het menu.",
@@ -1358,6 +1358,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Een account kan maximaal 25 gastheren hebben.",
   "ws.addedActive": "{email} is nu gastheer in het account.",
   "ws.addedPending": "{email} komt in het account zodra hij voor het eerst inlogt met dat e-mailadres.",
-  "ws.sendLink": "Stuur deze link naar {email} – hij logt in met dat e-mailadres en komt uit bij {account}:",
+  "ws.sendLink": "Stuur deze link naar {email} – hij logt in met dat e-mailadres en komt direct in het account:",
   "guestLib.lastLogin": "ingelogd {when}",
 };

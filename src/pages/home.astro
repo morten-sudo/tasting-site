@@ -68,6 +68,7 @@ import EmptyState from '../components/ui/EmptyState.astro';
 
 <script>
   import { supabase } from '../lib/supabase';
+  import { storedWorkspace } from '../lib/workspace';
   import { loadMe, getCodes, tastingUrl } from '../lib/guest';
   import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
   import { landingUrl } from '../lib/landing';
@@ -82,7 +83,8 @@ import EmptyState from '../components/ui/EmptyState.astro';
   const [me, mine, host, admin] = await Promise.all([
     loadMe(),
     loadAllMyTastings(),
-    s.session ? supabase.rpc('host_dashboard') : Promise.resolve({ data: null }),
+    // The account chosen last in the admin (the database falls back to the default one)
+    s.session ? supabase.rpc('host_dashboard', { tn: storedWorkspace() }) : Promise.resolve({ data: null }),
     s.session ? supabase.rpc('is_admin') : Promise.resolve({ data: false }),
   ]);
   // Only one place to go (just a host, or a guest with one tasting): go there directly

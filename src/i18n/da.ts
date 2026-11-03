@@ -1474,7 +1474,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "{name}s konto",
   "ws.shared": "Delt med mig",
   "ws.sharedChip": "Delt med dig",
-  "ws.addHint": "Værter, du tilføjer her, ser og retter alt på kontoen. Skal nogen kun hjælpe med én smagning, så tilføj dem som medvært i smagningen (Indstillinger → Værter).",
+  "ws.addHint": "Værter, du tilføjer her, ser og retter alt på kontoen. Skal nogen kun hjælpe med én smagning, så tilføj dem som medvært i smagningen (Overblik → Værter).",
   "ws.ownerAdds": "Kun kontoens ejer tilføjer og fjerner værter.",
   "ws.addTitle": "Tilføj vært til kontoen",
   "ws.addIntro": "Værten ser og retter alle kontoens smagninger, vine og gæster. Har personen allerede sin egen konto, er de på begge og vælger konto øverst i menuen.",
@@ -1489,6 +1489,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "En konto kan have højst 25 værter.",
   "ws.addedActive": "{email} er nu vært på kontoen.",
   "ws.addedPending": "{email} kommer på kontoen første gang, de logger ind med den e-mail.",
-  "ws.sendLink": "Send dette link til {email} – de logger ind med den e-mail og lander på {account}:",
+  "ws.sendLink": "Send dette link til {email} – de logger ind med den e-mail og lander direkte på kontoen:",
   "guestLib.lastLogin": "logget ind {when}",
 };

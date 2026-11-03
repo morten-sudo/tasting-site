@@ -58,7 +58,7 @@ export const HELP: HelpSection[] = [
 <h4 id="max-guests"><a href="t:settings/#max-guests">Max antal gæster og venteliste</a></h4>
 <p>Tryk <i>Rediger</i> ved <i>Maks. antal gæster</i>, og skriv et tal. Når smagningen er fuld, kommer gæster, der siger ja, på venteliste i den rækkefølge, de svarede. Melder en, der kommer, fra – eller hæver du loftet – rykker den første på ventelisten automatisk op. Tomt felt betyder intet loft. Gæsterne ser ikke, hvor mange pladser der er tilbage.</p>
 <h4>Medværter</h4>
-<p>På smagningens <a href="t:#hosts">Overblik → Værter</a> trykker du <i>Tilføj vært</i> og skriver e-mailen. De får en mail og kan rette smagningen, vinene og gæsterne, men ikke slette smagningen eller styre værterne.</p>
+<p>På smagningens <a href="t:#hosts">Overblik → Værter</a> trykker du <i>Tilføj vært</i> og skriver e-mailen. De får en mail og kan rette smagningen, vinene og gæsterne, men ikke slette smagningen eller styre værterne. Har medværten sin egen konto, står smagningen under <i>Delt med mig</i> i deres menu. Skal de se hele kontoen, så <a href="/admin/account/?open=member-open">tilføj dem til kontoen</a> i stedet.</p>
 <h4 id="fee"><a href="t:settings/#fee">Deltagergebyr</a></h4>
 <p>Tryk <i>Rediger</i> under <i>Betaling for smagningen</i>, og skriv, hvad smagningen koster i alt – så foreslås et beløb pr. gæst ud fra antallet, der kommer. Slå <i>Vis gebyret for gæsterne</i> til, når de skal se det. Du markerer selv, hvem der har betalt.</p>`,
       en: `<p>A tasting has its own page with tabs: <a href="t:">Overview</a>, <a href="t:wines/">Wines</a>, <a href="t:guests/">Guests</a>, <a href="t:orders/">Orders</a>, <a href="t:quiz/">Quiz</a>, <a href="t:chat/">Chat</a> and <a href="t:settings/">Settings</a>. See them all under <a href="/admin/tastings/">Tastings</a>. Every host on the account can see and edit every tasting. When there are tastings you do not host yourself, the filter button above the list chooses between <i>I host</i> and <i>All</i> – with the number by each.</p>
@@ -78,7 +78,7 @@ export const HELP: HelpSection[] = [
 <h4 id="max-guests"><a href="t:settings/#max-guests">Max number of guests and the waiting list</a></h4>
 <p>Press <i>Edit</i> by <i>Max. number of guests</i> and enter a number. When the tasting is full, guests who say yes go on the waiting list in the order they replied. When someone who is coming drops out – or you raise the limit – the first on the list moves up automatically. An empty field means no limit. Guests do not see how many places are left.</p>
 <h4>Co-hosts</h4>
-<p>On the tasting's <a href="t:#hosts">Overview → Hosts</a> press <i>Add host</i> and enter the email. They get an email and can edit the tasting, its wines and guests, but cannot delete the tasting or manage its hosts.</p>
+<p>On the tasting's <a href="t:#hosts">Overview → Hosts</a> press <i>Add host</i> and enter the email. They get an email and can edit the tasting, its wines and guests, but cannot delete the tasting or manage its hosts. If the co-host has an account of their own, the tasting is under <i>Shared with me</i> in their menu. If they should see the whole account, <a href="/admin/account/?open=member-open">add them to the account</a> instead.</p>
 <h4 id="fee"><a href="t:settings/#fee">Tasting fee</a></h4>
 <p>Press <i>Edit</i> under <i>Tasting fee</i> and enter what the tasting costs in all – an amount per guest is suggested from the number who are coming. Turn on <i>Show the fee to the guests</i> when they should see it. You mark yourself who has paid.</p>`,
     },
@@ -221,11 +221,21 @@ export const HELP: HelpSection[] = [
     id: 'account',
     title: { da: 'Konto og værter', en: 'Account and hosts' },
     body: {
-      da: `<p>Under <a href="/admin/account/">Konto og værter</a> kan kontoen få et navn, fx en vinklub. Ejeren – den der oprettede kontoen – kan invitere flere værter. Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Ejeren kan ikke fjernes.</p>
+      da: `<p>Under <a href="/admin/account/">Konto og værter</a> kan kontoen få et navn, fx en vinklub. Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Ejeren – den der oprettede kontoen – kan ikke fjernes.</p>
+<h4 id="add-host">Flere værter på kontoen</h4>
+<p>Ejeren trykker <a href="/admin/account/?open=member-open">Tilføj vært</a> og skriver e-mailen. Er personen allerede vært på Winetastr, er de med på kontoen med det samme; ellers står de som <i>Inviteret</i>, til de logger ind første gang med den e-mail. De får en mail med et link direkte til kontoen. Skraldespanden ved en vært fjerner værten (eller trækker invitationen tilbage) – du bliver spurgt først, og det, de har lavet, bliver på kontoen.</p>
+<p>Skal nogen kun hjælpe med én smagning, så tilføj dem i stedet som medvært på smagningens <a href="t:#hosts">Overblik → Værter</a>. De ser kun den smagning – ikke kontoens vine og gæster.</p>
+<h4 id="accounts">Vært på flere konti</h4>
+<p>Er du vært på mere end én konto – fx din egen og vinklubbens – vælger du konto øverst i menuen til venstre (på telefonen under <i>Menu</i>). Menuen, overblikket, vinene og gæsterne viser så den konto, du har valgt, og nye smagninger, vine og gæster kommer på den. Enheden husker dit valg til næste gang. Smagninger, hvor du kun er medvært, står under <i>Delt med mig</i>, uanset hvilken konto du har valgt.</p>
 <p>Under <a href="/profile/">Profil</a> (menuen øverst til højre) retter du dit navn, din e-mail og dit sprog. Du logger ind med en kode på mail; <i>Husk mig</i> holder dig logget ind på enheden.</p>
 <h4 id="notify">Mails til dig om gæsterne</h4>
 <p>Under <a href="/profile/#notify">Profil → Mail til mig, når en gæst …</a> vælger du, hvad du vil have mail om: når en gæst siger ja (også venteliste og oprykning), siger nej, skriver en note eller et kost-hensyn, skriver i chatten eller bestiller vin. Alt er slået fra fra start. Det gælder alle smagninger, du er vært eller medvært for; flere ting på én gang kommer i én mail pr. smagning, og du får aldrig mail om noget, du selv har gjort.</p>`,
-      en: `<p>Under <a href="/admin/account/">Account and hosts</a> the account can get a name, e.g. a wine club. The owner – whoever created the account – can invite more hosts. Every host on the account sees and edits all tastings, wines and guests. The owner cannot be removed.</p>
+      en: `<p>Under <a href="/admin/account/">Account and hosts</a> the account can get a name, e.g. a wine club. Every host on the account sees and edits all tastings, wines and guests. The owner – whoever created the account – cannot be removed.</p>
+<h4 id="add-host">More hosts on the account</h4>
+<p>The owner presses <a href="/admin/account/?open=member-open">Add host</a> and types the email. If the person is already a host on Winetastr, they are on the account at once; otherwise they show as <i>Invited</i> until they first sign in with that email. They get an email with a link straight to the account. The trash by a host removes the host (or withdraws the invitation) – you are asked first, and what they made stays on the account.</p>
+<p>If someone should only help with one tasting, add them as co-host in the tasting instead, on its <a href="t:#hosts">Overview → Hosts</a>. They see only that tasting – not the account's wines and guests.</p>
+<h4 id="accounts">Host on more than one account</h4>
+<p>If you are a host on more than one account – e.g. your own and the wine club's – you choose the account at the top of the menu on the left (on a phone under <i>Menu</i>). The menu, the overview, the wines and the guests then show the account you chose, and new tastings, wines and guests go into it. The device remembers your choice for next time. Tastings where you are only a co-host are under <i>Shared with me</i>, whichever account you chose.</p>
 <p>Under <a href="/profile/">Profile</a> (the menu at the top right) you change your name, email and language. You sign in with a code by email; <i>Remember me</i> keeps you signed in on the device.</p>
 <h4 id="notify">Emails to you about the guests</h4>
 <p>Under <a href="/profile/#notify">Profile → Email me when a guest …</a> you choose what you want an email about: a guest saying yes (also the waiting list and moving up), saying no, writing a note or diet, writing in the chat or ordering wine. Everything starts off. It applies to all tastings you host or co-host; several things at once come in one email per tasting, and you never get an email about something you did yourself.</p>`,
@@ -326,6 +336,6 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
     da: '<b>Hver gæst</b>: gæstens egne flasker tæller. <b>Samlet</b>: alle gæsters flasker af en vin tæller sammen – godt til vinklubber. Priserne er så foreløbige, til du lukker for bestillinger.',
     en: '<b>Each guest</b>: the guest\'s own bottles count. <b>Together</b>: all the guests\' bottles of a wine count together – good for wine clubs. Prices are then provisional until you close ordering.' } },
   'account-hosts': { more: 'account', text: {
-    da: 'Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Kun ejeren kan tilføje og fjerne værter.',
-    en: 'Every host on the account sees and edits all tastings, wines and guests. Only the owner can add and remove hosts.' } },
+    da: 'Alle værter på kontoen ser og retter alle smagninger, vine og gæster. Kun ejeren kan tilføje og fjerne værter. En vært kan være på flere konti og vælger konto øverst i menuen.',
+    en: 'Every host on the account sees and edits all tastings, wines and guests. Only the owner can add and remove hosts. A host can be on several accounts and chooses the account at the top of the menu.' } },
 };

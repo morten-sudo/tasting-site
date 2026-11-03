@@ -1343,7 +1343,7 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Konto von {name}",
   "ws.shared": "Mit mir geteilt",
   "ws.sharedChip": "Mit dir geteilt",
-  "ws.addHint": "Gastgeber, die du hier hinzufügst, sehen und bearbeiten alles im Konto. Soll jemand nur bei einer Verkostung helfen, füge ihn dort als Mitgastgeber hinzu (Einstellungen → Gastgeber).",
+  "ws.addHint": "Gastgeber, die du hier hinzufügst, sehen und bearbeiten alles im Konto. Soll jemand nur bei einer Verkostung helfen, füge ihn dort als Mitgastgeber hinzu (Übersicht → Gastgeber).",
   "ws.ownerAdds": "Nur der Inhaber des Kontos fügt Gastgeber hinzu und entfernt sie.",
   "ws.addTitle": "Gastgeber zum Konto hinzufügen",
   "ws.addIntro": "Der Gastgeber sieht und bearbeitet alle Verkostungen, Weine und Gäste des Kontos. Hat er schon ein eigenes Konto, ist er in beiden und wählt das Konto oben im Menü.",
@@ -1358,6 +1358,6 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Ein Konto kann höchstens 25 Gastgeber haben.",
   "ws.addedActive": "{email} ist jetzt Gastgeber im Konto.",
   "ws.addedPending": "{email} kommt ins Konto, sobald er sich zum ersten Mal mit dieser E-Mail anmeldet.",
-  "ws.sendLink": "Schick diesen Link an {email} – er meldet sich mit dieser E-Mail an und landet bei {account}:",
+  "ws.sendLink": "Schick diesen Link an {email} – er meldet sich mit dieser E-Mail an und landet direkt im Konto:",
   "guestLib.lastLogin": "angemeldet {when}",
 };

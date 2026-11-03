@@ -75,7 +75,7 @@ import '../../styles/admin.css';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, locale, formatWhen, type Key } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
-  import { tastingRoles } from '../../lib/admin-side';
+  import { tastingRoles, visibleRoles } from '../../lib/admin-side';
 
   type Dash = {
     tastings: number; upcoming: number; guests: number; wines: number;
@@ -207,7 +207,7 @@ import '../../styles/admin.css';
   // ---------- The tastings I host ----------
   const MINE_SHOWN = 2;
   async function showMine() {
-    const roles = await tastingRoles();
+    const roles = visibleRoles(await tastingRoles());
     if (!roles.length) return;
     const hosting = new Set(roles.filter((x) => x.hosting).map((x) => x.tasting_id));
     const { data } = await supabase.from('tastings')
@@ -242,7 +242,7 @@ import '../../styles/admin.css';
     $('intro-new').addEventListener('click', () => wizard.openNew());
     document.querySelector('.sm-add')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
     showMine();
-    const { data } = await supabase.rpc('host_dashboard');
+    const { data } = await supabase.rpc('host_dashboard', { tn: host.tenant_id });
     if (data && typeof data === 'object' && 'tastings' in data) render(data as Dash);
   }
 </script>

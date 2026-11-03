@@ -1343,7 +1343,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Konto: {name}",
   "ws.shared": "Udostępnione mi",
   "ws.sharedChip": "Udostępniona Tobie",
-  "ws.addHint": "Gospodarze dodani tutaj widzą i edytują wszystko na koncie. Jeśli ktoś ma pomóc tylko przy jednej degustacji, dodaj go jako współgospodarza tej degustacji (Ustawienia → Gospodarze).",
+  "ws.addHint": "Gospodarze dodani tutaj widzą i edytują wszystko na koncie. Jeśli ktoś ma pomóc tylko przy jednej degustacji, dodaj go jako współgospodarza tej degustacji (Przegląd → Gospodarze).",
   "ws.ownerAdds": "Tylko właściciel konta dodaje i usuwa gospodarzy.",
   "ws.addTitle": "Dodaj gospodarza do konta",
   "ws.addIntro": "Gospodarz widzi i edytuje wszystkie degustacje, wina i gości konta. Jeśli ma już własne konto, jest na obu i wybiera konto na górze menu.",
@@ -1358,6 +1358,6 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Konto może mieć najwyżej 25 gospodarzy.",
   "ws.addedActive": "{email} jest teraz gospodarzem konta.",
   "ws.addedPending": "{email} dołączy do konta przy pierwszym logowaniu tym adresem.",
-  "ws.sendLink": "Wyślij ten link do {email} – zaloguje się tym adresem i trafi do {account}:",
+  "ws.sendLink": "Wyślij ten link do {email} – zaloguje się tym adresem i trafi prosto na konto:",
   "guestLib.lastLogin": "zalogowano {when}",
 };

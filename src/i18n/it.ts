@@ -1343,7 +1343,7 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Account di {name}",
   "ws.shared": "Condivise con me",
   "ws.sharedChip": "Condivisa con te",
-  "ws.addHint": "Gli host aggiunti qui vedono e modificano tutto l’account. Se qualcuno deve aiutare solo con una degustazione, aggiungilo come co-host in quella degustazione (Impostazioni → Host).",
+  "ws.addHint": "Gli host aggiunti qui vedono e modificano tutto l’account. Se qualcuno deve aiutare solo con una degustazione, aggiungilo come co-host in quella degustazione (Panoramica → Host).",
   "ws.ownerAdds": "Solo il proprietario dell’account aggiunge e rimuove gli host.",
   "ws.addTitle": "Aggiungi un host all’account",
   "ws.addIntro": "L’host vede e modifica tutte le degustazioni, i vini e gli ospiti dell’account. Se ha già un account proprio, è su entrambi e sceglie l’account in cima al menu.",
@@ -1358,6 +1358,6 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Un account può avere al massimo 25 host.",
   "ws.addedActive": "{email} è ora host dell’account.",
   "ws.addedPending": "{email} entra nell’account al primo accesso con questa e-mail.",
-  "ws.sendLink": "Invia questo link a {email}: accede con quell’e-mail e arriva su {account}:",
+  "ws.sendLink": "Invia questo link a {email}: accede con quell’e-mail e arriva direttamente sull’account:",
   "guestLib.lastLogin": "accesso {when}",
 };

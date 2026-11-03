@@ -1474,7 +1474,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "ws.ofName": "Reikningur {name}",
   "ws.shared": "Deilt með mér",
   "ws.sharedChip": "Deilt með þér",
-  "ws.addHint": "Gestgjafar sem þú bætir við hér sjá og breyta öllu á reikningnum. Ef einhver á aðeins að hjálpa með eina smökkun skaltu bæta honum við sem meðgestgjafa í smökkuninni (Stillingar → Gestgjafar).",
+  "ws.addHint": "Gestgjafar sem þú bætir við hér sjá og breyta öllu á reikningnum. Ef einhver á aðeins að hjálpa með eina smökkun skaltu bæta honum við sem meðgestgjafa í smökkuninni (Yfirlit → Gestgjafar).",
   "ws.ownerAdds": "Aðeins eigandi reikningsins bætir við og fjarlægir gestgjafa.",
   "ws.addTitle": "Bæta gestgjafa við reikninginn",
   "ws.addIntro": "Gestgjafinn sér og breytir öllum smökkunum, vínum og gestum reikningsins. Ef viðkomandi á þegar eigin reikning er hann á báðum og velur reikning efst í valmyndinni.",
@@ -1489,6 +1489,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "ws.tooMany": "Reikningur getur haft að hámarki 25 gestgjafa.",
   "ws.addedActive": "{email} er nú gestgjafi á reikningnum.",
   "ws.addedPending": "{email} bætist við reikninginn í fyrsta sinn sem viðkomandi skráir sig inn með þessu netfangi.",
-  "ws.sendLink": "Sendu þennan tengil á {email} – viðkomandi skráir sig inn með því netfangi og lendir á {account}:",
+  "ws.sendLink": "Sendu þennan tengil á {email} – viðkomandi skráir sig inn með því netfangi og lendir beint á reikningnum:",
   "guestLib.lastLogin": "skráði sig inn {when}",
 };

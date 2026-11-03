@@ -44,13 +44,14 @@ import '../../styles/admin.css';
   import { t, formatWhen } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
   import { toast } from '../../lib/toast';
-  import { tastingRoles } from '../../lib/admin-side';
+  import { tastingRoles, visibleRoles } from '../../lib/admin-side';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
     participants: { status: string }[]; tasting_wines: { count: number }[] };
 
   let host: Awaited<ReturnType<typeof requireHost>> = null;
   let hosting = new Set<string>();
+  let shared = new Set<string>();
   let rows: Row[] = [];
   let filter: 'mine' | 'all' = 'mine';
 
@@ -61,15 +62,17 @@ import '../../styles/admin.css';
     const coming = r.participants.filter((p) => p.status === 'yes').length;
     return listRow({
       variant: 'card', cardHref: adminUrl(r.slug), title: r.title,
-      chips: hosting.has(r.id) ? [{ text: t('roles.youHost'), tone: 'strong' }] : [],
+      chips: [...(hosting.has(r.id) ? [{ text: t('roles.youHost'), tone: 'strong' as const }] : []), ...(shared.has(r.id) ? [{ text: t('ws.sharedChip') }] : [])],
       meta: [[r.starts_at ? formatWhen(r.starts_at, { year: true }) : null, r.place],
         [t('tastingsAdmin.guests', { coming, n: r.participants.length }), t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })]],
     });
   }
 
   async function load() {
-    const roles = await tastingRoles();
+    // The chosen account's tastings, and those shared with me
+    const roles = visibleRoles(await tastingRoles());
     hosting = new Set(roles.filter((x) => x.hosting).map((x) => x.tasting_id));
+    shared = new Set(roles.filter((x) => x.shared).map((x) => x.tasting_id));
     const { data } = await supabase.from('tastings')
       .select('id, slug, title, starts_at, place, participants(status), tasting_wines(count)')
       .in('id', roles.map((x) => x.tasting_id))

@@ -1,0 +1,14 @@
+---
+// Component 43 (part of the side menu) – the choice at the top of the menu: the host's accounts. A small heading and the
+// one dropdown (component 7). Hidden until sideSwitcher() in src/lib/ui/side-menu.ts fills it – and only shown when
+// there is more than one to choose from. id: the box (the dropdown is `${id}-dd`); label: an i18n key.
+import Dropdown from './Dropdown.astro';
+import { en } from '../../i18n/en';
+interface Props { id?: string; label: string }
+const { id = 'side-switch', label } = Astro.props;
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+---
+<div id={id} class="side-switch" hidden>
+  <label class="side-switch-label" for={`${id}-dd-btn`} data-i18n={label}>{tr(label)}</label>
+  <Dropdown id={`${id}-dd`} />
+</div>

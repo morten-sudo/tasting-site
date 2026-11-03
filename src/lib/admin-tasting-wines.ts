@@ -295,6 +295,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   }
   const quick = initQuickAdd({
     hostId,
+    tenantId,
     toggle: $('tw-add-toggle'),
     library: () => library,
     inHere: () => new Set(rows.map((r) => r.wine_id)),

@@ -1473,7 +1473,7 @@ export const en = {
   "ws.ofName": "{name}'s account",
   "ws.shared": "Shared with me",
   "ws.sharedChip": "Shared with you",
-  "ws.addHint": "Hosts you add here see and edit everything on the account. To let someone help with one tasting only, add them as co-host in that tasting (Settings → Hosts).",
+  "ws.addHint": "Hosts you add here see and edit everything on the account. To let someone help with one tasting only, add them as co-host in that tasting (Overview → Hosts).",
   "ws.ownerAdds": "Only the account’s owner adds and removes hosts.",
   "ws.addTitle": "Add host to the account",
   "ws.addIntro": "The host sees and edits all the account’s tastings, wines and guests. If they already have an account of their own, they are on both and choose the account at the top of the menu.",
@@ -1488,6 +1488,6 @@ export const en = {
   "ws.tooMany": "An account can have at most 25 hosts.",
   "ws.addedActive": "{email} is now a host on the account.",
   "ws.addedPending": "{email} joins the account the first time they sign in with that email.",
-  "ws.sendLink": "Send this link to {email} – they sign in with that email and land on {account}:",
+  "ws.sendLink": "Send this link to {email} – they sign in with that email and land right on the account:",
   "guestLib.lastLogin": "signed in {when}",
 } as const;

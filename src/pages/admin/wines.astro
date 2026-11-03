@@ -259,6 +259,7 @@ import '../../styles/admin.css';
     // New wine: the line above the list. Opened by "+ New wine", by ?new (help links) and when the library is empty.
     const quick = initQuickAdd({
       hostId: host.id,
+      tenantId: host.tenant_id,
       toggle: $('wine-add-toggle'),
       library: () => admin.wines(),
       href: (w) => admin.paths().get(w.id) ?? '/admin/wines/',

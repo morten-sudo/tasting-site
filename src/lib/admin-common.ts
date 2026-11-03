@@ -2,12 +2,13 @@
 import { supabase } from './supabase';
 import { parseAmount } from './wine-validate';
 import { i18nReady, t } from '../i18n';
-import { initSide } from './admin-side';
+import { initSide, currentAdmin, tastingRoles } from './admin-side';
+import { storedWorkspace, rememberWorkspace, setCurrentWorkspace, type Workspace } from './workspace';
 import { linkMe, takeCohostWelcome } from './link-me';
 
-/** The signed-in host, with their account (tenant) and whether they own it */
+/** The signed-in host, with the account (tenant) the admin shows and whether they own it, and all their accounts */
 export type Host = { id: string; email: string; name: string | null; language: string; mobilepay: string | null;
-  tenant_id: string; tenant_owner: boolean };
+  tenant_id: string; tenant_owner: boolean; workspaces: Workspace[] };
 
 export { $, mk } from './ui/dom';
 import { $, mk } from './ui/dom';
@@ -37,18 +38,42 @@ export async function requireHost(): Promise<Host | null> {
   await linkMe();
   const { data: hostId } = await supabase.rpc('current_host_id');
   if (!hostId) { $('not-host').hidden = false; return null; }
-  // A host removed from an account gets a new account of their own here
-  const [{ data: host }, { data: tenantId }] = await Promise.all([
+  // My accounts (a host removed from their last account gets a new one of their own here)
+  const [{ data: host }, { data: list }] = await Promise.all([
     supabase.from('hosts').select('id, email, name, language, mobilepay').eq('id', hostId).single(),
-    supabase.rpc('ensure_my_tenant'),
+    supabase.rpc('my_workspaces'),
   ]);
-  if (!host || !tenantId) { $('not-host').hidden = false; return null; }
-  const { data: tenant } = await supabase.from('tenants').select('owner_id').eq('id', tenantId).maybeSingle();
+  const workspaces = (list ?? []) as Workspace[];
+  if (!host || !workspaces.length) { $('not-host').hidden = false; return null; }
+  const ws = await pickWorkspace(workspaces);
+  setCurrentWorkspace(ws.id);
+  if (workspaces.length > 1) rememberWorkspace(ws.id);
 
-  initSide(data.session.user.email ?? '', signOut);
+  initSide(data.session.user.email ?? '', signOut, workspaces);
   enableImageZoom(t('admin.close'));
   showCohostWelcome();
-  return { ...host, tenant_id: tenantId as string, tenant_owner: (tenant as { owner_id: string } | null)?.owner_id === host.id } as Host;
+  return { ...host, tenant_id: ws.id, tenant_owner: ws.role === 'owner', workspaces } as Host;
+}
+
+/**
+ * The account the admin shows: the one a link names (?ws=, from an invitation), else the account of the tasting
+ * that is open, else the one chosen last on this device, else the default one. Only ever one of my own.
+ */
+async function pickWorkspace(list: Workspace[]): Promise<Workspace> {
+  const mine = (id: string | null | undefined) => list.find((w) => w.id === id);
+  const params = new URLSearchParams(location.search);
+  const asked = mine(params.get('ws'));
+  if (params.has('ws')) {
+    params.delete('ws');
+    history.replaceState(null, '', location.pathname + (params.size ? '?' + params : '') + location.hash);
+  }
+  if (asked) return asked;
+  const here = currentAdmin();
+  if (here && list.length > 1) {
+    const role = (await tastingRoles()).find((r) => r.slug === here.slug);
+    if (role && !role.shared && mine(role.tenant_id)) return mine(role.tenant_id)!;
+  }
+  return mine(storedWorkspace()) ?? list.find((w) => w.is_default) ?? list[0];
 }
 
 /** A typed amount: "144,95", "144.95", "1.234,50" or "149 kr." – null when empty or not a number. */

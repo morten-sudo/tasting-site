@@ -23,6 +23,8 @@ export type QuickWine = { id: number; name: string; producer: string | null; vin
 
 type Opts = {
   hostId: string;
+  /** The account the new wines go into (the one the admin shows) */
+  tenantId: string;
   /** The "+ New wine" button: it stays where it is and opens the new row (or goes back to it). */
   toggle: HTMLElement;
   /** The host's wines, for the search. */
@@ -309,7 +311,7 @@ export function initQuickAdd(o: Opts) {
     if (job.upload) image_url = (await job.upload) ?? null;
     const offer = r.offer && r.offer.price != null ? r.offer : null;
     const row = {
-      host_id: o.hostId, name, vintage, style, country,
+      host_id: o.hostId, tenant_id: o.tenantId, name, vintage, style, country,
       producer: r.producer?.trim() || null,
       abv: typeof r.abv === 'number' ? r.abv : null,
       region: r.region?.trim() || null, appellation: r.appellation?.trim() || null,

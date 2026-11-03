@@ -843,7 +843,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
     const { data: saved, error } = before
       ? await supabase.from('wines').update({ ...row, ...place }).eq('id', before.id).select('id').single()
-      : await supabase.from('wines').insert({ ...row, ...place, host_id: hostId }).select('id').single();
+      : await supabase.from('wines').insert({ ...row, ...place, host_id: hostId, tenant_id: tenantId }).select('id').single();
 
     setLoading(save, false);
     if (error) { toast(t('admin.wineNotSaved'), { kind: 'error' }); return; }

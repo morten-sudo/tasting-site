@@ -1,6 +1,7 @@
 // Component 43 – the one side menu for hosts and superadmin (SideMenu.astro): a column on the left on larger
 // screens; on phones "Menu" opens it as a panel from the left. One open/close code path for both.
 import { $ } from './dom';
+import { getDropdown, type DdOption } from './dropdown';
 
 export function setSideOpen(on: boolean) {
   const side = $('admin-side');
@@ -30,4 +31,16 @@ export function initSideMenu(email: string, onSignOut: () => void) {
     if (e.key === 'Escape' && $('admin-side').classList.contains('open')) { setSideOpen(false); $('side-open').focus(); }
   });
   $('side-logout').addEventListener('click', onSignOut);
+}
+
+/**
+ * The choice at the top of the menu (SideSwitch.astro: the host's accounts). Shown only when there is
+ * more than one to choose from; onChange gets the value picked.
+ */
+export function sideSwitcher(options: DdOption[], value: string, onChange: (value: string) => void, id = 'side-switch') {
+  const box = $(id);
+  if (!box) return null;
+  box.hidden = options.length < 2;
+  if (box.hidden) return null;
+  return getDropdown(`${id}-dd`, { options, value, onChange });
 }

@@ -1,6 +1,8 @@
 ---
 import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
+import Notice from '../../components/ui/Notice.astro';
+import Icon from '../../components/ui/Icon.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
@@ -25,12 +27,34 @@ import '../../styles/admin.css';
         </EmptyState>
       </section>
 
-      <!-- The account's hosts: the owner first; only the owner removes others -->
+      <!-- The account's hosts: the owner first, then the hosts, then invitations not yet accepted; only the owner adds and removes -->
       <section class="block">
-        <h2><span data-i18n="account.hostsTitle">Hosts on the account</span><span data-help="account-hosts"></span></h2>
+        <PageHeader size="section">
+          <Fragment slot="title"><span data-i18n="account.hostsTitle">Hosts on the account</span><span data-help="account-hosts"></span></Fragment>
+          <Fragment slot="actions">
+          <button id="member-open" class="btn small" type="button" hidden><Icon name="plus" /><span data-i18n="hosts.add">Add host</span></button>
+          </Fragment>
+        </PageHeader>
         <ul id="members" class="list"></ul>
-        <p class="hint" data-i18n="account.addHint">New hosts join the account when you add them as co-host of a tasting (Settings → Hosts in the tasting).</p>
+        <p id="members-hint" class="hint" data-i18n="ws.addHint">Hosts you add here see and edit everything on the account. To let someone help with one tasting only, add them as co-host in that tasting (Overview → Hosts).</p>
       </section>
+
+      <Sheet id="member-panel" title="ws.addTitle" titleId="member-title" form="member-form">
+        <p class="help" data-i18n="ws.addIntro">The host sees and edits all the account's tastings, wines and guests. If they already have an account of their own, they are on both and choose the account in the menu.</p>
+        <label for="member-email" data-i18n="common.email">Email</label>
+        <input class="input" id="member-email" type="email" inputmode="email" autocomplete="off" />
+        <label for="member-name"><span data-i18n="admin.name">Name</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
+        <input class="input" id="member-name" type="text" autocomplete="off" maxlength="80" />
+        <!-- The invitation mail could not be sent: the link to pass on yourself -->
+        <Notice id="member-link" tone="warn" title="hosts.mailFailed" hidden>
+          <p id="member-link-text"></p>
+          <div class="copy-row">
+            <input class="input small" id="member-link-url" type="text" readonly aria-labelledby="member-link-text" />
+            <button id="member-link-copy" class="icon-act strong" type="button" aria-label="Copy" data-tip="Copy" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
+          </div>
+        </Notice>
+        <button slot="foot" id="member-add-btn" class="btn" type="submit" data-i18n="hosts.add">Add host</button>
+      </Sheet>
 
       <Sheet id="name-panel" title="account.nameTitle" titleId="name-panel-title" form="name-form">
         <label for="name-input" data-i18n="account.nameLabel">The account's name</label>
@@ -52,16 +76,13 @@ import '../../styles/admin.css';
   import { confirmModal } from '../../lib/confirm';
   import { toast } from '../../lib/toast';
   import { fieldError } from '../../lib/field-error';
-  import { t } from '../../i18n';
+  import { setLoading } from '../../lib/ui/button';
+  import { copyText } from '../../lib/ui/copy';
+  import { t, lang } from '../../i18n';
 
-  type Member = { email: string; name: string | null; owner: boolean; me: boolean };
+  type Member = { email: string; name: string | null; owner: boolean; me: boolean; pending: boolean };
 
   const host = await requireHost();
-  if (host) {
-    $('admin-main').hidden = false;
-    await Promise.all([loadName(), loadMembers()]);
-    followHelpLink();
-  }
 
   // ---------- Name ----------
   let name = '';
@@ -85,7 +106,7 @@ import '../../styles/admin.css';
   $('name-add').addEventListener('click', openName);
   $('name-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const { error } = await supabase.rpc('set_tenant_name', { n: $<HTMLInputElement>('name-input').value });
+    const { error } = await supabase.rpc('set_tenant_name', { n: $<HTMLInputElement>('name-input').value, tn: host!.tenant_id });
     if (error) { fieldError($('name-input'), t('admin.changeNotSaved')); return; }
     panel.close();
     toast(t('common.saved'));
@@ -93,31 +114,106 @@ import '../../styles/admin.css';
   });
 
   // ---------- Hosts ----------
+  let members: Member[] = [];
   async function loadMembers() {
-    const { data } = await supabase.rpc('tenant_members');
-    const rows = (data ?? []) as Member[];
-    $('members').replaceChildren(...rows.map((r) => {
+    const { data } = await supabase.rpc('tenant_members', { tn: host!.tenant_id });
+    members = (data ?? []) as Member[];
+    $('member-open').hidden = !host!.tenant_owner;
+    $('members-hint').textContent = host!.tenant_owner ? t('ws.addHint') : t('ws.ownerAdds');
+    $('members').replaceChildren(...members.map((r) => {
+      const who = r.name || r.email;
       const actions: HTMLElement[] = [];
-      // The owner can remove other hosts; the owner can never be removed
+      // The owner can remove other hosts and take back invitations; the owner can never be removed
       if (host!.tenant_owner && !r.owner) {
-        // Remove a host: a quiet icon, asked about first in a small window
-        const del = iconButton('trash', `${t('hosts.remove')}: ${r.name || r.email}`, { quiet: true });
-        del.dataset.tip = t('hosts.remove');
+        // A quiet icon, asked about first in a small window
+        const label = r.pending ? t('ws.withdraw') : t('hosts.remove');
+        const del = iconButton('trash', `${label}: ${who}`, { quiet: true });
+        del.dataset.tip = label;
         del.addEventListener('click', async () => {
-          if (!(await confirmModal({ title: t('account.removeQ', { name: r.name || r.email }), ok: t('hosts.remove'), danger: true }))) return;
-          const { error } = await supabase.rpc('remove_tenant_member', { e: r.email });
+          const ok = await confirmModal(r.pending
+            ? { title: t('ws.withdrawQ', { email: r.email }), ok: t('ws.withdraw'), danger: true }
+            : { title: t('account.removeQ', { name: who }), text: t('ws.removeText'), ok: t('hosts.remove'), danger: true });
+          if (!ok) return;
+          const { error } = await supabase.rpc('remove_tenant_member', { e: r.email, tn: host!.tenant_id });
           if (error) { toast(t('hosts.failed'), { kind: 'error' }); return; }
-          toast(t('hosts.removed', { name: r.name || r.email }), { kind: 'ok' });
+          toast(r.pending ? t('ws.withdrawn', { email: r.email }) : t('hosts.removed', { name: who }), { kind: 'ok' });
           loadMembers();
         });
         actions.push(del);
       }
       // The same row as the guests
       return personRow({
-        name: r.name || r.email, you: r.me ? t('hosts.you') : null, meta: r.name ? [r.email] : [],
-        chips: [r.owner ? { text: t('account.owner'), tone: 'strong' } : { text: t('account.host') }], actions,
+        name: who, you: r.me ? t('hosts.you') : null, meta: r.name ? [r.email] : [],
+        chips: [r.owner ? { text: t('account.owner'), tone: 'strong' } : r.pending ? { text: t('ws.invited'), tone: 'wait' } : { text: t('account.host') }], actions,
       });
     }));
+  }
+
+  // ---------- Adding a host: the side panel ----------
+  const memberPanel = sheetPanel($<HTMLDialogElement>('member-panel'), { dirty: 'form' });
+  const emailInput = $<HTMLInputElement>('member-email');
+  $('member-open').addEventListener('click', () => {
+    fieldError(emailInput, null);
+    $('member-link').hidden = true;
+    memberPanel.open();
+    if (matchMedia('(min-width: 48rem)').matches) emailInput.focus();
+  });
+  const say = (text: string) => { fieldError(emailInput, text); emailInput.focus(); };
+  // The link an invited host opens: sign in, then straight to this account
+  const linkFor = () => `${location.origin}/login/?next=${encodeURIComponent(`/admin/?ws=${host!.tenant_id}`)}`;
+  $('member-link-copy').addEventListener('click', () => copyText($<HTMLInputElement>('member-link-url').value, t('hosts.linkCopied'), $<HTMLInputElement>('member-link-url')));
+
+  async function sendInvite(email: string, name: string) {
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      const res = await fetch('/api/invite-host', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ tenant_id: host!.tenant_id, email, name: name || null, lang: lang() }),
+      });
+      return res.ok && ((await res.json()) as { sent?: boolean }).sent === true;
+    } catch { return false; }
+  }
+
+  $('member-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say(t('guest.emailBad')); return; }
+    const known = members.find((m) => m.email === email);
+    if (known) { say(known.owner ? t('ws.isOwner') : known.pending ? t('ws.alreadyInvited', { email }) : t('ws.alreadyMember', { email })); return; }
+    const btn = $<HTMLButtonElement>('member-add-btn');
+    setLoading(btn, true);
+    const { data, error } = await supabase.rpc('add_tenant_member', { e: email, tn: host!.tenant_id });
+    if (error) {
+      setLoading(btn, false);
+      if (error.message.includes('already_member')) say(t('ws.alreadyMember', { email }));
+      else if (error.message.includes('too_many')) say(t('ws.tooMany'));
+      else if (error.message.includes('bad_email')) say(t('guest.emailBad'));
+      else toast(t('hosts.failed'), { kind: 'error' });
+      return;
+    }
+    const added = data === 'active' ? t('ws.addedActive', { email }) : t('ws.addedPending', { email });
+    loadMembers();
+    const sent = await sendInvite(email, $<HTMLInputElement>('member-name').value.trim());
+    setLoading(btn, false);
+    emailInput.value = '';
+    $<HTMLInputElement>('member-name').value = '';
+    memberPanel.markClean();
+    // Sent: done – the panel closes and says so. Not sent: the panel stays with the link to pass on.
+    if (sent) { memberPanel.close(); toast(`${added} ${t('hosts.mailSent', { email })}`); }
+    else {
+      toast(added);
+      $('member-link').hidden = false;
+      $('member-link-text').textContent = t('ws.sendLink', { email });
+      $<HTMLInputElement>('member-link-url').value = linkFor();
+    }
+  });
+
+  // ---------- Startup (after everything above is defined) ----------
+  if (host) {
+    $('admin-main').hidden = false;
+    await Promise.all([loadName(), loadMembers()]);
+    followHelpLink();
   }
 </script>
 

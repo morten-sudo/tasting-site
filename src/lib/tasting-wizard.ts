@@ -52,7 +52,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
       return;
     }
     const { data, error } = await supabase.rpc('create_tasting', {
-      title, place: null, mobilepay: null, starts_at: readWhen('wz'), ...readAddress('wz'),
+      title, place: null, mobilepay: null, starts_at: readWhen('wz'), ...readAddress('wz'), tn: host.tenant_id,
     });
     if (error || !data) { toast(t('admin.createFailed'), { kind: 'error' }); return; }
     const tasting = data as Tasting;
