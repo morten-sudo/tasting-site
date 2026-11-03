@@ -185,7 +185,7 @@ import '../../styles/admin.css';
       type R = { kind: string; at: string; tasting: string; guest: string; bottles: number; amount: number; paid: boolean };
       fillTable<R>('payments', (data ?? []) as R[], [
         { key: 'at', label: t('super.when'), nowrap: true, sort: (r) => r.at, desc: true, cell: (r) => date.format(new Date(r.at)) },
-        { key: 'kind', label: t('super.kind'), cell: (r) => (r.kind === 'order' ? `${t('super.order')} · ${r.bottles} fl.` : t('super.fee')) },
+        { key: 'kind', label: t('super.kind'), cell: (r) => (r.kind === 'order' ? `${t('super.order')} · ${t('count.bottles', { n: Number(r.bottles) })}` : t('super.fee')) },
         { key: 'tasting', label: t('page.tasting'), sort: (r) => r.tasting },
         { key: 'guest', label: t('admin.name'), sort: (r) => r.guest },
         { key: 'amount', label: t('super.amount'), num: true, sort: (r) => Number(r.amount), desc: true, cell: (r) => formatKr(r.amount) },

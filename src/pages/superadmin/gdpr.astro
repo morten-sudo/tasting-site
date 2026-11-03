@@ -35,7 +35,7 @@ import '../../styles/admin.css';
 <script>
   import { table } from '../../lib/ui/table';
   import { supabase } from '../../lib/supabase';
-  import { t } from '../../i18n';
+  import { t, locale } from '../../i18n';
   import { requireAdmin, $, mk, timeFmt } from '../../lib/super-common';
   import { eventText } from '../../lib/super-events';
   import { confirmModal } from '../../lib/ui/confirm';
@@ -79,7 +79,9 @@ import '../../styles/admin.css';
     if (error || !data) { toast(t('admin.couldNotSave'), { kind: 'error' }); return; }
     const sum = data as Summary;
     const rows: string[] = [];
-    if (sum.host) rows.push(t('super.gdprHost', { tastings: sum.host.tastings, wines: sum.host.wines, guests: sum.host.guests }));
+    // Each count in its own form ("1 tasting", "3 wines")
+    if (sum.host) rows.push(t('super.gdprHostList', { list: new Intl.ListFormat(locale(), { type: 'conjunction' }).format([
+      t('count.tastings', { n: sum.host.tastings }), t('count.wines', { n: sum.host.wines }), t('count.guests', { n: sum.host.guests })]) }));
     if (sum.invitations) rows.push(t('super.gdprInvites', { n: sum.invitations, orders: sum.orders, ratings: sum.ratings, chat: sum.chat_messages }));
     if (sum.library_entries) rows.push(t('super.gdprLibrary', { n: sum.library_entries }));
     if (sum.account) rows.push(t('super.gdprAccount'));

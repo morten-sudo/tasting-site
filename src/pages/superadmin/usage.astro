@@ -160,7 +160,8 @@ import '../../styles/admin.css';
     $('u-db').replaceChildren(meter(t('usage.db'), u.db_bytes, 500e6, `${mb(u.db_bytes)} / 500 MB`));
     $('u-storage').replaceChildren(meter(t('usage.storage'), u.storage_bytes, 1e9, `${mb(u.storage_bytes)} / 1 GB`));
     $('u-mau').replaceChildren(meter(t('usage.mau'), u.mau, 50000));
-    $('u-counts').textContent = t('usage.counts', { users: u.users, tastings: u.counts.tastings, wines: u.counts.wines, guests: u.counts.guests, orders: u.counts.orders });
+    $('u-counts').textContent = [t('count.users', { n: u.users }), t('count.tastings', { n: u.counts.tastings }), t('count.wines', { n: u.counts.wines }),
+      t('count.invitations', { n: u.counts.guests }), t('count.orders', { n: u.counts.orders })].join(' · ');
   }
 
   async function loadCloudflare() {
