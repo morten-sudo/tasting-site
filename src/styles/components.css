@@ -1181,6 +1181,12 @@ main { position: relative; isolation: isolate; }
 .page-bg { top: -1rem; right: 0; width: min(46vw, 34rem); height: 30rem; opacity: 0.22; }
 .page-bg > svg { width: 100%; height: 100%; }
 @media (max-width: 40rem) { .page-bg { width: 80vw; height: 20rem; opacity: 0.16; } }
+/* The page's map stays put while the page scrolls (every page, the tasting's heading, the sign-up page) */
+.page-bg, .hero-light > .hero-bg, .has-map-bg:not(.card) > .hero-bg.left { position: fixed; }
+.page-bg, .hero-light > .hero-bg { top: calc(var(--header-h, 4.5rem) - 1rem); }
+.hero-light > .hero-bg { right: 0; }
+.has-map-bg:not(.card) > .hero-bg.left { top: calc(var(--header-h, 4.5rem) - 0.5rem); bottom: auto; height: min(34rem, 80vh); left: 0; }
+@media (max-width: 40rem) { .hero-light > .hero-bg { width: 100vw; } }
 /* In a card: the right part of the card, clipped by it */
 .card.has-map-bg { overflow: hidden; }
 .card > .hero-bg { inset: 0; width: auto; opacity: 0.3;

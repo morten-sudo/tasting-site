@@ -55,6 +55,9 @@ const site = 'https://winetastr.com';
     <script>
       import { pageBackground } from '../lib/ui/map-background';
       pageBackground(document.getElementById('page-bg')!);
+      // The header's height, for what sits just below it (the fixed background map, sticky panels)
+      const siteHeader = document.querySelector<HTMLElement>('.site-header');
+      if (siteHeader) new ResizeObserver(() => document.documentElement.style.setProperty('--header-h', siteHeader.offsetHeight + 'px')).observe(siteHeader);
       import { getCart, cartCount } from '../lib/cart';
       import { setBadge } from '../lib/ui/badge';
       import { supabase } from '../lib/supabase';
