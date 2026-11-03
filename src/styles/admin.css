@@ -238,7 +238,8 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .help-toc a { color: var(--amber); font-size: 0.95rem; }
 .admin-page .help-list { display: grid; gap: 0.6rem; }
 .admin-page .help-body { max-width: 44rem; }
-.admin-page .help-body h4 { margin: 1.1rem 0 0.3rem; font-size: 1rem; scroll-margin-top: 6rem; }
+/* Sub-headings in a topic (h2: the topics are folding boxes, not headings) look as the sub-heading (h3) */
+.admin-page .help-body h2 { margin: 1.1rem 0 0.3rem; font-family: var(--body); font-weight: 600; font-size: 1rem; line-height: 1.3; letter-spacing: 0; scroll-margin-top: 6rem; }
 .admin-page .help-body ol, .admin-page .help-body ul { padding-left: 1.3rem; }
 .admin-page .help-body li { margin: 0.3rem 0; }
 .admin-page #help-list > .disc { scroll-margin-top: 6rem; }

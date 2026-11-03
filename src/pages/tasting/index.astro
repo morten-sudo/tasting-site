@@ -209,6 +209,8 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     // The host's introduction: plain text, blank lines separate paragraphs
     const intro = typeof info.intro === 'string' ? info.intro.trim() : '';
     $('h-intro').replaceChildren(...intro.split(/\n\s*\n/).map((para) => mk('p', '', para.trim())));
+    // The host's own words, in the tasting's language (screen readers read them in that language)
+    if (typeof info.language === 'string' && info.language) { $('h-intro').lang = info.language; const name = document.getElementById('t-title'); if (name) name.lang = info.language; }
     $('intro-block').hidden = !intro;
     // Tiles for the evening
     ($('tile-wines') as HTMLAnchorElement).href = tastingUrl(slug, 'wines/');

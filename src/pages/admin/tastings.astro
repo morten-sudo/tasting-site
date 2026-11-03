@@ -21,9 +21,9 @@ import '../../styles/admin.css';
       </PageHeader>
 
       <section>
-        <h3 id="upcoming-h" data-i18n="tastings.upcoming" hidden>Upcoming</h3>
+        <h2 id="upcoming-h" class="h3" data-i18n="tastings.upcoming" hidden>Upcoming</h2>
         <ul id="upcoming" class="cards tasting-cards"></ul>
-        <h3 id="past-h" data-i18n="tastings.past" hidden>Past</h3>
+        <h2 id="past-h" class="h3" data-i18n="tastings.past" hidden>Past</h2>
         <ul id="past" class="cards tasting-cards"></ul>
         <EmptyState id="intro" icon="calendar" title="admin.noTastingsTitle" text="admin.welcomeHost" hidden>
           <button id="intro-new" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
@@ -125,3 +125,7 @@ import '../../styles/admin.css';
     if (deleted) { history.replaceState(null, '', '/admin/tastings/'); toast(t('tastingDelete.done', { title: deleted }), { kind: 'ok' }); }
   }
 </script>
+
+<style>
+  #past-h { margin-top: 1.75rem; }
+</style>

@@ -488,7 +488,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const manages = tasting.host_id === host.id || (host.tenant_owner && tasting.tenant_id === host.tenant_id);
     initHosts(tasting.id, slug, manages);
     $('delete-tasting').hidden = !manages;
-    document.title = `${tasting.title} – Winetastr`;
+    // Not the same as the guest page's title: the admin says so
+    document.title = `${tasting.title} – ${t('page.admin')} – Winetastr`;
     $('ta-title').textContent = tasting.title;
     ($('t-guestpage') as HTMLAnchorElement).href = tastingUrl(slug);
     document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a[data-apath]').forEach((a) => { a.href = `/t/${slug}/admin/${a.dataset.apath}`; });
