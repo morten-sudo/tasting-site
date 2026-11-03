@@ -49,6 +49,7 @@ const opts = [
     <AdminNav>
     <div id="admin-main" class="dv" hidden>
       <PageHeader title="Components" lead="Every shared component in its states – the real components and the real stylesheet. A missing one is added to src/components/ui or src/lib/ui first and shown here." />
+      <p class="dv-maps-link">All the site's maps, with where each is used: <a href="/dev/maps/">/dev/maps/</a></p>
       <nav class="dv-toc" aria-label="Groups">
         <a href="#g-a">A. Basics</a><a href="#g-b">B. Choices</a><a href="#g-c">C. Display</a><a href="#g-d">D. Lists and rows</a>
         <a href="#g-e">E. Panels, messages and states</a><a href="#g-f">F. Page structure</a><a href="#g-g">G. Guest parts</a>
@@ -582,6 +583,7 @@ const opts = [
 <style is:global>
   /* The page's own layout (global: the script builds parts of it; every class starts with dv-): the groups, one component after the other, a label column for the states */
   .dv { max-width: 60rem; }
+  .dv-maps-link { margin: -0.5rem 0 1rem; font-size: 0.92rem; }
   .dv-toc { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: -0.5rem 0 1rem; font-size: 0.92rem; }
   .dv-group { margin-top: 2.5rem; }
   .dv-comp { padding: 1.5rem 0; border-top: 1px solid var(--lodge-3); scroll-margin-top: 5rem; }

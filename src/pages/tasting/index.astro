@@ -142,11 +142,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { payBox, setPayee } from '../../lib/pay';
   import { i18nReady, t, formatWhen, lang } from '../../i18n';
-  import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from '../../lib/region-map';
-  import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from '../../lib/overview-map';
-  import { mapZoom } from '../../lib/ui/map-zoom';
-  import { countryName } from '../../lib/origin';
-  import { setMapCredit, OVERVIEW_SOURCES } from '../../lib/wine-map';
+  import { showOrigins as drawOrigins, type MapWine } from '../../lib/tasting-origins';
 
   await i18nReady;
 
@@ -227,90 +223,9 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     });
   }
 
-  // ---------- Where the wines come from ----------
-  type MapWine = { id: number; sort_order: number; name: string; region: string | null; appellation: string | null; appellation_id: string | null; country: string | null;
-    producer: string | null; producer_lat?: number | null; producer_lon?: number | null };
-  async function showOrigins(wines: MapWine[]) {
-    const region = mainRegion(wines);
-    const map = region ? await loadMap(region) : null;
-    if (!map) { await showOverviewOrigins(wines); return; }
-    const groups = await groupWines(map, wines);
-    const counts = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.count]));
-    const titles = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.title]));
-    const whole = groups.some((g) => g.whole);
-    // Faint map behind the heading
-    $('hero-map').innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion: whole && !counts.size });
-    // The map card; on phones it zooms to the filled appellations
-    const box = $('origin-map');
-    // Producers with an exact place get a pin (one per producer)
-    const pins = [...new Map(wines.filter((w) => w.producer_lat != null && w.producer_lon != null)
-      .map((w) => [`${w.producer_lat},${w.producer_lon}`, { lon: w.producer_lon!, lat: w.producer_lat!, title: w.producer ?? '' }])).values()];
-    box.innerHTML = drawMap(map, { counts, titles, wholeRegion: whole && !counts.size, pins });
-    // Shown before zooming: sizes can only be measured on a visible map
-    $('origin-block').hidden = false;
-    if (matchMedia('(max-width: 40rem)').matches) fitToAreas(box.querySelector('svg')!, map);
-    mapZoom(box);
-    // The legend: number of wines per appellation, with their numbers in the evening
-    const no = new Map(wines.map((w, i) => [w.id, i + 1]));
-    const byId = new Map(wines.map((w) => [w.id, w]));
-    $('origin-legend').replaceChildren(...await Promise.all(groups.map(async (g) => {
-      const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((id) => no.get(id) ?? 0)) });
-      const li = legendItem(g.inMap ? 'in-map' : g.whole ? 'whole' : 'other', g.count, g.title,
-        g.inMap ? nums : g.whole ? `${t('map.wholeRegion', { region: map.name })} · ${nums}` : `${t('map.otherRegion')} · ${nums}`);
-      // Wines from another region: a small map of their country with the place marked
-      if (!g.inMap && !g.whole) {
-        const places = (await Promise.all(g.wines.map((id) => placeOf(byId.get(id)!)))).filter((p): p is Place => !!p);
-        if (places.length) {
-          const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
-          if (ov) {
-            const inset = mk('span', 'map-box');
-            inset.innerHTML = drawOverview(ov, places.map((p) => ({ lon: p.lon, lat: p.lat })), focus, 'inset');
-            li.querySelector('.txt')!.append(inset);
-          }
-        }
-      }
-      return li;
-    })));
-    setMapCredit($('origin-map'), map.sources, pins.length > 0, $('map-source'));
-    $('origin-block').hidden = false;
-  }
-
-  // No detailed map for these wines: the overview map with a numbered pin per place
-  async function showOverviewOrigins(wines: MapWine[]) {
-    const placed = (await Promise.all(wines.map(async (w) => ({ w, p: await placeOf(w) })))).filter((x) => x.p) as { w: MapWine; p: Place }[];
-    if (!placed.length) return;
-    const groups = new Map<string, { p: Place; wines: MapWine[] }>();
-    for (const { w, p } of placed) {
-      const key = `${p.lon.toFixed(2)},${p.lat.toFixed(2)}`;
-      const g = groups.get(key) ?? { p, wines: [] };
-      g.wines.push(w);
-      groups.set(key, g);
-    }
-    const list = [...groups.values()].sort((a, b) => b.wines.length - a.wines.length);
-    const places = list.map((g) => g.p);
-    const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
-    if (!ov) return;
-    const pins = list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.wines.length, label: g.p.label }));
-    $('origin-map').innerHTML = drawOverview(ov, pins, focus, 'full');
-    mapZoom($('origin-map'));
-    $('hero-map').innerHTML = '';
-    const no = new Map(wines.map((w, i) => [w.id, i + 1]));
-    $('origin-legend').replaceChildren(...list.map((g) => {
-      const where = [g.wines[0].region, countryName(g.p.country)].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
-      const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((w) => no.get(w.id) ?? 0)) });
-      return legendItem('in-map', g.wines.length, g.p.label, [where, nums].filter(Boolean).join(' · '));
-    }));
-    setMapCredit($('origin-map'), OVERVIEW_SOURCES, false, $('map-source'));
-    $('origin-block').hidden = false;
-  }
-
-  // One line of the map's legend (component 23): the number of wines in a circle, the place, what it covers
-  function legendItem(kind: string, count: number, titleText: string, subText: string) {
-    const li = mk('li', kind);
-    const text = mk('span', 'txt');
-    text.append(mk('b', '', titleText), mk('span', 'sub', subText));
-    li.append(mk('span', 'no', String(count)), text);
-    return li;
+  // ---------- Where the wines come from (src/lib/tasting-origins.ts) ----------
+  function showOrigins(wines: MapWine[]) {
+    return drawOrigins(wines, { hero: $('hero-map'), block: $('origin-block'), box: $('origin-map'), legend: $('origin-legend'), credit: $('map-source') });
   }
 
   function setComing(n: unknown) {
