@@ -4,6 +4,7 @@
 // middle of its region (wine_regions) or in the middle of its country. Land and borders come from Natural Earth (scripts/build-overview.py).
 import { supabase } from './supabase';
 import { esc } from './ui/dom';
+import { anchored } from './region-map';
 import { loadAppellations, loadRegions, matchRegion, normOrigin, countryName } from './origin';
 
 export type OverviewMap = { id: string; w: number; h: number; proj: { lon0: number; lat1: number; k: number; s: number }; land: string; border: string };
@@ -128,33 +129,37 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
   const u = w / 100; // one unit ≈ 1 % of the width, so pins and text keep their size at any zoom
   const parts = [`<svg class="region-map overview ${mode}" viewBox="${x0.toFixed(1)} ${y0.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}" xmlns="http://www.w3.org/2000/svg" role="img">`,
     `<rect class="rm-sea" x="${x0}" y="${y0}" width="${w}" height="${h}"/>`];
-  const dash = `stroke-width:${(u * 0.18).toFixed(2)};stroke-dasharray:${(u * 1.2).toFixed(1)} ${(u * 0.6).toFixed(1)}`;
+  // Line widths follow the zoom (map-zoom.ts sets --z), so they keep their width on screen
+  const zw = (v: number) => `calc(var(--z, 1) * ${v.toFixed(2)}px)`;
+  const dash = `stroke-width:${zw(u * 0.18)};stroke-dasharray:${zw(u * 1.2)} ${zw(u * 0.6)}`;
   if (detail) {
     // Zoomed in: Natural Earth's detailed shapes, projected the same way as the overview
     const d = (shape: [number, number][], close: boolean) => 'M' + shape.map(([lon, lat]) => xy(lon, lat).map((v) => v.toFixed(2)).join(' ')).join('L') + (close ? 'Z' : '');
     for (const tile of detail.land) parts.push(`<path class="rm-land" fill-rule="evenodd" d="${tile.map((r) => d(r, true)).join('')}"/>`);
     if (detail.lakes.length) parts.push(`<path class="rm-sea" fill-rule="evenodd" d="${detail.lakes.map((r) => d(r, true)).join('')}"/>`);
-    if (detail.rivers.length) parts.push(`<path class="rm-river" d="${detail.rivers.map((r) => d(r, false)).join('')}" style="stroke-width:${(u * 0.22).toFixed(2)};opacity:.55"/>`);
-    if (detail.coast.length) parts.push(`<path class="rm-coast" d="${detail.coast.map((r) => d(r, false)).join('')}" style="stroke:#c9b9a8;stroke-width:${(u * 0.16).toFixed(2)}"/>`);
+    if (detail.rivers.length) parts.push(`<path class="rm-river" d="${detail.rivers.map((r) => d(r, false)).join('')}" style="stroke-width:${zw(u * 0.22)};opacity:.55"/>`);
+    if (detail.coast.length) parts.push(`<path class="rm-coast" d="${detail.coast.map((r) => d(r, false)).join('')}" style="stroke:#c9b9a8;stroke-width:${zw(u * 0.16)}"/>`);
     if (detail.border.length) parts.push(`<path class="rm-border" d="${detail.border.map((r) => d(r, false)).join('')}" style="${dash}"/>`);
   } else {
-    parts.push(`<path class="rm-land" d="${map.land}" style="stroke:#c9b9a8;stroke-width:${(u * 0.12).toFixed(2)}"/>`,
+    parts.push(`<path class="rm-land" d="${map.land}" style="stroke:#c9b9a8;stroke-width:${zw(u * 0.12)}"/>`,
       `<path class="rm-border" d="${map.border}" style="${dash}"/>`);
   }
   for (const p of pins) {
     const [x, y] = xy(p.lon, p.lat);
     const r = mode === 'inset' ? u * 3.2 : u * 1.6;
-    parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(r * 2.6).toFixed(1)}" fill="#6e0f1f" fill-opacity=".14"/>`);
+    // Drawn around 0 0 at the place (anchored): the zoom keeps pins, numbers and names their size on screen
+    const m: string[] = [`<circle r="${(r * 2.6).toFixed(1)}" fill="#6e0f1f" fill-opacity=".14"/>`];
     if (p.n) {
       const rr = u * 2.6;
-      parts.push(`<g class="rm-badge"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rr.toFixed(1)}" style="stroke-width:${(u * 0.4).toFixed(2)}"/><text class="rm-badge-n" x="${x.toFixed(1)}" y="${(y + u * 1.1).toFixed(1)}" style="font-size:${(u * 3).toFixed(1)}px">${p.n}</text></g>`);
+      m.push(`<g class="rm-badge"><circle r="${rr.toFixed(1)}" style="stroke-width:${(u * 0.4).toFixed(2)}"/><text class="rm-badge-n" y="${(u * 1.1).toFixed(1)}" style="font-size:${(u * 3).toFixed(1)}px">${p.n}</text></g>`);
     } else {
-      parts.push(`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#6e0f1f" stroke="#fff" stroke-width="${(u * 0.5).toFixed(2)}"/>`);
+      m.push(`<circle r="${r.toFixed(1)}" fill="#6e0f1f" stroke="#fff" stroke-width="${(u * 0.5).toFixed(2)}"/>`);
     }
     if (p.label && mode !== 'inset') {
       const fs = u * 3.4;
-      parts.push(`<text class="rm-badge-title" x="${(x + u * 3.4).toFixed(1)}" y="${(y - u * 1.2).toFixed(1)}" style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.25).toFixed(1)}px">${esc(p.label)}</text>`);
+      m.push(`<text class="rm-badge-title" x="${(u * 3.4).toFixed(1)}" y="${(-u * 1.2).toFixed(1)}" style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.25).toFixed(1)}px">${esc(p.label)}</text>`);
     }
+    parts.push(anchored(x, y, m.join('')));
   }
   parts.push('</svg>');
   return parts.join('');

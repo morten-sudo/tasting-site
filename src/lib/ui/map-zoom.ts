@@ -1,7 +1,7 @@
 // Zoom for every map (component 23): + and − in the map's corner, double-click or double-tap to zoom in, pinch on a
 // phone or trackpad (ctrl + wheel), and drag to move around once zoomed. The page still scrolls normally with the
 // wheel and one finger – the map only moves after it has been zoomed in. Works on the SVG's viewBox, so lines and
-// labels stay sharp. Call it again after the map is redrawn (it reads the new SVG).
+// labels stay sharp; names, numbers, pins and line widths keep their size on screen at every zoom. Call it again after the map is redrawn (it reads the new SVG).
 import { t } from '../../i18n';
 import { iconButton } from './icon-button';
 
@@ -22,6 +22,11 @@ export function mapZoom(box: HTMLElement) {
     const x = Math.min(Math.max(v.x, home.x), home.x + home.w - w), y = Math.min(Math.max(v.y, home.y), home.y + home.h - h);
     view = { x, y, w, h };
     svg.setAttribute('viewBox', `${x.toFixed(2)} ${y.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)}`);
+    // Only the land gets bigger: names, numbers, pins and dots are scaled back (each around its own point) and
+    // the lines keep their width (--z in the maps' CSS)
+    const z = w / home.w;
+    svg.style.setProperty('--z', z.toFixed(4));
+    for (const g of svg.querySelectorAll('.rm-s')) g.setAttribute('transform', `scale(${z.toFixed(4)})`);
     const zoomed = w < home.w - 0.5;
     box.classList.toggle('zoomed', zoomed);
     out.disabled = !zoomed;

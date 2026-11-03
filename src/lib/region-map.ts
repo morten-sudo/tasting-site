@@ -25,7 +25,11 @@ export function mapPoint(map: RegionMap, lon: number, lat: number): [number, num
 
 /** A map pin whose tip is at (x, y). */
 export const pinSvg = (x: number, y: number, title = '', scale = 1) =>
-  `<g class="rm-pin" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})">${title ? `<title>${esc(title)}</title>` : ''}<path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"/><circle cy="-22" r="4"/></g>`;
+  `<g class="rm-pin" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})">${title ? `<title>${esc(title)}</title>` : ''}<g class="rm-s"><path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"/><circle cy="-22" r="4"/></g></g>`;
+/** A marker or label anchored at (x, y): its content is drawn around 0 0 inside .rm-s, which the map's zoom
+ *  (map-zoom.ts) scales back so names, numbers, pins and dots keep their size on screen at any zoom */
+export const anchored = (x: number, y: number, inner: string, cls = '') =>
+  `<g${cls ? ` class="${cls}"` : ''} transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g class="rm-s">${inner}</g></g>`;
 
 // Regions that have a map, by the region name stored on wines
 const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro', bourgogne: 'bourgogne', burgundy: 'bourgogne', champagne: 'champagne', roussillon: 'roussillon',
@@ -155,7 +159,7 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
       };
       const spot = spots.find((sp) => !hits(box(sp)) && box(sp).x0 >= 0 && box(sp).x1 <= map.w) ?? spots[0];
       taken.push(box(spot));
-      titleSvg.push(`<text class="rm-badge-title" x="${spot[0].toFixed(0)}" y="${spot[1].toFixed(0)}" text-anchor="${spot[2]}">${esc(title)}</text>`);
+      titleSvg.push(anchored(b.x, b.y, `<text class="rm-badge-title" x="${(spot[0] - b.x).toFixed(0)}" y="${(spot[1] - b.y).toFixed(0)}" text-anchor="${spot[2]}">${esc(title)}</text>`));
     }
     // Towns, unless they would clash with a label or repeat an appellation's name
     const named = [...titles.values()].map((t) => normOrigin(t));
@@ -165,17 +169,17 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
       const tb = { x0: t.x - 4, y0: t.y - 6 - fs, x1: t.x + 7 + t.name.length * fs * 0.48, y1: t.y + 4 };
       if (t.size !== 'big' && (hits(tb) || named.some((n) => n.includes(normOrigin(t.name).split(' ')[0])))) continue;
       taken.push(tb);
-      parts.push(`<g class="rm-town ${t.size}"><circle cx="${t.x}" cy="${t.y}" r="${r}"/><text x="${t.x + 7}" y="${t.y - 6}" font-size="${fs}">${esc(t.name)}</text></g>`);
+      parts.push(anchored(t.x, t.y, `<circle r="${r}"/><text x="7" y="-6" font-size="${fs}">${esc(t.name)}</text>`, `rm-town ${t.size}`));
     }
     // The whole region lit (e.g. port from the Douro): name its parts quietly
     if (wholeRegion && !badges.length) {
       for (const a of Object.values(map.areas)) {
-        if (a.title) parts.push(`<text class="rm-part" x="${a.label[0]}" y="${a.label[1]}">${esc(a.title.toUpperCase())}</text>`);
+        if (a.title) parts.push(anchored(a.label[0], a.label[1], `<text class="rm-part">${esc(a.title.toUpperCase())}</text>`));
       }
     }
     parts.push(...titleSvg);
     if (numbered) for (const b of badges) {
-      parts.push(`<g class="rm-badge" transform="translate(${b.x} ${b.y})"><circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text></g>`);
+      parts.push(anchored(b.x, b.y, `<circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text>`, 'rm-badge'));
     }
   }
   if (mode !== 'background') {

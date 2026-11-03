@@ -688,13 +688,13 @@ dialog .input { max-width: none; }
 /* The map drawing: an old atlas in ink and wine red */
 .region-map { display: block; width: 100%; height: auto; font-family: var(--display); }
 .region-map .rm-sea { fill: #e6ecec; }
-.region-map .rm-wave { fill: none; stroke: #7d97a3; stroke-width: 0.7; }
+.region-map .rm-wave { fill: none; stroke: #7d97a3; stroke-width: calc(var(--z, 1) * 0.7px); }
 .region-map .rm-land { fill: #fbf6ee; stroke: none; }
-.region-map .rm-area { fill: #6e0f1f; fill-opacity: 0; stroke: #8a6a55; stroke-width: 0.7; stroke-dasharray: 3 3; stroke-linejoin: round; }
-.region-map .rm-area.on { stroke: #6e0f1f; stroke-width: 1.2; stroke-dasharray: none; }
-.region-map .rm-border { fill: none; stroke: #8a7a70; stroke-width: 1; stroke-dasharray: 8 4 2 4; }
-.region-map .rm-river { fill: none; stroke: #6f93a8; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.region-map .rm-coast { fill: none; stroke: #6f93a8; stroke-width: 1.2; }
+.region-map .rm-area { fill: #6e0f1f; fill-opacity: 0; stroke: #8a6a55; stroke-width: calc(var(--z, 1) * 0.7px); stroke-dasharray: calc(var(--z, 1) * 3px) calc(var(--z, 1) * 3px); stroke-linejoin: round; }
+.region-map .rm-area.on { stroke: #6e0f1f; stroke-width: calc(var(--z, 1) * 1.2px); stroke-dasharray: none; }
+.region-map .rm-border { fill: none; stroke: #8a7a70; stroke-width: calc(var(--z, 1) * 1px); stroke-dasharray: calc(var(--z, 1) * 8px) calc(var(--z, 1) * 4px) calc(var(--z, 1) * 2px) calc(var(--z, 1) * 4px); }
+.region-map .rm-river { fill: none; stroke: #6f93a8; stroke-width: calc(var(--z, 1) * 2.2px); stroke-linecap: round; stroke-linejoin: round; }
+.region-map .rm-coast { fill: none; stroke: #6f93a8; stroke-width: calc(var(--z, 1) * 1.2px); }
 .region-map .rm-town circle { fill: #3d2a22; }
 .region-map .rm-town text { fill: #3d2a22; font-style: italic; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
 .region-map .rm-part { fill: #6e0f1f; font-family: var(--body); font-size: 15px; font-weight: 600; letter-spacing: 0.25em; text-anchor: middle; opacity: 0.75; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; }
