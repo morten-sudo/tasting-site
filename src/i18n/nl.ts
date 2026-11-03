@@ -1555,4 +1555,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "home3.favourite": "je favoriet: {name}",
   "home3.otherUpcoming": "Ook gepland",
   "home3.memories": "Proeverijen waar je bij was",
+  "admin.introNone": "Nog geen introductie. Schrijf wat de avond te bieden heeft – je gasten zien het in de uitnodiging.",
+  "admin.introLabel": "Wat de avond te bieden heeft – je gasten lezen het in de uitnodiging",
 };

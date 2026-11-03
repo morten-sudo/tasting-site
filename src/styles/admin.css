@@ -171,6 +171,11 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 /* A tasting's details, read-only (edited in the side panel) */
 .admin-page .ov-details { margin: 0.5rem 0 1.25rem; max-width: 46rem; }
 .admin-page .ov-hosts-head { margin-top: 1.75rem; }
+.admin-page .ov-intro-head { margin-top: 1.75rem; }
+.admin-page .ov-intro { max-width: 46rem; line-height: 1.6; }
+.admin-page .ov-intro[hidden] { display: none; }
+.admin-page .ov-intro p { margin: 0 0 0.8rem; white-space: pre-line; }
+.admin-page .ov-intro p:last-child { margin-bottom: 0; }
 
 /* Filling from a label or link: the fields that already hold something else, and the button that takes them */
 .admin-page .status .fill-diff { flex-basis: 100%; color: var(--paper); }

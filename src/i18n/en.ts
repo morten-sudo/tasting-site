@@ -1554,4 +1554,6 @@ export const en = {
   "home3.favourite": "your favourite: {name}",
   "home3.otherUpcoming": "Also coming up",
   "home3.memories": "Tastings you have been to",
+  "admin.introNone": "No introduction yet. Write what the evening holds – your guests see it on the invitation.",
+  "admin.introLabel": "What the evening holds – your guests read it on the invitation",
 } as const;

@@ -1555,4 +1555,6 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "home3.favourite": "tu favorito: {name}",
   "home3.otherUpcoming": "También próximamente",
   "home3.memories": "Catas en las que has estado",
+  "admin.introNone": "Aún no hay introducción. Escribe lo que ofrece la velada: tus invitados la ven en la invitación.",
+  "admin.introLabel": "Lo que ofrece la velada: tus invitados lo leen en la invitación",
 };
