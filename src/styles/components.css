@@ -478,6 +478,7 @@ dialog.confirm::backdrop { background: rgba(20, 12, 12, 0.45); }
 dialog.confirm[open] { animation: pop 0.18s ease-out; }
 @keyframes pop { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 .cf-q { margin: 0 0 0.35rem; font-weight: 600; font-size: 1.05rem; }
+.cf-q:focus { outline: none; }
 .cf-t { margin: 0; color: var(--muted); font-size: 0.95rem; }
 dialog.confirm .actions { margin-top: 1.1rem; }
 

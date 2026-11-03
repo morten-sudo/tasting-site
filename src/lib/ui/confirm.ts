@@ -1,6 +1,7 @@
 // Component 31 – confirmation: the ONLY way the site asks before doing something ("Delete the tasting?",
 // "Discard changes?"). A small window with the question, one line on what happens, Cancel and the button that says
-// what happens ("Delete the tasting", never "OK"). Focus starts on Cancel; the action is last (right); on phones the
+// what happens ("Delete the tasting", never "OK"). Focus starts on the question (read out, no ring on a button – Tab
+// goes to Cancel first, so Enter never acts by itself); the action is last (right); on phones the
 // buttons stack with the action on top. Resolves true when the action is chosen.
 import { t } from '../../i18n';
 
@@ -19,7 +20,7 @@ export function confirmModal(o: ConfirmOptions): Promise<boolean> {
     const dlg = document.createElement('dialog');
     dlg.className = 'confirm';
     const id = `cf-${Math.random().toString(36).slice(2, 8)}`;
-    const q = Object.assign(document.createElement('p'), { className: 'cf-q', id: `${id}-q`, textContent: o.title });
+    const q = Object.assign(document.createElement('p'), { className: 'cf-q', id: `${id}-q`, textContent: o.title, tabIndex: -1 });
     dlg.setAttribute('aria-labelledby', q.id);
     dlg.append(q);
     if (o.text) {
@@ -41,6 +42,6 @@ export function confirmModal(o: ConfirmOptions): Promise<boolean> {
     // Inside an open dialog it would sit under it: the top layer stacks in order of opening, so body is fine
     document.body.append(dlg);
     dlg.showModal();
-    no.focus();
+    q.focus();
   });
 }
