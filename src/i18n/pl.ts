@@ -1360,4 +1360,12 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "ws.addedPending": "{email} dołączy do konta przy pierwszym logowaniu tym adresem.",
   "ws.sendLink": "Wyślij ten link do {email} – zaloguje się tym adresem i trafi prosto na konto:",
   "guestLib.lastLogin": "zalogowano {when}",
+  "quizReset.title": "Zresetuj quiz",
+  "quizReset.hint": "Usuwa odpowiedzi wszystkich gości, aby quiz można było rozwiązać ponownie. Pytania zostają.",
+  "quizReset.button": "Zresetuj …",
+  "quizReset.question": "Zresetować quiz?",
+  "quizReset.questionText": "Odpowiedzi wszystkich gości i ranking zostaną usunięte. Pytania zostają.",
+  "quizReset.ok": "Zresetuj",
+  "quizReset.done": "Quiz zresetowany",
+  "quizReset.undone": "Odpowiedzi wróciły",
 };

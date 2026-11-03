@@ -1491,4 +1491,12 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "ws.addedPending": "{email} bætist við reikninginn í fyrsta sinn sem viðkomandi skráir sig inn með þessu netfangi.",
   "ws.sendLink": "Sendu þennan tengil á {email} – viðkomandi skráir sig inn með því netfangi og lendir beint á reikningnum:",
   "guestLib.lastLogin": "skráði sig inn {when}",
+  "quizReset.title": "Endurstilla spurningakeppnina",
+  "quizReset.hint": "Eyðir svörum allra gesta svo hægt sé að taka keppnina aftur. Spurningarnar haldast.",
+  "quizReset.button": "Endurstilla …",
+  "quizReset.question": "Endurstilla keppnina?",
+  "quizReset.questionText": "Öllum svörum gesta og stöðunni er eytt. Spurningarnar haldast.",
+  "quizReset.ok": "Endurstilla",
+  "quizReset.done": "Keppnin er endurstillt",
+  "quizReset.undone": "Svörin eru komin aftur",
 };

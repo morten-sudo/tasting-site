@@ -379,6 +379,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <ol id="board" class="board"></ol>
           <p id="board-empty" class="help" data-i18n="board.noAnswers" hidden>No one has answered yet.</p>
         </div>
+
+        <!-- Start over: every guest's answers are deleted (the questions stay) – quiet, asked about first, with Undo -->
+        <div id="quiz-reset" class="quiz-reset" hidden>
+          <h3 data-i18n="quizReset.title">Reset the quiz</h3>
+          <p class="hint" data-i18n="quizReset.hint">Deletes every guest's answers, so the quiz can be taken again. The questions stay.</p>
+          <button id="quiz-reset-btn" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="quizReset.button">Reset quiz …</span></button>
+        </div>
       </section>
       </div>
 
@@ -1360,7 +1367,26 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal);
     $('board').hidden = !rows.length;
     $('board-empty').hidden = rows.length > 0;
+    // Resetting only makes sense once someone has answered
+    $('quiz-reset').hidden = !rows.length || resetPending;
   }
+
+  // ---------- Reset the quiz: asked first, the standings go at once, the answers are deleted when the toast closes ----------
+  let resetPending = false;
+  $('quiz-reset-btn').addEventListener('click', async () => {
+    if (!tasting) return;
+    const id = tasting.id;
+    const before = [...$('board').children];
+    await deleteWithUndo({
+      label: t('quizReset.done'),
+      ask: { title: t('quizReset.question'), text: t('quizReset.questionText'), ok: t('quizReset.ok') },
+      hide: () => { resetPending = true; $('board').replaceChildren(); $('board').hidden = true; $('board-empty').hidden = false; $('quiz-reset').hidden = true; },
+      restore: () => { resetPending = false; $('board').replaceChildren(...before); $('board').hidden = !before.length; $('board-empty').hidden = before.length > 0; $('quiz-reset').hidden = !before.length; },
+      commit: async () => { const { error } = await supabase.rpc('reset_quiz', { t_id: id }); resetPending = false; return !error; },
+      keepaliveRpc: { fn: 'reset_quiz', args: { t_id: id } },
+      restored: t('quizReset.undone'),
+    });
+  });
 
   host = await requireHost();
   if (host) {

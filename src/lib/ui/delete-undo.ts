@@ -18,6 +18,8 @@ export interface DeleteOptions {
   commit: () => Promise<boolean>;
   /** The same deletion as REST paths ("participants?id=eq.…") for when the page is left before the toast closes */
   keepalive?: string[];
+  /** …or as a function call ("reset_quiz", { t_id }) when the deletion is done by the database */
+  keepaliveRpc?: { fn: string; args: Record<string, unknown> };
   /** The page's own bookkeeping: take it out of the data and render (instead of / as well as row) … */
   hide?: () => void;
   /** … and back again on Undo or when the deletion failed */
@@ -30,18 +32,17 @@ export interface DeleteOptions {
 }
 
 // The deletions waiting for their toast to close
-const pending = new Map<number, { paths: string[]; token: string }>();
+const pending = new Map<number, { paths: string[]; rpc?: { fn: string; args: Record<string, unknown> }; token: string }>();
 let wired = false;
 let n = 0;
 function wire() {
   if (wired) return;
   wired = true;
   addEventListener('pagehide', () => {
-    for (const { paths, token } of pending.values()) {
-      for (const path of paths) {
-        fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'DELETE', keepalive: true,
-          headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}` } });
-      }
+    for (const { paths, rpc, token } of pending.values()) {
+      const headers = { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}`, 'content-type': 'application/json' };
+      for (const path of paths) fetch(`${SUPABASE_URL}/rest/v1/${path}`, { method: 'DELETE', keepalive: true, headers });
+      if (rpc) fetch(`${SUPABASE_URL}/rest/v1/rpc/${rpc.fn}`, { method: 'POST', keepalive: true, headers, body: JSON.stringify(rpc.args) });
     }
     pending.clear();
   });
@@ -53,7 +54,7 @@ export async function deleteWithUndo(o: DeleteOptions): Promise<boolean> {
   wire();
   const key = ++n;
   const { data } = await supabase.auth.getSession();
-  pending.set(key, { paths: o.keepalive ?? [], token: data.session?.access_token ?? '' });
+  pending.set(key, { paths: o.keepalive ?? [], rpc: o.keepaliveRpc, token: data.session?.access_token ?? '' });
   // Out of view, remembering where it was
   const row = o.row ?? null;
   const parent = row?.parentNode ?? null;

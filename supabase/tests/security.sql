@@ -160,6 +160,8 @@ begin
   assert failed, 'a host can read the link log';
   failed := false; begin perform admin_link_reads(); exception when others then failed := true; end;
   assert failed, 'a host can read the superadmin''s link log';
+  failed := false; begin perform reset_quiz('00000000-0000-4000-b000-00000000000b'); exception when others then failed := true; end;
+  assert failed, 'host A can reset host B''s quiz';
   failed := false; begin perform admin_delete_person('guest-b@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'a host can delete a person';
   -- The admin overview only counts A's own data
@@ -532,6 +534,8 @@ begin
   assert failed, 'anyone can read the link log';
   failed := false; begin perform * from guest_last_logins(); exception when others then failed := true; end;
   assert failed, 'anyone can read when guests signed in';
+  failed := false; begin perform reset_quiz('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can reset a quiz';
   -- Sign-up's check tells only whether a host account exists – never about guests
   assert not signup_email_taken('guest-a@selftest.invalid'), 'the sign-up check reveals a guest';
   -- …while a guest's own chat works

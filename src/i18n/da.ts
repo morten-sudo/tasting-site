@@ -1491,4 +1491,12 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "ws.addedPending": "{email} kommer på kontoen første gang, de logger ind med den e-mail.",
   "ws.sendLink": "Send dette link til {email} – de logger ind med den e-mail og lander direkte på kontoen:",
   "guestLib.lastLogin": "logget ind {when}",
+  "quizReset.title": "Nulstil quizzen",
+  "quizReset.hint": "Sletter alle gæsternes svar, så quizzen kan tages forfra. Spørgsmålene bliver.",
+  "quizReset.button": "Nulstil quiz …",
+  "quizReset.question": "Nulstil quizzen?",
+  "quizReset.questionText": "Alle gæsternes svar og stillingen slettes. Spørgsmålene bliver.",
+  "quizReset.ok": "Nulstil quiz",
+  "quizReset.done": "Quizzen er nulstillet",
+  "quizReset.undone": "Svarene er tilbage",
 };

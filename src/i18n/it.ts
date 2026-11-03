@@ -1360,4 +1360,12 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "ws.addedPending": "{email} entra nell’account al primo accesso con questa e-mail.",
   "ws.sendLink": "Invia questo link a {email}: accede con quell’e-mail e arriva direttamente sull’account:",
   "guestLib.lastLogin": "accesso {when}",
+  "quizReset.title": "Azzera il quiz",
+  "quizReset.hint": "Cancella le risposte di tutti gli ospiti, così il quiz si può rifare. Le domande restano.",
+  "quizReset.button": "Azzera …",
+  "quizReset.question": "Azzerare il quiz?",
+  "quizReset.questionText": "Le risposte di tutti gli ospiti e la classifica vengono cancellate. Le domande restano.",
+  "quizReset.ok": "Azzera",
+  "quizReset.done": "Il quiz è azzerato",
+  "quizReset.undone": "Le risposte sono tornate",
 };

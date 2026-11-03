@@ -1360,4 +1360,12 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "ws.addedPending": "{email} komt in het account zodra hij voor het eerst inlogt met dat e-mailadres.",
   "ws.sendLink": "Stuur deze link naar {email} – hij logt in met dat e-mailadres en komt direct in het account:",
   "guestLib.lastLogin": "ingelogd {when}",
+  "quizReset.title": "Quiz resetten",
+  "quizReset.hint": "Verwijdert de antwoorden van alle gasten, zodat de quiz opnieuw kan. De vragen blijven.",
+  "quizReset.button": "Resetten …",
+  "quizReset.question": "Quiz resetten?",
+  "quizReset.questionText": "De antwoorden van alle gasten en de stand worden verwijderd. De vragen blijven.",
+  "quizReset.ok": "Resetten",
+  "quizReset.done": "De quiz is gereset",
+  "quizReset.undone": "De antwoorden zijn terug",
 };

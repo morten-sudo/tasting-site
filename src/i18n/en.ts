@@ -1490,4 +1490,12 @@ export const en = {
   "ws.addedPending": "{email} joins the account the first time they sign in with that email.",
   "ws.sendLink": "Send this link to {email} – they sign in with that email and land right on the account:",
   "guestLib.lastLogin": "signed in {when}",
+  "quizReset.title": "Reset the quiz",
+  "quizReset.hint": "Deletes every guest's answers, so the quiz can be taken again. The questions stay.",
+  "quizReset.button": "Reset quiz …",
+  "quizReset.question": "Reset the quiz?",
+  "quizReset.questionText": "Every guest's answers and the standings are deleted. The questions stay.",
+  "quizReset.ok": "Reset quiz",
+  "quizReset.done": "The quiz is reset",
+  "quizReset.undone": "The answers are back",
 } as const;

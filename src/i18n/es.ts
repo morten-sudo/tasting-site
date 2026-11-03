@@ -1360,4 +1360,12 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "ws.addedPending": "{email} entra en la cuenta la primera vez que inicie sesión con ese correo.",
   "ws.sendLink": "Envía este enlace a {email}: inicia sesión con ese correo y llega directamente a la cuenta:",
   "guestLib.lastLogin": "conectado {when}",
+  "quizReset.title": "Reiniciar el quiz",
+  "quizReset.hint": "Borra las respuestas de todos los invitados para repetir el quiz. Las preguntas se quedan.",
+  "quizReset.button": "Reiniciar …",
+  "quizReset.question": "¿Reiniciar el quiz?",
+  "quizReset.questionText": "Se borran las respuestas de todos los invitados y la clasificación. Las preguntas se quedan.",
+  "quizReset.ok": "Reiniciar",
+  "quizReset.done": "El quiz se ha reiniciado",
+  "quizReset.undone": "Las respuestas han vuelto",
 };

@@ -368,3 +368,7 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .super-shell .tabs { margin-bottom: 1rem; }
 .super-shell .list-search + #tenants { margin-top: 0.75rem; }
 .admin-page .ph:has(+ section > .tasting-cards) { max-width: 40rem; }
+
+/* The quiz tab: resetting the quiz, quiet at the bottom */
+.admin-page .quiz-reset { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--lodge-3); }
+.admin-page .quiz-reset h3 { margin: 0 0 0.25rem; font-family: var(--body); font-size: 0.95rem; font-weight: 600; color: var(--paper); }
