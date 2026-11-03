@@ -1154,7 +1154,11 @@ html.side-locked main { z-index: 60; }
 .hero.full { min-height: min(78vh, 40rem); }
 /* The tasting (guest pages): the countdown, the title and when / where with their links; a faint map behind */
 .hero-light { position: relative; isolation: isolate; display: grid; gap: 0.6rem; justify-items: start; margin: 0 0 2rem; min-width: 0; }
-.hero-light > .chip { margin-bottom: 0.2rem; }
+.hero-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; margin-bottom: 0.2rem; }
+.hero-chips > * { margin: 0; }
+.hero-chips > span { display: inline-flex; }
+.hero-chips > [hidden] { display: none; }
+.hero-chips .text-btn { min-height: 0; padding: 0.2rem 0.15rem; font-size: 0.9rem; }
 .hero-light .hero-title { font-family: var(--display); font-weight: 400; font-size: clamp(2.5rem, 9vw, 4.6rem); line-height: 1; margin: 0 0 0.4rem; overflow-wrap: anywhere; }
 .hero-light .hero-title:empty::before { content: '…'; color: var(--muted); }
 .hero-when { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; font-size: 0.98rem; }

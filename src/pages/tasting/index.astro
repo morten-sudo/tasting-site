@@ -27,6 +27,8 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     <div id="invite" class="t-home" hidden>
       <!-- The tasting at a glance: the one hero, its "tasting" variant (the region's map faint behind the heading) -->
       <Hero variant="tasting" titleId="h-title" countdownId="t-countdown" backgroundId="hero-map">
+        <span slot="chips" id="h-answer" hidden></span>
+        <button slot="chips" id="change" type="button" class="text-btn small" hidden data-i18n="tastingHome.change">Change answer</button>
         <li id="f-when" hidden>
           <Icon name="calendar" />
           <span><span id="h-when"></span><button id="h-ics" type="button" class="text-btn small" data-i18n="tastingHome.calendar">Add to calendar</button></span>
@@ -39,16 +41,18 @@ import Disclosure from '../../components/ui/Disclosure.astro';
           <Icon name="user" />
           <span id="h-host"></span>
         </li>
+        <li id="f-coming" hidden>
+          <Icon name="users" />
+          <span id="h-coming"></span>
+        </li>
       </Hero>
 
       <div class="t-grid">
         <!-- Sign-up and payment (right column on large screens, right after the heading on phones) -->
         <aside class="t-side">
-          <section class="card rsvp-card">
+          <!-- Not answered yet (or changing the answer): the card; once answered, the answer is a chip in the heading -->
+          <section id="rsvp-card" class="card rsvp-card">
             <SectionTitle level="h3" as="h2" text="tastingHome.yourAnswer" />
-            <p id="current" class="rsvp-status" role="status" hidden></p>
-            <p id="h-coming" class="coming" hidden></p>
-            <button id="change" type="button" class="text-btn" hidden data-i18n="tastingHome.change">Change answer</button>
             <p id="closed-hint" class="help" hidden data-i18n="tastingHome.closedHint">Sign-up is closed.</p>
             <p id="full-hint" class="help" hidden data-i18n="guest.fullHint">The tasting is full. If you say yes, you go on the waiting list.</p>
 
@@ -69,6 +73,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
 
               <Actions tight>
                 <button type="submit" class="btn small" id="submit" data-i18n="common.save">Save</button>
+                <button type="button" class="btn small secondary" id="cancel-edit" hidden data-i18n="common.cancel">Cancel</button>
                 <span class="help" data-i18n="guest.canChange">You can change your answer while sign-up is open.</span>
               </Actions>
             </form>
@@ -130,7 +135,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
   import { payBox, setPayee } from '../../lib/pay';
-  import { i18nReady, t, formatWhen, lang, type Key } from '../../i18n';
+  import { i18nReady, t, formatWhen, lang } from '../../i18n';
   import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from '../../lib/region-map';
   import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from '../../lib/overview-map';
   import { mapZoom } from '../../lib/ui/map-zoom';
@@ -143,18 +148,18 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
   const form = $<HTMLFormElement>('rsvp-form');
-  const current = $('current');
+  const current = $('h-answer');
   const submit = $<HTMLButtonElement>('submit');
 
   let guestName = '';
 
-  // The answer as the status chip (one word and tone, as everywhere) with a sentence on what it means
-  const SENTENCE: Record<string, Key> = { yes: 'guest.statusYes', waitlist: 'guest.statusWaitlist', no: 'guest.statusNo' };
+  // The answer as the status chip (one word and tone, as everywhere) beside the countdown in the heading
+  let answered = false;
   function showCurrent(status: string) {
-    const sentence = SENTENCE[status];
-    current.hidden = !sentence;
-    if (!sentence) return;
-    current.replaceChildren(statusChip(guestStatus(status)), Object.assign(document.createElement('span'), { textContent: t(sentence) }));
+    answered = status === 'yes' || status === 'no' || status === 'waitlist';
+    current.hidden = !answered;
+    current.replaceChildren(...(answered ? [statusChip(guestStatus(status))] : []));
+    updateRsvpView();
   }
 
   // ---------- The tasting at a glance ----------
@@ -304,7 +309,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   function setComing(n: unknown) {
     const count = Number(n ?? 0);
     $('h-coming').textContent = count > 0 ? t('tastingHome.coming', { n: count }) : '';
-    $('h-coming').hidden = count === 0;
+    $('f-coming').hidden = count === 0;
   }
 
   // "In 21 days", "Tomorrow", "Today" – in the page's language
@@ -341,15 +346,23 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   let signupOpen = true;
   let editing = false;
   function updateRsvpView() {
-    const answered = !current.hidden;
-    form.hidden = answered && !editing || !signupOpen && answered;
+    // The card only before answering, or while changing the answer
+    $('rsvp-card').hidden = answered && (!editing || !signupOpen);
+    form.hidden = !signupOpen;
     $('change').hidden = !answered || editing || !signupOpen;
+    $('cancel-edit').hidden = !editing;
     $('closed-hint').hidden = signupOpen;
   }
   $('change').addEventListener('click', () => {
     editing = true;
     updateRsvpView();
-    form.querySelector<HTMLInputElement>('input[name="attending"]:checked')?.focus();
+    $('rsvp-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    form.querySelector<HTMLInputElement>('input[name="attending"]:checked')?.focus({ preventScroll: true });
+  });
+  $('cancel-edit').addEventListener('click', () => {
+    editing = false;
+    updateRsvpView();
+    $('change').focus();
   });
 
   async function loadFee() {
@@ -503,13 +516,14 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     .t-grid { grid-template-columns: minmax(0, 1fr) 21rem; align-items: start; gap: 3rem; }
     .t-side { grid-column: 2; grid-row: 1; position: sticky; top: 7.5rem; }
     .t-main { grid-column: 1; grid-row: 1; }
+    /* Answered and nothing to pay: no right column */
+    .t-grid:not(:has(.t-side > section:not([hidden]))) { grid-template-columns: minmax(0, 1fr); }
   }
+  .t-side:not(:has(> section:not([hidden]))) { display: none; }
   .t-main { display: grid; gap: 2.25rem; align-content: start; }
 
   .rsvp-card { position: relative; z-index: 1; padding: 1.2rem 1.25rem; }
-  .rsvp-status { display: grid; justify-items: start; gap: 0.4rem; margin: 0 0 0.4rem; }
-  .coming { margin: 0 0 0.6rem; font-size: 0.88rem; color: var(--muted); }
-  .rsvp[hidden], .coming[hidden] { display: none; }
+  .rsvp-card[hidden], .rsvp[hidden] { display: none; }
 
   .h-intro { font-size: 1.05rem; line-height: 1.65; max-width: 40rem; }
   .h-intro :global(p) { margin: 0 0 0.9rem; white-space: pre-line; }
