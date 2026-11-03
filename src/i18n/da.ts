@@ -1499,4 +1499,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "quizReset.ok": "Nulstil quiz",
   "quizReset.done": "Quizzen er nulstillet",
   "quizReset.undone": "Svarene er tilbage",
+  "pay.scan": "Scan koden med telefonens kamera – så åbner MobilePay med nummer, beløb og besked udfyldt.",
+  "pay.qrLabel": "QR-kode, der åbner MobilePay på din telefon",
+  "pay.fallbackScan": "Virker koden ikke, så åbn MobilePay på telefonen og brug oplysningerne ovenfor.",
 };

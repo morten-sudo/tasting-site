@@ -1499,4 +1499,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "quizReset.ok": "Zresetuj",
   "quizReset.done": "Quiz zresetowany",
   "quizReset.undone": "Odpowiedzi wróciły",
+  "pay.scan": "Zeskanuj kod aparatem telefonu – MobilePay otworzy się z wypełnionym numerem, kwotą i wiadomością.",
+  "pay.qrLabel": "Kod QR, który otwiera MobilePay w telefonie",
+  "pay.fallbackScan": "Jeśli kod nie działa, otwórz MobilePay w telefonie i użyj danych powyżej.",
 };

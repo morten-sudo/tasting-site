@@ -1499,4 +1499,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "quizReset.ok": "Endurstilla",
   "quizReset.done": "Keppnin er endurstillt",
   "quizReset.undone": "Svörin eru komin aftur",
+  "pay.scan": "Skannaðu kóðann með myndavél símans – þá opnast MobilePay með númeri, upphæð og skilaboðum útfylltum.",
+  "pay.qrLabel": "QR-kóði sem opnar MobilePay í símanum þínum",
+  "pay.fallbackScan": "Ef kóðinn virkar ekki, opnaðu MobilePay í símanum og notaðu upplýsingarnar hér að ofan.",
 };

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
-    "astro": "^7.4.2"
+    "astro": "^7.4.2",
+    "qrcode-generator": "^2.0.4"
   }
 }
