@@ -451,6 +451,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, formatWhen, type Key } from '../../i18n';
   import { ago } from '../../lib/ui/ago';
+  import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
 
   await i18nReady;
@@ -851,7 +852,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   // One row per guest, the same as the wines: a "picture" (initials), name, a line with email and invitation,
   // status as small chips, what they ordered on the right – and "Edit". The rest is in the side panel.
-  let lastLogins = new Map<string, string>();
+  let lastLogins = new Map<string, Seen>();
   function guestCard(p: P, cols = { mail: true, link: true }) {
     // On the waiting list: its number in the queue
     const place = p.status === 'waitlist'
@@ -874,10 +875,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     link.addEventListener('click', () => copyInvite(p));
     // Last sign-in: a column of its own just left of the icons (empty when never – the columns stay in line)
     const seenAt = p.guest_id ? lastLogins.get(p.guest_id) : undefined;
-    const seen = mk('span', 'last-in', seenAt ? t('guestLib.lastLogin', { when: ago(seenAt, true) }) : '');
-    if (seenAt) tooltip(seen, new Date(seenAt).toLocaleString(locale()));
+    const seen = mk('span', 'last-in', seenAt ? seenText(seenAt, true) : '');
+    if (seenAt) tooltip(seen, new Date(seenAt.at).toLocaleString(locale()));
     // (phones: a line under the name instead – the icons have the bottom line to themselves)
-    const seenLine = seenAt ? mk('span', 'm-last', t('guestLib.lastLogin', { when: ago(seenAt) })) : null;
+    const seenLine = seenAt ? mk('span', 'm-last', seenText(seenAt)) : null;
     const actions: HTMLElement[] = [seen, ...(cols.mail ? [mail] : []), ...(cols.link ? [link] : [])];
     const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
     edit.dataset.tip = t('admin.edit');
@@ -1390,8 +1391,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     ]);
     participants = (p.data ?? []) as P[];
     // When each guest last signed in (the account's guests); the list shows it when it comes
-    supabase.rpc('guest_last_logins').then(({ data }) => {
-      lastLogins = new Map(((data ?? []) as { guest_id: string; last_sign_in_at: string }[]).map((r) => [r.guest_id, r.last_sign_in_at]));
+    loadGuestSeen().then((m) => {
+      lastLogins = m;
       if (lastLogins.size) renderParticipants();
     });
     orders = (o.data ?? []) as O[];

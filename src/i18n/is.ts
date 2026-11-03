@@ -1568,6 +1568,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "signup.guestText": "Þú þarft ekki eigin aðgang til að vera með í {title} – þú ert skráð(ur) inn og getur farið beint í smakkanirnar þínar. Stofnaðu aðeins gestgjafaaðgang ef þú vilt halda smakkanir sjálf(ur).",
   "signup.guestGo": "Fara í smakkanirnar mínar",
   "signup.guestHost": "Stofna gestgjafaaðgang samt",
+  "guestLib.lastLink": "opnaði hlekkinn {when}",
+  "ev.login.link": "{guest} opnaði boðshlekkinn – {tasting}",
   "count.tastings": "{n} smakkanir",
   "count.tastings#one": "{n} smakkun",
   "count.wines": "{n} vín",

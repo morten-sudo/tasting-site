@@ -1567,6 +1567,8 @@ export const en = {
   "signup.guestText": "You don't need an account of your own to join {title} – you are signed in and can go straight to your tastings. Only create a host account if you want to hold tastings yourself.",
   "signup.guestGo": "Go to my tastings",
   "signup.guestHost": "Create a host account anyway",
+  "guestLib.lastLink": "opened the link {when}",
+  "ev.login.link": "{guest} opened the invitation link – {tasting}",
   "count.tastings": "{n} tastings",
   "count.tastings#one": "{n} tasting",
   "count.wines": "{n} wines",

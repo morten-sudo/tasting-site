@@ -1568,6 +1568,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "signup.guestText": "Je hebt geen eigen account nodig om mee te doen aan {title} – je bent ingelogd en kunt direct naar je proeverijen. Maak alleen een hostaccount aan als je zelf proeverijen wilt organiseren.",
   "signup.guestGo": "Naar mijn proeverijen",
   "signup.guestHost": "Toch een hostaccount aanmaken",
+  "guestLib.lastLink": "opende de link {when}",
+  "ev.login.link": "{guest} opende de uitnodigingslink – {tasting}",
   "count.tastings": "{n} proeverijen",
   "count.tastings#one": "{n} proeverij",
   "count.wines": "{n} wijnen",

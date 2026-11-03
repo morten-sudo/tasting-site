@@ -109,6 +109,7 @@ import '../../styles/admin.css';
   import { toast } from '../../lib/toast';
   import { t } from '../../i18n';
   import { ago } from '../../lib/ui/ago';
+  import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
   import { confirmModal } from '../../lib/ui/confirm';
   import { guestPaths, guestIdFromPath, onGuestPage, showGuestPage } from '../../lib/admin-guest-page';
@@ -173,17 +174,16 @@ import '../../styles/admin.css';
     }));
   }
   // When each guest last signed in (on the guest's email; guests who only use their invitation link have none)
-  let lastLogins = new Map<string, string>();
+  let lastLogins = new Map<string, Seen>();
   async function loadLastLogins() {
-    const { data } = await supabase.rpc('guest_last_logins');
-    lastLogins = new Map(((data ?? []) as { guest_id: string; last_sign_in_at: string }[]).map((r) => [r.guest_id, r.last_sign_in_at]));
+    lastLogins = await loadGuestSeen();
     render();
   }
   function lastSeen(id: string) {
-    const at = lastLogins.get(id);
-    if (!at) return null;
-    const el = mk('span', '', t('guestLib.lastLogin', { when: ago(at) }));
-    tooltip(el, new Date(at).toLocaleString());
+    const s = lastLogins.get(id);
+    if (!s) return null;
+    const el = mk('span', '', seenText(s));
+    tooltip(el, new Date(s.at).toLocaleString());
     return el;
   }
   const highlight = (id: string) => highlightRow(document.querySelector(`#guest-list [data-id="${id}"]`));

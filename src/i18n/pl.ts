@@ -1568,6 +1568,8 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "signup.guestText": "Nie potrzebujesz własnego konta, żeby wziąć udział w {title} – jesteś zalogowany i możesz od razu przejść do swoich degustacji. Załóż konto gospodarza tylko, jeśli chcesz sam organizować degustacje.",
   "signup.guestGo": "Przejdź do moich degustacji",
   "signup.guestHost": "Mimo to załóż konto gospodarza",
+  "guestLib.lastLink": "otworzył(a) link {when}",
+  "ev.login.link": "{guest} otworzył(a) link z zaproszeniem – {tasting}",
   "count.tastings": "{n} degustacji",
   "count.tastings#one": "{n} degustacja",
   "count.wines": "{n} win",

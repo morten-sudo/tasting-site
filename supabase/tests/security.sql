@@ -618,8 +618,17 @@ begin
   assert respond_invite('selftestaa', true, null, null) = 'waitlist', 'a full tasting lets a guest past the limit';
   failed := false; begin perform promote_waitlist('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
   assert failed, 'anyone can move guests up from the waiting list';
+  -- Opening the invitation is noted by get_tasting (above) – nobody may note it directly
+  failed := false; begin perform note_invite_seen('selftestbb'); exception when others then failed := true; end;
+  assert failed, 'anyone can note an invitation as seen';
 end $$;
 reset role;
+
+do $$ begin
+  assert (select last_seen_at from participants where invite_code = 'selftestaa') is not null, 'opening the invitation is not noted';
+  assert (select count(*) from events where kind = 'login.link' and detail->>'tasting' is not null
+          and actor = (select lower(email) from participants where invite_code = 'selftestaa')) = 1, 'opening the invitation is not logged once';
+end $$;
 
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';

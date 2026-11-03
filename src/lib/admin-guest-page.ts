@@ -2,6 +2,7 @@
 // invited to, what the guest did there, and the guest's roles on this account. Only this account – the RPC
 // guest_profile() gives nothing from other accounts. Editing happens in the guest list's side panel (guests.astro).
 import { supabase } from './supabase';
+import { seenText, type Seen } from './guest-seen';
 import { t, formatWhen, locale, type Key } from '../i18n';
 import { $, mk } from './ui/dom';
 import { listRow, activityRow, missing } from './ui/list-row';
@@ -64,8 +65,8 @@ type Profile = { id: string; name: string; email: string | null; tastings: Tasti
 export interface GuestPageActions {
   /** Opens the guest's side panel */
   edit: () => void;
-  /** When the guest signed in last (the guest list's "signed in …") */
-  lastLogin: () => string | null;
+  /** When the guest was last here (the guest list's "signed in …" / "opened the link …") */
+  lastLogin: () => Seen | null;
   /** The host owns the account (may add hosts to it) */
   owner: boolean;
 }
@@ -98,8 +99,8 @@ export async function showGuestPage(id: string, actions: GuestPageActions) {
   meta.replaceChildren(p.email ? p.email : missing());
   const seen = actions.lastLogin();
   if (seen) {
-    const el = mk('span', '', t('guestLib.lastLogin', { when: ago(seen) }));
-    tooltip(el, new Date(seen).toLocaleString());
+    const el = mk('span', '', seenText(seen));
+    tooltip(el, new Date(seen.at).toLocaleString());
     meta.append(' · ', el);
   }
   $('gd-edit').onclick = actions.edit;
