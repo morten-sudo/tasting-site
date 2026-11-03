@@ -891,6 +891,8 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
 @container (max-width: 34rem) {
   .newrow { column-gap: 0.7rem; }
   .newrow > .llead { gap: 0.7rem; }
+  /* Narrow: no empty grip and "+" spaces before the bottle – the fields get the room */
+  .newrow > .llead > :is(.grip.blank, .lno.plus) { display: none; }
   .newrow .llead .thumb { width: 2.6rem; height: 3.2rem; }
   .newrow .llead .lno { font-size: 1.2rem; }
   .newrow .ar-fields { grid-template-columns: 1fr; }
