@@ -1122,6 +1122,11 @@ html.side-locked { overflow: hidden; }
 .hero-bg.left { right: auto; left: -3rem; top: -1.5rem; bottom: -1.5rem; width: min(50vw, 34rem); }
 .hero-bg.left > svg { width: 100%; height: 100%; }
 @media (max-width: 40rem) { .hero-bg.left { left: -30vw; width: 100vw; bottom: auto; height: 34rem; } }
+/* Every page (Base.astro): the same faint map in the top right corner, behind everything, never wider than the page */
+main { position: relative; isolation: isolate; }
+.page-bg { top: -1rem; right: 0; width: min(46vw, 34rem); height: 30rem; opacity: 0.22; }
+.page-bg > svg { width: 100%; height: 100%; }
+@media (max-width: 40rem) { .page-bg { width: 80vw; height: 20rem; opacity: 0.16; } }
 /* In a card: the right part of the card, clipped by it */
 .card.has-map-bg { overflow: hidden; }
 .card > .hero-bg { inset: 0; width: auto; opacity: 0.3;

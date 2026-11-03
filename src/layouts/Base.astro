@@ -49,9 +49,12 @@ const site = 'https://winetastr.com';
   <body data-tasting={tasting ? '1' : undefined} data-admin={adminTasting ? '1' : undefined} data-title={title}>
     <TopBar tasting={tasting} path={path} />
     <main>
+      <div id="page-bg" class="hero-bg page-bg" aria-hidden="true"></div>
       <slot />
     </main>
     <script>
+      import { pageBackground } from '../lib/ui/map-background';
+      pageBackground(document.getElementById('page-bg')!);
       import { getCart, cartCount } from '../lib/cart';
       import { setBadge } from '../lib/ui/badge';
       import { supabase } from '../lib/supabase';
