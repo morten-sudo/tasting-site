@@ -9,6 +9,10 @@ struct TastingView: View {
     @State private var failed = false
     @State private var editing = false
     @State private var toast: String?
+    @State private var wines: [Wine] = []
+    @State private var origins: Origins?
+    @State private var payment: TastingPayment?
+    @State private var addToCalendar = false
 
     var body: some View {
         @Bindable var model = model
@@ -40,6 +44,13 @@ struct TastingView: View {
                 }
             }
         }
+        .sheet(isPresented: $addToCalendar) {
+            if let info, let start = info.start {
+                CalendarSheet(title: info.title, start: start, end: info.end, place: info.place,
+                              url: URL(string: "https://winetastr.com/t/\(info.slug)/")) { addToCalendar = false }
+                    .ignoresSafeArea()
+            }
+        }
         .toast($toast)
     }
 
@@ -49,45 +60,98 @@ struct TastingView: View {
         let open = info.signup_open ?? true
         let done = answered(invite)
         let countdown = info.start.flatMap(countdownText)
-        return ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 10) {
-                    // The countdown and, once answered, the answer as its chip with "Change answer" beside it
-                    if countdown != nil || done {
-                        FlowRow(spacing: 8) {
-                            if let countdown { Chip(text: countdown, tone: .wait) }
-                            if done, let s = statusText(invite.status) {
-                                Chip(text: s, tone: statusTone(invite.status), dashed: invite.status == "no")
-                                if open {
-                                    Button(L("tastingHome.change")) { editing = true }
-                                        .buttonStyle(TextButton(size: 14.4)).accessibilityIdentifier("change-answer")
+        return ZStack(alignment: .topLeading) {
+            // The faint map of the wines' region behind the heading (.hero-bg) – it stays put while the page scrolls
+            if let hero = origins?.hero {
+                GeometryReader { geo in
+                    MapBackdrop(drawing: hero).frame(width: geo.size.width * 1.2).offset(x: geo.size.width * 0.2, y: -16)
+                }
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 36) {
+                    VStack(alignment: .leading, spacing: 9.6) {
+                        // The countdown and, once answered, the answer as its chip with "Change answer" beside it
+                        if countdown != nil || done {
+                            FlowRow(spacing: 8) {
+                                if let countdown { Chip(text: countdown, tone: .wait) }
+                                if done, let s = statusText(invite.status) {
+                                    Chip(text: s, tone: statusTone(invite.status), dashed: invite.status == "no")
+                                    if open {
+                                        Button(L("tastingHome.change")) { editing = true }
+                                            .buttonStyle(TextButton(size: 14.4)).accessibilityIdentifier("change-answer")
+                                    }
                                 }
                             }
                         }
+                        Text(info.title).font(.display(44, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
+                            .padding(.bottom, 6.4)
+                        if let d = info.start {
+                            factLine("calendar", whenText(d)) { Button(L("tastingHome.calendar")) { addToCalendar = true }.buttonStyle(TextButton(size: 14.4, minHeight: 20)) }
+                        }
+                        if let p = info.place, !p.isEmpty {
+                            factLine("pin", p) {
+                                if let url = URL(string: "https://maps.apple.com/?q=" + (p.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")) {
+                                    Link(L("tastingHome.map"), destination: url).buttonStyle(TextButton(size: 14.4, minHeight: 20))
+                                }
+                            }
+                        }
+                        if let h = info.hostLine { factLine("user", h) { EmptyView() } }
+                        if let n = info.coming, n > 0 { factLine("users", L("tastingHome.coming", ["n": "\(n)"])) { EmptyView() } }
                     }
-                    Text(info.title).font(.display(44, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
-                    if let d = info.start { factLine("calendar", whenText(d)) }
-                    if let p = info.place, !p.isEmpty { factLine("pin", p) }
-                    if let h = info.hostLine { factLine("user", h) }
-                    if let n = info.coming, n > 0 { factLine("users", L("tastingHome.coming", ["n": "\(n)"])) }
-                }
-                if !done { answerCard(info, open: open) }
-                if let intro = info.intro, !intro.isEmpty {
+                    if !done || (payment.map { $0.amount > 0 } ?? false) {
+                        VStack(spacing: 16) {
+                            if !done { answerCard(info, open: open) }
+                            if let payment, payment.amount > 0 {
+                                FeeCard(amount: payment.amount, paid: payment.paid, mobilepay: info.mobilepay, name: invite.name, toast: $toast)
+                            }
+                        }
+                    }
+                    if let intro = info.intro?.trimmingCharacters(in: .whitespacesAndNewlines), !intro.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Eyebrow(text: L("tastingHome.about"))
+                            introText(intro)
+                        }
+                    }
+                    if let origins { OriginsBlock(origins: origins) }
                     VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow(text: L("tastingHome.about"))
-                        Text(intro).font(.display(25, relativeTo: .title2)).foregroundStyle(Color.paper).lineSpacing(3)
+                        Eyebrow(text: L("tastingHome.during"))
+                        Button { model.tastingTab = .wines } label: {
+                            EveningTile(icon: "glass", title: L("nav.wines"), sub: wines.isEmpty ? nil : L("tastingHome.winesSub", ["n": "\(wines.count)"]))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
+                .padding(16).padding(.top, 8).padding(.bottom, 16)
             }
-            .padding(16).padding(.top, 8)
+            #if DEBUG
+            .defaultScrollAnchor(UserDefaults.standard.bool(forKey: "scrollBottom") ? .bottom : .top)
+            #endif
+            .refreshable { await load() }
         }
-        .refreshable { await load() }
     }
 
-    private func factLine(_ icon: String, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            SiteIcon(icon).foregroundStyle(Color.bordeaux).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 4 }
-            Text(text).font(.body()).foregroundStyle(Color.paper)
+    /// The host's introduction: blank lines part the paragraphs, the first in the display face (.h-intro)
+    private func introText(_ intro: String) -> some View {
+        let paras = intro.components(separatedBy: "\n").reduce(into: [[String]]([[]])) { acc, line in
+            if line.trimmingCharacters(in: .whitespaces).isEmpty { if !(acc.last ?? []).isEmpty { acc.append([]) } } else { acc[acc.count - 1].append(line) }
+        }.filter { !$0.isEmpty }.map { $0.joined(separator: "\n") }
+        return VStack(alignment: .leading, spacing: 14.4) {
+            ForEach(Array(paras.enumerated()), id: \.offset) { i, p in
+                if i == 0 { Text(p).font(.display(23, relativeTo: .title2)).foregroundStyle(Color.paper).lineSpacing(4) }
+                else { Text(p).font(.body(16.8)).foregroundStyle(Color.paper).lineSpacing(6) }
+            }
+        }
+    }
+
+    /// One line of the heading (.hero-when): the icon, the text and its text link after it (or under it when there is no room)
+    private func factLine<Act: View>(_ icon: String, _ text: String, @ViewBuilder link: () -> Act) -> some View {
+        let act = link()
+        return HStack(alignment: .firstTextBaseline, spacing: 9.6) {
+            SiteIcon(icon, size: 19).foregroundStyle(Color.bordeaux).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 4 }
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 6) { Text(text).font(.body(15.7)).foregroundStyle(Color.paper); act }
+                VStack(alignment: .leading, spacing: 0) { Text(text).font(.body(15.7)).foregroundStyle(Color.paper); act }
+            }
         }
     }
 
@@ -110,6 +174,11 @@ struct TastingView: View {
             async let v = Backend.invite(tasting.code)
             let (a, b) = try await (i, v)
             info = a; invite = b; failed = a == nil || b == nil
+            payment = try? await Backend.payment(tasting.code)
+            if let w = try? await Backend.wines(tasting.code) {
+                wines = w
+                if origins == nil { origins = await buildOrigins(w) }
+            }
             #if DEBUG
             if UserDefaults.standard.string(forKey: "route") == "rsvp", b?.email != nil { editing = true }
             #endif

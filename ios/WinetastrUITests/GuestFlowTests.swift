@@ -67,7 +67,7 @@ final class GuestFlowTests: XCTestCase {
         let four = a.buttons["4 stjerner"]
         XCTAssertTrue(four.waitForExistence(timeout: 20))
         four.tap()
-        XCTAssertTrue(a.staticTexts["Gemt."].waitForExistence(timeout: 10), "saved")
+        XCTAssertTrue(a.staticTexts["Din bedømmelse er gemt"].waitForExistence(timeout: 10), "saved")
         a.terminate()
         a = app(["-inviteCode", code, "-route", "wine"])
         let again = a.buttons["4 stjerner"]
@@ -76,7 +76,7 @@ final class GuestFlowTests: XCTestCase {
         expectation(for: selected, evaluatedWith: again)
         waitForExpectations(timeout: 10)
         again.tap() // clear again
-        XCTAssertTrue(a.staticTexts["Gemt."].waitForExistence(timeout: 10), "cleared")
+        XCTAssertTrue(a.staticTexts["Din bedømmelse er gemt"].waitForExistence(timeout: 10), "cleared")
     }
 
     func testEmailStepValidates() {

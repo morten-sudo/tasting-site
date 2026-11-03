@@ -1832,19 +1832,19 @@
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Du ser kun de smagninger, der er åbnet med et invitationslink på denne enhed. Log ind med din e-mail for at se det hele – på alle enheder."
+      "value": "Du er ikke logget ind, så vinbogen viser kun smagninger fra invitationslinks, du har åbnet her. Log ind for at se alle dine smagninger."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "You only see the tastings opened with an invitation link on this device. Sign in with your email to see everything, on any device."
+      "value": "You're not signed in, so your wine book only shows tastings from invitation links you've opened here. Sign in to see all your tastings."
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Þú sérð aðeins smakkanir sem opnaðar voru með boðshlekk á þessu tæki. Skráðu þig inn með netfangi til að sjá allt."
+      "value": "Þú ert ekki skráð(ur) inn, svo vínbókin sýnir aðeins smakkanir úr boðshlekkjum sem þú hefur opnað hér. Skráðu þig inn til að sjá allar smakkanirnar þínar."
      }
     }
    }
@@ -2250,19 +2250,19 @@
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Du er logget ind med et invitationslink på denne enhed. Log ind med din e-mail for at se alle dine smagninger på alle dine enheder."
+      "value": "Du er ikke logget ind, så vi kender kun de invitationslinks, du har åbnet her. Log ind for at se alle dine smagninger."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "You are signed in with an invitation link on this device. Sign in with your email to see all your tastings on any device."
+      "value": "You're not signed in, so we only know the invitation links you've opened here. Sign in to see all your tastings."
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Þú ert skráð(ur) inn með boðshlekk á þessu tæki. Skráðu þig inn með netfangi til að sjá allar smakkanirnar þínar á öllum tækjum."
+      "value": "Þú ert ekki skráð(ur) inn, svo við þekkjum aðeins boðshlekkina sem þú hefur opnað hér. Skráðu þig inn til að sjá allar smakkanirnar þínar."
      }
     }
    }
@@ -2527,6 +2527,952 @@
      "stringUnit": {
       "state": "translated",
       "value": "Bíður greiðslu"
+     }
+    }
+   }
+  },
+  "tastingHome.calendar": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Føj til kalender"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Add to calendar"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bæta í dagatal"
+     }
+    }
+   }
+  },
+  "tastingHome.map": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Åbn i kort"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Open in maps"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Opna á korti"
+     }
+    }
+   }
+  },
+  "tastingHome.during": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Under smagningen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "During the tasting"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Á meðan á smökkun stendur"
+     }
+    }
+   }
+  },
+  "tastingHome.winesSub": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vine – læs, bedøm og bestil"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} wines – read, rate and order"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vín – lestu, gefðu einkunn og pantaðu"
+     }
+    }
+   }
+  },
+  "map.title": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hvor vinene kommer fra"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Where the wines come from"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hvaðan vínin koma"
+     }
+    }
+   }
+  },
+  "map.wineNumbers": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vin {list}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wine {list}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vín {list}"
+     }
+    }
+   }
+  },
+  "map.wholeRegion": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hele {region}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "All of {region}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Allt {region}"
+     }
+    }
+   }
+  },
+  "map.otherRegion": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Anden region"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Another region"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Annað hérað"
+     }
+    }
+   }
+  },
+  "map.source": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kort: {sources}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Map: {sources}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kort: {sources}"
+     }
+    }
+   }
+  },
+  "map.zoomIn": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Zoom ind"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Zoom in"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þysja inn"
+     }
+    }
+   }
+  },
+  "map.zoomOut": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Zoom ud"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Zoom out"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þysja út"
+     }
+    }
+   }
+  },
+  "guest.feeTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Betaling for smagningen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tasting fee"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Greiðsla fyrir smökkunina"
+     }
+    }
+   }
+  },
+  "guest.feeText": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Prisen for aftenen er fundet ud fra indkøb og antal gæster."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The price for the evening is based on purchases and the number of guests."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Verðið fyrir kvöldið miðast við innkaup og fjölda gesta."
+     }
+    }
+   }
+  },
+  "guest.feePaid": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tak, din betaling for smagningen er modtaget."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Thank you, your payment for the tasting has been received."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Takk, greiðslan þín fyrir smökkunina hefur borist."
+     }
+    }
+   }
+  },
+  "pay.feeComment": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smagning {name}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tasting {name}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smökkun {name}"
+     }
+    }
+   }
+  },
+  "pay.noNumber": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Beløbet på {amount} betales med MobilePay. Værten fortæller dig hvordan."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The amount of {amount} is paid with MobilePay. The host will tell you how."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Upphæðin {amount} er greidd með MobilePay. Gestgjafinn segir þér hvernig."
+     }
+    }
+   }
+  },
+  "pay.lead": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Betal {amount} med MobilePay"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pay {amount} with MobilePay"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Greiddu {amount} með MobilePay"
+     }
+    }
+   }
+  },
+  "pay.open": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Åbn MobilePay"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Open MobilePay"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Opna MobilePay"
+     }
+    }
+   }
+  },
+  "pay.copyLabel": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kopiér {what}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Copy {what}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Afrita {what}"
+     }
+    }
+   }
+  },
+  "pay.copied": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kopieret"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Copied"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Afritað"
+     }
+    }
+   }
+  },
+  "pay.number": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nummer"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Number"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Númer"
+     }
+    }
+   }
+  },
+  "pay.amount": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Beløb"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Amount"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Upphæð"
+     }
+    }
+   }
+  },
+  "pay.message": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Besked"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Message"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skilaboð"
+     }
+    }
+   }
+  },
+  "pay.fallback": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Virker knappen ikke, så åbn MobilePay selv og brug oplysningerne ovenfor."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "If the button doesn't work, open MobilePay yourself and use the details above."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ef hnappurinn virkar ekki skaltu opna MobilePay sjálf(ur) og nota upplýsingarnar hér að ofan."
+     }
+    }
+   }
+  },
+  "wizard.back": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tilbage"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Back"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Til baka"
+     }
+    }
+   }
+  },
+  "rating.saved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Din bedømmelse er gemt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your rating is saved"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Einkunnin þín er vistuð"
+     }
+    }
+   }
+  },
+  "rating.notSaved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ikke gemt – prøv igen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Not saved – try again"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki vistað – reyndu aftur"
+     }
+    }
+   }
+  },
+  "rating.private": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kun du kan se dine noter. Værten ser kun gennemsnittet af stjernerne."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Only you can see your notes. The host only sees the average rating."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aðeins þú sérð athugasemdirnar þínar. Gestgjafinn sér aðeins meðaleinkunnina."
+     }
+    }
+   }
+  },
+  "wine.readLess": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vis mindre"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Show less"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sýna minna"
+     }
+    }
+   }
+  },
+  "wine.moreAbout": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mere om vinen og producenten"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "More about the wine and the producer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Meira um vínið og framleiðandann"
+     }
+    }
+   }
+  },
+  "wine.prev": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Forrige"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Previous"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fyrra"
+     }
+    }
+   }
+  },
+  "wine.next": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Næste"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Next"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Næsta"
+     }
+    }
+   }
+  },
+  "wine.others": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Andre vine"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Other wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Önnur vín"
+     }
+    }
+   }
+  },
+  "label.grapes": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Druer"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Grapes"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þrúgur"
+     }
+    }
+   }
+  },
+  "wineFields.food": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Passer til"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Goes with"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Passar með"
+     }
+    }
+   }
+  },
+  "wineFields.serving": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Servering"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Serving"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Framreiðsla"
+     }
+    }
+   }
+  },
+  "producer.websiteShort": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hjemmeside"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Website"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vefsíða"
+     }
+    }
+   }
+  },
+  "producer.addressShort": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Adresse"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Address"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Heimilisfang"
+     }
+    }
+   }
+  },
+  "price.bulk": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ved {n} stk.: {price} pr. flaske"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "From {n} bottles: {price} each"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Frá {n} flöskum: {price} hver"
+     }
+    }
+   }
+  },
+  "bulk.reached": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mængdepris nået: {price} pr. flaske."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Quantity price reached: {price} per bottle."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Magnverði náð: {price} á flösku."
+     }
+    }
+   }
+  },
+  "bulk.reachedAll": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sammen har I nået mængdeprisen: {price} pr. flaske for alle."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Together you have reached the quantity price: {price} per bottle for everyone."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Saman hafið þið náð magnverðinu: {price} á flösku fyrir alla."
+     }
+    }
+   }
+  },
+  "bulk.togetherMore": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sammen har I bestilt {have} af {need} – {more} flasker mere, så falder prisen til {price} for alle."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Together you have ordered {have} of {need} – {more} more and the price falls to {price} for everyone."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Saman hafið þið pantað {have} af {need} – {more} í viðbót og verðið lækkar í {price} fyrir alla."
+     }
+    }
+   }
+  },
+  "bulk.youMore": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du har {have} af {need} – {more} flasker mere, så falder prisen til {price} pr. flaske."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You have {have} of {need} – {more} more and the price falls to {price} per bottle."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú ert með {have} af {need} – {more} í viðbót og verðið lækkar í {price} á flösku."
      }
     }
    }

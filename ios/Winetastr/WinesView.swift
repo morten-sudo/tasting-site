@@ -196,15 +196,25 @@ struct WineDetailView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     let tasting: MyTasting
-    let wine: Wine
+    @State var wine: Wine
     let position: Int?
+    @State private var wines: [Wine] = []
+    @State private var info: TastingInfo?
     @State private var stars: Int?
     @State private var note = ""
     @State private var didLoad = false
     @State private var saveTask: Task<Void, Never>?
-    @State private var status: String?
-    @State private var failed = false
     @State private var needsFlush = false
+    @State private var toast: String?
+    @State private var descOpen = false
+    @State private var descLong = false
+    @State private var map: WineMap?
+
+    init(tasting: MyTasting, wine: Wine, position: Int?) {
+        self.tasting = tasting; self._wine = State(initialValue: wine); self.position = position
+    }
+
+    private var index: Int? { wines.firstIndex { $0.id == wine.id } }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -219,37 +229,36 @@ struct WineDetailView: View {
                     }
                     .buttonStyle(TextButton()).padding(.horizontal, 16).padding(.vertical, 2)
 
+                    // The picture on white, edge to edge, with the wine's number in the corner
                     ZStack(alignment: .topLeading) {
-                        WineImage(wine: wine).frame(height: 300).padding(.vertical, 16)
-                        if let position { Text(twoDigits(position)).font(.display(17, light: false, relativeTo: .caption)).tracking(2).foregroundStyle(Color.muted).padding(14) }
+                        WineImage(wine: wine).padding(24).frame(height: 300)
+                        if let position { Text(twoDigits(index.map { $0 + 1 } ?? position)).font(.display(17, light: false, relativeTo: .caption)).tracking(2).foregroundStyle(Color.muted).padding(14) }
                     }
+                    .frame(maxWidth: .infinity)
                     .background(Color.surface)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        StyleEyebrow(wine: wine)
-                        Text(wineTitle(wine, number: position)).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
+                    VStack(alignment: .leading, spacing: 0) {
+                        StyleEyebrow(wine: wine).padding(.top, 22).padding(.bottom, 8)
+                        Text(wineTitle(wine, number: index.map { $0 + 1 } ?? position)).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
                         if wine.isBlind {
-                            Text(L("blind.hint")).font(.body()).foregroundStyle(Color.muted)
+                            Text(L("blind.hint")).font(.body()).foregroundStyle(Color.muted).padding(.top, 8)
                         } else {
-                            let line = [vintageText(wine.vintage), wine.producer].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
-                            if !line.isEmpty { Text(line).font(.body()).foregroundStyle(Color.muted) }
-                            if let o = wine.fullOrigin {
-                                HStack(spacing: 8) {
-                                    SiteIcon("pin", size: 18).foregroundStyle(Color.muted)
+                            let meta = [vintageText(wine.vintage), wine.producer, wine.abv.map { "\($0.formatted(.number.locale(appLocale))) %" }].compactMap { $0 }.filter { !$0.isEmpty }
+                            if !meta.isEmpty { Text(meta.joined(separator: " · ")).font(.body()).foregroundStyle(Color.muted).padding(.top, 8) }
+                            if let o = originFull(wine) {
+                                HStack(spacing: 6.4) {
+                                    SiteIcon("pin", size: 16).foregroundStyle(Color.muted)
                                     Text(o).font(.body()).foregroundStyle(Color.muted)
                                 }
+                                .padding(.top, 4.8)
                             }
+                            if wine.price_dkk != nil { buy.padding(.top, 20) }
                         }
-                        if wine.price_dkk != nil {
-                            Rectangle().fill(Color.rule).frame(height: 1).padding(.top, 8)
-                            PriceLine(wine: wine, big: true).padding(.vertical, 4)
-                            Rectangle().fill(Color.rule).frame(height: 1)
-                        }
-                        ratingBox.padding(.top, 12)
-                        if let d = wine.description, !d.isEmpty { Text(d).font(.body()).foregroundStyle(Color.paper).lineSpacing(3).padding(.top, 18) }
-                        facts.padding(.top, 18)
+                        ratingBox.padding(.top, wine.price_dkk != nil && !wine.isBlind ? 4 : 20)
+                        if !wine.isBlind { reading }
+                        if wines.count > 1, let index { pager(index).padding(.top, 32) }
                     }
-                    .padding(16)
+                    .padding(.horizontal, 16).padding(.bottom, 48)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -260,24 +269,32 @@ struct WineDetailView: View {
         .background(Color.lodge)
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
-        .task {
-            guard !didLoad else { return }
-            if let r = try? await Backend.ratings(tasting.code)[wine.id] { stars = r.rating; note = r.note ?? "" }
-            didLoad = true
-        }
-        .onDisappear {
-            saveTask?.cancel()
-            if needsFlush { Task { [stars, note] in try? await Backend.rate(tasting.code, wine: wine.id, stars: stars, note: note) } }
-        }
+        .toast($toast)
+        .task(id: wine.id) { await load() }
+        .task(id: wine.id) { await watchBlind() }
+        .onDisappear { flush() }
     }
+
+    // MARK: Price (component 21): ours, the regular one struck through, the quantity prices and how far the guests are
+
+    private var buy: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            PriceLine(wine: wine, big: true)
+            ForEach(tierLabels(wine) + [bulkNote(wine, mode: info?.bulk_mode)].compactMap { $0 }, id: \.self) {
+                Text($0).font(.body(14.4)).foregroundStyle(Color.bordeaux)
+            }
+        }
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .top) { Rectangle().fill(Color.rule).frame(height: 1) }
+        .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
+    }
+
+    // MARK: The guest's own rating (ratingBox in src/lib/rating.ts): saved by itself, the toast says so
 
     private var ratingBox: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(L("rating.title")).font(.semibold(17)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
-                Spacer()
-                if let status { Text(status).font(.body(13.6)).foregroundStyle(failed ? Color.errorText : Color.okText) }
-            }
+            Text(L("rating.title")).font(.semibold(17)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
             HStack(spacing: 0) {
                 ForEach(1...5, id: \.self) { n in
                     Button {
@@ -293,39 +310,109 @@ struct WineDetailView: View {
                     .accessibilityAddTraits(n == stars ? .isSelected : [])
                 }
             }
+            .padding(.leading, -9)
             FieldLabel(text: L("rating.note")).padding(.top, 6)
             TextField("", text: $note, prompt: Text(L("rating.notePlaceholder")).foregroundStyle(Color.placeholder), axis: .vertical)
                 .accessibilityLabel(L("rating.note")).lineLimit(2...6).padding(.vertical, 10).wtField()
                 .onChange(of: note) { if didLoad { scheduleSave(after: 0.8) } }
+            Text(L("rating.private")).font(.body(13.6)).foregroundStyle(Color.muted)
+        }
+        .padding(.top, 16)
+    }
+
+    // MARK: Reading: the description (folded when long), grapes, food and serving, the map, more about the producer
+
+    @ViewBuilder private var reading: some View {
+        if let d = wine.description, !d.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(d).font(.body(16.3)).foregroundStyle(Color.paper).lineSpacing(8)
+                    .lineLimit(descOpen ? nil : 5)
+                    .background(GeometryReader { g in Color.clear.onAppear { descLong = d.count > 320 || g.size.height > 150 } })
+                if descLong {
+                    Button(L(descOpen ? "wine.readLess" : "wine.readMore")) { withAnimation { descOpen.toggle() } }.buttonStyle(TextButton())
+                }
+            }
+            .padding(.top, 26)
+        }
+        WineFactsList(wine: wine).padding(.top, 20)
+        if let map {
+            VStack(alignment: .trailing, spacing: 4.8) {
+                MapBox(drawing: map.drawing, label: originFull(wine))
+                MapCredit(sources: map.sources, osm: map.osm)
+            }
+            .padding(.top, 20)
+        }
+        let rows = moreRows
+        if !rows.isEmpty {
+            Disclosure(summary: L("wine.moreAbout")) { FactsRows(rows: rows) }.padding(.top, 24)
         }
     }
 
-    /// .facts: label and value side by side
-    @ViewBuilder private var facts: some View {
-        let extra: [(String, String?)] = [
-            (L("app.grapes"), wine.grapes), (L("app.foodPairing"), wine.food_pairing),
-            (L("app.serving"), wine.serving), (L("app.abv"), wine.abv.map { "\($0.formatted(.number.locale(appLocale))) %" }),
-        ]
-        let rows = extra.filter { !($0.1 ?? "").isEmpty }
-        let lines = wine.detailLines
-        if !lines.isEmpty || !rows.isEmpty || wine.producer_website != nil {
-            VStack(alignment: .leading, spacing: 12) {
-                Eyebrow(text: L("app.aboutWine"))
-                ForEach(rows, id: \.0) { row in fact(row.0, row.1 ?? "") }
-                ForEach(Array(lines.enumerated()), id: \.offset) { _, l in fact(l.label, l.text) }
-                if let site = wine.producer_website, let url = URL(string: site), ["http", "https"].contains(url.scheme ?? "") {
-                    Link(url.host?.replacingOccurrences(of: "www.", with: "") ?? site, destination: url).font(.medium(15.2)).foregroundStyle(Color.bordeaux)
-                }
+    private var moreRows: [(label: String?, value: AnyView)] {
+        var rows: [(label: String?, value: AnyView)] = []
+        if let site = wine.producer_website, let url = URL(string: site), ["http", "https"].contains(url.scheme ?? "") {
+            rows.append((L("producer.websiteShort"), AnyView(Link(url.host?.replacingOccurrences(of: "www.", with: "") ?? site, destination: url).font(.body(15.2)).foregroundStyle(Color.bordeaux))))
+        }
+        if let a = wine.producer_address, !a.isEmpty { rows.append((L("producer.addressShort"), AnyView(Text(a).font(.body(15.2)).foregroundStyle(Color.paper)))) }
+        for l in wine.detailLines { rows.append((l.label, AnyView(Text(l.text).font(.body(15.2)).foregroundStyle(Color.paper)))) }
+        return rows
+    }
+
+    // MARK: Previous and next around "2 af 11"
+
+    private func pager(_ i: Int) -> some View {
+        HStack(spacing: 24) {
+            pagerButton("left", L("wine.prev"), i > 0 ? wines[i - 1] : nil, i)
+            Text(L("wines.position", ["n": "\(i + 1)", "total": "\(wines.count)"])).font(.body(15)).foregroundStyle(Color.muted).monospacedDigit()
+            pagerButton("right", L("wine.next"), i + 1 < wines.count ? wines[i + 1] : nil, i + 2)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .contain).accessibilityLabel(L("wine.others"))
+    }
+
+    private func pagerButton(_ icon: String, _ dir: String, _ w: Wine?, _ n: Int) -> some View {
+        Button {
+            guard let w else { return }
+            flush()
+            if !model.path.isEmpty { model.path[model.path.count - 1] = .wine(tasting, w, n) }
+        } label: {
+            SiteIcon(icon, size: 20).foregroundStyle(w != nil ? Color.paper : Color.fieldLine)
+                .frame(width: 48, height: 48)
+                .background(w != nil ? Color.surface : Color.clear, in: Circle())
+                .overlay(Circle().strokeBorder(Color.rule))
+        }
+        .disabled(w == nil)
+        .accessibilityLabel(w.map { "\(dir): \(wineTitle($0, number: n))" } ?? dir)
+    }
+
+    // MARK: Loading and saving
+
+    private func load() async {
+        async let all = try? Backend.wines(tasting.code)
+        async let t = try? Backend.tasting(tasting.code)
+        async let r = try? Backend.ratings(tasting.code)
+        let (list, settings, mine) = await (all, t, r)
+        if let list { wines = list; if let fresh = list.first(where: { $0.id == wine.id }) { wine = fresh } }
+        info = settings ?? info
+        if !didLoad, let m = mine?[wine.id] { stars = m.rating; note = m.note ?? "" }
+        didLoad = true
+        if !wine.isBlind { map = await wineMap(wine) }
+    }
+
+    /// A blind wine: when the host reveals it, the whole wine shows (checked every 15 seconds, as on the site)
+    private func watchBlind() async {
+        while !Task.isCancelled && wine.isBlind {
+            try? await Task.sleep(for: .seconds(15))
+            if let list = try? await Backend.wines(tasting.code), let fresh = list.first(where: { $0.id == wine.id }), fresh.isBlind != wine.isBlind {
+                wines = list; wine = fresh
+                map = await wineMap(fresh)
             }
         }
     }
 
-    private func fact(_ label: String?, _ text: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            if let label { Text(label).font(.body(15.2)).foregroundStyle(Color.muted) }
-            Text(text).font(.body(15.2)).foregroundStyle(Color.paper)
-        }
-        .accessibilityElement(children: .combine)
+    private func flush() {
+        saveTask?.cancel()
+        if needsFlush { needsFlush = false; Task { [stars, note, code = tasting.code, id = wine.id] in try? await Backend.rate(code, wine: id, stars: stars, note: note) } }
     }
 
     private func scheduleSave(after seconds: Double) {
@@ -336,9 +423,9 @@ struct WineDetailView: View {
             do {
                 try await Backend.rate(tasting.code, wine: wine.id, stars: stars, note: note)
                 guard !Task.isCancelled else { return }
-                needsFlush = false; failed = false; status = L("common.saved")
+                needsFlush = false; toast = L("rating.saved")
             } catch {
-                failed = true; status = L("app.notSaved")
+                toast = L("rating.notSaved")
             }
         }
     }

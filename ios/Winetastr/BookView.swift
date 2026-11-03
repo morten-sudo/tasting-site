@@ -83,7 +83,7 @@ struct BookView: View {
     }
     private func stat(_ n: Int, _ label: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text("\(n)").font(.custom("CormorantGaramond-Regular", size: 30, relativeTo: .title)).fontWeight(.medium).foregroundStyle(Color.bordeaux)
+            Text("\(n)").font(.display(32, light: false)).foregroundStyle(Color.bordeaux)
             Text(label).font(.body(13.6)).foregroundStyle(Color.muted).lineLimit(2).minimumScaleFactor(0.85)
         }
         .padding(.vertical, 12.8).padding(.horizontal, 14.4)

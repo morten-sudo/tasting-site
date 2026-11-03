@@ -32,6 +32,7 @@ struct LoginView: View {
                 Image("Logo").resizable().frame(width: 30, height: 30)
                 Text("Winetastr").font(.medium(17)).foregroundStyle(Color.paper)
                 Spacer()
+                if onClose == nil { MenuButton(id: .account, accessibilityLabel: L("nav.userMenu")) { SiteIcon("user", size: 23).foregroundStyle(Color.paper) } }
                 if let onClose {
                     Button(action: onClose) { SiteIcon("x", size: 20).foregroundStyle(Color.muted).frame(width: 44, height: 44) }
                         .accessibilityLabel(L("common.cancel"))
@@ -39,6 +40,7 @@ struct LoginView: View {
             }
             .padding(.horizontal, 16).frame(minHeight: 54).background(Color.surface)
         }
+        .siteMenus()
     }
 
     private var hero: some View {

@@ -15,7 +15,10 @@ struct TastingInfo: Decodable {
     let slug: String; let title: String; let starts_at: String?; let place: String?; let intro: String?
     let host_names: [String]?; let host_name: String?
     let coming: Int?; let full: Bool?; let signup_open: Bool?
+    let ends_at: String?; let quiz_count: Int?; let quiz_open: Bool?; let quiz_finished: Bool?
+    let orders_open: Bool?; let mobilepay: String?; let bulk_mode: String?
     var start: Date? { parseDate(starts_at) }
+    var end: Date? { parseDate(ends_at) }
     var hosts: String? {
         let names = (host_names ?? [host_name].compactMap { $0 }).filter { !$0.isEmpty }
         return names.isEmpty ? nil : names.formatted(.list(type: .and).locale(appLocale))
@@ -69,6 +72,8 @@ struct Wine: Decodable, Hashable, Identifiable {
 
 /// A quantity price: from qty bottles, price each
 struct PriceTier: Decodable, Hashable { let qty: Int; let price: Double }
+
+struct TastingPayment: Decodable { let amount: Double; let paid: Bool }
 
 struct MyRating: Decodable { let wine_id: Int; let rating: Int?; let note: String? }
 struct Profile: Decodable { let email: String?; let name: String?; let is_host: Bool? }
@@ -138,6 +143,11 @@ enum Backend {
         return (try? JSONDecoder().decode(Bool.self, from: data)) ?? true
     }
     static func linkMe() async { _ = try? await supabase.rpc("link_me_tastings").execute() }
+    /// The tasting's own price for the guest, when the host has set one
+    static func payment(_ code: String) async throws -> TastingPayment? {
+        let rows: [TastingPayment] = try decode(try await supabase.rpc("get_tasting_payment", params: CodeParam(code: code)).execute().data)
+        return rows.first
+    }
     static func wineBook(_ codes: [String]) async throws -> [BookWine] {
         try decode(try await supabase.rpc("my_wine_book", params: Codes(codes: codes)).execute().data)
     }

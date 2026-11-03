@@ -51,12 +51,28 @@ enum WTFonts {
 }
 
 extension Font {
+    /// The display face with lining figures: Cormorant's own old-style figures make 0 and 1 look like O and I
     static func display(_ size: CGFloat, light: Bool = true, relativeTo style: Font.TextStyle = .title) -> Font {
-        .custom(light ? "CormorantGaramond-Light" : "CormorantGaramond-Regular", size: size, relativeTo: style)
+        let name = light ? "CormorantGaramond-Light" : "CormorantGaramond-Regular"
+        guard let base = UIFont(name: name, size: size) else { return .custom(name, size: size, relativeTo: style) }
+        let lining = base.fontDescriptor.addingAttributes([.featureSettings: [[
+            UIFontDescriptor.FeatureKey.type: kNumberCaseType, UIFontDescriptor.FeatureKey.selector: kUpperCaseNumbersSelector,
+        ]]])
+        return Font(UIFontMetrics(forTextStyle: style.uiKit).scaledFont(for: UIFont(descriptor: lining, size: size)))
     }
     static func body(_ size: CGFloat = 16, relativeTo style: Font.TextStyle = .body) -> Font { .custom("Inter-Regular", size: size, relativeTo: style) }
     static func medium(_ size: CGFloat = 16, relativeTo style: Font.TextStyle = .body) -> Font { .custom("Inter-Medium", size: size, relativeTo: style) }
     static func semibold(_ size: CGFloat = 16, relativeTo style: Font.TextStyle = .body) -> Font { .custom("Inter-SemiBold", size: size, relativeTo: style) }
+}
+
+extension Font.TextStyle {
+    var uiKit: UIFont.TextStyle {
+        switch self {
+        case .largeTitle: .largeTitle; case .title: .title1; case .title2: .title2; case .title3: .title3
+        case .headline: .headline; case .subheadline: .subheadline; case .callout: .callout
+        case .footnote: .footnote; case .caption: .caption1; case .caption2: .caption2; default: .body
+        }
+    }
 }
 
 /// The site's line icons (src/lib/ui/icons.ts)
@@ -85,9 +101,11 @@ struct TextButton: ButtonStyle {
     var size: CGFloat = 15.2
     /// The quiet kind: muted until pressed
     var quiet = false
+    /// Inline links in a line of text (.hero-when .text-btn) are not made taller than the line
+    var minHeight: CGFloat = 44
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.medium(size)).foregroundStyle(quiet ? Color.muted : Color.bordeaux).opacity(configuration.isPressed ? 0.6 : 1)
-            .frame(minHeight: 44).contentShape(Rectangle())
+            .frame(minHeight: minHeight).contentShape(Rectangle().inset(by: minHeight < 44 ? -8 : 0))
     }
 }
 
@@ -264,8 +282,7 @@ struct TopBar: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            // The language and the account: the site's dropdowns (the one menu, Menu.swift)
-            MenuButton(id: .language, accessibilityLabel: L("profile.language")) { FlagImage(code: model.language).opacity(0.85) }
+            // The account, with the language in it: the site's one menu (Menu.swift)
             MenuButton(id: .account, accessibilityLabel: L("nav.userMenu")) { SiteIcon("user", size: 23).foregroundStyle(Color.paper) }
         }
         .padding(.leading, 16).padding(.trailing, 8).frame(minHeight: 54)

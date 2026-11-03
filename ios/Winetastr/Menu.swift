@@ -24,7 +24,11 @@ struct SiteMenuItem: Identifiable {
     var quiet = false
     /// The <hr> before the item
     var dividerBefore = false
-    let action: () -> Void
+    /// Shown at the right in the muted colour (the current language)
+    var value: String? = nil
+    /// A list the same panel switches to ("Sprog" → the languages), with "Tilbage" at the top
+    var submenu: [SiteMenuItem]? = nil
+    var action: () -> Void = {}
 }
 
 /// .menu .opt-i: the light background while pressed
@@ -37,28 +41,19 @@ private struct MenuRowStyle: ButtonStyle {
 struct MenuPanel: View {
     let items: [SiteMenuItem]
     let close: () -> Void
+    @State private var sub: [SiteMenuItem]?
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(items) { item in
-                if item.dividerBefore { Rectangle().fill(Color.rule).frame(height: 1).padding(.vertical, 4.8) }
-                Button { close(); item.action() } label: {
-                    HStack(spacing: 9.6) {
-                        switch item.lead {
-                        case .icon(let name): SiteIcon(name, size: 17.6).foregroundStyle(Color.muted)
-                        case .flag(let code): FlagImage(code: code)
-                        case .none: EmptyView()
-                        }
-                        Text(item.title).font(item.checked == true ? .medium(14.9) : .body(14.9))
-                            .foregroundStyle(item.quiet ? Color.muted : Color.paper).lineLimit(1)
-                        Spacer(minLength: 12)
-                        if let checked = item.checked {
-                            SiteIcon("check", size: 16).foregroundStyle(Color.bordeaux).opacity(checked ? 1 : 0)
-                        }
-                    }
-                    .padding(.horizontal, 8.8).frame(minHeight: 44).contentShape(Rectangle())
+            if let sub {
+                row(SiteMenuItem(lead: .icon("left"), title: L("wizard.back"), quiet: true) { withAnimation(.easeOut(duration: 0.15)) { self.sub = nil } }, keepOpen: true)
+                Rectangle().fill(Color.rule).frame(height: 1).padding(.vertical, 4.8)
+                ForEach(sub) { row($0) }
+            } else {
+                ForEach(items) { item in
+                    if item.dividerBefore { Rectangle().fill(Color.rule).frame(height: 1).padding(.vertical, 4.8) }
+                    row(item, keepOpen: item.submenu != nil)
                 }
-                .buttonStyle(MenuRowStyle())
-                .accessibilityAddTraits(item.checked == true ? .isSelected : [])
             }
         }
         .padding(5.6)
@@ -67,6 +62,32 @@ struct MenuPanel: View {
         .background(Color.surface, in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.rule))
         .shadow(color: Color.paper.opacity(0.14), radius: 14, y: 10)
+    }
+
+    private func row(_ item: SiteMenuItem, keepOpen: Bool = false) -> some View {
+        Button {
+            if let s = item.submenu { withAnimation(.easeOut(duration: 0.15)) { sub = s } }
+            else { if !keepOpen { close() }; item.action() }
+        } label: {
+            HStack(spacing: 9.6) {
+                switch item.lead {
+                case .icon(let name): SiteIcon(name, size: 17.6).foregroundStyle(Color.muted)
+                case .flag(let code): FlagImage(code: code)
+                case .none: EmptyView()
+                }
+                Text(item.title).font(item.checked == true ? .medium(14.9) : .body(14.9))
+                    .foregroundStyle(item.quiet ? Color.muted : Color.paper).lineLimit(1)
+                Spacer(minLength: 12)
+                if let value = item.value { Text(value).font(.body(14.4)).foregroundStyle(Color.muted).lineLimit(1) }
+                if item.submenu != nil { SiteIcon("right", size: 15).foregroundStyle(Color.muted) }
+                if let checked = item.checked {
+                    SiteIcon("check", size: 16).foregroundStyle(Color.bordeaux).opacity(checked ? 1 : 0)
+                }
+            }
+            .padding(.horizontal, 8.8).frame(minHeight: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(MenuRowStyle())
+        .accessibilityAddTraits(item.checked == true ? .isSelected : [])
     }
 }
 
@@ -105,23 +126,33 @@ struct MenuButton<Label: View>: View {
 }
 
 extension AppModel {
-    /// The top bar's menus: the languages, and the account with the guest's places (as on the site, without admin)
+    /// The languages, as the sub list of "Sprog": the current one checked, picking one switches at once
+    var languageItems: [SiteMenuItem] {
+        appLanguages.map { l in SiteMenuItem(lead: .flag(l.code), title: l.name, checked: l.code == language) { [weak self] in self?.setLanguage(l.code) } }
+    }
+    private var languageRow: SiteMenuItem {
+        SiteMenuItem(lead: .icon("globe"), title: L("profile.language"), dividerBefore: true,
+                     value: appLanguages.first { $0.code == language }?.name, submenu: languageItems)
+    }
+
+    /// The account menu with the guest's places, as on the site (without admin); the language is a row in it
     func menuItems(_ id: MenuID) -> [SiteMenuItem]? {
         switch id {
-        case .language:
-            return appLanguages.map { l in
-                SiteMenuItem(lead: .flag(l.code), title: l.name, checked: l.code == language) { [weak self] in self?.setLanguage(l.code) }
-            }
-        case .account:
+        case .account where isIn:
             return [
                 SiteMenuItem(lead: .icon("home"), title: L("nav.home")) { [weak self] in self?.path = [] },
                 SiteMenuItem(lead: .icon("book"), title: L("book.title")) { [weak self] in self?.path = [.book] },
                 SiteMenuItem(lead: .icon("user"), title: L("nav.profile")) { [weak self] in self?.path = [.profile] },
+                languageRow,
                 SiteMenuItem(lead: .icon("logout"), title: L("nav.signOut"), quiet: true, dividerBefore: true) { [weak self] in
                     Task { await self?.signOut() }
                 },
             ]
-        case .custom: return nil
+        case .account:
+            // Not signed in (the sign-in page): only the language
+            var row = languageRow; row.dividerBefore = false
+            return [row]
+        default: return nil
         }
     }
 }

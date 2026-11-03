@@ -41,12 +41,15 @@ final class MenuTests: XCTestCase {
 
     func testLanguageSwitchesInPlace() {
         let a = app()
-        let lang = a.buttons["Sprog"]
-        XCTAssertTrue(lang.waitForExistence(timeout: 15))
-        lang.tap()
+        let account = a.buttons["Kontomenu"]
+        XCTAssertTrue(account.waitForExistence(timeout: 15))
+        account.tap()
+        a.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Sprog'")).firstMatch.tap()
+        XCTAssertTrue(a.buttons["Tilbage"].waitForExistence(timeout: 3), "the language list in the same panel")
         a.buttons["English"].tap()
         XCTAssertTrue(a.staticTexts["My tastings"].waitForExistence(timeout: 10), "English")
-        a.buttons["Language"].tap()
+        a.buttons["Account menu"].tap()
+        a.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Language'")).firstMatch.tap()
         a.buttons["Dansk"].tap()
         XCTAssertTrue(a.staticTexts["Mine smagninger"].waitForExistence(timeout: 10), "back to Danish")
     }
