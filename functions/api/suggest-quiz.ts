@@ -4,7 +4,7 @@
 // asked about by their number (a guessing question), without giving them away in the question.
 // Read as the signed-in host; nothing is saved here – the host adds the suggestions they want.
 import { SUPABASE_URL, SUPABASE_KEY } from '../../src/lib/config';
-import { json, str, parseAnswer, type AiEnv, meteredAi } from '../../src/server/wine-ai';
+import { json, str, parseAnswer, type AiEnv, meteredAi, overDailyLimit } from '../../src/server/wine-ai';
 
 const MODEL = '@cf/openai/gpt-oss-120b';
 const LANGS: Record<string, string> = {
@@ -50,6 +50,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   if (!tasting) return json({ error: 'not_found' }, 404);
   const rows = ((wRes.ok ? await wRes.json() : []) as Row[]).filter((r) => r.wines && r.revealed);
   if (!rows.length) return json({ error: 'no_wines' }, 400);
+  const limited = await overDailyLimit(request, 'ai', { t_id: id });
+  if (limited) return limited;
 
   const lang = [str(body.lang), tasting.language].find((l) => l && LANGS[l]) ?? 'da';
   const blindCount = rows.filter((r) => r.blind).length;

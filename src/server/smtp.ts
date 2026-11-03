@@ -28,14 +28,25 @@ const b64Lines = (s: string) => b64(s).replace(/.{1,76}/g, '$&\r\n');
 const headerWord = (s: string) => (/^[\x20-\x7e]*$/.test(s) ? s : `=?UTF-8?B?${b64(s)}?=`);
 const clean = (s: string) => s.replace(/[\r\n]+/g, ' ').trim();
 
+/** A plain email address: one @, a dot in the domain, no spaces, control characters, < or > (they would end up in
+ *  the mail's headers and the SMTP commands, e.g. "x@y.dk>\r\nRCPT TO:<z@w.dk"). At most 320 characters. */
+export const isMailAddress = (s: unknown): s is string =>
+  typeof s === 'string' && s.length <= 320 && /^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$/.test(s) && !/[\u0000-\u001f\u007f]/.test(s);
+/** Throws for an address that is not a plain email address */
+function address(s: string, what: string) {
+  if (!isMailAddress(s)) throw new Error(`smtp: bad ${what} address`);
+  return s;
+}
+
 /** The whole message: plain text and HTML, both base64 encoded so long lines and æøå are safe. */
 export function buildMessage(mail: Mail, from: string, now = new Date()) {
   const boundary = `wt-${crypto.randomUUID()}`;
-  const domain = from.split('@')[1] ?? 'localhost';
+  const domain = address(from, 'from').split('@')[1];
   const headers = [
     `From: ${headerWord(clean(mail.fromName))} <${from}>`,
-    `To: <${clean(mail.to)}>`,
-    ...(mail.replyTo ? [`Reply-To: <${clean(mail.replyTo)}>`] : []),
+    `To: <${address(mail.to, 'to')}>`,
+    // A reply address that is not a plain address is left out rather than failing the mail
+    ...(mail.replyTo && isMailAddress(mail.replyTo) ? [`Reply-To: <${mail.replyTo}>`] : []),
     `Subject: ${headerWord(clean(mail.subject))}`,
     `Date: ${now.toUTCString().replace('GMT', '+0000')}`,
     `Message-ID: <${crypto.randomUUID()}@${domain}>`,
@@ -49,6 +60,11 @@ export function buildMessage(mail: Mail, from: string, now = new Date()) {
 
 /** Talks SMTP over an open, encrypted connection and sends the message. Throws with the server's reply on failure. */
 export async function smtpSend(conn: Conn, opts: { user: string; pass: string; from: string; to: string; message: string; helo?: string }) {
+  // Checked before anything is sent: an address goes into the SMTP commands as it is
+  if (!isMailAddress(opts.from) || !isMailAddress(opts.to)) {
+    try { await conn.close(); } catch { /* not open */ }
+    throw new Error('smtp: bad from or to address');
+  }
   const reader = conn.readable.getReader();
   const writer = conn.writable.getWriter();
   const dec = new TextDecoder();
@@ -106,7 +122,9 @@ export async function sendMail(env: MailEnv, open: Open, mail: Mail): Promise<bo
   if (!env.SMTP_USER || !env.SMTP_PASS) return false;
   // The sender: SMTP_FROM, or the login when that is an address (One.com); services like Resend log in with a plain user name
   const from = env.SMTP_FROM || (env.SMTP_USER.includes('@') ? env.SMTP_USER : 'noreply@winetastr.com');
+  // Built first: it refuses an address with a line break, < or > before any connection is opened
+  const message = buildMessage(mail, from);
   const conn = open(env.SMTP_HOST || 'send.one.com', Number(env.SMTP_PORT || 465));
-  await smtpSend(conn, { user: env.SMTP_USER, pass: env.SMTP_PASS, from, to: mail.to, message: buildMessage(mail, from) });
+  await smtpSend(conn, { user: env.SMTP_USER, pass: env.SMTP_PASS, from, to: mail.to, message });
   return true;
 }

@@ -5,7 +5,7 @@
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
 import { json, logUsage } from '../../src/server/wine-ai';
-import { sendMail, type MailEnv } from '../../src/server/smtp';
+import { sendMail, isMailAddress, type MailEnv } from '../../src/server/smtp';
 import { updatesMail } from '../../src/server/mail-texts';
 import { formatKr } from '../../src/lib/ui/kr';
 
@@ -28,6 +28,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
   const origin = new URL(request.url).origin;
   let sent = 0;
   for (const b of batches) {
+    if (!isMailAddress(b.to)) { console.log('notify: not a plain address, skipped'); continue; }
     // The most fitting part of the tasting's admin: chat, orders or guests
     const kinds = new Set(b.items.map((i) => i.kind));
     const part = kinds.size === 1 && kinds.has('chat') ? 'chat/' : kinds.size === 1 && kinds.has('order') ? 'orders/' : 'guests/';
