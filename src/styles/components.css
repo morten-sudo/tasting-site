@@ -778,6 +778,13 @@ dialog .input { max-width: none; }
 /* A row that is a headline (the next tasting, the tastings you host) */
 .lrow.big .ltitle { font-family: var(--display); font-weight: 400; font-size: 1.45rem; line-height: 1.15; }
 .llead { display: flex; align-items: center; gap: 0.9rem; flex: none; }
+/* A row with a wine's picture: a large picture whose top lines up with the top of the name; the number and the grip
+   sit on the name's line, the price and the icons stay in the middle */
+.llead .thumb { --pad: 0.5rem; width: 6rem; height: 7.6rem; margin-top: 0.2rem; }
+.lrow:has(> .llead > .thumb) { align-items: flex-start; }
+.lrow:has(> .llead > .thumb) > :is(.laside, .lacts) { align-self: center; }
+.llead:has(> .thumb) { align-items: flex-start; }
+.llead:has(> .thumb) > :is(.lno, .grip) { line-height: 1.4; margin-top: -0.1rem; }
 .grip {
   cursor: grab; color: var(--lodge-3); background: none; border: 0; padding: 0; width: 1.4rem; height: var(--h-sm);
   display: grid; place-items: center; border-radius: 4px; touch-action: none; flex: none;
@@ -835,7 +842,7 @@ span.ltitle { cursor: default; }
   .lrow:has(> .lacts > :nth-child(3)) { grid-template-areas: 'lead main main' 'lead aside acts'; }
   .lrow:has(> .lacts > :nth-child(3)) > .lacts { align-self: end; margin-right: -0.35rem; }
   .lrow:has(> .lacts > :nth-child(3)) > .laside { align-self: center; }
-  .llead .thumb { --pad: 0.3rem; width: 3.2rem; height: 4rem; }
+  .llead .thumb { --pad: 0.3rem; width: 3.8rem; height: 4.8rem; }
   .llead .lno { font-size: 1.2rem; }
   .llead .grip { height: 1.75rem; }
 }
@@ -867,7 +874,7 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
   .lcard > .llead { grid-area: lead; align-self: start; }
   .lcard > .lmain { grid-area: main; }
   .lcard > .laside { grid-area: aside; justify-items: start; grid-auto-flow: column; justify-content: start; align-items: center; }
-  .lcard .llead .thumb { --pad: 0.3rem; width: 3.2rem; height: 4rem; }
+  .lcard .llead .thumb { --pad: 0.3rem; width: 3.8rem; height: 4.8rem; }
 }
 
 /* ---------- 27 Highlight after saving (src/lib/ui/highlight.ts) ---------- */
@@ -907,7 +914,7 @@ a.lcard:hover { border-color: var(--amber); color: var(--paper); }
   .newrow > .llead { gap: 0.7rem; }
   /* Narrow: no empty grip and "+" spaces before the bottle – the fields get the room */
   .newrow > .llead > :is(.grip.blank, .lno.plus) { display: none; }
-  .newrow .llead .thumb { --pad: 0.3rem; width: 3.2rem; height: 4rem; }
+  .newrow .llead .thumb { --pad: 0.3rem; width: 3.8rem; height: 4.8rem; }
   .newrow .llead .lno { font-size: 1.2rem; }
   .newrow .ar-fields { grid-template-columns: 1fr; }
   .newrow > .ar-acts { grid-column: 2 / -1; justify-content: flex-start; }

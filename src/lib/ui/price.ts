@@ -35,7 +35,8 @@ export function price(o: PriceOptions): HTMLDivElement {
   } else box.append(now);
   for (const line of o.tiers ?? []) {
     const tier = mk('span', 'tier');
-    tier.append(line);
+    // A tight line may break, but never inside an amount ("304,95 kr." stays together)
+    tier.append(typeof line === 'string' ? line.replace(/(\d) (?=kr\.|DKK|ISK|€)/g, '$1\u00a0').replace(/(\d) (?=stk\.|pcs|bottles|flasker)/g, '$1\u00a0') : line);
     box.append(tier);
   }
   return box;
