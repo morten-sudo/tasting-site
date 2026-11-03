@@ -1075,7 +1075,8 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .t-title:empty::before { content: '…'; color: var(--muted); }
 .t-admin { margin-left: auto; align-self: center; }
 .ctx { position: relative; }
-.t-menu { left: 0; top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
+/* Under the name, its edge just left of the name's (inside the page's gutter) */
+.t-menu { left: max(0.5rem, calc(var(--gutter) - 0.6rem)); top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
 .t-menu .m-list { max-height: 50vh; }
 @media (max-width: 40rem) {
   /* Two rows: the tasting (and Admin) on top, the tabs below – wrapping, never cut off */

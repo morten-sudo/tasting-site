@@ -66,7 +66,6 @@ const site = 'https://winetastr.com';
       import { i18nReady, LANGS, lang, setLang, t, plural, formatWhen, type Key } from '../i18n';
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
-      import { sheetPanel } from '../lib/ui/sheet';
       import { initDropdowns } from '../lib/ui/dropdown';
       import { initTabs } from '../lib/ui/tabs';
       import { tooltip } from '../lib/ui/tooltip';
@@ -190,20 +189,8 @@ const site = 'https://winetastr.com';
         btn.disabled = false;
         btn.classList.add('can-switch');
         tooltip(btn, t('nav.switchTasting'));
-        // Phones: the same items in the one side panel (a bottom sheet from below); larger screens: the menu
+        // The one menu under the name, on phones too
         const menu = document.getElementById('t-menu')!;
-        const sheetList = document.getElementById('t-sheet-list')!;
-        const all = document.getElementById('t-all')!;
-        const sheet = sheetPanel(document.getElementById('t-sheet') as HTMLDialogElement, {
-          onClose: () => { menu.querySelector('.m-group')!.after(list); menu.append(all); btn.focus(); },
-        });
-        btn.addEventListener('click', (e) => {
-          if (!matchMedia('(max-width: 40rem)').matches) return;
-          e.stopImmediatePropagation();
-          sheetList.replaceChildren(list, all);
-          sheet.open();
-          (list.querySelector<HTMLElement>('[aria-current]') ?? list.querySelector<HTMLElement>('.opt-i'))?.focus();
-        });
         bindMenu(btn, menu);
       }
 

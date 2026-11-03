@@ -5,7 +5,6 @@
 import Badge from './Badge.astro';
 import Icon from './Icon.astro';
 import Tabs from './Tabs.astro';
-import Sheet from './Sheet.astro';
 import { SITE_NAME } from '../../lib/config';
 interface Props { tasting?: boolean; path: string }
 const { tasting = false, path } = Astro.props;
@@ -72,16 +71,13 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
         <!-- The host's way into this tasting's admin: the settings icon (opens in a new tab) -->
         <a id="t-admin" class="icon-act t-admin tip-below" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" aria-label="Manage this tasting" data-tip="Manage this tasting" data-i18n-attr="aria-label=nav.adminThisTitle;data-tip=nav.adminThisTitle" hidden><Icon name="gear" /></a>
       </div>
-      <!-- Larger screens: the one menu under the name; phones: the same items in the one side panel (a bottom sheet) -->
+      <!-- The one menu under the name -->
       <div id="t-menu" class="menu t-menu" role="menu" hidden>
         <div class="m-group" role="presentation" data-i18n="nav.switchTasting">Switch tasting</div>
         <div id="t-list" class="m-list"></div>
         <hr />
         <a id="t-all" class="opt-i act" role="menuitem" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
       </div>
-      <Sheet id="t-sheet" title="nav.switchTasting" titleId="t-sheet-title">
-        <div id="t-sheet-list" class="menu static"></div>
-      </Sheet>
     </div>
   )}
 </header>
