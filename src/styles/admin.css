@@ -68,11 +68,12 @@ dialog.zoom {
 }
 dialog.zoom::backdrop { background: rgba(11, 9, 8, 0.88); }
 dialog.zoom > .icon-act { position: absolute; top: -1.1rem; right: -1.1rem; }
-/* White room around the picture; the room is added outside, so the picture keeps its size */
+/* White room around the picture – wider at the sides than above and below; the room is added outside, so the
+   picture keeps its size */
 dialog.zoom img {
-  --zp: clamp(1rem, 3vw, 2.25rem);
-  display: block; box-sizing: content-box; padding: var(--zp);
-  max-width: calc(94vw - 2 * var(--zp)); max-height: calc(88vh - 2 * var(--zp)); width: auto; height: auto;
+  --zp: clamp(1rem, 3vw, 2.25rem); --zx: clamp(2rem, 9vw, 7rem);
+  display: block; box-sizing: content-box; padding: var(--zp) var(--zx);
+  max-width: calc(94vw - 2 * var(--zx)); max-height: calc(88vh - 2 * var(--zp)); width: auto; height: auto;
   object-fit: contain; background: #fff; border-radius: var(--radius); cursor: zoom-out;
 }
 
