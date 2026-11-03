@@ -25,6 +25,7 @@ struct HomeView: View {
                 case .wine(let t, let w, let n): WineDetailView(tasting: t, wine: w, position: n)
                 case .book: BookView()
                 case .profile: ProfileView()
+                case .cart(let t): CartView(tasting: t)
                 }
             }
         }
@@ -81,6 +82,7 @@ struct HomeView: View {
             #if DEBUG
             let route = UserDefaults.standard.string(forKey: "route")
             if model.path.isEmpty, route == "book" { model.path = [.book] }
+            else if model.path.isEmpty, route == "cart", let t = list.first(where: { $0.slug == "app-test" }) ?? list.first { model.path = [.tasting(t), .cart(t)] }
             else if model.path.isEmpty, route == "profile" { model.path = [.profile] }
             else if model.path.isEmpty, route != nil, route != "home", let t = list.first { model.path = [.tasting(t)] }
             if let m = UserDefaults.standard.string(forKey: "openMenu") { model.openMenu = m == "language" ? .language : .account }

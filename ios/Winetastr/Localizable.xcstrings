@@ -4291,6 +4291,688 @@
     }
    }
   },
+  "nav.cart": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Indkøbskurv"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Karfa"
+     }
+    }
+   }
+  },
+  "page.cart": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kurv"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Karfa"
+     }
+    }
+   }
+  },
+  "cart.closed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bestillingen er ikke åben lige nu."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ordering is not open right now."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki er opið fyrir pantanir núna."
+     }
+    }
+   }
+  },
+  "cart.send": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send bestilling"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send order"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Senda pöntun"
+     }
+    }
+   }
+  },
+  "cart.binding": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Når du sender, er bestillingen bindende. Prisen er den, der står ved vinen nu."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "When you send it, the order is binding. The price is the one shown with the wine now."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þegar þú sendir pöntunina er hún bindandi. Verðið er það sem stendur við vínið núna."
+     }
+    }
+   }
+  },
+  "cart.empty": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kurven er tom."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your cart is empty."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Karfan er tóm."
+     }
+    }
+   }
+  },
+  "cart.seeWines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Se vinene"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "See the wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sjá vínin"
+     }
+    }
+   }
+  },
+  "cart.yourOrders": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dine bestillinger"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your orders"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pantanirnar þínar"
+     }
+    }
+   }
+  },
+  "cart.perBottle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{price} pr. flaske"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{price} per bottle"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{price} á flösku"
+     }
+    }
+   }
+  },
+  "cart.oneLess": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Én flaske færre af {name}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "One bottle less of {name}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Einni flösku færra af {name}"
+     }
+    }
+   }
+  },
+  "cart.oneMore": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Én flaske mere af {name}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "One bottle more of {name}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Einni flösku meira af {name}"
+     }
+    }
+   }
+  },
+  "cart.remove": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fjern"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Remove"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fjarlægja"
+     }
+    }
+   }
+  },
+  "cart.howToPay": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sådan betaler du"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "How to pay"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svona greiðir þú"
+     }
+    }
+   }
+  },
+  "cart.errClosed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bestillingen er lukket, så den kunne ikke sendes."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ordering is closed, so the order could not be sent."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lokað er fyrir pantanir svo ekki var hægt að senda pöntunina."
+     }
+    }
+   }
+  },
+  "cart.errWine": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "En af vinene kan ikke længere bestilles. Fjern den, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "One of the wines can no longer be ordered. Remove it and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki er lengur hægt að panta eitt af vínunum. Fjarlægðu það og reyndu aftur."
+     }
+    }
+   }
+  },
+  "cart.errSend": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bestillingen blev ikke sendt. Tjek din forbindelse, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The order was not sent. Check your connection and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pöntunin var ekki send. Athugaðu tenginguna og reyndu aftur."
+     }
+    }
+   }
+  },
+  "cart.thanks": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tak! Din bestilling nr. {id} er modtaget."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Thank you! Your order no. {id} has been received."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Takk! Pöntun nr. {id} hefur borist."
+     }
+    }
+   }
+  },
+  "cart.emptyHelp": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læg vine i kurven fra listen – du sender bestillingen herfra."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Add wines from the list – you send the order here."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bættu vínum í körfuna af listanum – þú sendir pöntunina héðan."
+     }
+    }
+   }
+  },
+  "cart.removed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{name} er fjernet fra kurven"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{name} is removed from the cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{name} var fjarlægt úr körfunni"
+     }
+    }
+   }
+  },
+  "cart.removeQ": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fjern {name} fra kurven?"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Remove {name} from the cart?"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fjarlægja {name} úr körfunni?"
+     }
+    }
+   }
+  },
+  "wines.toCart": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gå til kurven"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Go to cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fara í körfu"
+     }
+    }
+   }
+  },
+  "wines.bottlesOne": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flaske i kurven"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} bottle in the cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flaska í körfunni"
+     }
+    }
+   }
+  },
+  "wines.bottlesMany": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flasker i kurven"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} bottles in the cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flöskur í körfunni"
+     }
+    }
+   }
+  },
+  "wine.add": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læg i kurv"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Add to cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Setja í körfu"
+     }
+    }
+   }
+  },
+  "wine.addMore": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læg i kurv ({n} i kurven)"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Add to cart ({n} in cart)"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Setja í körfu ({n} í körfu)"
+     }
+    }
+   }
+  },
+  "wine.qty": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Antal flasker"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Number of bottles"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fjöldi flaskna"
+     }
+    }
+   }
+  },
+  "wine.added": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lagt i kurven"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Added to the cart"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sett í körfuna"
+     }
+    }
+   }
+  },
+  "bulk.payLater": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du betaler, når værten har lukket for bestillinger – indtil da kan prisen nå at falde."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You pay when the host has closed ordering – until then the price may still fall."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú greiðir þegar gestgjafinn hefur lokað fyrir pantanir – fram að því getur verðið enn lækkað."
+     }
+    }
+   }
+  },
+  "wineLib.undo": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fortryd"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Undo"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Afturkalla"
+     }
+    }
+   }
+  },
+  "common.sending": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sender …"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sending …"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sendi …"
+     }
+    }
+   }
+  },
+  "wines.introOrder": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tryk på en vin for at læse mere og lægge den i kurven. Du sender bestillingen fra kurven."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tap a wine to read more and add it to your cart. You send the order from the cart."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smelltu á vín til að lesa meira og setja það í körfuna. Þú sendir pöntunina úr körfunni."
+     }
+    }
+   }
+  },
   "style.Red": {
    "localizations": {
     "da": {

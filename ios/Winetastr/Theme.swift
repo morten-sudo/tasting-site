@@ -271,6 +271,8 @@ extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
 /// The one top bar: logo, language and account, as on every page of the site.
 struct TopBar: View {
     @Environment(AppModel.self) private var model
+    /// In a tasting: the cart with its badge, while it has bottles (as on the site)
+    var tasting: MyTasting? = nil
 
     var body: some View {
         HStack(spacing: 6) {
@@ -282,6 +284,19 @@ struct TopBar: View {
             }
             .buttonStyle(.plain)
             Spacer()
+            if let tasting, model.cartCount(tasting.slug) > 0 {
+                let n = model.cartCount(tasting.slug)
+                Button { model.openMenu = nil; if case .cart = model.path.last {} else { model.path.append(.cart(tasting)) } } label: {
+                    SiteIcon("cart", size: 23).foregroundStyle(Color.paper).frame(width: 44, height: 44)
+                        .overlay(alignment: .topTrailing) {
+                            Text("\(n)").font(.semibold(11.2)).foregroundStyle(.white).monospacedDigit()
+                                .padding(.horizontal, 4.8).frame(minWidth: 19.2, minHeight: 19.2)
+                                .background(Color.bordeaux, in: Capsule()).overlay(Capsule().strokeBorder(.white, lineWidth: 2))
+                                .offset(x: 2, y: 2)
+                        }
+                }
+                .accessibilityLabel("\(L("nav.cart")), \(L(n == 1 ? "wines.bottlesOne" : "wines.bottlesMany", ["n": "\(n)"]))")
+            }
             // The account, with the language in it: the site's one menu (Menu.swift)
             MenuButton(id: .account, accessibilityLabel: L("nav.userMenu")) { SiteIcon("user", size: 23).foregroundStyle(Color.paper) }
         }
@@ -295,12 +310,14 @@ struct TopBar: View {
 struct TastingBar: View {
     @Environment(AppModel.self) private var model
     let title: String
-    let tab: TastingTab
+    /// None on the cart, which is not one of the tabs
+    let tab: TastingTab?
     let select: (TastingTab) -> Void
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Rectangle().fill(Color.rule).frame(height: 1)
-            Text(title).font(.semibold(16)).foregroundStyle(Color.paper).padding(.top, 10)
+            // The tasting's name in the display face, as the heading below it, only smaller
+            Text(title).font(.display(21.6, light: false, relativeTo: .title3)).foregroundStyle(Color.paper).lineSpacing(1).padding(.top, 9)
             HStack(spacing: 22) {
                 ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
                     Button { select(t) } label: {

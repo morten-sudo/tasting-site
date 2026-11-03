@@ -16,6 +16,8 @@ tastingHome.calendar tastingHome.map tastingHome.during tastingHome.winesSub map
 wizard.back
 rating.saved rating.notSaved rating.private wine.readLess wine.moreAbout wine.prev wine.next wine.others label.grapes wineFields.food wineFields.serving producer.websiteShort producer.addressShort price.bulk bulk.reached bulk.reachedAll bulk.togetherMore bulk.youMore
 nav.quiz nav.chat page.quiz page.chat tastingHome.quizOpen tastingHome.quizLater tastingHome.quizDone tastingHome.chatSub quiz.closed quiz.rules quiz.lock quiz.locking quiz.done quiz.over quiz.standingsNow quiz.final quiz.count quiz.closedForAnswers quiz.notSaved quiz.unanswered quiz.right quiz.wrong quiz.allAnswered quiz.answeredOf quiz.correctAnswer quiz.yourAnswer board.done board.noAnswers hosts.you chat.intro chat.write chat.send chat.host chat.tooMany chat.notSent chat.emptyTitle chat.emptyText
+nav.cart page.cart cart.closed cart.send cart.binding cart.empty cart.seeWines cart.yourOrders cart.perBottle cart.oneLess cart.oneMore cart.remove cart.howToPay cart.errClosed cart.errWine cart.errSend cart.thanks cart.emptyHelp cart.removed cart.removeQ wines.toCart wines.bottlesOne wines.bottlesMany wine.add wine.addMore wine.qty wine.added bulk.payLater wineLib.undo common.sending
+wines.introOrder
 style.Red style.WhiteWine style.Rose style.Orange style.Sparkling style.Sweet style.Fortified style.Other'''.split()
 APP = {
  'app.previous': ('Forrige','Previous','Fyrri'),

@@ -50,9 +50,11 @@ extension NoticeBox where Actions == EmptyView {
 /// .btn.secondary.small
 struct SecondaryButton: ButtonStyle {
     var small = true
+    /// Fills its row (the cart's "Læg i kurv (2 i kurven)" beside the stepper)
+    var wide = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.medium(small ? 14.4 : 15.2)).foregroundStyle(Color.paper)
-            .padding(.horizontal, 14).frame(minHeight: 44)
+            .padding(.horizontal, 14).frame(maxWidth: wide ? .infinity : nil, minHeight: 44)
             .background(configuration.isPressed ? Color.lodge : Color.surface, in: RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.fieldLine))
     }

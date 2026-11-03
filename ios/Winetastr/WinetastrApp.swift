@@ -20,6 +20,7 @@ enum Route: Hashable {
     case wine(MyTasting, Wine, Int)
     case book
     case profile
+    case cart(MyTasting)
 }
 
 @MainActor @Observable
@@ -34,6 +35,12 @@ final class AppModel {
     var openMenu: MenuID?
     /// The open tasting has a quiz: its tab shows
     var tastingHasQuiz = false
+    /// The carts on this device, per tasting: wine → bottles
+    var carts: [String: [Int: Int]] = {
+        guard let data = UserDefaults.standard.data(forKey: "carts"), let c = try? JSONDecoder().decode([String: [Int: Int]].self, from: data) else { return [:] }
+        return c
+    }()
+    func saveCarts() { UserDefaults.standard.set(try? JSONEncoder().encode(carts), forKey: "carts") }
     /// The language shown; changing it redraws every screen in place (the stack of screens is kept)
     private(set) var language = AppLanguage.code
     private let monitor = NWPathMonitor()
@@ -58,7 +65,7 @@ final class AppModel {
 
     func start() async {
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "resetData") { CodeStore.save([:]); try? await supabase.auth.signOut(scope: .local) }
+        if UserDefaults.standard.bool(forKey: "resetData") { CodeStore.save([:]); carts = [:]; saveCarts(); try? await supabase.auth.signOut(scope: .local) }
         if let code = UserDefaults.standard.string(forKey: "inviteCode"), let info = try? await Backend.tasting(code) {
             CodeStore.save([info.slug: code])
         }

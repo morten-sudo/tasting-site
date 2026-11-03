@@ -112,6 +112,8 @@ private struct Rate: Encodable, Sendable { let code: String; let w_id: Int; let 
 private struct Usage: Encodable, Sendable { let feature: String }
 private struct Codes: Encodable, Sendable { let codes: [String] }
 private struct Answer: Encodable, Sendable { let code: String; let q_id: Int; let a_key: String }
+private struct OrderItem: Encodable, Sendable { let wine_id: Int; let qty: Int }
+private struct PlaceOrder: Encodable, Sendable { let code: String; let items: [OrderItem] }
 private struct ChatAfter: Encodable, Sendable { let code: String; let after_id: Int }
 private struct ChatPost: Encodable, Sendable { let code: String; let body: String }
 private struct Board: Encodable, Sendable { let code: String; let slug: String? }
@@ -155,6 +157,10 @@ enum Backend {
         return (try? JSONDecoder().decode(Bool.self, from: data)) ?? true
     }
     static func linkMe() async { _ = try? await supabase.rpc("link_me_tastings").execute() }
+    /// Sends the order; returns its number
+    static func placeOrder(_ code: String, _ items: [(Int, Int)]) async throws -> Int {
+        try decode(try await supabase.rpc("place_order", params: PlaceOrder(code: code, items: items.map { OrderItem(wine_id: $0.0, qty: $0.1) })).execute().data)
+    }
     static func chat(_ code: String, after: Int) async throws -> [ChatMessage] {
         try decode(try await supabase.rpc("get_chat", params: ChatAfter(code: code, after_id: after)).execute().data)
     }

@@ -27,6 +27,7 @@ begin
     ('tasting_leaderboard','code text, slug text','name,points,answered'),
     ('get_chat','code text, after_id bigint','id,author,body,created_at,from_host,mine'),
     ('post_chat','code text, body text',''),
+    ('place_order','code text, items jsonb',''),
     ('log_usage','feature text, model text, tokens_in integer, tokens_out integer, estimated boolean, n integer','')
   ) as t(fn,args,cols) loop
     select pg_get_function_result(p.oid) into res from pg_proc p join pg_namespace n on n.oid = p.pronamespace

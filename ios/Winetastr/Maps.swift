@@ -268,7 +268,12 @@ enum SVGPath {
 /// A map drawn once: paths parsed and the labels placed, as drawMap() does.
 struct RegionDrawing {
     enum Mode { case full, background }
-    struct Label { let text: String; let at: CGPoint; let anchor: UnitPoint; let kind: Kind; enum Kind { case badgeTitle, town(String), part } }
+    struct Label {
+        let text: String; let at: CGPoint; let anchor: UnitPoint; let kind: Kind
+        /// The point the label belongs to (badge, town): zooming keeps the label beside it at the same on-screen distance
+        var base: CGPoint? = nil
+        enum Kind { case badgeTitle, town(String), part }
+    }
     struct Badge { let n: Int; let at: CGPoint }
     let map: RegionMap
     let mode: Mode
@@ -318,7 +323,7 @@ struct RegionDrawing {
             let spot = spots.first { !hits(box($0)) && box($0).x0 >= 0 && box($0).x1 <= map.w } ?? spots[0]
             taken.append(box(spot))
             titleLabels.append(Label(text: title, at: CGPoint(x: spot.0, y: spot.1),
-                                     anchor: spot.2 == "start" ? .leading : spot.2 == "end" ? .trailing : .center, kind: .badgeTitle))
+                                     anchor: spot.2 == "start" ? .leading : spot.2 == "end" ? .trailing : .center, kind: .badgeTitle, base: CGPoint(x: b.x, y: b.y)))
         }
         let named = titles.values.map { normOrigin($0) }
         for t in map.towns ?? [] {
@@ -329,7 +334,7 @@ struct RegionDrawing {
             if t.size != "big" && (hits(tb) || named.contains { $0.contains(first) }) { continue }
             taken.append(tb)
             towns.append((CGPoint(x: t.x, y: t.y), r))
-            labels.append(Label(text: t.name, at: CGPoint(x: t.x + 7, y: t.y - 6), anchor: .leading, kind: .town(t.size)))
+            labels.append(Label(text: t.name, at: CGPoint(x: t.x + 7, y: t.y - 6), anchor: .leading, kind: .town(t.size), base: CGPoint(x: t.x, y: t.y)))
         }
         if wholeRegion && list.isEmpty {
             for a in map.areas.values { if let title = a.title { labels.append(Label(text: title.uppercased(), at: CGPoint(x: a.label[0], y: a.label[1]), anchor: .center, kind: .part)) } }
@@ -379,60 +384,68 @@ private func haloText(_ ctx: inout GraphicsContext, _ text: Text, _ halo: Text, 
 private func baseline(_ p: CGPoint, _ size: Double) -> CGPoint { CGPoint(x: p.x, y: p.y - size * 0.36) }
 
 extension RegionDrawing {
+    /// Zooming makes only the geography bigger: names, numbers, dots, pins and line widths keep their size on screen.
     func draw(_ ctx: inout GraphicsContext, view v: CGRect, size: CGSize) {
+        let z = max(1, view.width / v.width)
         let k = min(size.width / v.width, size.height / v.height)
         ctx.translateBy(x: (size.width - v.width * k) / 2, y: (size.height - v.height * k) / 2)
         ctx.scaleBy(x: k, y: k)
         ctx.translateBy(x: -v.minX, y: -v.minY)
+        func w(_ x: Double) -> Double { x / z }
         let bg = mode == .background
         if !bg {
             ctx.fill(Path(CGRect(x: 0, y: 0, width: map.w, height: map.h)), with: .color(MapColor.sea))
             for i in 1...4 {
                 var c = ctx; c.translateBy(x: Double(-5 * i), y: 0)
-                c.stroke(coast, with: .color(MapColor.wave.opacity(0.5 - Double(i) * 0.1)), lineWidth: 0.7)
+                c.stroke(coast, with: .color(MapColor.wave.opacity(0.5 - Double(i) * 0.1)), lineWidth: w(0.7))
             }
             ctx.fill(land, with: .color(MapColor.land))
         }
-        let tone = bg ? MapColor.bordeaux : MapColor.bordeaux
+        let tone = MapColor.bordeaux
         for a in areas {
             if a.opacity > 0 { ctx.fill(a.path, with: .color(tone.opacity(a.opacity))) }
             if bg { ctx.stroke(a.path, with: .color(tone), lineWidth: 1.1) }
-            else if a.on && a.opacity > 0 { ctx.stroke(a.path, with: .color(MapColor.bordeaux), style: StrokeStyle(lineWidth: 1.2, lineJoin: .round)) }
-            else { ctx.stroke(a.path, with: .color(MapColor.areaLine), style: StrokeStyle(lineWidth: 0.7, lineJoin: .round, dash: [3, 3])) }
+            else if a.on && a.opacity > 0 { ctx.stroke(a.path, with: .color(MapColor.bordeaux), style: StrokeStyle(lineWidth: w(1.2), lineJoin: .round)) }
+            else { ctx.stroke(a.path, with: .color(MapColor.areaLine), style: StrokeStyle(lineWidth: w(0.7), lineJoin: .round, dash: [w(3), w(3)])) }
         }
-        if let border { ctx.stroke(border, with: .color(bg ? tone : MapColor.border), style: StrokeStyle(lineWidth: 1, dash: bg ? [] : [8, 4, 2, 4])) }
-        for r in rivers { ctx.stroke(r, with: .color(bg ? tone : MapColor.water), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)) }
-        ctx.stroke(coast, with: .color(bg ? tone : MapColor.water), lineWidth: 1.2)
+        if let border { ctx.stroke(border, with: .color(bg ? tone : MapColor.border), style: StrokeStyle(lineWidth: w(1), dash: bg ? [] : [w(8), w(4), w(2), w(4)])) }
+        for r in rivers { ctx.stroke(r, with: .color(bg ? tone : MapColor.water), style: StrokeStyle(lineWidth: w(2.2), lineCap: .round, lineJoin: .round)) }
+        ctx.stroke(coast, with: .color(bg ? tone : MapColor.water), lineWidth: w(1.2))
         guard !bg else { return }
-        for t in towns { ctx.fill(Path(ellipseIn: CGRect(x: t.at.x - t.r, y: t.at.y - t.r, width: t.r * 2, height: t.r * 2)), with: .color(MapColor.town)) }
+        for t in towns { let r = w(t.r); ctx.fill(Path(ellipseIn: CGRect(x: t.at.x - r, y: t.at.y - r, width: r * 2, height: r * 2)), with: .color(MapColor.town)) }
         for l in labels {
+            // Kept beside its point at the same distance on screen
+            let p = l.base.map { CGPoint(x: $0.x + (l.at.x - $0.x) / z, y: $0.y + (l.at.y - $0.y) / z) } ?? l.at
             switch l.kind {
-            case .town(let s):
-                let fs = s == "big" ? 22.0 : s == "mid" ? 17.0 : 14.0
+            case .town(let sz):
+                let fs = w(sz == "big" ? 22.0 : sz == "mid" ? 17.0 : 14.0)
                 haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.town),
                          Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.land),
-                         at: baseline(l.at, fs), anchor: l.anchor == .leading ? .leading : l.anchor, width: 3)
+                         at: baseline(p, fs), anchor: l.anchor, width: w(3))
             case .part:
-                haloText(&ctx, Text(l.text).font(.custom("Inter-SemiBold", fixedSize: 15)).tracking(3.75).foregroundStyle(MapColor.bordeaux.opacity(0.75)),
-                         Text(l.text).font(.custom("Inter-SemiBold", fixedSize: 15)).tracking(3.75).foregroundStyle(MapColor.land),
-                         at: baseline(l.at, 15), anchor: .center, width: 3)
+                let fs = w(15)
+                haloText(&ctx, Text(l.text).font(.custom("Inter-SemiBold", fixedSize: fs)).tracking(fs / 4).foregroundStyle(MapColor.bordeaux.opacity(0.75)),
+                         Text(l.text).font(.custom("Inter-SemiBold", fixedSize: fs)).tracking(fs / 4).foregroundStyle(MapColor.land),
+                         at: baseline(p, fs), anchor: .center, width: w(3))
             case .badgeTitle:
-                haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: 17)).fontWeight(.semibold).italic().foregroundStyle(MapColor.bordeaux),
-                         Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: 17)).fontWeight(.semibold).italic().foregroundStyle(MapColor.land),
-                         at: baseline(l.at, 17), anchor: l.anchor, width: 4)
+                let fs = w(17)
+                haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.bordeaux),
+                         Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.land),
+                         at: baseline(p, fs), anchor: l.anchor, width: w(4))
             }
         }
         for b in badges {
-            let c = Path(ellipseIn: CGRect(x: b.at.x - 13, y: b.at.y - 13, width: 26, height: 26))
-            ctx.fill(c, with: .color(MapColor.bordeaux)); ctx.stroke(c, with: .color(.white), lineWidth: 2)
-            ctx.draw(Text("\(b.n)").font(.custom("Inter-SemiBold", fixedSize: 14)).foregroundStyle(.white), at: b.at, anchor: .center)
+            let r = w(13)
+            let c = Path(ellipseIn: CGRect(x: b.at.x - r, y: b.at.y - r, width: r * 2, height: r * 2))
+            ctx.fill(c, with: .color(MapColor.bordeaux)); ctx.stroke(c, with: .color(.white), lineWidth: w(2))
+            ctx.draw(Text("\(b.n)").font(.custom("Inter-SemiBold", fixedSize: w(14))).foregroundStyle(.white), at: b.at, anchor: .center)
         }
-        for p in pins { drawPin(&ctx, at: p, scale: 1.2) }
+        for p in pins { drawPin(&ctx, at: p, scale: 1.2 / z, line: w(2)) }
     }
 }
 
 /// pinSvg(): a map pin whose tip is at the point
-private func drawPin(_ ctx: inout GraphicsContext, at p: CGPoint, scale s: Double) {
+private func drawPin(_ ctx: inout GraphicsContext, at p: CGPoint, scale s: Double, line: Double = 2) {
     var pin = Path()
     pin.move(to: CGPoint(x: 0, y: 0))
     pin.addCurve(to: CGPoint(x: -11, y: -22), control1: CGPoint(x: -3, y: -9), control2: CGPoint(x: -11, y: -13))
@@ -441,7 +454,7 @@ private func drawPin(_ ctx: inout GraphicsContext, at p: CGPoint, scale s: Doubl
     pin.closeSubpath()
     let t = CGAffineTransform(translationX: p.x, y: p.y).scaledBy(x: s, y: s)
     let shape = pin.applying(t)
-    ctx.fill(shape, with: .color(MapColor.bordeaux)); ctx.stroke(shape, with: .color(.white), lineWidth: 2)
+    ctx.fill(shape, with: .color(MapColor.bordeaux)); ctx.stroke(shape, with: .color(.white), lineWidth: line)
     ctx.fill(Path(ellipseIn: CGRect(x: -4, y: -26, width: 8, height: 8)).applying(t), with: .color(.white))
 }
 
@@ -489,7 +502,8 @@ struct OverviewDrawing {
         ctx.translateBy(x: (size.width - v.width * k) / 2, y: (size.height - v.height * k) / 2)
         ctx.scaleBy(x: k, y: k)
         ctx.translateBy(x: -v.minX, y: -v.minY)
-        let u = view.width / 100
+        // One unit ≈ 1 % of the width on screen, so pins, text and lines keep their size at any zoom
+        let u = v.width / 100
         ctx.fill(Path(view), with: .color(MapColor.sea))
         let dash = StrokeStyle(lineWidth: u * 0.18, dash: [u * 1.2, u * 0.6])
         if let d = detail {

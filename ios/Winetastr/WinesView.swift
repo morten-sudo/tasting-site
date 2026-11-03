@@ -10,6 +10,7 @@ struct WinesView: View {
     @State private var failed = false
     @State private var current: Int?
     @State private var debugDone = false
+    @State private var ordersOpen = false
 
     private var index: Int { wines.firstIndex { $0.id == current } ?? 0 }
 
@@ -26,6 +27,7 @@ struct WinesView: View {
                 content
             }
         }
+        .overlay(alignment: .bottom) { CartBar(tasting: tasting, wines: wines) }
         .task { await load() }
         .onChange(of: model.online) { if model.online && failed { Task { await load() } } }
         .onChange(of: model.path) { Task { ratings = (try? await Backend.ratings(tasting.code)) ?? ratings } }
@@ -35,7 +37,7 @@ struct WinesView: View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(L("nav.wines")).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
-                Text(L("wines.intro")).font(.body()).foregroundStyle(Color.muted)
+                Text(L(ordersOpen ? "wines.introOrder" : "wines.intro")).font(.body()).foregroundStyle(Color.muted)
             }
             .padding(.horizontal, 16).padding(.top, 14)
 
@@ -61,7 +63,7 @@ struct WinesView: View {
                     .font(.body(15)).foregroundStyle(Color.muted).monospacedDigit()
                 pagerButton("right", L("app.next"), enabled: index < wines.count - 1) { go(index + 1) }
             }
-            .frame(maxWidth: .infinity).padding(.bottom, 10)
+            .frame(maxWidth: .infinity).padding(.bottom, model.cartCount(tasting.slug) > 0 ? 84 : 10)
         }
     }
 
@@ -82,6 +84,7 @@ struct WinesView: View {
             async let w = Backend.wines(tasting.code)
             async let r = Backend.ratings(tasting.code)
             (wines, ratings) = try await (w, r)
+            ordersOpen = (try? await Backend.tasting(tasting.code))?.orders_open == true || debugOrdersOpen
             failed = false; loaded = true
             if current == nil { current = wines.first?.id }
             #if DEBUG
@@ -209,6 +212,7 @@ struct WineDetailView: View {
     @State private var descOpen = false
     @State private var descLong = false
     @State private var map: WineMap?
+    @State private var qty = 1
 
     init(tasting: MyTasting, wine: Wine, position: Int?) {
         self.tasting = tasting; self._wine = State(initialValue: wine); self.position = position
@@ -218,7 +222,7 @@ struct WineDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            TopBar()
+            TopBar(tasting: tasting)
             TastingBar(title: tasting.title, tab: .wines) { tab in
                 model.tastingTab = tab; dismiss()
             }
@@ -258,7 +262,8 @@ struct WineDetailView: View {
                         if !wine.isBlind { reading }
                         if wines.count > 1, let index { pager(index).padding(.top, 32) }
                     }
-                    .padding(.horizontal, 16).padding(.bottom, 48)
+                    // Room for the cart bar at the bottom while it shows
+                    .padding(.horizontal, 16).padding(.bottom, model.cartCount(tasting.slug) > 0 ? 110 : 48)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
@@ -267,6 +272,7 @@ struct WineDetailView: View {
             #endif
         }
         .background(Color.lodge)
+        .overlay(alignment: .bottom) { CartBar(tasting: tasting, wines: wines).animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug)) }
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
         .toast($toast)
@@ -278,16 +284,37 @@ struct WineDetailView: View {
     // MARK: Price (component 21): ours, the regular one struck through, the quantity prices and how far the guests are
 
     private var buy: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let inCart = model.cart(tasting.slug)[wine.id] ?? 0
+        return VStack(alignment: .leading, spacing: 4) {
             PriceLine(wine: wine, big: true)
             ForEach(tierLabels(wine) + [bulkNote(wine, mode: info?.bulk_mode)].compactMap { $0 }, id: \.self) {
                 Text($0).font(.body(14.4)).foregroundStyle(Color.bordeaux)
+            }
+            // Ordering: how many and "Læg i kurv"; the cart bar at the bottom follows
+            if (info?.orders_open == true || debugOrdersOpen) && wine.orderable == true {
+                HStack(spacing: 9.6) {
+                    Stepper17(value: $qty, max: max(1, maxPerWine - inCart), label: L("wine.qty"))
+                    if inCart > 0 {
+                        Button(L("wine.addMore", ["n": "\(inCart)"])) { add() }.buttonStyle(SecondaryButton(small: false, wide: true))
+                            .disabled(inCart >= maxPerWine)
+                    } else {
+                        Button(L("wine.add")) { add() }.buttonStyle(PrimaryButton())
+                    }
+                }
+                .padding(.top, 10)
             }
         }
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .top) { Rectangle().fill(Color.rule).frame(height: 1) }
         .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
+    }
+
+    private func add() {
+        model.addToCart(tasting.slug, wine.id, qty)
+        qty = 1
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        toast = L("wine.added")
     }
 
     // MARK: The guest's own rating (ratingBox in src/lib/rating.ts): saved by itself, the toast says so
