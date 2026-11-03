@@ -67,6 +67,8 @@ import '../../styles/admin.css';
   import { fieldError } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
   import { t } from '../../i18n';
+  import { ago } from '../../lib/ui/ago';
+  import { tooltip } from '../../lib/ui/tooltip';
 
   // The guest list: one row per guest, the same as a tasting's guests – initials, name, email, the tastings they are
   // invited to as chips, and icons to edit and delete. A new guest comes in as a new row at the top.
@@ -116,12 +118,26 @@ import '../../styles/admin.css';
       });
       const li = personRow({
         name: g.name, onOpen: () => openForm(g),
-        meta: [g.email ?? missing()],
+        meta: [g.email ?? missing(), lastSeen(g.id)],
         chips: chips.length ? chips : [{ text: t('guestLib.notInvited') }],
         actions: [edit, del], id: g.id,
       });
       return li;
     }));
+  }
+  // When each guest last signed in (on the guest's email; guests who only use their invitation link have none)
+  let lastLogins = new Map<string, string>();
+  async function loadLastLogins() {
+    const { data } = await supabase.rpc('guest_last_logins');
+    lastLogins = new Map(((data ?? []) as { guest_id: string; last_sign_in_at: string }[]).map((r) => [r.guest_id, r.last_sign_in_at]));
+    render();
+  }
+  function lastSeen(id: string) {
+    const at = lastLogins.get(id);
+    if (!at) return null;
+    const el = mk('span', '', t('guestLib.lastLogin', { when: ago(at) }));
+    tooltip(el, new Date(at).toLocaleString());
+    return el;
   }
   const highlight = (id: string) => highlightRow(document.querySelector(`#guest-list [data-id="${id}"]`));
 
@@ -233,6 +249,7 @@ import '../../styles/admin.css';
   if (host) {
     $('admin-main').hidden = false;
     await load();
+    loadLastLogins();
     if (new URLSearchParams(location.search).has('new') || !guests.length) openAdd(false);
     followHelpLink();
   }
