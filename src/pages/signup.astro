@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import SectionTitle from '../components/ui/SectionTitle.astro';
+import Actions from '../components/ui/Actions.astro';
 import Notice from '../components/ui/Notice.astro';
 import Loading from '../components/ui/Loading.astro';
 import Steps from '../components/ui/Steps.astro';
@@ -58,6 +59,15 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
           </p>
         </form>
 
+        <!-- Signed in and already invited as a guest: a host account is not needed to join – asked before one is made -->
+        <div id="guest-choice" class="login-form" hidden>
+          <Notice title="signup.guestTitle"><p id="guest-text"></p></Notice>
+          <Actions>
+            <a id="guest-go" class="btn" href="/home/" data-i18n="signup.guestGo">Go to my tastings</a>
+            <button id="guest-host" class="btn secondary" type="button" data-i18n="signup.guestHost">Create a host account anyway</button>
+          </Actions>
+        </div>
+
         <p class="hint su-fine" data-i18n-html="host.already">Already a host? <a href="/login/?next=%2Fadmin%2F">Sign in here</a>.</p>
       </div>
     </div>
@@ -97,13 +107,28 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
   // Signed in: make the user a host and go to admin
   let busy = false;
-  async function finish(name: string) {
+  async function finish(name: string, sure = false) {
     if (busy) return;
     busy = true;
     $('start-form').hidden = true;
     $('otp-form').hidden = true;
     $('su-steps').hidden = true;
+    $('guest-choice').hidden = true;
     $('checking').hidden = false;
+    // Already invited as a guest (known only now, signed in with the email): ask before making them a host –
+    // most of them came to sign in to a tasting
+    if (!sure) {
+      const { data: mine } = await supabase.rpc('my_tastings');
+      const list = Array.isArray(mine) ? mine as { title: string; starts_at: string | null }[] : [];
+      if (list.length) {
+        const next = [...list].sort((a, b) => (a.starts_at ?? '').localeCompare(b.starts_at ?? '')).find((x) => !x.starts_at || new Date(x.starts_at) > new Date()) ?? list[0];
+        $('guest-text').textContent = t('signup.guestText', { title: next.title });
+        $('checking').hidden = true;
+        $('guest-choice').hidden = false;
+        busy = false;
+        return;
+      }
+    }
     const { error } = await supabase.rpc('become_host', { host_name: name });
     if (error) {
       busy = false;
@@ -117,6 +142,10 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     try { localStorage.removeItem(NAME_KEY); } catch {}
     location.replace('/admin/');
   }
+
+  // Only a guest after all: nothing is made; the name typed is forgotten
+  $('guest-go').addEventListener('click', () => { try { localStorage.removeItem(NAME_KEY); } catch {} });
+  $('guest-host').addEventListener('click', () => finish(remembered() || (($('name') as HTMLInputElement).value.trim()), true));
 
   async function start() {
     const { data } = await supabase.auth.getSession();

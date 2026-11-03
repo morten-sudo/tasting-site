@@ -165,6 +165,10 @@ begin
   assert failed, 'a host can look up accounts by slug';
   failed := false; begin perform * from admin_tenant_slugs(); exception when others then failed := true; end;
   assert failed, 'a host can list the accounts'' slugs';
+  failed := false; begin perform admin_remove_host_role(my_tenant()); exception when others then failed := true; end;
+  assert failed, 'a host can remove a host role';
+  failed := false; begin perform host_role_removable(my_tenant()); exception when others then failed := true; end;
+  assert failed, 'a host can call host_role_removable';
   -- The admin overview only counts A's own data
   assert (host_dashboard() ->> 'tastings')::int = (select count(*) from tastings), 'overview counts other hosts'' tastings';
   assert (host_dashboard() ->> 'wines')::int = (select count(*) from wines), 'overview counts other hosts'' wines';

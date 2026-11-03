@@ -27,6 +27,8 @@ import '../../styles/admin.css';
         </div>
         </PageHeader>
 
+        <!-- An empty account made by mistake (a guest who meant to sign in): its host role can go -->
+        <div id="remove-host" hidden></div>
         <h2 id="sec-title"></h2>
 
         <section data-sec="hosts" hidden>
@@ -67,6 +69,9 @@ import '../../styles/admin.css';
   import { chip } from '../../lib/ui/status';
   import { getDropdown } from '../../lib/ui/dropdown';
   import { toast } from '../../lib/toast';
+  import { notice } from '../../lib/ui/notice';
+  import { confirmModal } from '../../lib/ui/confirm';
+  import { setLoading } from '../../lib/ui/button';
   import { supabase } from '../../lib/supabase';
   import { t, type Key } from '../../i18n';
   import { requireAdmin, $, mk, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection, tenantUrl, rememberTenantSlug } from '../../lib/super-common';
@@ -206,13 +211,33 @@ import '../../styles/admin.css';
   tabs($('log-filters'), { onChange: (id) => { logKind = id === 'all' ? '' : id; renderLog(); } });
 
 
+  // ---------- Removing a host role made by mistake: only an empty account, asked first ----------
+  function showRemoveHost(name: string, invited: boolean) {
+    const btn = Object.assign(document.createElement('button'), { type: 'button', className: 'btn small secondary', textContent: t('super.removeHost') });
+    btn.addEventListener('click', async () => {
+      const ok = await confirmModal({ title: t('super.removeHostQ', { name }), text: t('super.removeHostText', { name }), ok: t('super.removeHost'), danger: true });
+      if (!ok) return;
+      setLoading(btn, true);
+      const { error } = await supabase.rpc('admin_remove_host_role', { tn: id });
+      setLoading(btn, false);
+      if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return; }
+      toast(t('super.hostRemoved', { name }), { kind: 'ok' });
+      setTimeout(() => location.replace('/superadmin/'), 900);
+    });
+    const box = $('remove-host');
+    box.replaceChildren(notice(invited ? 'warn' : 'info', {
+      title: t('super.removeHostTitle'), text: invited ? t('super.removeHostHint', { name }) : t('super.removeHostHintNoInvite'), actions: [btn],
+    }));
+    box.hidden = false;
+  }
+
   // Start once everything above is defined
   if (await requireAdmin()) {
     if (m?.[1]) id = ((await supabase.rpc('admin_tenant_id', { ref: m[1] })).data as string | null) ?? '';
     const { data } = id ? await supabase.rpc('admin_tenant', { tn: id }) : { data: null };
     if (!data) $('not-found').hidden = false;
     else {
-      const tn = data as { slug: string; name: string; plan: string; created_at: string; owner_name: string | null; owner_email: string };
+      const tn = data as { slug: string; name: string; plan: string; created_at: string; owner_name: string | null; owner_email: string; invitations: number; removable: boolean };
       // An old link (the id) or a renamed account: the address becomes the account's slug
       rememberTenantSlug(id, tn.slug);
       const here = tenantUrl(id, TENANT_SECTIONS.some((s) => s.id === m?.[2]) ? m![2] : 'hosts');
@@ -232,9 +257,15 @@ import '../../styles/admin.css';
         if (error) { plan.value = tn.plan; toast(t('admin.changeNotSaved'), { kind: 'error' }); }
         else { tn.plan = plan.value; loaded.delete('log'); toast(t('common.saved'), { kind: 'ok' }); }
       });
+      if (tn.removable) showRemoveHost(tn.owner_name || tn.owner_email, Number(tn.invitations) > 0);
       const section = TENANT_SECTIONS.some((s) => s.id === m?.[2]) ? m![2] : 'hosts';
       showTenantInMenu(id, tn.name, section);
       show(section);
     }
   }
 </script>
+
+<style>
+  #remove-host { margin-bottom: 1.5rem; max-width: 46rem; }
+  #remove-host[hidden] { display: none; }
+</style>
