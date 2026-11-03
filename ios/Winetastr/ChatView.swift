@@ -16,7 +16,7 @@ struct ChatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9.6) {
-            PageTitle(text: L("page.chat")).padding(.top, 14)
+            SectionHeading(text: L("page.chat")).padding(.top, 14)
             Text(L("chat.intro")).font(.body()).foregroundStyle(Color.muted)
             if !loaded {
                 LoadingState()

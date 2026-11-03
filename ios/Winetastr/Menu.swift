@@ -162,19 +162,6 @@ extension AppModel {
                     Task { await self?.signOut() }
                 },
             ]
-        case .custom("tasting"):
-            // The tasting switcher (as on the site): each tasting with its date, the current one checked, then all of them
-            let list = myTastings.filter { !$0.isPast }.sorted { ($0.starts_at ?? "9999") < ($1.starts_at ?? "9999") }
-                + myTastings.filter(\.isPast).sorted { ($0.starts_at ?? "") > ($1.starts_at ?? "") }
-            var items = [SiteMenuItem(title: L("nav.switchTasting"), isHeading: true)]
-            for t in list {
-                items.append(SiteMenuItem(title: t.title, checked: t.slug == currentTasting, subtitle: t.start.map(whenText)) { [weak self] in
-                    guard let self, t.slug != self.currentTasting else { return }
-                    self.tastingTab = .home; self.path = [.tasting(t)]
-                })
-            }
-            items.append(SiteMenuItem(title: L("nav.allMyTastings"), dividerBefore: true) { [weak self] in self?.path = [] })
-            return items
         case .account:
             // Not signed in (the sign-in page): only the language
             var row = languageRow; row.dividerBefore = false

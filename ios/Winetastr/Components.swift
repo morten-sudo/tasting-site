@@ -125,6 +125,12 @@ struct PageTitle: View {
     var body: some View { Text(text).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader) }
 }
 
+/// A section's heading under the tasting's tabs (Vinene, Quiz, Chat, Kurv): smaller than the page title
+struct SectionHeading: View {
+    let text: String
+    var body: some View { Text(text).font(.display(28, light: false, relativeTo: .title2)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader) }
+}
+
 /// .choice-cards, compact: a radio, a flag or nothing, the name – the choice saved straight away
 struct CompactChoices<T: Hashable>: View {
     let options: [(T, String, String?)]

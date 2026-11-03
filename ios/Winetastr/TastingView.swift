@@ -18,7 +18,10 @@ struct TastingView: View {
         @Bindable var model = model
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
-            TastingBar(title: tasting.title, tab: model.tastingTab) { model.tastingTab = $0 }
+            Rectangle().fill(Color.rule).frame(height: 1)
+            TastingHead(title: info?.title ?? tasting.title, tab: model.tastingTab, select: { model.tastingTab = $0 }) {
+                if model.tastingTab == .home, let info, let invite, invite.email != nil { headChips(info, invite) }
+            }
             Group {
                 if let info, let invite {
                     if invite.email == nil { EmailStep(code: tasting.code, name: invite.name) { Task { await load() } } }
@@ -60,6 +63,25 @@ struct TastingView: View {
         .toast($toast)
     }
 
+    /// The countdown and, once answered, the answer as its chip with "Ret svar" beside it
+    @ViewBuilder private func headChips(_ info: TastingInfo, _ invite: Invite) -> some View {
+        let open = info.signup_open ?? true
+        let done = answered(invite)
+        let countdown = info.start.flatMap(countdownText)
+        if countdown != nil || done {
+            FlowRow(spacing: 8) {
+                if let countdown { Chip(text: countdown, tone: .wait) }
+                if done, let s = statusText(invite.status) {
+                    Chip(text: s, tone: statusTone(invite.status), dashed: invite.status == "no")
+                    if open {
+                        Button(L("tastingHome.change")) { editing = true }
+                            .buttonStyle(TextButton(size: 14.4)).accessibilityIdentifier("change-answer")
+                    }
+                }
+            }
+        }
+    }
+
     private func answered(_ invite: Invite) -> Bool { ["yes", "no", "waitlist"].contains(invite.status ?? "") }
 
     private func details(_ info: TastingInfo, _ invite: Invite) -> some View {
@@ -76,21 +98,6 @@ struct TastingView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 36) {
                     VStack(alignment: .leading, spacing: 9.6) {
-                        // The countdown and, once answered, the answer as its chip with "Change answer" beside it
-                        if countdown != nil || done {
-                            FlowRow(spacing: 8) {
-                                if let countdown { Chip(text: countdown, tone: .wait) }
-                                if done, let s = statusText(invite.status) {
-                                    Chip(text: s, tone: statusTone(invite.status), dashed: invite.status == "no")
-                                    if open {
-                                        Button(L("tastingHome.change")) { editing = true }
-                                            .buttonStyle(TextButton(size: 14.4)).accessibilityIdentifier("change-answer")
-                                    }
-                                }
-                            }
-                        }
-                        Text(info.title).font(.display(44, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
-                            .padding(.bottom, 6.4)
                         if let d = info.start {
                             factLine("calendar", whenText(d)) { Button(L("tastingHome.calendar")) { addToCalendar = true }.buttonStyle(TextButton(size: 14.4, minHeight: 20)) }
                         }

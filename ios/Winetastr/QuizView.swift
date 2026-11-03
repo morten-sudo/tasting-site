@@ -33,7 +33,7 @@ struct QuizView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageTitle(text: L("page.quiz"))
+                SectionHeading(text: L("page.quiz"))
                 switch mode {
                 case .closed: NoticeBox(text: L("quiz.closed"))
                 case .open: play

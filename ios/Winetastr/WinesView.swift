@@ -36,7 +36,7 @@ struct WinesView: View {
     private var content: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(L("nav.wines")).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
+                SectionHeading(text: L("nav.wines"))
                 Text(L(ordersOpen ? "wines.introOrder" : "wines.intro")).font(.body()).foregroundStyle(Color.muted)
             }
             .padding(.horizontal, 16).padding(.top, 14)
@@ -223,7 +223,8 @@ struct WineDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
-            TastingBar(title: tasting.title, tab: .wines) { tab in
+            Rectangle().fill(Color.rule).frame(height: 1)
+            TastingHead(title: tasting.title, tab: .wines) { tab in
                 model.tastingTab = tab; dismiss()
             }
             ScrollView {

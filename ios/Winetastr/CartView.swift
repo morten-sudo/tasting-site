@@ -107,7 +107,8 @@ struct CartView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
-            TastingBar(title: tasting.title, tab: nil) { tab in model.tastingTab = tab; model.path.removeLast(model.path.count - 1) }
+            Rectangle().fill(Color.rule).frame(height: 1)
+            TastingHead(title: tasting.title, tab: nil) { tab in model.tastingTab = tab; model.path.removeLast(model.path.count - 1) }
             ZStack(alignment: .top) {
                 PageBackground(path: "/t/cart/")
                 if !loaded { LoadingState() } else { content }
@@ -133,7 +134,7 @@ struct CartView: View {
     private var content: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                PageTitle(text: L("page.cart"))
+                SectionHeading(text: L("page.cart"))
                 if !open { NoticeBox(text: L("cart.closed")) }
                 if let confirm {
                     VStack(alignment: .leading, spacing: 10) {

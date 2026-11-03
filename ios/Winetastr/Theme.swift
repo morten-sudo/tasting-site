@@ -309,25 +309,19 @@ struct TopBar: View {
     }
 }
 
-/// Under the top bar in a tasting: its name and the tabs (the quiz only when the tasting has one, as on the site).
-struct TastingBar: View {
+/// The tasting's head in the page (as the site's, like the admin's): on the tasting's own tab the chips over it, then
+/// its name as the page title, then the tabs (the quiz only when the tasting has one) with the underline.
+struct TastingHead<Chips: View>: View {
     @Environment(AppModel.self) private var model
     let title: String
-    /// None on the cart, which is not one of the tabs
+    /// None on the cart and a wine's page's parent, which are not tabs themselves
     let tab: TastingTab?
     let select: (TastingTab) -> Void
+    @ViewBuilder var chips: Chips
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Rectangle().fill(Color.rule).frame(height: 1)
-            // The tasting's name in the display face, as the heading below it, only smaller; it opens the switcher
-            if model.myTastings.count > 1 {
-                MenuButton(id: .custom("tasting"), accessibilityLabel: L("nav.switchTasting")) {
-                    Text(title).font(.display(21.6, light: false, relativeTo: .title3)).foregroundStyle(Color.paper).lineLimit(1)
-                }
-                .frame(minHeight: 40).padding(.top, 2)
-            } else {
-                Text(title).font(.display(21.6, light: false, relativeTo: .title3)).foregroundStyle(Color.paper).lineSpacing(1).padding(.top, 9)
-            }
+        VStack(alignment: .leading, spacing: 9.6) {
+            chips
+            PageTitle(text: title)
             HStack(spacing: 22) {
                 ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
                     Button { select(t) } label: {
@@ -340,11 +334,13 @@ struct TastingBar: View {
                 }
                 Spacer()
             }
+            .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
         }
-        .padding(.horizontal, 16)
-        .background(Color.surface)
-        .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
+        .padding(.horizontal, 16).padding(.top, 14)
     }
+}
+extension TastingHead where Chips == EmptyView {
+    init(title: String, tab: TastingTab?, select: @escaping (TastingTab) -> Void) { self.init(title: title, tab: tab, select: select) { EmptyView() } }
 }
 
 enum TastingTab: CaseIterable, Hashable {
