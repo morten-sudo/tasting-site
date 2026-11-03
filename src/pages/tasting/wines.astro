@@ -37,7 +37,7 @@ import CartBar from '../../components/ui/CartBar.astro';
 <script>
   import { supabase } from '../../lib/supabase';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
-  import { i18nReady, t } from '../../i18n';
+  import { i18nReady, t, locale } from '../../i18n';
   import { fetchMyRatings, type MyRating } from '../../lib/rating';
   import { starsRo } from '../../lib/ui/stars';
   import { listRow } from '../../lib/ui/list-row';
@@ -47,6 +47,7 @@ import CartBar from '../../components/ui/CartBar.astro';
   import { iconSvg } from '../../lib/ui/icons';
   import { $, mk } from '../../lib/ui/dom';
   import { initCartBar } from '../../lib/cart-bar';
+  import { bottleText } from '../../lib/bottle';
   import { type Wine, wineSlugs, styleTag, vintageLabel, tierLabels, nameBlind, watchBlind } from '../../lib/wines';
   import { originLine } from '../../lib/origin';
 
@@ -81,7 +82,7 @@ import CartBar from '../../components/ui/CartBar.astro';
       variant: 'card', cls: 'wine-card', id: w.id, cardHref: tastingUrl(slug, `wines/${slugs.get(w.id)}/`),
       no: String(index + 1).padStart(2, '0'), pic: wineThumb(w, { size: 'large', blind: w.blind }),
       kicker: styleTag(w), title: w.name,
-      meta: [w.blind ? mk('span', 'note', t('blind.hint')) : null, [vintageLabel(w), originLine(w)]],
+      meta: [w.blind ? mk('span', 'note', t('blind.hint')) : null, [vintageLabel(w), bottleText(w.bottle_cl, locale()), originLine(w)]],
       foot,
     });
     li.querySelector('.thumb')?.classList.add('fill');

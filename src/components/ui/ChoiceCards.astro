@@ -2,13 +2,14 @@
 // Component 10 – choice cards (choiceCards() in src/lib/ui/choice-cards.ts builds the same). name: the radios' name;
 // legend: an i18n key (plus a slot named "legend", e.g. a help tip; without the key the slot is the legend, which a
 // script may fill via legendId); options: value, label and hint as i18n keys (hintId: a hint the script fills);
-// compact: names only. id goes on the fieldset.
+// compact: names only; tiles: a few short choices side by side, each still with its line (e.g. the bottle size).
+// id goes on the fieldset.
 import { en } from '../../i18n/en';
 type K = keyof typeof en;
-interface Props { name: string; legend?: K; legendId?: string; options: { value: string; label: K; hint?: K; hintId?: string; checked?: boolean }[]; compact?: boolean; id?: string; class?: string; srLegend?: boolean }
-const { name, legend, legendId, options, compact = false, id, class: cls, srLegend = false } = Astro.props;
+interface Props { name: string; legend?: K; legendId?: string; options: { value: string; label: K; hint?: K; hintId?: string; checked?: boolean }[]; compact?: boolean; tiles?: boolean; id?: string; class?: string; srLegend?: boolean }
+const { name, legend, legendId, options, compact = false, tiles = false, id, class: cls, srLegend = false } = Astro.props;
 ---
-<fieldset class:list={['cc', { compact }, cls]} id={id}>
+<fieldset class:list={['cc', { compact, tiles }, cls]} id={id}>
   {legend && <legend class:list={{ sr: srLegend }} id={legendId}><span data-i18n={legend}>{en[legend]}</span><slot name="legend" /></legend>}
   {!legend && <legend id={legendId}><slot name="legend" /></legend>}
   {options.map((o) => (

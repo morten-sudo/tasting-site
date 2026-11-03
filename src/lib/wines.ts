@@ -11,6 +11,8 @@ export type Wine = {
   grapes?: string | null; food_pairing?: string | null; serving?: string | null;
   /** Blind: the guests see only its number and style until the host reveals it */
   blind?: boolean;
+  /** Bottle size in cl (get_wines' last column; null for a blind wine, missing from an older database) */
+  bottle_cl?: number | null;
 };
 
 import { formatKr } from './ui/kr';

@@ -33,6 +33,8 @@ export async function labelDataUrl(blob: Blob, maxSide = 1024): Promise<string |
 export type LabelResult = {
   name: string | null; producer: string | null; vintage: string | null; style: string | null;
   abv: number | null; appellation: string | null; region: string | null; country: string | null; grapes: string | null;
+  /** The bottle size in cl when the label or page states it (src/lib/bottle.ts) */
+  bottle_cl?: number | null;
 };
 export type LinkResult = LabelResult & {
   description: string | null; image: string | null; images?: string[]; price: number | null; source_url: string;

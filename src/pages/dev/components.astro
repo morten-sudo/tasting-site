@@ -176,6 +176,7 @@ const opts = [
             <div id="cc-2"></div>
             <div id="cc-3"></div>
             <div id="cc-4"></div>
+            <div id="cc-5"></div>
           </div>
         </section>
 
@@ -750,6 +751,9 @@ const opts = [
     const err = choiceCards({ legend: 'Error (nothing chosen)', options: levels.slice(0, 2), compact: true }); err.el.classList.add('error');
     const focus = err.el.querySelector('input'); focus?.classList.add('is-focus');
     $('cc-4').append(err.el);
+    // Tiles: a few short choices side by side, each with its line (the wine's bottle size)
+    $('cc-5').append(choiceCards({ legend: 'Tiles (bottle size)', tiles: true, value: '150', options: [{ value: '37.5', label: '37,5 cl', hint: 'Half bottle' },
+      { value: '75', label: '75 cl', hint: 'Ordinary' }, { value: '150', label: '150 cl', hint: 'Magnum' }, { value: '300', label: '300 cl', hint: 'Double magnum' }, { value: 'other', label: 'Other', hint: 'Type the size' }] }).el);
 
     bindSwitch($<HTMLInputElement>('sw-1'), { save: async () => true });
     bindSwitch($<HTMLInputElement>('sw-2'), { save: async () => true });

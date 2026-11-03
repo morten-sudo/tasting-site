@@ -1,6 +1,7 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Dropdown from '../../components/ui/Dropdown.astro';
+import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import SearchField from '../../components/ui/SearchField.astro';
 import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
@@ -152,6 +153,19 @@ import '../../styles/admin.css';
           <div class="affix w-num">
             <input id="wf-abv" type="text" inputmode="decimal" class="input" placeholder="13,5" />
             <span class="unit" aria-hidden="true">%</span>
+          </div>
+          <!-- Bottle size: the usual sizes as tiles, anything else typed in cl (75 cl unless set) -->
+          <ChoiceCards id="wf-bottle" name="wf-bottle" legend="bottle.label" tiles class="wf-bottle" options={[
+            { value: '37.5', label: 'bottle.cl37', hint: 'bottle.half' },
+            { value: '75', label: 'bottle.cl75', hint: 'bottle.standard', checked: true },
+            { value: '150', label: 'bottle.cl150', hint: 'bottle.magnum' },
+            { value: '300', label: 'bottle.cl300', hint: 'bottle.doubleMagnum' },
+            { value: 'other', label: 'bottle.other', hint: 'bottle.otherHint' }]}><span slot="legend" data-help="bottle-size"></span></ChoiceCards>
+          <div id="wf-bottle-other-box" class="wf-bottle-other" hidden>
+            <div class="affix w-num">
+              <input id="wf-bottle-other" type="text" inputmode="decimal" class="input" placeholder="50" aria-label="Bottle size in cl" data-i18n-attr="aria-label=bottle.otherLabel" />
+              <span class="unit" aria-hidden="true">cl</span>
+            </div>
           </div>
           </section>
 

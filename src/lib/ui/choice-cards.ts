@@ -1,14 +1,14 @@
 // Component 10 – choice cards: one choice among a few. Each card is a radio, a name and (normal variant) one line on
-// what it means; compact: the name only (yes/no, difficulty). src/components/ui/ChoiceCards.astro gives the same markup:
+// what it means; compact: the name only (yes/no, difficulty); tiles: a few short choices side by side, each with its line. src/components/ui/ChoiceCards.astro gives the same markup:
 // <fieldset class="cc [compact]"><legend>…</legend><label><input type="radio"><span><b>name</b><small>hint</small></span></label>…</fieldset>
 export interface Choice { value: string; label: string; hint?: string; disabled?: boolean; lead?: string; lang?: string }
 export interface ChoiceCards { el: HTMLFieldSetElement; value: () => string | null; set: (v: string | null) => void; inputs: HTMLInputElement[]; setDisabled: (on: boolean) => void }
 
 let uid = 0;
-export function choiceCards(o: { name?: string; legend?: string; legendId?: string; options: Choice[]; value?: string | null; compact?: boolean; onChange?: (v: string) => void }): ChoiceCards {
+export function choiceCards(o: { name?: string; legend?: string; legendId?: string; options: Choice[]; value?: string | null; compact?: boolean; tiles?: boolean; onChange?: (v: string) => void }): ChoiceCards {
   const name = o.name ?? `cc-${++uid}`;
   const el = document.createElement('fieldset');
-  el.className = 'cc' + (o.compact ? ' compact' : '');
+  el.className = 'cc' + (o.compact ? ' compact' : '') + (o.tiles ? ' tiles' : '');
   if (o.legend) {
     const lg = Object.assign(document.createElement('legend'), { textContent: o.legend });
     if (o.legendId) lg.id = o.legendId;

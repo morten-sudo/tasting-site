@@ -7,7 +7,7 @@ begin
   for r in select * from (values
     ('get_invite','code text','name,status,note,email'),
     ('get_tasting','code text, slug text',''),
-    ('get_wines','code text','id,sort_order,name,producer,style,vintage,abv,price_dkk,retail_price_dkk,description,image_url,details,country,region,appellation,producer_website,producer_address,grapes,food_pairing,serving,blind,appellation_id,producer_lat,producer_lon,orderable,ordered,price_tiers'),
+    ('get_wines','code text','id,sort_order,name,producer,style,vintage,abv,price_dkk,retail_price_dkk,description,image_url,details,country,region,appellation,producer_website,producer_address,grapes,food_pairing,serving,blind,appellation_id,producer_lat,producer_lon,orderable,ordered,price_tiers,bottle_cl'),
     ('get_my_ratings','code text','wine_id,rating,note'),
     ('rate_wine','code text, w_id integer, stars integer, note text',''),
     ('respond_invite','code text, attending boolean, diet text, note text',''),

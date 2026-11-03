@@ -75,12 +75,13 @@ import CartBar from '../../components/ui/CartBar.astro';
   import { detailIcon } from '../../lib/ui/detail-icon';
   import { $, mk } from '../../lib/ui/dom';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
-  import { i18nReady, t } from '../../i18n';
+  import { i18nReady, t, locale } from '../../i18n';
   import { fetchMyRatings, ratingBox } from '../../lib/rating';
   import { initCartBar } from '../../lib/cart-bar';
 
   await i18nReady;
   import { getCart, addToCart, MAX_PER_WINE } from '../../lib/cart';
+  import { bottleText } from '../../lib/bottle';
   import { type Wine, wineSlug, wineSlugs, styleTag, vintageLabel, tierLabels, wineFacts, nameBlind, watchBlind } from '../../lib/wines';
   import { originFull } from '../../lib/origin';
   import { bulkNote } from '../../lib/bulk';
@@ -174,6 +175,7 @@ import CartBar from '../../components/ui/CartBar.astro';
 
     $('meta').textContent = [
       vintageLabel(w),
+      bottleText(w.bottle_cl, locale()),
       w.producer,
       w.abv ? `${w.abv.toString().replace('.', ',')} %` : null,
     ].filter(Boolean).join(' · ');

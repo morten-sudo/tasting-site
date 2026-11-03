@@ -21,17 +21,18 @@ import { toast } from './toast';
 import { confirmModal } from './ui/confirm';
 import { initQuickAdd } from './wine-quick-add';
 import { winePaths } from './wine-paths';
+import { bottleText } from './bottle';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   country: string | null; region: string | null; appellation: string | null;
   image_url: string | null; source_url: string | null; retail_price_dkk: number | null;
-  offer_price_dkk: number | null; offer_quantity: number | null };
+  offer_price_dkk: number | null; offer_quantity: number | null; bottle_cl?: number | null };
 type Row = { wine_id: number; sort_order: number; price_dkk: number | null; orderable: boolean; revealed: boolean; blind: boolean;
   price_tiers: Tier[]; wines: LibWine };
 type Tier = { qty: number; price: number };
-export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number; tiers: Tier[] };
+export type TastingWine = { id: number; name: string; price_dkk: number | null; sort_order: number; tiers: Tier[]; bottle_cl?: number | null };
 
-const COLS = 'id, name, producer, style, vintage, country, region, appellation, image_url, source_url, retail_price_dkk, offer_price_dkk, offer_quantity';
+const COLS = 'id, name, producer, style, vintage, bottle_cl, country, region, appellation, image_url, source_url, retail_price_dkk, offer_price_dkk, offer_quantity';
 
 export function initTastingWines(tastingId: string, hostId: string, tenantId: string, onChange: (wines: TastingWine[]) => void) {
   let rows: Row[] = [];
@@ -41,7 +42,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
 
   /** A wine's address in the library (its real one, worked out from all the account's wines) */
   const wineHref = (id: number) => winePaths(library).get(id) ?? '/admin/wines/';
-  const meta = (w: LibWine) => [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
+  const meta = (w: LibWine) => [w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer].filter(Boolean).join(' · ');
 
   async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'blind' | 'sort_order' | 'price_tiers'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)
@@ -255,7 +256,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   });
 
   function emit() {
-    onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order, tiers: r.price_tiers ?? [] })));
+    onChange(rows.map((r) => ({ id: r.wine_id, name: r.wines.name, price_dkk: r.price_dkk, sort_order: r.sort_order, tiers: r.price_tiers ?? [], bottle_cl: r.wines.bottle_cl ?? null })));
   }
 
   // ---------- Adding: the line above the list (wine-quick-add.ts) ----------

@@ -10,7 +10,8 @@ import { storeImage } from './wine-image';
 import { $, mk } from './ui/dom';
 import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
-import { t, lang } from '../i18n';
+import { t, lang, locale } from '../i18n';
+import { STANDARD_CL, bottleIn, bottleText, withoutBottle } from './bottle';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { attachImageInput } from './ui/image-picker';
@@ -20,7 +21,7 @@ import { wineThumb, setThumb } from './ui/thumb';
 import { setStatus, statusLine, type StatusState } from './ui/status-line';
 
 export type QuickWine = { id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
-  image_url: string | null; source_url?: string | null };
+  image_url: string | null; source_url?: string | null; bottle_cl?: number | null };
 
 type Opts = {
   hostId: string;
@@ -56,6 +57,12 @@ export function asLink(text: string): string | null {
     return u.hostname.includes('.') ? u.href : null;
   } catch { return null; }
 }
+/** "Barolo 2019 Magnum" → name, vintage and bottle size (null: an ordinary bottle, nothing said). */
+export function splitTyped(text: string): { name: string; vintage: string | null; bottle_cl: number | null } {
+  const y = splitYear(text);
+  return { name: withoutBottle(y.name) ?? y.name, vintage: y.vintage, bottle_cl: bottleIn(y.name) };
+}
+const sameSize = (w: QuickWine, cl: number | null | undefined) => Number(w.bottle_cl ?? STANDARD_CL) === Number(cl ?? STANDARD_CL);
 /** "Barolo San Giovanni 2019" → name and vintage; a name without a year has no vintage. */
 export function splitYear(text: string): { name: string; vintage: string | null } {
   // A year standing on its own anywhere in the name ("… Vigna Rocche 2013 Magnum") is the vintage
@@ -125,8 +132,8 @@ export function initQuickAdd(o: Opts) {
       .sort((a, b) => b.score - a.score || a.w.name.localeCompare(b.w.name, lang()))
       .slice(0, 5).map((x) => x.w);
   }
-  const metaOf = (w: Pick<QuickWine, 'style' | 'vintage' | 'producer'>) =>
-    [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
+  const metaOf = (w: Pick<QuickWine, 'style' | 'vintage' | 'producer' | 'bottle_cl'>) =>
+    [w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer].filter(Boolean).join(' · ');
 
   function renderHits(list?: QuickWine[], head?: string) {
     const text = input.value.trim();
@@ -173,8 +180,10 @@ export function initQuickAdd(o: Opts) {
     } else {
       // The same wine twice is not allowed: a name without a year matches the name in any vintage,
       // "Barolo 2019" only that vintage. Tasting: the library wine is what was meant; library: show it.
-      const typed = splitYear(text);
-      const same = o.library().filter((w) => norm(w.name) === norm(typed.name) && (!typed.vintage || (w.vintage ?? '') === typed.vintage));
+      // A size in the name ("… Magnum") counts too: a magnum is another wine than the 75 cl bottle
+      const typed = splitTyped(text);
+      const same = o.library().filter((w) => norm(w.name) === norm(typed.name) && (!typed.vintage || (w.vintage ?? '') === typed.vintage)
+        && (typed.bottle_cl == null || sameSize(w, typed.bottle_cl)));
       if (same.length) {
         const free = same.filter((w) => !o.inHere?.().has(w.id));
         if (o.pick && free.length === 1 && same.length === 1) { pickWine(free[0]); return; }
@@ -278,9 +287,11 @@ export function initQuickAdd(o: Opts) {
       }
     }
     // A typed name may end in its year ("Barolo 2019")
-    const typed = job.name ? splitYear(job.name) : null;
+    // …and its size ("Barolo 2019 Magnum"); the size words never stay in the name
+    const typed = job.name ? splitTyped(job.name) : null;
     const vintage = r.vintage?.trim() || typed?.vintage || null;
-    const name = withoutYear((typed?.name ?? r.name ?? '').trim(), vintage ?? '')?.trim() ?? '';
+    const bottle = typed?.bottle_cl ?? r.bottle_cl ?? null;
+    const name = withoutYear((typed?.name ?? withoutBottle(r.name) ?? '').trim(), vintage ?? '')?.trim() ?? '';
     if (!name) { failed(job, t(src.kind === 'link' ? 'qa.linkNoName' : 'qa.labelNoName')); return; }
 
     // What came in
@@ -289,12 +300,12 @@ export function initQuickAdd(o: Opts) {
     p.title.textContent = [name, vintage].filter(Boolean).join(' ');
     p.title.classList.remove('unnamed');
     if (r.image && src.kind === 'link') setThumb(p.pic, r.image);
-    fact(li, metaOf({ style, vintage, producer: r.producer ?? null }) || null);
+    fact(li, metaOf({ style, vintage, producer: r.producer ?? null, bottle_cl: bottle }) || null);
     fact(li, originLine({ appellation: r.appellation ?? null, region: r.region ?? null, country }));
     if (r.price != null) fact(li, t('qa.price', { price: formatKr(r.price) }));
 
     // The same wine is in the library already (same name and vintage): use that one
-    const twin = o.library().find((w) => norm(w.name) === norm(name) && (w.vintage ?? '') === (vintage ?? ''));
+    const twin = o.library().find((w) => norm(w.name) === norm(name) && (w.vintage ?? '') === (vintage ?? '') && sameSize(w, bottle));
     if (twin) {
       // Never the same wine twice: offer the one in the library instead
       const here = !!o.inHere?.().has(twin.id);
@@ -306,7 +317,7 @@ export function initQuickAdd(o: Opts) {
       buttons(li, ...actions);
       return;
     }
-    await save(job, r, name, vintage, style, country);
+    await save(job, { ...r, bottle_cl: bottle }, name, vintage, style, country);
   }
 
   async function save(job: Job, r: Partial<LinkResult>, name: string, vintage: string | null, style: string | null, country: string | null) {
@@ -323,6 +334,7 @@ export function initQuickAdd(o: Opts) {
       host_id: o.hostId, tenant_id: o.tenantId, name, vintage, style, country,
       producer: r.producer?.trim() || null,
       abv: typeof r.abv === 'number' ? r.abv : null,
+      bottle_cl: r.bottle_cl ?? STANDARD_CL,
       region: r.region?.trim() || null, appellation: r.appellation?.trim() || null,
       grapes: r.grapes?.trim() || null, description: r.description?.trim() || null,
       food_pairing: r.food?.trim() || null, serving: r.serving?.trim() || null,

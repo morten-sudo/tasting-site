@@ -1,6 +1,7 @@
 // Shared by the Cloudflare Pages Functions in /functions: host check, the AI model and
 // turning the model's answer into wine fields. Runs on Cloudflare, not in the browser.
 import { SUPABASE_URL, SUPABASE_KEY } from '../lib/config';
+import { bottleIn, validCl, withoutBottle } from '../lib/bottle';
 
 export interface AiEnv {
   AI: { run: (model: string, input: unknown) => Promise<{ response?: string | object }> };
@@ -11,7 +12,7 @@ export const MODEL = '@cf/mistralai/mistral-small-3.1-24b-instruct';
 
 export const STYLES = ['Red', 'WhiteWine', 'Rose', 'Orange', 'Sparkling', 'Sweet', 'Fortified', 'Other'];
 
-export const FIELDS_SPEC = `"name": the wine's name (without the producer, unless it is the only name; without the vintage year, which goes in "vintage"; drop shop marketing such as "95 points" or "top buy"),
+export const FIELDS_SPEC = `"name": the wine's name (without the producer, unless it is the only name; without the vintage year, which goes in "vintage"; without the bottle size such as "Magnum", "75 cl" or "1,5 l", which goes in "bottle_cl"; drop shop marketing such as "95 points" or "top buy"),
 "producer": the producer, winery, house or château,
 "vintage": the year as 4 digits, "NV" for a non-vintage wine (e.g. most champagne, tawny or ruby port without a year), an age statement such as "10 years", or null when unknown,
 "style": one of ${JSON.stringify(STYLES)} – "Fortified" for port, sherry, madeira, Rivesaltes and the like, "Sweet" for dessert wines such as Sauternes or Tokaji, "Other" for spirits and anything that is not wine,
@@ -19,11 +20,14 @@ export const FIELDS_SPEC = `"name": the wine's name (without the producer, unles
 "appellation": the protected designation of origin as stated (e.g. "Saint-Émilion Grand Cru", "Pauillac", "Porto", "Rioja", "Barolo", "Chablis"), without classification words such as "Cru Classé" unless they are part of the name, or null,
 "region": the wine region the appellation belongs to (e.g. "Bordeaux", "Douro", "Bourgogne", "Piemonte", "Toscana", "Mosel"; in the USA and Australia the state, e.g. "California", "South Australia"), or null,
 "country": the country as a two-letter ISO 3166 code (e.g. "FR", "PT", "IT", "ES", "DE", "US"), or null,
-"grapes": grape varieties as a comma-separated string, or null`;
+"grapes": grape varieties as a comma-separated string, or null,
+"bottle_cl": the bottle size in centilitres as a number (75 for an ordinary bottle, 37.5 for a half bottle, 50, 150 for a magnum, 300 for a double magnum or jeroboam), only when it is stated – e.g. "75 cl", "750 ml", "1,5 l", "Magnum" – otherwise null`;
 
 export type WineFields = {
   name: string | null; producer: string | null; vintage: string | null; style: string | null;
   abv: number | null; appellation: string | null; region: string | null; country: string | null; grapes: string | null;
+  /** The bottle size in centilitres when it is stated (else null: the wine keeps 75 cl) */
+  bottle_cl: number | null;
 };
 
 export const json = (body: unknown, status = 200) =>
@@ -86,8 +90,12 @@ export function toFields(answer: Record<string, unknown>, hints: string[] = []):
   const v = text(answer.vintage);
   const vintage = v && /^(n\.?\s?v\.?|non[- ]?vintage|sans ann[ée]e|sin añada|uden årgang)$/i.test(v) ? 'NV' : v;
   const year = vintage ?? yearIn(name, ...hints);
+  // The size: what the name or the page's title says ("… Magnum", "1,5 l") before the model's answer;
+  // the size words never stay in the name (the size is shown from bottle_cl)
+  const said = Number(String(answer.bottle_cl ?? '').replace(',', '.'));
+  const bottle = [name, ...hints].map(bottleIn).find((x) => x != null) ?? (validCl(said) ? Math.round(said * 10) / 10 : null);
   return {
-    name: withoutYear(name, year),
+    name: withoutBottle(withoutYear(name, year)),
     producer: text(answer.producer),
     vintage: year,
     style: style && STYLES.includes(style) ? style : null,
@@ -96,6 +104,7 @@ export function toFields(answer: Record<string, unknown>, hints: string[] = []):
     region: str(answer.region),
     country: (() => { const c = str(answer.country)?.toUpperCase() ?? null; return c && /^[A-Z]{2}$/.test(c) ? c : null; })(),
     grapes: str(answer.grapes),
+    bottle_cl: bottle,
   };
 }
 

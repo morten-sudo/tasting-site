@@ -59,9 +59,10 @@ import SignInState from '../../components/ui/SignInState.astro';
   import { payBox, setPayee } from '../../lib/pay';
   import { unitPrice, nextTierLabel, type PriceTier } from '../../lib/wines';
   import { bulkNote } from '../../lib/bulk';
+  import { bottleText, nameWithSize } from '../../lib/bottle';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number;
-    price_tiers: PriceTier[] | null; ordered?: number; image_url?: string | null; blind?: boolean };
+    price_tiers: PriceTier[] | null; ordered?: number; image_url?: string | null; blind?: boolean; bottle_cl?: number | null };
   type Line = {
     order_id: number; created_at: string; paid: boolean;
     wine_id: number; wine_name: string; quantity: number; unit_price: number;
@@ -73,6 +74,9 @@ import SignInState from '../../components/ui/SignInState.astro';
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
   let wines = new Map<number, Wine>();
+  // Every revealed wine's size (also wines that can no longer be ordered), for the order history
+  let sizes = new Map<number, number | null>();
+  const keepSizes = (list: Wine[]) => { sizes = new Map(list.map((x) => [x.id, x.bottle_cl ?? null])); };
   let open = false;
   // What counts towards a quantity price: the guest's own bottles over all their orders, or everyone's (pooled)
   let bulkMode: 'guest' | 'pooled' | null = null;
@@ -124,7 +128,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       // One line per wine (the one list row): picture, name, price per bottle, the stepper and the line's total
       ul.append(listRow({
         id, pic: wineThumb(w, { blind: w.blind === true }), title: w.name, cls: 'cart-line',
-        meta: [[t('cart.perBottle', { price: formatKr(price) }), nextTierLabel(w, counted)], note ? mk('span', 'tier', note) : null],
+        meta: [[bottleText(w.bottle_cl, locale()), t('cart.perBottle', { price: formatKr(price) }), nextTierLabel(w, counted)], note ? mk('span', 'tier', note) : null],
         aside, actions: [remove],
       }));
     }
@@ -148,7 +152,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     box.replaceChildren(...[...byOrder].reverse().map(([id, ls]) => {
       const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
       const ul = mk('ul');
-      for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${l.wine_name}`));
+      for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${nameWithSize(l.wine_name, sizes.get(l.wine_id), locale())}`));
       const body: Node[] = [ul];
       if (!ls[0].paid && payLater()) body.push(mk('p', 'lmeta', t('bulk.payLater')));
       else if (!ls[0].paid) {
@@ -195,6 +199,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       : payBox(total, t('pay.orderComment', { id: String(data) })));
     // The counts changed: fetch them again
     const { data: fresh } = await supabase.rpc('get_wines', { code });
+    keepSizes((fresh ?? []) as Wine[]);
     wines = new Map(((fresh ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
     $('confirm').hidden = false;
     renderCart();
@@ -212,6 +217,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       supabase.rpc('get_wines', { code }),
       supabase.rpc('get_tasting', { code }),
     ]);
+    keepSizes((w.data ?? []) as Wine[]);
     wines = new Map(((w.data ?? []) as Wine[]).filter((x) => x.orderable).map((x) => [x.id, x]));
     const settings = ((s.data ?? {}) as Record<string, unknown>);
     open = settings.orders_open === true;

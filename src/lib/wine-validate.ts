@@ -1,6 +1,7 @@
 // Checking the wine form: each field says what is wrong right under it (inline), when it is left and
 // before "Next" or "Save". Amounts accept both "144,95" and "144.95" (and "1.234,50", "kr.").
 import { t } from '../i18n';
+import { parseCl, validCl } from './bottle';
 
 /** A price or other amount typed by a person, or NaN when it is not a number. Empty → null. */
 export function parseAmount(v: string): number | null {
@@ -45,6 +46,11 @@ export const WINE_RULES: Record<string, Rule> = {
     if (!(n > 0 && n < 1_000_000)) return 'wineCheck.price';
     const retail = parseAmount(value(form, 'wf-retail'));
     return retail != null && !Number.isNaN(retail) && n >= retail ? 'wineCheck.offerNotLower' : null;
+  },
+  // Another bottle size: only when "Another size" is chosen; 5–3000 cl as the database allows
+  'wf-bottle-other': (v, form) => {
+    if (!form.querySelector<HTMLInputElement>('input[name="wf-bottle"][value="other"]')?.checked) return null;
+    return validCl(parseCl(v)) ? null : 'wineCheck.bottle';
   },
   'wf-offer-qty': (v, form) => {
     if (!v) return value(form, 'wf-offer-price') ? 'wineCheck.offerQtyMissing' : null;

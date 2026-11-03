@@ -27,6 +27,7 @@ import { wineThumb } from './ui/thumb';
 import { highlight as highlightRow } from './ui/highlight';
 import { deleteWithUndo } from './ui/delete-undo';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
+import { COMMON_CL, STANDARD_CL, bottleText, parseCl } from './bottle';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
 export type AdminWine = {
@@ -39,10 +40,12 @@ export type AdminWine = {
   offer_price_dkk: number | null; offer_quantity: number | null;
   producer_website?: string | null; producer_address?: string | null;
   producer_lat?: number | null; producer_lon?: number | null; producer_source?: string | null; producer_checked_at?: string | null;
+  /** Bottle size in centilitres (75 unless set) */
+  bottle_cl?: number | null;
   tasting_wines?: { price_dkk?: number | null; price_tiers?: { qty: number; price: number }[] | null; tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(price_dkk, price_tiers, tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, bottle_cl, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(price_dkk, price_tiers, tastings(slug, title))';
 const BUCKET = 'wine-images';
 
 /** A typed web address as https://…, or null. */
@@ -107,6 +110,32 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   // Style options
   // The one dropdown (src/lib/ui/dropdown.ts); the box works like a <select> (.value, "change")
   const styleSelect = getDropdown('wf-style', { placeholder: t('admin.choose'), notSet: true, options: STYLES.map((key) => ({ value: key, label: styleName(key) })) }).el;
+
+  // ---------- Bottle size: the usual sizes as choice cards (tiles), anything else typed in cl ----------
+  const bottleOther = field<HTMLInputElement>('wf-bottle-other');
+  const bottleRadios = () => [...form.querySelectorAll<HTMLInputElement>('input[name="wf-bottle"]')];
+  /** Shows a size: one of the cards, or "Another size" with the number in the field ("50", "62,5"). */
+  function setBottle(cl: number | null | undefined) {
+    const n = cl == null || !Number.isFinite(Number(cl)) ? STANDARD_CL : Number(cl);
+    const common = (COMMON_CL as readonly number[]).includes(n);
+    bottleRadios().forEach((r) => { r.checked = r.value === (common ? String(n) : 'other'); });
+    bottleOther.value = common ? '' : amountText(n, locale());
+    syncBottle();
+  }
+  /** The size chosen, in cl (NaN when "Another size" holds something that is not a size). */
+  function readBottle(): number {
+    const v = bottleRadios().find((r) => r.checked)?.value ?? String(STANDARD_CL);
+    if (v !== 'other') return Number(v);
+    return parseCl(bottleOther.value) ?? NaN;
+  }
+  /** "Another size" opens its field; another card closes it again (and clears its message). */
+  function syncBottle(focus = false) {
+    const other = bottleRadios().find((r) => r.checked)?.value === 'other';
+    $('wf-bottle-other-box').hidden = !other;
+    if (!other) checks.check('wf-bottle-other');
+    if (other && focus) bottleOther.focus();
+  }
+  bottleRadios().forEach((r) => r.addEventListener('change', () => syncBottle(true)));
 
   // ---------- Origin: country → region → appellation ----------
   // Each choice narrows the next list; a known appellation fills in region and country.
@@ -273,6 +302,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   /** The field's label without its hint, e.g. "Vintage". */
   const fieldName = (id: string) => {
     if (id === 'wf-image') return t('admin.image');
+    if (id === 'wf-bottle') return t('bottle.label');
     const label = form.querySelector<HTMLElement>(`label[for="${id}"], label[for="${id}-btn"]`);
     const first = label?.querySelector('span:not(.hint)') ?? label;
     return (first?.textContent ?? id).replace(/\s*\(.*\)\s*$/, '').trim();
@@ -316,6 +346,14 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     f.put('wf-appellation', r.appellation);
     syncOrigin();
     f.put('wf-grapes', r.grapes);
+    // The size: an ordinary 75 cl counts as not set (it is where every wine starts), so it is simply replaced;
+    // another size the host chose is offered as a change instead
+    const cl = r.bottle_cl;
+    if (cl != null && Number.isFinite(cl) && cl !== readBottle()) {
+      const apply = () => { setBottle(cl); form.querySelector('#wf-bottle')?.classList.add('from-label'); };
+      if (readBottle() === STANDARD_CL) { apply(); f.bump(); }
+      else f.add({ id: 'wf-bottle', apply });
+    }
     return f;
   }
 
@@ -437,6 +475,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     field<HTMLInputElement>('wf-grapes').value = w.grapes ?? '';
     field<HTMLInputElement>('wf-food').value = w.food_pairing ?? '';
     field<HTMLInputElement>('wf-serving').value = w.serving ?? '';
+    setBottle(w.bottle_cl);
+    form.querySelector('#wf-bottle')?.classList.remove('from-label');
     appInput.value = w.appellation ?? '';
     regionInput.value = w.region ?? '';
     countrySelect.value = w.country ?? '';
@@ -609,7 +649,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       edit.addEventListener('click', () => openForm(w));
       return listRow({
         id: w.id, pic: wineThumb(w), title: w.name, href: paths().get(w.id) ?? '/admin/wines/',
-        meta: [[w.style ? styleName(w.style) : null, w.vintage, w.producer], originLine(w),
+        meta: [[w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer], originLine(w),
           [w.retail_price_dkk != null ? t('admin.normally', { price: formatKr(w.retail_price_dkk) }) : null, offer]],
         chips: chips.length ? chips : [{ text: t('wineLib.unused'), dashed: true }],
         actions: [edit],
@@ -784,8 +824,11 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     }
 
     // Never the same wine twice: same name and vintage as another wine in the library
+    // (a magnum of a wine is another wine than its 75 cl bottle)
     const vintageNow = field<HTMLInputElement>('wf-vintage').value.trim();
-    const twin = wines.find((w) => w.id !== editing?.id && normOrigin(w.name) === normOrigin(name) && (w.vintage ?? '') === vintageNow);
+    const bottleNow = readBottle();
+    const twin = wines.find((w) => w.id !== editing?.id && normOrigin(w.name) === normOrigin(name) && (w.vintage ?? '') === vintageNow
+      && Number(w.bottle_cl ?? STANDARD_CL) === bottleNow);
     if (twin) {
       fieldError(field<HTMLInputElement>('wf-name'), t('wineCheck.twin'));
       focusField(field<HTMLInputElement>('wf-name'));
@@ -814,6 +857,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       style: styleSelect.value || null,
       vintage: toText(field<HTMLInputElement>('wf-vintage').value),
       abv: parseAmount(field<HTMLInputElement>('wf-abv').value),
+      bottle_cl: bottleNow,
       retail_price_dkk: parseAmount(field<HTMLInputElement>('wf-retail').value),
       offer_price_dkk: parseAmount(field<HTMLInputElement>('wf-offer-price').value),
       offer_quantity: (() => {

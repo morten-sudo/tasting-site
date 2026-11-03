@@ -305,6 +305,15 @@ dialog .dd.full { max-width: none; }
 .cc.compact > legend { grid-column: 1 / -1; }
 .cc.compact > label { align-items: center; padding: 0 0.8rem; min-height: var(--h); }
 .cc.compact > label > input { margin: 0; }
+/* Tiles: a few short choices side by side (e.g. the bottle size), each still with its one line */
+.cc.tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr)); }
+.cc.tiles > legend { grid-column: 1 / -1; }
+.cc.tiles > label { display: grid; grid-template-columns: auto 1fr; align-items: center; align-content: start; column-gap: 0.5rem; row-gap: 0.15rem; padding: 0.6rem 0.7rem; }
+.cc.tiles > label > input { margin: 0; }
+/* The line under the name uses the whole tile, also below the radio */
+.cc.tiles > label > span { display: contents; }
+.cc.tiles > label b { overflow-wrap: normal; white-space: nowrap; }
+.cc.tiles > label small { grid-column: 1 / -1; font-size: 0.8rem; }
 .cc:is(.error, [aria-invalid='true']) > label { border-color: var(--err-line); }
 .cc.busy > label { cursor: progress; }
 /* Long answers (the quiz): text wraps inside the card */
