@@ -1,6 +1,8 @@
 ---
 // The log for all accounts in one list: hosts, guests, sign-ins and the superadmin's own actions.
 import Base from '../../layouts/Base.astro';
+import Tabs from '../../components/ui/Tabs.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import '../../styles/admin.css';
@@ -8,14 +10,10 @@ import '../../styles/admin.css';
 <Base title="super.log">
   <section class="wrap admin-page">
     <SuperNav active="log">
-      <h1 class="title" data-i18n="super.log">Log</h1>
-      <div id="log-filters" class="filters" role="tablist">
-        <button type="button" role="tab" data-kind="" aria-selected="true"><b data-i18n="super.logFilterAll">All</b></button>
-        <button type="button" role="tab" data-kind="host"><b data-i18n="super.logFilterHost">Hosts</b></button>
-        <button type="button" role="tab" data-kind="guest"><b data-i18n="super.logFilterGuest">Guests</b></button>
-        <button type="button" role="tab" data-kind="login"><b data-i18n="super.logFilterLogin">Sign-ins</b></button>
-        <button type="button" role="tab" data-kind="admin"><b data-i18n="super.logFilterAdmin">Superadmin</b></button>
-      </div>
+      <PageHeader title="super.log" />
+      <Tabs id="log-filters" label="Log" items={[
+            { id: 'all', label: 'super.logFilterAll' }, { id: 'host', label: 'super.logFilterHost' }, { id: 'guest', label: 'super.logFilterGuest' },
+            { id: 'login', label: 'super.logFilterLogin' }, { id: 'admin', label: 'super.logFilterAdmin' }]} current="all" />
       <div class="table-wrap"><table class="table">
         <thead><tr><th data-i18n="super.logWhen">When</th><th></th><th data-i18n="super.logWhat">What</th>
           <th data-i18n="super.tenant">Account</th><th data-i18n="super.logWho">By</th></tr></thead>
@@ -27,6 +25,7 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
+  import { tabs } from '../../lib/ui/tabs';
   import { chip } from '../../lib/ui/status';
   import { supabase } from '../../lib/supabase';
   import { t, type Key } from '../../i18n';
@@ -58,13 +57,8 @@ import '../../styles/admin.css';
     }));
   }
 
-  document.querySelectorAll<HTMLButtonElement>('#log-filters button').forEach((b) => {
-    b.addEventListener('click', () => {
-      kind = b.dataset.kind ?? '';
-      document.querySelectorAll('#log-filters button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
-      load();
-    });
-  });
+  // The kinds of entries: the one tab bar (arrow keys move between them)
+  tabs($('log-filters'), { onChange: (id) => { kind = id === 'all' ? '' : id; load(); } });
 
   if (await requireAdmin()) load();
 </script>

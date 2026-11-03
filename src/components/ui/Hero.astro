@@ -1,0 +1,40 @@
+---
+// Component 44 – the one hero.
+//   image="cellar" (default): the cellar photo with white text – an eyebrow, the title, a lead and on-photo buttons
+//     (slot "actions", .btn.on-photo / .on-photo-2); the default slot goes after them. size "full" (the front page)
+//     or "fill" (fills its box – the sign-in page's photo side). titleTag: "p" when the page's <h1> is elsewhere.
+//   variant="tasting": the guest's tasting – the countdown chip, the title and the when / where lines with their
+//     icons and text links (put in the default slot as <li>s), a faint region map behind (backgroundId).
+import { en } from '../../i18n/en';
+interface Props {
+  variant?: 'photo' | 'tasting'; size?: 'full' | 'fill'; eyebrow?: string; title?: string; titleId?: string; titleTag?: 'h1' | 'p';
+  lead?: string; sizes?: string; alt?: string; countdownId?: string; backgroundId?: string; whenId?: string; class?: string;
+}
+const { variant = 'photo', size = 'full', eyebrow, title, titleId, titleTag = 'h1', lead, sizes = '100vw', alt = '', countdownId, backgroundId, whenId, class: cls } = Astro.props;
+const tr = (k?: string) => (k ? (en as Record<string, string>)[k] ?? k : '');
+const i18n = (k?: string) => (k && (en as Record<string, string>)[k] ? k : undefined);
+const T = titleTag;
+---
+{variant === 'tasting' ? (
+  <header class:list={['hero-light', cls]}>
+    {backgroundId && <div id={backgroundId} class="hero-bg" aria-hidden="true"></div>}
+    {countdownId && <p id={countdownId} class="chip wait" hidden></p>}
+    <T id={titleId} class="hero-title" data-i18n={i18n(title)}>{tr(title)}</T>
+    <ul id={whenId} class="hero-when"><slot /></ul>
+  </header>
+) : (
+  <section class:list={['hero', size, cls]}>
+    <picture>
+      <source type="image/webp" srcset="/img/cellar-800.webp 800w, /img/cellar-1200.webp 1200w" sizes={sizes} />
+      <img src="/img/cellar-1200.jpg" srcset="/img/cellar-800.jpg 800w, /img/cellar-1200.jpg 1200w" sizes={sizes}
+           width="1200" height="800" alt={tr(alt)} data-i18n-attr={i18n(alt) ? `alt=${alt}` : undefined} fetchpriority={size === 'full' ? 'high' : undefined} />
+    </picture>
+    <div class="hero-in wrap">
+      {eyebrow && <p class="eyebrow" data-i18n={i18n(eyebrow)}>{tr(eyebrow)}</p>}
+      <T id={titleId} class="hero-title" data-i18n={i18n(title)}>{tr(title)}</T>
+      {lead && <p class="hero-lead" data-i18n={i18n(lead)}>{tr(lead)}</p>}
+      <slot name="actions" />
+      <slot />
+    </div>
+  </section>
+)}

@@ -1,7 +1,7 @@
 // Shared by the superadmin pages: the administrator check, the menu and small helpers.
 import { supabase } from './supabase';
 import { i18nReady, t, locale, type Key } from '../i18n';
-import { setOpen } from './admin-side';
+import { initSideMenu, setSideOpen } from './ui/side-menu';
 
 export const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as E;
 export function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string) {
@@ -34,28 +34,18 @@ export async function requireAdmin(): Promise<boolean> {
   const { data: s } = await supabase.auth.getSession();
   if (!s.session) { location.replace('/login/?next=' + encodeURIComponent(location.pathname)); return false; }
   const { data: admin } = await supabase.rpc('is_admin');
-  $('loading').hidden = true;
   if (admin !== true) { $('denied').hidden = false; return false; }
   $('super-main').hidden = false;
-  $('me').textContent = s.session.user.email ?? '';
-  $('admin-side').hidden = false;
-  const header = document.querySelector<HTMLElement>('.site-header');
-  if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
-  $('side-open').hidden = false;
-  $('side-open').addEventListener('click', () => setOpen(true));
-  $('side-close').addEventListener('click', () => setOpen(false));
-  $('side-backdrop').addEventListener('click', () => setOpen(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
-  $('side-logout').addEventListener('click', async () => { await supabase.auth.signOut(); location.href = '/'; });
+  initSideMenu(s.session.user.email ?? '', async () => { await supabase.auth.signOut(); location.href = '/'; });
   return true;
 }
 
 /** The open tenant in the menu, with its parts underneath */
 export function showTenantInMenu(id: string, name: string, section: string) {
-  const li = mk('li', 'current');
+  const li = mk('li');
   const a = mk('a', '', name);
   a.href = tenantUrl(id);
-  const sub = mk('ul', 'side-sub');
+  const sub = mk('ul', 'sm-sub');
   for (const s of TENANT_SECTIONS) {
     const item = mk('li');
     const link = mk('a', '', t(s.label));
@@ -73,5 +63,5 @@ export function markTenantSection(section: string) {
     if (a.dataset.section === section) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
-  setOpen(false);
+  setSideOpen(false);
 }

@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
@@ -7,7 +8,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.cart" tasting>
   <section class="wrap cart-page">
-    <h1 class="title" data-i18n="page.cart">Cart</h1>
+    <PageHeader title="page.cart" />
 
     <Loading text="gate.loadingCart" />
 
@@ -235,13 +236,6 @@ import SignInState from '../../components/ui/SignInState.astro';
 
 <style is:global>
   .cart-page { padding-top: 2.5rem; padding-bottom: 3rem; }
-  .cart-page .title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(3rem, 16vw, 5rem);
-    line-height: 0.9;
-    margin-bottom: 1.25rem;
-  }
   .cart-page .confirm, .cart-page #closed { margin-bottom: 1.5rem; }
 
   .cart-page .cart-qty { display: flex; align-items: center; gap: 1rem; }

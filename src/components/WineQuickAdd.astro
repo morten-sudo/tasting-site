@@ -8,7 +8,7 @@ import Icon from './ui/Icon.astro';
 const { lead = false } = Astro.props as { lead?: boolean };
 ---
 <AddRow id="qa" pic="wine" lead={lead}>
-  <label for="qa-input" class="visually-hidden" data-i18n="qa.label">Name, link or photo of the wine</label>
+  <label for="qa-input" class="sr" data-i18n="qa.label">Name, link or photo of the wine</label>
   <div class="input">
     <span id="qa-attached" class="ar-attached" hidden>
       <span id="qa-attached-text"></span>

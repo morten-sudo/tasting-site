@@ -23,7 +23,7 @@
 :focus-visible { outline: var(--ring); outline-offset: var(--ring-offset); }
 :focus:not(:focus-visible) { outline: none; }
 /* On dark backgrounds (photos) the bordeaux ring cannot be seen: white there */
-.on-dark :focus-visible, .hero :focus-visible, .has-hero .site-header :focus-visible { outline-color: #fff; }
+.on-dark :focus-visible, .hero :focus-visible { outline-color: #fff; }
 
 /* ---------- The one spinner: a wine glass that is drunk and filled up again ---------- */
 .spin {
@@ -47,6 +47,8 @@ svg.i { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; strok
 .btn:hover { background: var(--amber-dark); border-color: var(--amber-dark); color: #fff; }
 .btn.secondary { background: var(--lodge-2); color: var(--amber); border-color: var(--amber); }
 .btn.secondary:hover { background: var(--err-bg); color: var(--amber-dark); border-color: var(--amber-dark); }
+.btn.secondary.grey { color: var(--paper); border-color: var(--lodge-3); }
+.btn.secondary.grey:hover { background: var(--lodge-2); border-color: var(--muted); color: var(--paper); }
 .btn.danger { background: var(--error); border-color: var(--error); color: #fff; }
 .btn.danger:hover { background: #8f1e18; border-color: #8f1e18; }
 .btn.quiet-danger { background: transparent; border-color: transparent; color: var(--error); padding-inline: 0.75rem; }
@@ -67,9 +69,6 @@ svg.i { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; strok
 .btn.on-photo:hover { background: #f3e9e0; border-color: #f3e9e0; color: var(--amber-dark); }
 .btn.on-photo-2 { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.8); }
 .btn.on-photo-2:hover { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: #fff; }
-
-/* A row of buttons under a form or in a box (component 46 – actions) */
-.row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 0.6rem; }
 
 /* ---------- 2 Text button / text link (not underlined; underlined on hover) ---------- */
 .text-btn {
@@ -471,14 +470,7 @@ dialog.confirm[open] { animation: pop 0.18s ease-out; }
 @keyframes pop { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 .cf-q { margin: 0 0 0.35rem; font-weight: 600; font-size: 1.05rem; }
 .cf-t { margin: 0; color: var(--muted); font-size: 0.95rem; }
-/* 46 Actions: a row of buttons; in a dialog the action is last (right), on phones stacked with the action on top */
-.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1rem; }
-.actions .push { margin-left: auto; }
-dialog.confirm .actions { justify-content: flex-end; margin-top: 1.1rem; }
-@media (max-width: 30rem) {
-  dialog .actions.stack { flex-direction: column-reverse; align-items: stretch; }
-  dialog .actions.stack .btn { width: 100%; }
-}
+dialog.confirm .actions { margin-top: 1.1rem; }
 
 /* ---------- 32 Toast (src/lib/ui/toast.ts): the only feedback after saving, deleting or copying ---------- */
 .toast-host {
@@ -539,7 +531,7 @@ dialog.confirm .actions { justify-content: flex-end; margin-top: 1.1rem; }
 .empty-state p { margin: 0; max-width: 26rem; }
 .empty-state .e-title:has(+ .help) { font-weight: 600; }
 .empty-state .help { font-size: 0.92rem; }
-.empty-state .e-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 0.3rem; }
+.empty-state > .actions { justify-content: center; margin-top: 0.3rem; }
 .empty-state[hidden] { display: none; }
 /* On guest pages: not signed in / not invited – as wide as the text around it */
 .empty-state.need-login { max-width: 34rem; margin: 1rem 0 2rem; }
@@ -786,3 +778,231 @@ dialog.sheet .sh-form, dialog.wizard .sh-body { max-width: none; }
 .sh-wine .lmeta { margin: 0; }
 @media (min-width: 48rem) { .sh-head, .sh-body, .sh-foot { padding-left: 1.75rem; padding-right: 1.75rem; } }
 @media (max-width: 30rem) { .sh-foot > .actions > .btn { flex: 1; } }
+
+/* ======================= F. Page structure ======================= */
+
+/* ---------- 47 Text for screen readers only (Sr.astro, or class="sr") ---------- */
+.sr {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- 40 Headings: ONE scale – page (39), section, sub-heading, eyebrow (SectionTitle.astro) ---------- */
+h1, h2, h3 { line-height: 1.1; margin: 0 0 0.5em; font-weight: 400; }
+.h1 { font-family: var(--display); font-weight: 400; font-size: clamp(2.25rem, 6vw, 3.2rem); line-height: 1.05; letter-spacing: 0; overflow-wrap: anywhere; }
+h2, .h2 { font-family: var(--display); font-weight: 400; font-size: 2rem; line-height: 1.1; letter-spacing: 0.005em; }
+h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-height: 1.3; letter-spacing: 0; margin: 0 0 0.4rem; }
+.eyebrow {
+  display: block; font: 500 0.72rem/1.3 var(--body); letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+  margin: 0 0 0.6rem;
+}
+/* The title of a side panel or a dialog (component 30) */
+.sh-head h2, dialog.welcome-modal h2 { font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.15; }
+
+/* ---------- 39 Page header (PageHeader.astro): title and lead on the left, the actions on the right ---------- */
+.ph { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem 1rem; flex-wrap: wrap; min-width: 0; margin: 0 0 1.5rem; }
+.ph > .ph-text { min-width: 0; flex: 1 1 18rem; }
+.ph h1 { margin: 0; }
+.ph h1:empty::before { content: '…'; color: var(--muted); }
+.ph .lead { color: var(--muted); margin: 0.4rem 0 0; font-size: 1.02rem; line-height: 1.5; max-width: 40rem; }
+.ph .lead:empty { display: none; }
+.ph-act { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; flex: none; max-width: 100%; }
+.ph-act:empty { display: none; }
+/* Page: the buttons sit level with the title's first line */
+.ph.page > .ph-act { margin-top: 0.5rem; }
+/* Section: a smaller heading with its buttons on the same line */
+.ph.sec { align-items: center; margin: 0 0 0.75rem; gap: 0.5rem 1rem; }
+.ph.sec > .ph-text { flex: 1 1 auto; }
+.ph.sec :is(h2, h3) { margin: 0; }
+.ph.sec h3 { font-size: 1rem; }
+/* Phones: a filter and a button under the heading, one at each side */
+@media (max-width: 30rem) { .ph.sec > .ph-act:has(> :nth-child(2)) { width: 100%; justify-content: space-between; } }
+
+/* ---------- 42 Tabs (Tabs.astro, src/lib/ui/tabs.ts): ONE tab bar; on phones two rows, never hidden off to the right ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 0 1.5rem; border-bottom: 1px solid var(--lodge-3); margin: 0; padding: 0; min-width: 0; list-style: none; }
+.tabs > :is(a, button) {
+  display: inline-flex; align-items: center; gap: 0.4rem; height: var(--h); padding: 0; margin: 0 0 -1px; background: none; border: 0;
+  border-bottom: 2px solid transparent; border-radius: 0; color: var(--muted); font: 400 0.98rem/1 var(--body); text-decoration: none;
+  white-space: nowrap; cursor: pointer; box-sizing: border-box;
+}
+.tabs > :is(a, button):hover { color: var(--paper); text-decoration: none; }
+.tabs > :is([aria-selected='true'], [aria-current='page']) { color: var(--amber); border-bottom-color: var(--amber); font-weight: 500; }
+.tabs > :focus-visible { outline-offset: -2px; border-radius: 4px; }
+.tabs > [hidden] { display: none; }
+.tabs .n { font-size: 0.8rem; color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+@media (max-width: 40rem) { .tabs { column-gap: 1.1rem; } }
+
+/* ---------- 43 Navigation: the top bar (TopBar.astro) on every page ---------- */
+.site-header {
+  position: sticky; top: 0; z-index: 10; background: rgba(255, 255, 255, 0.96);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--lodge-3);
+}
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.4rem; }
+.logo { flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 0.6rem; color: var(--paper); text-decoration: none; font-weight: 500; letter-spacing: 0.01em; }
+.logo:hover { color: var(--paper); }
+.logo > svg { flex: none; display: block; width: 1.9rem; height: 1.9rem; }
+.logo > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tb-right { display: flex; align-items: center; gap: 0.25rem; flex: none; }
+.tb-right [hidden] { display: none !important; }
+.tb-right > .icon-act svg { width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
+.tb-right .dd { position: relative; }
+.tb-right .dd-btn.bare { height: var(--h); font-size: 0.9rem; }
+.tb-right .menu { top: calc(100% + 0.25rem); min-width: 12rem; }
+.tb-right .lang-menu { min-width: 10.5rem; }
+.tb-flag { display: grid; }
+.tb-flag .flag { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
+.tb-name { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
+.tb-user > .tb-user-i { display: none; width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
+.tb-user[aria-current='page'] { color: var(--paper); }
+/* Phones: a person icon instead of the name */
+@media (max-width: 40rem) {
+  .tb-user { padding: 0 0.2rem; color: var(--paper); }
+  .tb-user > .tb-name { display: none; }
+  .tb-user > .tb-user-i { display: block; }
+}
+/* The number on the cart */
+.tb-badge {
+  position: absolute; top: 0.2rem; right: 0.05rem; min-width: 1.15rem; padding: 0 0.3rem; border-radius: var(--round);
+  background: var(--amber); color: #fff; font: 500 0.72rem/1.15rem var(--body); text-align: center;
+}
+/* Inside a tasting: which tasting (a switcher), its tabs and the way to its admin */
+.ctx-bar { display: flex; align-items: center; gap: 0 1.5rem; border-top: 1px solid var(--lodge-3); min-width: 0; }
+.ctx-bar > .tabs { border-bottom: 0; flex: 0 1 auto; }
+.t-switch {
+  flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 0.3rem; height: var(--h); padding: 0; margin: 0;
+  background: none; border: 0; font: 600 0.95rem/1.2 var(--body); color: var(--paper); cursor: default;
+}
+.t-switch:disabled { opacity: 1; }
+.t-switch > .chev { display: none; width: 0.9rem; height: 0.9rem; color: var(--muted); transition: transform 0.15s; }
+.t-switch.can-switch { cursor: pointer; }
+.t-switch.can-switch > .chev { display: block; }
+.t-switch.can-switch:hover > .chev, .t-switch[aria-expanded='true'] > .chev { color: var(--amber); }
+.t-switch[aria-expanded='true'] > .chev { transform: rotate(180deg); }
+.t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; min-width: 0; }
+.t-title:empty::before { content: '…'; color: var(--muted); }
+.t-admin { margin-left: auto; }
+.ctx { position: relative; }
+.t-menu { left: 0; top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
+.t-menu .m-list { max-height: 50vh; }
+@media (max-width: 40rem) {
+  /* Two rows: the tasting (and Admin) on top, the tabs below – wrapping, never cut off */
+  .ctx-bar { flex-wrap: wrap; column-gap: 0.75rem; }
+  .t-switch { flex: 1 1 0; height: auto; padding: 0.6rem 0 0.2rem; }
+  .t-title { max-width: none; }
+  .t-admin { margin-top: 0.4rem; }
+  .ctx-bar > .tabs { order: 3; flex: 1 0 100%; }
+}
+
+/* ---------- 43 Navigation: the side menu (SideMenu.astro, src/lib/ui/side-menu.ts) for hosts and superadmin ----------
+   On larger screens a column on the left; on phones "Menu" opens it as a panel from the left. */
+.side-open[hidden] { display: none; }
+.side-open { margin: 0 0 1.25rem; }
+.side-backdrop { position: fixed; inset: 0; z-index: 49; background: rgba(20, 12, 12, 0.45); }
+.side-backdrop[hidden] { display: none; }
+html.side-locked { overflow: hidden; }
+.side {
+  position: fixed; inset: 0 auto 0 0; z-index: 50; width: min(19rem, 86vw); display: flex; flex-direction: column; overflow-y: auto;
+  padding: 1rem 1rem calc(1.25rem + env(safe-area-inset-bottom)); background: var(--lodge); box-shadow: 10px 0 40px rgba(0, 0, 0, 0.18);
+  transform: translateX(-105%); transition: transform 0.22s ease-out; visibility: hidden; box-sizing: border-box;
+}
+.side.open { transform: none; visibility: visible; }
+.side:focus { outline: none; }
+.side[hidden] { display: none; }
+.side-head { display: flex; justify-content: space-between; align-items: center; padding: 0 0 0.25rem 0.75rem; }
+.side-head .eyebrow { margin: 0; }
+.sidemenu { display: grid; gap: 0.1rem; font-size: 0.95rem; }
+.sidemenu .sm-g {
+  display: flex; gap: 0.5rem; align-items: center; margin: 1.1rem 0 0.25rem; padding: 0.2rem 0.75rem;
+  font: 600 0.7rem/1.3 var(--body); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); text-decoration: none; border-radius: var(--radius);
+}
+.sidemenu > .sm-g:first-child { margin-top: 0.3rem; }
+.sidemenu .sm-g svg.i { width: 1rem; height: 1rem; }
+.sidemenu a.sm-g:hover, .sidemenu a.sm-g[aria-current='page'] { color: var(--paper); }
+.sidemenu a.sm-g[aria-current='page'] { box-shadow: inset 2px 0 0 var(--amber); border-radius: 0 var(--radius) var(--radius) 0; }
+.sm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.1rem; }
+.sm-list a, .sm-more > summary, .sidemenu a.sm-add {
+  display: block; padding: 0.45rem 0.75rem 0.45rem 2.25rem; border-radius: var(--radius); color: var(--paper); text-decoration: none; line-height: 1.3;
+}
+.sm-list a:hover, .sm-more > summary:hover, .sidemenu a.sm-add:hover { background: var(--lodge-2); }
+.sm-list a[aria-current='page'] { background: var(--paper); color: #fff; }
+.sm-list a.mine::after { content: '●'; color: var(--amber); font-size: 0.6rem; margin-left: 0.45rem; vertical-align: 0.15em; }
+.sm-list a[aria-current='page'].mine::after { color: #fff; }
+.sm-more > summary { color: var(--muted); cursor: pointer; font-size: 0.92rem; }
+.sidemenu a.sm-add { display: flex; align-items: center; gap: 0.35rem; color: var(--amber); font-size: 0.92rem; }
+.sidemenu a.sm-add svg.i { width: 1rem; height: 1rem; margin-left: -1.35rem; }
+/* A part of the current item (a tenant's sections) */
+.sm-sub { list-style: none; margin: 0.15rem 0 0.4rem 2.25rem; padding: 0 0 0 0.6rem; border-left: 1px solid var(--lodge-3); display: grid; gap: 0.05rem; }
+.sm-sub a { font-size: 0.92rem; padding: 0.35rem 0.6rem; color: var(--muted); }
+.sm-sub a[aria-current='page'] { background: none; color: var(--amber); font-weight: 600; }
+.side-foot { margin-top: auto; padding: 1.5rem 0.6rem 0; display: grid; gap: 0.2rem; justify-items: start; font-size: 0.85rem; color: var(--muted); }
+.side-me { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+/* The page's loading line goes once its content (or "not found" / "not a host") shows */
+.side-content:has(#admin-main:not([hidden]), #not-found:not([hidden]), #super-main:not([hidden]), #denied:not([hidden])) > .page-loading,
+.side-shell:has(#not-host:not([hidden])) .page-loading { display: none; }
+@media (min-width: 60rem) {
+  .side-shell { display: grid; grid-template-columns: 14.5rem minmax(0, 1fr); column-gap: clamp(2rem, 4vw, 4rem); align-items: start; }
+  .side-shell > #not-host { grid-column: 1 / -1; }
+  .side-open, .side-head, .side-backdrop { display: none !important; }
+  .side {
+    grid-column: 1; grid-row: 1; position: sticky; top: calc(var(--header-h, 4.5rem) + 1.25rem); inset: auto; z-index: auto; width: auto;
+    max-height: calc(100vh - var(--header-h, 4.5rem) - 2.5rem); padding: 0; background: none; box-shadow: none; transform: none;
+    transition: none; visibility: visible;
+  }
+  .side-content { grid-column: 2; grid-row: 1; min-width: 0; }
+  /* Not allowed here: no menu, the notice across the page */
+  .side-shell:has(#denied:not([hidden])) > .side-content { grid-column: 1 / -1; }
+}
+
+/* ---------- 44 Hero (Hero.astro): the cellar photo with white text and on-photo buttons; "tasting": the guest's tasting ---------- */
+.hero { position: relative; overflow: hidden; color: #fff; background: #241014; display: flex; align-items: flex-end; min-width: 0; }
+.hero > picture img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 52% 50%; }
+.hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(36, 10, 16, 0.93) 0%, rgba(36, 10, 16, 0.6) 45%, rgba(36, 10, 16, 0.18) 100%); }
+.hero > .hero-in { position: relative; z-index: 1; width: 100%; padding-top: 5rem; padding-bottom: 2.5rem; box-sizing: border-box; }
+.hero .eyebrow { color: rgba(255, 255, 255, 0.85); }
+.hero .hero-title { font-family: var(--display); font-weight: 400; font-size: clamp(2.5rem, 7vw, 4.6rem); line-height: 1; margin: 0; max-width: 17ch; color: #fff; overflow-wrap: anywhere; }
+.hero .hero-lead { font-size: clamp(1.05rem, 2.6vw, 1.25rem); line-height: 1.5; max-width: 34rem; margin: 1.1rem 0 0; color: rgba(255, 255, 255, 0.9); }
+.hero .actions { margin-top: 1.6rem; }
+.hero a:not(.btn) { color: #fff; }
+.hero.full { min-height: min(78vh, 40rem); }
+/* The tasting (guest pages): the countdown, the title and when / where with their links; a faint map behind */
+.hero-light { position: relative; isolation: isolate; display: grid; gap: 0.6rem; justify-items: start; margin: 0 0 2rem; min-width: 0; }
+.hero-light > .chip { margin-bottom: 0.2rem; }
+.hero-light .hero-title { font-family: var(--display); font-weight: 400; font-size: clamp(2.5rem, 9vw, 4.6rem); line-height: 1; margin: 0 0 0.4rem; overflow-wrap: anywhere; }
+.hero-light .hero-title:empty::before { content: '…'; color: var(--muted); }
+.hero-when { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; font-size: 0.98rem; }
+.hero-when li { display: flex; gap: 0.6rem; align-items: flex-start; line-height: 1.45; }
+.hero-when li[hidden] { display: none; }
+.hero-when svg.i { color: var(--amber); width: 1.2rem; height: 1.2rem; margin-top: 0.08rem; }
+.hero-when .text-btn { min-height: 0; padding: 0 0.15rem; margin-left: 0.35rem; vertical-align: baseline; font-size: 0.9rem; }
+.hero-bg {
+  position: absolute; z-index: -1; right: -2rem; top: -3rem; width: min(60vw, 38rem); color: var(--amber); opacity: 0.3; pointer-events: none;
+  -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent); mask-image: radial-gradient(closest-side, #000 70%, transparent);
+}
+@media (max-width: 40rem) { .hero-bg { width: 120vw; right: -40vw; top: -1rem; opacity: 0.22; } }
+
+/* ---------- 45 Footer (Footer.astro) ---------- */
+.foot { color: var(--muted); font-size: 0.9rem; padding-top: 1.5rem; padding-bottom: 2rem; border-top: 1px solid var(--lodge-3); }
+.foot-when { margin: 0 0 0.75rem; }
+.foot-when:empty { display: none; }
+.foot-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
+.foot nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+.foot nav a { color: var(--muted); text-decoration: none; padding: 0.35rem 0; }
+.foot nav a:hover { color: var(--paper); text-decoration: underline; }
+@media (max-width: 40rem) { .foot-row { flex-direction: column-reverse; text-align: center; } .foot nav { justify-content: center; } .foot-when { text-align: center; } }
+
+/* ---------- 46 Actions (Actions.astro): one row of buttons, 0.6rem apart ----------
+   Forms and panels: the primary first. Dialogs (.end): right-aligned with the primary last. .stack: one under the other on phones. */
+.actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1rem; min-width: 0; }
+.actions[hidden] { display: none; }
+.actions.tight { margin-top: 0.5rem; }
+.actions.end { justify-content: flex-end; }
+.actions .push { margin-left: auto; }
+.actions > .help, .actions > .hint { font-size: 0.85rem; }
+dialog.confirm .actions { justify-content: flex-end; }
+@media (max-width: 30rem) {
+  .actions.stack { flex-direction: column; align-items: stretch; }
+  .actions.stack > .btn { width: 100%; }
+  .actions.stack .push { margin-left: 0; }
+  dialog .actions.stack { flex-direction: column-reverse; }
+}

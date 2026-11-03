@@ -1,0 +1,22 @@
+---
+// Component 42 – the one tab bar. Links (href) switch between pages; without href the items are buttons
+// (role="tab") that tabs() in src/lib/ui/tabs.ts wires up (arrow keys, the chosen one). On phones the tabs wrap
+// to two rows – never hidden off to the right.
+//   items: { id, label (i18n key), href?, count?, hidden?, attrs? }; current: the chosen id
+import { en } from '../../i18n/en';
+interface Item { id: string; label: string; href?: string; count?: number | string; hidden?: boolean; attrs?: Record<string, string> }
+interface Props { items: Item[]; current?: string; id?: string; label?: string; labelKey?: string; class?: string; [attr: string]: unknown }
+const { items, current, id, label, labelKey, class: cls, ...rest } = Astro.props;
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+const links = items.some((i) => i.href != null);
+const Wrap = links ? 'nav' : 'div';
+---
+<Wrap id={id} class:list={['tabs', cls]} role={links ? undefined : 'tablist'} aria-label={label}
+  data-i18n-attr={labelKey ? `aria-label=${labelKey}` : undefined} data-tabs {...rest}>
+  {items.map((it) => links
+    ? <a href={it.href} data-tab={it.id} aria-current={it.id === current ? 'page' : undefined} hidden={it.hidden} {...it.attrs}>
+        <span data-i18n={it.label}>{tr(it.label)}</span>{it.count != null && <span class="n">{it.count}</span>}</a>
+    : <button type="button" role="tab" data-tab={it.id} aria-selected={it.id === current ? 'true' : 'false'}
+        tabindex={it.id === current ? 0 : -1} hidden={it.hidden} {...it.attrs}>
+        <span data-i18n={it.label}>{tr(it.label)}</span>{it.count != null && <span class="n">{it.count}</span>}</button>)}
+</Wrap>

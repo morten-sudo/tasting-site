@@ -1,12 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.quiz" tasting>
   <section class="wrap quiz-page">
-    <h1 class="title" data-i18n="page.quiz">Quiz</h1>
+    <PageHeader title="page.quiz" />
 
     <Loading text="gate.loadingQuiz" />
 
@@ -33,7 +34,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 
     <!-- Quiz finished -->
     <div id="results" hidden>
-      <p class="lead" data-i18n="quiz.over">The quiz is over. Here are the answers and explanations.</p>
+      <p data-i18n="quiz.over">The quiz is over. Here are the answers and explanations.</p>
       <ol id="result-list" class="results"></ol>
     </div>
 
@@ -258,13 +259,6 @@ import SignInState from '../../components/ui/SignInState.astro';
 
 <style is:global>
   .quiz-page { padding-top: 2.5rem; padding-bottom: 3rem; }
-  .quiz-page .title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(3rem, 16vw, 5rem);
-    line-height: 0.9;
-    margin-bottom: 1.25rem;
-  }
   .quiz-page .rules { margin-bottom: 1rem; }
 
   .quiz-page .dots {

@@ -6,6 +6,8 @@ import AddRow from '../../components/ui/AddRow.astro';
 import Switch from '../../components/ui/Switch.astro';
 import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Checkbox from '../../components/ui/Checkbox.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import Tabs from '../../components/ui/Tabs.astro';
 import Base from '../../layouts/Base.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
@@ -36,16 +38,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     </EmptyState>
 
     <div id="admin-main" hidden>
-      <!-- The tasting's name, the way to its guest page, and its sub-menu -->
-      <header class="ta-head">
-        <div class="ta-top">
-          <h1 id="ta-title" class="title"></h1>
-          <a id="t-guestpage" class="btn small secondary" href="/home/" target="_blank" rel="noopener" data-tip-text="See the tasting as your guests do" data-i18n-attr="data-tip-text=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span><Icon name="ext" /></a>
-        </div>
-        <nav id="admin-tabs" class="ta-tabs" aria-label="Tasting admin" data-i18n-attr="aria-label=adminBar.label">
-          {TABS.map((tab) => <a href="/admin/" data-apath={tab.path} data-section={tab.id} data-i18n={tab.key}>{en[tab.key]}</a>)}
-        </nav>
-      </header>
+      <!-- The tasting's name, the way to its guest page, and its sub-menu (the one tab bar) -->
+      <PageHeader id="ta-title" class="ta-head">
+        <a slot="actions" id="t-guestpage" class="btn small secondary" href="/home/" target="_blank" rel="noopener" data-tip-text="See the tasting as your guests do" data-i18n-attr="data-tip-text=nav.guestPageTitle"><span data-i18n="nav.guestPage">Guest page</span><Icon name="ext" /></a>
+      </PageHeader>
+      <Tabs id="admin-tabs" label="Tasting admin" labelKey="adminBar.label" items={TABS.map((tab) => ({ id: tab.id, label: tab.key, href: '/admin/', attrs: { 'data-apath': tab.path, 'data-section': tab.id } }))} />
       <div id="tasting-panel">
       <!-- Tasting details -->
       <section class="block" data-section="overview">
@@ -78,10 +75,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             </li>
           </ol>
         </div>
-        <div class="guests-head">
-          <h2 data-i18n="section.details">Details</h2>
+        <PageHeader size="section" title="section.details">
+          <Fragment slot="actions">
           <button id="details-edit" class="text-btn" type="button" data-i18n="admin.edit">Edit</button>
-        </div>
+          </Fragment>
+        </PageHeader>
         <!-- Read-only; changed in the side panel ("Edit") -->
         <dl id="details-view" class="details-view">
           <dt data-i18n="admin.title">Title</dt><dd id="v-title"></dd>
@@ -91,10 +89,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </dl>
 
         <!-- Who hosts the tasting -->
-        <div class="guests-head ov-hosts-head">
-          <h2 data-i18n="hosts.title">Hosts</h2>
+        <PageHeader size="section" title="hosts.title" class="ov-hosts-head">
+          <Fragment slot="actions">
           <a id="ov-hosts-manage" class="text-btn" href="settings/" data-section="settings" hidden data-i18n="hosts.manage">Manage hosts</a>
-        </div>
+          </Fragment>
+        </PageHeader>
         <ul id="ov-hosts" class="list"></ul>
 
         <Sheet id="details-panel" title="section.details" titleId="details-panel-title" wide form="details" formClass="tasting-form">
@@ -110,7 +109,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <div id="ai-draft" class="ai-draft" hidden>
               <p class="ai-draft-label" data-i18n="aiIntro.label">Draft from AI – check it before you use it</p>
               <div id="ai-text" class="ai-text"></div>
-              <div class="row-actions">
+              <div class="actions tight">
                 <button id="ai-use" class="btn small" type="button" data-i18n="aiIntro.use">Use the draft</button>
                 <button id="ai-again" class="text-btn" type="button" data-i18n="aiIntro.again">Try again</button>
                 <button id="ai-discard" class="text-btn" type="button" data-i18n="aiIntro.discard">Discard</button>
@@ -149,10 +148,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
       <!-- Hosts: the owner gives others the host role for this tasting -->
       <section id="hosts" class="block set-card" data-section="settings">
-        <div class="guests-head">
-          <h2 data-i18n="hosts.title">Hosts</h2>
+        <PageHeader size="section" title="hosts.title">
+          <Fragment slot="actions">
           <button id="host-open" class="btn small secondary" type="button" hidden data-i18n="hosts.add">Add host</button>
-        </div>
+          </Fragment>
+        </PageHeader>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
         <ul id="hosts-list" class="list"></ul>
       </section>
@@ -212,10 +212,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
       <!-- Wines in this tasting (from the wine library) -->
       <section class="block wines-admin" data-section="wines">
-        <div class="guests-head">
-          <h2 data-i18n="page.wines">Wines</h2>
+        <PageHeader size="section" title="page.wines">
+          <Fragment slot="actions">
           <button id="tw-add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="adminTasting.addWineBtn">Add wine</span></button>
-        </div>
+          </Fragment>
+        </PageHeader>
         <!-- Add a wine: a new row that slides in at the top of the list – search the library, paste a link or add a photo -->
         <WineQuickAdd lead />
         <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
@@ -269,14 +270,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
       <!-- Guests -->
       <section class="block guests" data-section="guests">
-        <div class="guests-head">
-          <h2 data-i18n="admin.guests">Guests</h2>
-          <div class="head-actions">
+        <PageHeader size="section" title="admin.guests">
+          <Fragment slot="actions">
             <!-- Who is shown: the one filter menu (src/lib/filter-dd.ts), made in the script -->
             <div id="g-filter-slot" class="filter-slot"></div>
             <button id="g-invite-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
-          </div>
-        </div>
+          </Fragment>
+        </PageHeader>
         <!-- Guests are invited to wines: at least one wine in the tasting first -->
         <Notice id="g-needs-wine" tone="warn" hidden>
           <p data-i18n="adminTasting.needsWine">Add at least one wine to the tasting before you invite guests.</p>
@@ -290,11 +290,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <AddRow id="gi" pic="guest">
           <div id="gi-fields" class="ar-fields">
             <div class="input">
-              <label for="gi-input" class="visually-hidden" data-i18n="admin.name">Name</label>
+              <label for="gi-input" class="sr" data-i18n="admin.name">Name</label>
               <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
             </div>
             <div class="input">
-              <label for="gi-email" class="visually-hidden" data-i18n="common.email">Email</label>
+              <label for="gi-email" class="sr" data-i18n="common.email">Email</label>
               <input id="gi-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
             </div>
           </div>
@@ -347,10 +347,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
       <!-- Quiz -->
       <section class="block quiz-admin" data-section="quiz">
-        <div class="guests-head">
-          <h2 data-i18n="page.quiz">Quiz</h2>
+        <PageHeader size="section" title="page.quiz">
+          <Fragment slot="actions">
           <button id="q-add-toggle" class="btn small secondary" type="button" data-i18n="aq.add">Add question</button>
-        </div>
+          </Fragment>
+        </PageHeader>
         <div class="tab-switches">
           <Switch title="set.quizOpen" hint="set.quizOpenHint" help="quiz" data-key="quiz_open" class="tab-switch" />
           <Switch title="set.quizDone" hint="set.quizDoneHint" data-key="quiz_finished" class="tab-switch" />
@@ -375,7 +376,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <label for="qf-question" data-i18n="aq.question">Question</label>
           <textarea class="input" id="qf-question" rows="2" maxlength="500"></textarea>
           <fieldset class="qf-fieldset">
-            <legend data-i18n="aq.answersLegend">Answers – mark the right one</legend>
+            <legend class="flabel" data-i18n="aq.answersLegend">Answers – mark the right one</legend>
             <div id="qf-options" class="qf-options"></div>
             <button id="qf-add-option" class="text-btn" type="button"><Icon name="plus" /><span data-i18n="aq.addAnswer">Add answer</span></button>
           </fieldset>
@@ -405,6 +406,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
 <script>
   import { setLoading } from '../../lib/ui/button';
+  import { selectTab } from '../../lib/ui/tabs';
   import { setStatus } from '../../lib/ui/status-line';
   import { copyText } from '../../lib/ui/copy';
   import { setNotice } from '../../lib/ui/notice';
@@ -908,7 +910,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     // The invitation: send (again) and copy the link
     out.push(mk('p', 'flabel', t('guestRow.invitation')));
     out.push(mk('p', 'help', p.invite_mailed_at ? t('guestRow.mailedLong', { when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }) : t('guestRow.notMailedLong')));
-    const inv = mk('div', 'row-actions guest-inv');
+    const inv = mk('div', 'actions tight guest-inv');
     if (p.email) {
       const send = mk('button', 'btn small secondary', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
       send.type = 'button';
@@ -1085,7 +1087,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       }
       const name = pById.get(o.participant_id)?.name ?? t('admin.unknownGuest');
       const mark = o.paid
-        ? iconButton('x', t('orders.markUnpaid'), { quiet: true })
+        ? iconButton('undo', t('orders.markUnpaid'))
         : iconButton('check', t('orders.markPaid'), { strong: true });
       mark.setAttribute('aria-label', `${t(o.paid ? 'orders.markUnpaid' : 'orders.markPaid')}: ${t('pay.orderComment', { id: o.id })}, ${name}`);
       mark.addEventListener('click', async () => {
@@ -1102,7 +1104,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       list.append(listRow({
         id: o.id, pic: avatar(name), title: name,
         meta: [[t('pay.orderComment', { id: o.id }), when.format(new Date(o.created_at))]],
-        body: [lines], chips: [statusChipFor(o.paid ? 'order.paid' : 'order.unpaid')],
+        body: [lines], chips: [statusChipFor(o.paid ? 'order.paid' : 'order.notPaid')],
         aside: mkEl('b', '', kr.format(orderTotal(o))), actions: [mark],
       }));
     }
@@ -1262,12 +1264,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   function showSection(id: string) {
     document.querySelectorAll<HTMLElement>('#tasting-panel [data-section]').forEach((el) => { el.hidden = el.dataset.section !== id; });
     // The page's sub-menu
-    document.querySelectorAll<HTMLAnchorElement>('#admin-tabs a').forEach((a) => {
-      const on = a.dataset.section === id;
-      a.classList.toggle('current', on);
-      if (on) { a.setAttribute('aria-current', 'page'); a.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
-      else a.removeAttribute('aria-current');
-    });
+    selectTab($('admin-tabs'), id);
     markSection(id);
     if (id === 'chat') startChat();
   }

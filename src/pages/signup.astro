@@ -1,5 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import SectionTitle from '../components/ui/SectionTitle.astro';
 import Loading from '../components/ui/Loading.astro';
 import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 ---
@@ -8,9 +10,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     <!-- Hero: what Winetastr is, with the sign-up form beside it -->
     <div class="su-hero">
       <div class="su-pitch">
-        <p class="eyebrow" data-i18n="signup.eyebrow">For hosts</p>
-        <h1 class="su-title" data-i18n="signup.title">Wine tastings your guests remember</h1>
-        <p class="su-lead" data-i18n="signup.lead">Winetastr gathers the whole evening in one place: invitations and replies, the wines with photos and prices, orders paid with MobilePay, ratings, and a quiz with a live leaderboard on the big screen. You prepare it in minutes – your guests only need their phone.</p>
+        <PageHeader eyebrow="signup.eyebrow" title="signup.title" lead="signup.lead" class="su-ph" />
         <ul class="su-points">
           <li data-i18n="signup.point1">Free to get started</li>
           <li data-i18n="signup.point2">No app to install – for you or your guests</li>
@@ -19,7 +19,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       </div>
 
       <div id="signup" class="card su-card">
-        <h2 data-i18n="signup.formTitle">Create your free account</h2>
+        <SectionTitle level="h3" as="h2" text="signup.formTitle" />
         <Loading id="checking" text="host.creating" hidden />
 
         <!-- Step 1: name and email -->
@@ -55,7 +55,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     <PlansAndFeatures />
 
     <section class="card su-final">
-      <h2 class="su-h2" data-i18n="signup.finalTitle">Ready for your next tasting?</h2>
+      <h2 data-i18n="signup.finalTitle">Ready for your next tasting?</h2>
       <a class="btn" href="#signup" data-i18n="signup.formTitle">Create your free account</a>
     </section>
   </section>
@@ -189,17 +189,14 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
   .signup-page { padding-top: 2.5rem; padding-bottom: 4rem; }
   .su-hero { display: grid; gap: 2rem; align-items: start; }
   @media (min-width: 56rem) { .su-hero { grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.9fr); gap: 3.5rem; } }
-  .su-title {
-    font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 9vw, 4.6rem);
-    line-height: 0.98; margin: 0.4rem 0 1.1rem; max-width: 15ch;
-  }
-  .su-lead { font-size: 1.12rem; line-height: 1.6; max-width: 36rem; margin: 0 0 1.2rem; }
+  .su-ph { margin-bottom: 1.2rem; }
+  .su-ph :global(.lead) { max-width: 36rem; }
   .su-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
   .su-points li { display: flex; gap: 0.6rem; align-items: baseline; }
   .su-points li::before { content: '✓'; color: var(--ok); font-weight: 700; }
 
   .su-card { padding: 1.5rem; scroll-margin-top: 6rem; }
-  .su-card h2 { margin: 0 0 1rem; font-size: 1.5rem; }
+  .su-card > h2 { margin: 0 0 1rem; }
   .su-fine { font-size: 0.88rem; margin: 0.6rem 0 0; }
   .login-form { display: grid; gap: 0.6rem; }
   .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
@@ -207,5 +204,5 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
   #email-wrap label { margin: 0; }
 
   .su-final { margin-top: 4.5rem; padding: 2rem 1.5rem; text-align: center; }
-  .su-final .su-h2 { margin-bottom: 1rem; }
+  .su-final > h2 { margin-bottom: 1rem; }
 </style>

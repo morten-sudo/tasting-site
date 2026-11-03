@@ -1,6 +1,7 @@
 ---
 import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
@@ -9,15 +10,15 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="account">
     <div id="admin-main" hidden>
-      <h1 class="title" data-i18n="account.title">Account</h1>
-      <p class="hint" data-i18n="account.intro">Everyone on the account sees and edits all its tastings, wines and guests.</p>
+      <PageHeader title="account.title" lead="account.intro" />
 
       <!-- The account's name -->
       <section class="block">
-        <div class="guests-head">
-          <h2 data-i18n="account.nameTitle">Name</h2>
+        <PageHeader size="section" title="account.nameTitle">
+          <Fragment slot="actions">
           <button id="name-edit" class="text-btn" type="button" hidden data-i18n="admin.edit">Edit</button>
-        </div>
+          </Fragment>
+        </PageHeader>
         <p id="acc-name" class="acc-name"></p>
         <EmptyState id="acc-name-empty" icon="edit" title="account.noNameTitle" text="account.noNameText" hidden>
           <button id="name-add" class="btn small secondary" type="button" data-i18n="account.giveName">Give it a name</button>

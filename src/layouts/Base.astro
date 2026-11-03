@@ -1,16 +1,16 @@
 ---
 import '../styles/global.css';
 import '../styles/components.css';
-import Icon from '../components/ui/Icon.astro';
-import Sheet from '../components/ui/Sheet.astro';
+import TopBar from '../components/ui/TopBar.astro';
+import Footer from '../components/ui/Footer.astro';
 import { SITE_NAME } from '../lib/config';
 import { en } from '../i18n/en';
 
 // title: a translation key for the page title
 // tasting: the page lives under /t/<slug>/ and gets the tasting's menu
 // adminTasting: a tasting's admin page (/t/<slug>/admin/...); its sub-menu is on the page itself
-interface Props { title?: keyof typeof en; hero?: boolean; tasting?: boolean; adminTasting?: boolean }
-const { title, hero = false, tasting = false, adminTasting = false } = Astro.props;
+interface Props { title?: keyof typeof en; tasting?: boolean; adminTasting?: boolean }
+const { title, tasting = false, adminTasting = false } = Astro.props;
 const pageTitle = title ? `${en[title]} – ${SITE_NAME}` : SITE_NAME;
 const path = Astro.url.pathname;
 // For links shared in messages and social media: a description and a picture (the invitation's own pages say
@@ -18,7 +18,6 @@ const path = Astro.url.pathname;
 const shareText = tasting ? en['meta.invite'] : en['meta.description'];
 const shareTitle = tasting ? `${en['meta.inviteTitle']} – ${SITE_NAME}` : pageTitle;
 const site = 'https://winetastr.com';
-const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect width="100" height="100" rx="22" fill="#6e0f1f" /><g transform="translate(50 50) scale(0.84) translate(-50 -50)"><rect x="0" y="43" width="100" height="100" fill="#fff" clip-path="url(#logo-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></g></svg>`;
 ---
 <!doctype html>
 <html lang="en" class="i18n-pending">
@@ -47,80 +46,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap"
     />
   </head>
-  <body class:list={{ 'has-hero': hero }} data-tasting={tasting ? '1' : undefined} data-admin={adminTasting ? '1' : undefined} data-title={title}>
-    <header class="site-header">
-      <div class="wrap header-inner">
-      <div class="top-row">
-        <div class="brand">
-          <Fragment set:html={LOGO} />
-          <a href={tasting ? '/home/' : '/'} class="mark" id="mark">{SITE_NAME}</a>
-        </div>
-        <div class="tools">
-          <!-- The header's menus are the one menu (src/lib/ui/menu.ts, .menu in components.css) -->
-          <div class="dd lang-pick">
-            <button id="lang-btn" class="dd-btn bare" type="button" aria-haspopup="menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;data-tip-text=profile.language" data-tip-text="Language">
-              <span id="lang-current" class="lang-current"></span>
-              <Icon name="chev" class="chev" />
-            </button>
-            <div id="lang-menu" class="menu right lang-menu" role="menu" hidden></div>
-          </div>
-          {tasting && (
-            <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below cart-link" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
-              <Icon name="cart" />
-              <span id="nav-cart-count" class="badge" hidden></span>
-            </a>
-          )}
-          <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->
-          <div id="user-in" class="user-in" hidden>
-            <button id="user-btn" type="button" class:list={['dd-btn', 'bare', 'user-name', { current: path.startsWith('/profile') }]} aria-haspopup="menu" data-tip-text="Account menu" data-i18n-attr="data-tip-text=nav.userMenu">
-              <span id="user-name" class="user-name-text"></span>
-              <Icon name="user" class="user-icon" />
-              <Icon name="chev" class="chev" />
-            </button>
-            <div id="user-menu" class="menu right" role="menu" hidden>
-              <a class="opt-i" role="menuitem" href="/home/" data-i18n="nav.home">Home</a>
-              <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden data-i18n="nav.admin">Admin</a>
-              <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden data-i18n="nav.superadmin">Superadmin</a>
-              <a class="opt-i" role="menuitem" href="/my/" data-i18n="book.title">My wine book</a>
-              <a class="opt-i" role="menuitem" href="/profile/" data-i18n="nav.profile">My profile</a>
-              <hr />
-              <button id="logout" class="opt-i quiet" role="menuitem" type="button" data-i18n="nav.signOut">Sign out</button>
-            </div>
-          </div>
-          <a id="user-out" href="/login/" class="icon-act md close tip-below" aria-label="Sign in" data-tip="Sign in" data-i18n-attr="aria-label=nav.signIn;data-tip=nav.signIn" hidden><Icon name="user" /></a>
-        </div>
-      </div>
-      {tasting && (
-        <div class="ctx">
-          <!-- Tasting context: which tasting (with a switcher), its tabs, and the way between guest page and admin -->
-          <div class="ctx-bar">
-            <button id="t-switch" type="button" class="t-switch" aria-haspopup="menu" disabled>
-              <span id="t-title" class="t-title"></span>
-              <Icon name="chev" class="chev" />
-            </button>
-            <nav aria-label="Tasting menu" data-i18n-attr="aria-label=nav.tastingMenu">
-              <a href="/home/" data-tpath="" class:list={{ current: path === '/tasting/' || path === '/tasting' }} data-i18n="nav.tasting">Tasting</a>
-              <a href="/home/" data-tpath="wines/" class:list={{ current: path.startsWith('/tasting/wine') }} data-i18n="nav.wines">Wines</a>
-              <!-- Only when the tasting has a quiz (shown by the script) -->
-              <a id="t-quiz-tab" href="/home/" data-tpath="quiz/" class:list={{ current: path.startsWith('/tasting/quiz') }} hidden={!path.startsWith('/tasting/quiz')} data-i18n="nav.quiz">Quiz</a>
-              <a href="/home/" data-tpath="chat/" class:list={{ current: path.startsWith('/tasting/chat') }} data-i18n="nav.chat">Chat</a>
-            </nav>
-            <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" data-tip-text="Manage this tasting" data-i18n-attr="data-tip-text=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
-          </div>
-          <!-- Larger screens: the one menu under the name; phones: the same items in the one side panel (a bottom sheet) -->
-          <div id="t-menu" class="menu t-menu" role="menu" hidden>
-            <div class="m-group" role="presentation" data-i18n="nav.switchTasting">Switch tasting</div>
-            <div id="t-list" class="m-list t-list"></div>
-            <hr />
-            <a id="t-all" class="opt-i act" role="menuitem" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
-          </div>
-          <Sheet id="t-sheet" title="nav.switchTasting" titleId="t-sheet-title">
-            <div id="t-sheet-list" class="menu static"></div>
-          </Sheet>
-        </div>
-      )}
-      </div>
-    </header>
+  <body data-tasting={tasting ? '1' : undefined} data-admin={adminTasting ? '1' : undefined} data-title={title}>
+    <TopBar tasting={tasting} path={path} />
     <main>
       <slot />
     </main>
@@ -134,6 +61,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       import { bindMenu, menuItem } from '../lib/ui/menu';
       import { sheetPanel } from '../lib/ui/sheet';
       import { initDropdowns } from '../lib/ui/dropdown';
+      import { initTabs } from '../lib/ui/tabs';
       import { tooltip } from '../lib/ui/tooltip';
       import { setEmpty } from '../lib/ui/empty';
 
@@ -157,6 +85,8 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
 
       // Every static dropdown on the page works, also before a page's own script asks for it
       initDropdowns();
+      // …and every static tab bar (arrow keys)
+      initTabs();
 
       const inTasting = document.body.dataset.tasting === '1';
       const slug = currentSlug();
@@ -182,12 +112,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       };
       window.addEventListener('cart-change', sync);
       sync();
-
-      if (document.body.classList.contains('has-hero')) {
-        const onScroll = () => document.body.classList.toggle('scrolled', window.scrollY > 24);
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-      }
 
       const userIn = document.getElementById('user-in')!;
       const userOut = document.getElementById('user-out')!;
@@ -217,7 +141,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       type SwitchItem = { slug: string; title: string; starts_at: string | null };
       async function initSwitcher() {
         const { all, upcoming, past } = await loadAllMyTastings();
-        const tab = document.querySelector<HTMLAnchorElement>('.ctx nav a.current')?.dataset.tpath ?? '';
+        const tab = document.querySelector<HTMLAnchorElement>('#t-tabs a[aria-current]')?.dataset.tpath ?? '';
         fillSwitcher(all.length < 2 ? [] : [...upcoming, ...past], (s) => tastingUrl(s, tab));
       }
       function fillSwitcher(items: SwitchItem[], hrefFor: (slug: string) => string) {
@@ -336,158 +260,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         location.href = '/';
       });
     </script>
-    <footer class="site-footer wrap">
-      <p id="footer-when"></p>
-      <div class="footer-row">
-        <span class="footer-brand">Winetastr · © 2026</span>
-        <nav class="footer-links" aria-label="Winetastr">
-          <a href="/about/" data-i18n="footer.about">About</a>
-          <a href="/contact/" data-i18n="footer.contact">Contact</a>
-          <a href="/privacy/" data-i18n="footer.privacy">Privacy</a>
-          <a href="/terms/" data-i18n="footer.terms">Terms</a>
-        </nav>
-      </div>
-    </footer>
+    <Footer />
   </body>
 </html>
-
-<style>
-  /* Header stays at the top while scrolling */
-  .site-header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.96);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--lodge-3);
-    transition: background-color 0.2s, border-color 0.2s;
-  }
-  /* Header spans the full width */
-  .header-inner {
-    padding-top: 0.6rem;
-    padding-bottom: 0;
-  }
-  .top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-  .tools { display: flex; align-items: center; gap: 0.25rem; flex: 0 0 auto; }
-  .tools [hidden] { display: none !important; }
-  .tools .icon-act :global(svg) { width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
-  /* The account and language menus: the one menu (components.css); the buttons are quiet in the header */
-  .user-in { position: relative; display: inline-flex; align-items: center; min-width: 0; }
-  .tools .dd-btn.bare { height: var(--h); font-size: 0.88rem; }
-  .user-name-text { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
-  .tools .dd-btn > :global(.user-icon) { display: none; width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
-  /* Phones: a profile icon instead of the name */
-  @media (max-width: 40rem) {
-    .tools .user-name { padding: 0 0.2rem; color: var(--paper); }
-    .user-name-text { display: none; }
-    .tools .dd-btn > :global(.user-icon) { display: block; }
-  }
-  .tools .user-name.current { color: var(--paper); }
-  .tools .menu { top: calc(100% + 0.25rem); min-width: 12rem; }
-  /* Tasting context bar under the top row */
-  .header-inner { position: relative; }
-  .ctx-bar {
-    display: flex; align-items: center; gap: 1.5rem; margin-top: 0.35rem;
-    border-top: 1px solid var(--lodge-3);
-    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
-  }
-  .ctx-bar::-webkit-scrollbar { display: none; }
-  .t-switch {
-    flex: 0 1 auto; flex-shrink: 0; min-width: 0; display: inline-flex; align-items: center; gap: 0.3rem;
-    padding: 0.7rem 0; background: none; border: 0; font: inherit; font-size: 0.95rem; font-weight: 600;
-    color: var(--paper); cursor: default;
-  }
-  .t-switch:disabled { opacity: 1; }
-  .t-switch > :global(.chev) { display: none; width: 0.9rem; height: 0.9rem; transition: transform 0.15s; }
-  .t-switch.can-switch { cursor: pointer; }
-  .t-switch.can-switch > :global(.chev) { display: block; color: var(--muted); }
-  .t-switch.can-switch:hover > :global(.chev), .t-switch[aria-expanded='true'] > :global(.chev) { color: var(--amber); }
-  .t-switch[aria-expanded='true'] > :global(.chev) { transform: rotate(180deg); }
-  .t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; }
-  .t-title:empty::before { content: '…'; color: var(--muted); }
-  nav { display: flex; gap: 0 1.5rem; flex: none; }
-  .t-admin { margin-left: auto; }
-  .t-admin[hidden] { display: none; }
-  /* The tasting switcher: the one menu under the tasting's name (on phones the one side panel, #t-sheet) */
-  .t-menu { left: var(--gutter); top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
-  .t-menu .t-list { max-height: 50vh; }
-  @media (max-width: 40rem) {
-    /* Two rows: the tasting (and Admin) on top, the tabs below – scrolling sideways if they do not fit */
-    .ctx-bar { flex-wrap: wrap; gap: 0 0.75rem; overflow: visible; }
-    .t-switch { flex: 1 1 0; padding: 0.55rem 0 0.15rem; }
-    .t-title { max-width: none; }
-    .t-admin { margin-top: 0.4rem; }
-    nav {
-      order: 3; flex: 1 0 100%; gap: 0 1.25rem; overflow-x: auto; scrollbar-width: none;
-      margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter);
-    }
-    nav::-webkit-scrollbar { display: none; }
-  }
-  .badge {
-    position: absolute;
-    top: 0.2rem;
-    right: 0.05rem;
-    min-width: 1.15rem;
-    padding: 0 0.3rem;
-    border-radius: 999px;
-    background: var(--amber);
-    color: #ffffff;
-    font-size: 0.72rem;
-    font-weight: 500;
-    text-align: center;
-    line-height: 1.15rem;
-  }
-  nav a[hidden] { display: none; }
-  nav a {
-    white-space: nowrap;
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 400;
-    padding: 0.7rem 0;
-  }
-  nav a:hover { color: var(--paper); }
-  nav a.current { color: var(--amber); font-weight: 500; box-shadow: inset 0 -2px 0 var(--amber); }
-  .brand { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 0.6rem; }
-  .brand :global(.logo) { flex: none; display: block; }
-  .mark {
-    flex: 1 1 auto;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-family: var(--body);
-    font-weight: 500;
-    font-size: 1rem;
-    letter-spacing: 0.01em;
-    color: var(--paper);
-    text-decoration: none;
-  }
-  main { padding-bottom: 3rem; }
-  .site-footer {
-    color: var(--muted);
-    font-size: 0.9rem;
-    padding-top: 1.5rem;
-    padding-bottom: 2rem;
-    border-top: 1px solid var(--lodge-3);
-  }
-  #footer-when:empty { display: none; }
-  .footer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1.5rem; }
-  .footer-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
-  .footer-links a { color: var(--muted); text-decoration: none; padding: 0.35rem 0; }
-  .footer-links a:hover, .footer-links a:focus-visible { color: var(--paper); text-decoration: underline; }
-  @media (max-width: 40rem) {
-    .footer-row { flex-direction: column-reverse; text-align: center; }
-    .footer-links { justify-content: center; }
-  }
-  /* Language picker (top right): the current flag */
-  .lang-current { display: grid; }
-  .lang-current :global(.flag) { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
-  .lang-menu { min-width: 10.5rem; }
-</style>

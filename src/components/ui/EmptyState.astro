@@ -13,5 +13,5 @@ const hasActions = Astro.slots.has('default');
   {icon && <span class="e-ic" aria-hidden="true"><Icon name={icon} /></span>}
   <p class="e-title" data-i18n={title}>{en[title]}</p>
   {text && (textHtml ? <p class="help" data-i18n-html={text} set:html={en[text]} /> : <p class="help" data-i18n={text}>{en[text]}</p>)}
-  {hasActions && <div class="e-actions"><slot /></div>}
+  {hasActions && <div class="actions"><slot /></div>}
 </div>

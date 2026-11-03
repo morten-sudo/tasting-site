@@ -30,6 +30,8 @@ export const STATUS = {
   // Orders
   'order.paid': { key: 'cart.paid', tone: 'ok' },
   'order.unpaid': { key: 'cart.awaiting', tone: 'err' },
+  // The host's word for the same: marked by hand, so "Not paid" rather than "Awaiting payment"
+  'order.notPaid': { key: 'guestRow.unpaid', tone: 'err' },
 } satisfies Record<string, Status>;
 export type StatusName = keyof typeof STATUS;
 

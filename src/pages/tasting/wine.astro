@@ -1,6 +1,7 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
@@ -21,10 +22,11 @@ import SignInState from '../../components/ui/SignInState.astro';
       <div id="pic" class="pic"><span id="no" class="no" aria-hidden="true"></span></div>
       <div class="text">
 
-      <p id="style-tag" class="style-tag"></p>
-      <h1 id="name" class="name"></h1>
-      <p id="meta" class="meta"></p>
-      <p id="origin" class="origin" hidden></p>
+      <p id="style-tag" class="eyebrow style-tag"></p>
+      <PageHeader id="name" class="wine-ph">
+        <p id="meta" class="meta"></p>
+        <p id="origin" class="origin" hidden></p>
+      </PageHeader>
 
       <!-- What the guest does here comes first: price and cart, then their own rating; reading after -->
       <div class="buy">
@@ -117,7 +119,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   function pagerLink(a: HTMLAnchorElement, w: Wine | undefined, label: string) {
     if (!w) return;
     a.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
-    a.append(el('span', 'dir', label), el('span', 'to', w.name));
+    a.append(el('span', 'eyebrow dir', label), el('span', 'to', w.name));
     a.hidden = false;
   }
 
@@ -248,9 +250,9 @@ import SignInState from '../../components/ui/SignInState.astro';
         a.rel = 'noopener';
         const dd = el('dd');
         dd.append(a);
-        dl.append(el('dt', '', t('producer.websiteShort')), dd);
+        dl.append(el('dt', 'eyebrow', t('producer.websiteShort')), dd);
       }
-      if (w.producer_address) dl.append(el('dt', '', t('producer.addressShort')), el('dd', '', w.producer_address));
+      if (w.producer_address) dl.append(el('dt', 'eyebrow', t('producer.addressShort')), el('dd', '', w.producer_address));
       if (w.producer_website || w.producer_address) { dl.hidden = false; $('details-box').hidden = false; }
     }
 
@@ -259,7 +261,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       for (const line of w.details.split('\n')) {
         const i = line.indexOf(':');
         if (i > 0 && i < 30) {
-          dl.append(el('dt', '', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
+          dl.append(el('dt', 'eyebrow', line.slice(0, i)), el('dd', '', line.slice(i + 1).trim()));
         } else if (line.trim()) {
           dl.append(el('dd', '', line.trim()));
         }
@@ -330,7 +332,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       border-radius: var(--radius);
     }
     .wine-page .text { max-width: 40rem; padding-left: clamp(2rem, 5vw, 5rem); }
-    .wine-page .style-tag { margin-top: 0.5rem; }
+    .wine-page .style-tag { display: flex; align-items: center; gap: 0.5rem; margin: 1.4rem 0 0.5rem; }
   }
   .wine-page > .back, .wine-page .back { margin-left: -0.15rem; }
 
@@ -365,16 +367,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     color: #8a7f72;
   }
 
-  .wine-page .style-tag {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 1.4rem 0 0.4rem;
-    color: var(--muted);
-    font-size: 0.82rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
+  .wine-page .style-tag { display: flex; align-items: center; gap: 0.5rem; margin: 1.4rem 0 0.5rem; }
   .wine-page .style-tag::before {
     content: '';
     width: 1.5rem;
@@ -382,15 +375,9 @@ import SignInState from '../../components/ui/SignInState.astro';
     border-radius: 2px;
     background: var(--tone);
   }
-  .wine-page .name {
-    font-family: var(--display);
-    font-size: clamp(2.2rem, 7vw, 3.2rem);
-    font-weight: 300;
-    line-height: 1.05;
-    margin: 0 0 0.5rem;
-  }
-  .wine-page .meta { margin: 0; color: var(--muted); }
-  .wine-page .mini-map { width: min(100%, 12rem); margin: 0.6rem 0 0; border: 1px solid var(--lodge-3); border-radius: 0.6rem; overflow: hidden; }
+  .wine-page .wine-ph { margin: 0; }
+  .wine-page .meta { margin: 0.5rem 0 0; color: var(--muted); }
+  .wine-page .mini-map { width: min(100%, 12rem); margin: 0.6rem 0 0; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
   .wine-page .mini-map[hidden] { display: none; }
   .wine-page .origin { margin: 0.3rem 0 0; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
   .wine-page .origin::before {
@@ -435,7 +422,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   }
   .wine-page .my-rating { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--lodge-3); }
   .wine-page .rating-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
-  .wine-page .rating-head h2 { font-size: 1.5rem; margin: 0; }
+  .wine-page .rating-head h2 { margin: 0; }
   /* The stars are the shared component (components.css); only the space around them is the page's */
   .wine-page .my-rating .stars { margin: 0.4rem 0 0.9rem -0.55rem; }
   .wine-page .my-rating .note-label { margin-bottom: 0.4rem; }
@@ -446,10 +433,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     line-height: 1.5;
   }
   .wine-page .details dt {
-    color: var(--muted);
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
+    margin: 0 0 0.2rem;
     padding-top: 0.9rem;
     border-top: 1px solid var(--lodge-3);
   }
@@ -476,7 +460,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   }
   .wine-page .pager-link.next { grid-column: 2; text-align: right; }
   .wine-page .pager-link:hover { border-color: var(--amber); }
-  .wine-page .pager-link .dir { color: var(--muted); font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase; }
+  .wine-page .pager-link .dir { margin: 0; }
   .wine-page .pager-link .to { font-family: var(--display); font-size: 1.15rem; line-height: 1.25; }
 
   .basket {

@@ -3,6 +3,7 @@ import SearchField from '../../components/ui/SearchField.astro';
 import Dropdown from '../../components/ui/Dropdown.astro';
 // Help for hosts: every feature, step by step. Only shown to signed-in hosts (in the admin menu).
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
@@ -11,8 +12,7 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="help">
     <div id="admin-main" hidden>
-      <h1 class="title" data-i18n="adminNav.help">Help</h1>
-      <p class="hint" data-i18n="help.intro">Everything Winetastr can do, and how. Search, or open a topic.</p>
+      <PageHeader title="adminNav.help" lead="help.intro" />
       <SearchField id="help-search" label="help.search" />
       <div id="help-target" class="help-target" hidden>
         <label for="help-tasting-btn" data-i18n="help.linksTo">Links to a tasting go to</label>

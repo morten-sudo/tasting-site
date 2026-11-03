@@ -38,7 +38,6 @@ export async function requireHost(): Promise<Host | null> {
     return null;
   }
   $('logout2')?.addEventListener('click', signOut);
-  $('side-logout')?.addEventListener('click', signOut);
 
   // Turns a co-host invitation for this email into a host account (first sign-in)
   await linkMe();
@@ -52,8 +51,7 @@ export async function requireHost(): Promise<Host | null> {
   if (!host || !tenantId) { $('not-host').hidden = false; return null; }
   const { data: tenant } = await supabase.from('tenants').select('owner_id').eq('id', tenantId).maybeSingle();
 
-  $('me').textContent = data.session.user.email ?? '';
-  initSide(host.id);
+  initSide(data.session.user.email ?? '', signOut);
   enableImageZoom(t('admin.close'));
   showCohostWelcome();
   return { ...host, tenant_id: tenantId as string, tenant_owner: (tenant as { owner_id: string } | null)?.owner_id === host.id } as Host;
@@ -106,17 +104,18 @@ function showCohostWelcome() {
   dlg.setAttribute('aria-labelledby', 'welcome-title');
   dlg.append(mk('p', 'welcome-icon', '🍷'), Object.assign(mk('h2', '', t('cohost.welcomeTitle')), { id: 'welcome-title' }));
   for (const r of rows) dlg.append(mk('p', 'welcome-text', t('cohost.welcomeText', { tasting: r.title })));
-  const actions = mk('div', 'row-actions');
+  const actions = mk('div', 'actions end');
   const other = rows.find((r) => r.slug !== here);
+  // A dialog: the primary action last (on the right)
+  const ok = mk('button', rows.length === 1 && other ? 'btn small secondary' : 'btn small', t('cohost.ok'));
+  ok.type = 'button';
+  ok.addEventListener('click', () => dlg.close());
+  actions.append(ok);
   if (rows.length === 1 && other) {
     const go = mk('a', 'btn small', t('cohost.goTo'));
     go.href = `/t/${other.slug}/admin/`;
     actions.append(go);
   }
-  const ok = mk('button', rows.length === 1 && other ? 'text-btn' : 'btn small', t('cohost.ok'));
-  ok.type = 'button';
-  ok.addEventListener('click', () => dlg.close());
-  actions.append(ok);
   dlg.append(actions);
   dlg.addEventListener('close', () => dlg.remove());
   dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });

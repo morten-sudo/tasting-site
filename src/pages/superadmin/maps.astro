@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import '../../styles/admin.css';
@@ -7,7 +8,7 @@ import '../../styles/admin.css';
 <Base title="page.superadmin">
   <section class="wrap admin-page">
     <SuperNav active="maps">
-      <h1 class="title" data-i18n="super.mapsTitle">Maps</h1>
+      <PageHeader title="super.mapsTitle" />
       <!-- Maps: which regions the wines come from, to decide which detailed maps to make next -->
       <section class="block maps-block">
                 <p class="hint" data-i18n="super.mapsHint">The regions the wines in all tastings come from. Regions without a detailed map are shown on the overview map – the most used ones are the next candidates for a detailed map.</p>

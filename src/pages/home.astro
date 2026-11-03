@@ -1,6 +1,7 @@
 ---
 import Icon from '../components/ui/Icon.astro';
 import Base from '../layouts/Base.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
 import Loading from '../components/ui/Loading.astro';
 import EmptyState from '../components/ui/EmptyState.astro';
 ---
@@ -9,14 +10,13 @@ import EmptyState from '../components/ui/EmptyState.astro';
     <Loading />
 
     <div id="main" hidden>
-      <h1 class="title"><span data-i18n="home2.hello">Hello</span><span id="hello-name"></span></h1>
-      <p class="home-lead" data-i18n="home2.lead">Where do you want to go?</p>
+      <PageHeader lead="home2.lead"><Fragment slot="title"><span data-i18n="home2.hello">Hello</span><span id="hello-name"></span></Fragment></PageHeader>
 
       <!-- Workspaces: guest, host and (for administrators) superadmin -->
       <div class="ws-grid">
         <a id="ws-guest" class="card ws-card" href="#my-tastings" hidden>
           <span class="ws-icon"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="ws-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" clip-path="url(#ws-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg></span>
-          <span class="ws-kicker" data-i18n="home2.guest">As a guest</span>
+          <span class="eyebrow" data-i18n="home2.guest">As a guest</span>
           <span class="ws-title" data-i18n="nav.myTastings">My tastings</span>
           <span id="ws-guest-info" class="ws-info"></span>
           <Icon name="right" class="ws-go" />
@@ -24,7 +24,7 @@ import EmptyState from '../components/ui/EmptyState.astro';
 
         <a id="ws-host" class="card ws-card" href="/admin/" hidden>
           <span class="ws-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg></span>
-          <span class="ws-kicker" data-i18n="home2.host">As a host</span>
+          <span class="eyebrow" data-i18n="home2.host">As a host</span>
           <span class="ws-title" data-i18n="page.admin">Admin</span>
           <span id="ws-host-info" class="ws-info"></span>
           <Icon name="right" class="ws-go" />
@@ -32,14 +32,14 @@ import EmptyState from '../components/ui/EmptyState.astro';
 
         <a id="ws-super" class="card ws-card" href="/superadmin/" hidden>
           <span class="ws-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg></span>
-          <span class="ws-kicker">Winetastr</span>
+          <span class="eyebrow">Winetastr</span>
           <span class="ws-title" data-i18n="page.superadmin">Superadmin</span>
           <span id="ws-super-info" class="ws-info"></span>
           <Icon name="right" class="ws-go" />
         </a>
 
         <a id="ws-become" class="card add ws-card ws-soft" href="/signup/" hidden>
-          <span class="ws-kicker" data-i18n="home2.hostToo">Host your own?</span>
+          <span class="eyebrow" data-i18n="home2.hostToo">Host your own?</span>
           <span class="ws-title" data-i18n="page.signup">Sign up</span>
           <span class="ws-info" data-i18n="home2.hostTooText">Create a free host account and invite your own guests.</span>
           <Icon name="right" class="ws-go" />
@@ -135,14 +135,12 @@ import EmptyState from '../components/ui/EmptyState.astro';
 
 <style is:global>
   .home-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 56rem; }
-  .home-page .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 11vw, 4.5rem); line-height: 1; margin: 0 0 0.4rem; }
-  .home-page .home-lead { color: var(--muted); margin: 0 0 1.5rem; font-size: 1.05rem; }
   .ws-grid { display: grid; gap: 0.9rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
   .ws-card { position: relative; display: grid; align-content: start; gap: 0.25rem; padding: 1.3rem 1.3rem 1.2rem; }
-  .ws-icon { width: 2.6rem; height: 2.6rem; border-radius: 0.7rem; display: grid; place-items: center; background: var(--lodge); color: var(--amber); margin-bottom: 0.6rem; }
+  .ws-icon { width: 2.6rem; height: 2.6rem; border-radius: var(--radius); display: grid; place-items: center; background: var(--lodge); color: var(--amber); margin-bottom: 0.6rem; }
   .ws-icon svg { width: 1.45rem; height: 1.45rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
   .ws-icon svg[viewBox='0 0 100 100'] { width: 1.6rem; height: 1.6rem; }
-  .ws-kicker { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .ws-card .eyebrow { margin: 0; }
   .ws-title { font-family: var(--display); font-size: 1.7rem; line-height: 1.1; }
   .ws-info { font-size: 0.92rem; color: var(--muted); margin-top: 0.2rem; }
   .ws-go { position: absolute; top: 1.2rem; right: 1.2rem; color: var(--amber); }
@@ -150,5 +148,4 @@ import EmptyState from '../components/ui/EmptyState.astro';
   #my-tastings { scroll-margin-top: 5rem; }
   .book-more { margin: 1.5rem 0 0; }
   .home-section { margin-top: 2.75rem; }
-  .home-section h2 { font-size: 1.6rem; }
 </style>

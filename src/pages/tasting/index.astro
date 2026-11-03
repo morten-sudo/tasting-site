@@ -1,6 +1,11 @@
 ---
 import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Base from '../../layouts/Base.astro';
+import Hero from '../../components/ui/Hero.astro';
+import Icon from '../../components/ui/Icon.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import Actions from '../../components/ui/Actions.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import SignInState from '../../components/ui/SignInState.astro';
@@ -12,41 +17,34 @@ import SignInState from '../../components/ui/SignInState.astro';
 
     <!-- First visit: email required before continuing -->
     <form id="email-step" class="email-step" hidden novalidate>
-      <h1 class="greeting"><span data-i18n="guest.welcome">Welcome,</span> <span id="step-name"></span></h1>
-      <p class="lead" data-i18n="guest.emailLead">Before you continue, we need your email. You use it to sign in with a code – for example if you switch phones.</p>
+      <PageHeader lead="guest.emailLead"><Fragment slot="title"><span data-i18n="guest.welcome">Welcome,</span> <span id="step-name"></span></Fragment></PageHeader>
       <label for="step-email" data-i18n="guest.yourEmail">Your email</label>
       <input class="input" id="step-email" type="email" autocomplete="email" inputmode="email" maxlength="200" required />
-      <button class="btn" type="submit" id="step-btn" data-i18n="common.continue">Continue</button>
+      <Actions tight><button class="btn" type="submit" id="step-btn" data-i18n="common.continue">Continue</button></Actions>
     </form>
 
     <div id="invite" class="t-home" hidden>
-      <!-- The tasting at a glance -->
-      <header class="t-hero">
-        <!-- The region's map, faint behind the heading -->
-        <div id="hero-map" class="hero-map" aria-hidden="true"></div>
-        <p id="t-countdown" class="chip wait t-countdown" hidden></p>
-        <h1 id="h-title" class="h-title"></h1>
-        <ul class="facts">
-          <li id="f-when" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
-            <span><span id="h-when"></span> <button id="h-ics" type="button" class="text-btn small fact-act" data-i18n="tastingHome.calendar">Add to calendar</button></span>
-          </li>
-          <li id="f-place" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.1-6.5-11a6.5 6.5 0 0 1 13 0c0 4.9-6.5 11-6.5 11z" /><circle cx="12" cy="10" r="2.3" /></svg>
-            <span><span id="h-place"></span> <a id="h-map" class="text-btn small fact-act" target="_blank" rel="noopener" data-i18n="tastingHome.map">Open in maps</a></span>
-          </li>
-          <li id="f-host" hidden>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5" /><path d="M5 20c1.2-3.6 3.8-5.5 7-5.5s5.8 1.9 7 5.5" /></svg>
-            <span id="h-host"></span>
-          </li>
-        </ul>
-      </header>
+      <!-- The tasting at a glance: the one hero, its "tasting" variant (the region's map faint behind the heading) -->
+      <Hero variant="tasting" titleId="h-title" countdownId="t-countdown" backgroundId="hero-map">
+        <li id="f-when" hidden>
+          <Icon name="calendar" />
+          <span><span id="h-when"></span><button id="h-ics" type="button" class="text-btn small" data-i18n="tastingHome.calendar">Add to calendar</button></span>
+        </li>
+        <li id="f-place" hidden>
+          <Icon name="pin" />
+          <span><span id="h-place"></span><a id="h-map" class="text-btn small" target="_blank" rel="noopener" data-i18n="tastingHome.map">Open in maps</a></span>
+        </li>
+        <li id="f-host" hidden>
+          <Icon name="user" />
+          <span id="h-host"></span>
+        </li>
+      </Hero>
 
       <div class="t-grid">
         <!-- Sign-up and payment (right column on large screens, right after the heading on phones) -->
         <aside class="t-side">
           <section class="card rsvp-card">
-            <h2 data-i18n="tastingHome.yourAnswer">Your answer</h2>
+            <SectionTitle level="h3" as="h2" text="tastingHome.yourAnswer" />
             <p id="current" class="rsvp-status" role="status" hidden></p>
             <p id="h-coming" class="coming" hidden></p>
             <button id="change" type="button" class="text-btn" hidden data-i18n="tastingHome.change">Change answer</button>
@@ -69,15 +67,15 @@ import SignInState from '../../components/ui/SignInState.astro';
               </details>
 
 
-              <div class="actions">
+              <Actions tight>
                 <button type="submit" class="btn small" id="submit" data-i18n="common.save">Save</button>
-                <span class="hint" data-i18n="guest.canChange">You can change your answer while sign-up is open.</span>
-              </div>
+                <span class="help" data-i18n="guest.canChange">You can change your answer while sign-up is open.</span>
+              </Actions>
             </form>
           </section>
 
           <section id="fee" class="card fee" hidden>
-            <h2 data-i18n="guest.feeTitle">Tasting fee</h2>
+            <SectionTitle level="h3" as="h2" text="guest.feeTitle" />
             <Notice id="fee-paid" tone="ok" hidden><p data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p></Notice>
             <div id="fee-due" hidden>
               <p data-i18n="guest.feeText">The price for the evening is based on purchases and the number of guests.</p>
@@ -88,20 +86,20 @@ import SignInState from '../../components/ui/SignInState.astro';
 
         <div class="t-main">
           <section id="intro-block" class="intro-block" hidden>
-            <h2 class="sec-h" data-i18n="tastingHome.about">About the evening</h2>
+            <SectionTitle level="eyebrow" as="h2" text="tastingHome.about" />
             <div id="h-intro" class="h-intro"></div>
           </section>
 
           <!-- Where the wines come from: the region's map with their appellations -->
           <section id="origin-block" class="origin-block" hidden>
-            <h2 class="sec-h" data-i18n="map.title">Where the wines come from</h2>
+            <SectionTitle level="eyebrow" as="h2" text="map.title" />
             <div id="origin-map" class="origin-map"></div>
             <ul id="origin-legend" class="origin-legend"></ul>
             <p id="map-source" class="map-source"></p>
           </section>
 
           <section>
-            <h2 class="sec-h" data-i18n="tastingHome.during">During the tasting</h2>
+            <SectionTitle level="eyebrow" as="h2" text="tastingHome.during" />
             <ul class="tiles">
               <li><a id="tile-wines" class="card tile" href="/home/">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l-.5 6a3.5 3.5 0 0 1-7 0L8 3z" /><path d="M12 12.5V20M8.5 20.5h7" /></svg>
@@ -501,18 +499,12 @@ import SignInState from '../../components/ui/SignInState.astro';
 
   /* The tasting at a glance */
   .t-home { overflow-x: clip; }
-  .t-hero { position: relative; isolation: isolate; margin-bottom: 2rem; }
-  .hero-map {
-    position: absolute; z-index: -1; right: -2rem; top: -3rem; width: min(60vw, 38rem); color: var(--amber); opacity: 0.3;
-    pointer-events: none; -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent); mask-image: radial-gradient(closest-side, #000 70%, transparent);
-  }
-  @media (max-width: 40rem) { .hero-map { width: 120vw; right: -40vw; top: -1rem; opacity: 0.22; } }
   .origin-map :global(svg) { display: block; }
-  .origin-map { border: 1px solid var(--lodge-3); border-radius: 0.9rem; overflow: hidden; background: #fbf6ee; }
+  .origin-map { border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; background: #fbf6ee; }
   /* Larger screens: the map at half width with the legend beside it */
   @media (min-width: 40rem) {
     .origin-block:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.25rem; align-items: start; }
-    .origin-block .sec-h, .origin-block .map-source { grid-column: 1 / -1; }
+    .origin-block > h2, .origin-block .map-source { grid-column: 1 / -1; }
     .origin-block .origin-legend { margin-top: 0; grid-template-columns: 1fr; }
   }
   .origin-legend { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; gap: 0.45rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
@@ -521,20 +513,10 @@ import SignInState from '../../components/ui/SignInState.astro';
   .origin-legend :global(li.whole .n) { background: #b07a85; }
   .origin-legend :global(li.other .n) { background: transparent; color: var(--amber); box-shadow: inset 0 0 0 1.5px var(--amber); }
   .origin-legend :global(b) { display: block; font-weight: 600; font-size: 0.95rem; }
-  .origin-legend :global(.inset) { display: block; width: 9rem; margin-top: 0.4rem; border: 1px solid var(--lodge-3); border-radius: 0.5rem; overflow: hidden; }
+  .origin-legend :global(.inset) { display: block; width: 9rem; margin-top: 0.4rem; border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; }
   .origin-legend :global(.inset svg) { display: block; }
   .origin-legend :global(.sub) { display: block; font-size: 0.82rem; color: var(--muted); }
   .map-source { margin: 0.6rem 0 0; font-size: 0.72rem; color: var(--muted); }
-  .t-countdown { margin: 0 0 0.8rem; }
-  .h-title {
-    font-family: var(--display); font-weight: 400; font-size: clamp(2.8rem, 12vw, 5rem);
-    line-height: 0.95; margin: 0 0 1.1rem;
-  }
-  .facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
-  .facts li { display: flex; align-items: flex-start; gap: 0.65rem; line-height: 1.45; }
-  .facts li[hidden] { display: none; }
-  .facts svg { flex: none; width: 1.25rem; height: 1.25rem; margin-top: 0.05rem; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .fact-act { margin-left: 0.4rem; vertical-align: baseline; }
 
   /* Two columns on large screens: the evening on the left, your answer on the right */
   .t-grid { display: grid; gap: 2.25rem; }
@@ -544,10 +526,8 @@ import SignInState from '../../components/ui/SignInState.astro';
     .t-main { grid-column: 1; grid-row: 1; }
   }
   .t-main { display: grid; gap: 2.25rem; align-content: start; }
-  .sec-h { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 0.9rem; }
 
   .rsvp-card { position: relative; z-index: 1; padding: 1.2rem 1.25rem; }
-  .rsvp-card h2 { font-family: var(--body); font-size: 1rem; font-weight: 600; margin: 0 0 0.75rem; }
   .rsvp-status { display: grid; justify-items: start; gap: 0.4rem; margin: 0 0 0.4rem; }
   .coming { margin: 0 0 0.6rem; font-size: 0.88rem; color: var(--muted); }
   .rsvp[hidden], .coming[hidden] { display: none; }
@@ -563,31 +543,12 @@ import SignInState from '../../components/ui/SignInState.astro';
   .tile svg { flex: none; width: 1.7rem; height: 1.7rem; fill: none; stroke: var(--amber); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
   .tile strong { display: block; font-weight: 600; }
   .tile-sub { display: block; font-size: 0.85rem; color: var(--muted); margin-top: 0.1rem; }
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-  .greeting {
-    font-family: var(--display);
-    font-weight: 400;
-    font-size: clamp(2.2rem, 9vw, 3rem);
-    line-height: 1;
-    margin: 0 0 0.35rem;
-  }
-  .when { color: var(--muted); margin: 0 0 1.25rem; }
-  .lead { margin-bottom: 1rem; }
 
   /* First visit: email */
   .email-step { display: grid; gap: 0.6rem; max-width: 28rem; }
-  .email-step .btn { justify-self: start; margin-top: 0.3rem; }
 
   /* Payment */
   .fee { padding: 0.9rem 1.25rem; margin-top: 1rem; }
-  .fee h2 { font-family: var(--body); font-size: 1rem; font-weight: 500; margin: 0 0 0.3rem; }
   .fee #fee-due p { font-size: 0.92rem; color: var(--muted); }
 
   /* Form */
@@ -606,7 +567,4 @@ import SignInState from '../../components/ui/SignInState.astro';
   .note summary::before { content: '+'; font-size: 1.1rem; line-height: 1; }
   .note[open] summary::before { content: '–'; }
   .note textarea { margin-top: 0.4rem; min-height: 4.5rem; }
-
-  .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
-  .actions .hint { font-size: 0.85rem; }
 </style>

@@ -42,27 +42,8 @@ body {
 
 strong, b { font-weight: 500; }
 
-/* Small uppercase labels with letter spacing */
-.eyebrow {
-  font-family: var(--body);
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 a { color: var(--amber); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
 a:hover { color: var(--paper); }
-
-h1, h2, h3 { line-height: 1.1; margin: 0 0 0.5em; font-weight: 400; }
-
-h2 {
-  font-family: var(--display);
-  font-weight: 400;
-  font-size: 2rem;
-  letter-spacing: 0.005em;
-}
 
 p { margin: 0 0 1em; }
 
@@ -152,7 +133,7 @@ select { max-width: 36rem; }
 .chat-list {
   list-style: none; margin: 0; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;
   height: min(60vh, 36rem); height: min(60dvh, 36rem); overflow-y: auto; overscroll-behavior: contain;
-  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: 0.8rem;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); border-radius: var(--radius);
 }
 .chat-list:empty { display: none; }
 .chat-empty { margin: 0 0 0.75rem; }
@@ -170,7 +151,6 @@ select { max-width: 36rem; }
 .chat-form { display: flex; gap: 0.5rem; align-items: flex-end; }
 .chat-form .input { flex: 1; resize: none; min-height: var(--h); height: auto; max-width: none; padding-block: 0.65rem; line-height: 1.4; }
 .chat-form .chat-send { width: var(--h); padding: 0; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Region maps (src/lib/region-map.ts): an old atlas in ink and wine red */
 .region-map { display: block; width: 100%; height: auto; font-family: var(--display); }
@@ -200,15 +180,15 @@ select { max-width: 36rem; }
 
 /* One-time welcome (e.g. a new co-host) */
 dialog.welcome-modal {
-  width: min(26rem, calc(100vw - 2rem)); padding: 1.75rem 1.5rem 1.4rem; border: 0; border-radius: 1rem;
+  width: min(26rem, calc(100vw - 2rem)); padding: 1.75rem 1.5rem 1.4rem; border: 0; border-radius: var(--radius);
   background: var(--lodge); color: var(--paper); text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 dialog.welcome-modal[open] { animation: welcome-in 0.2s ease-out; }
 dialog.welcome-modal::backdrop { background: rgba(20, 12, 12, 0.45); }
 .welcome-modal .welcome-icon { font-size: 2rem; margin: 0 0 0.3rem; }
-.welcome-modal h2 { margin: 0 0 0.6rem; font-size: 1.6rem; }
+.welcome-modal h2 { margin: 0 0 0.6rem; }
 .welcome-modal .welcome-text { margin: 0 0 0.4rem; }
-.welcome-modal .row-actions { justify-content: center; margin-top: 1.1rem; }
+.welcome-modal .actions { justify-content: center; margin-top: 1.1rem; }
 @keyframes welcome-in { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
 /* A producer's exact place on the region maps */
 .region-map .rm-pin path { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }

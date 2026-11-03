@@ -1,0 +1,7 @@
+---
+// Component 47 – text only screen readers hear (class "sr" – the one class for it)
+import { en } from '../../i18n/en';
+interface Props { text?: string; id?: string; as?: 'span' | 'p' | 'label' | 'h2' | 'legend'; [attr: string]: unknown }
+const { text, id, as: Tag = 'span', ...rest } = Astro.props;
+---
+<Tag id={id} class="sr" data-i18n={text || undefined} {...rest}>{text ? (en as Record<string, string>)[text] ?? text : <slot />}</Tag>

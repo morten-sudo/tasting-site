@@ -3,6 +3,7 @@
 // and Cloudflare's Pages Functions. AI and mails are counted by us (usage_log), Supabase is read from the
 // database, Cloudflare's requests come from its Analytics API when a token is set up.
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import Loading from '../../components/ui/Loading.astro';
 import '../../styles/admin.css';
@@ -10,8 +11,7 @@ import '../../styles/admin.css';
 <Base title="usage.title">
   <section class="wrap admin-page">
     <SuperNav active="usage">
-      <h1 class="title" data-i18n="usage.title">Usage</h1>
-      <p class="hint" data-i18n="usage.intro">How much of the free quotas the site uses. Days follow UTC, like the quotas.</p>
+      <PageHeader title="usage.title" lead="usage.intro" />
       <p id="u-since" class="hint" hidden></p>
 
       <div class="usage-grid">

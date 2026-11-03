@@ -1,0 +1,63 @@
+---
+// Component 43 – the one side menu (host admin and superadmin give it their own groups) and the shell around the
+// page: the menu on the left on larger screens, "Menu" opening it as a panel from the left on phones, and the one
+// loading line until the page shows its content. src/lib/ui/side-menu.ts opens, closes and shows it.
+//   groups: { icon, label (i18n key), href?, current?, links?: { href, label, current? }[], listId?, slot? }
+//     listId: an empty list the page fills in; slot: a named slot put after the group (e.g. "Past" and "New tasting")
+//   label: the menu's name (for screen readers and as the panel's small heading); slots: "top" (before the menu,
+//   full width), "foot" (links in the menu's foot), default (the page)
+import Icon from './Icon.astro';
+import CloseButton from './CloseButton.astro';
+import Loading from './Loading.astro';
+import type { IconName } from '../../lib/ui/icons';
+import { en } from '../../i18n/en';
+interface Link { href: string; label: string; current?: boolean }
+export interface SideGroup { icon: IconName; label: string; href?: string; current?: boolean; links?: Link[]; listId?: string; slot?: string }
+interface Props { label: string; groups: SideGroup[]; class?: string }
+const { label, groups, class: cls } = Astro.props;
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+const i18n = (k: string) => ((en as Record<string, string>)[k] ? k : undefined);
+const slots: Record<string, string> = {};
+for (const g of groups) if (g.slot && Astro.slots.has(g.slot)) slots[g.slot] = await Astro.slots.render(g.slot);
+---
+<div class:list={['side-shell', cls]}>
+  <slot name="top" />
+  <button id="side-open" class="btn small secondary grey side-open" type="button" aria-controls="admin-side" aria-expanded="false" hidden>
+    <Icon name="menu" /><span data-i18n="adminNav.menu">Menu</span>
+  </button>
+  <div id="side-backdrop" class="side-backdrop" hidden></div>
+
+  <aside id="admin-side" class="side" hidden>
+    <div class="side-head">
+      <span class="eyebrow">{label}</span>
+      <CloseButton id="side-close" />
+    </div>
+    <nav class="sidemenu" aria-label={label}>
+      {groups.map((g) => (
+        <Fragment>
+          {g.href
+            ? <a class="sm-g" href={g.href} aria-current={g.current ? 'page' : undefined}><Icon name={g.icon} /><span data-i18n={i18n(g.label)}>{tr(g.label)}</span></a>
+            : <p class="sm-g"><Icon name={g.icon} /><span data-i18n={i18n(g.label)}>{tr(g.label)}</span></p>}
+          {g.links && (
+            <ul class="sm-list">
+              {g.links.map((l) => <li><a href={l.href} aria-current={l.current ? 'page' : undefined} data-i18n={i18n(l.label)}>{tr(l.label)}</a></li>)}
+            </ul>
+          )}
+          {g.listId && <ul id={g.listId} class="sm-list"></ul>}
+          {g.slot && slots[g.slot] && <Fragment set:html={slots[g.slot]} />}
+        </Fragment>
+      ))}
+    </nav>
+    <div class="side-foot">
+      <span id="me" class="side-me"></span>
+      <slot name="foot" />
+      <button id="side-logout" class="text-btn small" type="button" data-i18n="nav.signOut">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="side-content">
+    <!-- Shown while the page signs in and fetches its data; hidden by CSS once the page's content (or a notice) shows -->
+    <Loading />
+    <slot />
+  </div>
+</div>

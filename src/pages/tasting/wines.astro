@@ -1,6 +1,7 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
@@ -8,8 +9,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 ---
 <Base title="page.wines" tasting>
   <section class="wrap wines-page">
-    <h1 class="title" data-i18n="page.wines">Wines</h1>
-    <p id="intro" class="lead" data-i18n="wines.intro">This is what we are pouring tonight.</p>
+    <PageHeader title="page.wines" lead="wines.intro" leadId="intro" />
 
     <Notice id="order-status" hidden><p></p><div class="actions"><a class="btn small secondary" href="/login/" data-login data-i18n="login.submit">Sign in</a></div></Notice>
 
@@ -117,7 +117,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     link.append(pic);
 
     const info = el('div', 'info');
-    const tag = el('p', 'style-tag', styleLabel(w));
+    const tag = el('p', 'eyebrow style-tag', styleLabel(w));
     tag.style.setProperty('--tone', styleTone(w));
     info.append(tag);
     info.append(el('h3', 'name', w.name));
@@ -145,7 +145,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       my.setAttribute('aria-label', t('rating.yours', { n: mine }));
       foot.append(my);
     }
-    const go = el('span', 'go', t('wines.readMore'));
+    const go = el('span', 'eyebrow go', t('wines.readMore'));
     go.setAttribute('aria-hidden', 'true');
     foot.append(go);
     info.append(foot);
@@ -278,15 +278,6 @@ import SignInState from '../../components/ui/SignInState.astro';
   .bulk { display: block; color: var(--amber); font-size: 0.9rem; margin-top: 0.15rem; }
   /* The wines page uses the full screen width */
   .wines-page { padding-top: 2.5rem; padding-bottom: 5rem; }
-  .wines-page .title {
-    font-family: var(--display);
-    font-weight: 400;
-    font-weight: 300;
-    font-size: clamp(3.25rem, 14vw, 5.5rem);
-    line-height: 0.95;
-    margin-bottom: 0.75rem;
-  }
-  .wines-page .lead { font-family: var(--display); font-style: italic; font-size: 1.35rem; color: var(--muted); }
 
   /* Carousel: one wine at a time, the next one peeks in at the edge */
   /* The carousel sits on a full-width white band */
@@ -349,16 +340,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     line-height: 1;
     color: #8a7f72;
   }
-  .carousel .style-tag {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0 0 0.4rem;
-    color: var(--muted);
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
+  .carousel .style-tag { display: flex; align-items: center; gap: 0.5rem; margin: 0 0 0.4rem; }
   .carousel .style-tag::before {
     content: '';
     width: 1.5rem;
@@ -412,10 +394,8 @@ import SignInState from '../../components/ui/SignInState.astro';
   .carousel .price .ours { font-weight: 400; font-size: 1rem; letter-spacing: 0.02em; }
   .carousel .price .normal { color: var(--muted); font-size: 0.85rem; }
   .carousel .go {
+    margin: 0;
     color: var(--amber);
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;

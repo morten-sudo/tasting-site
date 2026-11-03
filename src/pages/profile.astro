@@ -3,6 +3,7 @@ import Icon from '../components/ui/Icon.astro';
 import Sheet from '../components/ui/Sheet.astro';
 import Switch from '../components/ui/Switch.astro';
 import Base from '../layouts/Base.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
 import Loading from '../components/ui/Loading.astro';
 import Notice from '../components/ui/Notice.astro';
 import SignInState from '../components/ui/SignInState.astro';
@@ -12,19 +13,15 @@ import SignInState from '../components/ui/SignInState.astro';
     <Loading />
 
     <div id="signed-out" hidden>
-      <h1 class="title" data-i18n="page.profile">Profile</h1>
+      <PageHeader title="page.profile" />
       <SignInState title="gate.profileTitle" hidden={false} />
     </div>
 
     <div id="me" hidden>
       <!-- Name and email; edited only after tapping the pencil -->
-      <header class="me-head">
-        <div class="name-row">
-          <h1 class="title" id="me-name"></h1>
-          <button id="edit-toggle" class="icon-act md" type="button" aria-label="Edit name and email" data-tip="Edit name and email" data-i18n-attr="aria-label=profile.edit;data-tip=profile.edit"><Icon name="edit" /></button>
-        </div>
-        <p id="me-email" class="hint"></p>
-      </header>
+      <PageHeader id="me-name" leadId="me-email">
+        <button slot="actions" id="edit-toggle" class="icon-act md" type="button" aria-label="Edit name and email" data-tip="Edit name and email" data-i18n-attr="aria-label=profile.edit;data-tip=profile.edit"><Icon name="edit" /></button>
+      </PageHeader>
       <!-- A new email waits for its confirmation link -->
       <Notice id="email-pending" hidden />
 
@@ -222,22 +219,10 @@ import SignInState from '../components/ui/SignInState.astro';
 <style is:global>
   .notify-list { margin: 0.75rem 0 0; max-width: 34rem; }
   .profile-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 48rem; }
-  .profile-page .title {
-    font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 12vw, 4.5rem);
-    line-height: 0.95; margin-bottom: 0.4rem; overflow-wrap: anywhere;
-  }
-  .profile-page .name-row { display: flex; align-items: center; gap: 0.75rem; }
-  /* The name stays on one line (shortened with … if it is very long) */
-  .profile-page .name-row .title {
-    margin: 0; min-width: 0; font-size: clamp(1.5rem, 6.5vw, 3rem); line-height: 1.15;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal;
-  }
-  .profile-page .me-head .hint { margin: 0.4rem 0 0; }
   .profile-page .profile-block { margin-top: 2.5rem; }
-  .profile-page .profile-block h2 { font-size: 1.6rem; }
   .profile-page .book-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
   .profile-page .book-link svg { color: var(--amber); }
-  .profile-page .book-link b { display: block; font-size: 1.1rem; }
+  .profile-page .book-link b { display: block; font-weight: 600; }
   .profile-page .book-link span span { display: block; color: var(--muted); font-size: 0.9rem; margin-top: 0.15rem; }
   .profile-page .lang-list { max-width: 34rem; }
   .profile-page .lang-list .cc.compact { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }

@@ -2,6 +2,9 @@
 import SearchField from '../components/ui/SearchField.astro';
 import Dropdown from '../components/ui/Dropdown.astro';
 import Base from '../layouts/Base.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import SectionTitle from '../components/ui/SectionTitle.astro';
+import Tabs from '../components/ui/Tabs.astro';
 import Loading from '../components/ui/Loading.astro';
 import Notice from '../components/ui/Notice.astro';
 import EmptyState from '../components/ui/EmptyState.astro';
@@ -13,12 +16,12 @@ import SignInState from '../components/ui/SignInState.astro';
     <Loading text="gate.loadingBook" />
 
     <div id="signed-out" hidden>
-      <h1 class="title" data-i18n="book.title">My wine book</h1>
+      <PageHeader title="book.title" />
       <SignInState title="gate.bookTitle" hidden={false} />
     </div>
 
     <div id="book" hidden>
-      <h1 class="title" data-i18n="book.title">My wine book</h1>
+      <PageHeader title="book.title" />
       <ul class="book-stats">
         <li class="card"><b id="st-wines">0</b><span data-i18n="book.statWines">wines tasted</span></li>
         <li class="card"><b id="st-tastings">0</b><span data-i18n="book.statTastings">tastings</span></li>
@@ -29,11 +32,10 @@ import SignInState from '../components/ui/SignInState.astro';
         <div class="actions"><a class="btn small secondary" href="/login/?next=/my/" data-i18n="login.submit">Sign in</a></div>
       </Notice>
 
-      <div class="book-tabs" role="tablist" aria-label="My wine book" data-i18n-attr="aria-label=book.title">
-        <button type="button" role="tab" id="tab-wines" aria-controls="panel-wines" data-tab="wines" data-i18n="book.tabWines">Wines</button>
-        <button type="button" role="tab" id="tab-tastings" aria-controls="panel-tastings" data-tab="tastings" data-i18n="book.tabTastings">Tastings</button>
-        <button type="button" role="tab" id="tab-orders" aria-controls="panel-orders" data-tab="orders" data-i18n="book.tabOrders">Purchases</button>
-      </div>
+      <Tabs id="book-tabs" label="My wine book" labelKey="book.title" current="wines" class="book-tabs" items={[
+        { id: 'wines', label: 'book.tabWines', attrs: { id: 'tab-wines', 'aria-controls': 'panel-wines' } },
+        { id: 'tastings', label: 'book.tabTastings', attrs: { id: 'tab-tastings', 'aria-controls': 'panel-tastings' } },
+        { id: 'orders', label: 'book.tabOrders', attrs: { id: 'tab-orders', 'aria-controls': 'panel-orders' } }]} />
 
       <!-- Wines I have tasted -->
       <section id="panel-wines" role="tabpanel" aria-labelledby="tab-wines" class="book-panel">
@@ -53,9 +55,9 @@ import SignInState from '../components/ui/SignInState.astro';
 
       <!-- Tastings I am invited to or have been to -->
       <section id="panel-tastings" role="tabpanel" aria-labelledby="tab-tastings" class="book-panel" hidden>
-        <h2 id="up-h" class="book-h" data-i18n="home.upcomingMany" hidden>Upcoming tastings</h2>
+        <SectionTitle level="eyebrow" as="h2" id="up-h" text="home.upcomingMany" hidden />
         <ul id="up-list" class="cards"></ul>
-        <h2 id="past-h" class="book-h" data-i18n="tastings.past" hidden>Past</h2>
+        <SectionTitle level="eyebrow" as="h2" id="past-h" text="tastings.past" hidden />
         <ul id="past-list" class="cards"></ul>
         <EmptyState id="no-tastings" icon="calendar" title="tastings.none" text="tastings.noneHint" hidden />
       </section>
@@ -71,6 +73,7 @@ import SignInState from '../components/ui/SignInState.astro';
 </Base>
 
 <script>
+  import { tabs, selectTab } from '../lib/ui/tabs';
   import { supabase } from '../lib/supabase';
   import { loadMe, getCodes, tastingUrl } from '../lib/guest';
   import { loadAllMyTastings, tastingCard } from '../lib/my-tastings';
@@ -101,7 +104,7 @@ import SignInState from '../components/ui/SignInState.astro';
   } else {
     $('book').hidden = false;
     $('link-only').hidden = !!me?.signedIn;
-    initTabs();
+    initBookTabs();
     const [wineRes, tastings, lines] = await Promise.all([
       supabase.rpc('my_wine_book', { codes }),
       loadAllMyTastings(),
@@ -113,29 +116,14 @@ import SignInState from '../components/ui/SignInState.astro';
   }
 
   // ---------- Tabs (remembered in the address, e.g. /my/#orders) ----------
-  function initTabs() {
-    const tabs = [...document.querySelectorAll<HTMLButtonElement>('.book-tabs [data-tab]')];
-    const select = (name: string, push = false) => {
-      if (!tabs.some((b) => b.dataset.tab === name)) name = 'wines';
-      for (const b of tabs) {
-        const on = b.dataset.tab === name;
-        b.setAttribute('aria-selected', String(on));
-        b.tabIndex = on ? 0 : -1;
-        $(`panel-${b.dataset.tab}`).hidden = !on;
-      }
-      if (push) history.replaceState(null, '', name === 'wines' ? location.pathname : `#${name}`);
-    };
-    tabs.forEach((b, i) => {
-      b.addEventListener('click', () => select(b.dataset.tab!, true));
-      b.addEventListener('keydown', (e) => {
-        const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-        if (!step) return;
-        const next = tabs[(i + step + tabs.length) % tabs.length];
-        next.focus();
-        select(next.dataset.tab!, true);
-      });
-    });
-    select(location.hash.slice(1));
+  function initBookTabs() {
+    const bar = $('book-tabs');
+    const names = ['wines', 'tastings', 'orders'];
+    const show = (name: string) => { for (const n of names) $(`panel-${n}`).hidden = n !== name; };
+    tabs(bar, { onChange: (name) => { show(name); history.replaceState(null, '', name === 'wines' ? location.pathname : `#${name}`); } });
+    const start = names.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'wines';
+    selectTab(bar, start);
+    show(start);
   }
 
   // ---------- Wines ----------
@@ -228,20 +216,13 @@ import SignInState from '../components/ui/SignInState.astro';
 
 <style is:global>
   .book-page { padding-top: 2.5rem; padding-bottom: 3rem; max-width: 52rem; }
-  .book-page .title { font-family: var(--display); font-weight: 400; font-size: clamp(2.6rem, 11vw, 4.2rem); line-height: 0.95; margin: 0 0 1.2rem; }
   .book-stats { list-style: none; margin: 0 0 1.5rem; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
   .book-stats li { display: grid; gap: 0.1rem; padding: 0.8rem 0.9rem; }
   .book-stats b { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; color: var(--amber); }
   .book-stats span { font-size: 0.85rem; color: var(--muted); }
-  .book-tabs { display: flex; gap: 1.5rem; border-bottom: 1px solid var(--lodge-3); margin-bottom: 1.25rem; overflow-x: auto; scrollbar-width: none; }
-  .book-tabs button {
-    flex: none; padding: 0.7rem 0; background: none; border: 0; font: inherit; font-size: 0.98rem; color: var(--muted); cursor: pointer;
-  }
-  .book-tabs button:hover { color: var(--paper); }
-  .book-tabs button[aria-selected='true'] { color: var(--amber); font-weight: 500; box-shadow: inset 0 -2px 0 var(--amber); }
+  .book-tabs { margin-bottom: 1.25rem; }
   .book-panel[hidden] { display: none; }
-  .book-h { font-family: var(--body); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.75rem; }
-  .book-h:first-child { margin-top: 0; }
+  .book-panel > .eyebrow:not(:first-child) { margin-top: 1.5rem; }
   .book-tools { display: flex; gap: 0.6rem; margin-bottom: 1rem; }
   .book-tools[hidden] { display: none; }
   .book-tools .affix { flex: 1; max-width: none; }

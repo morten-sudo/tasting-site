@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
@@ -8,7 +9,7 @@ import '../../styles/admin.css';
 <Base title="page.superadmin">
   <section class="wrap admin-page">
     <SuperNav active="gdpr">
-      <h1 class="title" data-i18n="super.gdprTitle">Delete personal data</h1>
+      <PageHeader title="super.gdprTitle" />
       <!-- GDPR: see and delete everything stored about one person -->
       <section class="block gdpr">
                 <p class="hint" data-i18n="super.gdprHint">When someone asks to be forgotten: look up their email, check what is stored, then delete it all – invitations with answers, ratings, orders and chat messages, guest-list entries, a host account with everything in it, and the sign-in account. This cannot be undone.</p>

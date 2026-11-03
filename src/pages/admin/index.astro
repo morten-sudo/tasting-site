@@ -1,6 +1,8 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
@@ -10,13 +12,12 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="overview">
     <div id="admin-main" hidden>
-      <div class="dash-head">
-        <h1 class="title" data-i18n="adminNav.overview">Overview</h1>
-        <div class="dash-actions">
+      <PageHeader title="adminNav.overview">
+        <Fragment slot="actions">
           <a class="btn small secondary" href="/admin/wines/?new"><Icon name="plus" /><span data-i18n="admin.newWine">New wine</span></a>
           <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
-        </div>
-      </div>
+        </Fragment>
+      </PageHeader>
       <!-- No tastings yet: how to start -->
       <EmptyState id="intro" icon="calendar" title="admin.noTastingsTitle" text="admin.welcomeHost" hidden>
         <button id="intro-new" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
@@ -32,13 +33,13 @@ import '../../styles/admin.css';
       <div class="dash-grid">
         <!-- Next tasting -->
         <section class="card dash-card">
-          <h2 data-i18n="dash.next">Next tasting</h2>
+          <SectionTitle level="eyebrow" as="h2" text="dash.next" />
           <div id="next"></div>
         </section>
 
         <!-- The tastings I host myself (the account may have many more) -->
         <section id="mine-card" class="card dash-card mine-card" hidden>
-          <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
+          <SectionTitle level="eyebrow" as="h2" text="roles.mineTitle" />
           <ul id="mine" class="list flush"></ul>
           <EmptyState id="mine-none" icon="calendar" title="roles.mineNone" hidden />
           <a id="mine-all" class="text-btn fwd" href="/admin/tastings/" hidden></a>
@@ -46,13 +47,13 @@ import '../../styles/admin.css';
 
         <!-- Needs paying -->
         <section id="unpaid-card" class="card dash-card" hidden>
-          <h2 data-i18n="dash.unpaid">Awaiting payment</h2>
+          <SectionTitle level="eyebrow" as="h2" text="dash.unpaid" />
           <ul id="unpaid" class="list flush"></ul>
         </section>
 
         <!-- Latest activity -->
         <section class="card dash-card dash-wide">
-          <h2 data-i18n="dash.latest">Latest activity</h2>
+          <SectionTitle level="eyebrow" as="h2" text="dash.latest" />
           <ul id="activity" class="list flush"></ul>
         </section>
       </div>
@@ -226,7 +227,7 @@ import '../../styles/admin.css';
     const wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
     $('new-toggle').addEventListener('click', () => wizard.openNew());
     $('intro-new').addEventListener('click', () => wizard.openNew());
-    document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
+    document.querySelector('.sm-add')?.addEventListener('click', (e) => { e.preventDefault(); wizard.openNew(); });
     showMine();
     const { data } = await supabase.rpc('host_dashboard');
     if (data && typeof data === 'object' && 'tastings' in data) render(data as Dash);

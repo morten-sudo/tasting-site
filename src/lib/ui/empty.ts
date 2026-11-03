@@ -25,7 +25,7 @@ export function setEmpty(el: HTMLElement, o: EmptyOptions) {
   const acts = [...(o.action ? [o.action] : []), ...(o.actions ?? [])];
   if (acts.length) {
     const row = document.createElement('div');
-    row.className = 'e-actions';
+    row.className = 'actions';
     row.append(...acts.map(actionEl));
     el.append(row);
   }

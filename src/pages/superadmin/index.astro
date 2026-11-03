@@ -1,13 +1,14 @@
 ---
 import SearchField from '../../components/ui/SearchField.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import SuperNav from '../../components/SuperNav.astro';
 import '../../styles/admin.css';
 ---
 <Base title="page.superadmin">
   <section class="wrap admin-page">
     <SuperNav active="tenants">
-      <h1 class="title" data-i18n="super.tenantsNav">Tenants</h1>
+      <PageHeader title="super.tenantsNav" />
       <!-- Totals across all hosts -->
       <div class="super-stats">
         <div class="card stat"><span id="t-hosts" class="stat-n"></span><span class="stat-label" data-i18n="super.hosts">Hosts</span></div>
@@ -18,10 +19,8 @@ import '../../styles/admin.css';
         <div class="card stat"><span id="t-activity" class="stat-n"></span><span class="stat-label" data-i18n="super.active30">Active last 30 days</span></div>
       </div>
 
-      <div class="guests-head">
-        <h2 class="visually-hidden" data-i18n="super.tenants">All accounts</h2>
-        <SearchField id="search" label="adminTasting.search" class="head-search" />
-      </div>
+      <h2 class="sr" data-i18n="super.tenants">All accounts</h2>
+      <SearchField id="search" label="adminTasting.search" class="list-search" />
       <div class="table-wrap super-table">
         <table class="table">
           <thead>

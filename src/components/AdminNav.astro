@@ -1,64 +1,33 @@
 ---
 import Icon from './ui/Icon.astro';
-import CloseButton from './ui/CloseButton.astro';
 import EmptyState from './ui/EmptyState.astro';
-import Loading from './ui/Loading.astro';
-// Admin shell shared by all host pages: the menu on the left (a drawer on phones),
-// the signed-in line and the "not a host" notice. Page content goes in the slot.
+import SideMenu, { type SideGroup } from './ui/SideMenu.astro';
+// The host admin's shell: the one side menu (SideMenu.astro) with the host's groups, and the "not a host" notice.
 interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'account' | 'payments' | 'help' }
 const { active } = Astro.props;
-const cur = (key: string) => (active === key ? 'page' : undefined);
+const groups: SideGroup[] = [
+  { icon: 'grid', label: 'adminNav.overview', href: '/admin/', current: active === 'overview' },
+  { icon: 'glass', label: 'adminNav.tastings', href: '/admin/tastings/', current: active === 'tastings', listId: 'side-tastings', slot: 'tastings' },
+  { icon: 'book', label: 'adminNav.library', links: [
+    { href: '/admin/wines/', label: 'adminNav.wines', current: active === 'wines' },
+    { href: '/admin/guests/', label: 'adminNav.guests', current: active === 'guests' }] },
+  { icon: 'gear', label: 'adminNav.settings', links: [
+    { href: '/admin/account/', label: 'account.navLink', current: active === 'account' },
+    { href: '/admin/payments/', label: 'adminNav.payments', current: active === 'payments' }] },
+  { icon: 'question', label: 'adminNav.help', href: '/admin/help/', current: active === 'help' },
+];
 ---
-<div class="admin-shell">
-  <EmptyState id="not-host" icon="user" title="admin.notHostTitle" text="admin.notHostText" hidden>
+<SideMenu label="Admin" groups={groups}>
+  <EmptyState slot="top" id="not-host" icon="user" title="admin.notHostTitle" text="admin.notHostText" hidden>
     <a class="btn small" href="/signup/" data-i18n="admin.becomeHost">Become a host</a>
     <button id="logout2" class="btn small secondary" type="button" data-i18n="nav.signOut">Sign out</button>
   </EmptyState>
-
-  <!-- Phones: a menu button that opens the menu as a drawer from the left -->
-  <button id="side-open" class="side-open" type="button" aria-controls="admin-side" aria-expanded="false" hidden>
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-    <span id="side-where" data-i18n="adminNav.menu">Menu</span>
-  </button>
-  <div id="side-backdrop" class="side-backdrop" hidden></div>
-
-  <aside id="admin-side" class="admin-side" data-active={active} hidden>
-    <div class="side-head">
-      <span class="side-kicker">Admin</span>
-      <CloseButton id="side-close" />
-    </div>
-    <nav aria-label="Admin">
-      <a class="side-group side-home" href="/admin/" aria-current={cur('overview')}><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></svg><span data-i18n="adminNav.overview">Overview</span></a>
-      <a class="side-group" href="/admin/tastings/" aria-current={cur('tastings')}><svg class="side-icon" viewBox="0 0 100 100" aria-hidden="true"><defs><clipPath id="side-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect x="0" y="43" width="100" height="100" fill="currentColor" stroke="none" clip-path="url(#side-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" stroke-width="7"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></svg><span data-i18n="adminNav.tastings">Tastings</span></a>
-      <ul id="side-tastings" class="side-list"></ul>
-      <details id="side-past" class="side-past" hidden>
-        <summary data-i18n="adminNav.past">Past</summary>
-        <ul id="side-past-list" class="side-list"></ul>
-      </details>
-      <a class="side-new" href="/admin/tastings/?new=1"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></a>
-
-      <p class="side-group"><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10a2 2 0 0 1 2 2v14a1.5 1.5 0 0 0-1.5-1.5H4z" /><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H14a2 2 0 0 0-2 2v14a1.5 1.5 0 0 1 1.5-1.5H20z" /></svg><span data-i18n="adminNav.library">Library</span></p>
-      <ul class="side-list">
-        <li><a href="/admin/wines/" aria-current={cur('wines')} data-i18n="adminNav.wines">Wines</a></li>
-        <li><a href="/admin/guests/" aria-current={cur('guests')} data-i18n="adminNav.guests">Guests</a></li>
-      </ul>
-
-      <p class="side-group"><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg><span data-i18n="adminNav.settings">Settings</span></p>
-      <ul class="side-list">
-        <li><a href="/admin/account/" aria-current={cur('account')} data-i18n="account.navLink">Account and hosts</a></li>
-        <li><a href="/admin/payments/" aria-current={cur('payments')} data-i18n="adminNav.payments">Payments</a></li>
-      </ul>
-      <a class="side-group" href="/admin/help/" aria-current={cur('help')}><svg class="side-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6" /><circle cx="12" cy="17" r=".6" /></svg><span data-i18n="adminNav.help">Help</span></a>
-    </nav>
-    <div class="side-foot">
-      <span id="me" class="side-me"></span>
-      <button id="side-logout" class="text-btn small" type="button" data-i18n="nav.signOut">Sign out</button>
-    </div>
-  </aside>
-
-  <div class="admin-content">
-    <!-- Shown while the page signs in and fetches its data; hidden by CSS once #admin-main (or "not found") shows -->
-    <Loading id="admin-loading" />
-    <slot />
-  </div>
-</div>
+  <Fragment slot="tastings">
+    <details id="side-past" class="sm-more" hidden>
+      <summary data-i18n="adminNav.past">Past</summary>
+      <ul id="side-past-list" class="sm-list"></ul>
+    </details>
+    <a class="sm-add" href="/admin/tastings/?new=1"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></a>
+  </Fragment>
+  <slot />
+</SideMenu>

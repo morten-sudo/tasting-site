@@ -1,0 +1,7 @@
+---
+// Component 46 – one row of buttons, 0.6rem apart. Forms and panels: the primary first (align "start");
+// dialogs: align "end" with the primary last. stack: one under the other on phones. tight: less air above.
+interface Props { align?: 'start' | 'end'; stack?: boolean; tight?: boolean; id?: string; class?: string; [attr: string]: unknown }
+const { align = 'start', stack = false, tight = false, id, class: cls, ...rest } = Astro.props;
+---
+<div id={id} class:list={['actions', { end: align === 'end', stack, tight }, cls]} {...rest}><slot /></div>

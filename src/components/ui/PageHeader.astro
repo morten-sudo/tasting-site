@@ -1,0 +1,26 @@
+---
+// Component 39 – the one page / section header: the title (and a lead) on the left, the actions on the right.
+//   size "page": the page's <h1> on the one page scale; "section": an <h2> (or level 3) with its buttons on the same line
+//   eyebrow: a small heading over the title (i18n key); title: an i18n key (leave it out when the script fills the heading in – give it an id); lead / leadId: the line under it
+//   slots: "actions" (buttons, a filter), "title" (heading content with parts of its own), default (after the lead)
+import { en } from '../../i18n/en';
+interface Props {
+  eyebrow?: string; title?: string; id?: string; lead?: string; leadId?: string; size?: 'page' | 'section'; level?: 1 | 2 | 3;
+  class?: string; [attr: string]: unknown;
+}
+const { eyebrow, title, id, lead, leadId, size = 'page', level, class: cls, ...rest } = Astro.props;
+const H = `h${level ?? (size === 'page' ? 1 : 2)}` as 'h1' | 'h2' | 'h3';
+const tr = (k?: string) => (k ? (en as Record<string, string>)[k] ?? k : '');
+const hasTitleSlot = Astro.slots.has('title');
+---
+<header class:list={['ph', size === 'page' ? 'page' : 'sec', cls]} {...rest}>
+  <div class="ph-text">
+    {eyebrow && <p class="eyebrow" data-i18n={eyebrow}>{tr(eyebrow)}</p>}
+    {hasTitleSlot
+      ? <H id={id} class:list={[{ h1: H === 'h1' }]}><slot name="title" /></H>
+      : <H id={id} class:list={[{ h1: H === 'h1' }]} data-i18n={title || undefined}>{tr(title)}</H>}
+    {(lead || leadId) && <p id={leadId} class="lead" data-i18n={lead || undefined}>{tr(lead)}</p>}
+    <slot />
+  </div>
+  {Astro.slots.has('actions') && <div class="ph-act"><slot name="actions" /></div>}
+</header>

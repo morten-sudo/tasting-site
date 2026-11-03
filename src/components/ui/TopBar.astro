@@ -1,0 +1,80 @@
+---
+// Component 43 – the one top bar on every page: the logo, the language, the cart (in a tasting) and the account
+// (the one menu, src/lib/ui/menu.ts) or "Sign in". In a tasting a second row: the tasting (a switcher), its tabs
+// (the one tab bar, Tabs.astro) and, for its hosts, the way to its admin. Base.astro's script fills it in.
+import Icon from './Icon.astro';
+import Tabs from './Tabs.astro';
+import Sheet from './Sheet.astro';
+import { SITE_NAME } from '../../lib/config';
+interface Props { tasting?: boolean; path: string }
+const { tasting = false, path } = Astro.props;
+const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect width="100" height="100" rx="22" fill="#6e0f1f" /><g transform="translate(50 50) scale(0.84) translate(-50 -50)"><rect x="0" y="43" width="100" height="100" fill="#fff" clip-path="url(#logo-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></g></svg>`;
+const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.startsWith('/tasting/wine') ? 'wines'
+  : path.startsWith('/tasting/quiz') ? 'quiz' : path.startsWith('/tasting/chat') ? 'chat' : undefined;
+---
+<header class="site-header">
+  <div class="wrap topbar">
+    <a href={tasting ? '/home/' : '/'} class="logo" id="mark"><Fragment set:html={LOGO} /><span>{SITE_NAME}</span></a>
+    <div class="tb-right">
+      <div class="dd">
+        <button id="lang-btn" class="dd-btn bare" type="button" aria-haspopup="menu" aria-label="Language" data-i18n-attr="aria-label=profile.language;data-tip-text=profile.language" data-tip-text="Language">
+          <span id="lang-current" class="tb-flag"></span>
+          <Icon name="chev" class="chev" />
+        </button>
+        <div id="lang-menu" class="menu right lang-menu" role="menu" hidden></div>
+      </div>
+      {tasting && (
+        <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>
+          <Icon name="cart" />
+          <span id="nav-cart-count" class="tb-badge" aria-hidden="true" hidden></span>
+        </a>
+      )}
+      <!-- Signed in: the name opens a menu with the person's places, profile and sign-out -->
+      <div id="user-in" class="dd" hidden>
+        <button id="user-btn" type="button" class="dd-btn bare tb-user" aria-current={path.startsWith('/profile') ? 'page' : undefined} aria-haspopup="menu" data-tip-text="Account menu" data-i18n-attr="data-tip-text=nav.userMenu">
+          <span id="user-name" class="tb-name"></span>
+          <Icon name="user" class="tb-user-i" />
+          <Icon name="chev" class="chev" />
+        </button>
+        <div id="user-menu" class="menu right" role="menu" hidden>
+          <a class="opt-i" role="menuitem" href="/home/" data-i18n="nav.home">Home</a>
+          <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden data-i18n="nav.admin">Admin</a>
+          <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden data-i18n="nav.superadmin">Superadmin</a>
+          <a class="opt-i" role="menuitem" href="/my/" data-i18n="book.title">My wine book</a>
+          <a class="opt-i" role="menuitem" href="/profile/" data-i18n="nav.profile">My profile</a>
+          <hr />
+          <button id="logout" class="opt-i quiet" role="menuitem" type="button" data-i18n="nav.signOut">Sign out</button>
+        </div>
+      </div>
+      <a id="user-out" href="/login/" class="icon-act md close tip-below" aria-label="Sign in" data-tip="Sign in" data-i18n-attr="aria-label=nav.signIn;data-tip=nav.signIn" hidden><Icon name="user" /></a>
+    </div>
+  </div>
+  {tasting && (
+    <div class="wrap ctx">
+      <div class="ctx-bar">
+        <button id="t-switch" type="button" class="t-switch" aria-haspopup="menu" disabled>
+          <span id="t-title" class="t-title"></span>
+          <Icon name="chev" class="chev" />
+        </button>
+        <Tabs id="t-tabs" label="Tasting menu" labelKey="nav.tastingMenu" current={tab} items={[
+          { id: 'tasting', label: 'nav.tasting', href: '/home/', attrs: { 'data-tpath': '' } },
+          { id: 'wines', label: 'nav.wines', href: '/home/', attrs: { 'data-tpath': 'wines/' } },
+          // Only when the tasting has a quiz (shown by the script)
+          { id: 'quiz', label: 'nav.quiz', href: '/home/', hidden: tab !== 'quiz', attrs: { 'data-tpath': 'quiz/', id: 't-quiz-tab' } },
+          { id: 'chat', label: 'nav.chat', href: '/home/', attrs: { 'data-tpath': 'chat/' } },
+        ]} />
+        <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" data-tip-text="Manage this tasting" data-i18n-attr="data-tip-text=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
+      </div>
+      <!-- Larger screens: the one menu under the name; phones: the same items in the one side panel (a bottom sheet) -->
+      <div id="t-menu" class="menu t-menu" role="menu" hidden>
+        <div class="m-group" role="presentation" data-i18n="nav.switchTasting">Switch tasting</div>
+        <div id="t-list" class="m-list"></div>
+        <hr />
+        <a id="t-all" class="opt-i act" role="menuitem" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
+      </div>
+      <Sheet id="t-sheet" title="nav.switchTasting" titleId="t-sheet-title">
+        <div id="t-sheet-list" class="menu static"></div>
+      </Sheet>
+    </div>
+  )}
+</header>

@@ -1,0 +1,11 @@
+---
+// Component 40 – a heading on the one scale: "eyebrow" (small capitals over a section), "h2" (a section), "h3" (a
+// sub-heading, also a card's title). as: the element when it differs from the look (an eyebrow that is a section's <h2>).
+import { en } from '../../i18n/en';
+interface Props { level?: 'eyebrow' | 'h2' | 'h3'; as?: 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'legend'; text?: string; id?: string; class?: string; [attr: string]: unknown }
+const { level = 'h2', as, text, id, class: cls, ...rest } = Astro.props;
+const Tag = as ?? (level === 'eyebrow' ? 'p' : level);
+const look = level === 'eyebrow' ? 'eyebrow' : Tag === level ? undefined : level;
+const label = text ? (en as Record<string, string>)[text] ?? text : '';
+---
+<Tag id={id} class:list={[look, cls]} data-i18n={text || undefined} {...rest}>{text ? label : <slot />}</Tag>

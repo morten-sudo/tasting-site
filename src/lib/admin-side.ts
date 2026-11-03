@@ -3,6 +3,7 @@
 import { supabase } from './supabase';
 import { t, type Key } from '../i18n';
 import { tooltip } from './ui/tooltip';
+import { initSideMenu, setSideOpen } from './ui/side-menu';
 
 /** The parts of a tasting's admin, each with its own address /t/<slug>/admin/<path> */
 export const SECTIONS: { id: string; path: string; label: Key }[] = [
@@ -36,12 +37,6 @@ function mk<K extends keyof HTMLElementTagNameMap>(tag: K, cls = '', text?: stri
   return e;
 }
 
-export function setOpen(on: boolean) {
-  $('admin-side').classList.toggle('open', on);
-  $('side-backdrop').hidden = !on;
-  $('side-open').setAttribute('aria-expanded', String(on));
-  document.documentElement.classList.toggle('side-locked', on);
-}
 
 /** Marks the current section in the menu (also after switching section without reloading) */
 export function markSection(section: string) {
@@ -49,7 +44,7 @@ export function markSection(section: string) {
     if (a.dataset.section === section) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
-  setOpen(false);
+  setSideOpen(false);
 }
 
 function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>, hosting: Set<string>) {
@@ -64,23 +59,13 @@ function tastingItem(r: Row, current: ReturnType<typeof currentAdmin>, hosting: 
   li.append(a);
   // The tasting's sections are tabs in the bar at the top; here it is only marked
   if (current?.slug === r.slug) {
-    li.className = 'current';
     a.setAttribute('aria-current', 'page');
   }
   return li;
 }
 
-export async function initSide(hostId: string) {
-  $('admin-side').hidden = false;
-  // The menu sticks just below the site header on larger screens
-  const header = document.querySelector<HTMLElement>('.site-header');
-  if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
-  $('side-open').hidden = false;
-  $('side-open').addEventListener('click', () => setOpen(true));
-  $('side-close').addEventListener('click', () => setOpen(false));
-  $('side-backdrop').addEventListener('click', () => setOpen(false));
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
-
+export async function initSide(email: string, onSignOut: () => void) {
+  initSideMenu(email, onSignOut);
   const roles = await tastingRoles();
   const ids = roles.map((x) => x.tasting_id);
   const hosting = new Set(roles.filter((x) => x.hosting).map((x) => x.tasting_id));
@@ -97,7 +82,6 @@ export async function initSide(hostId: string) {
   if (current && past.some((r) => r.slug === current.slug)) ($('side-past') as HTMLDetailsElement).open = true;
 
   if (current) markSection(current.section);
-
 }
 
 /** The account's tastings (and those I co-host on other accounts), with my part in each. */

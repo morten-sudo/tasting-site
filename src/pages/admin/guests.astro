@@ -4,6 +4,7 @@ import SearchField from '../../components/ui/SearchField.astro';
 import Sheet from '../../components/ui/Sheet.astro';
 import AddRow from '../../components/ui/AddRow.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
 ---
@@ -11,24 +12,22 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="guests">
     <div id="admin-main" hidden>
-      <h1 class="title" data-i18n="adminNav.guests">Guests</h1>
-      <p class="hint" data-i18n="guestLib.intro">Everyone you invite. Add them here once, then invite them to each tasting.</p>
+      <PageHeader title="adminNav.guests" lead="guestLib.intro">
+        <button slot="actions" id="add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
+      </PageHeader>
 
-      <section class="block guests">
-        <div class="guests-head">
-          <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="head-search" />
-          <button id="add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
-        </div>
+      <section class="guests">
+        <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="list-search" />
 
         <!-- New guest: the one add row (AddRow.astro) at the top of the list – name and email -->
         <AddRow id="gl" pic="guest">
           <div id="gl-fields" class="ar-fields">
             <div class="input">
-              <label for="gl-name" class="visually-hidden" data-i18n="admin.name">Name</label>
+              <label for="gl-name" class="sr" data-i18n="admin.name">Name</label>
               <input id="gl-name" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
             </div>
             <div class="input">
-              <label for="gl-email" class="visually-hidden" data-i18n="common.email">Email</label>
+              <label for="gl-email" class="sr" data-i18n="common.email">Email</label>
               <input id="gl-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
             </div>
           </div>

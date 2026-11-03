@@ -1,6 +1,7 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import TastingWizard from '../../components/TastingWizard.astro';
@@ -11,17 +12,13 @@ import '../../styles/admin.css';
     <AdminNav active="tastings">
 
     <div id="admin-main" hidden>
-      <h1 class="title" data-i18n="adminNav.tastings">Tastings</h1>
-
-      <div class="guests-head">
-        <h2 class="sr" data-i18n="adminNav.tastings">Tastings</h2>
-        <!-- Mine: the tastings I host myself; All: everything on the account – the one filter menu (made in the script) -->
-        <div class="head-actions">
+      <!-- Mine: the tastings I host myself; All: everything on the account – the one filter menu (made in the script) -->
+      <PageHeader title="adminNav.tastings">
+        <Fragment slot="actions">
           <div id="t-filter" hidden></div>
-        <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
-        </div>
-      </div>
-
+          <button id="new-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
+        </Fragment>
+      </PageHeader>
 
       <section>
         <h3 id="upcoming-h" data-i18n="tastings.upcoming" hidden>Upcoming</h3>
@@ -110,7 +107,7 @@ import '../../styles/admin.css';
   $('new-toggle').addEventListener('click', openNew);
   $('intro-new').addEventListener('click', openNew);
   // "+ New tasting" in the menu opens the guide right here
-  document.querySelector('.side-new')?.addEventListener('click', (e) => { e.preventDefault(); openNew(); });
+  document.querySelector('.sm-add')?.addEventListener('click', (e) => { e.preventDefault(); openNew(); });
 
   // ---------- Startup (after everything above is defined) ----------
   host = await requireHost();

@@ -5,6 +5,8 @@ import SearchField from '../../components/ui/SearchField.astro';
 import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import WineQuickAdd from '../../components/WineQuickAdd.astro';
 import '../../styles/admin.css';
@@ -22,12 +24,11 @@ import '../../styles/admin.css';
         <div id="wd-main">
           <div class="wd-head">
             <div id="wd-pic" class="wd-pic" hidden></div>
-            <div class="wd-head-text">
-              <h1 id="wd-name" class="title"></h1>
+            <PageHeader id="wd-name" class="wd-ph">
               <p id="wd-meta" class="wd-meta"></p>
               <p id="wd-overall" class="wd-overall" hidden></p>
-            </div>
-            <button id="wd-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+              <button slot="actions" id="wd-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+            </PageHeader>
           </div>
           <!-- A wine with only a name: a way forward -->
           <EmptyState id="wd-empty" icon="glass" title="wineAdmin.emptyTitle" text="wineAdmin.emptyText" hidden>
@@ -39,17 +40,17 @@ import '../../styles/admin.css';
               <p id="wd-description" class="wd-description" hidden></p>
               <div id="wd-facts-strip"></div>
               <section id="wd-facts-block" class="wd-block" hidden>
-                <h2 data-i18n="wineAdmin.facts">Details</h2>
+                <SectionTitle level="eyebrow" as="h2" text="wineAdmin.facts" />
                 <dl id="wd-facts" class="card wd-facts"></dl>
               </section>
               <section class="wd-block">
-                <h2 data-i18n="wineAdmin.tastings">Tastings</h2>
+                <SectionTitle level="eyebrow" as="h2" text="wineAdmin.tastings" />
                 <ul id="wd-tastings" class="card list flush wd-tastings"></ul>
                 <EmptyState id="wd-tastings-empty" icon="glass" title="wineLib.unused" text="wineAdmin.unusedHelp" hidden />
               </section>
             </div>
             <section id="wd-origin" class="wd-block" hidden>
-              <h2 data-i18n="wineAdmin.origin">Origin</h2>
+              <SectionTitle level="eyebrow" as="h2" text="wineAdmin.origin" />
               <p id="wd-origin-text" class="wd-origin-text"></p>
               <div id="wd-map" class="card wd-map" hidden></div>
             </section>
@@ -58,14 +59,14 @@ import '../../styles/admin.css';
       </section>
 
       <div id="wine-list-view">
-      <h1 class="title" data-i18n="adminNav.wines">Wines</h1>
-      <p class="hint" data-i18n="wineLib.intro">All your wines. Add them here, then choose them for each tasting – where you also set the guest price.</p>
-
-      <section class="block wines-admin">
-        <div class="guests-head">
-          <SearchField id="wine-search" label="adminTasting.search" class="head-search" />
+      <PageHeader title="adminNav.wines" lead="wineLib.intro">
+        <Fragment slot="actions">
           <button id="wine-add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="wineLib.newWineBtn">New wine</span></button><span id="wine-add-help" data-help="new-wine"></span>
-        </div>
+        </Fragment>
+      </PageHeader>
+
+      <section class="wines-admin">
+        <SearchField id="wine-search" label="adminTasting.search" class="list-search" />
 
         <!-- Filters: country → region (linked), type, tasting – drop-downs with checkboxes, made in admin-wines.ts -->
         <div id="wine-filters" class="wine-filters" hidden>

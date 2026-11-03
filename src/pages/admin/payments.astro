@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
 ---
@@ -7,8 +8,7 @@ import '../../styles/admin.css';
   <section class="wrap admin-page">
     <AdminNav active="payments">
     <div id="admin-main" hidden>
-      <h1 class="title" data-i18n="adminNav.payments">Payments</h1>
-      <p class="hint" data-i18n="payments.intro">How your guests pay for orders and the tasting fee. It applies to all your tastings.</p>
+      <PageHeader title="adminNav.payments" lead="payments.intro" />
 
       <section class="block">
         <h2>MobilePay</h2>
@@ -16,7 +16,7 @@ import '../../styles/admin.css';
           <label for="mp-number" data-i18n="admin.mobilepay">MobilePay number</label>
           <input class="input" id="mp-number" type="tel" inputmode="numeric" autocomplete="tel" placeholder="12 34 56 78" />
           <p class="hint" data-i18n="payments.mpHint">Guests get a button that opens MobilePay with the amount and a message filled in. Leave it empty to hide MobilePay.</p>
-          <div class="row-actions">
+          <div class="actions tight">
             <button id="mp-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
           </div>
         </form>

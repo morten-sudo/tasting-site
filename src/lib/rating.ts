@@ -1,4 +1,5 @@
 // The guest's own rating (1–5 stars) and private note for a wine. Saved automatically.
+import { sectionTitle } from './ui/section-title';
 import { supabase } from './supabase';
 import { t } from '../i18n';
 import { toast } from './ui/toast';
@@ -20,9 +21,7 @@ export function ratingBox(code: string, wineId: number, initial?: MyRating) {
 
   const head = document.createElement('div');
   head.className = 'rating-head';
-  const h = document.createElement('h2');
-  h.textContent = t('rating.title');
-  head.append(h);
+  head.append(sectionTitle('h3', t('rating.title'), 'h2'));
 
   // The one star component (src/lib/ui/stars.ts); tap the chosen star again to clear
   const rate = starsInput({ value: stars, label: t('rating.title'), onRate: (n) => { stars = n; save(); } });
