@@ -256,7 +256,7 @@ export const HELP: HelpSection[] = [
 <li><b>Quiz, stilling og chat</b> under aftenen.</li>
 <li><b>Min vinbog</b> – de vine gæsten har smagt, egne karakterer og køb på tværs af smagninger (når gæsten logger ind med sin e-mail).</li>
 </ul>
-<p>Tip: <a href="g:">åbn gæstesiden</a> for at se smagningen, som gæsterne gør (eller brug <i>Gæsteside ↗</i> øverst på smagningen).</p>`,
+<p>Tip: <a href="g:">åbn gæstesiden</a> for at se smagningen, som gæsterne gør (eller brug øjet ved siden af smagningens navn).</p>`,
       en: `<ul>
 <li><b><a href="g:">The invitation</a></b> – about the evening, time and place, "Add to calendar", reply yes/no with diet and note, and a map of where the wines come from.</li>
 <li><b>The wines</b> – one wine at a time, with rating and notes; cart and ordering when it is open.</li>
@@ -264,7 +264,7 @@ export const HELP: HelpSection[] = [
 <li><b>Quiz, standings and chat</b> during the evening.</li>
 <li><b>My wine book</b> – the wines the guest has tasted, their own ratings and purchases across tastings (when the guest signs in with their email).</li>
 </ul>
-<p>Tip: <a href="g:">open the guest page</a> to see the tasting the way the guests do (or use <i>Guest page ↗</i> at the top of the tasting).</p>`,
+<p>Tip: <a href="g:">open the guest page</a> to see the tasting the way the guests do (or use the eye beside the tasting's name).</p>`,
     },
   },
   {
