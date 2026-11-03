@@ -117,6 +117,21 @@ export async function logUsage(request: Request | null, feature: UsageFeature,
   } catch { /* counting is not worth a failed request */ }
 }
 
+/** A wine read from a shop link: where its picture came from, or why there is none (the superadmin's Usage page).
+ *  Never fails the request it belongs to. */
+export type LinkOutcome = 'og' | 'jsonld' | 'shopify' | 'page' | 'none' | 'fetch_failed' | 'unreadable';
+export async function logLinkRead(request: Request, url: string, outcome: LinkOutcome, images = 0, wineName: string | null = null) {
+  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (!token) return;
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/rpc/log_link_read`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ url, outcome, images, wine_name: wineName }),
+    });
+  } catch { /* logging is not worth a failed request */ }
+}
+
 /** The model's own token count when it gives one; otherwise about 4 characters per token (and ~1500 for a picture). */
 function tokensOf(input: unknown, out: unknown): { tokens_in: number; tokens_out: number; estimated: boolean } {
   const u = (out as { usage?: { prompt_tokens?: number; completion_tokens?: number; input_tokens?: number; output_tokens?: number } } | null)?.usage;

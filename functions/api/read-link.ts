@@ -2,7 +2,7 @@
 // Fetches a shop's product page for a wine, collects what the page states about it
 // (structured data, Open Graph tags, Shopify product data and the page text) and lets
 // the AI model in Workers AI turn it into wine fields. Only signed-in hosts may call it.
-import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi } from '../../src/server/wine-ai';
+import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi, logLinkRead } from '../../src/server/wine-ai';
 
 const MAX_HTML = 2_000_000;
 const MAX_TEXT = 9_000;
@@ -145,7 +145,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
 
   let html: string;
   try { html = await fetchText(url.href, 'text/html,application/xhtml+xml'); }
-  catch { return json({ error: 'fetch_failed' }, 502); }
+  catch { await logLinkRead(request, url.href, 'fetch_failed'); return json({ error: 'fetch_failed' }, 502); }
 
   const meta = metaTags(html);
   const product = jsonLdProducts(html)[0] ?? {};
@@ -207,16 +207,18 @@ ${text}`;
   } catch {
     return json({ error: 'model_failed' }, 502);
   }
-  if (!answer) return json({ error: 'unreadable' }, 422);
+  if (!answer) { await logLinkRead(request, url.href, 'unreadable'); return json({ error: 'unreadable' }, 422); }
 
   // The shop's own main picture (what it shares and marks as the product's image) comes before its gallery,
   // which can hold the back label or a detail first; all of them are returned so the host can pick another
-  const pictures = [
-    meta['og:image:secure_url'], meta['og:image'],
-    ...(Array.isArray(product.image) ? product.image : [product.image]),
-    ...(shop?.images ?? []).map((i) => i.src),
-  ].map((x) => absolute(x, url)).filter(Boolean) as string[];
+  const abs = (xs: unknown[]) => xs.map((x) => absolute(x, url)).filter(Boolean) as string[];
+  const fromOg = abs([meta['og:image:secure_url'], meta['og:image']]);
+  const fromLd = abs(Array.isArray(product.image) ? product.image : [product.image]);
+  const fromShop = abs((shop?.images ?? []).map((i) => i.src));
+  const pictures = [...fromOg, ...fromLd, ...fromShop];
   if (!pictures.length) pictures.push(...pageImages(html, url, [title, meta['og:title'], str(product.name), str(answer.name)].filter(Boolean) as string[]).slice(0, 8));
+  // Logged for the superadmin: where the picture came from, or that the page gave none
+  const source = fromOg.length ? 'og' : fromLd.length ? 'jsonld' : fromShop.length ? 'shopify' : pictures.length ? 'page' : 'none';
   let image = pickImage(pictures);
   const images = [...new Set(pictures)].filter((u) => !NOT_BOTTLE.test(decodeURIComponent(u.split('/').pop() ?? ''))).slice(0, 8);
   // Vivino shares a close crop of the label (…_pl_375x500.png); the bottle shot (…_pb_x600.png) suits the wine card
@@ -244,6 +246,7 @@ ${text}`;
   // Never use the offer price as the regular price
   const shopPrice = regular ?? (offer && structured === offer.price ? null : structured);
 
+  await logLinkRead(request, url.href, source, images.length || (image ? 1 : 0), str(answer.name));
   return json({
     ...toFields(answer, [title, meta['og:title'], str(product.name), shop?.title].filter(Boolean) as string[]),
     description: str(answer.description),

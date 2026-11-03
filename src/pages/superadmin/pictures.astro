@@ -1,0 +1,83 @@
+---
+// Superadmin → Pictures from links: every wine read from a shop link is logged with where its picture came from
+// (link_reads). The shops whose pages give no picture come first, with the latest misses and their links, so the
+// reader in functions/api/read-link.ts can be taught each one.
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import SuperNav from '../../components/SuperNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="pics.title">
+  <section class="wrap admin-page">
+    <SuperNav active="pictures">
+      <PageHeader title="pics.title" lead="pics.intro" />
+      <p id="pics-rate" class="hint"></p>
+      <SectionTitle level="h2" text="pics.shops" />
+      <div id="pics-shops" class="pics-block"></div>
+      <SectionTitle level="h2" text="pics.misses" />
+      <div id="pics-misses"></div>
+    </SuperNav>
+  </section>
+</Base>
+
+<script>
+  import { supabase } from '../../lib/supabase';
+  import { t, i18nReady, locale, type Key } from '../../i18n';
+  import { requireAdmin, $, mk, timeFmt, tenantUrl } from '../../lib/super-common';
+  import { table } from '../../lib/ui/table';
+  import { chip } from '../../lib/ui/status';
+
+  type Shop = { domain: string; reads: number; misses: number; last_miss: string | null };
+  type Miss = { at: string; domain: string; url: string; outcome: string; wine_name: string | null; tenant_id: string | null; tenant: string | null };
+  const WHY: Record<string, Key> = { none: 'pics.none', fetch_failed: 'pics.fetchFailed', unreadable: 'pics.unreadable' };
+
+  await i18nReady;
+  const nf = () => new Intl.NumberFormat(locale());
+  const time = timeFmt();
+  const pct = (a: number, b: number) => (b ? `${nf().format(Math.round((a / b) * 100))} %` : '–');
+  const link = (href: string, text: string) => Object.assign(mk('a', '', text), { href, target: '_blank', rel: 'noopener' });
+
+  const shops = table<Shop>({
+    caption: t('pics.shops'), sort: { key: 'misses', desc: true },
+    empty: { icon: 'image', title: t('pics.noReads') },
+    columns: [
+      { key: 'domain', label: t('pics.shop'), cell: (s) => link(`https://${s.domain}/`, `${s.domain} ↗`), sort: (s) => s.domain },
+      { key: 'reads', label: t('pics.reads'), num: true, cell: (s) => nf().format(s.reads), sort: (s) => s.reads, desc: true },
+      { key: 'misses', label: t('pics.withoutPicture'), num: true, cell: (s) => nf().format(s.misses), sort: (s) => s.misses, desc: true },
+      { key: 'share', label: t('pics.share'), num: true, cell: (s) => pct(s.misses, s.reads), sort: (s) => (s.reads ? s.misses / s.reads : 0), desc: true },
+      { key: 'last', label: t('pics.lastMiss'), nowrap: true, cell: (s) => (s.last_miss ? time.format(new Date(s.last_miss)) : '–'), sort: (s) => s.last_miss ?? '', desc: true },
+    ],
+  });
+  const misses = table<Miss>({
+    caption: t('pics.misses'),
+    empty: { icon: 'check', title: t('pics.noMisses') },
+    columns: [
+      { key: 'at', label: t('super.logWhen'), nowrap: true, cell: (m) => time.format(new Date(m.at)) },
+      { key: 'wine', label: t('pics.wine'), cell: (m) => link(m.url, `${m.wine_name || m.domain} ↗`) },
+      { key: 'why', label: t('pics.why'), cell: (m) => chip(t(WHY[m.outcome] ?? 'pics.none'), m.outcome === 'none' ? 'wait' : 'err') },
+      { key: 'domain', label: t('pics.shop'), cell: (m) => m.domain, wideOnly: true },
+      { key: 'tenant', label: t('super.tenant'), cell: (m) => {
+        if (!m.tenant_id || !m.tenant) return '—';
+        return Object.assign(mk('a', '', m.tenant), { href: tenantUrl(m.tenant_id, 'log') });
+      } },
+    ],
+  });
+  $('pics-shops').replaceChildren(shops.el);
+  $('pics-misses').replaceChildren(misses.el);
+
+  async function load() {
+    const { data } = await supabase.rpc('admin_link_reads', { days: 30 });
+    const d = (data ?? { domains: [], misses: [] }) as { domains: Shop[]; misses: Miss[] };
+    const reads = d.domains.reduce((s, x) => s + Number(x.reads), 0), miss = d.domains.reduce((s, x) => s + Number(x.misses), 0);
+    $('pics-rate').textContent = reads ? t('pics.rate', { n: nf().format(reads), share: pct(reads - miss, reads) }) : '';
+    shops.setRows(d.domains.map((x) => ({ ...x, reads: Number(x.reads), misses: Number(x.misses) })));
+    misses.setRows(d.misses);
+  }
+
+  if (await requireAdmin()) load();
+</script>
+
+<style>
+  .pics-block { margin-bottom: 2rem; }
+</style>

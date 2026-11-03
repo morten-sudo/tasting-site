@@ -2,13 +2,14 @@
 import EmptyState from './ui/EmptyState.astro';
 import SideMenu, { type SideGroup } from './ui/SideMenu.astro';
 // The superadmin's shell: the one side menu (SideMenu.astro) with its own groups – Tenants (with the open tenant's
-// parts underneath, filled in by the tenant page), Log, Usage, Maps and GDPR.
-interface Props { active?: 'tenants' | 'log' | 'usage' | 'maps' | 'gdpr' }
+// parts underneath, filled in by the tenant page), Log, Usage, Pictures from links, Maps and GDPR.
+interface Props { active?: 'tenants' | 'log' | 'usage' | 'pictures' | 'maps' | 'gdpr' }
 const { active } = Astro.props;
 const groups: SideGroup[] = [
   { icon: 'home', label: 'super.tenantsNav', href: '/superadmin/', current: active === 'tenants', listId: 'side-tenant' },
   { icon: 'list', label: 'super.log', href: '/superadmin/log/', current: active === 'log' },
   { icon: 'chart', label: 'usage.title', href: '/superadmin/usage/', current: active === 'usage' },
+  { icon: 'image', label: 'pics.title', href: '/superadmin/pictures/', current: active === 'pictures' },
   { icon: 'map', label: 'super.mapsTitle', href: '/superadmin/maps/', current: active === 'maps' },
   { icon: 'shield', label: 'GDPR', href: '/superadmin/gdpr/', current: active === 'gdpr' },
 ];

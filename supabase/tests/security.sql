@@ -147,6 +147,12 @@ begin
   assert failed, 'a host can change the plan';
   failed := false; begin perform admin_usage(); exception when others then failed := true; end;
   assert failed, 'a host can read the usage page';
+  -- Shop-link reads: a host logs its own, but cannot read them back
+  perform log_link_read('https://www.example.com/wine', 'none', 0, 'Wine A');
+  failed := false; begin perform count(*) from link_reads; exception when others then failed := true; end;
+  assert failed, 'a host can read the link log';
+  failed := false; begin perform admin_link_reads(); exception when others then failed := true; end;
+  assert failed, 'a host can read the superadmin''s link log';
   failed := false; begin perform admin_delete_person('guest-b@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'a host can delete a person';
   -- The admin overview only counts A's own data
@@ -370,6 +376,10 @@ begin
   assert failed, 'anyone can call link_me_tastings';
   failed := false; begin perform * from my_tasting_roles(); exception when others then failed := true; end;
   assert failed, 'anyone can call my_tasting_roles';
+  failed := false; begin perform log_link_read('https://x.example/', 'none'); exception when others then failed := true; end;
+  assert failed, 'anyone can write to the link log';
+  failed := false; begin perform admin_link_reads(); exception when others then failed := true; end;
+  assert failed, 'anyone can read the link log';
   -- Sign-up's check tells only whether a host account exists – never about guests
   assert not signup_email_taken('guest-a@selftest.invalid'), 'the sign-up check reveals a guest';
   -- …while a guest's own chat works
@@ -419,6 +429,11 @@ begin
   assert failed, 'anyone can read the usage page';
 end $$;
 reset role;
+
+do $$ begin
+  assert (select count(*) from link_reads where url = 'https://www.example.com/wine' and domain = 'example.com' and outcome = 'none'
+          and tenant_id = (select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a')) = 1, 'a host''s link read is not logged';
+end $$;
 
 select 'security test passed' as result;
 rollback;
