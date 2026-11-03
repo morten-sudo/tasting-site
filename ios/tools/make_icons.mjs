@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 
 const src = readFileSync('src/lib/ui/icons.ts', 'utf8');
-const names = process.argv.slice(2);
+const names = process.argv[2] === '--flags' ? [] : process.argv.slice(2);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 48, height: 48 }, deviceScaleFactor: 3 });
 for (const name of names) {
@@ -22,3 +22,22 @@ for (const name of names) {
   console.log('ok', name);
 }
 await browser.close();
+
+// The language flags (src/i18n/flags.ts) as plain images: node ios/tools/make_icons.mjs --flags da en is
+if (process.argv[2] === '--flags') {
+  const flags = readFileSync('src/i18n/flags.ts', 'utf8');
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 24, height: 16 }, deviceScaleFactor: 3 });
+  for (const code of process.argv.slice(3)) {
+    const m = flags.match(new RegExp(`^\\s+${code}: svg\\('([^']+)', '([^']+)'\\)`, 'm'));
+    if (!m) { console.error('no flag', code); continue; }
+    await p.setContent(`<html><body style="margin:0"><svg viewBox="${m[1]}" width="24" height="16" preserveAspectRatio="xMidYMid slice" style="display:block">${m[2]}</svg></body></html>`);
+    const png = await p.locator('svg').screenshot();
+    const dir = `ios/Winetastr/Assets.xcassets/flag-${code}.imageset`;
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(`${dir}/f.png`, png);
+    writeFileSync(`${dir}/Contents.json`, JSON.stringify({ images: [{ filename: 'f.png', idiom: 'universal', scale: '3x' }], info: { author: 'xcode', version: 1 } }));
+    console.log('ok flag', code);
+  }
+  await b.close();
+}
