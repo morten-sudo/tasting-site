@@ -412,6 +412,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
+  import { iconSpacer } from '../../lib/ui/icon-button';
   import { personRow, listRow, missing, type RowChip } from '../../lib/ui/list-row';
   import { avatar } from '../../lib/ui/thumb';
   import { addRow, hitButton } from '../../lib/ui/add-row';
@@ -804,7 +805,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   // One row per guest, the same as the wines: a "picture" (initials), name, a line with email and invitation,
   // status as small chips, what they ordered on the right – and "Edit". The rest is in the side panel.
-  function guestCard(p: P) {
+  function guestCard(p: P, cols = { mail: true, link: true }) {
     // On the waiting list: its number in the queue
     const place = p.status === 'waitlist'
       ? participants.filter((x) => x.status === 'waitlist' && (x.waitlisted_at ?? '') <= (p.waitlisted_at ?? '')).length : 0;
@@ -814,13 +815,15 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (p.diet) chips.push({ text: p.diet });
     if (p.note) chips.push({ text: t('guestRow.note'), title: p.note });
     const n = bottlesOf(p);
-    const actions: HTMLElement[] = [];
-    // Never invited: its one action in the row (as "Reveal" by a blind wine) – the rest is in the panel
-    if (!p.invite_mailed_at && p.status === 'invited') {
-      const b = iconButton(p.email ? 'mail' : 'link', t(p.email ? 'inviteMail.send' : 'admin.copyLink'), { strong: true });
-      b.addEventListener('click', () => (p.email ? sendInvite(p, b) : copyInvite(p)));
-      actions.push(b);
-    }
+    // Never invited: send the invitation (with an email) or copy the link (without) – each in a column of its own,
+    // so the same icon is always in the same place down the list; an empty place keeps the columns (a column only when
+    // some guest in the list needs it). The rest is in the panel.
+    const invite = !p.invite_mailed_at && p.status === 'invited';
+    const mail = invite && p.email ? iconButton('mail', t('inviteMail.send')) : iconSpacer();
+    if (invite && p.email) mail.addEventListener('click', () => sendInvite(p, mail as HTMLButtonElement));
+    const link = invite && !p.email ? iconButton('link', t('admin.copyLink')) : iconSpacer();
+    if (invite && !p.email) link.addEventListener('click', () => copyInvite(p));
+    const actions: HTMLElement[] = [...(cols.mail ? [mail] : []), ...(cols.link ? [link] : [])];
     const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
     edit.dataset.tip = t('admin.edit');
     edit.addEventListener('click', () => openGuestPanel(p));
@@ -933,7 +936,10 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         || (a.status === 'waitlist' ? (a.waitlisted_at ?? '').localeCompare(b.waitlisted_at ?? '') : 0)
         || a.name.localeCompare(b.name, 'da'))
       .filter(matches);
-    for (const p of sorted) list.append(guestCard(p));
+    // The invitation columns are only there when a guest in the list needs them
+    const uninvited = sorted.filter((p) => !p.invite_mailed_at && p.status === 'invited');
+    const cols = { mail: uninvited.some((p) => p.email), link: uninvited.some((p) => !p.email) };
+    for (const p of sorted) list.append(guestCard(p, cols));
     // No guests at all is not "none match": say how to start – or how to see them all again
     list.hidden = !sorted.length;
     if (sorted.length) $('guest-empty').hidden = true;
@@ -1044,7 +1050,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       const name = pById.get(o.participant_id)?.name ?? t('admin.unknownGuest');
       const mark = o.paid
         ? iconButton('undo', t('orders.markUnpaid'))
-        : iconButton('check', t('orders.markPaid'), { strong: true });
+        : iconButton('check', t('orders.markPaid'));
       mark.setAttribute('aria-label', `${t(o.paid ? 'orders.markUnpaid' : 'orders.markPaid')}: ${t('pay.orderComment', { id: o.id })}, ${name}`);
       mark.addEventListener('click', async () => {
         setIconLoading(mark, true);

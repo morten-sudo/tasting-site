@@ -25,6 +25,15 @@ export function iconButton(icon: IconName, label: string, opts: IconButtonOption
   return b;
 }
 
+/** An empty place the size of an icon button: keeps a row's icons in columns when one row has an action another
+ *  has not (the same icon always in the same place down a list). Not focusable, hidden from screen readers. */
+export function iconSpacer(size: IconButtonOptions['size'] = 'small'): HTMLSpanElement {
+  const s = document.createElement('span');
+  s.className = 'icon-act spacer' + SIZE[size ?? 'small'];
+  s.setAttribute('aria-hidden', 'true');
+  return s;
+}
+
 /** The one close button (×) – panels, menus, dialogs, the toast */
 export function closeButton(label: string = t('admin.close'), size: IconButtonOptions['size'] = 'normal'): HTMLButtonElement {
   return iconButton('x', label, { size, close: true });

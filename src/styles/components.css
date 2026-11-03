@@ -789,6 +789,7 @@ span.ltitle { cursor: default; }
 .laside b { font-weight: 500; }
 .laside small { color: var(--muted); font-size: 0.82rem; }
 .lacts { flex: none; display: flex; gap: 0.25rem; justify-content: flex-end; align-items: center; }
+.icon-act.spacer { visibility: hidden; pointer-events: none; }
 .lrow.busy .lacts { opacity: 0.6; }
 .lrow.dragging { opacity: 0.6; background: var(--lodge-2); }
 .lrow.dragging .grip { cursor: grabbing; color: var(--paper); }
