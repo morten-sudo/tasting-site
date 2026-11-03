@@ -126,6 +126,36 @@ export async function logUsage(request: Request | null, feature: UsageFeature,
   } catch { /* counting is not worth a failed request */ }
 }
 
+// ---------- Daily limits per account (use_daily_quota in the database, 20261104_daily_limits.sql) ----------
+export type QuotaKind = 'ai' | 'mail';
+
+/**
+ * Counts one use of `kind` against the account's limit for today, with the caller's own token, before the work is done.
+ * Returns null when it may go ahead, or the response to send: 429 { error: 'daily_limit', kind, limit } at the limit,
+ * 403 when the caller is not a host of the account or tasting. The account is the tasting's (t_id), else the given
+ * account (tn), else the host's own. When the count cannot be reached at all (the database has no such function yet,
+ * or the network failed) the call goes ahead – a limit is not worth a host's failed request.
+ */
+export async function overDailyLimit(request: Request, kind: QuotaKind, at: { t_id?: string | null; tn?: string | null } = {}): Promise<Response | null> {
+  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+  if (!token) return json({ error: 'not_signed_in' }, 401);
+  let res: Response;
+  try {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/use_daily_quota`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify({ what: kind, amount: 1, t_id: at.t_id ?? null, tn: at.tn ?? null }),
+    });
+  } catch (e) {
+    console.log('use_daily_quota unreachable', String(e).slice(0, 120));
+    return null;
+  }
+  if (res.status === 401 || res.status === 403) return json({ error: 'not_host' }, 403);
+  if (!res.ok) { console.log('use_daily_quota failed', res.status); return null; }
+  const q = (await res.json().catch(() => null)) as { ok?: boolean; limit?: number } | null;
+  return q && q.ok === false ? json({ error: 'daily_limit', kind, limit: q.limit ?? null }, 429) : null;
+}
+
 /** A wine read from a shop link: where its picture came from, or why there is none (the superadmin's Usage page).
  *  Never fails the request it belongs to. */
 export type LinkOutcome = 'og' | 'jsonld' | 'shopify' | 'page' | 'none' | 'fetch_failed' | 'unreadable';

@@ -2,26 +2,12 @@
 // Fetches a shop's product page for a wine, collects what the page states about it
 // (structured data, Open Graph tags, Shopify product data and the page text) and lets
 // the AI model in Workers AI turn it into wine fields. Only signed-in hosts may call it.
-import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi, logLinkRead } from '../../src/server/wine-ai';
+import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi, logLinkRead, overDailyLimit } from '../../src/server/wine-ai';
+import { cleanUrl, safeFetch } from '../../src/server/safe-fetch';
 
 const MAX_HTML = 2_000_000;
 const MAX_TEXT = 9_000;
 const LANG_NAMES: Record<string, string> = { da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', nl: 'Dutch', pl: 'Polish' };
-const TRACKING = /^(utm_|gad_|gclid|gbraid|wbraid|fbclid|mc_|_ga|srsltid)/i;
-
-/** Only public http(s) addresses; tracking parameters removed. */
-export function cleanUrl(raw: string): URL | null {
-  let u: URL;
-  try { u = new URL(raw.trim()); } catch { return null; }
-  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
-  const host = u.hostname.toLowerCase();
-  if (host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal') ||
-      /^(127|10|0)\.|^192\.168\.|^172\.(1[6-9]|2\d|3[01])\.|^169\.254\.|^\[?::1\]?$|^\[?f[cd]/.test(host)) return null;
-  for (const k of [...u.searchParams.keys()]) if (TRACKING.test(k)) u.searchParams.delete(k);
-  u.hash = '';
-  return u;
-}
-
 const decode = (s: string) => s
   .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
   .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
@@ -121,12 +107,12 @@ type Shopify = { title?: string; vendor?: string; body_html?: string; product_ty
   images?: { src: string }[]; variants?: { title?: string; price: string; compare_at_price?: string | null }[] };
 
 async function fetchText(url: string, accept: string) {
-  const res = await fetch(url, {
+  // Every redirect is checked too (never on to a private address)
+  const res = await safeFetch(url, {
     headers: {
       'user-agent': 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)',
       accept, 'accept-language': 'da,en;q=0.8',
     },
-    redirect: 'follow',
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`fetch ${res.status}`);
@@ -141,6 +127,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
   const url = cleanUrl(String(body.url ?? ''));
   if (!url) return json({ error: 'bad_url' }, 400);
+  const limited = await overDailyLimit(request, 'ai');
+  if (limited) return limited;
   const lang = LANG_NAMES[body.lang ?? ''] ? body.lang! : 'da';
 
   let html: string;
@@ -225,7 +213,7 @@ ${text}`;
   const bottle = image?.match(/^(https:\/\/images\.vivino\.com\/thumbs\/[\w-]+)_pl_\d+x\d+\.png$/)?.[1];
   if (bottle) {
     try {
-      const res = await fetch(`${bottle}_pb_x600.png`, { method: 'HEAD', signal: AbortSignal.timeout(4000) });
+      const res = await safeFetch(`${bottle}_pb_x600.png`, { method: 'HEAD', signal: AbortSignal.timeout(4000) });
       if (res.ok) image = `${bottle}_pb_x600.png`;
     } catch {}
   }

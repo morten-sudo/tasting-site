@@ -5,8 +5,8 @@
 // hosts (added through add_cohost) or on the account (add_tenant_member) – so it cannot mail anyone else.
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
-import { json, str, logUsage } from '../../src/server/wine-ai';
-import { sendMail, type MailEnv } from '../../src/server/smtp';
+import { json, str, logUsage, overDailyLimit } from '../../src/server/wine-ai';
+import { sendMail, isMailAddress, type MailEnv } from '../../src/server/smtp';
 import { inviteHostMail, inviteWorkspaceMail } from '../../src/server/mail-texts';
 
 type HostRow = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
@@ -22,7 +22,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
   const givenName = str(body.name)?.slice(0, 80) ?? null;
   const lang = str(body.lang) ?? 'da';
   const uuid = /^[0-9a-f-]{36}$/i;
-  if (!(uuid.test(tastingId) || (!tastingId && uuid.test(tenantId))) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json({ error: 'bad_request' }, 400);
+  if (!(uuid.test(tastingId) || (!tastingId && uuid.test(tenantId))) || !isMailAddress(email)) return json({ error: 'bad_request' }, 400);
 
   // Everything is read as the signed-in host, so the database decides what they may see
   const headers = { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, 'content-type': 'application/json' };
@@ -39,6 +39,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
   const invited = hosts.find((h) => !h.owner && h.email === email);
   if (!tasting || !me?.owner) return json({ error: 'not_owner' }, 403);
   if (!invited) return json({ error: 'not_a_host' }, 400);
+  const limited = await overDailyLimit(request, 'mail', { t_id: tastingId });
+  if (limited) return limited;
 
   const link = `${origin}/login/?next=${encodeURIComponent(`/t/${tasting.slug}/admin/`)}`;
   const texts = inviteHostMail(lang, { name: givenName || invited.name, tasting: tasting.title, link, inviter: me.name });
@@ -65,6 +67,8 @@ async function inviteToWorkspace(request: Request, env: MailEnv, headers: Record
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/workspace_invite_info`, { method: 'POST', headers, body: JSON.stringify({ e: v.email, tn: v.tenantId }) });
   const info = (res.ok ? await res.json() : null) as { name: string; invitee: string | null; owner_name: string | null; owner_email: string } | null;
   if (!info) return json({ error: 'not_owner' }, 403);
+  const limited = await overDailyLimit(request, 'mail', { tn: v.tenantId });
+  if (limited) return limited;
   const link = `${v.origin}/login/?next=${encodeURIComponent(`/admin/?ws=${v.tenantId}`)}`;
   const texts = inviteWorkspaceMail(v.lang, { name: v.givenName || info.invitee, account: info.name, link, inviter: info.owner_name });
   try {

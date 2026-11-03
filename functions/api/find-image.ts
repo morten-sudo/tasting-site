@@ -2,8 +2,9 @@
 // 1. Pages about the wine: links on the home page and URLs in the sitemap whose words match the wine's name.
 // 2. Their pictures: the page's share picture, the product picture in its data, and <img> whose file name or alt text
 //    names the wine. Bottle shots count in favour; logos, icons, cases and gift boxes against.
-import { isHost, json } from '../../src/server/wine-ai';
-import { cleanUrl, htmlToText, NOT_BOTTLE, BOTTLE } from './read-link';
+import { isHost, json, overDailyLimit } from '../../src/server/wine-ai';
+import { htmlToText, NOT_BOTTLE, BOTTLE } from './read-link';
+import { cleanUrl, safeFetch } from '../../src/server/safe-fetch';
 
 const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
 const plain = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss');
@@ -14,7 +15,7 @@ async function get(url: string, ms = 7000): Promise<{ url: string; html: string 
   const u = cleanUrl(url);
   if (!u) return null;
   try {
-    const res = await fetch(u.href, { headers: { 'user-agent': UA, accept: 'text/html,application/xml', 'accept-language': 'en,fr;q=0.8' }, redirect: 'follow', signal: AbortSignal.timeout(ms) });
+    const res = await safeFetch(u.href, { headers: { 'user-agent': UA, accept: 'text/html,application/xml', 'accept-language': 'en,fr;q=0.8' }, signal: AbortSignal.timeout(ms) });
     if (!res.ok) return null;
     return { url: res.url || u.href, html: (await res.text()).slice(0, 1_500_000) };
   } catch { return null; }
@@ -23,7 +24,7 @@ async function get(url: string, ms = 7000): Promise<{ url: string; html: string 
 /** A picture's width and height, read from the first bytes of the file (PNG, JPEG, WebP, GIF) – cheap, no decoding. */
 async function imageSize(url: string): Promise<{ w: number; h: number } | null> {
   try {
-    const res = await fetch(url, { headers: { 'user-agent': UA, range: 'bytes=0-65535' }, signal: AbortSignal.timeout(5000) });
+    const res = await safeFetch(url, { headers: { 'user-agent': UA, range: 'bytes=0-65535' }, signal: AbortSignal.timeout(5000) });
     if (!res.ok && res.status !== 206) return null;
     const reader = res.body?.getReader();
     if (!reader) return null;
@@ -67,7 +68,7 @@ async function imageSize(url: string): Promise<{ w: number; h: number } | null> 
 /** A bottle shot is tall and narrow (a whole bottle standing); scenes, glasses, vineyards and cases are wider. */
 /** The shop system's own product pictures for a product page (the page itself often loads them by script):
  *  Magento (GraphQL by url key), Shopify (/products/<handle>.json) and WooCommerce (Store API by slug). */
-const shopNotes: string[] = []; // what the shop systems answered (for checking)
+const shopNotes: string[] = []; // what the shop systems answered (for checking; logged, never sent back)
 async function shopPictures(pageUrl: string, html: string, wineName = '', fits: (s: string) => number = () => 0, need = 1): Promise<{ urls: string[]; via: string } | null> {
   const u = new URL(pageUrl);
   const slug = u.pathname.split('/').filter(Boolean).pop()?.replace(/\.html?$/, '') ?? '';
@@ -76,7 +77,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
     .filter((x): x is string => !!x && /^https?:/.test(x) && !/placeholder/i.test(x));
   try {
     if (/\/products\//.test(u.pathname)) { // Shopify
-      const r = await fetch(`${u.origin}/products/${slug}.json`, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(5000) });
+      const r = await safeFetch(`${u.origin}/products/${slug}.json`, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(5000) });
       if (r.ok) {
         const p = ((await r.json()) as { product?: { images?: { src: string }[] } }).product;
         const list = urls(p?.images ?? []);
@@ -88,7 +89,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
       const query = `{products(filter:{url_key:{eq:${JSON.stringify(slug)}}}){items{name image{url} small_image{url} media_gallery{url}}}}`;
       // The store view is often the language in the address (/fr/…)
       const store = u.pathname.split('/').filter(Boolean)[0];
-      const r = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json', ...(store && store.length <= 5 ? { store } : {}) }, body: JSON.stringify({ query }), signal: AbortSignal.timeout(6000) });
+      const r = await safeFetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json', ...(store && store.length <= 5 ? { store } : {}) }, body: JSON.stringify({ query }), signal: AbortSignal.timeout(6000) });
       const peek = await r.clone().text().catch(() => '');
       shopNotes.push(`${slug}: graphql ${r.status} ${peek.slice(0, 120).replace(/\s+/g, ' ')}`);
       if (r.ok) {
@@ -97,7 +98,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
         // Not found by its address: search the shop by the wine's name, and take a product named like the wine
         if (!it && wineName) {
           const q2 = `{products(search:${JSON.stringify(wineName)},pageSize:10){items{name image{url} small_image{url} media_gallery{url}}}}`;
-          const r2 = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q2 }), signal: AbortSignal.timeout(6000) });
+          const r2 = await safeFetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q2 }), signal: AbortSignal.timeout(6000) });
           const items = r2.ok ? ((await r2.json()) as { data?: { products?: { items?: Item[] } } }).data?.products?.items ?? [] : [];
           it = items.find((x) => fits(x.name ?? '') >= need);
           shopNotes.push(`search "${wineName}": ${items.map((x) => x.name).join(' | ')}${it ? ` → chose ${it.name}` : ''}`);
@@ -105,7 +106,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
         // "Our wines" pages are often categories: the category's own picture
         if (!it) {
           const q3 = `{categories(filters:{url_key:{eq:${JSON.stringify(slug)}}}){items{name image}}}`;
-          const r3 = await fetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q3 }), signal: AbortSignal.timeout(6000) });
+          const r3 = await safeFetch(`${u.origin}/graphql`, { method: 'POST', headers: { 'user-agent': UA, 'content-type': 'application/json' }, body: JSON.stringify({ query: q3 }), signal: AbortSignal.timeout(6000) });
           const cat = r3.ok ? ((await r3.json()) as { data?: { categories?: { items?: { name?: string; image?: string | null }[] } } }).data?.categories?.items?.find((c) => c.image && fits(c.name ?? '') >= need) : undefined;
           shopNotes.push(`category ${slug}: ${cat ? `${cat.name} ${cat.image}` : 'none'}`);
           if (cat?.image) {
@@ -118,7 +119,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
       }
     }
     if (/wp-content|woocommerce/i.test(html)) { // WooCommerce
-      const r = await fetch(`${u.origin}/wp-json/wc/store/v1/products?slug=${encodeURIComponent(slug)}`, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(5000) });
+      const r = await safeFetch(`${u.origin}/wp-json/wc/store/v1/products?slug=${encodeURIComponent(slug)}`, { headers: { 'user-agent': UA }, signal: AbortSignal.timeout(5000) });
       if (r.ok) {
         const p = ((await r.json()) as { images?: { src: string }[] }[])[0];
         const list = urls(p?.images ?? []);
@@ -129,7 +130,7 @@ async function shopPictures(pageUrl: string, html: string, wineName = '', fits: 
   return null;
 }
 
-const sizes: string[] = []; // what was measured (for checking)
+const sizes: string[] = []; // what was measured (for checking; logged, never sent back)
 async function isBottleShot(url: string): Promise<boolean> {
   const s = await imageSize(url);
   sizes.push(`${url.split('/').pop()?.slice(0, 40)} ${s ? `${s.w}x${s.h}` : 'unknown'}`);
@@ -145,6 +146,8 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
   const site = cleanUrl(String(body.website ?? ''));
   if (!site) return json({ error: 'no_website' }, 400);
+  const limited = await overDailyLimit(request, 'ai');
+  if (limited) return limited;
   const producerWords = new Set(wordsOf(String(body.producer ?? '')));
   // The words that tell this wine from the producer's others, e.g. "Mâcon-Villages" → macon, villages
   const key = wordsOf(String(body.name ?? '')).filter((w) => !producerWords.has(w) && !STOP.has(w) && !/^\d{4}$/.test(w));
@@ -265,6 +268,8 @@ export const onRequestPost = async ({ request }: { request: Request }) => {
     list = checked.filter(Boolean).slice(0, 6) as typeof list;
   }
   if (!list.length) list = shares.filter((x, i) => shares.findIndex((y) => y.url === x.url) === i).slice(0, 3).map((x) => ({ ...x, score: 0 }));
-  // pages and seen show where the pictures came from (and why there are none)
-  return json({ images: list.map(({ url, page }) => ({ url, page })), pages, seen, words: all, looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15), sizes: sizes.splice(0), shop: shopNotes.splice(0) });
+  // Where the pictures came from (and why there are none) goes to the function's log, not to the browser
+  console.log('find-image', JSON.stringify({ site: site.hostname, pages, seen, words: all, found: list.length,
+    looked: looked.filter((x) => !x.startsWith('data:')).slice(0, 15), sizes: sizes.splice(0), shop: shopNotes.splice(0) }).slice(0, 4000));
+  return json({ images: list.map(({ url, page }) => ({ url, page })), pages });
 };

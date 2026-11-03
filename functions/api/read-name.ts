@@ -1,7 +1,7 @@
 // Cloudflare Pages Function: POST /api/read-name
 // A wine added by its name only: what is generally known about it (producer, vintage, type, origin, grapes) and a
 // short description, from a text model in Cloudflare Workers AI. Only signed-in hosts may call it. The host checks it.
-import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi } from '../../src/server/wine-ai';
+import { MODEL, FIELDS_SPEC, isHost, json, parseAnswer, str, toFields, type AiEnv, meteredAi, overDailyLimit } from '../../src/server/wine-ai';
 
 const LANG_NAMES: Record<string, string> = { da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', nl: 'Dutch', pl: 'Polish' };
 
@@ -11,6 +11,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
   const name = String(body.name ?? '').replace(/\s+/g, ' ').trim().slice(0, 200);
   if (name.length < 3) return json({ error: 'bad_name' }, 400);
+  const limited = await overDailyLimit(request, 'ai');
+  if (limited) return limited;
   const lang = LANG_NAMES[body.lang ?? ''] ? body.lang! : 'da';
 
   const prompt = `A host has added a wine to a wine tasting by typing its name: "${name}".

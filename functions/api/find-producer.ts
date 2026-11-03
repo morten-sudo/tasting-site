@@ -5,8 +5,9 @@
 //    the domain or title, its region or appellation and the wine's name on the page count in its favour. The best wins.
 // 3. The place: the site is crawled along its own links (and sitemap) to the contact and visit pages; coordinates in
 //    the page or its text, an embedded map link, or the postal address in its data or as text.
-import { MODEL, isHost, json, parseAnswer, str, type AiEnv, meteredAi } from '../../src/server/wine-ai';
-import { cleanUrl, htmlToText } from './read-link';
+import { MODEL, isHost, json, parseAnswer, str, type AiEnv, meteredAi, overDailyLimit } from '../../src/server/wine-ai';
+import { htmlToText } from './read-link';
+import { cleanUrl, safeFetch } from '../../src/server/safe-fetch';
 import { geocodeAddress } from '../../src/server/geocode';
 
 const UA = 'Mozilla/5.0 (compatible; Winetastr/1.0; +https://winetastr.com)';
@@ -77,6 +78,7 @@ function scorePage(page: { url: string; html: string }, words: string[], origin:
 
 // Why the last fetch of a URL failed (shown in "tried", to see why a site was not read)
 const failed = new Map<string, string>();
+const noteFailed = (url: string, why: string) => { if (failed.size > 500) failed.clear(); failed.set(url, why); };
 const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
 
 /** A page's HTML. Some sites turn away anything that does not look like a browser: then once more as one. */
@@ -85,15 +87,15 @@ async function get(url: string, ms = 7000): Promise<{ url: string; html: string 
   if (!u) return null;
   for (const ua of [UA, BROWSER_UA]) {
     try {
-      const res = await fetch(u.href, { headers: { 'user-agent': ua, accept: 'text/html,application/xhtml+xml,*/*;q=0.8',
-        'accept-language': 'en,fr;q=0.8,it;q=0.7,de;q=0.6' }, redirect: 'follow', signal: AbortSignal.timeout(ms) });
+      const res = await safeFetch(u.href, { headers: { 'user-agent': ua, accept: 'text/html,application/xhtml+xml,*/*;q=0.8',
+        'accept-language': 'en,fr;q=0.8,it;q=0.7,de;q=0.6' }, signal: AbortSignal.timeout(ms) });
       const type = res.headers.get('content-type') ?? '';
-      if (!res.ok) { failed.set(url, `http ${res.status}`); continue; }
-      if (type && !type.includes('html')) { failed.set(url, `type ${type.slice(0, 40)}`); return null; }
+      if (!res.ok) { noteFailed(url, `http ${res.status}`); continue; }
+      if (type && !type.includes('html')) { noteFailed(url, `type ${type.slice(0, 40)}`); return null; }
       const html = (await res.text()).slice(0, 1_500_000);
       failed.delete(url);
       return { url: res.url || u.href, html };
-    } catch (e) { failed.set(url, `error ${String(e).slice(0, 80)}`); }
+    } catch (e) { noteFailed(url, `error ${String(e).slice(0, 80)}`); }
   }
   return null;
 }
@@ -211,7 +213,7 @@ async function sitemapLinks(base: string): Promise<{ url: string; score: number 
 }
 async function getXml(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, { headers: { 'user-agent': BROWSER_UA }, signal: AbortSignal.timeout(5000) });
+    const res = await safeFetch(url, { headers: { 'user-agent': BROWSER_UA }, signal: AbortSignal.timeout(5000) });
     return res.ok ? (await res.text()).slice(0, 600_000) : null;
   } catch { return null; }
 }
@@ -270,6 +272,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   // A website alone is enough (the host typed it); otherwise the producer's name is needed to look for one
   const producer = String(body.producer ?? '').trim() || (given0 ? new URL(given0).hostname.replace(/^www\./, '').split('.')[0] : '');
   if (!producer) return json({ error: 'no_producer' }, 400);
+  const limited = await overDailyLimit(request, 'ai');
+  if (limited) return limited;
   const country = String(body.country ?? '').toUpperCase() || null;
   const words = keyWords(producer);
 
@@ -311,7 +315,10 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     tried.push({ url: candidates[i], result: (score == null ? 'not the producer: ' : `score ${score}: `) + why });
     if (score != null && score > best) { best = score; site = page; }
   }
-  if (!site) return json({ producer, website: given, location: null, address: null, tried, suggested });
+  if (!site) {
+    console.log('find-producer', JSON.stringify({ producer, tried, suggested }).slice(0, 4000));
+    return json({ producer, website: given, location: null, address: null });
+  }
 
   // 3. The place: the home page, then the pages the site's own links lead to (contact, visit, about …)
   const pages = [site, ...(await crawlSite(site, country))];
@@ -352,7 +359,8 @@ Appellation: ${body.appellation ?? ''}, region: ${body.region ?? ''}, country: $
     const hit = await geocodeAddress(address, country);
     if (hit) location = { lat: hit.lat, lon: hit.lon, source: hit.source, page: '' };
   }
-  // pages_read and hints show what the lookup saw (for checking why something was not found)
-  return json({ producer, website: new URL(site.url).origin + '/', location, address, tried, suggested,
-    pages_read: pages.map((p) => ({ url: p.url, chars: p.html.length, maps: (p.html.match(/google\.[a-z.]+\/maps[^"'\s<>]{0,80}/gi) ?? []).slice(0, 2) })), hints });
+  // What the lookup saw (for checking why something was not found) goes to the function's log, not to the browser
+  console.log('find-producer', JSON.stringify({ producer, tried, suggested, hints,
+    pages_read: pages.map((p) => ({ url: p.url, chars: p.html.length })) }).slice(0, 4000));
+  return json({ producer, website: new URL(site.url).origin + '/', location, address });
 };

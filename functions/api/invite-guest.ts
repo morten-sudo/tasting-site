@@ -4,8 +4,8 @@
 // email already on the invitation. The same invitation is not mailed twice within a minute.
 import { connect } from 'cloudflare:sockets';
 import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
-import { json, str, logUsage } from '../../src/server/wine-ai';
-import { sendMail, type MailEnv } from '../../src/server/smtp';
+import { json, str, logUsage, overDailyLimit } from '../../src/server/wine-ai';
+import { sendMail, isMailAddress, type MailEnv } from '../../src/server/smtp';
 import { inviteGuestMail, INVITE_LANGS } from '../../src/server/mail-texts';
 
 type Guest = { id: string; name: string; email: string | null; invite_code: string; invite_mailed_at: string | null;
@@ -26,8 +26,12 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
   const guest = ((res.ok ? await res.json() : []) as Guest[])[0];
   if (!guest?.tastings) return json({ error: 'not_found' }, 404);
   if (!guest.email) return json({ error: 'no_email' }, 400);
+  if (!isMailAddress(guest.email)) return json({ error: 'bad_email' }, 400);
   if (guest.invite_mailed_at && Date.now() - Date.parse(guest.invite_mailed_at) < 60_000) return json({ error: 'too_soon' }, 429);
   const t = guest.tastings;
+  // The account's daily limit on emails (counted on the tasting's account)
+  const limited = await overDailyLimit(request, 'mail', { t_id: t.id });
+  if (limited) return limited;
   const hostsRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/tasting_cohosts`, { method: 'POST', headers, body: JSON.stringify({ t_id: t.id }) });
   const me = ((hostsRes.ok ? await hostsRes.json() : []) as HostRow[]).find((h) => h.me);
 

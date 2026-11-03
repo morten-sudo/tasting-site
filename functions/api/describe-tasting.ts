@@ -2,7 +2,7 @@
 // Writes a draft introduction for a tasting with Cloudflare Workers AI, from the tasting's title and its wines.
 // Read as the signed-in host, so only a host of the tasting gets a draft. The host edits it before saving.
 import { SUPABASE_URL, SUPABASE_KEY } from '../../src/lib/config';
-import { MODEL, json, str, type AiEnv, meteredAi } from '../../src/server/wine-ai';
+import { MODEL, json, str, type AiEnv, meteredAi, overDailyLimit } from '../../src/server/wine-ai';
 
 const LANGS: Record<string, string> = {
   da: 'Danish', en: 'English', is: 'Icelandic', fr: 'French', de: 'German', it: 'Italian', es: 'Spanish', nl: 'Dutch', pl: 'Polish',
@@ -87,6 +87,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   // Wines hidden from the guests are left out; blind wines are only described by their style
   const rows = ((wRes.ok ? await wRes.json() : []) as Row[]).filter((r) => r.wines && r.revealed);
   if (!rows.length) return json({ error: 'no_wines' }, 400);
+  const limited = await overDailyLimit(request, 'ai', { t_id: id });
+  if (limited) return limited;
   const open = rows.filter((r) => !r.blind).map((r) => r.wines);
   const blind = rows.filter((r) => r.blind);
 
