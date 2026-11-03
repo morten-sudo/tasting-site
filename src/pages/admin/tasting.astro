@@ -1203,7 +1203,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       if (ge || !g) { toast(t('admin.guestNotAdded'), { kind: 'error' }); return; }
       library.push(g as G);
       await inviteGuest(g as G);
-    } finally { setLoading(btn, false); }
+    } finally {
+      setLoading(btn, false);
+      // setLoading puts the old label back ("Add and invite"); the fields are empty now
+      btn.textContent = addLabel(!!giEmail.value.trim());
+    }
   }
 
   /** Puts a guest from the guest list into the tasting – and mails the invitation when chosen */

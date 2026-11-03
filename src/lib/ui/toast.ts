@@ -19,8 +19,23 @@ export interface ToastOptions {
 
 let current: { host: HTMLElement; el: HTMLElement; timer: number; done?: () => void } | null = null;
 
+// A toast shown while a panel is open lives in that dialog (the top layer); when the panel then closes – e.g.
+// "Remove from the tasting" closes the panel right after the toast with Undo – the toast moves out with it
+// instead of disappearing with the dialog. ('close' does not bubble, so it is caught on the way down.)
+let movesWired = false;
+function wireMoves() {
+  if (movesWired) return;
+  movesWired = true;
+  document.addEventListener('close', (e) => {
+    const d = e.target as HTMLElement;
+    if (!current || !(d instanceof HTMLDialogElement) || !d.contains(current.host)) return;
+    ([...document.querySelectorAll('dialog[open]')].filter((x) => x !== d).pop() ?? document.body).append(current.host);
+  }, true);
+}
+
 export function toast(text: string, opts: ToastOptions = {}) {
   hideToast();
+  wireMoves();
   const error = opts.error || opts.kind === 'error';
   const host = document.createElement('div');
   host.className = 'toast-host';

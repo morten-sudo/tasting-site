@@ -1327,4 +1327,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "signup.stepYou": "Naam en e-mail",
   "super.noTenantMatch": "Geen accounts passen bij de zoekopdracht",
   "super.showAll": "Alle accounts tonen",
+  "twe.tierTwice": "Er is al een prijs voor dit aantal flessen",
 };

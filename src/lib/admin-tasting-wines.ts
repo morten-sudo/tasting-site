@@ -126,10 +126,17 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   let editing: Row | null = null;
   let tierRows: { qty: Stepper; price: HTMLInputElement }[] = [];
   // "From [− 6 +] bottles: [109,95 kr.] each" – the number of bottles with the stepper, the price with its unit inside
-  function tierRow(qty = 6, price = '') {
+  /** A new quantity price starts at the first free number of bottles: 6, then 12, 18 … (never one already there) */
+  function freeQty() {
+    const used = new Set(tierRows.map((x) => x.qty.value));
+    for (let q = 6; q <= 99; q += 6) if (!used.has(q)) return q;
+    for (let q = 2; q <= 99; q++) if (!used.has(q)) return q;
+    return 99;
+  }
+  function tierRow(qty = freeQty(), price = '') {
     const row = mk('div', 'twe-tier');
     const line = mk('div', 'twe-tier-line');
-    const q = stepper({ value: qty, min: 2, max: 99, small: true, label: t('adminTasting.bulkQty') });
+    const q = stepper({ value: qty, min: 2, max: 99, small: true, label: t('adminTasting.bulkQty'), onChange: () => fieldError(p, null) });
     const p = mk('input');
     p.type = 'text'; p.inputMode = 'decimal'; p.className = 'input'; p.value = price; p.autocomplete = 'off';
     p.id = `twe-p-${Math.random().toString(36).slice(2, 8)}`;
@@ -198,6 +205,9 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const p = parseAmount(pt);
       const row = x.price.closest('.twe-tier')!;
       if (p == null || Number.isNaN(p) || p < 0) { fieldError(x.price, t('wineCheck.price'), row); ok = false; continue; }
+      // Two prices for the same number of bottles: the host chooses – one is never dropped silently
+      if (tiers.has(q)) { fieldError(x.price, t('twe.tierTwice'), row); ok = false; continue; }
+      fieldError(x.price, null, row);
       tiers.set(q, p);
     }
     if (!ok) { $('tw-edit').querySelector<HTMLElement>('[aria-invalid]')?.focus(); return; }

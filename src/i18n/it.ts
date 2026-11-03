@@ -1327,4 +1327,5 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "signup.stepYou": "Nome ed e-mail",
   "super.noTenantMatch": "Nessun account corrisponde alla ricerca",
   "super.showAll": "Mostra tutti gli account",
+  "twe.tierTwice": "Esiste già un prezzo per questo numero di bottiglie",
 };

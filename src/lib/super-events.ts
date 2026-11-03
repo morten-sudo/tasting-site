@@ -1,7 +1,7 @@
 // The event log in words: "Louise was added as co-host of Portvin 2026"
 import { t, type Key } from '../i18n';
 
-const STATUS: Record<string, Key> = { yes: 'status.yes', no: 'status.no', invited: 'status.invited' };
+const STATUS: Record<string, Key> = { yes: 'status.yes', no: 'status.no', invited: 'status.invited', waitlist: 'status.waitlist' };
 
 export function eventText(kind: string, d: Record<string, unknown>): string {
   const v: Record<string, string> = {};

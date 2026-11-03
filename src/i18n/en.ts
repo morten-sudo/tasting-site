@@ -1440,4 +1440,5 @@ export const en = {
   "signup.stepYou": "Name and email",
   "super.noTenantMatch": "No accounts match the search",
   "super.showAll": "Show all accounts",
+  "twe.tierTwice": "There is already a price for this number of bottles",
 } as const;
