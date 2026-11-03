@@ -354,7 +354,8 @@ export function initQuickAdd(o: Opts) {
     }
     say(li, t('qa.saved'), 'ok');
     await o.done(id, [name, vintage].filter(Boolean).join(' '));
-    setTimeout(() => drop(li), 1200);
+    // The wine is in the list now (highlighted): the card goes in the same moment, so the wine is never shown twice
+    li.remove();
   }
 
   /** Reading failed or found no name: the card says so; "Type the name" keeps the link or photo for the line. */

@@ -332,8 +332,6 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     ratings = new Map(((r.data ?? []) as { wine_id: number; average: number; votes: number }[])
       .map((x) => [x.wine_id, { average: Number(x.average), votes: x.votes }]));
     render();
-    // No wines yet: the line is open, ready for the first one
-    if (!rows.length && !quick.isOpen()) quick.open(false);
     // ?edit=<wine id> (from the wine library): open that wine's panel
     const want = Number(new URLSearchParams(location.search).get('edit'));
     const hit = want ? rows.find((x) => x.wine_id === want) : null;
