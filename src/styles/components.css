@@ -927,8 +927,9 @@ dialog.sheet::backdrop, dialog.wizard::backdrop { background: rgba(20, 12, 12, 0
 .sh-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1.25rem 0.75rem; border-bottom: 1px solid var(--lodge-3); flex: none; }
 .sh-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.15; margin: 0; min-width: 0; overflow-wrap: anywhere; }
 dialog.sheet .sh-form, dialog.wizard .sh-body { max-width: none; }
-.sh-form { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0; }
-.sh-body { padding: 1.1rem 1.25rem 1.5rem; overflow-y: auto; overflow-x: hidden; flex: 1; min-height: 0; display: grid; gap: 0.4rem; align-content: start; overscroll-behavior: contain; }
+/* flex-basis auto, not 0: a bottom sheet has only a max-height, and Safari gives a 0-based body no height at all */
+.sh-form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin: 0; }
+.sh-body { padding: 1.1rem 1.25rem 1.5rem; overflow-y: auto; overflow-x: hidden; flex: 1 1 auto; min-height: 0; display: grid; gap: 0.4rem; align-content: start; overscroll-behavior: contain; }
 .sh-body > * { margin-top: 0; margin-bottom: 0; min-width: 0; }
 /* A label starts a new field: a little air above it (the label and its field stay close) */
 .sh-body > :is(label, .flabel, fieldset, .cc, .twe-group, .sw-row, .notice):not(:first-child),
