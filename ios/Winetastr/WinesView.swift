@@ -258,6 +258,7 @@ struct WineDetailView: View {
             #endif
         }
         .background(Color.lodge)
+        .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
         .task {
             guard !didLoad else { return }

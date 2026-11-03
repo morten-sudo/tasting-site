@@ -1651,6 +1651,886 @@
     }
    }
   },
+  "nav.home": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hjem"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Home"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Heim"
+     }
+    }
+   }
+  },
+  "nav.profile": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Min profil"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "My profile"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Prófíllinn minn"
+     }
+    }
+   }
+  },
+  "nav.userMenu": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kontomenu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Account menu"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aðgangsvalmynd"
+     }
+    }
+   }
+  },
+  "book.title": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Min vinbog"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "My wine book"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vínbókin mín"
+     }
+    }
+   }
+  },
+  "book.linkText": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "De vine, du har smagt, dine smagninger og det, du har købt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The wines you have tasted, your tastings and what you have bought"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vínin sem þú hefur smakkað, smakkanirnar þínar og það sem þú hefur keypt"
+     }
+    }
+   }
+  },
+  "book.statWines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "vine smagt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "wines tasted"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "vín smökkuð"
+     }
+    }
+   }
+  },
+  "book.statTastings": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "smagninger"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "tastings"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "smakkanir"
+     }
+    }
+   }
+  },
+  "book.statBottles": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "flasker bestilt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "bottles ordered"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "flöskur pantaðar"
+     }
+    }
+   }
+  },
+  "book.linkOnly": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du ser kun de smagninger, der er åbnet med et invitationslink på denne enhed. Log ind med din e-mail for at se det hele – på alle enheder."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You only see the tastings opened with an invitation link on this device. Sign in with your email to see everything, on any device."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú sérð aðeins smakkanir sem opnaðar voru með boðshlekk á þessu tæki. Skráðu þig inn með netfangi til að sjá allt."
+     }
+    }
+   }
+  },
+  "book.tabWines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vine"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vín"
+     }
+    }
+   }
+  },
+  "book.tabTastings": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smagninger"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tastings"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smakkanir"
+     }
+    }
+   }
+  },
+  "book.tabOrders": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Køb"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Purchases"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kaup"
+     }
+    }
+   }
+  },
+  "book.sort": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sortér"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sort"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Raða"
+     }
+    }
+   }
+  },
+  "book.sortRecent": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nyeste først"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Newest first"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nýjast fyrst"
+     }
+    }
+   }
+  },
+  "book.sortRating": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bedst bedømt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Best rated"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Best metið"
+     }
+    }
+   }
+  },
+  "book.sortName": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Navn"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Name"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nafn"
+     }
+    }
+   }
+  },
+  "book.noWines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Når du har været til en smagning eller har bedømt en vin, kommer den her – med dine stjerner og noter."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "When you have been to a tasting, or rated a wine, it appears here – with your stars and notes."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þegar þú hefur farið í smökkun eða gefið víni einkunn birtist það hér – með stjörnum og athugasemdum."
+     }
+    }
+   }
+  },
+  "book.noWinesTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen vine endnu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No wines yet"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Engin vín enn"
+     }
+    }
+   }
+  },
+  "book.noMatch": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen vine passer til søgningen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No wines match the search."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Engin vín passa við leitina."
+     }
+    }
+   }
+  },
+  "book.tastedAt": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{tasting} · {when}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{tasting} · {when}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{tasting} · {when}"
+     }
+    }
+   }
+  },
+  "book.bought": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Købt {n} fl."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bought {n}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Keypt {n}"
+     }
+    }
+   }
+  },
+  "book.ordersSum": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flasker i alt, {total}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} bottles in all, {total}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flöskur alls, {total}"
+     }
+    }
+   }
+  },
+  "book.showAll": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vis alle vine"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Show all wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sýna öll vín"
+     }
+    }
+   }
+  },
+  "book.noOrdersText": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Det, du bestiller til en smagning, samles her."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "What you order at a tasting is gathered here."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Það sem þú pantar í smökkun safnast hér."
+     }
+    }
+   }
+  },
+  "tastings.none": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du er ikke inviteret til nogen smagninger med denne e-mail endnu."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You are not invited to any tastings with this email yet."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þér hefur ekki enn verið boðið í neina smökkun með þessu netfangi."
+     }
+    }
+   }
+  },
+  "profile.name": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dit navn"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your name"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nafnið þitt"
+     }
+    }
+   }
+  },
+  "profile.nameHint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vises øverst på siden. Værter kan have dig stående under det navn, de inviterede dig med."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Shown at the top of the site. Hosts may list you under the name they invited you by."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Birtist efst á síðunni. Gestgjafar geta skráð þig undir nafninu sem þeir buðu þér með."
+     }
+    }
+   }
+  },
+  "profile.linkOnly": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du er logget ind med et invitationslink på denne enhed. Log ind med din e-mail for at se alle dine smagninger på alle dine enheder."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You are signed in with an invitation link on this device. Sign in with your email to see all your tastings on any device."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú ert skráð(ur) inn með boðshlekk á þessu tæki. Skráðu þig inn með netfangi til að sjá allar smakkanirnar þínar á öllum tækjum."
+     }
+    }
+   }
+  },
+  "profile.language": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sprog"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Language"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tungumál"
+     }
+    }
+   }
+  },
+  "profile.edit": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ret navn og e-mail"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Edit name and email"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Breyta nafni og netfangi"
+     }
+    }
+   }
+  },
+  "profile.noOrders": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du har ingen bestillinger endnu."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You have no orders yet."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú átt engar pantanir enn."
+     }
+    }
+   }
+  },
+  "profile.emailConfirm": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vi har sendt en bekræftelse til {email}. Din e-mail skifter, når du åbner linket – tjek også din nuværende indbakke."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "We have sent a confirmation to {email}. Your email changes when you open the link – check your current inbox too."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Við höfum sent staðfestingu á {email}. Netfangið breytist þegar þú opnar hlekkinn – athugaðu líka núverandi innhólf."
+     }
+    }
+   }
+  },
+  "profile.emailNotChanged": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "E-mailen kunne ikke ændres. Den er måske allerede i brug."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The email could not be changed. It may already be in use."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki tókst að breyta netfanginu. Það gæti þegar verið í notkun."
+     }
+    }
+   }
+  },
+  "host.nameMissing": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv dit navn."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enter your name."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sláðu inn nafnið þitt."
+     }
+    }
+   }
+  },
+  "admin.changesNotSaved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ændringerne blev ikke gemt."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The changes were not saved."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Breytingarnar voru ekki vistaðar."
+     }
+    }
+   }
+  },
+  "adminTasting.search": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Søg"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Search"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Leita"
+     }
+    }
+   }
+  },
+  "pay.orderComment": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bestilling {id}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Order {id}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Pöntun {id}"
+     }
+    }
+   }
+  },
+  "cart.total": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "I alt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Total"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Samtals"
+     }
+    }
+   }
+  },
+  "cart.paid": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Betalt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Paid"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Greitt"
+     }
+    }
+   }
+  },
+  "cart.awaiting": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Afventer betaling"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Awaiting payment"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bíður greiðslu"
+     }
+    }
+   }
+  },
   "style.Red": {
    "localizations": {
     "da": {

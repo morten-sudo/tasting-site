@@ -16,6 +16,10 @@ begin
     ('login_email_known','e text',''),
     ('invite_is_mine','code text',''),
     ('link_me_tastings','',''),
+    ('my_wine_book','codes text[]','wine_id,name,producer,vintage,style,image_url,appellation,region,country,slug,title,starts_at,sort_order,rating,note,rated_at,bought'),
+    ('get_my_orders','code text','order_id,created_at,paid,wine_id,wine_name,quantity,unit_price'),
+    ('my_orders','','order_id,created_at,paid,slug,title,wine_name,quantity,unit_price'),
+    ('my_profile','',''),
     ('log_usage','feature text, model text, tokens_in integer, tokens_out integer, estimated boolean, n integer','')
   ) as t(fn,args,cols) loop
     select pg_get_function_result(p.oid) into res from pg_proc p join pg_namespace n on n.oid = p.pronamespace

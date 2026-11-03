@@ -83,8 +83,10 @@ struct PrimaryButton: ButtonStyle {
 /// .text-btn
 struct TextButton: ButtonStyle {
     var size: CGFloat = 15.2
+    /// The quiet kind: muted until pressed
+    var quiet = false
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.medium(size)).foregroundStyle(Color.bordeaux).opacity(configuration.isPressed ? 0.6 : 1)
+        configuration.label.font(.medium(size)).foregroundStyle(quiet ? Color.muted : Color.bordeaux).opacity(configuration.isPressed ? 0.6 : 1)
             .frame(minHeight: 44).contentShape(Rectangle())
     }
 }
@@ -251,16 +253,10 @@ extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
 /// The one top bar: logo, language and account, as on every page of the site.
 struct TopBar: View {
     @Environment(AppModel.self) private var model
-    var onAddInvite: (() -> Void)? = nil
-    @State private var confirmOut = false
-
-    private var flag: String {
-        switch appLanguageCode { case "da": "🇩🇰"; case "is": "🇮🇸"; default: "🇬🇧" }
-    }
 
     var body: some View {
-        HStack(spacing: 10) {
-            Button { model.path = [] } label: {
+        HStack(spacing: 6) {
+            Button { model.openMenu = nil; model.path = [] } label: {
                 HStack(spacing: 10) {
                     Image("Logo").resizable().frame(width: 30, height: 30)
                     Text("Winetastr").font(.medium(17)).foregroundStyle(Color.paper)
@@ -268,30 +264,13 @@ struct TopBar: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            Button {
-                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
-            } label: {
-                HStack(spacing: 5) { Text(flag); SiteIcon("chev", size: 14).foregroundStyle(Color.muted) }
-                    .frame(minWidth: 44, minHeight: 44)
-            }
-            .accessibilityLabel(L("app.language"))
-            Menu {
-                if let onAddInvite { Button(L("app.addInvitation"), systemImage: "link", action: onAddInvite) }
-                Button(L("nav.signOut"), systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) { confirmOut = true }
-            } label: {
-                HStack(spacing: 5) {
-                    SiteIcon("user", size: 24).foregroundStyle(Color.paper)
-                    SiteIcon("chev", size: 14).foregroundStyle(Color.muted)
-                }
-                .frame(minWidth: 44, minHeight: 44)
-            }
-            .accessibilityLabel(L("app.account"))
+            // The language and the account: the site's dropdowns (the one menu, Menu.swift)
+            MenuButton(id: .language, accessibilityLabel: L("profile.language")) { FlagImage(code: model.language).opacity(0.85) }
+            MenuButton(id: .account, accessibilityLabel: L("nav.userMenu")) { SiteIcon("user", size: 23).foregroundStyle(Color.paper) }
         }
-        .padding(.horizontal, 16).frame(minHeight: 54)
+        .padding(.leading, 16).padding(.trailing, 8).frame(minHeight: 54)
         .background(Color.surface)
-        .confirmationDialog(L("nav.signOut"), isPresented: $confirmOut) {
-            Button(L("nav.signOut"), role: .destructive) { Task { await model.signOut() } }
-        }
+        .zIndex(10)
     }
 }
 

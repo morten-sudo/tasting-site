@@ -40,6 +40,8 @@ struct Wine: Decodable, Hashable, Identifiable {
     let abv: Double?; let price_dkk: Double?; let retail_price_dkk: Double?; let description: String?; let image_url: String?; let details: String?
     let country: String?; let region: String?; let appellation: String?; let producer_website: String?
     let producer_address: String?; let grapes: String?; let food_pairing: String?; let serving: String?; let blind: Bool?
+    let appellation_id: String?; let producer_lat: Double?; let producer_lon: Double?
+    let orderable: Bool?; let ordered: Int?; let price_tiers: [PriceTier]?
     var isBlind: Bool { blind ?? false }
     var imageURL: URL? {
         guard let image_url, !image_url.isEmpty else { return nil }
@@ -65,8 +67,29 @@ struct Wine: Decodable, Hashable, Identifiable {
     }
 }
 
+/// A quantity price: from qty bottles, price each
+struct PriceTier: Decodable, Hashable { let qty: Int; let price: Double }
+
 struct MyRating: Decodable { let wine_id: Int; let rating: Int?; let note: String? }
-struct Profile: Decodable { let email: String?; let name: String? }
+struct Profile: Decodable { let email: String?; let name: String?; let is_host: Bool? }
+
+/// A wine in "My wine book" (my_wine_book)
+struct BookWine: Decodable, Identifiable {
+    let wine_id: Int; let name: String; let producer: String?; let vintage: String?; let style: String?; let image_url: String?
+    let appellation: String?; let region: String?; let country: String?; let slug: String; let title: String; let starts_at: String?
+    let sort_order: Int?; let rating: Int?; let note: String?; let rated_at: String?; let bought: Int
+    var id: String { "\(slug)-\(wine_id)" }
+    var imageURL: URL? {
+        guard let image_url, !image_url.isEmpty else { return nil }
+        return URL(string: image_url.hasPrefix("/") ? "https://winetastr.com" + image_url : image_url)
+    }
+}
+
+/// One line of an order (get_my_orders, my_orders); slug and title are filled in for the wine book
+struct OrderLine: Decodable {
+    let order_id: Int; let created_at: String; let paid: Bool; var slug: String?; var title: String?
+    let wine_id: Int?; let wine_name: String; let quantity: Int; let unit_price: Double
+}
 
 private struct CodeParam: Encodable, Sendable { let code: String }
 private struct EmailParam: Encodable, Sendable { let e: String }
@@ -74,6 +97,7 @@ private struct SetEmail: Encodable, Sendable { let code: String; let e: String }
 private struct Respond: Encodable, Sendable { let code: String; let attending: Bool; let note: String? }
 private struct Rate: Encodable, Sendable { let code: String; let w_id: Int; let stars: Int?; let note: String? }
 private struct Usage: Encodable, Sendable { let feature: String }
+private struct Codes: Encodable, Sendable { let codes: [String] }
 
 enum Backend {
     private static func decode<T: Decodable>(_ data: Data) throws -> T { try JSONDecoder().decode(T.self, from: data) }
@@ -114,6 +138,23 @@ enum Backend {
         return (try? JSONDecoder().decode(Bool.self, from: data)) ?? true
     }
     static func linkMe() async { _ = try? await supabase.rpc("link_me_tastings").execute() }
+    static func wineBook(_ codes: [String]) async throws -> [BookWine] {
+        try decode(try await supabase.rpc("my_wine_book", params: Codes(codes: codes)).execute().data)
+    }
+    static func myOrders(_ code: String) async throws -> [OrderLine] {
+        try decode(try await supabase.rpc("get_my_orders", params: CodeParam(code: code)).execute().data)
+    }
+    /// Signed in: every order of the email, with the tasting
+    static func allMyOrders() async throws -> [OrderLine] {
+        try decode(try await supabase.rpc("my_orders").execute().data)
+    }
+    static func profile() async throws -> Profile? {
+        try? decode(try await supabase.rpc("my_profile").execute().data)
+    }
+    /// A shared list the site reads straight from its table (the appellations, regions and places for the maps)
+    static func table<T: Decodable>(_ name: String, _ columns: String) async throws -> [T] {
+        try decode(try await supabase.from(name).select(columns).execute().data)
+    }
     static func logLogin() async { _ = try? await supabase.rpc("log_usage", params: Usage(feature: "login")).execute() }
 }
 

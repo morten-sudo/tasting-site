@@ -8,7 +8,7 @@ final class GuestFlowTests: XCTestCase {
 
     private func app(_ args: [String]) -> XCUIApplication {
         let a = XCUIApplication()
-        a.launchArguments = ["-AppleLanguages", "(da)", "-AppleLocale", "da_DK"] + args
+        a.launchArguments = ["-AppleLanguages", "(da)", "-AppleLocale", "da_DK", "-appLanguage", "da"] + args
         a.launch()
         return a
     }

@@ -4,6 +4,8 @@ import Supabase
 /// The site's /login/: the cellar photo with the claim, and the card with the two steps.
 struct LoginView: View {
     @Environment(AppModel.self) private var model
+    /// Opened from a page (the wine book, the profile) to sign in with the email: a way back
+    var onClose: (() -> Void)? = nil
     private enum Step { case email, code }
     @State private var step = Step.email
     @State private var email = ""
@@ -30,6 +32,10 @@ struct LoginView: View {
                 Image("Logo").resizable().frame(width: 30, height: 30)
                 Text("Winetastr").font(.medium(17)).foregroundStyle(Color.paper)
                 Spacer()
+                if let onClose {
+                    Button(action: onClose) { SiteIcon("x", size: 20).foregroundStyle(Color.muted).frame(width: 44, height: 44) }
+                        .accessibilityLabel(L("common.cancel"))
+                }
             }
             .padding(.horizontal, 16).frame(minHeight: 54).background(Color.surface)
         }

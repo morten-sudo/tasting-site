@@ -11,17 +11,20 @@ struct HomeView: View {
         @Bindable var model = model
         NavigationStack(path: $model.path) {
             VStack(spacing: 0) {
-                TopBar(onAddInvite: { showAddLink = true })
+                TopBar()
                 Rectangle().fill(Color.rule).frame(height: 1)
                 content.frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .background(Color.lodge)
+            .siteMenus()
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showAddLink) { AddInviteSheet { Task { await load() } } }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .tasting(let t): TastingView(tasting: t)
                 case .wine(let t, let w, let n): WineDetailView(tasting: t, wine: w, position: n)
+                case .book: BookView()
+                case .profile: ProfileView()
                 }
             }
         }
@@ -53,6 +56,8 @@ struct HomeView: View {
                     Text(L("nav.myTastings")).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)
                     if !upcoming.isEmpty { section(L("home.upcomingMany"), upcoming) }
                     if !past.isEmpty { section(L("tastings.past"), past) }
+                    // Another invitation: quietly under the list (the empty list has it as its one button)
+                    Button(L("app.addInvitation")) { showAddLink = true }.buttonStyle(TextButton(size: 14.4, quiet: true))
                 }
                 .padding(16)
             }
@@ -74,7 +79,11 @@ struct HomeView: View {
             let list = try await model.loadTastings()
             tastings = list; failed = false; loaded = true
             #if DEBUG
-            if model.path.isEmpty, UserDefaults.standard.string(forKey: "route") != nil, let t = list.first { model.path = [.tasting(t)] }
+            let route = UserDefaults.standard.string(forKey: "route")
+            if model.path.isEmpty, route == "book" { model.path = [.book] }
+            else if model.path.isEmpty, route == "profile" { model.path = [.profile] }
+            else if model.path.isEmpty, route != nil, route != "home", let t = list.first { model.path = [.tasting(t)] }
+            if let m = UserDefaults.standard.string(forKey: "openMenu") { model.openMenu = m == "language" ? .language : .account }
             #endif
         } catch {
             failed = true; loaded = true

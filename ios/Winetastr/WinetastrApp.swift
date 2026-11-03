@@ -18,6 +18,8 @@ struct WinetastrApp: App {
 enum Route: Hashable {
     case tasting(MyTasting)
     case wine(MyTasting, Wine, Int)
+    case book
+    case profile
 }
 
 @MainActor @Observable
@@ -28,7 +30,20 @@ final class AppModel {
     private(set) var online = true
     var path: [Route] = [] { didSet { if path.isEmpty { tastingTab = .home } } }
     var tastingTab = TastingTab.home
+    /// The menu open in the top bar or on the page (one at a time, as on the site)
+    var openMenu: MenuID?
+    /// The language shown; changing it redraws every screen in place (the stack of screens is kept)
+    private(set) var language = AppLanguage.code
     private let monitor = NWPathMonitor()
+
+    func setLanguage(_ code: String) {
+        guard code != language else { return }
+        UserDefaults.standard.set(code, forKey: AppLanguage.key)
+        AppLanguage.chosen = code
+        // The phone's own texts (dates, the keyboard) follow from the next start
+        UserDefaults.standard.set([code], forKey: "AppleLanguages")
+        language = code
+    }
 
     init() {
         monitor.pathUpdateHandler = { [weak self] p in
@@ -98,6 +113,8 @@ struct RootView: View {
                 LoginView()
             }
         }
+        .id(model.language)
+        .environment(\.locale, appLocale)
         .task {
             #if DEBUG
             await SelfTest.runIfAsked()

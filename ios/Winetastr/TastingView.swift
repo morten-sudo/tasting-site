@@ -29,6 +29,7 @@ struct TastingView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.lodge)
+        .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
         .onChange(of: model.online) { if model.online && failed { Task { await load() } } }

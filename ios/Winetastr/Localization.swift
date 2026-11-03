@@ -1,15 +1,37 @@
 import Foundation
 
+/// The app's languages, as on the site (LANGS in src/i18n/index.ts) – the ones the app has texts for.
+let appLanguages: [(code: String, name: String)] = [("da", "Dansk"), ("en", "English"), ("is", "Íslenska")]
+
+/// The language the app is shown in: the one picked in the app (the flag in the top bar, or the profile), else the phone's.
+enum AppLanguage {
+    static let key = "appLanguage"
+    /// Picked during this run (the launch arguments of the tests outrank what is saved)
+    static var chosen: String?
+    static var code: String {
+        if let chosen { return chosen }
+        if let c = UserDefaults.standard.string(forKey: key), appLanguages.contains(where: { $0.code == c }) { return c }
+        return Bundle.main.preferredLocalizations.first ?? "en"
+    }
+    private static var cache: (String, Bundle)?
+    static var bundle: Bundle {
+        let c = code
+        if let cache, cache.0 == c { return cache.1 }
+        let b = Bundle.main.path(forResource: c, ofType: "lproj").flatMap(Bundle.init(path:)) ?? .main
+        cache = (c, b)
+        return b
+    }
+}
+
 /// A text from Localizable.xcstrings. Keys match the website's dictionaries where the text exists there.
 func L(_ key: String, _ values: [String: String] = [:]) -> String {
-    var text = String(localized: String.LocalizationValue(key))
+    var text = AppLanguage.bundle.localizedString(forKey: key, value: nil, table: nil)
     for (name, value) in values { text = text.replacingOccurrences(of: "{\(name)}", with: value) }
     return text
 }
 
-/// The language the app is actually shown in (follows the phone, or Settings → Winetastr → Language).
-var appLocale: Locale { Locale(identifier: Bundle.main.preferredLocalizations.first ?? "en") }
-var appLanguageCode: String { Bundle.main.preferredLocalizations.first ?? "en" }
+var appLocale: Locale { Locale(identifier: appLanguageCode) }
+var appLanguageCode: String { AppLanguage.code }
 
 private let isoFractional: ISO8601DateFormatter = {
     let f = ISO8601DateFormatter(); f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]; return f

@@ -11,6 +11,7 @@ login.mailLead login.sendCode login.sentTo login.enterIt login.codeLabel login.s
 login.inviteHelp login.inviteLabel login.unknownEmail login.tooManyMails login.sendFailed login.wholeCode login.tooManyTries login.wrongCode
 login.resent login.pasteCode login.codeNotFound login.otherInvite login.tooManyChecks
 nav.tasting wines.intro wines.readMore wines.position wine.all wine.vintage loginx.claim loginx.noPassword loginx.or loginx.code login.title rating.notePlaceholder home2.hello login.lostHint
+nav.home nav.profile nav.userMenu book.title book.linkText book.statWines book.statTastings book.statBottles book.linkOnly book.tabWines book.tabTastings book.tabOrders book.sort book.sortRecent book.sortRating book.sortName book.noWines book.noWinesTitle book.noMatch book.tastedAt book.bought book.ordersSum book.showAll book.noOrdersText tastings.none profile.name profile.nameHint profile.linkOnly profile.language profile.edit profile.noOrders profile.emailConfirm profile.emailNotChanged host.nameMissing admin.changesNotSaved adminTasting.search pay.orderComment cart.total cart.paid cart.awaiting
 style.Red style.WhiteWine style.Rose style.Orange style.Sparkling style.Sweet style.Fortified style.Other'''.split()
 APP = {
  'app.previous': ('Forrige','Previous','Fyrri'),
