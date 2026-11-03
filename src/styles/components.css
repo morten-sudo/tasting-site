@@ -785,7 +785,9 @@ dialog .input { max-width: none; }
 .llead .thumb { --pad: 0.5rem; width: 6rem; height: auto; min-height: 5.6rem; margin-top: 0.2rem; }
 .lrow:has(> .llead > .thumb) { align-items: stretch; }
 .lrow:has(> .llead > .thumb) > :is(.laside, .lacts) { align-self: center; }
-.lrow:has(> .llead > .thumb) > .lmain { align-self: start; }
+.lrow:has(> .llead > .thumb) > .lmain { align-self: stretch; display: flex; flex-direction: column; align-items: flex-start; }
+/* …and the chips always on the bottom line, level with the frame's bottom, whether a price line is there or not */
+.lrow:has(> .llead > .thumb) > .lmain > .chips { margin-top: auto; padding-top: 0.4rem; }
 .llead:has(> .thumb) { align-items: stretch; align-self: stretch; }
 .llead:has(> .thumb) > :is(.lno, .grip) { align-self: flex-start; line-height: 1.4; margin-top: -0.1rem; }
 .grip {
