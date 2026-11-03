@@ -140,7 +140,7 @@ export function initWhen(prefix: string) {
 
   // Picking a date with no time suggests 19:00, which the host can change
   hidden.addEventListener('change', () => { if (hidden.value && !el(prefix, 'time').value) el(prefix, 'time').value = '19:00'; });
-  // Times: written as 19:00 when the field is left; quick picks under the start time
+  // Times: written as 19:00 when the field is left
   for (const name of ['time', 'end']) {
     const input = el(prefix, name);
     input.addEventListener('blur', () => {
@@ -149,10 +149,6 @@ export function initWhen(prefix: string) {
       else input.value = n;
     });
   }
-  document.querySelectorAll<HTMLButtonElement>(`#${prefix}-quick button`).forEach((b) => b.addEventListener('click', () => {
-    el(prefix, 'time').value = b.dataset.time!;
-    fieldError(el(prefix, 'time'), null);
-  }));
   showDate(prefix);
 }
 

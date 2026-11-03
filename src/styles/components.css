@@ -362,8 +362,6 @@ dialog .dd.full { max-width: none; }
 .dt-day.today { box-shadow: inset 0 0 0 1px var(--lodge-3); font-weight: 600; }
 .dt-day.chosen { background: var(--amber); color: #fff; font-weight: 600; }
 .dt-day:disabled { color: var(--lodge-3); cursor: default; }
-.dt-quick { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.45rem 0 0.2rem; }
-.dt-quick .btn { padding-inline: 0.7rem; font-variant-numeric: tabular-nums; }
 @media (max-width: 34rem) { .dt-row { grid-template-columns: 1fr; } }
 
 /* ---------- 14 Address (src/components/AddressFields.astro, src/lib/address.ts); the country is the dropdown (7) ---------- */

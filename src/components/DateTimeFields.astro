@@ -1,10 +1,8 @@
 ---
 import Icon from './ui/Icon.astro';
-// Component 13 – date and time: the date (our own calendar, see datetime.ts), start and end time, with quick picks
-// for the start. Styles: src/styles/components.css.
+// Component 13 – date and time: the date (our own calendar, see datetime.ts), start and end time. Styles: src/styles/components.css.
 // `prefix` makes the ids unique (e.g. "wz" → wz-date).
 const { prefix } = Astro.props as { prefix: string };
-const quick = ['18:00', '18:30', '19:00', '19:30', '20:00'];
 ---
 <div class="dt-row">
   <div class="dt-date">
@@ -26,7 +24,4 @@ const quick = ['18:00', '18:30', '19:00', '19:30', '20:00'];
       <input id={`${prefix}-end`} class="input dt-time" type="text" inputmode="numeric" placeholder="23:00" autocomplete="off" maxlength="5" />
     </div>
   </div>
-</div>
-<div id={`${prefix}-quick`} class="dt-quick" aria-label="Start time" data-i18n-attr="aria-label=dt.start">
-  {quick.map((q) => <button type="button" class="btn small secondary" data-time={q}>{q}</button>)}
 </div>
