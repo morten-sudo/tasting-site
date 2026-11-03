@@ -38,13 +38,14 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
           <Icon name="chev" class="chev" />
         </button>
         <div id="user-menu" class="menu right" role="menu" hidden>
-          <a class="opt-i" role="menuitem" href="/home/" data-i18n="nav.home">Home</a>
-          <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden data-i18n="nav.admin">Admin</a>
-          <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden data-i18n="nav.superadmin">Superadmin</a>
-          <a class="opt-i" role="menuitem" href="/my/" data-i18n="book.title">My wine book</a>
-          <a class="opt-i" role="menuitem" href="/profile/" data-i18n="nav.profile">My profile</a>
+          <!-- Each place with its icon (the same icons as in the menus and buttons elsewhere) -->
+          <a class="opt-i" role="menuitem" href="/home/"><Icon name="home" /><span data-i18n="nav.home">Home</span></a>
+          <a id="um-admin" class="opt-i" role="menuitem" href="/admin/" hidden><Icon name="gear" /><span data-i18n="nav.admin">Admin</span></a>
+          <a id="um-super" class="opt-i" role="menuitem" href="/superadmin/" hidden><Icon name="shield" /><span data-i18n="nav.superadmin">Superadmin</span></a>
+          <a class="opt-i" role="menuitem" href="/my/"><Icon name="book" /><span data-i18n="book.title">My wine book</span></a>
+          <a class="opt-i" role="menuitem" href="/profile/"><Icon name="user" /><span data-i18n="nav.profile">My profile</span></a>
           <hr />
-          <button id="logout" class="opt-i quiet" role="menuitem" type="button" data-i18n="nav.signOut">Sign out</button>
+          <button id="logout" class="opt-i quiet" role="menuitem" type="button"><Icon name="logout" /><span data-i18n="nav.signOut">Sign out</span></button>
         </div>
       </div>
       <a id="user-out" href="/login/" class="icon-act md close tip-below" aria-label="Sign in" data-tip="Sign in" data-i18n-attr="aria-label=nav.signIn;data-tip=nav.signIn" hidden><Icon name="user" /></a>

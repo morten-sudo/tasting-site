@@ -248,6 +248,9 @@ dialog .dd.full { max-width: none; }
 .menu .opt-i.all { font-weight: 500; }
 .menu .opt-i.act { color: var(--amber); font-weight: 500; }
 .menu .opt-i.quiet { color: var(--muted); }
+/* An item's own icon before its name (the account menu): quiet, the same size as the text's line */
+.menu .opt-i > svg.i:not(.ck) { width: 1.1rem; height: 1.1rem; color: var(--muted); flex: none; }
+.menu .opt-i:hover > svg.i:not(.ck), .menu .opt-i[aria-current] > svg.i:not(.ck) { color: var(--amber); }
 /* Two lines: a name with a line under it (a tasting and its date, a wine and its type) */
 .menu .opt-i .opt-txt { display: grid; gap: 0.1rem; min-width: 0; flex: 1; }
 .menu .opt-i .opt-txt > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
