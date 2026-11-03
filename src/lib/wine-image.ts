@@ -9,6 +9,10 @@ const MAX_SIDE = 1200;
 /** The picture is already ours (or there is none) */
 export const isStored = (url: string | null | undefined) => !url || url.includes('/storage/v1/object/public/' + BUCKET + '/');
 
+const toBlob = (c: HTMLCanvasElement, type: string, q?: number) => new Promise<Blob | null>((r) => c.toBlob(r, type, q));
+
+/** Smaller; a picture that may be transparent (png, webp, gif, avif) stays transparent: WebP, or PNG where the
+ *  browser cannot write WebP. A photo (jpeg) stays JPEG. */
 async function shrink(blob: Blob): Promise<Blob | null> {
   const bitmap = await createImageBitmap(blob).catch(() => null);
   if (!bitmap) return null;
@@ -16,12 +20,10 @@ async function shrink(blob: Blob): Promise<Blob | null> {
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext('2d')!;
-  // Transparent bottle shots get the white they are shown on
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.86));
+  canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  if (/jpe?g/i.test(blob.type)) return toBlob(canvas, 'image/jpeg', 0.86);
+  const webp = await toBlob(canvas, 'image/webp', 0.86);
+  return webp?.type === 'image/webp' ? webp : toBlob(canvas, 'image/png');
 }
 
 /** Stores a picture from a web address; its address on our storage, or null when it cannot be fetched */
@@ -37,8 +39,9 @@ export async function storeImage(url: string, hostId: string): Promise<string | 
     if (!res.ok) return null;
     const small = await shrink(await res.blob());
     if (!small) return null;
-    const path = `${hostId}/${crypto.randomUUID()}.jpg`;
-    const { error } = await supabase.storage.from(BUCKET).upload(path, small, { contentType: 'image/jpeg', upsert: false });
+    const ext = small.type === 'image/webp' ? 'webp' : small.type === 'image/png' ? 'png' : 'jpg';
+    const path = `${hostId}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from(BUCKET).upload(path, small, { contentType: small.type, upsert: false });
     return error ? null : supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   } catch { return null; }
 }
