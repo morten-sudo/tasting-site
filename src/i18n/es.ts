@@ -1502,4 +1502,5 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "pay.scan": "Escanea el código con la cámara del móvil: MobilePay se abre con el número, el importe y el mensaje ya rellenados.",
   "pay.qrLabel": "Código QR que abre MobilePay en tu móvil",
   "pay.fallbackScan": "Si el código no funciona, abre MobilePay en el móvil y usa los datos de arriba.",
+  "inviteMail.againQ": "¿Enviar de nuevo la invitación a {name}?",
 };

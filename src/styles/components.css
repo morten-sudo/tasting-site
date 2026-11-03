@@ -812,6 +812,11 @@ span.ltitle { cursor: default; }
   .lrow:has(> .llead > .grip):has(> .lacts > :nth-child(2)) { grid-template-areas: 'lead main main' 'lead aside acts'; }
   .lrow:has(> .llead > .grip):has(> .lacts > :nth-child(2)) > .lacts { align-self: end; margin-right: -0.35rem; }
   .lrow:has(> .llead > .grip):has(> .lacts > :nth-child(2)) > .laside { align-self: center; }
+  /* Three or more icons (a tasting's guests: mail, link, edit, remove): the same – the icons on the bottom line, right,
+     so name, email and chips keep the whole width */
+  .lrow:has(> .lacts > :nth-child(3)) { grid-template-areas: 'lead main main' 'lead aside acts'; }
+  .lrow:has(> .lacts > :nth-child(3)) > .lacts { align-self: end; margin-right: -0.35rem; }
+  .lrow:has(> .lacts > :nth-child(3)) > .laside { align-self: center; }
   .llead .thumb { width: 2.6rem; height: 3.2rem; }
   .llead .lno { font-size: 1.2rem; }
   .llead .grip { height: 1.75rem; }

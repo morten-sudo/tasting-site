@@ -1502,4 +1502,5 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "pay.scan": "Scan de code met de camera van je telefoon – MobilePay opent met nummer, bedrag en bericht al ingevuld.",
   "pay.qrLabel": "QR-code die MobilePay op je telefoon opent",
   "pay.fallbackScan": "Werkt de code niet, open dan MobilePay op je telefoon en gebruik de gegevens hierboven.",
+  "inviteMail.againQ": "De uitnodiging opnieuw naar {name} sturen?",
 };

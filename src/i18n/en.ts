@@ -1501,4 +1501,5 @@ export const en = {
   "pay.scan": "Scan the code with your phone's camera – MobilePay opens with the number, the amount and the message filled in.",
   "pay.qrLabel": "QR code that opens MobilePay on your phone",
   "pay.fallbackScan": "If the code doesn't work, open MobilePay on your phone and use the details above.",
+  "inviteMail.againQ": "Send the invitation to {name} again?",
 } as const;

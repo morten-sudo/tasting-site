@@ -822,14 +822,16 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (p.diet) chips.push({ text: p.diet });
     if (p.note) chips.push({ text: t('guestRow.note'), title: p.note });
     const n = bottlesOf(p);
-    // Never invited: send the invitation (with an email) or copy the link (without) – each in a column of its own,
-    // so the same icon is always in the same place down the list; an empty place keeps the columns (a column only when
-    // some guest in the list needs it). The rest is in the panel.
-    const invite = !p.invite_mailed_at && p.status === 'invited';
-    const mail = invite && p.email ? iconButton('mail', t('inviteMail.send')) : iconSpacer();
-    if (invite && p.email) mail.addEventListener('click', () => sendInvite(p, mail as HTMLButtonElement));
-    const link = invite && !p.email ? iconButton('link', t('admin.copyLink')) : iconSpacer();
-    if (invite && !p.email) link.addEventListener('click', () => copyInvite(p));
+    // Every guest: copy their link; every guest with an email: mail the invitation (again – asked first once it has
+    // been sent). Each in a column of its own, so the same icon is always in the same place down the list; an empty
+    // place keeps the columns. The rest is in the panel.
+    const mail = p.email ? iconButton('mail', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send')) : iconSpacer();
+    if (p.email) mail.addEventListener('click', async () => {
+      if (p.invite_mailed_at && !(await confirmModal({ title: t('inviteMail.againQ', { name: p.name }), text: t('inviteMail.sentAt', { when: mailedWhen(p.invite_mailed_at) }), ok: t('inviteMail.again') }))) return;
+      sendInvite(p, mail as HTMLButtonElement);
+    });
+    const link = iconButton('link', t('admin.copyLink'));
+    link.addEventListener('click', () => copyInvite(p));
     const actions: HTMLElement[] = [...(cols.mail ? [mail] : []), ...(cols.link ? [link] : [])];
     const edit = iconButton('edit', `${t('admin.edit')}: ${p.name}`);
     edit.dataset.tip = t('admin.edit');
@@ -943,9 +945,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         || (a.status === 'waitlist' ? (a.waitlisted_at ?? '').localeCompare(b.waitlisted_at ?? '') : 0)
         || a.name.localeCompare(b.name, 'da'))
       .filter(matches);
-    // The invitation columns are only there when a guest in the list needs them
-    const uninvited = sorted.filter((p) => !p.invite_mailed_at && p.status === 'invited');
-    const cols = { mail: uninvited.some((p) => p.email), link: uninvited.some((p) => !p.email) };
+    // The mail column is only there when a guest in the list has an email
+    const cols = { mail: sorted.some((p) => p.email), link: true };
     for (const p of sorted) list.append(guestCard(p, cols));
     // No guests at all is not "none match": say how to start – or how to see them all again
     list.hidden = !sorted.length;
