@@ -1,5 +1,6 @@
 ---
-// One tenant: /superadmin/tenants/<id>/<section>/ (rewritten to this page in public/_redirects).
+// One tenant: /superadmin/tenants/<slug>/<section>/ (rewritten to this page in public/_redirects). An old link with
+// the account's id still works and is replaced by the slug address.
 // The parts (hosts, tastings, guests, wines, payments, log) are chosen in the menu on the left.
 import Base from '../../layouts/Base.astro';
 import Tabs from '../../components/ui/Tabs.astro';
@@ -68,15 +69,16 @@ import '../../styles/admin.css';
   import { toast } from '../../lib/toast';
   import { supabase } from '../../lib/supabase';
   import { t, type Key } from '../../i18n';
-  import { requireAdmin, $, mk, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
+  import { requireAdmin, $, mk, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection, tenantUrl, rememberTenantSlug } from '../../lib/super-common';
   import { personRow } from '../../lib/ui/list-row';
   import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
   import { styleName } from '../../lib/wines';
   import { table, type Column } from '../../lib/ui/table';
   import { wineThumb } from '../../lib/ui/thumb';
 
-  const m = location.pathname.match(/^\/superadmin\/tenants\/([0-9a-f-]{36})\/(?:([a-z]+)\/?)?$/);
-  const id = m?.[1] ?? '';
+  const m = location.pathname.match(/^\/superadmin\/tenants\/([a-z0-9-]+)\/(?:([a-z]+)\/?)?$/);
+  // The address names the account by its slug (or, in an old link, its id); the id is looked up once signed in
+  let id = '';
   const date = dateFmt();
   const time = timeFmt();
   const loaded = new Set<string>();
@@ -94,7 +96,7 @@ import '../../styles/admin.css';
     window.scrollTo({ top: 0 });
   });
   window.addEventListener('popstate', () => {
-    const s = location.pathname.match(/\/tenants\/[0-9a-f-]{36}\/([a-z]+)\//)?.[1] ?? 'hosts';
+    const s = location.pathname.match(/\/tenants\/[a-z0-9-]+\/([a-z]+)\//)?.[1] ?? 'hosts';
     show(s);
   });
 
@@ -206,10 +208,15 @@ import '../../styles/admin.css';
 
   // Start once everything above is defined
   if (await requireAdmin()) {
+    if (m?.[1]) id = ((await supabase.rpc('admin_tenant_id', { ref: m[1] })).data as string | null) ?? '';
     const { data } = id ? await supabase.rpc('admin_tenant', { tn: id }) : { data: null };
     if (!data) $('not-found').hidden = false;
     else {
-      const tn = data as { name: string; plan: string; created_at: string; owner_name: string | null; owner_email: string };
+      const tn = data as { slug: string; name: string; plan: string; created_at: string; owner_name: string | null; owner_email: string };
+      // An old link (the id) or a renamed account: the address becomes the account's slug
+      rememberTenantSlug(id, tn.slug);
+      const here = tenantUrl(id, TENANT_SECTIONS.some((s) => s.id === m?.[2]) ? m![2] : 'hosts');
+      if (location.pathname !== here) history.replaceState(null, '', here + location.search);
       $('tenant').hidden = false;
       $('tn-name').textContent = tn.name;
       document.title = `${tn.name} – Superadmin`;

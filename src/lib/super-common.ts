@@ -12,7 +12,7 @@ export function cell(text: string, cls = '') {
 export const dateFmt = () => new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
 export const timeFmt = () => new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-/** The parts of one tenant, each with its address /superadmin/tenants/<id>/<path> */
+/** The parts of one tenant, each with its address /superadmin/tenants/<slug>/<path> */
 export const TENANT_SECTIONS: { id: string; label: Key }[] = [
   { id: 'hosts', label: 'super.hosts' },
   { id: 'tastings', label: 'adminNav.tastings' },
@@ -21,7 +21,10 @@ export const TENANT_SECTIONS: { id: string; label: Key }[] = [
   { id: 'payments', label: 'adminNav.payments' },
   { id: 'log', label: 'super.log' },
 ];
-export const tenantUrl = (id: string, section = 'hosts') => `/superadmin/tenants/${id}/${section === 'hosts' ? '' : section + '/'}`;
+// Accounts are addressed by their slug ("askes-konto"), loaded once when the superadmin signs in; the id is the fallback
+const slugs = new Map<string, string>();
+export const rememberTenantSlug = (id: string, slug: string) => { if (slug) slugs.set(id, slug); };
+export const tenantUrl = (id: string, section = 'hosts') => `/superadmin/tenants/${slugs.get(id) ?? id}/${section === 'hosts' ? '' : section + '/'}`;
 
 /** Signed in as a Winetastr administrator? Sets up the menu; false shows the "only for administrators" notice. */
 export async function requireAdmin(): Promise<boolean> {
@@ -30,6 +33,8 @@ export async function requireAdmin(): Promise<boolean> {
   if (!s.session) { location.replace('/login/?next=' + encodeURIComponent(location.pathname)); return false; }
   const { data: admin } = await supabase.rpc('is_admin');
   if (admin !== true) { $('denied').hidden = false; return false; }
+  const { data: list } = await supabase.rpc('admin_tenant_slugs');
+  for (const r of (list ?? []) as { id: string; slug: string }[]) rememberTenantSlug(r.id, r.slug);
   $('super-main').hidden = false;
   initSideMenu(s.session.user.email ?? '', async () => { await supabase.auth.signOut(); location.href = '/'; });
   return true;
