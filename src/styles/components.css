@@ -1015,7 +1015,7 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .t-switch[aria-expanded='true'] > .chev { transform: rotate(180deg); }
 .t-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 16rem; min-width: 0; }
 .t-title:empty::before { content: '…'; color: var(--muted); }
-.t-admin { margin-left: auto; }
+.t-admin { margin-left: auto; align-self: center; }
 .ctx { position: relative; }
 .t-menu { left: 0; top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
 .t-menu .m-list { max-height: 50vh; }

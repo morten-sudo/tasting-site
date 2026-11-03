@@ -65,7 +65,7 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
           { id: 'chat', label: 'nav.chat', href: '/home/', attrs: { 'data-tpath': 'chat/' } },
         ]} />
         <!-- The host's way into this tasting's admin: the settings icon (opens in a new tab) -->
-        <a id="t-admin" class="icon-act md t-admin tip-below" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" aria-label="Manage this tasting" data-tip="Manage this tasting" data-i18n-attr="aria-label=nav.adminThisTitle;data-tip=nav.adminThisTitle" hidden><Icon name="gear" /></a>
+        <a id="t-admin" class="icon-act t-admin tip-below" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" aria-label="Manage this tasting" data-tip="Manage this tasting" data-i18n-attr="aria-label=nav.adminThisTitle;data-tip=nav.adminThisTitle" hidden><Icon name="gear" /></a>
       </div>
       <!-- Larger screens: the one menu under the name; phones: the same items in the one side panel (a bottom sheet) -->
       <div id="t-menu" class="menu t-menu" role="menu" hidden>
