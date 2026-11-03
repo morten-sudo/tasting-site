@@ -370,6 +370,8 @@ begin
   assert failed, 'anyone can call link_me_tastings';
   failed := false; begin perform * from my_tasting_roles(); exception when others then failed := true; end;
   assert failed, 'anyone can call my_tasting_roles';
+  -- Sign-up's check tells only whether a host account exists – never about guests
+  assert not signup_email_taken('guest-a@selftest.invalid'), 'the sign-up check reveals a guest';
   -- …while a guest's own chat works
   perform post_chat('selftestaa', 'hi from A');
   select count(*) into n from get_chat('selftestaa') c where c.mine;                                        assert n = 2, 'guest A cannot see own messages';
