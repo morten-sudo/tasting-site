@@ -1337,4 +1337,5 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "signup.comClub": "Integrazione con il club clienti",
   "signup.existsTitle": "Hai già un account",
   "signup.existsText": "Esiste già un account con questa e-mail. Inserisci il codice ricevuto per e-mail per accedere.",
+  "wineAdmin.notes": "Sul vino",
 };

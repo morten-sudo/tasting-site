@@ -1468,4 +1468,5 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "pics.unreadable": "Ekkert vín fannst á síðunni",
   "pics.noReads": "Engir tenglar lesnir enn",
   "pics.noMisses": "Allir tenglar gáfu mynd",
+  "wineAdmin.notes": "Um vínið",
 };

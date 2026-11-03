@@ -579,7 +579,9 @@ dialog .input { max-width: none; }
 .thumb > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
 .thumb > svg { width: 60%; height: 85%; }
 .thumb.sm { width: 2.2rem; height: 2.7rem; }
-.thumb.lg { width: 6rem; height: 8rem; }
+/* Large: white room around the picture – the frame grows so the picture keeps its size (6 × 8 rem) */
+.thumb.lg { width: 7.4rem; height: 9.4rem; }
+.thumb.lg:not(.fill) > img { inset: 0.7rem; width: calc(100% - 1.4rem); height: calc(100% - 1.4rem); }
 /* A picture that fills its place (the wine page, the guests' wine cards): the page gives the size */
 .thumb.fill { width: 100%; height: 100%; border: 0; background: transparent; }
 .thumb.fill > svg { width: auto; height: 82%; max-height: 22rem; }
@@ -629,6 +631,18 @@ dialog .input { max-width: none; }
 /* An icon inside the text (e.g. refresh after "Fetched from"): does not make the line taller than its label */
 .facts dd span > .icon-act { vertical-align: middle; margin-block: -0.5rem; }
 .facts.card { padding: 0.9rem 1rem; }
+/* Ruled: a hairline between the pairs and room around each – for long values (a wine's notes and details) */
+.facts.ruled { row-gap: 0; column-gap: 1.5rem; line-height: 1.55; }
+.facts.ruled > dt, .facts.ruled > dd { padding-block: 0.75rem; border-top: 1px solid var(--lodge-3); }
+.facts.ruled > :is(dt, dd):nth-child(-n + 2), .facts.ruled > dd.full:first-child { border-top: 0; }
+.facts.ruled.card { padding-block: 0.2rem; }
+.facts.ruled > dt { padding-right: 0.5rem; }
+@media (max-width: 34rem) {
+  .facts.ruled { grid-template-columns: minmax(0, 1fr); }
+  .facts.ruled > dt { padding-bottom: 0.1rem; font-size: 0.85rem; }
+  .facts.ruled > dd { border-top: 0; padding-top: 0; }
+  .facts.ruled > dt:first-child { border-top: 0; }
+}
 /* Phones: the label over its value – not in the payment box, where the labels are short and the copy buttons line up */
 @media (max-width: 26rem) { .facts:not(:has(dd > .icon-act)) { grid-template-columns: minmax(0, 1fr); row-gap: 0.1rem; } .facts:not(:has(dd > .icon-act)) dd { margin-bottom: 0.5rem; } .facts dd:last-child { margin-bottom: 0; } }
 

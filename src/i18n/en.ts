@@ -1467,4 +1467,5 @@ export const en = {
   "pics.unreadable": "No wine found on the page",
   "pics.noReads": "No links read yet",
   "pics.noMisses": "Every link gave a picture",
+  "wineAdmin.notes": "About the wine",
 } as const;

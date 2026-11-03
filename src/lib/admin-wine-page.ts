@@ -62,10 +62,14 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     facts.push({ label: t('wineLib.offer'), value: t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
       { price: formatKr(w.offer_price_dkk), n: w.offer_quantity ?? 1 }).replace(/^[^:]*:\s*/, '') });
   }
+  // The wine's own notes (style, origin, ageing, taste …) on their own, the shop and producer facts below
+  const notes: Fact[] = [];
   for (const line of (w.details ?? '').split('\n').map((l) => l.trim()).filter(Boolean)) {
     const [k, ...v] = line.split(':');
-    facts.push(v.length ? { label: k.trim(), value: v.join(':').trim() } : { label: t('admin.details'), value: line });
+    notes.push(v.length && k.length <= 30 ? { label: k.trim(), value: v.join(':').trim() } : { label: '', value: line });
   }
+  fillFacts($('wd-notes'), notes);
+  $('wd-notes-block').hidden = !notes.length;
   if (w.producer_website) {
     const a = mk('a');
     a.href = w.producer_website;
@@ -114,7 +118,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   showMapCredit($('wd-map'), map);
 
   // Only a name so far: say so, with a way to fill in the rest (a shop link or a label photo – or by hand)
-  const empty = !w.image_url && !facts.length && !w.description && !strip && !where.length && !w.producer && !w.style;
+  const empty = !w.image_url && !facts.length && !notes.length && !w.description && !strip && !where.length && !w.producer && !w.style;
   $('wd-empty').hidden = !empty;
   $('wd-empty-fill').onclick = actions.fill ?? actions.edit;
   $('wd-empty-edit').onclick = actions.edit;

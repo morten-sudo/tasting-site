@@ -39,9 +39,13 @@ import '../../styles/admin.css';
             <div>
               <p id="wd-description" class="wd-description" hidden></p>
               <div id="wd-facts-strip"></div>
+              <section id="wd-notes-block" class="wd-block" hidden>
+                <SectionTitle level="eyebrow" as="h2" text="wineAdmin.notes" />
+                <dl id="wd-notes" class="facts ruled card"></dl>
+              </section>
               <section id="wd-facts-block" class="wd-block" hidden>
                 <SectionTitle level="eyebrow" as="h2" text="wineAdmin.facts" />
-                <dl id="wd-facts" class="facts card"></dl>
+                <dl id="wd-facts" class="facts ruled card"></dl>
               </section>
               <section class="wd-block">
                 <SectionTitle level="eyebrow" as="h2" text="wineAdmin.tastings" />

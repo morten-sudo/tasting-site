@@ -275,6 +275,8 @@ const opts = [
             <Facts id="facts-static" items={[{ label: 'admin.date', id: 'fs-1', icon: 'calendar' }, { label: 'nav.wines', id: 'fs-2', icon: 'glass' }, { label: 'nav.quiz', id: 'fs-3' }]} />
             <div id="facts-ts"></div>
           </div>
+          <p class="help">.ruled – a hairline between the pairs, for long values (a wine's notes); on phones the label goes above its value</p>
+          <div id="facts-ruled"></div>
         </section>
 
         <section id="c23" class="dv-comp">
@@ -774,6 +776,7 @@ const opts = [
     setFact($('fs-1'), 'Saturday 14 November 2026, 19:00');
     setFact($('fs-2'), '11 wines');
     setFact($('fs-3'), null);
+    $('facts-ruled').append(facts([{ label: 'Style', value: 'Tawny with an age statement – a blend of several vintages averaging about 10 years.' }, { label: 'Ageing', value: 'Oxidatively matured in oak casks.' }, { label: 'Nose', value: 'Ripe fruit, light caramel, dried fig and walnut.' }, { label: '', value: 'A line without a label spans the whole width.' }], 'ruled card')!);
     $('facts-ts').append(facts([{ label: 'Grapes', value: 'Touriga Nacional, Touriga Franca', icon: 'grapes' }, { label: 'Food', value: 'Blue cheese', icon: 'food' }, { label: 'Serving', value: '16–18 °C', icon: 'serving' }, { label: 'Number', value: '12 34 56 78', copy: { text: '12345678', label: 'Copy the number', done: 'Copied: 12 34 56 78' } }], 'card')!);
     $('flag-line').innerHTML = Object.values(FLAGS).join(' ');
     loadMap(DETAILED_MAPS[0].id).then((m) => {
