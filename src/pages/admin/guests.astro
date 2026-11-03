@@ -1,7 +1,8 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import SearchField from '../../components/ui/SearchField.astro';
-import CloseButton from '../../components/ui/CloseButton.astro';
+import Sheet from '../../components/ui/Sheet.astro';
+import AddRow from '../../components/ui/AddRow.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
@@ -19,57 +20,32 @@ import '../../styles/admin.css';
           <button id="add-toggle" class="btn small" type="button"><Icon name="plus" /><span data-i18n="guestLib.addBtn">Add guest</span></button>
         </div>
 
-        <!-- New guest: a new row that slides in at the top of the list – name and email -->
-        <div class="qa qa-guest">
-          <div id="gl-bar" class="qa-slide" inert>
-            <div class="qa-slide-in">
-              <div class="qa-item qa-new gi-row">
-                <span class="guest-av gi-av" aria-hidden="true">+</span>
-                <div class="qa-body">
-                  <div id="gl-fields" class="gi-fields">
-                    <div class="input qa-field gi-name">
-                      <label for="gl-name" class="visually-hidden" data-i18n="admin.name">Name</label>
-                      <input id="gl-name" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
-                    </div>
-                    <div class="input qa-field gi-email">
-                      <label for="gl-email" class="visually-hidden" data-i18n="common.email">Email</label>
-                      <input id="gl-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
-                    </div>
-                  </div>
-                </div>
-                <div class="qa-actions">
-                  <button id="gl-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
-                  <CloseButton id="gl-close" />
-                </div>
-                <!-- Matches from the library: across the row, from the field to the right edge -->
-                <ul id="gl-hits" class="qa-hits menu static" hidden></ul>
-              </div>
+        <!-- New guest: the one add row (AddRow.astro) at the top of the list – name and email -->
+        <AddRow id="gl" pic="guest">
+          <div id="gl-fields" class="ar-fields">
+            <div class="input">
+              <label for="gl-name" class="visually-hidden" data-i18n="admin.name">Name</label>
+              <input id="gl-name" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
+            </div>
+            <div class="input">
+              <label for="gl-email" class="visually-hidden" data-i18n="common.email">Email</label>
+              <input id="gl-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
             </div>
           </div>
-        </div>
-        <ul id="guest-list" class="tw-list guest-list"></ul>
+          <button slot="actions" id="gl-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
+        </AddRow>
+        <ul id="guest-list" class="list"></ul>
         <div id="guest-empty" class="empty-state" hidden></div>
 
         <!-- Edit a guest: side panel on larger screens, bottom sheet on phones -->
-        <dialog id="guest-panel" class="sheet" aria-labelledby="gf-title">
-        <div class="sheet-head">
-          <h2 id="gf-title" data-i18n="guestLib.editGuest">Edit guest</h2>
-          <CloseButton data-close />
-        </div>
-        <form id="guest-form" class="add-form edit-panel" novalidate>
+        <Sheet id="guest-panel" title="guestLib.editGuest" titleId="gf-title" form="guest-form">
           <label for="gf-name" data-i18n="admin.name">Name</label>
           <input class="input" id="gf-name" type="text" autocomplete="off" required />
           <label for="gf-email"><span data-i18n="common.email">Email</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
           <input class="input" id="gf-email" type="email" autocomplete="off" />
-          <div class="row-actions">
-            <button id="gf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-            <button id="gf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-          </div>
-          <div class="guest-remove">
-            <button id="gf-delete" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="guestLib.delete">Delete guest</span></button>
-          </div>
-        </form>
-        </dialog>
+          <button slot="quiet" id="gf-delete" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="guestLib.delete">Delete guest</span></button>
+          <button slot="foot" id="gf-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+        </Sheet>
       </section>
     </div>
     </AdminNav>
@@ -83,12 +59,14 @@ import '../../styles/admin.css';
   import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
-  import { personRow } from '../../lib/ui/person-row';
-  import { menuGroup, menuHit } from '../../lib/ui/menu';
+  import { personRow } from '../../lib/ui/list-row';
+  import { missing } from '../../lib/ui/list-row';
+  import { avatar } from '../../lib/ui/thumb';
+  import { addRow, hitButton } from '../../lib/ui/add-row';
+  import { highlight as highlightRow } from '../../lib/ui/highlight';
+  import { deleteWithUndo } from '../../lib/ui/delete-undo';
   import { fieldError } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
-  import { confirmModal } from '../../lib/confirm';
-  import { SUPABASE_URL, SUPABASE_KEY } from '../../lib/config';
   import { t } from '../../i18n';
 
   // The guest list: one row per guest, the same as a tasting's guests – initials, name, email, the tastings they are
@@ -99,8 +77,8 @@ import '../../styles/admin.css';
   const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   let guests: G[] = [];
   let editing: G | null = null;
-  // Guests deleted with "Undo" still possible: hidden, deleted for real when the message goes
-  const pendingDelete = new Map<string, { g: G; token: string }>();
+  // Guests deleted with "Undo" still possible: hidden, deleted for real when the toast goes
+  const pendingDelete = new Set<string>();
   const panel = sheetPanel($<HTMLDialogElement>('guest-panel'), { onClose: () => { editing = null; }, dirty: 'form' });
 
 
@@ -112,7 +90,6 @@ import '../../styles/admin.css';
     render();
   }
 
-  const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   const norm = (x: string) => x.trim().toLowerCase().replace(/\s+/g, ' ');
 
   function render() {
@@ -140,91 +117,46 @@ import '../../styles/admin.css';
       });
       const li = personRow({
         name: g.name, onOpen: () => openForm(g),
-        meta: [g.email ?? mk('span', 'guest-missing', t('admin.noEmail'))],
+        meta: [g.email ?? missing()],
         chips: chips.length ? chips : [{ text: t('guestLib.notInvited') }],
-        actions: [edit, del],
+        actions: [edit, del], id: g.id,
       });
-      li.dataset.guest = g.id;
       return li;
     }));
   }
-  function highlight(id: string) {
-    const li = document.querySelector<HTMLElement>(`[data-guest="${id}"]`);
-    if (!li) return;
-    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    li.classList.add('just-saved');
-    setTimeout(() => li.classList.remove('just-saved'), 2600);
-  }
+  const highlight = (id: string) => highlightRow(document.querySelector(`#guest-list [data-id="${id}"]`));
 
-  // ---------- New guest: the row at the top ----------
-  const bar = $('gl-bar');
-  const toggle = $<HTMLButtonElement>('add-toggle');
+  // ---------- New guest: the one add row at the top (src/lib/ui/add-row.ts) ----------
   const nameIn = $<HTMLInputElement>('gl-name');
   const emailIn = $<HTMLInputElement>('gl-email');
-  const hits = $('gl-hits');
-  toggle.setAttribute('aria-controls', 'gl-bar');
-  toggle.setAttribute('aria-expanded', 'false');
-  function openAdd(focus = true) {
-    bar.classList.add('open');
-    bar.inert = false;
-    toggle.disabled = true;
-    toggle.setAttribute('aria-expanded', 'true');
-    if (focus && matchMedia('(min-width: 48rem)').matches) nameIn.focus({ preventScroll: true });
-  }
-  function closeAdd() {
-    bar.classList.remove('open');
-    bar.inert = true;
-    toggle.disabled = false;
-    toggle.setAttribute('aria-expanded', 'false');
-    nameIn.value = ''; emailIn.value = '';
-    fieldError(nameIn, null); fieldError(emailIn, null);
-    renderHits();
-    toggle.focus();
-  }
-  toggle.addEventListener('click', () => openAdd());
-  $('gl-close').addEventListener('click', closeAdd);
+  const add = addRow({ id: 'gl', button: $<HTMLButtonElement>('add-toggle'), fields: [nameIn, emailIn], go: $<HTMLButtonElement>('gl-go'),
+    onSubmit: () => addGuest(), onInput: () => renderHits() });
+  const openAdd = add.open;
 
   /** Guests you already have with this name or email – shown so you do not add them twice */
   function renderHits(list?: G[]) {
     const q = norm(nameIn.value), e = emailIn.value.trim().toLowerCase();
     const found = list ?? guests.filter((g) => !pendingDelete.has(g.id)
       && ((q.length >= 2 && norm(`${g.name} ${g.email ?? ''}`).includes(q)) || (e.length >= 3 && g.email?.toLowerCase().includes(e)))).slice(0, 5);
-    hits.replaceChildren();
-    hits.hidden = !found.length;
-    if (!found.length) return;
     // The one menu's look: a heading, then a row per guest with "Edit"
-    hits.append(menuGroup(t('guestLib.already'), 'li'));
-    for (const g of found) {
-      const open = mk('button', 'btn small secondary', t('admin.edit'));
-      open.type = 'button';
-      open.addEventListener('click', () => openForm(g));
-      hits.append(menuHit(mk('span', 'guest-av small', initials(g.name)), g.name, g.email ?? t('admin.noEmail'), open));
-    }
+    add.setHits(found.map((g) => ({ lead: avatar(g.name, { size: 'small' }), title: g.name, sub: g.email ?? t('admin.noEmail'),
+      action: hitButton(t('admin.edit'), () => openForm(g)) })), t('guestLib.already'));
   }
-  for (const el of [nameIn, emailIn]) {
-    el.addEventListener('input', () => renderHits());
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); addGuest(); }
-      else if (e.key === 'Escape') { e.preventDefault(); if (nameIn.value || emailIn.value) { nameIn.value = ''; emailIn.value = ''; renderHits(); nameIn.focus(); } else closeAdd(); }
-    });
-  }
-  $('gl-go').addEventListener('click', () => addGuest());
 
   async function addGuest() {
     const name = nameIn.value.replace(/\s+/g, ' ').trim();
     const email = emailIn.value.trim().toLowerCase() || null;
-    if (email && !EMAIL_RE.test(email)) { fieldError(emailIn, t('guest.emailBad'), $('gl-fields')); emailIn.focus(); return; }
-    if (!name) { fieldError(nameIn, t('guestInvite.nameMissing'), $('gl-fields')); nameIn.focus(); return; }
+    if (email && !EMAIL_RE.test(email)) { add.error(emailIn, t('guest.emailBad')); emailIn.focus(); return; }
+    if (!name) { add.error(nameIn, t('guestInvite.nameMissing')); nameIn.focus(); return; }
     // Never the same guest twice: same email, or the same name without an email
     const twin = guests.find((g) => !pendingDelete.has(g.id) && ((email && g.email?.toLowerCase() === email) || (!email && norm(g.name) === norm(name))));
-    if (twin) { renderHits([twin]); fieldError(email ? emailIn : nameIn, t('guestLib.twin'), $('gl-fields')); return; }
+    if (twin) { renderHits([twin]); add.error(email ? emailIn : nameIn, t('guestLib.twin')); return; }
     const btn = $<HTMLButtonElement>('gl-go');
     setLoading(btn, true);
     const { data, error } = await supabase.from('guests').insert({ host_id: host!.id, name, email }).select('id').single();
     setLoading(btn, false);
     if (error || !data) { toast(error?.code === '23505' ? t('guestLib.emailTaken') : t('admin.changeNotSaved'), { kind: 'error' }); return; }
-    nameIn.value = ''; emailIn.value = '';
-    renderHits();
+    add.clear();
     $<HTMLInputElement>('guest-search').value = '';
     await load();
     highlight((data as { id: string }).id);
@@ -244,7 +176,6 @@ import '../../styles/admin.css';
     // On phones the keyboard would cover the panel, so only focus a field on larger screens
     if (matchMedia('(min-width: 48rem)').matches) $<HTMLInputElement>('gf-name').focus({ preventScroll: true });
   }
-  $('gf-cancel').addEventListener('click', () => panel.requestClose());
   $('guest-search').addEventListener('input', render);
 
   $('guest-form').addEventListener('submit', async (e) => {
@@ -273,41 +204,30 @@ import '../../styles/admin.css';
     if (await deleteGuest(g)) panel.close();
   });
 
-  // ---------- Delete: asked about first, then gone with "Undo" for a while ----------
+  // ---------- Delete: asked about first, then gone with "Undo" for a while (the one delete with Undo) ----------
   // A guest who is invited is removed from those tastings too (with their answers there)
-  async function deleteGuest(g: G): Promise<boolean> {
+  function deleteGuest(g: G): Promise<boolean> {
     const n = g.participants.length;
-    const ok = await confirmModal({ title: t('guestLib.deleteQ', { name: g.name }), ok: t('guestLib.delete'), danger: true,
-      text: n ? t('guestLib.deleteNoteIn', { n }) : undefined });
-    if (!ok) return false;
-    const { data: sess } = await supabase.auth.getSession();
-    pendingDelete.set(g.id, { g, token: sess.session?.access_token ?? '' });
-    render();
-    toast(t('guestLib.deleted', { name: g.name }), {
-      action: { label: t('wineLib.undo'), run: () => { pendingDelete.delete(g.id); render(); highlight(g.id); toast(t('guestRow.restored', { name: g.name }), { kind: 'ok' }); } },
-      onTimeout: async () => {
-        if (!pendingDelete.has(g.id)) return;
-        pendingDelete.delete(g.id);
-        const ids = g.participants.map((p) => p.id);
+    const ids = g.participants.map((p) => p.id);
+    return deleteWithUndo({
+      label: t('guestLib.deleted', { name: g.name }),
+      ask: { title: t('guestLib.deleteQ', { name: g.name }), ok: t('guestLib.delete'), text: n ? t('guestLib.deleteNoteIn', { n }) : undefined },
+      hide: () => { pendingDelete.add(g.id); render(); },
+      restore: () => { pendingDelete.delete(g.id); render(); highlight(g.id); },
+      restored: t('guestRow.restored', { name: g.name }),
+      failed: t('guestLib.deleteFailed', { name: g.name }),
+      commit: async () => {
         const removed = ids.length ? await supabase.from('participants').delete().in('id', ids) : { error: null };
         const { error } = removed.error ? removed : await supabase.from('guests').delete().eq('id', g.id);
-        if (error) { render(); toast(t('guestLib.deleteFailed', { name: g.name }), { kind: 'error' }); return; }
+        if (error) return false;
+        pendingDelete.delete(g.id);
         guests = guests.filter((x) => x.id !== g.id);
         render();
+        return true;
       },
+      keepalive: [...(ids.length ? [`participants?id=in.(${ids.join(',')})`] : []), `guests?id=eq.${g.id}`],
     });
-    return true;
   }
-  // Leaving the page before the message is gone: delete now (keepalive, so it is sent after the page closes)
-  addEventListener('pagehide', () => {
-    for (const [id, { g, token }] of pendingDelete) {
-      const headers = { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}` };
-      const ids = g.participants.map((p) => p.id);
-      if (ids.length) fetch(`${SUPABASE_URL}/rest/v1/participants?id=in.(${ids.join(',')})`, { method: 'DELETE', keepalive: true, headers });
-      fetch(`${SUPABASE_URL}/rest/v1/guests?id=eq.${id}`, { method: 'DELETE', keepalive: true, headers });
-    }
-    pendingDelete.clear();
-  });
 
   // Start (last, so everything above is defined)
   const host = await requireHost();

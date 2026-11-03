@@ -1,7 +1,8 @@
 ---
 import Icon from '../../components/ui/Icon.astro';
 import SearchField from '../../components/ui/SearchField.astro';
-import CloseButton from '../../components/ui/CloseButton.astro';
+import Sheet from '../../components/ui/Sheet.astro';
+import AddRow from '../../components/ui/AddRow.astro';
 import Switch from '../../components/ui/Switch.astro';
 import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Checkbox from '../../components/ui/Checkbox.astro';
@@ -94,14 +95,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <h2 data-i18n="hosts.title">Hosts</h2>
           <a id="ov-hosts-manage" class="text-btn" href="settings/" data-section="settings" hidden data-i18n="hosts.manage">Manage hosts</a>
         </div>
-        <ul id="ov-hosts" class="tw-list guest-list hosts-rows"></ul>
+        <ul id="ov-hosts" class="list"></ul>
 
-        <dialog id="details-panel" class="sheet wide" aria-labelledby="details-panel-title">
-          <div class="sheet-head">
-            <h2 id="details-panel-title" data-i18n="section.details">Details</h2>
-            <CloseButton data-close />
-          </div>
-        <form id="details" class="add-form tasting-form" novalidate>
+        <Sheet id="details-panel" title="section.details" titleId="details-panel-title" wide form="details" formClass="tasting-form">
           <label for="d-title" data-i18n="admin.title">Title</label>
           <input class="input" id="d-title" type="text" required />
           <label for="d-intro"><span data-i18n="admin.intro">Introduction</span> <span class="opt" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
@@ -123,12 +119,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <DateTimeFields prefix="d" />
           <AddressFields prefix="d" />
-          <div class="row-actions">
-            <button id="d-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-            <button id="d-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-          </div>
-        </form>
-        </dialog>
+          <button slot="foot" id="d-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+        </Sheet>
         <p class="hint ov-link-note"><span data-i18n="admin.tastingPage">Tasting page:</span> <a id="tasting-link" href="/" target="_blank"></a><br />
           <span data-i18n="admin.personalLinks">Each guest gets a personal link under Guests.</span></p>
       </section>
@@ -162,7 +154,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <button id="host-open" class="btn small secondary" type="button" hidden data-i18n="hosts.add">Add host</button>
         </div>
         <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
-        <ul id="hosts-list" class="tw-list guest-list hosts-rows"></ul>
+        <ul id="hosts-list" class="list"></ul>
       </section>
 
       <!-- Tasting fee -->
@@ -175,40 +167,30 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       </section>
 
       <!-- Side panels for the settings above -->
-      <dialog id="mg-panel" class="sheet" aria-labelledby="mg-title">
-        <div class="sheet-head"><h2 id="mg-title" data-i18n="wizard.maxGuests">Max. number of guests</h2><CloseButton data-close /></div>
-        <form id="mg-form" class="add-form" novalidate>
-          <label for="max-guests" data-i18n="wizard.maxGuests">Max. number of guests</label>
-          <div class="affix w-num u-long"><input id="max-guests" class="input" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
-          <p class="hint" data-i18n="set.maxHint">Leave it empty for no limit. When it is full, guests who say yes go on a waiting list – and move up by themselves when someone says no.</p>
-          <div class="row-actions"><button class="btn small" type="submit" data-i18n="common.save">Save</button><button class="text-btn" type="button" data-close data-i18n="common.cancel">Cancel</button></div>
-        </form>
-      </dialog>
+      <Sheet id="mg-panel" title="wizard.maxGuests" titleId="mg-title" form="mg-form">
+        <label for="max-guests" data-i18n="wizard.maxGuests">Max. number of guests</label>
+        <div class="affix w-num u-long"><input id="max-guests" class="input" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
+        <p class="help" data-i18n="set.maxHint">Leave it empty for no limit. When it is full, guests who say yes go on a waiting list – and move up by themselves when someone says no.</p>
+        <button slot="foot" class="btn" type="submit" data-i18n="common.save">Save</button>
+      </Sheet>
 
-      <dialog id="fee-panel" class="sheet" aria-labelledby="fee-title">
-        <div class="sheet-head"><h2 id="fee-title" data-i18n="guest.feeTitle">Tasting fee</h2><CloseButton data-close /></div>
-        <form id="fee-form" class="add-form" novalidate>
-          <label for="fee-total" data-i18n="set.feeTotal">What the tasting costs in all</label>
-          <div class="affix w-num"><input id="fee-total" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
-          <p id="fee-suggest" class="hint"></p>
-          <label for="fee-amount" data-i18n="set.feePer">Each guest pays</label>
-          <div class="field-row"><div class="affix w-num"><input id="fee-amount" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div><span data-i18n="unit.perPerson">per person</span></div>
-          <p class="hint" data-i18n="set.feePerHint">Leave it empty to use the suggestion above.</p>
-          <Switch title="wizard.feeShowTitle" hint="wizard.feeShowHint" id="fee-open" />
-          <div class="row-actions"><button class="btn small" type="submit" data-i18n="common.save">Save</button><button class="text-btn" type="button" data-close data-i18n="common.cancel">Cancel</button></div>
-        </form>
-      </dialog>
+      <Sheet id="fee-panel" title="guest.feeTitle" titleId="fee-title" form="fee-form">
+        <label for="fee-total" data-i18n="set.feeTotal">What the tasting costs in all</label>
+        <div class="affix w-num"><input id="fee-total" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
+        <p id="fee-suggest" class="help"></p>
+        <label for="fee-amount" data-i18n="set.feePer">Each guest pays</label>
+        <div class="field-row"><div class="affix w-num"><input id="fee-amount" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div><span data-i18n="unit.perPerson">per person</span></div>
+        <p class="help" data-i18n="set.feePerHint">Leave it empty to use the suggestion above.</p>
+        <Switch title="wizard.feeShowTitle" hint="wizard.feeShowHint" id="fee-open" />
+        <button slot="foot" class="btn" type="submit" data-i18n="common.save">Save</button>
+      </Sheet>
 
-      <dialog id="host-panel" class="sheet" aria-labelledby="host-title">
-        <div class="sheet-head"><h2 id="host-title" data-i18n="hosts.add">Add host</h2><CloseButton data-close /></div>
-        <p class="hint" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
-        <form id="host-add" class="add-form host-add" novalidate>
-          <label for="host-email" data-i18n="common.email">Email</label>
-          <input class="input" id="host-email" type="email" inputmode="email" autocomplete="off" />
-          <label for="host-name"><span data-i18n="admin.name">Name</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
-          <input class="input" id="host-name" type="text" autocomplete="off" maxlength="80" />
-          <div class="row-actions"><button id="host-add-btn" class="btn small" type="submit" data-i18n="hosts.add">Add host</button></div>
-        </form>
+      <Sheet id="host-panel" title="hosts.add" titleId="host-title" form="host-add">
+        <p class="help" data-i18n="hosts.intro">Co-hosts can do everything in this tasting – except delete it and manage the hosts.</p>
+        <label for="host-email" data-i18n="common.email">Email</label>
+        <input class="input" id="host-email" type="email" inputmode="email" autocomplete="off" />
+        <label for="host-name"><span data-i18n="admin.name">Name</span> <span class="opt" data-i18n="dt.optional">(optional)</span></label>
+        <input class="input" id="host-name" type="text" autocomplete="off" maxlength="80" />
         <!-- The invitation mail could not be sent: the link to pass on yourself -->
         <Notice id="host-link" tone="warn" title="hosts.mailFailed" hidden>
           <p id="host-link-text"></p>
@@ -217,7 +199,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
             <button id="host-link-copy" class="icon-act strong" type="button" aria-label="Copy" data-tip="Copy" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
           </div>
         </Notice>
-      </dialog>
+        <button slot="foot" id="host-add-btn" class="btn" type="submit" data-i18n="hosts.add">Add host</button>
+      </Sheet>
 
       <section class="block quiet-zone" data-section="settings">
       <div id="delete-tasting" hidden>
@@ -236,61 +219,52 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <!-- Add a wine: a new row that slides in at the top of the list – search the library, paste a link or add a photo -->
         <WineQuickAdd lead />
         <!-- The list shows each wine; "Edit" opens the side panel with its settings for this tasting -->
-        <ol id="tw-list" class="tw-list"></ol>
+        <ol id="tw-list" class="list"></ol>
         <p id="tw-move-help" class="sr" aria-live="polite"></p>
         <EmptyState id="tw-empty" icon="glass" title="adminTasting.noWinesTitle" text="adminTasting.noWinesText" hidden>
           <button id="tw-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="adminTasting.addWineBtn">Add wine</span></button>
         </EmptyState>
 
-        <dialog id="tw-edit" class="sheet" aria-labelledby="twe-title">
-          <div class="sheet-head">
-            <h2 id="twe-title"></h2>
-            <CloseButton data-close />
+        <Sheet id="tw-edit" titleId="twe-title" form="twe-form" formClass="twe-form">
+          <div class="sh-wine">
+            <span id="twe-thumb" class="thumb"></span>
+            <p id="twe-meta" class="lmeta"></p>
           </div>
-          <form id="twe-form" class="add-form twe-form" novalidate>
-            <div class="twe-wine">
-              <div id="twe-thumb" class="wine-thumb"></div>
-              <p id="twe-meta" class="lib-meta"></p>
+
+          <!-- The guest price (this tasting) next to the shop's price (the wine in the library, all tastings) -->
+          <div class="twe-prices">
+            <div>
+              <label for="twe-price"><span data-i18n="adminTasting.guestPrice">Guest price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
+              <div class="affix w-num"><input id="twe-price" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
             </div>
-
-            <!-- The guest price (this tasting) next to the shop's price (the wine in the library, all tastings) -->
-            <div class="twe-prices">
-              <div>
-                <label for="twe-price"><span data-i18n="adminTasting.guestPrice">Guest price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
-                <div class="affix w-num"><input id="twe-price" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
-              </div>
-              <div>
-                <label for="twe-retail-in"><span data-i18n="twe.shopPriceLabel">Shop price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
-                <div class="affix w-num"><input id="twe-retail-in" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
-              </div>
+            <div>
+              <label for="twe-retail-in"><span data-i18n="twe.shopPriceLabel">Shop price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
+              <div class="affix w-num"><input id="twe-retail-in" class="input" type="text" inputmode="decimal" autocomplete="off" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
             </div>
-            <p class="hint twe-prices-hint" data-i18n="twe.shopPriceHint">The shop's price is saved on the wine in your library, so it follows the wine into other tastings.</p>
+          </div>
+          <p class="help" data-i18n="twe.shopPriceHint">The shop's price is saved on the wine in your library, so it follows the wine into other tastings.</p>
 
-            <fieldset class="twe-group">
-              <legend data-i18n="twe.tiersTitle">Quantity prices</legend>
-              <p class="hint" data-i18n="twe.tiersHint">A lower price per bottle when a guest buys several.</p>
-              <div id="twe-tiers" class="twe-tiers"></div>
-              <button id="twe-add-tier" class="text-btn" type="button"><Icon name="plus" /><span data-i18n="twe.addTier">Add quantity price</span></button>
-            </fieldset>
+          <fieldset class="twe-group">
+            <legend data-i18n="twe.tiersTitle">Quantity prices</legend>
+            <p class="help" data-i18n="twe.tiersHint">A lower price per bottle when a guest buys several.</p>
+            <div id="twe-tiers" class="twe-tiers"></div>
+            <button id="twe-add-tier" class="text-btn" type="button"><Icon name="plus" /><span data-i18n="twe.addTier">Add quantity price</span></button>
+          </fieldset>
 
-            <!-- What the guests see: the choice cards (component 10) -->
-            <ChoiceCards name="twe-vis" legend="blind.guestsSee" class="twe-group" options={[
-              { value: 'shown', label: 'blind.shown', hint: 'twe.shownHint' },
-              { value: 'blind', label: 'blind.blind', hint: 'twe.blindHint' },
-              { value: 'hidden', label: 'twe.hidden', hint: 'twe.hiddenHint' }]}><span slot="legend" data-help="guests-see"></span></ChoiceCards>
+          <!-- What the guests see: the choice cards (component 10) -->
+          <ChoiceCards name="twe-vis" legend="blind.guestsSee" class="twe-group" options={[
+            { value: 'shown', label: 'blind.shown', hint: 'twe.shownHint' },
+            { value: 'blind', label: 'blind.blind', hint: 'twe.blindHint' },
+            { value: 'hidden', label: 'twe.hidden', hint: 'twe.hiddenHint' }]}><span slot="legend" data-help="guests-see"></span></ChoiceCards>
 
-            <Switch title="admin.orderable" hint="twe.orderableHint" id="twe-orderable" class="twe-switch" />
+          <Switch title="admin.orderable" hint="twe.orderableHint" id="twe-orderable" class="twe-switch" />
 
-            <div class="row-actions">
-              <button id="twe-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-              <button id="twe-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-            </div>
-            <div class="twe-danger">
-              <button id="twe-remove" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="twe.remove">Remove from the tasting</span></button>
-              <p class="hint" data-i18n="twe.removeHint">The wine stays in your library.</p>
-            </div>
-          </form>
-        </dialog>
+          <Fragment slot="quiet">
+            <button id="twe-remove" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="twe.remove">Remove from the tasting</span></button>
+            <p class="help" data-i18n="twe.removeHint">The wine stays in your library.</p>
+          </Fragment>
+          <button slot="foot" id="twe-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+        </Sheet>
       </section>
 
       <!-- Guests -->
@@ -312,44 +286,28 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
         <SearchField id="guest-search" label="admin.searchGuest" placeholder="admin.searchPlaceholder" class="list-search" />
 
-        <!-- Invite a guest: a new row that slides in at the top of the list – name (searches your guest list) and email -->
-        <div class="qa qa-guest">
-          <div id="gi-bar" class="qa-slide" inert>
-            <div class="qa-slide-in">
-              <div class="qa-item qa-new gi-row">
-                <span class="guest-av gi-av" aria-hidden="true">+</span>
-                <div class="qa-body">
-                  <div id="gi-fields" class="gi-fields">
-                    <div id="gi-field" class="input qa-field gi-name">
-                      <label for="gi-input" class="visually-hidden" data-i18n="admin.name">Name</label>
-                      <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
-                    </div>
-                    <div id="gi-email-field" class="input qa-field gi-email">
-                      <label for="gi-email" class="visually-hidden" data-i18n="common.email">Email</label>
-                      <input id="gi-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
-                    </div>
-                  </div>
-                  <Checkbox label="inviteMail.sendOnInvite" id="g-send-mail" checked small class="gi-mail" help="invite-mail" />
-                </div>
-                <div class="qa-actions">
-                  <button id="gi-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
-                  <CloseButton id="gi-close" />
-                </div>
-                <!-- Matches from the library: across the row, from the field to the right edge -->
-                <ul id="gi-hits" class="qa-hits menu static" hidden></ul>
-              </div>
+        <!-- Invite a guest: the one add row (AddRow.astro) at the top of the list – name (searches your guest list) and email -->
+        <AddRow id="gi" pic="guest">
+          <div id="gi-fields" class="ar-fields">
+            <div class="input">
+              <label for="gi-input" class="visually-hidden" data-i18n="admin.name">Name</label>
+              <input id="gi-input" type="text" autocomplete="off" enterkeyhint="go" placeholder="Name" data-i18n-attr="placeholder=guestInvite.namePh" />
+            </div>
+            <div class="input">
+              <label for="gi-email" class="visually-hidden" data-i18n="common.email">Email</label>
+              <input id="gi-email" type="email" inputmode="email" autocomplete="off" enterkeyhint="go" placeholder="Email (optional)" data-i18n-attr="placeholder=guestInvite.emailPh" />
             </div>
           </div>
-        </div>
-        <ul id="guest-list" class="tw-list guest-list"></ul>
-        <!-- Edit one guest of the tasting: side panel -->
-        <dialog id="p-panel" class="sheet" aria-labelledby="p-panel-title">
-          <div class="sheet-head">
-            <h2 id="p-panel-title"></h2>
-            <CloseButton data-close />
-          </div>
-          <div id="p-panel-body"></div>
-        </dialog>
+          <Checkbox label="inviteMail.sendOnInvite" id="g-send-mail" checked small help="invite-mail" />
+          <button slot="actions" id="gi-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
+        </AddRow>
+        <ul id="guest-list" class="list"></ul>
+        <!-- Edit one guest of the tasting: side panel (its fields are made by the script) -->
+        <Sheet id="p-panel" titleId="p-panel-title" form="p-form">
+          <div id="p-panel-body" class="sh-part"></div>
+          <button slot="quiet" id="p-remove" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="adminTasting.removeGuest">Remove guest</span></button>
+          <button slot="foot" id="p-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+        </Sheet>
         <div id="guest-empty" class="empty-state" hidden></div>
       </section>
 
@@ -408,17 +366,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </div>
           <p id="q-ai-status" class="status" aria-live="polite" hidden></p>
           <Notice id="q-ai-warn" tone="warn" hidden><p data-i18n="aiQuiz.warn">AI can be wrong – especially on Expert. Always check the marked answer before you press Add.</p></Notice>
-          <ol id="q-ai-list" class="ai-suggestions" hidden></ol>
+          <ol id="q-ai-list" class="list ai-suggestions" hidden></ol>
           <button id="q-ai-more" class="text-btn" type="button" hidden data-i18n="aiQuiz.more">More suggestions</button>
         </div>
 
         <!-- New / edit question: side panel -->
-        <dialog id="q-panel" class="sheet wide" aria-labelledby="qf-title">
-        <div class="sheet-head">
-          <h2 id="qf-title" data-i18n="aq.newQuestion">New question</h2>
-          <CloseButton data-close />
-        </div>
-        <form id="q-form" class="add-form quiz-form" novalidate>
+        <Sheet id="q-panel" title="aq.newQuestion" titleId="qf-title" wide form="q-form" formClass="quiz-form">
           <label for="qf-question" data-i18n="aq.question">Question</label>
           <textarea class="input" id="qf-question" rows="2" maxlength="500"></textarea>
           <fieldset class="qf-fieldset">
@@ -428,15 +381,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           </fieldset>
           <label for="qf-explanation"><span data-i18n="aq.explanation">Explanation</span> <span class="opt" data-i18n="aq.explanationHint">(shown when the quiz is finished)</span></label>
           <textarea class="input" id="qf-explanation" rows="2" maxlength="1000"></textarea>
-          <div class="row-actions">
-            <button id="qf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-            <button id="qf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-            <button id="qf-delete" class="text-btn danger" type="button" hidden data-i18n="aq.deleteQuestion">Delete question</button>
-          </div>
-        </form>
-        </dialog>
+          <button slot="quiet" id="qf-delete" class="btn small quiet-danger" type="button" hidden><Icon name="trash" /><span data-i18n="aq.deleteQuestion">Delete question</span></button>
+          <button slot="foot" id="qf-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+        </Sheet>
 
-        <ol id="q-admin-list" class="q-admin-list"></ol>
+        <ol id="q-admin-list" class="list"></ol>
         <EmptyState id="q-empty" icon="question" title="aq.emptyTitle" text="aq.emptyText" hidden>
           <button id="q-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="aq.add">Add question</span></button>
         </EmptyState>
@@ -473,9 +422,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, mk as mkEl, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
-  import { personRow, initials, type PersonChip } from '../../lib/ui/person-row';
-  import { menuGroup, menuHit } from '../../lib/ui/menu';
-  import { STATUS as STATUSES, guestStatus } from '../../lib/ui/status';
+  import { personRow, listRow, missing, type RowChip } from '../../lib/ui/list-row';
+  import { avatar } from '../../lib/ui/thumb';
+  import { addRow, hitButton } from '../../lib/ui/add-row';
+  import { highlight } from '../../lib/ui/highlight';
+  import { deleteWithUndo } from '../../lib/ui/delete-undo';
+  import { STATUS as STATUSES, guestStatus, statusChip as statusChipFor } from '../../lib/ui/status';
+  import { setIconLoading } from '../../lib/ui/icon-button';
   import { initQuizAdmin } from '../../lib/admin-quiz';
   import { initAddress, readAddress, writeAddress } from '../../lib/address';
   import { SECTIONS, adminUrl, currentAdmin, markSection } from '../../lib/admin-side';
@@ -483,7 +436,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { fieldError, focusField } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
   import { confirmModal } from '../../lib/confirm';
-  import { SUPABASE_URL, SUPABASE_KEY } from '../../lib/config';
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, money, formatWhen, type Key } from '../../i18n';
@@ -628,7 +580,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     fillDetailsForm();
     detailsPanel.open();
   });
-  $('d-cancel').addEventListener('click', () => detailsPanel.requestClose());
 
   // ---------- Hosts on the overview ----------
   async function loadOverviewHosts(slug: string, canManage: boolean) {
@@ -847,7 +798,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const guestPanel = sheetPanel($('p-panel') as HTMLDialogElement, { dirty: 'form' });
   function openGuestPanel(p: P) {
     $('p-panel-title').textContent = p.name;
-    $('p-panel-body').replaceChildren(editPanel(p));
+    $('p-panel-body').replaceChildren(...editPanel(p));
     guestPanel.open();
   }
 
@@ -900,7 +851,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const place = p.status === 'waitlist'
       ? participants.filter((x) => x.status === 'waitlist' && (x.waitlisted_at ?? '') <= (p.waitlisted_at ?? '')).length : 0;
     const st = STATUSES[guestStatus(p.status)];
-    const chips: PersonChip[] = [{ text: place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status, tone: st.tone, dashed: (st as { dashed?: boolean }).dashed }];
+    const chips: RowChip[] = [{ text: place ? `${STATUS[p.status]} ${place}` : STATUS[p.status] ?? p.status, tone: st.tone, dashed: (st as { dashed?: boolean }).dashed }];
     if (p.status === 'yes' && feeAmount > 0) chips.push(p.tasting_paid ? { text: t('guestRow.paid'), tone: 'ok' } : { text: t('guestRow.unpaid'), tone: 'err' });
     if (p.diet) chips.push({ text: p.diet });
     if (p.note) chips.push({ text: t('guestRow.note'), title: p.note });
@@ -922,58 +873,41 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     actions.push(edit, del);
     const li = personRow({
       name: p.name, onOpen: () => openGuestPanel(p),
-      meta: [p.email ?? mk('span', 'guest-missing', t('admin.noEmail')),
+      meta: [p.email ?? missing(),
         p.invite_mailed_at ? t('guestRow.mailed', { when: mailedWhen(p.invite_mailed_at) }) : t('guestRow.notMailed')],
-      chips, side: n ? mk('b', '', t('guestRow.bottles', { n })) : null, actions,
+      chips, side: n ? mk('b', '', t('guestRow.bottles', { n })) : null, actions, id: p.id,
     });
-    li.dataset.guest = p.id;
     return li;
   }
 
   // Removing a guest from the tasting (the guest stays in the guest list): asked about first, then gone from the
-  // list with "Undo" for a while – removed in the database when the message goes (or the page is left)
-  const pendingRemove = new Map<string, { p: P; token: string }>();
+  // list with "Undo" for a while – removed in the database when the toast goes or the page is left (delete-undo.ts)
   async function removeGuest(p: P): Promise<boolean> {
     if (orders.some((o) => o.participant_id === p.id)) { toast(t('adminTasting.guestHasOrders'), { kind: 'error' }); return false; }
-    if (!(await confirmModal({ title: t('guestRow.removeQ', { name: p.name }), text: t('guestRow.removeNote'), ok: t('adminTasting.removeGuest'), danger: true }))) return false;
-    const { data: sess } = await supabase.auth.getSession();
-    pendingRemove.set(p.id, { p, token: sess.session?.access_token ?? '' });
-    participants = participants.filter((x) => x.id !== p.id);
-    renderParticipants();
-    renderFee();
-    toast(t('guestRow.removed', { name: p.name }), {
-      action: { label: t('wineLib.undo'), run: () => {
-        pendingRemove.delete(p.id);
-        participants.push(p);
-        renderParticipants();
-        renderFee();
-        toast(t('guestRow.restored', { name: p.name }), { kind: 'ok' });
-      } },
-      onTimeout: async () => {
-        if (!pendingRemove.has(p.id)) return;
-        pendingRemove.delete(p.id);
-        const { error } = await supabase.from('participants').delete().eq('id', p.id);
-        if (error) { participants.push(p); renderParticipants(); renderFee(); toast(t('admin.changeNotSaved'), { kind: 'error' }); }
+    return deleteWithUndo({
+      label: t('guestRow.removed', { name: p.name }),
+      ask: { title: t('guestRow.removeQ', { name: p.name }), text: t('guestRow.removeNote'), ok: t('adminTasting.removeGuest') },
+      hide: () => { participants = participants.filter((x) => x.id !== p.id); renderParticipants(); renderFee(); },
+      restore: () => {
+        if (!participants.includes(p)) participants.push(p);
+        renderParticipants(); renderFee();
+        highlight(document.querySelector(`#guest-list [data-id="${p.id}"]`));
       },
+      restored: t('guestRow.restored', { name: p.name }),
+      commit: async () => !(await supabase.from('participants').delete().eq('id', p.id)).error,
+      keepalive: [`participants?id=eq.${p.id}`],
     });
-    return true;
   }
-  addEventListener('pagehide', () => {
-    for (const [id, { token }] of pendingRemove) {
-      fetch(`${SUPABASE_URL}/rest/v1/participants?id=eq.${id}`, { method: 'DELETE', keepalive: true,
-        headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}` } });
-    }
-    pendingRemove.clear();
-  });
 
   // The side panel for one guest: the invitation, status, fee paid, email – and removing them from the tasting
-  function editPanel(p: P) {
-    const form = mk('form', 'edit-panel');
+  // (the panel's head, foot and quiet delete are Sheet.astro's; the fields are made here)
+  function editPanel(p: P): Node[] {
+    const out: Node[] = [];
     let status = p.status;
 
     // The invitation: send (again) and copy the link
-    form.append(mk('p', 'flabel', t('guestRow.invitation')));
-    form.append(mk('p', 'hint guest-inv-when', p.invite_mailed_at ? t('guestRow.mailedLong', { when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }) : t('guestRow.notMailedLong')));
+    out.push(mk('p', 'flabel', t('guestRow.invitation')));
+    out.push(mk('p', 'help', p.invite_mailed_at ? t('guestRow.mailedLong', { when: new Date(p.invite_mailed_at).toLocaleString(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }) : t('guestRow.notMailedLong')));
     const inv = mk('div', 'row-actions guest-inv');
     if (p.email) {
       const send = mk('button', 'btn small secondary', t(p.invite_mailed_at ? 'inviteMail.again' : 'inviteMail.send'));
@@ -985,7 +919,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     copy.type = 'button';
     copy.addEventListener('click', () => copyInvite(p));
     inv.append(copy);
-    form.append(inv);
+    out.push(inv);
 
     // Status: the choice cards (radio, name, what it means)
     const cards = choiceCards({
@@ -993,13 +927,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       options: ['yes', 'waitlist', 'invited', 'no'].map((v) => ({ value: v, label: STATUS[v], hint: t(`guestStatus.${v}Hint` as Key) })),
       onChange: (v) => { status = v; paid.el.hidden = !(feeAmount > 0 && status === 'yes'); },
     });
-    form.append(cards.el);
+    out.push(cards.el);
 
     // The fee: paid or not (only for guests who come, when there is a fee) – saved with the panel
     const paid = switchRow({ title: t('guestRow.feePaid'), hint: t('guestRow.feePaidHint', { amount: money(feeAmount) }), checked: p.tasting_paid });
-    paid.el.classList.add('guest-paid');
     paid.el.hidden = !(feeAmount > 0 && status === 'yes');
-    form.append(paid.el);
+    out.push(paid.el);
 
     const lab = mk('label', '', t('common.email'));
     const id = 'em-' + p.id;
@@ -1009,45 +942,29 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     em.id = id;
     em.value = p.email ?? '';
     em.autocomplete = 'off';
-    form.append(lab, em);
+    out.push(lab, em);
 
-    const row = mk('div', 'row-actions');
-    const save = mk('button', 'btn small', t('common.save'));
-    save.type = 'submit';
-    const cancel = mk('button', 'text-btn', t('common.cancel'));
-    cancel.type = 'button';
-    cancel.addEventListener('click', () => guestPanel.close());
-    row.append(save, cancel);
-    form.append(row);
+    // Remove from this tasting (the guest stays in the guest list): the quiet button at the bottom, asked about first
+    $('p-remove').onclick = async () => { if (await removeGuest(p)) guestPanel.close(); };
 
-    // Remove from this tasting (the guest stays in the guest list): quiet, and asked about first
-    const quiet = mk('div', 'guest-remove');
-    const remove = mk('button', 'btn small quiet-danger');
-    remove.type = 'button';
-    remove.innerHTML = iconSvg('trash');
-    remove.append(t('adminTasting.removeGuest'));
-    remove.addEventListener('click', async () => { if (await removeGuest(p)) guestPanel.close(); });
-    quiet.append(remove);
-    form.append(quiet);
-
-    form.addEventListener('submit', async (e) => {
+    const save = $('p-save') as HTMLButtonElement;
+    ($('p-form') as HTMLFormElement).onsubmit = async (e) => {
       e.preventDefault();
       const email = em.value.trim().toLowerCase() || null;
       if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { fieldError(em, t('guest.emailBad')); em.focus(); return; }
-      save.disabled = true;
+      setLoading(save, true);
       const patch: Partial<P> = { status, email };
       if (feeAmount > 0 && status === 'yes') patch.tasting_paid = paid.input.checked;
       const ok = await saveGuest(p, patch);
-      save.disabled = false;
+      setLoading(save, false);
       if (!ok) return;
       guestPanel.close();
       await reloadParticipants();
       renderFee();
       toast(t('guestRow.saved', { name: p.name }), { kind: 'ok' });
-      const li = document.querySelector<HTMLElement>(`[data-guest="${p.id}"]`);
-      if (li) { li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }
-    });
-    return form;
+      highlight(document.querySelector(`#guest-list [data-id="${p.id}"]`));
+    };
+    return out;
   }
 
   function renderParticipants() {
@@ -1158,44 +1075,38 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       ordersSummary();
     }
 
+    // One row per order (the one list row): the guest, number and time, the lines, the amount and whether it is paid.
+    // Marking it paid is the row's action (an icon), saved straight away with a toast.
+    const list = mkEl('ul', 'list order-list');
     for (const o of sorted) {
-      const box = document.createElement('div');
-      box.className = 'card order-card' + (o.paid ? ' paid' : '');
-      const head = document.createElement('div');
-      head.className = 'order-head';
-      const h = document.createElement('strong');
-      h.textContent = `${pById.get(o.participant_id)?.name ?? t('admin.unknownGuest')}`;
-      const sum = document.createElement('span');
-      sum.textContent = kr.format(orderTotal(o));
-      head.append(h, sum);
-      const sub = document.createElement('p');
-      sub.className = 'hint order-sub';
-      sub.textContent = `${t('pay.orderComment', { id: o.id })}, ${when.format(new Date(o.created_at))}`;
-      box.append(head, sub);
-
-      const ul = document.createElement('ul');
+      const lines = mkEl('ul', 'order-lines');
       for (const l of o.order_lines) {
-        const li = document.createElement('li');
-        li.textContent = t('admin.orderLine', { qty: l.quantity, wine: wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'), price: kr.format(Number(l.unit_price)) });
-        ul.append(li);
+        lines.append(mkEl('li', '', t('admin.orderLine', { qty: l.quantity, wine: wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'), price: kr.format(Number(l.unit_price)) })));
       }
-      box.append(ul);
-
-      // Paid or not: the one switch, saved straight away
-      const paid = switchRow({
-        title: t('admin.paidMobilepay'), checked: o.paid, plain: true,
-        save: async (on) => {
-          const { error } = await supabase.from('orders').update({ paid: on }).eq('id', o.id);
-          if (error) return t('admin.paymentNotSaved');
-          o.paid = on;
-          box.classList.toggle('paid', on);
-          ordersSummary();
-          return true;
-        },
+      const name = pById.get(o.participant_id)?.name ?? t('admin.unknownGuest');
+      const mark = o.paid
+        ? iconButton('x', t('orders.markUnpaid'), { quiet: true })
+        : iconButton('check', t('orders.markPaid'), { strong: true });
+      mark.setAttribute('aria-label', `${t(o.paid ? 'orders.markUnpaid' : 'orders.markPaid')}: ${t('pay.orderComment', { id: o.id })}, ${name}`);
+      mark.addEventListener('click', async () => {
+        setIconLoading(mark, true);
+        const on = !o.paid;
+        const { error } = await supabase.from('orders').update({ paid: on }).eq('id', o.id);
+        setIconLoading(mark, false);
+        if (error) { toast(t('admin.paymentNotSaved'), { kind: 'error' }); return; }
+        o.paid = on;
+        renderOrders();
+        highlight(document.querySelector(`.order-list [data-id="${o.id}"]`), { scroll: false });
+        toast(t(on ? 'orders.markedPaid' : 'orders.markedUnpaid', { id: o.id, name }), { kind: 'ok' });
       });
-      box.append(paid.el);
-      byGuest.append(box);
+      list.append(listRow({
+        id: o.id, pic: avatar(name), title: name,
+        meta: [[t('pay.orderComment', { id: o.id }), when.format(new Date(o.created_at))]],
+        body: [lines], chips: [statusChipFor(o.paid ? 'order.paid' : 'order.unpaid')],
+        aside: mkEl('b', '', kr.format(orderTotal(o))), actions: [mark],
+      }));
     }
+    if (sorted.length) byGuest.append(list);
 
     const tbody = $('orders-by-wine');
     tbody.replaceChildren();
@@ -1246,43 +1157,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   type G = { id: string; name: string; email: string | null };
   let library: G[] = [];
 
-  // ---------- Invite a guest: a new row that slides in at the top of the guest list ----------
-  // Name (it searches your guest list) and email (optional); Enter or "Invite" invites.
-  const giBar = $('gi-bar');
+  // ---------- Invite a guest: the one add row at the top of the guest list (src/lib/ui/add-row.ts) ----------
+  // Name (it searches your guest list) and email (optional); Enter or "Add" adds.
   const giInput = $('gi-input') as HTMLInputElement;
   const giEmail = $('gi-email') as HTMLInputElement;
-  const giHits = $('gi-hits');
   const giToggle = $('g-invite-toggle') as HTMLButtonElement;
-  const giOpen = () => giBar.classList.contains('open');
   const normName = (x: string) => x.trim().toLowerCase().replace(/\s+/g, ' ');
   const typedGuest = () => ({ name: giInput.value.replace(/\s+/g, ' ').trim(), email: giEmail.value.trim().toLowerCase() || null });
   const invitedIds = () => new Set(participants.map((p) => (p as P & { guest_id?: string }).guest_id));
-
-  function openInvite(focus = true) {
-    if (!wines.length) return;
-    giBar.classList.add('open');
-    giBar.inert = false;
-    giToggle.disabled = true;
-    giToggle.setAttribute('aria-expanded', 'true');
-    if (focus && matchMedia('(min-width: 48rem)').matches) giInput.focus({ preventScroll: true });
-    if (focus) giBar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-  function closeInvite() {
-    giBar.classList.remove('open');
-    giBar.inert = true;
-    giToggle.setAttribute('aria-expanded', 'false');
-    gateInvite();
-    giInput.value = '';
-    giEmail.value = '';
-    fieldError(giInput, null);
-    fieldError(giEmail, null);
-    renderGuestHits();
-    giToggle.focus();
-  }
-  giToggle.setAttribute('aria-controls', 'gi-bar');
-  giToggle.setAttribute('aria-expanded', 'false');
-  giToggle.addEventListener('click', () => openInvite());
-  $('gi-close').addEventListener('click', closeInvite);
+  const gi = addRow({
+    id: 'gi', button: giToggle, fields: [giInput, giEmail], go: $('gi-go') as HTMLButtonElement,
+    // No inviting before the tasting has a wine
+    canOpen: () => wines.length > 0,
+    onSubmit: () => submitInvite(), onInput: () => renderGuestHits(),
+    onClose: () => syncInviteLabels(),
+  });
 
   /** Your guest list's matches for what is typed (name or email) */
   function guestMatches() {
@@ -1294,31 +1183,13 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       .sort((a, b) => a.name.localeCompare(b.name, locale())).slice(0, 5);
   }
   function renderGuestHits(list?: G[], head?: string) {
-    const found = list ?? guestMatches();
-    giHits.replaceChildren();
-    giHits.hidden = !found.length;
-    if (!found.length) return;
-    // The one menu's look: a heading, then a row per guest with the same button as the row's ("Add" / "Add and invite")
-    giHits.append(menuGroup(head ?? t('guestInvite.fromList'), 'li'));
     const invited = invitedIds();
-    for (const g of found) {
-      const b = mkEl('button', 'btn small secondary');
-      b.type = 'button';
-      // Disabled ("✓ Added") when the guest is already in the tasting
-      if (invited.has(g.id)) { b.disabled = true; b.innerHTML = iconSvg('check'); b.append(t('guestInvite.already')); }
-      else { b.textContent = addLabel(!!g.email); b.addEventListener('click', () => inviteGuest(g, b)); }
-      giHits.append(menuHit(mkEl('span', 'guest-av small', initials(g.name)), g.name, g.email ?? t('admin.noEmail'), b));
-    }
+    // A row per guest with the same button as the row's ("Add" / "Add and invite"); "✓ Added" when already in
+    gi.setHits((list ?? guestMatches()).map((g) => ({
+      lead: avatar(g.name, { size: 'small' }), title: g.name, sub: g.email ?? t('admin.noEmail'),
+      action: hitButton(addLabel(!!g.email), (b) => inviteGuest(g, b), invited.has(g.id), t('guestInvite.already')),
+    })), head ?? t('guestInvite.fromList'));
   }
-  for (const el of [giInput, giEmail]) {
-    el.addEventListener('input', () => renderGuestHits());
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); submitInvite(); }
-      else if (e.key === 'Escape') { e.preventDefault(); if (giInput.value || giEmail.value) { giInput.value = ''; giEmail.value = ''; renderGuestHits(); giInput.focus(); } else closeInvite(); }
-      else if (e.key === 'ArrowDown') { const b = giHits.querySelector<HTMLElement>('button'); if (b) { e.preventDefault(); b.focus(); } }
-    });
-  }
-  $('gi-go').addEventListener('click', () => submitInvite());
   // The button says what happens: "Add and invite" when the invitation is mailed (the box is ticked and there is an
   // email), else "Add"
   const mailOn = () => ($('g-send-mail') as HTMLInputElement).checked;
@@ -1332,7 +1203,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
   async function submitInvite() {
     const { name, email } = typedGuest();
-    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { fieldError(giEmail, t('guest.emailBad'), $('gi-fields')); giEmail.focus(); return; }
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { gi.error(giEmail, t('guest.emailBad')); giEmail.focus(); return; }
     // Already in your guest list (same email, or exactly the same name): invite that guest – never a second copy
     const same = library.filter((g) => (email && g.email?.toLowerCase() === email) || (!email && normName(g.name) === normName(name)));
     if (same.length) {
@@ -1341,7 +1212,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       renderGuestHits(same, t(free.length ? 'guestInvite.pick' : 'guestInvite.alreadyAll'));
       return;
     }
-    if (!name) { fieldError(giInput, t('guestInvite.nameMissing'), $('gi-fields')); giInput.focus(); return; }
+    if (!name) { gi.error(giInput, t('guestInvite.nameMissing')); giInput.focus(); return; }
     const btn = $('gi-go') as HTMLButtonElement;
     setLoading(btn, true);
     try {
@@ -1362,14 +1233,12 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     if (error || !data) { toast(error?.code === '23505' ? t('guest.emailTaken') : t('admin.guestNotAdded'), { kind: 'error' }); return; }
     const p = data as P;
     participants.push(p);
-    giInput.value = '';
-    giEmail.value = '';
+    gi.clear();
     syncInviteLabels();
     // Show the new guest: the filter that hides them is reset
     if (!matches(p)) { ALL_STATUSES.forEach((v) => guestStatuses.add(v)); onlyNoEmail = false; guestQuery = ''; ($('guest-search') as HTMLInputElement).value = ''; }
     renderParticipants();
-    const li = document.querySelector<HTMLElement>(`[data-guest="${p.id}"]`);
-    if (li) { li.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); li.classList.add('just-saved'); setTimeout(() => li.classList.remove('just-saved'), 2600); }
+    highlight(document.querySelector(`#guest-list [data-id="${p.id}"]`));
     if (matchMedia('(min-width: 48rem)').matches) giInput.focus({ preventScroll: true });
     if (p.email && ($('g-send-mail') as HTMLInputElement).checked) {
       toast(t('guestInvite.mailing', { name: p.name }), {});
@@ -1384,9 +1253,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   // No inviting before the tasting has a wine; while the row is open the button waits
   function gateInvite() {
     const none = wines.length === 0;
-    giToggle.disabled = none || giOpen();
+    giToggle.disabled = none || gi.isOpen();
     $('g-needs-wine').hidden = !none;
-    if (none && giOpen()) closeInvite();
+    if (none && gi.isOpen()) gi.close(false);
   }
 
   // ---------- Sections: each part of the tasting has its own address /t/<slug>/admin/<section>/ ----------

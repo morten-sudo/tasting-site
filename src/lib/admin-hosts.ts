@@ -1,7 +1,7 @@
 // Admin, one tasting: its hosts. The owner adds co-hosts by email and removes them;
 // co-hosts see the list. Everything goes through security-definer functions in the database.
 import { supabase } from './supabase';
-import { personRow } from './ui/person-row';
+import { personRow } from './ui/list-row';
 import { $, sheetPanel, iconButton } from './admin-common';
 import { confirmModal } from './ui/confirm';
 import { toast } from './ui/toast';

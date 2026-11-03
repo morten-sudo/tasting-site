@@ -1423,4 +1423,13 @@ export const en = {
   "admin.noOrdersClosed": "Turn on “Order wine” above so the guests can order.",
   "twe.removeTierQ": "Remove the quantity price?",
   "gate.winesTitle": "Sign in to see the wines",
+  "addRow.discardQ": "Discard what you have written?",
+  "aq.move": "Move question {n}",
+  "aq.moved": "Moved to place {n} of {total}",
+  "orders.markPaid": "Mark as paid",
+  "orders.markUnpaid": "Mark as not paid",
+  "orders.markedPaid": "Order {id} from {name} is marked as paid",
+  "orders.markedUnpaid": "Order {id} from {name} is marked as not paid",
+  "cart.removed": "{name} is removed from the cart",
+  "cart.removeQ": "Remove {name} from the cart?",
 } as const;

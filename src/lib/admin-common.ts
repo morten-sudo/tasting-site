@@ -84,7 +84,7 @@ export function enableImageZoom(closeLabel: string) {
     dialog.addEventListener('click', () => dialog!.close());
   }
   document.addEventListener('click', (e) => {
-    const img = (e.target as HTMLElement).closest('.wine-thumb img, #wf-preview') as HTMLImageElement | null;
+    const img = (e.target as HTMLElement).closest('.thumb > img, #wf-preview') as HTMLImageElement | null;
     if (!img || !img.src || img.hidden) return;
     e.preventDefault();
     const big = dialog!.querySelector('img')!;

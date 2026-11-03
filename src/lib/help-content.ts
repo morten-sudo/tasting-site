@@ -177,15 +177,15 @@ export const HELP: HelpSection[] = [
     body: {
       da: `<ul>
 <li><b><a href="g:wines/">Vinene</a></b> – gæsterne bladrer gennem vinene på telefonen, med billede, kort, druer, mad og servering, og giver hver vin stjerner og noter.</li>
-<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">lav spørgsmål</a> med svarmuligheder under fanen <a href="t:quiz/">Quiz</a>. Slå <a href="t:settings/#controls">Svare på quizzen</a> til, når gæsterne skal svare, og <i>Quiz afsluttet</i>, når de rigtige svar og stillingen skal vises.</li>
-<li><b>Quiz-forslag fra AI</b> – vælg sværhedsgrad (<i>Let, Mellem, Ekspert</i>) og tryk <a href="t:quiz/#q-ai">Forslag fra AI</a>. Du får 5 spørgsmål ud fra vinene – om land og region, druer, alder, fremstilling, begreber og "hvilken passer ikke ind". Ved en almindelig smagning handler spørgsmålene om viden omkring vinene (regionen, druerne, fremstillingen), ikke om det, gæsterne kan læse på vinens kort; kun blinde vine får gættespørgsmål. Forslagene tilføjes kun, når du trykker <i>Tilføj</i>; tjek de rigtige svar, og ret spørgsmålet bagefter som alle andre. <i>Flere forslag</i> giver nye uden gentagelser.</li>
+<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">lav spørgsmål</a> med svarmuligheder under fanen <a href="t:quiz/">Quiz</a>. Træk i grebet foran nummeret for at ændre rækkefølgen (eller Tab til grebet og ↑ ↓). Slå <a href="t:settings/#controls">Svare på quizzen</a> til, når gæsterne skal svare, og <i>Quiz afsluttet</i>, når de rigtige svar og stillingen skal vises.</li>
+<li><b>Quiz-forslag fra AI</b> – vælg sværhedsgrad (<i>Let, Mellem, Ekspert</i>) og tryk <a href="t:quiz/#q-ai">Forslag fra AI</a>. Du får 5 spørgsmål ud fra vinene – om land og region, druer, alder, fremstilling, begreber og "hvilken passer ikke ind". Ved en almindelig smagning handler spørgsmålene om viden omkring vinene (regionen, druerne, fremstillingen), ikke om det, gæsterne kan læse på vinens kort; kun blinde vine får gættespørgsmål. Forslagene tilføjes kun, når du trykker plusset (<i>Tilføj</i>) ved forslaget – krydset springer det over; tjek de rigtige svar, og ret spørgsmålet bagefter som alle andre. <i>Flere forslag</i> giver nye uden gentagelser.</li>
 <li><b><a href="t:chat/">Chat</a></b> – en fælles chat for aftenen, som både du og gæsterne kan skrive i.</li>
 <li><b>Blinde vine</b> – afslør dem undervejs, se <a href="#blind">Blindsmagning</a>.</li>
 </ul>`,
       en: `<ul>
 <li><b><a href="g:wines/">The wines</a></b> – guests browse the wines on their phone, with picture, map, grapes, food and serving, and give each wine stars and notes.</li>
-<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">make questions</a> with answer options on the <a href="t:quiz/">Quiz</a> tab. Turn on <a href="t:settings/#controls">Answer the quiz</a> when the guests should answer, and <i>Quiz finished</i> when the right answers and the standings should be shown.</li>
-<li><b>Quiz suggestions from AI</b> – choose a difficulty (<i>Easy, Medium, Expert</i>) and press <a href="t:quiz/#q-ai">Suggestions from AI</a>. You get 5 questions from the wines – about country and region, grapes, age, how it is made, terms and "odd one out". In an ordinary tasting the questions are about the knowledge around the wines (the region, the grapes, how it is made), not what guests can read on the wine's card; only blind wines get guessing questions. Suggestions are only added when you press <i>Add</i>; check the right answers, and edit the question afterwards like any other. <i>More suggestions</i> gives new ones without repeats.</li>
+<li><b>Quiz</b> – <a href="t:quiz/?open=q-add-toggle">make questions</a> with answer options on the <a href="t:quiz/">Quiz</a> tab. Drag the grip in front of the number to change the order (or Tab to the grip and use ↑ ↓). Turn on <a href="t:settings/#controls">Answer the quiz</a> when the guests should answer, and <i>Quiz finished</i> when the right answers and the standings should be shown.</li>
+<li><b>Quiz suggestions from AI</b> – choose a difficulty (<i>Easy, Medium, Expert</i>) and press <a href="t:quiz/#q-ai">Suggestions from AI</a>. You get 5 questions from the wines – about country and region, grapes, age, how it is made, terms and "odd one out". In an ordinary tasting the questions are about the knowledge around the wines (the region, the grapes, how it is made), not what guests can read on the wine's card; only blind wines get guessing questions. Suggestions are only added when you press the plus (<i>Add</i>) by one – the cross skips it; check the right answers, and edit the question afterwards like any other. <i>More suggestions</i> gives new ones without repeats.</li>
 <li><b><a href="t:chat/">Chat</a></b> – a shared chat for the evening that you and the guests can write in.</li>
 <li><b>Blind wines</b> – reveal them as you go, see <a href="#blind">Blind tasting</a>.</li>
 </ul>`,
@@ -203,7 +203,7 @@ export const HELP: HelpSection[] = [
 <li><b>Alle gæster sammen</b> – god til vinklubber og fællesindkøb: når gæsterne tilsammen bestiller 6, får alle mængdeprisen. Gæsterne ser "Sammen har I bestilt 4 af 6 – 2 flasker mere …". Priserne er foreløbige, indtil du lukker for bestillinger, og gæsterne bliver bedt om at vente med at betale til da.</li>
 </ul>
 <p>Når grænsen er nået, gælder den billige pris for alle flasker – også dem ud over 6. Betalte bestillinger beholder deres pris.</p>
-<p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger, markerer dem betalt og kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
+<p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger – én række pr. bestilling med <i>Betalt</i> eller <i>Afventer betaling</i>. Fluebenet i rækken markerer den betalt (krydset fortryder), og du kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
 <p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne får så en knap, der åbner MobilePay med beløb og besked udfyldt – både til bestillinger og deltagergebyr.</p>`,
       en: `<p>When <a href="t:settings/#controls">Ordering open</a> is on, guests can put the wines that can be ordered in the cart and send the order. Quantity prices apply automatically.</p>
 <h4 id="bulk">Quantity prices – each guest or everyone together</h4>
@@ -213,7 +213,7 @@ export const HELP: HelpSection[] = [
 <li><b>All guests together</b> – good for wine clubs and joint orders: when the guests together order 6, everyone gets the quantity price. Guests see "Together you have ordered 4 of 6 – 2 more …". Prices are provisional until you close ordering, and guests are asked to wait with paying until then.</li>
 </ul>
 <p>Once the quantity is reached, the lower price applies to every bottle – also those beyond 6. Paid orders keep their price.</p>
-<p>On the <a href="t:orders/">Orders</a> tab you see all orders, mark them paid and can <a href="t:orders/#csv">download them as CSV</a> for the supplier.</p>
+<p>On the <a href="t:orders/">Orders</a> tab you see all orders – one row per order with <i>Paid</i> or <i>Awaiting payment</i>. The tick in the row marks it paid (the cross undoes it), and you can <a href="t:orders/#csv">download them as CSV</a> for the supplier.</p>
 <p>Under <a href="/admin/payments/#mp-number">Payments</a> you enter your MobilePay number. Guests then get a button that opens MobilePay with the amount and message filled in – for orders and the tasting fee.</p>`,
     },
   },

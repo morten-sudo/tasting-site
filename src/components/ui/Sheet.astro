@@ -1,0 +1,43 @@
+---
+// Component 30 – the one side panel (<dialog class="sheet">): from the right on larger screens, a bottom sheet on
+// phones. The head (title and ×) and the foot (one primary button first, then a secondary "Cancel") stay put; the
+// body scrolls; the quiet delete goes last in the body (slot "quiet"). Wire it with sheetPanel() from
+// src/lib/ui/sheet.ts (backdrop click, Esc and × close – asking "Discard changes?" first when something was changed).
+// sheet() in the same file builds the same markup in TypeScript.
+//   title / titleId: the heading (an i18n key; leave title empty when the script fills it in)
+//   form: the id of a <form> around body and foot (Enter and the primary submit button save)
+//   cancel: false leaves out the "Cancel" button (a panel without a foot slot has no foot)
+import CloseButton from './CloseButton.astro';
+import { en } from '../../i18n/en';
+interface Props {
+  id: string; title?: string; titleId?: string; wide?: boolean; form?: string; formClass?: string; cancel?: boolean;
+  cancelId?: string; class?: string; label?: string; [attr: string]: unknown;
+}
+const { id, title, titleId = `${id}-title`, wide = false, form, formClass, cancel = true, cancelId, class: cls, label, ...rest } = Astro.props;
+const hasFoot = Astro.slots.has('foot');
+const hasQuiet = Astro.slots.has('quiet');
+const Wrap = form ? 'form' : 'div';
+const heading = title ? (en as Record<string, string>)[title] ?? title : '';
+---
+<dialog id={id} class:list={['sheet', { wide }, cls]} aria-labelledby={label ? undefined : titleId} aria-label={label} {...rest}>
+  <div class="sh-grab" aria-hidden="true"></div>
+  <div class="sh-head">
+    <h2 id={titleId} data-i18n={title || undefined}>{heading}</h2>
+    <CloseButton data-close />
+  </div>
+  <Wrap id={form} class:list={['sh-form', formClass]} novalidate={form ? true : undefined}>
+    <div class="sh-body">
+      <slot />
+      {hasQuiet && <div class="sh-quiet"><slot name="quiet" /></div>}
+    </div>
+    {hasFoot && (
+      <div class="sh-foot">
+        <slot name="foot-top" />
+        <div class="actions">
+          <slot name="foot" />
+          {cancel && <button id={cancelId} class="btn secondary" type="button" data-close data-i18n="common.cancel">Cancel</button>}
+        </div>
+      </div>
+    )}
+  </Wrap>
+</dialog>

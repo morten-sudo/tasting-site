@@ -28,7 +28,7 @@ import '../../styles/admin.css';
         </div>
         <h3 data-i18n="super.guessesTitle">Places found by Cloudflare AI</h3>
         <p class="hint" data-i18n="super.guessesHint">Appellations that are not on the list, placed by Cloudflare AI and checked against the country. Check the place; delete a wrong one and it is looked up again the next time a host saves the wine.</p>
-        <ul id="guess-rows" class="guess-list"></ul>
+        <ul id="guess-rows" class="list"></ul>
         <EmptyState id="guesses-none" icon="info" title="super.guessesNone" hidden />
       </section>
 
@@ -41,6 +41,8 @@ import '../../styles/admin.css';
   import { chip } from '../../lib/ui/status';
   import { confirmModal } from '../../lib/ui/confirm';
   import { toast } from '../../lib/ui/toast';
+  import { listRow } from '../../lib/ui/list-row';
+  import { iconButton } from '../../lib/ui/icon-button';
 
   import { supabase } from '../../lib/supabase';
   import { t } from '../../i18n';
@@ -77,19 +79,16 @@ import '../../styles/admin.css';
     type G = { key: string; name: string; country: string; lat: number; lon: number };
     const gs = (guesses ?? []) as G[];
     $('guesses-none').hidden = gs.length > 0;
+    // One row per guess (the one list row): the place (opens it on a map), country and coordinates, and the quiet trash
     $('guess-rows').replaceChildren(...gs.map((g) => {
-      const li = document.createElement('li');
-      const text = document.createElement('span');
-      text.textContent = `${g.name} · ${countryName(g.country)} · ${g.lat.toFixed(3)}, ${g.lon.toFixed(3)}`;
-      const show = document.createElement('a');
-      show.href = `https://www.google.com/maps?q=${g.lat},${g.lon}`;
-      show.target = '_blank';
-      show.rel = 'noopener';
-      show.textContent = t('super.guessShow');
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'text-btn danger';
-      del.textContent = t('super.guessDelete');
+      const del = iconButton('trash', `${t('super.guessDelete')}: ${g.name}`, { quiet: true });
+      del.dataset.tip = t('super.guessDelete');
+      const li = listRow({ title: g.name, href: `https://www.google.com/maps?q=${g.lat},${g.lon}`,
+        meta: [[countryName(g.country), `${g.lat.toFixed(3)}, ${g.lon.toFixed(3)}`]], actions: [del] });
+      const a = li.querySelector<HTMLAnchorElement>('a.ltitle')!;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.title = t('super.guessShow');
       del.addEventListener('click', async () => {
         if (!(await confirmModal({ title: t('super.guessDeleteQ', { name: g.name }), text: t('super.guessDeleteText'), ok: t('super.guessDelete'), danger: true }))) return;
         const { error } = await supabase.rpc('admin_delete_place_guess', { k: g.key });
@@ -98,7 +97,6 @@ import '../../styles/admin.css';
         $('guesses-none').hidden = !!$('guess-rows').children.length;
         toast(t('super.guessDeleted', { name: g.name }));
       });
-      li.append(text, show, del);
       return li;
     }));
   }

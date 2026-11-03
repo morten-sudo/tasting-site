@@ -1310,4 +1310,13 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "admin.noOrdersClosed": "Activez « Commander du vin » ci-dessus pour que les invités puissent commander.",
   "twe.removeTierQ": "Retirer le prix par quantité ?",
   "gate.winesTitle": "Connectez-vous pour voir les vins",
+  "addRow.discardQ": "Abandonner ce que vous avez écrit ?",
+  "aq.move": "Déplacer la question {n}",
+  "aq.moved": "Déplacée à la place {n} sur {total}",
+  "orders.markPaid": "Marquer comme payée",
+  "orders.markUnpaid": "Marquer comme non payée",
+  "orders.markedPaid": "La commande {id} de {name} est marquée comme payée",
+  "orders.markedUnpaid": "La commande {id} de {name} est marquée comme non payée",
+  "cart.removed": "{name} a été retiré du panier",
+  "cart.removeQ": "Retirer {name} du panier ?",
 };

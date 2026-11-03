@@ -1424,4 +1424,13 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "admin.noOrdersClosed": "Slå “Bestille vin” til ovenfor, så gæsterne kan bestille.",
   "twe.removeTierQ": "Fjern mængdeprisen?",
   "gate.winesTitle": "Log ind for at se vinene",
+  "addRow.discardQ": "Kassér det, du har skrevet?",
+  "aq.move": "Flyt spørgsmål {n}",
+  "aq.moved": "Flyttet til plads {n} af {total}",
+  "orders.markPaid": "Markér som betalt",
+  "orders.markUnpaid": "Markér som ikke betalt",
+  "orders.markedPaid": "Bestilling {id} fra {name} er markeret som betalt",
+  "orders.markedUnpaid": "Bestilling {id} fra {name} er markeret som ikke betalt",
+  "cart.removed": "{name} er fjernet fra kurven",
+  "cart.removeQ": "Fjern {name} fra kurven?",
 };

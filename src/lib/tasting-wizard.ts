@@ -98,6 +98,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     reset();
     dialog.showModal();
     if (matchMedia('(min-width: 48rem)').matches) $('wz-title-input').focus();
+    // Phones: the keyboard would cover the form – start on the heading, not on × (which would show its tip)
+    else { const h = $('wz-title'); h.tabIndex = -1; h.focus({ preventScroll: true }); }
   }
 
   return { openNew: open };

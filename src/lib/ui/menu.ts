@@ -7,8 +7,6 @@ import { iconSvg } from './icons';
 export interface MenuOptions {
   /** The items that keys move between (default: .opt-i that are buttons, links or labels) */
   items?: string;
-  /** Phones: a backdrop behind the menu (it opens as a bottom sheet with .sheet-sm) */
-  backdrop?: HTMLElement;
   /** What gets focus when it opens (default: the chosen item, else the first) */
   focusOnOpen?: () => HTMLElement | null | undefined;
   onOpen?: () => void;
@@ -47,7 +45,6 @@ export function bindMenu(button: HTMLElement, menu: HTMLElement, opts: MenuOptio
       if (!menu.hidden) return;
       closeMenus();
       menu.hidden = false;
-      if (opts.backdrop) { opts.backdrop.hidden = false; if (matchMedia('(max-width: 40rem)').matches) document.body.classList.add('sheet-open'); }
       button.setAttribute('aria-expanded', 'true');
       open.add(h);
       opts.onOpen?.();
@@ -60,8 +57,6 @@ export function bindMenu(button: HTMLElement, menu: HTMLElement, opts: MenuOptio
     close(refocus = true) {
       if (menu.hidden) return;
       menu.hidden = true;
-      if (opts.backdrop) opts.backdrop.hidden = true;
-      document.body.classList.remove('sheet-open');
       button.setAttribute('aria-expanded', 'false');
       open.delete(h);
       opts.onClose?.();
@@ -72,7 +67,6 @@ export function bindMenu(button: HTMLElement, menu: HTMLElement, opts: MenuOptio
   button.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); h.open(); if (e.key === 'ArrowUp') items().at(-1)?.focus(); }
   });
-  opts.backdrop?.addEventListener('click', () => h.close(false));
 
   let typed = '';
   let typedAt = 0;

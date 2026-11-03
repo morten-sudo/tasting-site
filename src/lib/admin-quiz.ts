@@ -7,6 +7,9 @@ import { toast } from './ui/toast';
 import { setStatus } from './ui/status-line';
 import { setLoading } from './ui/button';
 import { fieldError, focusField } from './field-error';
+import { listRow } from './ui/list-row';
+import { reorder } from './ui/reorder';
+import { highlight } from './ui/highlight';
 
 export type AdminQuestion = {
   id: number; tasting_id: string; sort_order: number; question: string;
@@ -98,40 +101,32 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     panel.close();
   }
 
+  /** The answers under a question: the right one marked */
+  function answers(options: string[], correct: number) {
+    const ul = mk('ul', 'q-options');
+    options.forEach((o, i) => {
+      const item = mk('li', i === correct ? 'correct' : '', o);
+      if (i === correct) item.setAttribute('aria-label', `${o} – ${t('aq.correct')}`);
+      ul.append(item);
+    });
+    return ul;
+  }
+
+  // One row per question (the one list row): the grip moves it (drag, or ↑/↓ on it), the pencil edits it
   function render() {
-    list.replaceChildren();
     $('q-empty').hidden = questions.length > 0;
     list.hidden = !questions.length;
-    questions.forEach((q, i) => {
-      const li = mk('li', 'q-row');
-      const body = mk('div', 'q-body');
-      body.append(mk('p', 'q-question', q.question));
-      const ul = mk('ul', 'q-options');
-      for (const o of q.options) {
-        const item = mk('li', o.key === q.correct_key ? 'correct' : '', o.text);
-        if (o.key === q.correct_key) item.setAttribute('aria-label', `${o.text} – ${t('aq.correct')}`);
-        ul.append(item);
-      }
-      body.append(ul);
-      if (!q.correct_key) body.append(mk('p', 'q-warn', t('aq.noCorrect')));
-
-      const actions = mk('div', 'tw-actions');
-      const up = iconButton('up', t('aq.moveUp', { n: i + 1 }));
-      up.dataset.tip = t('aq.up');
-      up.disabled = i === 0;
-      up.addEventListener('click', () => move(i, -1));
-      const down = iconButton('down', t('aq.moveDown', { n: i + 1 }));
-      down.dataset.tip = t('aq.down');
-      down.disabled = i === questions.length - 1;
-      down.addEventListener('click', () => move(i, 1));
+    list.replaceChildren(...questions.map((q, i) => {
       const edit = iconButton('edit', `${t('admin.edit')}: ${q.question}`);
       edit.dataset.tip = t('admin.edit');
       edit.addEventListener('click', () => openForm(q));
-      actions.append(up, down, edit);
-
-      li.append(body, actions);
-      list.append(li);
-    });
+      const body: Node[] = [answers(q.options.map((o) => o.text), q.options.findIndex((o) => o.key === q.correct_key))];
+      if (!q.correct_key) body.push(mk('p', 'q-warn', t('aq.noCorrect')));
+      return listRow({
+        id: q.id, grip: { label: t('aq.move', { n: i + 1 }), tip: t('twe.moveHint') }, no: i + 1,
+        title: q.question, onOpen: () => openForm(q), body, actions: [edit],
+      });
+    }));
     onChange(questions);
   }
 
@@ -142,22 +137,24 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     render();
   }
 
-  async function move(index: number, dir: -1 | 1) {
-    const other = index + dir;
-    if (other < 0 || other >= questions.length) return;
-    [questions[index], questions[other]] = [questions[other], questions[index]];
-    questions.forEach((q, i) => (q.sort_order = i + 1));
-    render();
-    await Promise.all(
-      [questions[index], questions[other]].map((q) =>
-        supabase.from('quiz_questions').update({ sort_order: q.sort_order }).eq('id', q.id)),
-    );
-  }
+  // The order: the one reorder (src/lib/ui/reorder.ts), as the tasting's wines
+  reorder(list, {
+    announce: (n, total) => t('aq.moved', { n, total }),
+    save: async (ids) => {
+      const byId = new Map(questions.map((q) => [String(q.id), q]));
+      questions = ids.map((id) => byId.get(id)!).filter(Boolean);
+      const changed = questions.filter((q, i) => q.sort_order !== i + 1);
+      questions.forEach((q, i) => (q.sort_order = i + 1));
+      onChange(questions);
+      const res = await Promise.all(changed.map((q) => supabase.from('quiz_questions').update({ sort_order: q.sort_order }).eq('id', q.id)));
+      if (res.some((x) => x.error)) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return false; }
+      return true;
+    },
+  });
 
   // ---------- Events ----------
   $('q-add-toggle').addEventListener('click', () => openForm(null));
   $('q-empty-add').addEventListener('click', () => openForm(null));
-  $('qf-cancel').addEventListener('click', closeForm);
   $('qf-add-option').addEventListener('click', () => {
     if (optionsBox.children.length < MAX_OPTIONS) optionRow().focus();
   });
@@ -197,9 +194,11 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
         });
     setLoading(save, false);
     if (error) { toast(t('aq.notSaved'), { kind: 'error' }); return; }
+    const id = editing?.id;
     closeForm();
     toast(t('aq.saved'));
     await load();
+    highlight(id ? list.querySelector(`[data-id="${id}"]`) : list.lastElementChild);
   });
 
   // Delete: asked about first; the guests' answers to the question go with it
@@ -226,7 +225,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     try {
       const { data: s } = await supabase.auth.getSession();
       // Neither the quiz nor the suggestions already shown are asked again
-      const shown = [...aiList.querySelectorAll<HTMLElement>('.ai-q')].map((x) => x.textContent ?? '');
+      const shown = [...aiList.querySelectorAll<HTMLElement>('.ai-q .ltitle')].map((x) => x.textContent ?? '');
       const res = await fetch('/api/suggest-quiz', {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
@@ -250,22 +249,14 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     }
   }
 
+  // A suggestion: the same row as the questions, with "Add to the quiz" and "Skip" as its icons
   function suggestionCard(sg: Suggestion) {
-    const li = mk('li', 'ai-suggestion');
-    li.append(mk('p', 'ai-q', sg.question));
-    const ul = mk('ul', 'q-options');
-    sg.options.forEach((o, i) => {
-      const item = mk('li', i === sg.correct ? 'correct' : '', o);
-      if (i === sg.correct) item.setAttribute('aria-label', `${o} – ${t('aq.correct')}`);
-      ul.append(item);
-    });
-    li.append(ul);
-    if (sg.explanation) li.append(mk('p', 'q-explain', sg.explanation));
-    const row = mk('div', 'row-actions');
-    const add = mk('button', 'btn small', t('aiQuiz.add'));
-    add.type = 'button';
-    const skip = mk('button', 'text-btn', t('aiQuiz.skip'));
-    skip.type = 'button';
+    const body: Node[] = [answers(sg.options, sg.correct)];
+    if (sg.explanation) body.push(mk('p', 'lmeta', sg.explanation));
+    const add = iconButton('plus', t('aiQuiz.add'), { strong: true });
+    const skip = iconButton('x', t('aiQuiz.skip'), { quiet: true });
+    const li = listRow({ title: sg.question, body, actions: [add, skip], cls: 'ai-q' });
+    const gone = () => { li.remove(); if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; } };
     add.addEventListener('click', async () => {
       add.disabled = true;
       const { error } = await supabase.from('quiz_questions').insert({
@@ -278,13 +269,11 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
       });
       if (error) { add.disabled = false; toast(t('aq.notSaved'), { kind: 'error' }); return; }
       toast(t('aiQuiz.added'));
-      li.remove();
-      if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; }
+      gone();
       await load();
+      highlight(list.lastElementChild);
     });
-    skip.addEventListener('click', () => { li.remove(); if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; } });
-    row.append(add, skip);
-    li.append(row);
+    skip.addEventListener('click', gone);
     return li;
   }
   $('q-ai').addEventListener('click', suggest);

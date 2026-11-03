@@ -18,7 +18,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     <Notice id="confirm" tone="ok" class="confirm" hidden><b id="confirm-title" class="n-title"></b><div id="confirm-pay"></div></Notice>
 
     <div id="cart" hidden>
-      <ul id="lines" class="lines"></ul>
+      <ul id="lines" class="list"></ul>
       <div class="sum">
         <span data-i18n="cart.total">Total</span>
         <strong id="total"></strong>
@@ -33,7 +33,7 @@ import SignInState from '../../components/ui/SignInState.astro';
 
     <section id="history" class="history" hidden>
       <h2 data-i18n="cart.yourOrders">Your orders</h2>
-      <div id="orders"></div>
+      <ul id="orders" class="cards"></ul>
     </section>
   </section>
 </Base>
@@ -41,6 +41,10 @@ import SignInState from '../../components/ui/SignInState.astro';
 <script>
   import { stepper } from '../../lib/ui/stepper';
   import { statusChip } from '../../lib/ui/status';
+  import { listRow } from '../../lib/ui/list-row';
+  import { wineThumb } from '../../lib/ui/thumb';
+  import { iconButton } from '../../lib/ui/icon-button';
+  import { deleteWithUndo } from '../../lib/ui/delete-undo';
   import { setLoading } from '../../lib/ui/button';
   import { toast } from '../../lib/ui/toast';
   import { supabase } from '../../lib/supabase';
@@ -52,7 +56,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   import { bulkNote } from '../../lib/bulk';
 
   type Wine = { id: number; name: string; price_dkk: number | null; orderable: boolean; sort_order: number;
-    price_tiers: PriceTier[] | null; ordered?: number };
+    price_tiers: PriceTier[] | null; ordered?: number; image_url?: string | null; blind?: boolean };
   type Line = {
     order_id: number; created_at: string; paid: boolean;
     wine_id: number; wine_name: string; quantity: number; unit_price: number;
@@ -98,33 +102,35 @@ import SignInState from '../../components/ui/SignInState.astro';
       const price = unitPrice(w, counted);
       total += n * price;
 
-      const li = el('li', 'line');
-      const info = el('div', 'line-info');
-      info.append(el('p', 'line-name', w.name), el('p', 'line-unit', [t('cart.perBottle', { price: kr.format(price) }),
-        nextTierLabel(w, counted)].filter(Boolean).join(' · ')));
-      const note = bulkNote(w, bulkMode, n);
-      if (note) info.append(el('p', 'line-bulk', note));
-
-      const ctrl = el('div', 'line-ctrl');
-      // The one stepper (src/lib/ui/stepper.ts): 1 up to what may be ordered; "Remove" takes the line away
+      // The one stepper (src/lib/ui/stepper.ts): 1 up to what may be ordered; the trash takes the line away
       const step = stepper({ value: n, min: 1, max: MAX_PER_WINE, label: w.name,
         lessLabel: t('cart.oneLess', { name: w.name }), moreLabel: t('cart.oneMore', { name: w.name }),
         onChange: (v) => {
           const which = document.activeElement === step.el.lastElementChild ? 'last' : 'first';
           setQty(id, v); renderCart();
           // Keep the focus on the same button after the list is drawn again
-          const again = ul.querySelector<HTMLElement>(`[data-line="${id}"] .stepper button:${which}-of-type`);
-          (again && !(again as HTMLButtonElement).disabled ? again : ul.querySelector<HTMLElement>(`[data-line="${id}"] .stepper button:not(:disabled)`))?.focus();
+          const again = ul.querySelector<HTMLElement>(`[data-id="${id}"] .stepper button:${which}-of-type`);
+          (again && !(again as HTMLButtonElement).disabled ? again : ul.querySelector<HTMLElement>(`[data-id="${id}"] .stepper button:not(:disabled)`))?.focus();
         } });
-      li.dataset.line = String(id);
-
-      const remove = el('button', 'text-btn danger small', t('cart.remove'));
-      remove.type = 'button';
-      remove.addEventListener('click', () => { setQty(id, 0); renderCart(); });
-
-      ctrl.append(step.el, el('span', 'line-total', kr.format(n * price)), remove);
-      li.append(info, ctrl);
-      ul.append(li);
+      const aside = el('div', 'cart-qty');
+      aside.append(step.el, el('b', 'line-total', kr.format(n * price)));
+      // Removing a line: the quiet trash, asked about first, with Undo
+      const remove = iconButton('trash', `${t('cart.remove')}: ${w.name}`, { quiet: true });
+      remove.dataset.tip = t('cart.remove');
+      remove.addEventListener('click', () => deleteWithUndo({
+        label: t('cart.removed', { name: w.name }),
+        ask: { title: t('cart.removeQ', { name: w.name }), ok: t('cart.remove') },
+        hide: () => { setQty(id, 0); renderCart(); },
+        restore: () => { setQty(id, n); renderCart(); },
+        commit: async () => true,
+      }));
+      const note = bulkNote(w, bulkMode, n);
+      // One line per wine (the one list row): picture, name, price per bottle, the stepper and the line's total
+      ul.append(listRow({
+        id, pic: wineThumb(w, { blind: w.blind === true }), title: w.name, cls: 'cart-line',
+        meta: [[t('cart.perBottle', { price: kr.format(price) }), nextTierLabel(w, counted)], note ? el('span', 'bulk', note) : null],
+        aside, actions: [remove],
+      }));
     }
     $('total').textContent = kr.format(total);
     ($('send') as HTMLButtonElement).disabled = !open;
@@ -142,31 +148,26 @@ import SignInState from '../../components/ui/SignInState.astro';
       if (!byOrder.has(l.order_id)) byOrder.set(l.order_id, []);
       byOrder.get(l.order_id)!.push(l);
     }
-    for (const [id, ls] of [...byOrder].reverse()) {
+    // One card per order (the card variant of the one list row) – the same as in the wine book
+    box.replaceChildren(...[...byOrder].reverse().map(([id, ls]) => {
       const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
-      const card = el('div', 'card order' + (ls[0].paid ? ' paid' : ''));
-      const head = el('div', 'order-head');
-      head.append(
-        el('strong', '', t('pay.orderComment', { id })),
-        statusChip(ls[0].paid ? 'order.paid' : 'order.unpaid'),
-      );
-      card.append(head, el('p', 'hint', date.format(new Date(ls[0].created_at))));
       const ul = el('ul');
       for (const l of ls) ul.append(el('li', '', `${l.quantity} × ${l.wine_name}`));
-      card.append(ul);
-      const foot = el('div', 'order-foot');
-      foot.append(el('span', '', t('cart.total')), el('strong', '', kr.format(total)));
-      card.append(foot);
-      if (!ls[0].paid && payLater()) {
-        card.append(el('p', 'hint', t('bulk.payLater')));
-      } else if (!ls[0].paid) {
+      const body: Node[] = [ul];
+      if (!ls[0].paid && payLater()) body.push(el('p', 'lmeta', t('bulk.payLater')));
+      else if (!ls[0].paid) {
         const more = el('details', 'pay-more');
         more.append(el('summary', '', t('cart.howToPay')));
         more.append(payBox(total, t('pay.orderComment', { id })));
-        card.append(more);
+        body.push(more);
       }
-      box.append(card);
-    }
+      return listRow({
+        variant: 'card', small: true, title: t('pay.orderComment', { id }),
+        chips: [statusChip(ls[0].paid ? 'order.paid' : 'order.unpaid')],
+        meta: [date.format(new Date(ls[0].created_at))],
+        body, foot: [el('span', '', t('cart.total')), el('b', '', kr.format(total))],
+      });
+    }));
   }
 
   $('send').addEventListener('click', async () => {
@@ -243,13 +244,10 @@ import SignInState from '../../components/ui/SignInState.astro';
   }
   .cart-page .confirm, .cart-page #closed { margin-bottom: 1.5rem; }
 
-  .cart-page .lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--lodge-3); }
-  .cart-page .line { padding: 1rem 0; border-bottom: 1px solid var(--lodge-2); }
-  .cart-page .line-name { margin: 0; font-weight: 500; line-height: 1.35; }
-  .cart-page .line-unit { margin: 0.1rem 0 0.6rem; color: var(--muted); font-size: 0.9rem; }
-  .cart-page .line-bulk { margin: -0.3rem 0 0.6rem; color: var(--amber); font-size: 0.88rem; }
-  .cart-page .line-ctrl { display: flex; align-items: center; gap: 1rem; }
-  .cart-page .line-total { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .cart-page .cart-qty { display: flex; align-items: center; gap: 1rem; }
+  .cart-page .cart-line .line-total { min-width: 6.5rem; text-align: right; font-weight: 500; }
+  .cart-page .cart-line .bulk { color: var(--amber); }
+  @container (max-width: 34rem) { .cart-page .cart-line .line-total { min-width: 0; } }
 
   .cart-page .sum {
     display: flex;
@@ -262,14 +260,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   .cart-page .send { margin-bottom: 0.6rem; }
 
   .cart-page .history { margin-top: 3rem; }
-  .cart-page .order { padding: 0.9rem 1rem; margin-bottom: 0.75rem; border-left: 3px solid var(--amber); }
-  .cart-page .order.paid { border-left-color: var(--ok); }
-  .cart-page .order-head, .cart-page .order-foot { display: flex; justify-content: space-between; gap: 1rem; }
-  .cart-page .order-head { align-items: center; }
-  .cart-page .order .hint { margin: 0.1rem 0 0.5rem; font-size: 0.85rem; }
-  .cart-page .order ul { margin: 0 0 0.6rem; padding-left: 1.1rem; font-size: 0.95rem; }
-  .cart-page .order-foot { border-top: 1px solid var(--lodge-3); padding-top: 0.5rem; }
-
+  .cart-page .history .cards { margin-top: 0.75rem; }
   .cart-page .pay-more { margin-top: 0.6rem; }
   .cart-page .pay-more summary { cursor: pointer; color: var(--amber); font-size: 0.95rem; padding: 0.3rem 0; }
 </style>

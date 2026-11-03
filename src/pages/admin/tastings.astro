@@ -25,9 +25,9 @@ import '../../styles/admin.css';
 
       <section>
         <h3 id="upcoming-h" data-i18n="tastings.upcoming" hidden>Upcoming</h3>
-        <ul id="upcoming" class="tasting-cards"></ul>
+        <ul id="upcoming" class="cards tasting-cards"></ul>
         <h3 id="past-h" data-i18n="tastings.past" hidden>Past</h3>
-        <ul id="past" class="tasting-cards"></ul>
+        <ul id="past" class="cards tasting-cards"></ul>
         <EmptyState id="intro" icon="calendar" title="admin.noTastingsTitle" text="admin.welcomeHost" hidden>
           <button id="intro-new" class="btn small" type="button"><Icon name="plus" /><span data-i18n="admin.newTasting">New tasting</span></button>
         </EmptyState>
@@ -40,10 +40,10 @@ import '../../styles/admin.css';
 </Base>
 
 <script>
-  import { chip } from '../../lib/ui/status';
+  import { listRow } from '../../lib/ui/list-row';
   import { filterDropdown } from '../../lib/filter-dd';
   import { supabase } from '../../lib/supabase';
-  import { requireHost, $, mk } from '../../lib/admin-common';
+  import { requireHost, $ } from '../../lib/admin-common';
   import { t, formatWhen } from '../../i18n';
   import { initWizard } from '../../lib/tasting-wizard';
   import { toast } from '../../lib/toast';
@@ -59,26 +59,15 @@ import '../../styles/admin.css';
 
   const adminUrl = (slug: string) => `/t/${slug}/admin/`;
 
+  // A tasting as the card variant of the one list row: title, "You host", when and where, guests and wines
   function card(r: Row) {
-    const li = mk('li');
-    const a = mk('a', 'card tasting-card');
-    a.href = adminUrl(r.slug);
-    // "You host" as a chip beside the title
-    const head = mk('span', 'card-head');
-    head.append(mk('span', 'card-title', r.title));
-    if (hosting.has(r.id)) head.append(chip(t('roles.youHost'), 'strong'));
-    a.append(head);
-    const meta = [r.starts_at ? formatWhen(r.starts_at, { year: true }) : null, r.place].filter(Boolean).join(' · ');
-    if (meta) a.append(mk('span', 'card-meta', meta));
-    const stats = mk('span', 'card-stats');
     const coming = r.participants.filter((p) => p.status === 'yes').length;
-    stats.append(
-      mk('span', '', t('tastingsAdmin.guests', { coming, n: r.participants.length })),
-      mk('span', '', t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })),
-    );
-    a.append(stats);
-    li.append(a);
-    return li;
+    return listRow({
+      variant: 'card', cardHref: adminUrl(r.slug), title: r.title,
+      chips: hosting.has(r.id) ? [{ text: t('roles.youHost'), tone: 'strong' }] : [],
+      meta: [[r.starts_at ? formatWhen(r.starts_at, { year: true }) : null, r.place],
+        [t('tastingsAdmin.guests', { coming, n: r.participants.length }), t('tastingsAdmin.wines', { n: r.tasting_wines[0]?.count ?? 0 })]],
+    });
   }
 
   async function load() {

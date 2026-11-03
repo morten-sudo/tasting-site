@@ -42,7 +42,7 @@ import SignInState from '../components/ui/SignInState.astro';
           <Dropdown id="w-sort" full={false} right ariaLabel="book.sort" value="recent"
             options={[{ value: 'recent', label: 'book.sortRecent', i18n: true }, { value: 'rating', label: 'book.sortRating', i18n: true }, { value: 'name', label: 'book.sortName', i18n: true }]} />
         </div>
-        <ul id="wine-list" class="book-wines"></ul>
+        <ul id="wine-list" class="cards book-wines"></ul>
         <EmptyState id="no-wines" icon="glass" title="book.noWinesTitle" text="book.noWines" hidden>
           <a class="btn small secondary" href="/home/" data-i18n="guest.toMyTastings">My tastings</a>
         </EmptyState>
@@ -54,16 +54,16 @@ import SignInState from '../components/ui/SignInState.astro';
       <!-- Tastings I am invited to or have been to -->
       <section id="panel-tastings" role="tabpanel" aria-labelledby="tab-tastings" class="book-panel" hidden>
         <h2 id="up-h" class="book-h" data-i18n="home.upcomingMany" hidden>Upcoming tastings</h2>
-        <ul id="up-list" class="tasting-list"></ul>
+        <ul id="up-list" class="cards"></ul>
         <h2 id="past-h" class="book-h" data-i18n="tastings.past" hidden>Past</h2>
-        <ul id="past-list" class="tasting-list"></ul>
+        <ul id="past-list" class="cards"></ul>
         <EmptyState id="no-tastings" icon="calendar" title="tastings.none" text="tastings.noneHint" hidden />
       </section>
 
       <!-- Purchases -->
       <section id="panel-orders" role="tabpanel" aria-labelledby="tab-orders" class="book-panel" hidden>
         <p id="orders-sum" class="hint"></p>
-        <div id="order-list"></div>
+        <ul id="order-list" class="cards"></ul>
         <EmptyState id="no-orders" icon="cart" title="profile.noOrders" text="book.noOrdersText" hidden />
       </section>
     </div>
@@ -78,6 +78,8 @@ import SignInState from '../components/ui/SignInState.astro';
   import { originLine, normOrigin } from '../lib/origin';
   import { styleName } from '../lib/wines';
   import { starsRo } from '../lib/ui/stars';
+  import { listRow } from '../lib/ui/list-row';
+  import { wineThumb } from '../lib/ui/thumb';
   import { getDropdown } from '../lib/ui/dropdown';
   import { i18nReady, t, money, lang, locale } from '../i18n';
 
@@ -170,43 +172,27 @@ import SignInState from '../components/ui/SignInState.astro';
     return e;
   }
 
+  // A wine as the card variant of the one list row: picture, name, what it is, origin, my note, where I tasted it –
+  // and on the right my stars and what I bought. The card opens the wine's page.
   function wineItem(w: BookWine) {
-    const li = el('li');
-    const a = el('a', 'card book-wine');
-    // By number: the wine page turns it into the name address (unique also for two vintages of one wine)
-    a.href = tastingUrl(w.slug, `wines/${w.wine_id}/`);
-    const pic = el('span', 'bw-pic');
-    if (w.image_url) {
-      const img = el('img');
-      img.src = w.image_url;
-      img.alt = '';
-      img.loading = 'lazy';
-      img.referrerPolicy = 'no-referrer';
-      img.addEventListener('error', () => img.remove());
-      pic.append(img);
-    }
-    const body = el('span', 'bw-body');
-    body.append(el('span', 'bw-name', w.name));
-    const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer]
-      .filter(Boolean).filter((x, i, arr) => arr.indexOf(x) === i).join(' · ');
-    if (meta) body.append(el('span', 'bw-meta', meta));
-    const origin = originLine(w);
-    if (origin) body.append(el('span', 'bw-meta', origin));
-    if (w.note?.trim()) body.append(el('span', 'bw-note', `“${w.note.trim()}”`));
-    const where = el('span', 'bw-where', w.starts_at
+    const where = w.starts_at
       ? t('book.tastedAt', { tasting: w.title, when: new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(w.starts_at)) })
-      : w.title);
-    body.append(where);
-    const side = el('span', 'bw-side');
+      : w.title;
+    const side = document.createDocumentFragment();
     if (w.rating) {
       const s = starsRo(w.rating);
       s.setAttribute('aria-label', t('rating.yours', { n: w.rating }));
       side.append(s);
     }
     if (w.bought > 0) side.append(el('span', 'chip', t('book.bought', { n: w.bought })));
-    a.append(pic, body, side);
-    li.append(a);
-    return li;
+    const note = w.note?.trim() ? el('p', 'lmeta note', `“${w.note.trim()}”`) : null;
+    return listRow({
+      variant: 'card',
+      // By number: the wine page turns it into the name address (unique also for two vintages of one wine)
+      cardHref: tastingUrl(w.slug, `wines/${w.wine_id}/`), pic: wineThumb(w), title: w.name,
+      meta: [[w.style ? styleName(w.style) : null, w.vintage, w.producer].filter((x, i, arr) => x && arr.indexOf(x) === i), originLine(w), note, where],
+      aside: side.childNodes.length ? side : null,
+    });
   }
 
   /** A number in the stats with its label in the right form ("1 tasting", "3 tastings"). */
@@ -260,21 +246,8 @@ import SignInState from '../components/ui/SignInState.astro';
   .book-tools[hidden] { display: none; }
   .book-tools .affix { flex: 1; max-width: none; }
   .book-tools .dd { flex: none; }
-  .book-wines { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
-  .book-wine { display: grid; grid-template-columns: 3.4rem 1fr auto; gap: 0.9rem; align-items: center; padding: 0.75rem 0.9rem; }
-  .bw-pic { width: 3.4rem; height: 4.4rem; border-radius: 0.45rem; background: linear-gradient(160deg, #a3213a, #b8742e); overflow: hidden; display: flex; }
-  .bw-pic img { display: block; flex: 1; min-width: 0; height: 100%; object-fit: contain; background: #fff; }
-  .bw-body { display: grid; gap: 0.12rem; min-width: 0; }
-  .bw-name { font-family: var(--display); font-size: 1.3rem; line-height: 1.15; }
-  .bw-meta { font-size: 0.86rem; color: var(--muted); }
-  .bw-note { font-size: 0.9rem; font-style: italic; color: var(--paper); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .bw-where { font-size: 0.8rem; color: var(--muted); margin-top: 0.15rem; }
-  .bw-side { display: grid; justify-items: end; gap: 0.35rem; align-self: start; }
   #orders-sum { margin: 0 0 1rem; }
   @media (max-width: 30rem) {
     .book-stats b { font-size: 1.6rem; }
-    .book-wine { grid-template-columns: 3.2rem 1fr; align-items: start; }
-    .bw-pic { width: 3.2rem; height: 4.6rem; }
-    .bw-side { grid-column: 2; justify-items: start; grid-auto-flow: column; justify-content: start; }
   }
 </style>

@@ -1310,4 +1310,13 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "admin.noOrdersClosed": "Zet hierboven “Wijn bestellen” aan zodat de gasten kunnen bestellen.",
   "twe.removeTierQ": "Staffelprijs verwijderen?",
   "gate.winesTitle": "Log in om de wijnen te zien",
+  "addRow.discardQ": "Wat je hebt geschreven weggooien?",
+  "aq.move": "Vraag {n} verplaatsen",
+  "aq.moved": "Verplaatst naar plaats {n} van {total}",
+  "orders.markPaid": "Markeren als betaald",
+  "orders.markUnpaid": "Markeren als niet betaald",
+  "orders.markedPaid": "Bestelling {id} van {name} is gemarkeerd als betaald",
+  "orders.markedUnpaid": "Bestelling {id} van {name} is gemarkeerd als niet betaald",
+  "cart.removed": "{name} is uit het winkelmandje verwijderd",
+  "cart.removeQ": "{name} uit het winkelmandje verwijderen?",
 };

@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import '../styles/components.css';
 import Icon from '../components/ui/Icon.astro';
+import Sheet from '../components/ui/Sheet.astro';
 import { SITE_NAME } from '../lib/config';
 import { en } from '../i18n/en';
 
@@ -106,14 +107,16 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
             </nav>
             <a id="t-admin" class="btn small secondary t-admin" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" data-tip-text="Manage this tasting" data-i18n-attr="data-tip-text=nav.adminThisTitle" hidden><span data-i18n="nav.adminThis">Admin</span><Icon name="ext" /></a>
           </div>
-          <div id="t-backdrop" class="menu-backdrop" hidden></div>
-          <!-- Phones: a bottom sheet (.sheet-sm) -->
-          <div id="t-menu" class="menu sheet-sm t-menu" role="menu" hidden>
+          <!-- Larger screens: the one menu under the name; phones: the same items in the one side panel (a bottom sheet) -->
+          <div id="t-menu" class="menu t-menu" role="menu" hidden>
             <div class="m-group" role="presentation" data-i18n="nav.switchTasting">Switch tasting</div>
             <div id="t-list" class="m-list t-list"></div>
             <hr />
             <a id="t-all" class="opt-i act" role="menuitem" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
           </div>
+          <Sheet id="t-sheet" title="nav.switchTasting" titleId="t-sheet-title">
+            <div id="t-sheet-list" class="menu static"></div>
+          </Sheet>
         </div>
       )}
       </div>
@@ -129,6 +132,7 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       import { i18nReady, LANGS, lang, setLang, t, formatWhen, type Key } from '../i18n';
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
+      import { sheetPanel } from '../lib/ui/sheet';
       import { initDropdowns } from '../lib/ui/dropdown';
       import { tooltip } from '../lib/ui/tooltip';
       import { setEmpty } from '../lib/ui/empty';
@@ -236,7 +240,21 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
         btn.disabled = false;
         btn.classList.add('can-switch');
         tooltip(btn, t('nav.switchTasting'));
-        bindMenu(btn, document.getElementById('t-menu')!, { backdrop: document.getElementById('t-backdrop')! });
+        // Phones: the same items in the one side panel (a bottom sheet from below); larger screens: the menu
+        const menu = document.getElementById('t-menu')!;
+        const sheetList = document.getElementById('t-sheet-list')!;
+        const all = document.getElementById('t-all')!;
+        const sheet = sheetPanel(document.getElementById('t-sheet') as HTMLDialogElement, {
+          onClose: () => { menu.querySelector('.m-group')!.after(list); menu.append(all); btn.focus(); },
+        });
+        btn.addEventListener('click', (e) => {
+          if (!matchMedia('(max-width: 40rem)').matches) return;
+          e.stopImmediatePropagation();
+          sheetList.replaceChildren(list, all);
+          sheet.open();
+          (list.querySelector<HTMLElement>('[aria-current]') ?? list.querySelector<HTMLElement>('.opt-i'))?.focus();
+        });
+        bindMenu(btn, menu);
       }
 
 
@@ -396,10 +414,9 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
   nav { display: flex; gap: 0 1.5rem; flex: none; }
   .t-admin { margin-left: auto; }
   .t-admin[hidden] { display: none; }
-  /* The tasting switcher: the one menu under the tasting's name (a bottom sheet on phones, .sheet-sm) */
+  /* The tasting switcher: the one menu under the tasting's name (on phones the one side panel, #t-sheet) */
   .t-menu { left: var(--gutter); top: calc(100% - 0.2rem); min-width: 17rem; max-width: min(24rem, calc(100vw - 2rem)); }
   .t-menu .t-list { max-height: 50vh; }
-  /* Phones: the switcher opens as a bottom sheet */
   @media (max-width: 40rem) {
     /* Two rows: the tasting (and Admin) on top, the tabs below – scrolling sideways if they do not fit */
     .ctx-bar { flex-wrap: wrap; gap: 0 0.75rem; overflow: visible; }
@@ -411,9 +428,6 @@ const LOGO = `<svg class="logo" viewBox="0 0 100 100" width="30" height="30" ari
       margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter);
     }
     nav::-webkit-scrollbar { display: none; }
-    /* A backdrop filter would make the fixed bottom sheet position itself inside the header */
-    .site-header { -webkit-backdrop-filter: none; backdrop-filter: none; }
-    .t-menu .t-list { max-height: none; }
   }
   .badge {
     position: absolute;

@@ -4,7 +4,11 @@ import { statusChip } from './ui/status';
 import { starsRo } from './ui/stars';
 import { supabase } from './supabase';
 import { $, mk, sheetPanel, iconButton } from './admin-common';
-import { iconSvg } from './ui/icons';
+import { listRow, rowPrice } from './ui/list-row';
+import { wineThumb } from './ui/thumb';
+import { highlight } from './ui/highlight';
+import { deleteWithUndo } from './ui/delete-undo';
+import { reorder } from './ui/reorder';
 import { stepper, type Stepper } from './ui/stepper';
 import { styleName } from './wines';
 import { initHelpTips } from './help-tip';
@@ -15,7 +19,6 @@ import { toast } from './toast';
 import { confirmModal } from './ui/confirm';
 import { initQuickAdd } from './wine-quick-add';
 import { winePaths } from './wine-paths';
-import { tooltip } from './ui/tooltip';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   country: string | null; region: string | null; appellation: string | null;
@@ -38,18 +41,6 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   const wineHref = (id: number) => winePaths(library).get(id) ?? '/admin/wines/';
   const meta = (w: LibWine) => [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
 
-  function thumb(w: LibWine) {
-    const box = mk('div', 'wine-thumb');
-    if (w.image_url) {
-      const img = mk('img');
-      img.src = w.image_url;
-      img.alt = '';
-      img.loading = 'lazy';
-      box.append(img);
-    }
-    return box;
-  }
-
   async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'blind' | 'sort_order' | 'price_tiers'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)
       .eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
@@ -66,45 +57,21 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
 
   // The list: one calm line per wine – what it is, its price, what the guests see. Settings are in the panel.
   function render() {
-    list.replaceChildren();
     $('tw-empty').hidden = rows.length > 0;
-    $('tw-list').hidden = !rows.length;
-    rows.forEach((r, i) => {
+    list.hidden = !rows.length;
+    list.replaceChildren(...rows.map((r, i) => {
       const w = r.wines;
-      const li = mk('li', 'tw-item');
-      li.dataset.wine = String(r.wine_id);
-      // The grip moves the wine: drag it (mouse or finger), or ↑/↓ when it has the focus
-      const grip = mk('button', 'tw-grip');
-      grip.type = 'button';
-      grip.setAttribute('aria-label', t('twe.move', { name: w.name }));
-      tooltip(grip, t('twe.moveHint'));
-      grip.setAttribute('aria-describedby', 'tw-move-help');
-      grip.innerHTML = iconSvg('grip');
-      const no = mk('span', 'tw-no', String(i + 1));
-
-      const main = mk('div', 'tw-main');
-      // The name opens the wine's own page in the library (origin, map, description); the pencil edits it here
-      const name = mk('a', 'tw-name', w.name);
-      name.href = wineHref(w.id);
-      main.append(name);
-      const m = meta(w);
-      if (m) main.append(mk('p', 'lib-meta', m));
-      const chips = mk('div', 'chips');
       const vis = visOf(r);
-      chips.append(statusChip(vis === 'shown' ? 'wine.shown' : vis === 'blind' ? 'wine.blind' : 'wine.hidden'));
-      chips.append(statusChip(r.orderable ? 'wine.orderable' : 'wine.notOrderable'));
+      const chips: HTMLElement[] = [
+        statusChip(vis === 'shown' ? 'wine.shown' : vis === 'blind' ? 'wine.blind' : 'wine.hidden'),
+        statusChip(r.orderable ? 'wine.orderable' : 'wine.notOrderable'),
+      ];
       const rating = ratings.get(r.wine_id);
       if (rating) {
         const avg = rating.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-        chips.append(starsRo(rating.average, ' ' + t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes }), { chip: true }));
+        chips.push(starsRo(rating.average, ' ' + t(rating.votes === 1 ? 'rating.avgOne' : 'rating.avgMany', { avg, n: rating.votes }), { chip: true }));
       }
-      main.append(chips);
-
-      const price = mk('div', 'tw-price');
-      price.append(mk('b', '', r.price_dkk != null ? kr(r.price_dkk) : t('twe.noPrice')));
-      for (const x of tiersOf(r)) price.append(mk('small', '', t('twe.tierLine', { n: x.qty, price: kr(x.price) })));
-
-      const actions = mk('div', 'tw-actions');
+      const actions: HTMLElement[] = [];
       // Reveal a blind wine with one click, in whatever order suits the evening
       if (vis === 'blind') {
         const reveal = iconButton('reveal', `${t('blind.reveal')}: ${w.name}`, { strong: true });
@@ -114,7 +81,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
           if (await update(r, { blind: false })) { render(); toast(t('twe.revealed', { name: w.name }), { kind: 'ok' }); }
           else reveal.disabled = false;
         });
-        actions.append(reveal);
+        actions.push(reveal);
       }
       const editBtn = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
       editBtn.dataset.tip = t('admin.edit');
@@ -123,74 +90,35 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       const del = iconButton('trash', `${t('twe.remove')}: ${w.name}`, { quiet: true });
       del.dataset.tip = t('twe.remove');
       del.addEventListener('click', () => removeWine(r));
-      actions.append(editBtn, del);
-
-      li.append(grip, no, thumb(w), main, price, actions);
-      wireDrag(li, grip);
-      list.append(li);
-    });
+      actions.push(editBtn, del);
+      // The grip moves the wine: drag it (mouse or finger), or ↑/↓ when it has the focus (reorder.ts)
+      // The name opens the wine's own page in the library (origin, map, description); the pencil edits it here
+      return listRow({
+        id: r.wine_id, grip: { label: t('twe.move', { name: w.name }), tip: t('twe.moveHint') }, no: i + 1, pic: wineThumb(w),
+        title: w.name, href: wineHref(w.id), meta: [meta(w)], chips,
+        aside: rowPrice(r.price_dkk != null ? kr(r.price_dkk) : t('twe.noPrice'), tiersOf(r).map((x) => t('twe.tierLine', { n: x.qty, price: kr(x.price) }))),
+        actions,
+      });
+    }));
     emit();
   }
 
-  // ---------- Reorder: drag the grip (pointer events – mouse, pen and finger), or ↑/↓ on it ----------
-  let dragged: HTMLElement | null = null;
-  function wireDrag(li: HTMLElement, grip: HTMLButtonElement) {
-    grip.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      e.preventDefault();
-      dragged = li;
-      li.classList.add('dragging');
-      try { grip.setPointerCapture(e.pointerId); } catch { /* a synthetic event */ }
-    });
-    grip.addEventListener('pointermove', (e) => {
-      if (dragged !== li) return;
-      const over = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.tw-item');
-      if (!over || over === li || over.parentElement !== list) return;
-      const box = over.getBoundingClientRect();
-      list.insertBefore(li, e.clientY < box.top + box.height / 2 ? over : over.nextSibling);
-    });
-    const end = () => {
-      if (dragged !== li) return;
-      li.classList.remove('dragging');
-      dragged = null;
-      saveOrderFromList(Number(li.dataset.wine));
-    };
-    grip.addEventListener('pointerup', end);
-    grip.addEventListener('pointercancel', end);
-    grip.addEventListener('keydown', (e) => {
-      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
-      e.preventDefault();
-      const ids = rows.map((r) => r.wine_id);
-      const id = Number(li.dataset.wine);
-      const i = ids.indexOf(id);
-      const to = i + (e.key === 'ArrowUp' ? -1 : 1);
-      if (to < 0 || to >= ids.length) return;
-      ids.splice(i, 1);
-      ids.splice(to, 0, id);
-      placeRows(ids, id);
-    });
-  }
-  async function saveOrderFromList(moved: number) {
-    const ids = [...list.querySelectorAll<HTMLElement>('.tw-item')].map((x) => Number(x.dataset.wine));
-    if (ids.every((id, i) => rows[i]?.wine_id === id)) return;
-    await placeRows(ids, moved);
-  }
-  /** Saves a new order (wine ids top to bottom) and shows it; the moved wine keeps the focus on its grip. */
-  async function placeRows(ids: number[], moved?: number) {
-    const byId = new Map(rows.map((r) => [r.wine_id, r]));
-    rows = ids.map((id) => byId.get(id)!).filter(Boolean);
-    const changed = rows.filter((r, i) => r.sort_order !== i + 1);
-    rows.forEach((r, i) => (r.sort_order = i + 1));
-    render();
-    if (moved != null) {
-      list.querySelector<HTMLElement>(`[data-wine="${moved}"] .tw-grip`)?.focus();
-      const r = rows.find((x) => x.wine_id === moved);
-      if (r) $('tw-move-help').textContent = t('twe.moved', { name: r.wines.name, n: rows.indexOf(r) + 1 });
-    }
-    const res = await Promise.all(changed.map((r) =>
-      supabase.from('tasting_wines').update({ sort_order: r.sort_order }).eq('tasting_id', tastingId).eq('wine_id', r.wine_id)));
-    if (res.some((x) => x.error)) toast(t('admin.changeNotSaved'), { kind: 'error' });
-  }
+  // ---------- Reorder: drag the grip, or ↑/↓ on it (the one reorder, src/lib/ui/reorder.ts) ----------
+  reorder(list, {
+    live: $('tw-move-help'),
+    announce: (n, total, li) => t('twe.moved', { name: rows.find((x) => String(x.wine_id) === li.dataset.id)?.wines.name ?? '', n, total }),
+    save: async (ids) => {
+      const byId = new Map(rows.map((r) => [String(r.wine_id), r]));
+      rows = ids.map((id) => byId.get(id)!).filter(Boolean);
+      const changed = rows.filter((r, i) => r.sort_order !== i + 1);
+      rows.forEach((r, i) => (r.sort_order = i + 1));
+      emit();
+      const res = await Promise.all(changed.map((r) =>
+        supabase.from('tasting_wines').update({ sort_order: r.sort_order }).eq('tasting_id', tastingId).eq('wine_id', r.wine_id)));
+      if (res.some((x) => x.error)) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return false; }
+      return true;
+    },
+  });
 
   // ---------- Edit one wine in the side panel ----------
   const editPanel = sheetPanel($<HTMLDialogElement>('tw-edit'), { dirty: 'form' });
@@ -232,7 +160,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     editing = r;
     const w = r.wines;
     $('twe-title').textContent = w.name;
-    $('twe-thumb').replaceWith(Object.assign(thumb(w), { id: 'twe-thumb' }));
+    $('twe-thumb').replaceWith(Object.assign(wineThumb(w), { id: 'twe-thumb' }));
     $('twe-meta').textContent = meta(w);
     const price = $<HTMLInputElement>('twe-price');
     // No guest price yet: start from the shop's price (an offer on 1 bottle first) – saved when the host presses Save
@@ -249,7 +177,6 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     initHelpTips($('tw-edit'));
   }
 
-  $('twe-cancel').addEventListener('click', () => editPanel.requestClose());
   $<HTMLFormElement>('twe-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const r = editing;
@@ -295,28 +222,22 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     editPanel.close();
     render();
     toast(t('twe.saved', { name: r.wines.name }), { kind: 'ok' });
-    list.querySelector<HTMLElement>(`[data-wine="${r.wine_id}"]`)?.classList.add('just-saved');
+    highlight(list.querySelector(`[data-id="${r.wine_id}"]`));
   });
 
-  // Remove from the tasting – asked first, then with Undo (the wine stays in the library)
-  async function removeWine(r: Row): Promise<boolean> {
-    if (!(await confirmModal({ title: t('twe.removeQ', { name: r.wines.name }), text: t('twe.removeHint'), ok: t('twe.remove'), danger: true }))) return false;
-    const { error } = await supabase.from('tasting_wines').delete().eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
-    if (error) { toast(t('twe.removeFailed', { name: r.wines.name }), { kind: 'error' }); return false; }
-    const index = rows.indexOf(r);
-    rows = rows.filter((x) => x !== r);
-    render();
-    toast(t('twe.removed', { name: r.wines.name }), {
-      action: { label: t('wineLib.undo'), run: async () => {
-        const back = { tasting_id: tastingId, wine_id: r.wine_id, sort_order: r.sort_order, price_dkk: r.price_dkk,
-          price_tiers: r.price_tiers, orderable: r.orderable, revealed: r.revealed, blind: r.blind };
-        const { error: e2 } = await supabase.from('tasting_wines').insert(back);
-        if (e2) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return; }
-        rows.splice(index, 0, r);
-        render();
-      } },
+  // Remove from the tasting – asked first, then gone with Undo; removed for real when the toast goes (the one
+  // delete with Undo, src/lib/ui/delete-undo.ts). The wine stays in the library.
+  function removeWine(r: Row): Promise<boolean> {
+    let index = -1;
+    return deleteWithUndo({
+      label: t('twe.removed', { name: r.wines.name }),
+      ask: { title: t('twe.removeQ', { name: r.wines.name }), text: t('twe.removeHint'), ok: t('twe.remove') },
+      hide: () => { index = rows.indexOf(r); rows = rows.filter((x) => x !== r); render(); },
+      restore: () => { if (!rows.includes(r)) rows.splice(Math.max(0, index), 0, r); render(); },
+      commit: async () => !(await supabase.from('tasting_wines').delete().eq('tasting_id', tastingId).eq('wine_id', r.wine_id)).error,
+      keepalive: [`tasting_wines?tasting_id=eq.${tastingId}&wine_id=eq.${r.wine_id}`],
+      failed: t('twe.removeFailed', { name: r.wines.name }),
     });
-    return true;
   }
   $('twe-remove').addEventListener('click', async () => {
     if (editing && await removeWine(editing)) editPanel.close();
@@ -343,18 +264,9 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     if (error || !saved) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return false; }
     rows.push({ ...row, ...(saved as { orderable: boolean; revealed: boolean; blind: boolean }), wines: w });
     render();
-    highlight(w.id);
+    highlight(list.querySelector(`[data-id="${w.id}"]`));
     toast(t('adminTasting.wineAdded', { name: [w.name, w.vintage].filter(Boolean).join(' ') }), { kind: 'ok' });
     return true;
-  }
-  function highlight(id: number) {
-    const li = list.querySelector<HTMLElement>(`[data-wine="${id}"]`);
-    if (!li) return;
-    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    li.classList.remove('just-saved');
-    void li.offsetWidth;
-    li.classList.add('just-saved');
-    setTimeout(() => li.classList.remove('just-saved'), 2600);
   }
   const quick = initQuickAdd({
     hostId,
@@ -376,7 +288,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     },
     done: async (id, name) => {
       await load();
-      highlight(id);
+      highlight(list.querySelector(`[data-id="${id}"]`));
       toast(t('adminTasting.wineAdded', { name }), { kind: 'ok', action: { label: t('wineLib.open'), href: wineHref(id) } });
     },
   });

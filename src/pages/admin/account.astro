@@ -1,5 +1,5 @@
 ---
-import CloseButton from '../../components/ui/CloseButton.astro';
+import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
@@ -27,25 +27,16 @@ import '../../styles/admin.css';
       <!-- The account's hosts: the owner first; only the owner removes others -->
       <section class="block">
         <h2><span data-i18n="account.hostsTitle">Hosts on the account</span><span data-help="account-hosts"></span></h2>
-        <ul id="members" class="tw-list guest-list hosts-rows"></ul>
+        <ul id="members" class="list"></ul>
         <p class="hint" data-i18n="account.addHint">New hosts join the account when you add them as co-host of a tasting (Settings → Hosts in the tasting).</p>
       </section>
 
-      <dialog id="name-panel" class="sheet" aria-labelledby="name-panel-title">
-        <div class="sheet-head">
-          <h2 id="name-panel-title" data-i18n="account.nameTitle">Name</h2>
-          <CloseButton data-close />
-        </div>
-        <form id="name-form" class="add-form" novalidate>
-          <label for="name-input" data-i18n="account.nameLabel">The account's name</label>
-          <input class="input" id="name-input" type="text" maxlength="80" autocomplete="organization" placeholder="E.g. Holte Wine Club" data-i18n-attr="placeholder=account.namePlaceholder" />
-          <p class="hint" data-i18n="account.nameHint">E.g. your wine club, your shop or your group of friends.</p>
-          <div class="row-actions">
-            <button class="btn small" type="submit" data-i18n="common.save">Save</button>
-            <button id="name-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-          </div>
-        </form>
-      </dialog>
+      <Sheet id="name-panel" title="account.nameTitle" titleId="name-panel-title" form="name-form">
+        <label for="name-input" data-i18n="account.nameLabel">The account's name</label>
+        <input class="input" id="name-input" type="text" maxlength="80" autocomplete="organization" placeholder="E.g. Holte Wine Club" data-i18n-attr="placeholder=account.namePlaceholder" />
+        <p class="help" data-i18n="account.nameHint">E.g. your wine club, your shop or your group of friends.</p>
+        <button slot="foot" class="btn" type="submit" data-i18n="common.save">Save</button>
+      </Sheet>
     </div>
     </AdminNav>
   </section>
@@ -56,7 +47,7 @@ import '../../styles/admin.css';
   initHelpTips();
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
-  import { personRow } from '../../lib/ui/person-row';
+  import { personRow } from '../../lib/ui/list-row';
   import { confirmModal } from '../../lib/confirm';
   import { toast } from '../../lib/toast';
   import { fieldError } from '../../lib/field-error';
@@ -91,7 +82,6 @@ import '../../styles/admin.css';
   };
   $('name-edit').addEventListener('click', openName);
   $('name-add').addEventListener('click', openName);
-  $('name-cancel').addEventListener('click', () => panel.requestClose());
   $('name-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const { error } = await supabase.rpc('set_tenant_name', { n: $<HTMLInputElement>('name-input').value });

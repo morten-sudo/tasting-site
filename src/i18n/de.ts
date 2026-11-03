@@ -1310,4 +1310,13 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "admin.noOrdersClosed": "Schalten Sie oben „Wein bestellen“ ein, damit die Gäste bestellen können.",
   "twe.removeTierQ": "Mengenpreis entfernen?",
   "gate.winesTitle": "Melden Sie sich an, um die Weine zu sehen",
+  "addRow.discardQ": "Das Geschriebene verwerfen?",
+  "aq.move": "Frage {n} verschieben",
+  "aq.moved": "Auf Platz {n} von {total} verschoben",
+  "orders.markPaid": "Als bezahlt markieren",
+  "orders.markUnpaid": "Als nicht bezahlt markieren",
+  "orders.markedPaid": "Bestellung {id} von {name} ist als bezahlt markiert",
+  "orders.markedUnpaid": "Bestellung {id} von {name} ist als nicht bezahlt markiert",
+  "cart.removed": "{name} wurde aus dem Warenkorb entfernt",
+  "cart.removeQ": "{name} aus dem Warenkorb entfernen?",
 };

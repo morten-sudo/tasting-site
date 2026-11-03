@@ -3,6 +3,7 @@
 import { supabase } from './supabase';
 import { getCodes, tastingUrl } from './guest';
 import { statusChip } from './ui/status';
+import { listRow } from './ui/list-row';
 import { t, money, locale } from '../i18n';
 
 export type OrderLine = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
@@ -25,7 +26,7 @@ export async function loadOrders(signedIn: boolean): Promise<OrderLine[]> {
   return out.sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
-/** One card per order: tasting, date, lines, total and whether it is paid. */
+/** One card per order (the card variant of the one list row): tasting and number, date, lines, total, paid or not. */
 export function orderCards(lines: OrderLine[]): HTMLElement[] {
   const byOrder = new Map<number, OrderLine[]>();
   for (const l of lines) {
@@ -36,28 +37,14 @@ export function orderCards(lines: OrderLine[]): HTMLElement[] {
   return [...byOrder.values()].map((ls) => {
     const first = ls[0];
     const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
-    const card = document.createElement('a');
-    card.className = 'card order-card' + (first.paid ? ' paid' : '');
-    card.href = tastingUrl(first.slug, 'cart/');
-    const head = document.createElement('div');
-    head.className = 'card-head';
-    const title = document.createElement('span');
-    title.className = 'order-title';
-    title.textContent = `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`;
-    head.append(title, statusChip(first.paid ? 'order.paid' : 'order.unpaid'));
-    const meta = document.createElement('span');
-    meta.className = 'card-meta';
-    meta.textContent = date.format(new Date(first.created_at));
     const ul = document.createElement('ul');
-    for (const l of ls) {
-      const li = document.createElement('li');
-      li.textContent = `${l.quantity} × ${l.wine_name}`;
-      ul.append(li);
-    }
-    const foot = document.createElement('div');
-    foot.className = 'order-total';
-    foot.textContent = `${t('cart.total')} ${money(total)}`;
-    card.append(head, meta, ul, foot);
-    return card;
+    for (const l of ls) ul.append(Object.assign(document.createElement('li'), { textContent: `${l.quantity} × ${l.wine_name}` }));
+    const sum = Object.assign(document.createElement('b'), { textContent: `${t('cart.total')} ${money(total)}` });
+    return listRow({
+      variant: 'card', small: true, cardHref: tastingUrl(first.slug, 'cart/'),
+      title: `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`,
+      chips: [statusChip(first.paid ? 'order.paid' : 'order.unpaid')],
+      meta: [date.format(new Date(first.created_at))], body: [ul], foot: [sum],
+    });
   });
 }

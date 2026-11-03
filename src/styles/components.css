@@ -122,7 +122,7 @@ svg.i { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; strok
 }
 .icon-act[data-tip]:is(:hover, :focus-visible)::after { display: block; animation: tip-in 0.15s 0.25s both; }
 .icon-act[data-tip]:last-child::after { left: auto; right: 0; transform: none; }
-.icon-act[data-tip].tip-below::after, :is(.sheet-head, .wz-top, .side-head) .icon-act[data-tip]::after { bottom: auto; top: calc(100% + 6px); }
+.icon-act[data-tip].tip-below::after, :is(.sh-head, .side-head) .icon-act[data-tip]::after { bottom: auto; top: calc(100% + 6px); }
 @media (hover: none) { .icon-act[data-tip]:hover:not(:focus-visible)::after { display: none; } }
 @keyframes tip-in { from { opacity: 0; } to { opacity: 1; } }
 /* On a dark surface (the toast) */
@@ -262,7 +262,6 @@ dialog .dd.full { max-width: none; }
 /* A row of suggestions with its own button on the right (a library wine with "Add", a guest with "Add and invite") */
 .menu .opt-i.hit { cursor: default; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.75rem; }
 .menu .opt-i.hit:hover { background: none; }
-.menu .opt-i.hit .wine-thumb { width: 2.2rem; height: 2.8rem; }
 .menu .opt-i.hit a.opt-name { color: var(--paper); text-decoration: none; font-weight: 500; }
 .menu .opt-i.hit a.opt-name:hover { text-decoration: underline; }
 .menu .opt-i.hit .opt-name { font-weight: 500; }
@@ -270,17 +269,6 @@ dialog .dd.full { max-width: none; }
   .menu .opt-i.hit { grid-template-columns: auto minmax(0, 1fr); }
   .menu .opt-i.hit > :last-child:not(.opt-txt) { grid-column: 2; justify-self: start; }
 }
-/* Phones: a menu with a backdrop opens as a bottom sheet (the tasting switcher) */
-.menu-backdrop { display: none; }
-@media (max-width: 40rem) {
-  .menu.sheet-sm {
-    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 41; max-width: none; min-width: 0; max-height: 80vh; overflow-y: auto;
-    border-radius: 1rem 1rem 0 0; padding: 0.6rem 0.6rem calc(0.8rem + env(safe-area-inset-bottom)); animation: sheet-up 0.22s ease-out;
-  }
-  .menu.sheet-sm .opt-i { padding: 0.75rem 0.8rem; }
-  .menu-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(20, 12, 12, 0.45); }
-}
-body.sheet-open { overflow: hidden; }
 /* A text field with suggestions (src/lib/combo.ts) */
 .combo { position: relative; min-width: 0; }
 .combo > .menu { right: 0; max-width: none; max-height: 16rem; overflow-y: auto; }
@@ -472,11 +460,6 @@ a.card:hover, button.card:hover { border-color: var(--amber); color: var(--paper
 .card.tight { padding: 0.8rem 1rem; }
 .card[hidden] { display: none; }
 .card > h3:first-child, .card > h2:first-child { margin-top: 0; }
-/* A card's title in the display face (tastings, orders) */
-.card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.8rem; }
-.card-title { font-family: var(--display); font-size: 1.6rem; line-height: 1.1; min-width: 0; overflow-wrap: anywhere; }
-.card-meta { color: var(--muted); font-size: 0.92rem; }
-.card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
 
 /* ---------- 31 Confirmation (src/lib/ui/confirm.ts): the only way the site asks first ---------- */
 dialog.confirm {
@@ -540,7 +523,7 @@ dialog.confirm .actions { justify-content: flex-end; margin-top: 1.1rem; }
 .copy-row .input { flex: 1; min-width: 0; font-size: 0.85rem; }
 .status { display: flex; flex-wrap: wrap; gap: 0.3rem 0.45rem; align-items: center; font-size: 0.88rem; color: var(--muted); min-height: 1.5rem; margin: 0.4rem 0 0; }
 .status > svg.i { width: 1.05rem; height: 1.05rem; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.status > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.status > span:not(.spin) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .status.ok { color: var(--ok); }
 .status.warn { color: var(--warn); }
 .status.err { color: var(--error); }
@@ -592,3 +575,214 @@ dialog.confirm .actions { justify-content: flex-end; margin-top: 1.1rem; }
 
 /* Inside a side panel the panel sets the width */
 dialog .input { max-width: none; }
+
+/* ---------- 20 Avatar and wine thumbnail (src/lib/ui/thumb.ts: avatar(), wineThumb()) ---------- */
+.av {
+  width: 2.6rem; height: 2.6rem; border-radius: 50%; display: inline-grid; place-items: center; flex: none; box-sizing: border-box;
+  background: var(--lodge-2); border: 1px solid var(--lodge-3); color: var(--muted); font-size: 0.85rem; font-weight: 600; letter-spacing: 0.02em;
+}
+.av.sm { width: 2.2rem; height: 2.2rem; font-size: 0.72rem; }
+.av.lg { width: 3.6rem; height: 3.6rem; font-size: 1.1rem; }
+.av.add { border-style: dashed; background: transparent; color: var(--amber); font-size: 1.2rem; font-weight: 400; }
+.av.host { border-color: var(--amber); color: var(--amber); }
+.thumb {
+  width: 3rem; height: 3.6rem; border-radius: var(--radius); background: #fff; border: 1px solid var(--lodge-3); box-sizing: border-box;
+  display: grid; place-items: center; flex: none; overflow: hidden; position: relative;
+}
+.thumb > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.thumb > svg { width: 60%; height: 85%; }
+.thumb.sm { width: 2.2rem; height: 2.7rem; }
+.thumb.lg { width: 6rem; height: 8rem; }
+.thumb.none { border-style: dashed; background: transparent; }
+.thumb > .spin { position: absolute; inset: 0; margin: auto; }
+.admin-page .thumb > img { cursor: zoom-in; }
+
+/* ---------- 25 List row and card (src/lib/ui/list-row.ts: listRow(), personRow()) ----------
+   Slots: lead (grip, number, picture) · main (title, meta lines, chips) · aside (price, bottles) · actions (icons).
+   Wide: one line; in a narrow list (phones) the aside goes under the title and the icons stay top right. */
+.list { list-style: none; margin: 0; padding: 0; container-type: inline-size; }
+.list[hidden] { display: none; }
+.lrow {
+  display: flex; align-items: center; gap: 0.4rem 0.9rem; padding: 0.85rem 0.25rem;
+  border-bottom: 1px solid var(--lodge-3); background: transparent; min-width: 0;
+}
+.list > .lrow:first-child { border-top: 1px solid var(--lodge-3); }
+/* Inside a card: no lines above the first row or under the last */
+.list.flush > .lrow:first-child { border-top: 0; padding-top: 0.2rem; }
+.list.flush > .lrow:last-child { border-bottom: 0; padding-bottom: 0.2rem; }
+/* A row that is a headline (the next tasting, the tastings you host) */
+.lrow.big .ltitle { font-family: var(--display); font-weight: 400; font-size: 1.45rem; line-height: 1.15; }
+.llead { display: flex; align-items: center; gap: 0.9rem; flex: none; }
+.grip {
+  cursor: grab; color: var(--lodge-3); background: none; border: 0; padding: 0; width: 1.4rem; height: var(--h-sm);
+  display: grid; place-items: center; border-radius: 4px; touch-action: none; flex: none;
+}
+.grip svg { width: 1.15rem; height: 1.15rem; fill: currentColor; stroke: none; }
+.lrow:hover .grip, .grip:focus-visible { color: var(--muted); }
+@media (hover: none) { .grip { color: var(--muted); } }
+.grip.ghost { visibility: hidden; }
+.lno { font-family: var(--display); font-size: 1.5rem; color: var(--muted); min-width: 1.15em; text-align: right; font-variant-numeric: tabular-nums; }
+.lno.plus { color: var(--amber); }
+.lmain { min-width: 0; flex: 1 1 0; }
+.ltitle {
+  font: inherit; font-weight: 500; font-size: 1.02rem; color: var(--paper); text-decoration: none; background: none; border: 0;
+  padding: 0; text-align: left; cursor: pointer; overflow-wrap: anywhere;
+}
+span.ltitle { cursor: default; }
+:is(a, button).ltitle:hover { color: var(--amber); text-decoration: underline; text-underline-offset: 3px; }
+.ltitle .you { font-weight: 400; color: var(--muted); }
+.lmeta { color: var(--muted); font-size: 0.9rem; margin: 0.1rem 0 0; overflow-wrap: anywhere; }
+.lmeta .err { color: var(--error); }
+.lmeta.note { font-style: italic; color: var(--paper); }
+.lmain .chips { margin-top: 0.4rem; }
+.lbody { margin: 0.3rem 0 0; display: grid; gap: 0.3rem; font-size: 0.92rem; min-width: 0; }
+.lbody ul { margin: 0; padding-left: 1.1rem; }
+.lbody > .status { margin: 0; }
+.laside { flex: none; display: flex; flex-direction: column; align-items: flex-end; text-align: right; font-variant-numeric: tabular-nums; }
+.laside b { font-weight: 500; }
+.laside small { color: var(--muted); font-size: 0.82rem; }
+.lacts { flex: none; display: flex; gap: 0.25rem; justify-content: flex-end; align-items: center; }
+.lrow.busy .lacts { opacity: 0.6; }
+.lrow.dragging { opacity: 0.6; background: var(--lodge-2); }
+.lrow.dragging .grip { cursor: grabbing; color: var(--paper); }
+.lrow.muted .ltitle { color: var(--muted); }
+@container (max-width: 34rem) {
+  .lrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'main acts' 'aside aside'; column-gap: 0.7rem; align-items: start; }
+  .lrow:has(> .llead) { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'lead main acts' 'lead aside aside'; }
+  .lrow > .llead { grid-area: lead; gap: 0.7rem; align-self: start; }
+  .lrow > .lmain { grid-area: main; }
+  .lrow > .laside { grid-area: aside; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 0 0.6rem; text-align: left; }
+  .lrow > .laside:empty { display: none; }
+  .lrow > .laside small::before { content: '· '; }
+  .lrow > .lacts { grid-area: acts; align-self: start; }
+  .llead .thumb { width: 2.6rem; height: 3.2rem; }
+  .llead .lno { font-size: 1.2rem; }
+  .llead .grip { height: 1.75rem; }
+}
+
+/* The card variant: guest-facing cards (tastings, orders, the wine book) – the same slots as a box */
+.cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; container-type: inline-size; }
+.cards[hidden] { display: none; }
+.lcard {
+  display: flex; gap: 0.9rem; align-items: flex-start; padding: 1rem 1.1rem; background: #fff; border: 1px solid var(--lodge-3);
+  border-radius: var(--radius); color: var(--paper); text-decoration: none; min-width: 0; transition: border-color 0.15s;
+}
+a.lcard:hover { border-color: var(--amber); color: var(--paper); }
+.lcard .lmain { display: grid; gap: 0.25rem; }
+.lc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.8rem; }
+.lcard .ltitle { font-family: var(--display); font-weight: 400; font-size: 1.5rem; line-height: 1.12; }
+.lcard.small .ltitle { font-family: var(--body); font-weight: 500; font-size: 1.02rem; line-height: 1.3; }
+.lc-top .chips { margin: 0.15rem 0 0; flex: none; justify-content: flex-end; }
+.lcard .lmeta { margin: 0; }
+.lcard .lfoot { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.35rem; font-variant-numeric: tabular-nums; }
+.lcard .lfoot b { font-weight: 600; }
+.lcard > .laside { align-self: flex-start; display: grid; justify-items: end; gap: 0.35rem; }
+@container (max-width: 30rem) {
+  .lcard { padding: 0.85rem 0.9rem; gap: 0.75rem; }
+  .lcard .ltitle { font-size: 1.3rem; }
+  .lc-top { flex-wrap: wrap; gap: 0.3rem 0.8rem; }
+  .lc-top .chips { justify-content: flex-start; }
+  .lcard:has(> .laside) { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'main' 'aside'; }
+  .lcard:has(> .llead):has(> .laside) { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'lead main' 'lead aside'; }
+  .lcard > .llead { grid-area: lead; align-self: start; }
+  .lcard > .lmain { grid-area: main; }
+  .lcard > .laside { grid-area: aside; justify-items: start; grid-auto-flow: column; justify-content: start; align-items: center; }
+  .lcard .llead .thumb { width: 2.6rem; height: 3.2rem; }
+}
+
+/* ---------- 27 Highlight after saving (src/lib/ui/highlight.ts) ---------- */
+.saved { animation: saved 2.6s ease-out; }
+@keyframes saved { 0%, 40% { background-color: #f6ead2; } 100% { background-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .saved { animation: saved-still 1.2s steps(1, end); } @keyframes saved-still { 0% { background-color: #f6ead2; } 100% { background-color: transparent; } } }
+
+/* ---------- 26 Add row: a new row that slides in at the top of a list (src/lib/ui/add-row.ts, AddRow.astro) ---------- */
+.ar-slide { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.25s ease-out, opacity 0.2s ease-out; container-type: inline-size; }
+.ar-slide.open { grid-template-rows: 1fr; opacity: 1; }
+.ar-slide > .ar-in { min-height: 0; overflow: hidden; }
+.newrow {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.5rem 0.9rem; align-items: start;
+  padding: 0.85rem 0.25rem; background: var(--lodge-2); border-top: 1px solid var(--lodge-3);
+}
+.ar-slide.drag .newrow { box-shadow: inset 0 0 0 2px var(--amber); background: var(--soft); }
+.newrow > .llead { align-self: start; }
+.newrow .ar-body { min-width: 0; }
+.newrow .ar-fields { display: grid; gap: 0.5rem; grid-template-columns: 1.2fr 1fr; }
+.newrow .ar-fields:has(> :only-child) { grid-template-columns: 1fr; }
+.newrow .help { margin-top: 0.35rem; font-size: 0.84rem; }
+.newrow .check { margin-top: 0.45rem; }
+.newrow .ar-acts { display: flex; gap: 0.4rem; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.newrow .ar-acts .btn { height: var(--h); }
+.newrow > .ar-hits { grid-column: 2 / -1; margin: 0; }
+.newrow .field-error { margin-top: 0.35rem; }
+.ar-attached {
+  flex: none; display: inline-flex; align-items: center; gap: 0.2rem; max-width: 45%; padding: 0.15rem 0.2rem 0.15rem 0.6rem;
+  border-radius: var(--round); background: var(--lodge-2); border: 1px solid var(--lodge-3); font-size: 0.85rem;
+}
+.ar-attached[hidden] { display: none; }
+.ar-attached > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.added { display: inline-flex; gap: 0.3rem; align-items: center; color: var(--ok); font-size: 0.88rem; font-weight: 500; }
+@media (pointer: coarse) { .newrow .ar-drop { display: none; } }
+@container (max-width: 34rem) {
+  .newrow { column-gap: 0.7rem; }
+  .newrow > .llead { gap: 0.7rem; }
+  .newrow .llead .thumb { width: 2.6rem; height: 3.2rem; }
+  .newrow .llead .lno { font-size: 1.2rem; }
+  .newrow .ar-fields { grid-template-columns: 1fr; }
+  .newrow > .ar-acts { grid-column: 2 / -1; justify-content: flex-start; }
+  .newrow > .ar-acts .btn { flex: 1; }
+}
+/* Rows being read and saved under the new row (the wine's quick add) */
+.ar-jobs { list-style: none; margin: 0; padding: 0; container-type: inline-size; }
+.ar-jobs > .lrow { background: var(--soft); animation: ar-in 0.3s ease-out; transition: opacity 0.3s; }
+.ar-jobs > .lrow.leaving { opacity: 0; }
+.ar-jobs .ltitle.unnamed { color: var(--muted); font-weight: 400; }
+@keyframes ar-in { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 20rem; } }
+@media (prefers-reduced-motion: reduce) { .ar-slide, .ar-jobs > .lrow { transition: none; animation: none; } }
+
+/* ---------- 30 Side panel (<dialog class="sheet">, Sheet.astro, src/lib/ui/sheet.ts) ----------
+   The head (title and ×) and the foot (the primary button, then Cancel) stay put; the body scrolls.
+   From the right on larger screens, a bottom sheet on phones. */
+dialog.sheet {
+  position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 90vh; max-height: 90dvh; padding: 0;
+  border: 0; border-radius: var(--radius) var(--radius) 0 0; background: var(--lodge); color: var(--paper);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18); overflow: hidden;
+}
+dialog.sheet[open] { display: flex; flex-direction: column; animation: sheet-up 0.22s ease-out; }
+dialog.sheet::backdrop, dialog.wizard::backdrop { background: rgba(20, 12, 12, 0.45); }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes sheet-in { from { transform: translateX(100%); } to { transform: none; } }
+@media (min-width: 48rem) {
+  dialog.sheet { inset: 0 0 0 auto; width: min(30rem, 100vw); height: 100vh; height: 100dvh; max-height: none; border-radius: 0; box-shadow: -10px 0 40px rgba(0, 0, 0, 0.18); }
+  dialog.sheet.wide { width: min(40rem, 100vw); }
+  dialog.sheet[open] { animation: sheet-in 0.22s ease-out; }
+}
+.sh-grab { width: 2.5rem; height: 4px; border-radius: 4px; background: var(--lodge-3); margin: 0.5rem auto 0; flex: none; }
+@media (min-width: 48rem) { dialog.sheet .sh-grab { display: none; } }
+.sh-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 1.25rem 0.75rem; border-bottom: 1px solid var(--lodge-3); flex: none; }
+.sh-head h2 { font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.15; margin: 0; min-width: 0; overflow-wrap: anywhere; }
+dialog.sheet .sh-form, dialog.wizard .sh-body { max-width: none; }
+.sh-form { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0; }
+.sh-body { padding: 1.1rem 1.25rem 1.5rem; overflow-y: auto; overflow-x: hidden; flex: 1; min-height: 0; display: grid; gap: 0.4rem; align-content: start; overscroll-behavior: contain; }
+.sh-body > * { margin-top: 0; margin-bottom: 0; min-width: 0; }
+/* A label starts a new field: a little air above it (the label and its field stay close) */
+.sh-body > :is(label, .flabel, fieldset, .cc, .twe-group, .sw-row, .notice):not(:first-child),
+.sh-body > .sh-part:not(:first-child) > :is(label, .flabel, fieldset, .cc, .sw-row, .notice),
+.sh-body > .sh-part > :is(label, .flabel, fieldset, .cc, .sw-row, .notice):not(:first-child) { margin-top: 0.6rem; }
+.sh-body > .sh-quiet { margin-top: 1.25rem; }
+.sh-body > .sh-wine + * { margin-top: 0.6rem; }
+.sh-head h2:focus { outline: none; }
+.sh-foot { padding: 0.85rem 1.25rem calc(0.85rem + env(safe-area-inset-bottom)); border-top: 1px solid var(--lodge-3); background: var(--lodge); flex: none; }
+.sh-foot[hidden] { display: none; }
+.sh-foot > .actions { margin: 0; }
+.sh-foot .notice { margin-bottom: 0.6rem; }
+.sh-quiet { padding-top: 1rem; margin-top: 1.25rem; border-top: 1px solid var(--lodge-3); display: grid; gap: 0.35rem; justify-items: start; }
+.sh-quiet .help { margin: 0; }
+.sh-part { display: contents; }
+.sh-part[hidden] { display: none; }
+/* Menu items in a panel (the tasting switcher on phones): the menu's items, larger to tap */
+.sh-body > .menu.static { border: 0; box-shadow: none; padding: 0; margin: 0 -0.5rem; background: none; }
+.sh-body > .menu.static .opt-i { padding: 0.75rem 0.6rem; }
+.sh-wine { display: flex; gap: 0.8rem; align-items: center; }
+.sh-wine .lmeta { margin: 0; }
+@media (min-width: 48rem) { .sh-head, .sh-body, .sh-foot { padding-left: 1.75rem; padding-right: 1.75rem; } }
+@media (max-width: 30rem) { .sh-foot > .actions > .btn { flex: 1; } }

@@ -2,7 +2,7 @@
 import Icon from '../../components/ui/Icon.astro';
 import Dropdown from '../../components/ui/Dropdown.astro';
 import SearchField from '../../components/ui/SearchField.astro';
-import CloseButton from '../../components/ui/CloseButton.astro';
+import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
@@ -44,7 +44,7 @@ import '../../styles/admin.css';
               </section>
               <section class="wd-block">
                 <h2 data-i18n="wineAdmin.tastings">Tastings</h2>
-                <ul id="wd-tastings" class="card wd-tastings"></ul>
+                <ul id="wd-tastings" class="card list flush wd-tastings"></ul>
                 <EmptyState id="wd-tastings-empty" icon="glass" title="wineLib.unused" text="wineAdmin.unusedHelp" hidden />
               </section>
             </div>
@@ -75,7 +75,7 @@ import '../../styles/admin.css';
 
         <!-- New wine: a new row that slides in at the top of the list (name, link or photo) -->
         <WineQuickAdd />
-        <ul id="wine-admin-list" class="wine-admin-list"></ul>
+        <ul id="wine-admin-list" class="list"></ul>
         <EmptyState id="wine-empty" icon="glass" title="wineLib.emptyTitle" text="wineLib.emptyText" hidden>
           <button id="wine-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="wineLib.newWineBtn">New wine</span></button>
         </EmptyState>
@@ -86,15 +86,7 @@ import '../../styles/admin.css';
       </div>
       <!-- Outside the list, so it also opens on a wine's own page (where the list is hidden) -->
         <!-- Editing a wine: the side panel from the right (bottom sheet on phones). New wines come in through the line above the list. -->
-        <dialog id="wine-panel" class="sheet wide" aria-labelledby="wf-title">
-        <div class="wf-head">
-          <div class="sheet-head">
-            <h2 id="wf-title" data-i18n="admin.editWine">Edit wine</h2>
-            <CloseButton id="wf-close" data-close />
-          </div>
-        </div>
-        <form id="wine-form" class="add-form wine-form" novalidate>
-        <div class="wf-body">
+        <Sheet id="wine-panel" title="admin.editWine" titleId="wf-title" wide form="wine-form" formClass="wine-form">
           <!-- 1. Source: a link to the wine (fetches it again) -->
           <section class="wf-step" data-step="0">
           <div id="wf-link-box" class="wf-link-box">
@@ -216,16 +208,9 @@ import '../../styles/admin.css';
           <label for="wf-details"><span data-i18n="admin.details">More about the wine</span> <span class="opt" data-i18n="admin.detailsHint">(one line per item, e.g. "Grapes: Touriga Nacional")</span></label>
           <textarea class="input" id="wf-details" rows="3"></textarea>
           </section>
-        </div>
-        <div class="wf-foot">
-          <div id="wf-actions" class="row-actions wf-actions">
-            <button id="wf-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-            <button id="wf-cancel" class="text-btn" type="button" data-i18n="common.cancel">Cancel</button>
-            <button id="wf-delete" class="btn small quiet-danger" type="button" hidden><Icon name="trash" /><span data-i18n="admin.deleteWine">Delete wine</span></button>
-          </div>
-        </div>
-        </form>
-        </dialog>
+          <button slot="quiet" id="wf-delete" class="btn small quiet-danger" type="button"><Icon name="trash" /><span data-i18n="admin.deleteWine">Delete wine</span></button>
+          <button slot="foot" id="wf-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+        </Sheet>
     </div>
     </AdminNav>
   </section>

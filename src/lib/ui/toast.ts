@@ -11,6 +11,8 @@ export interface ToastOptions {
   /** 'error' (stays until closed) or 'ok' (the default) */
   kind?: 'ok' | 'error';
   error?: boolean;
+  /** How long it stays (default 4 s, 8 s with an action) */
+  duration?: number;
   /** Runs when the toast goes away by itself or is closed – not when its action is used */
   onTimeout?: () => void;
 }
@@ -49,7 +51,7 @@ export function toast(text: string, opts: ToastOptions = {}) {
   const me = { host, el, timer: 0, done: opts.onTimeout };
   current = me;
   if (error) return;
-  let left = opts.action ? 8000 : 4000;
+  let left = opts.duration ?? (opts.action ? 8000 : 4000);
   let started = Date.now();
   const arm = () => { started = Date.now(); me.timer = window.setTimeout(() => hideToast(), left); };
   arm();

@@ -1,7 +1,59 @@
-// Component 30 – side panel (<dialog class="sheet">): editing always happens here. sheetPanel() wires it up and asks
-// "Discard changes?" (the one confirmation) before closing with unsaved edits.
+// Component 30 – side panel (<dialog class="sheet">): editing always happens here. Static markup: Sheet.astro;
+// sheet() builds the same markup in TypeScript. sheetPanel() wires it up and asks "Discard changes?" (the one
+// confirmation) before closing with unsaved edits.
 import { confirmModal } from './confirm';
+import { closeButton } from './icon-button';
 import { t } from '../../i18n';
+
+export interface SheetMarkup {
+  id: string; title: string; wide?: boolean;
+  /** A <form> around body and foot (its submit button saves) */
+  form?: boolean;
+  body?: Node[];
+  /** The quiet delete, last in the body */
+  quiet?: Node[];
+  /** The primary button(s); "Cancel" follows unless cancel is false */
+  foot?: Node[];
+  cancel?: boolean;
+}
+
+/** The same markup as Sheet.astro: head (title, ×), body (scrolls), foot (primary first, then Cancel). Appended to body. */
+export function sheet(o: SheetMarkup): { dialog: HTMLDialogElement; body: HTMLElement; foot: HTMLElement | null; form: HTMLFormElement | null; title: HTMLElement } {
+  const dialog = document.createElement('dialog');
+  dialog.id = o.id;
+  dialog.className = 'sheet' + (o.wide ? ' wide' : '');
+  dialog.setAttribute('aria-labelledby', `${o.id}-title`);
+  const grab = Object.assign(document.createElement('div'), { className: 'sh-grab' });
+  grab.setAttribute('aria-hidden', 'true');
+  const head = Object.assign(document.createElement('div'), { className: 'sh-head' });
+  const title = Object.assign(document.createElement('h2'), { id: `${o.id}-title`, textContent: o.title });
+  const x = closeButton();
+  x.dataset.close = '';
+  head.append(title, x);
+  const wrap = document.createElement(o.form ? 'form' : 'div');
+  wrap.className = 'sh-form';
+  if (o.form) (wrap as HTMLFormElement).noValidate = true;
+  const body = Object.assign(document.createElement('div'), { className: 'sh-body' });
+  body.append(...(o.body ?? []));
+  if (o.quiet?.length) { const q = Object.assign(document.createElement('div'), { className: 'sh-quiet' }); q.append(...o.quiet); body.append(q); }
+  wrap.append(body);
+  let foot: HTMLElement | null = null;
+  if (o.foot?.length) {
+    foot = Object.assign(document.createElement('div'), { className: 'sh-foot' });
+    const row = Object.assign(document.createElement('div'), { className: 'actions' });
+    row.append(...o.foot);
+    if (o.cancel !== false) {
+      const c = Object.assign(document.createElement('button'), { type: 'button', className: 'btn secondary', textContent: t('common.cancel') });
+      c.dataset.close = '';
+      row.append(c);
+    }
+    foot.append(row);
+    wrap.append(foot);
+  }
+  dialog.append(grab, head, wrap);
+  document.body.append(dialog);
+  return { dialog, body, foot, form: o.form ? (wrap as HTMLFormElement) : null, title };
+}
 
 /**
  * A side panel (<dialog class="sheet">): editing always happens here – from the right on larger
@@ -46,14 +98,24 @@ export function sheetPanel(dialog: HTMLDialogElement, opts: SheetOptions | (() =
     }
     dialog.close();
   }
-  dialog.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); requestClose(); }));
-  // A click on the backdrop lands on the dialog element itself
-  dialog.addEventListener('click', (e) => { if (e.target === dialog) requestClose(); });
+  // × and "Cancel" (data-close) – also ones put in later
+  dialog.addEventListener('click', (e) => {
+    if ((e.target as Element).closest?.('[data-close]')) { e.preventDefault(); requestClose(); return; }
+    // A click on the backdrop lands on the dialog element itself
+    if (e.target === dialog) requestClose();
+  });
   // Escape: asked about first too
   dialog.addEventListener('cancel', (e) => { if (isDirty()) { e.preventDefault(); requestClose(); } });
   dialog.addEventListener('close', () => o.onClose?.());
   return {
-    open() { dialog.showModal(); dialog.scrollTop = 0; initial = formSnapshot(dialog); touched = false; },
+    open() {
+      dialog.showModal();
+      dialog.querySelector('.sh-body')?.scrollTo(0, 0);
+      // The dialog puts the focus on ×, which would show its tip: start on the heading instead (fields are focused by the page)
+      const h = dialog.querySelector<HTMLElement>('.sh-head h2');
+      if (h && (document.activeElement as Element | null)?.closest('[data-close]')) { h.tabIndex = -1; h.focus({ preventScroll: true }); }
+      initial = formSnapshot(dialog); touched = false;
+    },
     /** The fields as they are now count as unchanged (e.g. after saving part of it) */
     markClean() { initial = formSnapshot(dialog); touched = false; },
     /** Whether the person has changed a field since the panel opened */

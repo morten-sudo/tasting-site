@@ -1,42 +1,27 @@
 ---
+import AddRow from './ui/AddRow.astro';
 import CloseButton from './ui/CloseButton.astro';
 import Icon from './ui/Icon.astro';
-// "New wine" as a new row that slides in at the top of a wine list – see src/lib/wine-quick-add.ts.
-// The page's "+ New wine" button stays where it is and opens the row; below it, rows show wines being read and saved.
+// "New wine" as a new row that slides in at the top of a wine list (the one add row, AddRow.astro) – see
+// src/lib/wine-quick-add.ts. The page's "+ New wine" button opens the row; below it, rows show wines being read and saved.
 // lead: the tasting's list has a grip and a number before the picture – the new rows keep the same columns.
 const { lead = false } = Astro.props as { lead?: boolean };
 ---
-<div id="qa" class:list={['qa', { 'qa-lead': lead }]}>
-  <div id="qa-bar" class="qa-slide" inert>
-    <div class="qa-slide-in">
-      <div id="qa-row" class="qa-item qa-new">
-        {lead && <span class="tw-grip qa-ghost" aria-hidden="true"></span>}
-        {lead && <span class="tw-no qa-plus" aria-hidden="true">+</span>}
-        <div class="wine-thumb qa-thumb" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M10 3h4v4.5c0 1 .6 1.6 1.2 2.4.8 1 1.3 2 1.3 3.6V21H7.5v-7.5c0-1.6.5-2.6 1.3-3.6.6-.8 1.2-1.4 1.2-2.4z" /></svg>
-        </div>
-        <div class="qa-body">
-          <label for="qa-input" class="visually-hidden" data-i18n="qa.label">Name, link or photo of the wine</label>
-          <div class="input qa-field">
-            <span id="qa-attached" class="qa-attached" hidden>
-              <span id="qa-attached-text"></span>
-              <CloseButton id="qa-attached-x" size="small" label="Remove" i18n="qa.dismiss" />
-            </span>
-            <input id="qa-input" type="text" autocomplete="off" enterkeyhint="go"
-              placeholder="Name of the wine, or paste a link" data-i18n-attr="placeholder=qa.placeholder" />
-          </div>
-          <p class="qa-hint"><span data-i18n="qa.hint">A link from a web shop or a photo of the label fills in the rest.</span> <span class="qa-drop" data-i18n="qa.dropHint">You can also drop a picture here.</span></p>
-        </div>
-        <div class="qa-actions">
-          <!-- The image picker's button (src/lib/ui/image-picker.ts): choose, or drop on the row, or paste in the field -->
-          <button id="qa-photo" class="btn small secondary" type="button"><Icon name="camera" /><span data-i18n="qa.photoBtn">Photo</span></button>
-          <button id="qa-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
-          <CloseButton id="qa-close" />
-        </div>
-        <!-- Matches from the library: across the row, from the field to the right edge -->
-        <ul id="qa-hits" class="qa-hits menu static" hidden></ul>
-      </div>
-    </div>
+<AddRow id="qa" pic="wine" lead={lead}>
+  <label for="qa-input" class="visually-hidden" data-i18n="qa.label">Name, link or photo of the wine</label>
+  <div class="input">
+    <span id="qa-attached" class="ar-attached" hidden>
+      <span id="qa-attached-text"></span>
+      <CloseButton id="qa-attached-x" size="small" label="Remove" i18n="qa.dismiss" />
+    </span>
+    <input id="qa-input" type="text" autocomplete="off" enterkeyhint="go"
+      placeholder="Name of the wine, or paste a link" data-i18n-attr="placeholder=qa.placeholder" />
   </div>
-  <ul id="qa-jobs" class="qa-jobs" aria-live="polite"></ul>
-</div>
+  <p class="help"><span data-i18n="qa.hint">A link from a web shop or a photo of the label fills in the rest.</span> <span class="ar-drop" data-i18n="qa.dropHint">You can also drop a picture here.</span></p>
+  <Fragment slot="actions">
+    <!-- The image picker's button (src/lib/ui/image-picker.ts): choose, or drop on the row, or paste in the field -->
+    <button id="qa-photo" class="btn small secondary" type="button"><Icon name="camera" /><span data-i18n="qa.photoBtn">Photo</span></button>
+    <button id="qa-go" class="btn small" type="button" data-i18n="admin.add">Add</button>
+  </Fragment>
+  <ul id="qa-jobs" class="ar-jobs" aria-live="polite" slot="after"></ul>
+</AddRow>

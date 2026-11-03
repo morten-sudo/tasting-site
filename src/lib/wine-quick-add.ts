@@ -10,10 +10,10 @@ import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang, money } from '../i18n';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
-import { fieldError } from './field-error';
 import { attachImageInput } from './ui/image-picker';
-import { menuGroup, menuHit } from './ui/menu';
-import { iconSvg } from './ui/icons';
+import { addRow, hitButton, type Hit } from './ui/add-row';
+import { listRow } from './ui/list-row';
+import { wineThumb, setThumb } from './ui/thumb';
 import { setStatus, statusLine, type StatusState } from './ui/status-line';
 
 export type QuickWine = { id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
@@ -74,42 +74,21 @@ async function post<T>(path: string, body: unknown): Promise<T> {
 }
 
 export function initQuickAdd(o: Opts) {
-  const bar = $('qa-bar');
   const input = $<HTMLInputElement>('qa-input');
-  const hits = $<HTMLUListElement>('qa-hits');
   const jobs = $<HTMLUListElement>('qa-jobs');
   const attached = $('qa-attached');
-  const go = $<HTMLButtonElement>('qa-go');
-  const lead = $('qa').classList.contains('qa-lead');
+  const lead = !!$('qa-row').querySelector('.grip.ghost');
   // A link or photo that could not be read: kept here while the host types the name
   let carry: Source | null = null;
 
-  // The new row slides in at the top of the list (.qa-slide.open); closed it is inert, so it cannot be tabbed into
-  const isOpen = () => bar.classList.contains('open');
-  o.toggle.setAttribute('aria-controls', 'qa-bar');
-  o.toggle.setAttribute('aria-expanded', 'false');
-  function open(focus = true) {
-    bar.classList.add('open');
-    bar.inert = false;
-    o.toggle.setAttribute('aria-expanded', 'true');
-    // The row is open: the button waits (grey) until the row is closed with ×
-    (o.toggle as HTMLButtonElement).disabled = true;
-    if (focus && matchMedia('(min-width: 48rem)').matches) input.focus({ preventScroll: true });
-    if (focus) bar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-  function close() {
-    bar.classList.remove('open');
-    bar.inert = true;
-    o.toggle.setAttribute('aria-expanded', 'false');
-    (o.toggle as HTMLButtonElement).disabled = false;
-    input.value = '';
-    setCarry(null);
-    fieldError(input, null);
-    renderHits();
-    o.toggle.focus();
-  }
-  o.toggle.addEventListener('click', () => open());
-  $('qa-close').addEventListener('click', close);
+  // The one add row (src/lib/ui/add-row.ts): opens with the page's button, Esc and × close (asked first with text)
+  const row = addRow({
+    id: 'qa', button: o.toggle as HTMLButtonElement, fields: [input], go: $<HTMLButtonElement>('qa-go'),
+    onSubmit: () => submit(), onInput: () => renderHits(), dirty: () => !!carry,
+    onClose: () => setCarry(null),
+  });
+  const { open, isOpen } = row;
+  const bar = row.bar;
 
   function setCarry(src: Source | null) {
     carry = src;
@@ -139,47 +118,20 @@ export function initQuickAdd(o: Opts) {
   const metaOf = (w: Pick<QuickWine, 'style' | 'vintage' | 'producer'>) =>
     [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
 
-  function thumb(url: string | null) {
-    const box = mk('div', 'wine-thumb');
-    if (url) { const img = mk('img'); img.src = url; img.alt = ''; box.append(img); }
-    // No picture yet: the same quiet bottle as the new row – no blank box
-    else { box.classList.add('qa-thumb'); box.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3h4v4.5c0 1 .6 1.6 1.2 2.4.8 1 1.3 2 1.3 3.6V21H7.5v-7.5c0-1.6.5-2.6 1.3-3.6.6-.8 1.2-1.4 1.2-2.4z" /></svg>'; }
-    return box;
-  }
-
   function renderHits(list?: QuickWine[], head?: string) {
     const text = input.value.trim();
     const found = list ?? (asLink(text) || carry ? [] : matchesOf(text));
-    hits.replaceChildren();
-    hits.hidden = !found.length;
-    if (!found.length) return;
     // The one menu's look (components.css): a heading, then a row per wine with its own button
-    hits.append(menuGroup(head ?? t(o.pick ? 'qa.fromLibrary' : 'qa.inLibrary'), 'li'));
     const here = o.inHere?.() ?? new Set<number>();
-    for (const w of found) {
+    row.setHits(found.map((w): Hit => {
       const name = mk('a', 'opt-name', w.name);
       name.href = o.href(w);
-      const li = menuHit(thumb(w.image_url), name, metaOf(w) || null, null);
-      if (here.has(w.id)) {
-        // The same button as "Add", disabled: the wine is already in the tasting
-        const b = mk('button', 'btn small secondary');
-        b.type = 'button';
-        b.disabled = true;
-        b.innerHTML = iconSvg('check');
-        b.append(t('qa.alreadyHere'));
-        li.append(b);
-      } else if (o.pick) {
-        const add = mk('button', 'btn small secondary', t('admin.add'));
-        add.type = 'button';
-        add.addEventListener('click', () => pickWine(w, add));
-        li.append(add);
-      } else {
-        const a = mk('a', 'text-btn', t('wineLib.open'));
-        a.href = o.href(w);
-        li.append(a);
-      }
-      hits.append(li);
-    }
+      let action: Node;
+      // The same button as "Add", disabled ("✓ In the tasting") when the wine is already in the tasting
+      if (o.pick) action = hitButton(t('admin.add'), (b) => pickWine(w, b), here.has(w.id));
+      else { const a = mk('a', 'text-btn', t('wineLib.open')); a.href = o.href(w); action = a; }
+      return { lead: wineThumb(w, { size: 'small' }), title: name, sub: metaOf(w) || null, action };
+    }), head ?? t(o.pick ? 'qa.fromLibrary' : 'qa.inLibrary'));
   }
   async function pickWine(w: QuickWine, btn?: HTMLButtonElement) {
     if (!o.pick) return;
@@ -192,31 +144,16 @@ export function initQuickAdd(o: Opts) {
     if (matchMedia('(min-width: 48rem)').matches) input.focus();
   }
 
-  input.addEventListener('input', () => {
-    renderHits();
-  });
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); submit(); }
-    else if (e.key === 'Escape') {
-      e.preventDefault();
-      if (input.value) { input.value = ''; renderHits(); } else close();
-    } else if (e.key === 'ArrowDown') {
-      const first = hits.querySelector<HTMLElement>('button, a.text-btn');
-      if (first) { e.preventDefault(); first.focus(); }
-    }
-  });
-  go.addEventListener('click', submit);
-
   function submit() {
     const text = input.value.trim();
     if (carry) {
-      if (!text) { fieldError(input, t('qa.nameMissing'), $('qa-row')); input.focus(); return; }
+      if (!text) { row.error(input, t('qa.nameMissing')); input.focus(); return; }
       start(carry, text);
       setCarry(null);
       input.value = '';
       return;
     }
-    if (!text) { fieldError(input, t('qa.empty'), $('qa-row')); input.focus(); return; }
+    if (!text) { row.error(input, t('qa.empty')); input.focus(); return; }
     const url = asLink(text);
     if (url) {
       // A link the library already has: show that wine instead of a second copy
@@ -250,47 +187,44 @@ export function initQuickAdd(o: Opts) {
   attachImageInput({
     button: $('qa-photo'), drop: bar, paste: input,
     onFile: (f) => photo(f),
-    onError: (m) => fieldError(input, m, $('qa-row')),
+    onError: (m) => row.error(input, m),
   });
 
   // ---------- The card: what comes in ----------
+  // The same row as the list's (src/lib/ui/list-row.ts); the tasting's list has a grip and a number first: kept (empty)
   function card(src: Source, name?: string): HTMLLIElement {
-    const li = mk('li', 'qa-item qa-job');
-    // The tasting's list has a grip and a number first: keep the columns (empty here)
-    if (lead) li.append(Object.assign(mk('span', 'tw-grip qa-ghost'), { ariaHidden: 'true' }), mk('span', 'tw-no qa-plus'));
-    const pic = thumb(src.kind === 'photo' ? src.preview : null);
-    const body = mk('div', 'wine-body');
-    const title = mk('p', 'wine-name');
-    // Until the name is read: a quiet "New wine" – the status line below shows that it is being fetched
-    if (name) title.textContent = name;
-    else { title.textContent = t('qa.unnamed'); title.classList.add('qa-unnamed'); }
-    const source = mk('p', 'wine-meta qa-src', src.kind === 'link' ? site(src.url) : src.kind === 'photo' ? t('qa.photo') : '');
+    const source = mk('p', 'lmeta qa-src', src.kind === 'link' ? site(src.url) : src.kind === 'photo' ? t('qa.photo') : '');
     source.hidden = src.kind === 'name';
-    const facts = mk('div', 'qa-facts');
-    const status = statusLine();
-    const actions = mk('div', 'qa-actions qa-job-actions');
-    body.append(title, source, facts, status);
-    li.append(pic, body, actions);
+    const li = listRow({
+      grip: lead ? 'ghost' : undefined, no: lead ? '' : undefined,
+      pic: wineThumb(src.kind === 'photo' ? src.preview : null),
+      // Until the name is read: a quiet "New wine" – the status line below shows that it is being fetched
+      title: name ?? t('qa.unnamed'),
+      body: [source, mk('div', 'qa-facts'), statusLine()],
+    });
+    if (!name) li.querySelector('.ltitle')!.classList.add('unnamed');
+    li.append(mk('div', 'lacts'));
     jobs.prepend(li);
     return li;
   }
   const part = (li: HTMLElement) => ({
-    pic: li.querySelector<HTMLElement>('.wine-thumb')!,
-    title: li.querySelector<HTMLElement>('.wine-name')!,
+    pic: li.querySelector<HTMLElement>('.thumb')!,
+    title: li.querySelector<HTMLElement>('.ltitle')!,
     facts: li.querySelector<HTMLElement>('.qa-facts')!,
-    status: li.querySelector<HTMLElement>('.wine-body > .status')!,
-    actions: li.querySelector<HTMLElement>('.qa-job-actions')!,
+    status: li.querySelector<HTMLElement>('.lbody > .status')!,
+    actions: li.querySelector<HTMLElement>(':scope > .lacts')!,
   });
   function say(li: HTMLElement, text: string, kind: StatusState | '' = '') {
     setStatus(part(li).status, kind || 'info', text);
   }
   function fact(li: HTMLElement, text: string | null) {
-    if (text) part(li).facts.append(mk('p', 'wine-meta', text));
+    if (text) part(li).facts.append(mk('p', 'lmeta', text));
   }
   function buttons(li: HTMLElement, ...list: [string, () => void, string?][]) {
     const box = part(li).actions;
     box.replaceChildren(...list.map(([label, run, cls]) => {
       const b = label === '×' ? closeButton(t('qa.dismiss'), 'small') : mk('button', cls ?? 'btn small secondary', label);
+      if (label === '×') b.dataset.tip = t('qa.dismiss');
       b.type = 'button';
       b.addEventListener('click', run);
       return b;
@@ -343,8 +277,8 @@ export function initQuickAdd(o: Opts) {
     const style = r.style && (STYLES as readonly string[]).includes(r.style) ? r.style : null;
     const country = r.country && WINE_COUNTRIES.includes(r.country) ? r.country : null;
     p.title.textContent = [name, vintage].filter(Boolean).join(' ');
-    p.title.classList.remove('qa-unnamed');
-    if (r.image && src.kind === 'link') { p.pic.classList.remove('qa-thumb'); p.pic.replaceChildren(Object.assign(mk('img'), { src: r.image, alt: '' })); }
+    p.title.classList.remove('unnamed');
+    if (r.image && src.kind === 'link') setThumb(p.pic, r.image);
     fact(li, metaOf({ style, vintage, producer: r.producer ?? null }) || null);
     fact(li, originLine({ appellation: r.appellation ?? null, region: r.region ?? null, country }));
     if (r.price != null) fact(li, t('qa.price', { price: money(r.price) }));

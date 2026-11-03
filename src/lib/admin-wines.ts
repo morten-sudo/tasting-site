@@ -18,7 +18,10 @@ import { setStatus, type StatusState } from './ui/status-line';
 import { fieldError, focusField } from './field-error';
 import { combo, type ComboOption } from './combo';
 import { filterDropdown, type DdOption } from './filter-dd';
-import { SUPABASE_URL, SUPABASE_KEY } from './config';
+import { listRow } from './ui/list-row';
+import { wineThumb } from './ui/thumb';
+import { highlight as highlightRow } from './ui/highlight';
+import { deleteWithUndo } from './ui/delete-undo';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 
@@ -66,7 +69,7 @@ export const fetchedWhen = (iso: string) => new Intl.DateTimeFormat(locale(), {
 export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved?: () => void; onDeleted?: (id: number) => void } = {}) {
   let wines: AdminWine[] = [];
   // Wines deleted with "Undo" still possible: hidden from the list, deleted for real when the toast goes
-  const pendingDelete = new Map<number, string>(); // id → access token
+  const pendingDelete = new Set<number>();
   let editing: AdminWine | null = null;
   let pendingImage: Blob | null = null;
   let linkImage: string | null = null; // product image found via a shop link
@@ -587,52 +590,28 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     renderFilters(shown.length);
     const noMatch = document.getElementById('wine-no-match');
     if (noMatch) noMatch.hidden = !wines.length || shown.length > 0;
-    shown.forEach((w, i) => {
-      const li = mk('li', 'wine-row');
-      li.dataset.id = String(w.id);
-      const thumb = mk('div', 'wine-thumb');
-      if (w.image_url) {
-        const img = mk('img');
-        img.src = w.image_url;
-        img.alt = '';
-        img.loading = 'lazy';
-        thumb.append(img);
-      }
-      const body = mk('div', 'wine-body');
-      const name = mk('a', 'wine-name', w.name);
-      name.href = paths().get(w.id) ?? '/admin/wines/';
-      body.append(name);
-      const meta = [w.style ? styleName(w.style) : null, w.vintage, w.producer].filter(Boolean).join(' · ');
-      if (meta) body.append(mk('p', 'wine-meta', meta));
-      const origin = originLine(w);
-      if (origin) body.append(mk('p', 'wine-meta', origin));
-      if (w.retail_price_dkk != null) body.append(mk('p', 'wine-meta', t('admin.normally', { price: kr.format(w.retail_price_dkk) })));
-      if (w.offer_price_dkk != null) {
-        body.append(mk('p', 'wine-meta', t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
-          { price: kr.format(w.offer_price_dkk), n: w.offer_quantity ?? 1 })));
-      }
-      // Which tastings the wine is in
+    // One row per wine (the one list row): picture, name (its own page), what it is, origin, the shop's prices,
+    // the tastings it is in as chips – and the pencil
+    list.replaceChildren(...shown.map((w) => {
+      const offer = w.offer_price_dkk != null ? t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
+        { price: kr.format(w.offer_price_dkk), n: w.offer_quantity ?? 1 }) : null;
+      // Which tastings the wine is in, with the wine's guest price there (separate from the shop's price)
       const ts = tastingsOf(w);
-      const chips = mk('div', 'chips');
-      for (const tt of ts) {
-        // The tasting and the wine's guest price there (separate from the shop's price above)
+      const chips = ts.map((tt) => {
         const p = (w.tasting_wines ?? []).find((x) => x.tastings?.slug === tt.slug)?.price_dkk;
-        const a = mk('a', 'chip', p != null ? `${tt.title} · ${kr.format(Number(p))}` : tt.title);
-        a.href = `/t/${tt.slug}/admin/`;
-        chips.append(a);
-      }
-      if (!ts.length) chips.append(mk('span', 'chip', t('wineLib.unused')));
-      body.append(chips);
-
-      const actions = mk('div', 'wine-actions');
+        return { text: p != null ? `${tt.title} · ${kr.format(Number(p))}` : tt.title, href: `/t/${tt.slug}/admin/` };
+      });
       const edit = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
       edit.dataset.tip = t('admin.edit');
       edit.addEventListener('click', () => openForm(w));
-      actions.append(edit);
-
-      li.append(thumb, body, actions);
-      list.append(li);
-    });
+      return listRow({
+        id: w.id, pic: wineThumb(w), title: w.name, href: paths().get(w.id) ?? '/admin/wines/',
+        meta: [[w.style ? styleName(w.style) : null, w.vintage, w.producer], originLine(w),
+          [w.retail_price_dkk != null ? t('admin.normally', { price: kr.format(w.retail_price_dkk) }) : null, offer]],
+        chips: chips.length ? chips : [{ text: t('wineLib.unused'), dashed: true }],
+        actions: [edit],
+      });
+    }));
   }
 
   async function load() {
@@ -684,7 +663,6 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
 
   // ---------- Events ----------
-  $('wf-cancel').addEventListener('click', () => sheet.requestClose());
 
   async function useImage(file: File, status: StatusId) {
     pendingImage = await shrinkImage(file);
@@ -879,11 +857,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     // Say so, and show the wine in the list (it may be far down)
     const shownName = [name, row.vintage].filter(Boolean).join(' ');
     const li = newId ? list.querySelector<HTMLElement>(`li[data-id="${newId}"]`) : null;
-    if (li) {
-      li.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      li.classList.add('just-saved');
-      setTimeout(() => li.classList.remove('just-saved'), 2600);
-    }
+    highlightRow(li, { scroll: 'center' });
     toast(t(before ? 'wineLib.savedToast' : 'wineLib.createdToast', { name: shownName }), {
       kind: 'ok',
       action: !before && newId && !li ? { label: t('wineLib.open'), href: paths().get(newId) ?? '/admin/wines/' } : undefined,
@@ -1078,46 +1052,42 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
   }
 
   // Delete: asked about first (the one confirmation), then the wine leaves the list with "Undo" for a while
+  const deleteQuestion = (w: AdminWine) => {
+    const n = tastingsOf(w).length;
+    return { title: t('wineLib.deleteQ', { name: w.name }), ok: t('admin.deleteWine'), text: n ? t('wineLib.deleteTextIn', { n }) : t('wineLib.deleteText') };
+  };
   $('wf-delete').addEventListener('click', async () => {
     if (!editing) return;
     const w = editing;
-    const n = tastingsOf(w).length;
-    const ok = await confirmModal({ title: t('wineLib.deleteQ', { name: w.name }), danger: true, ok: t('admin.deleteWine'),
-      text: n ? t('wineLib.deleteTextIn', { n }) : t('wineLib.deleteText') });
-    if (!ok) return;
-    closeForm();
-    // On a wine's own page: back to the list, which deletes it (with Undo)
-    if (hooks.onDeleted) { hooks.onDeleted(w.id); return; }
-    deleteLater(w.id);
+    // On a wine's own page: asked here, then back to the list, which deletes it (with Undo)
+    if (hooks.onDeleted) {
+      if (await confirmModal({ ...deleteQuestion(w), danger: true })) { closeForm(); hooks.onDeleted(w.id); }
+      return;
+    }
+    deleteLater(w.id, true);
   });
 
-  /** Hides a wine and deletes it when the toast goes – unless "Undo" is pressed. */
-  async function deleteLater(id: number) {
+  /** Hides a wine and deletes it when the toast goes – unless "Undo" is pressed (the one delete with Undo). */
+  function deleteLater(id: number, ask = false) {
     const w = wines.find((x) => x.id === id);
-    if (!w) return;
-    const { data } = await supabase.auth.getSession();
-    pendingDelete.set(id, data.session?.access_token ?? '');
-    render();
-    toast(t('wineLib.deletedToast', { name: [w.name, w.vintage].filter(Boolean).join(' ') }), {
-      action: { label: t('wineLib.undo'), run: () => { pendingDelete.delete(id); render(); toast(t('wineLib.restoredToast'), { kind: 'ok' }); } },
-      onTimeout: () => deleteNow(id),
+    if (!w) return Promise.resolve(false);
+    return deleteWithUndo({
+      label: t('wineLib.deletedToast', { name: [w.name, w.vintage].filter(Boolean).join(' ') }),
+      ask: ask ? deleteQuestion(w) : null,
+      hide: () => { if (editing) closeForm(); pendingDelete.add(id); render(); },
+      restore: () => { pendingDelete.delete(id); render(); highlight(id); },
+      restored: t('wineLib.restoredToast'),
+      commit: async () => {
+        const { error } = await supabase.from('wines').delete().eq('id', id);
+        if (error) return false;
+        pendingDelete.delete(id);
+        await load();
+        return true;
+      },
+      keepalive: [`wines?id=eq.${id}`],
+      failed: t('admin.wineOrdered'),
     });
   }
-  async function deleteNow(id: number) {
-    if (!pendingDelete.has(id)) return;
-    const { error } = await supabase.from('wines').delete().eq('id', id);
-    pendingDelete.delete(id);
-    if (error) { render(); toast(t('admin.wineOrdered'), { kind: 'error' }); return; }
-    await load();
-  }
-  // Leaving the page before the toast is gone: delete now (keepalive, so it is sent after the page closes)
-  addEventListener('pagehide', () => {
-    for (const [id, token] of pendingDelete) {
-      fetch(`${SUPABASE_URL}/rest/v1/wines?id=eq.${id}`, { method: 'DELETE', keepalive: true,
-        headers: { apikey: SUPABASE_KEY, authorization: `Bearer ${token || SUPABASE_KEY}` } });
-    }
-    pendingDelete.clear();
-  });
 
   /** Opens the panel for a wine on the list; with refresh it fetches its link again straight away. */
   function edit(id: number, refresh = false) {
@@ -1132,14 +1102,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
 
   /** Scrolls to a wine in the list and lights it up for a moment; false when it is not shown (filters). */
   function highlight(id: number) {
-    const li = list.querySelector<HTMLElement>(`li[data-id="${id}"]`);
-    if (!li) return false;
-    li.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    li.classList.remove('just-saved');
-    void li.offsetWidth;
-    li.classList.add('just-saved');
-    setTimeout(() => li.classList.remove('just-saved'), 2600);
-    return true;
+    return highlightRow(list.querySelector(`li[data-id="${id}"]`));
   }
 
   return { load, edit, paths, deleteLater, highlight, wines: () => wines.filter((w) => !pendingDelete.has(w.id)) };

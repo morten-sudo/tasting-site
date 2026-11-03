@@ -1,6 +1,7 @@
 // The host's page for one wine, /admin/wines/<id>/: picture, facts, origin with map, the tastings
 // it is in and the guests' ratings there. Editing happens in the usual side panel (admin-wines.ts).
 import { starsRo } from './ui/stars';
+import { listRow } from './ui/list-row';
 import { iconButton } from './ui/icon-button';
 import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
@@ -131,23 +132,19 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     return hit ? { average: Number(hit.average), votes: hit.votes } : null;
   }));
   const ul = $('wd-tastings');
+  // One row per tasting (the one list row): its name, when and the guest price – the guests' rating on the right
   ul.replaceChildren(...rows.map((x, i) => {
     const tt = x.tastings!;
-    const li = mk('li', 'wd-tasting');
-    const a = mk('a', 'wd-t-title', tt.title);
-    a.href = `/t/${tt.slug}/admin/wines/`;
-    const sub = [tt.starts_at ? formatWhen(tt.starts_at, { year: true }) : null,
-      x.price_dkk != null ? t('wineAdmin.guestPrice', { price: kr.format(x.price_dkk) }) : null].filter(Boolean).join(' · ');
-    const left = mk('div');
-    left.append(a, mk('span', 'wd-t-sub', sub));
     const r = ratings[i];
     // The read-only stars (src/lib/ui/stars.ts) with the average
-    const score = r ? starsRo(r.average, ' ' + r.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })) : mk('span', 'wd-score', '–');
-    const votes = mk('span', 'wd-votes', r ? t(r.votes === 1 ? 'wineAdmin.voteOne' : 'wineAdmin.votes', { n: r.votes }) : t('wineAdmin.noRatings'));
-    const right = mk('div', 'wd-t-rating');
-    right.append(score, votes);
-    li.append(left, right);
-    return li;
+    const aside = document.createDocumentFragment();
+    aside.append(r ? starsRo(r.average, ' ' + r.average.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 })) : mk('b', '', '–'),
+      mk('small', '', r ? t(r.votes === 1 ? 'wineAdmin.voteOne' : 'wineAdmin.votes', { n: r.votes }) : t('wineAdmin.noRatings')));
+    return listRow({
+      title: tt.title, href: `/t/${tt.slug}/admin/wines/`,
+      meta: [[tt.starts_at ? formatWhen(tt.starts_at, { year: true }) : null, x.price_dkk != null ? t('wineAdmin.guestPrice', { price: kr.format(x.price_dkk) }) : null]],
+      aside,
+    });
   }));
   $('wd-tastings-empty').hidden = rows.length > 0;
   // Overall: all votes across the tastings

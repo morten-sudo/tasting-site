@@ -1,0 +1,31 @@
+---
+// Component 26 – the new row that slides in at the top of a list (wire it with addRow() from src/lib/ui/add-row.ts).
+// The page's "+ Add …" button opens it and waits (grey) while it is open; Esc and × close it. Columns as the list's
+// rows: pic "wine" = the empty bottle (with lead: grip and number spaces first), "guest" = the dashed "+" avatar.
+// Slots: default = the field(s) and a line of help; "actions" = the row's buttons before ×; "after" = under the row.
+// Ids: <id>-bar (the sliding part), <id>-row, <id>-hits (suggestions), <id>-close.
+import CloseButton from './CloseButton.astro';
+interface Props { id: string; pic?: 'wine' | 'guest'; lead?: boolean; class?: string }
+const { id, pic = 'wine', lead = false, class: cls } = Astro.props;
+const bottle = '<svg viewBox="0 0 40 100" aria-hidden="true"><path d="M15 3h10v27c0 3 7 5 7 13v52a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V43c0-8 7-10 7-13z" fill="none" stroke="#9b8f8b" stroke-width="2.2" stroke-linejoin="round"/></svg>';
+---
+<div id={id} class:list={['add-row', cls]}>
+  <div id={`${id}-bar`} class="ar-slide" inert>
+    <div class="ar-in">
+      <div id={`${id}-row`} class="newrow">
+        <span class="llead">
+          {lead && <span class="grip ghost" aria-hidden="true"></span>}
+          {lead && <span class="lno plus" aria-hidden="true">+</span>}
+          {pic === 'wine' ? <span class="thumb none" aria-hidden="true" set:html={bottle} /> : <span class="av add" aria-hidden="true">+</span>}
+        </span>
+        <div class="ar-body"><slot /></div>
+        <div class="ar-acts">
+          <slot name="actions" />
+          <CloseButton id={`${id}-close`} />
+        </div>
+        <ul id={`${id}-hits`} class="ar-hits menu static" hidden></ul>
+      </div>
+    </div>
+  </div>
+  <slot name="after" />
+</div>

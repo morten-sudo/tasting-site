@@ -39,7 +39,7 @@ import '../../styles/admin.css';
         <!-- The tastings I host myself (the account may have many more) -->
         <section id="mine-card" class="card dash-card mine-card" hidden>
           <h2 data-i18n="roles.mineTitle">Tastings you host</h2>
-          <ul id="mine" class="mine-list"></ul>
+          <ul id="mine" class="list flush"></ul>
           <EmptyState id="mine-none" icon="calendar" title="roles.mineNone" hidden />
           <a id="mine-all" class="text-btn fwd" href="/admin/tastings/" hidden></a>
         </section>
@@ -47,13 +47,13 @@ import '../../styles/admin.css';
         <!-- Needs paying -->
         <section id="unpaid-card" class="card dash-card" hidden>
           <h2 data-i18n="dash.unpaid">Awaiting payment</h2>
-          <ul id="unpaid" class="dash-list"></ul>
+          <ul id="unpaid" class="list flush"></ul>
         </section>
 
         <!-- Latest activity -->
         <section class="card dash-card dash-wide">
           <h2 data-i18n="dash.latest">Latest activity</h2>
-          <ul id="activity" class="dash-list"></ul>
+          <ul id="activity" class="list flush"></ul>
         </section>
       </div>
       <TastingWizard />
@@ -64,6 +64,7 @@ import '../../styles/admin.css';
 
 <script>
   import { emptyState } from '../../lib/ui/empty';
+  import { listRow } from '../../lib/ui/list-row';
   import { starsRo } from '../../lib/ui/stars';
   import { iconSvg } from '../../lib/ui/icons';
   import { supabase } from '../../lib/supabase';
@@ -96,18 +97,13 @@ import '../../styles/admin.css';
     return rtf.format(Math.round(s / div), unit);
   }
 
+  // One line of the dashboard (the one list row): an icon in a circle, what happened (the link), and what kind and when
   function activity(icon: string, label: Key, text: string | Node[], meta: string, href: string | null) {
-    const li = mk('li');
-    const el = href ? mk('a', 'dash-item') : mk('div', 'dash-item');
-    if (href) (el as HTMLAnchorElement).href = href;
-    el.append(mk('span', 'dash-icon', icon));
-    const body = mk('span', 'dash-body');
-    const line = mk('span', 'dash-text');
-    line.append(...(typeof text === 'string' ? [text] : text));
-    body.append(mk('span', 'dash-label', t(label)), line, mk('span', 'dash-meta', meta));
-    el.append(body);
-    li.append(el);
-    return li;
+    const pic = mk('span', 'av dash-icon', icon);
+    pic.setAttribute('aria-hidden', 'true');
+    const title = document.createDocumentFragment();
+    title.append(...(typeof text === 'string' ? [text] : text));
+    return listRow({ pic, title, href: href ?? undefined, meta: [[t(label), meta]] });
   }
 
   /** Awaiting payment, one line per tasting, each going straight to that tasting's orders or guests. */
@@ -153,17 +149,15 @@ import '../../styles/admin.css';
     const next = $('next');
     if (d.next) {
       const n = d.next;
-      const a = mk('a', 'dash-next');
-      a.href = adminUrl(n.slug);
-      a.append(mk('span', 'card-title', n.title));
-      const meta = [n.starts_at ? formatWhen(n.starts_at) : null, n.place].filter(Boolean).join(' · ');
-      if (meta) a.append(mk('span', 'card-meta', meta));
-      const chips = mk('span', 'chips');
-      chips.append(mk('span', 'chip ok', t('tastingsAdmin.guests', { coming: n.coming, n: n.invited })));
-      if (n.no_reply) chips.append(mk('span', 'chip wait', t('dash.noReply', { n: n.no_reply })));
-      chips.append(mk('span', 'chip', t('tastingsAdmin.wines', { n: n.wines })));
-      a.append(chips);
-      next.replaceChildren(a);
+      const ul = mk('ul', 'list flush');
+      ul.append(listRow({
+        title: n.title, href: adminUrl(n.slug), cls: 'big',
+        meta: [[n.starts_at ? formatWhen(n.starts_at) : null, n.place]],
+        chips: [{ text: t('tastingsAdmin.guests', { coming: n.coming, n: n.invited }), tone: 'ok' },
+          ...(n.no_reply ? [{ text: t('dash.noReply', { n: n.no_reply }), tone: 'wait' as const }] : []),
+          { text: t('tastingsAdmin.wines', { n: n.wines }) }],
+      }));
+      next.replaceChildren(ul);
     } else {
       next.replaceChildren(emptyState({ icon: 'calendar', title: t('dash.noNext'), action: { label: t('admin.newTasting'), icon: 'plus', secondary: true, onClick: () => $('new-toggle').click() } }));
     }
@@ -210,15 +204,9 @@ import '../../styles/admin.css';
     const upcoming = ((data ?? []) as R[]).filter((x) => !x.starts_at || new Date(x.starts_at).getTime() >= cutoff);
     // The nearest few, so the card keeps the height of the next-tasting card beside it
     $('mine').replaceChildren(...upcoming.slice(0, MINE_SHOWN).map((x) => {
-      const li = mk('li');
-      const a = mk('a', 'mine-item');
-      a.href = adminUrl(x.slug);
-      a.append(mk('span', 'mine-title', x.title));
       const coming = x.participants.filter((p) => p.status === 'yes').length;
-      const meta = [x.starts_at ? formatWhen(x.starts_at, { year: true }) : null, t('tastingsAdmin.guests', { coming, n: x.participants.length })].filter(Boolean).join(' · ');
-      a.append(mk('span', 'mine-meta', meta));
-      li.append(a);
-      return li;
+      return listRow({ title: x.title, href: adminUrl(x.slug), cls: 'big',
+        meta: [[x.starts_at ? formatWhen(x.starts_at, { year: true }) : null, t('tastingsAdmin.guests', { coming, n: x.participants.length })]] });
     }));
     $('mine-none').hidden = upcoming.length > 0;
     // More of my own than shown → all of mine; otherwise, tastings others host on the account

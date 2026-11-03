@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 import { fetchMyTastings, getCodes, tastingUrl, inviteIsMine, forgetCode, type MyTasting } from './guest';
 import { t, formatWhen } from '../i18n';
 import { statusChip, guestStatus } from './ui/status';
+import { listRow } from './ui/list-row';
 
 
 // Tastings opened with an invite link on this device (no email sign-in needed)
@@ -40,28 +41,12 @@ export async function loadAllMyTastings() {
   return { all, upcoming, past };
 }
 
+/** A tasting as the card variant of the one list row: title, the guest's answer as a chip (also "Waiting list"),
+ *  when and where; the whole card opens the tasting. */
 export function tastingCard(x: MyTasting) {
-  const li = document.createElement('li');
-  const a = document.createElement('a');
-  a.className = 'card tasting-card';
-  a.href = tastingUrl(x.slug);
-
-  const head = document.createElement('div');
-  head.className = 'card-head';
-  const title = document.createElement('span');
-  title.className = 'card-title';
-  title.textContent = x.title;
-  // One word and tone per answer – also "Waiting list"
-  head.append(title, statusChip(guestStatus(x.status)));
-  a.append(head);
-
-  const parts = [x.starts_at ? formatWhen(x.starts_at, { year: true }) : null, x.place].filter(Boolean);
-  if (parts.length) {
-    const meta = document.createElement('span');
-    meta.className = 'card-meta';
-    meta.textContent = parts.join(' · ');
-    a.append(meta);
-  }
-  li.append(a);
-  return li;
+  return listRow({
+    variant: 'card', cardHref: tastingUrl(x.slug), title: x.title,
+    chips: [statusChip(guestStatus(x.status))],
+    meta: [[x.starts_at ? formatWhen(x.starts_at, { year: true }) : null, x.place]],
+  });
 }

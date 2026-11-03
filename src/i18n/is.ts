@@ -1424,4 +1424,13 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "admin.noOrdersClosed": "Kveiktu á „Panta vín“ hér að ofan svo gestirnir geti pantað.",
   "twe.removeTierQ": "Fjarlægja magnverðið?",
   "gate.winesTitle": "Skráðu þig inn til að sjá vínin",
+  "addRow.discardQ": "Henda því sem þú hefur skrifað?",
+  "aq.move": "Færa spurningu {n}",
+  "aq.moved": "Fært í sæti {n} af {total}",
+  "orders.markPaid": "Merkja sem greitt",
+  "orders.markUnpaid": "Merkja sem ógreitt",
+  "orders.markedPaid": "Pöntun {id} frá {name} er merkt sem greidd",
+  "orders.markedUnpaid": "Pöntun {id} frá {name} er merkt sem ógreidd",
+  "cart.removed": "{name} var fjarlægt úr körfunni",
+  "cart.removeQ": "Fjarlægja {name} úr körfunni?",
 };

@@ -26,7 +26,7 @@ import '../../styles/admin.css';
         <h2 id="sec-title"></h2>
 
         <section data-sec="hosts" hidden>
-          <ul id="hosts" class="tw-list guest-list hosts-rows"></ul>
+          <ul id="hosts" class="list"></ul>
         </section>
 
         <section data-sec="tastings" hidden>
@@ -90,7 +90,7 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { t, money, type Key } from '../../i18n';
   import { requireAdmin, $, mk, cell, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection } from '../../lib/super-common';
-  import { personRow } from '../../lib/ui/person-row';
+  import { personRow } from '../../lib/ui/list-row';
   import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
   import { styleName } from '../../lib/wines';
 

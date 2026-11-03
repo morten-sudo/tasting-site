@@ -55,7 +55,6 @@ strong, b { font-weight: 500; }
 a { color: var(--amber); text-underline-offset: 0.22em; text-decoration-thickness: 1px; }
 a:hover { color: var(--paper); }
 
-
 h1, h2, h3 { line-height: 1.1; margin: 0 0 0.5em; font-weight: 400; }
 
 h2 {
@@ -91,12 +90,9 @@ select { max-width: 36rem; }
 .spectrum span:nth-child(5) { background: #b8742e; }
 .spectrum span:nth-child(6) { background: #dba65a; }
 
-
 .hint { color: var(--muted); font-size: 0.95rem; }
 
-
 [hidden] { display: none !important; }
-
 
 /* Leaderboard (quiz page and big-screen page) */
 .board {
@@ -151,39 +147,6 @@ select { max-width: 36rem; }
   }
   .pay .hint { font-size: 0.85rem; margin: 0; }
 
-/* Tasting cards (My tastings and the profile page): .card + this layout */
-.tasting-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
-.tasting-card { display: grid; gap: 0.3rem; }
-
-
-
-
-/* Panels (<dialog class="sheet">): bottom sheet on phones, side panel from the right on larger screens */
-dialog.sheet {
-  position: fixed; inset: auto 0 0 0; margin: 0; width: 100%; max-width: 100%; max-height: 90vh;
-  padding: 1.25rem var(--gutter) calc(1.5rem + env(safe-area-inset-bottom)); overflow-y: auto;
-  border: 0; border-radius: 1rem 1rem 0 0; background: var(--lodge); color: var(--paper);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.18); overflow-x: hidden;
-}
-dialog.sheet[open] { animation: sheet-up 0.22s ease-out; }
-dialog.sheet::backdrop { background: rgba(20, 12, 12, 0.45); }
-.sheet-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-.sheet-head h2 { margin: 0; font-size: 1.5rem; }
-@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-@keyframes sheet-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
-@media (min-width: 48rem) {
-  dialog.sheet {
-    inset: 0 0 0 auto; width: min(30rem, 100vw); height: 100vh; max-height: 100vh; overflow-x: hidden;
-    border-radius: 0; padding: 1.75rem 1.75rem 2rem; box-shadow: -10px 0 40px rgba(0, 0, 0, 0.18);
-  }
-  dialog.sheet[open] { animation: sheet-in 0.22s ease-out; }
-}
-dialog.sheet .sheet-head { position: sticky; top: -1.25rem; z-index: 1; background: inherit; padding: 0.5rem 0; margin-top: -0.5rem; }
-@media (min-width: 48rem) {
-  dialog.sheet.wide { width: min(40rem, 100vw); }
-  dialog.sheet .sheet-head { top: -1.75rem; }
-}
-
 /* Event chat (guests and host) */
 .chat { display: flex; flex-direction: column; gap: 0.6rem; max-width: 44rem; }
 .chat-list {
@@ -208,13 +171,6 @@ dialog.sheet .sheet-head { position: sticky; top: -1.25rem; z-index: 1; backgrou
 .chat-form .input { flex: 1; resize: none; min-height: var(--h); height: auto; max-width: none; padding-block: 0.65rem; line-height: 1.4; }
 .chat-form .chat-send { width: var(--h); padding: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-/* An order (wine book and profile): a card (.card) with a coloured edge for paid / not paid */
-.order-card { display: grid; gap: 0.25rem; margin-bottom: 0.75rem; border-left: 3px solid var(--amber); }
-.order-card.paid { border-left-color: var(--ok); }
-.order-title { font-weight: 500; }
-.order-card ul { margin: 0.3rem 0 0; padding-left: 1.1rem; font-size: 0.95rem; }
-.order-total { margin-top: 0.3rem; font-weight: 500; font-variant-numeric: tabular-nums; }
 
 /* Region maps (src/lib/region-map.ts): an old atlas in ink and wine red */
 .region-map { display: block; width: 100%; height: auto; font-family: var(--display); }
