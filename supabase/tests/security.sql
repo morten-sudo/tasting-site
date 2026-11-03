@@ -530,6 +530,8 @@ begin
   assert failed, 'anyone can write to the link log';
   failed := false; begin perform admin_link_reads(); exception when others then failed := true; end;
   assert failed, 'anyone can read the link log';
+  failed := false; begin perform * from guest_last_logins(); exception when others then failed := true; end;
+  assert failed, 'anyone can read when guests signed in';
   -- Sign-up's check tells only whether a host account exists – never about guests
   assert not signup_email_taken('guest-a@selftest.invalid'), 'the sign-up check reveals a guest';
   -- …while a guest's own chat works
