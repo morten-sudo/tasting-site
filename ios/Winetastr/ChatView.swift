@@ -130,6 +130,8 @@ struct ChatView: View {
             messages += new.filter { !known.contains($0.id) }
         }
         loaded = true
+        // Seen: the newest message shown, per tasting (the site's localStorage key; the home page counts what came after)
+        if let last = messages.last?.id { UserDefaults.standard.set(last, forKey: "wt-chat-seen:\(tasting.slug)") }
     }
 
     private func poll() async {
