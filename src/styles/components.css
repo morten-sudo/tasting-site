@@ -784,6 +784,12 @@ span.ltitle { cursor: default; }
   .lrow > .laside small::before { content: '· '; }
   .lrow > .laside > .price.right { justify-items: start; text-align: left; }
   .lrow > .lacts { grid-area: acts; align-self: start; }
+  /* A row with a grip and two or more icons (the tasting's wines): grip, number and picture already take
+     the left, so the icons go on the bottom line, right (beside the price when there is one) – the title keeps the
+     whole width instead of being squeezed onto three lines. Every row of such a list has the grip, so they match. */
+  .lrow:has(> .llead > .grip):has(> .lacts > :nth-child(2)) { grid-template-areas: 'lead main main' 'lead aside acts'; }
+  .lrow:has(> .llead > .grip):has(> .lacts > :nth-child(2)) > .lacts { align-self: end; margin-right: -0.35rem; }
+  .lrow:has(> .llead > .grip):has(> .lacts > :nth-child(2)) > .laside { align-self: center; }
   .llead .thumb { width: 2.6rem; height: 3.2rem; }
   .llead .lno { font-size: 1.2rem; }
   .llead .grip { height: 1.75rem; }
