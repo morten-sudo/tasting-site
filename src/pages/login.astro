@@ -83,8 +83,8 @@ import Disclosure from '../components/ui/Disclosure.astro';
           <!-- Invite link or code -->
           <Disclosure id="alt-invite" class="boxed" icon="link" summary="login.inviteSummary">
             <form id="code-form" class="login-form" novalidate>
-              <p data-i18n-html="login.inviteHelp">Paste the link from your invitation, or just the code at the end of the link (after <code>?k=</code>).</p>
-              <label for="code" data-i18n="login.inviteLabel">Invitation link or code</label>
+              <p data-i18n-html="login.inviteHelp">Paste the link from your invitation.</p>
+              <label for="code" data-i18n="login.inviteLabel">Invitation link</label>
               <input class="input" id="code" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required />
               <button class="btn" type="submit" data-i18n="login.submit">Sign in</button>
             </form>

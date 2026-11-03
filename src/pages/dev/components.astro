@@ -29,6 +29,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
 import Progress from '../../components/ui/Progress.astro';
 import Steps from '../../components/ui/Steps.astro';
 import Tabs from '../../components/ui/Tabs.astro';
+import MapBackground from '../../components/ui/MapBackground.astro';
 import Hero from '../../components/ui/Hero.astro';
 import Actions from '../../components/ui/Actions.astro';
 import Sr from '../../components/ui/Sr.astro';
@@ -490,6 +491,9 @@ const opts = [
             <li><Icon name="calendar" /><span>Saturday 14 November at 19:00</span></li>
             <li><Icon name="pin" /><span>Strandvejen 12, Hellerup<button class="text-btn" type="button">Map</button></span></li>
           </Hero>
+          <div class="dv-gap"></div>
+          <p class="help">MapBackground.astro – a faint region map behind a heading, left or right (the sign-up page: Bourgogne, left)</p>
+          <div class="has-map-bg"><MapBackground map="bourgogne" side="left" /><PageHeader eyebrow="signup.eyebrow" title="signup.title" lead="signup.lead" /></div>
         </section>
 
         <section id="c45" class="dv-comp">
@@ -595,6 +599,8 @@ const opts = [
 <script>
   import { requireHost } from '../../lib/admin-common';
   import { $, mk } from '../../lib/ui/dom';
+  import { fillMapBackgrounds } from '../../lib/ui/map-background';
+  fillMapBackgrounds();
   import { button, setLoading } from '../../lib/ui/button';
   import { textButton } from '../../lib/ui/text-button';
   import { iconButton, closeButton, setIconLoading } from '../../lib/ui/icon-button';

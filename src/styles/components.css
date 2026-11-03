@@ -1117,6 +1117,11 @@ html.side-locked { overflow: hidden; }
   -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent); mask-image: radial-gradient(closest-side, #000 70%, transparent);
 }
 @media (max-width: 40rem) { .hero-bg { width: 120vw; right: -40vw; top: -1rem; opacity: 0.22; } }
+.has-map-bg { position: relative; isolation: isolate; }
+/* Left: the map fits the height of its box (the heading beside a form), never running into the next section */
+.hero-bg.left { right: auto; left: -3rem; top: -1.5rem; bottom: -1.5rem; width: min(50vw, 34rem); }
+.hero-bg.left > svg { width: 100%; height: 100%; }
+@media (max-width: 40rem) { .hero-bg.left { left: -30vw; width: 100vw; bottom: auto; height: 34rem; } }
 
 /* ---------- 45 Footer (Footer.astro) ---------- */
 .foot { color: var(--muted); font-size: 0.9rem; padding-top: 1.5rem; padding-bottom: 2rem; border-top: 1px solid var(--lodge-3); }

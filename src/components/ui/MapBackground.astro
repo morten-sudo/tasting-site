@@ -1,0 +1,8 @@
+---
+// Component 44b – a faint region map behind a page's heading (the same look as behind the tasting's title).
+// side "right" (default) or "left". The map is drawn by src/lib/ui/map-background.ts (fillMapBackgrounds()).
+// The parent needs `.has-map-bg` (position: relative; isolation: isolate).
+interface Props { map: string; side?: 'left' | 'right'; id?: string }
+const { map, side = 'right', id } = Astro.props;
+---
+<div id={id} class:list={['hero-bg', side === 'left' && 'left']} data-map-bg={map} aria-hidden="true"></div>

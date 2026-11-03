@@ -4,12 +4,14 @@ import PageHeader from '../components/ui/PageHeader.astro';
 import SectionTitle from '../components/ui/SectionTitle.astro';
 import Loading from '../components/ui/Loading.astro';
 import Steps from '../components/ui/Steps.astro';
+import MapBackground from '../components/ui/MapBackground.astro';
 import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 ---
 <Base title="page.signup">
   <section class="wrap signup-page">
     <!-- Hero: what Winetastr is, with the sign-up form beside it -->
-    <div class="su-hero">
+    <div class="su-hero has-map-bg">
+      <MapBackground map="bourgogne" side="left" />
       <div class="su-pitch">
         <PageHeader eyebrow="signup.eyebrow" title="signup.title" lead="signup.lead" class="su-ph" />
         <ul class="su-points">
@@ -68,11 +70,13 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
   import { setLoading } from '../lib/ui/button';
   import { setSteps } from '../lib/ui/progress';
   import { $ } from '../lib/ui/dom';
+  import { fillMapBackgrounds } from '../lib/ui/map-background';
   import { toast } from '../lib/ui/toast';
   import { fieldError } from '../lib/field-error';
   import { supabase } from '../lib/supabase';
   import { i18nReady, lang, t } from '../i18n';
 
+  fillMapBackgrounds();
   await i18nReady;
 
   const step = (i: number) => setSteps($('su-steps'), i);
