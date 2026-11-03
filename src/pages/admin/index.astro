@@ -98,14 +98,15 @@ import '../../styles/admin.css';
   }
 
   /** Awaiting payment, one line per tasting, each going straight to that tasting's orders or guests. */
-  async function showUnpaidByTasting() {
+  async function showUnpaidByTasting(tn: string): Promise<boolean> {
     type O = { tasting_id: string; tastings: { slug: string; title: string } | null; order_lines: { quantity: number; unit_price: number }[] };
     type P = { tasting_id: string; tastings: { slug: string; title: string; tasting_fee: number; tasting_fee_open: boolean } | null };
     const [o, p] = await Promise.all([
-      supabase.from('orders').select('tasting_id, tastings(slug, title), order_lines(quantity, unit_price)').eq('paid', false),
-      supabase.from('participants').select('tasting_id, tastings(slug, title, tasting_fee, tasting_fee_open)').eq('status', 'yes').eq('tasting_paid', false),
+      // The account shown (as the totals) – not every account the host is on
+      supabase.from('orders').select('tasting_id, tastings!inner(slug, title, tenant_id), order_lines(quantity, unit_price)').eq('paid', false).eq('tastings.tenant_id', tn),
+      supabase.from('participants').select('tasting_id, tastings!inner(slug, title, tasting_fee, tasting_fee_open, tenant_id)').eq('status', 'yes').eq('tasting_paid', false).eq('tastings.tenant_id', tn),
     ]);
-    if (o.error || p.error) return; // the totals above stay
+    if (o.error || p.error) return false;
     const rows: HTMLElement[] = [];
     const orders = new Map<string, { slug: string; title: string; n: number; amount: number }>();
     for (const x of (o.data ?? []) as unknown as O[]) {
@@ -126,7 +127,8 @@ import '../../styles/admin.css';
       fees.set(x.tasting_id, g);
     }
     for (const g of fees.values()) rows.push(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: g.n, amount: formatKr(g.amount) }), g.title, adminUrl(g.slug, 'guests/')));
-    if (rows.length) $('unpaid').replaceChildren(...rows);
+    $('unpaid').replaceChildren(...rows);
+    return rows.length > 0;
   }
 
   // The next tasting's map, faint behind the card – the same as behind the tasting's title
@@ -164,12 +166,9 @@ import '../../styles/admin.css';
     }
 
     // Awaiting payment
-    const unpaid = $('unpaid');
-    unpaid.replaceChildren();
-    if (d.unpaid_orders?.count) unpaid.append(activity('🧾', 'admin.orders', t('dash.unpaidOrders', { n: d.unpaid_orders.count, amount: formatKr(Number(d.unpaid_orders.amount)) }), '', '/admin/tastings/'));
-    if (d.unpaid_fees?.count) unpaid.append(activity('🍷', 'guest.feeTitle', t('dash.unpaidFees', { n: d.unpaid_fees.count, amount: formatKr(Number(d.unpaid_fees.amount)) }), '', '/admin/tastings/'));
-    $('unpaid-card').hidden = !unpaid.children.length;
-    if (unpaid.children.length) showUnpaidByTasting();
+    // Awaiting payment: one line per tasting, straight to its orders or guests
+    $('unpaid-card').hidden = true;
+    if (d.unpaid_orders?.count || d.unpaid_fees?.count) showUnpaidByTasting(host.tenant_id).then((any) => { $('unpaid-card').hidden = !any; });
 
     // Latest sign-up, order and rating
     const list = $('activity');
