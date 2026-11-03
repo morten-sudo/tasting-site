@@ -94,7 +94,7 @@ export const HELP: HelpSection[] = [
 <p>Tryk <a href="/admin/wines/?open=wine-add-toggle">Ny vin</a> (under Vine eller på Overblik). Øverst i listen glider en ny række ind, hvor du kan:</p>
 <ul>
 <li><b>Skrive navnet</b> – mens du skriver, vises vine i dit bibliotek med samme navn, så du ikke laver en kopi. Tryk <i>Tilføj</i> for at oprette en ny med det navn; et årstal i navnet bliver vinens årgang. Vinens side tilbyder bagefter at hente resten fra et link eller et billede.</li>
-<li><b>Indsætte et link til en butik</b> – navn, type, årgang, oprindelse, beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden.</li>
+<li><b>Indsætte et link til en butik</b> – navn, type, årgang, oprindelse, beskrivelse, priser, druer, "passer til", servering og billede hentes fra siden. Billedet gemmes hos os sammen med vinen, så det ikke forsvinder, hvis butikken ændrer sin side.</li>
 <li><b>Vælge et billede af etiketten</b> (eller trække det ind eller indsætte det) – navn, producent, årgang, type m.m. læses fra billedet.</li>
 </ul>
 <p>Med link eller billede kommer der en række i listen, hvor du kan se, hvad der kommer ind – til sidst producentens hjemmeside og adresse. Så glider vinen ind i listen og lyser op, og der står en kort besked nederst. Du kan tilføje flere vine i træk, mens rækkerne arbejder. Kan siden eller etiketten ikke læses, står det i rækken, og <i>Skriv navnet</i> lader dig skrive navnet selv – linket eller billedet gemmes stadig med vinen. Den samme vin (samme navn og årgang) kan ikke ligge i biblioteket to gange – har du den allerede, foreslås den i stedet. Er det en anden årgang, så skriv årstallet efter navnet, fx <i>Barolo 2019</i>.</p>
@@ -115,7 +115,7 @@ export const HELP: HelpSection[] = [
 <p>Press <a href="/admin/wines/?open=wine-add-toggle">New wine</a> (under Wines or on the Overview). A new row slides in at the top of the list, where you can:</p>
 <ul>
 <li><b>Type the name</b> – as you type, wines in your library with the same name are shown, so you do not make a copy. Press <i>Add</i> to create a new one with that name; a year in the name becomes the vintage. The wine’s page then offers to fetch the rest from a link or a photo.</li>
-<li><b>Paste a link to a shop</b> – name, type, vintage, origin, description, prices, grapes, "goes with", serving and picture are fetched from the page.</li>
+<li><b>Paste a link to a shop</b> – name, type, vintage, origin, description, prices, grapes, "goes with", serving and picture are fetched from the page. The picture is stored with the wine, so it does not vanish if the shop changes its page.</li>
 <li><b>Choose a photo of the label</b> (or drag it in or paste it) – name, producer, vintage, type and more are read from the photo.</li>
 </ul>
 <p>With a link or a photo, a row in the list shows what comes in – last the producer's website and address. Then the wine moves into the list and lights up, and a short message shows at the bottom. You can add more wines in a row while the rows work. If the page or the label cannot be read, the row says so, and <i>Type the name</i> lets you type the name yourself – the link or photo is still saved with the wine. The same wine (same name and vintage) cannot be in the library twice – if you already have it, it is suggested instead. For another vintage, type the year after the name, e.g. <i>Barolo 2019</i>.</p>

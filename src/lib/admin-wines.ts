@@ -6,6 +6,7 @@ import { setLoading } from './ui/button';
 import { getDropdown, type DropdownEl } from './ui/dropdown';
 import { imagePicker } from './ui/image-picker';
 import { supabase } from './supabase';
+import { storeImage, storeLinkedImages } from './wine-image';
 import { $ } from './ui/dom';
 import { STYLES, styleName } from './wines';
 import { t, lang, locale } from '../i18n';
@@ -621,6 +622,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     wines = (data ?? []) as unknown as AdminWine[];
     render();
     placeSavedAddresses();
+    // Pictures saved as links to a shop (before pictures were stored) get their own copy, quietly
+    storeLinkedImages(wines, hostId);
   }
 
   /** Wines with an address but no place yet (from before addresses were placed): placed in the background,
@@ -792,7 +795,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     setLoading(save, true, t('common.saving'));
 
     let image_url = editing?.image_url ?? null;
-    if (linkImage) image_url = linkImage;
+    // A picture from a link is stored with the wine (the link itself only if it cannot be fetched now)
+    if (linkImage) image_url = (await storeImage(linkImage, hostId)) ?? linkImage;
     if (removeImage) image_url = null;
     if (pendingImage) {
       const url = await uploadImage(pendingImage);

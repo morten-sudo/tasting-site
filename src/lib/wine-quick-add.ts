@@ -6,6 +6,7 @@ import { knownProducer, shareProducer } from './producers';
 import { formatKr } from './ui/kr';
 import { setLoading } from './ui/button';
 import { supabase } from './supabase';
+import { storeImage } from './wine-image';
 import { $, mk } from './ui/dom';
 import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
@@ -314,6 +315,8 @@ export function initQuickAdd(o: Opts) {
     say(li, t('common.saving'), 'busy');
     // 2. Save the wine
     let image_url = src.kind === 'link' ? r.image ?? null : null;
+    // A picture from a link is stored with the wine (the link itself only if it cannot be fetched now)
+    if (image_url) image_url = (await storeImage(image_url, o.hostId)) ?? image_url;
     if (job.upload) image_url = (await job.upload) ?? null;
     const offer = r.offer && r.offer.price != null ? r.offer : null;
     const row = {
