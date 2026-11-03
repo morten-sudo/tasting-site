@@ -1,4 +1,4 @@
-// Component 21 – the one price: our price, the regular price struck through, the quantity prices under it, and
+// Component 21 – the one price: our price, the regular price struck through on the line below, the quantity prices under it, and
 // "Price to follow" when there is none yet. Every amount is written by formatKr() (src/lib/ui/kr.ts).
 import { t } from '../../i18n';
 import { mk } from './dom';
@@ -28,11 +28,10 @@ export function price(o: PriceOptions): HTMLDivElement {
   }
   const now = mk('span', 'now', formatKr(o.amount));
   if (o.was != null && Number(o.was) > Number(o.amount)) {
-    const row = mk('span', 'row');
+    // Our price on top, the regular price struck through on the line under it
     const was = mk('span', 'was');
     was.append(mk('span', 'sr', t('wines.normalPrice') + ' '), formatKr(o.was));
-    row.append(now, was);
-    box.append(row);
+    box.append(now, was);
   } else box.append(now);
   for (const line of o.tiers ?? []) {
     const tier = mk('span', 'tier');

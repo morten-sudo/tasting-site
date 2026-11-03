@@ -617,7 +617,6 @@ dialog .input { max-width: none; }
 .price .now.none { color: var(--muted); font-weight: 400; }
 .price .was { color: var(--muted); font-size: 0.85rem; text-decoration: line-through; white-space: nowrap; }
 .price .tier { color: var(--amber); font-size: 0.85rem; }
-.price .row { display: flex; gap: 0.5rem; align-items: baseline; flex-wrap: wrap; }
 .price.lg .now { font-family: var(--display); font-size: 2rem; font-weight: 500; line-height: 1; }
 .price.lg .was { font-size: 0.95rem; }
 .price.lg .tier { font-size: 0.92rem; }
