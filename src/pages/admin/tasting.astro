@@ -42,7 +42,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
 
     <div id="admin-main" hidden>
       <!-- The tasting's name with the way to its guest page beside it, and its sub-menu (the one tab bar) -->
-      <PageHeader id="ta-title" class="ta-head">
+      <PageHeader id="ta-title" class="ta-head title-row">
         <!-- The way to the guest page: an icon on the name's line, where the guest page has its way back here (the gear) -->
         <a slot="actions" id="t-guestpage" class="icon-act t-guest tip-below" href="/home/" target="_blank" rel="noopener" aria-label="See the tasting as your guests do" data-tip="See the tasting as your guests do" data-i18n-attr="aria-label=nav.guestPageTitle;data-tip=nav.guestPageTitle"><Icon name="reveal" /></a>
       </PageHeader>

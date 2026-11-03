@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import '../styles/components.css';
 import TopBar from '../components/ui/TopBar.astro';
+import TastingHead from '../components/ui/TastingHead.astro';
 import Footer from '../components/ui/Footer.astro';
 import { SITE_NAME } from '../lib/config';
 import { en } from '../i18n/en';
@@ -50,6 +51,7 @@ const site = 'https://winetastr.com';
     <TopBar tasting={tasting} path={path} />
     <main>
       <div id="page-bg" class="hero-bg page-bg" aria-hidden="true"></div>
+      {tasting && <TastingHead path={path}><slot name="t-chips" slot="chips" /></TastingHead>}
       <slot />
     </main>
     <script>
@@ -62,13 +64,11 @@ const site = 'https://winetastr.com';
       import { setBadge } from '../lib/ui/badge';
       import { supabase } from '../lib/supabase';
       import { currentSlug, tastingUrl, resolveGuestCode, signOut, loadMe, cachedName } from '../lib/guest';
-      import { loadAllMyTastings } from '../lib/my-tastings';
       import { i18nReady, LANGS, lang, setLang, t, plural, formatWhen, type Key } from '../i18n';
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
       import { initDropdowns } from '../lib/ui/dropdown';
       import { initTabs } from '../lib/ui/tabs';
-      import { tooltip } from '../lib/ui/tooltip';
       import { setEmpty } from '../lib/ui/empty';
 
       // "Sign in" in the not-signed-in state comes back to this page
@@ -160,41 +160,6 @@ const site = 'https://winetastr.com';
         }
       }
 
-      // ---------- The account menu and the tasting switcher: the one menu (src/lib/ui/menu.ts) ----------
-
-      // Switch to another of my tastings, staying on the same tab
-      type SwitchItem = { slug: string; title: string; starts_at: string | null };
-      async function initSwitcher() {
-        const { all, upcoming, past } = await loadAllMyTastings();
-        const tab = document.querySelector<HTMLAnchorElement>('#t-tabs a[aria-current]')?.dataset.tpath ?? '';
-        fillSwitcher(all.length < 2 ? [] : [...upcoming, ...past], (s) => tastingUrl(s, tab));
-      }
-      function fillSwitcher(items: SwitchItem[], hrefFor: (slug: string) => string) {
-        const btn = document.getElementById('t-switch') as HTMLButtonElement | null;
-        if (!btn || !slug || items.length < 2) return;
-        const list = document.getElementById('t-list')!;
-        list.replaceChildren(...items.map((x) => {
-          // The tasting with its date under it; a check by the one shown now
-          const a = menuItem(x.title, { href: hrefFor(x.slug), role: 'menuitem', check: true,
-            sub: x.starts_at ? formatWhen(x.starts_at, { year: new Date(x.starts_at).getFullYear() !== new Date().getFullYear() }) : undefined });
-          a.dataset.slug = x.slug;
-          if (x.slug === slug) a.setAttribute('aria-current', 'page');
-          return a;
-        }));
-        // The link is worked out again on click (an admin page can change section without reloading)
-        list.addEventListener('click', (e) => {
-          const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-slug]');
-          if (a) a.href = hrefFor(a.dataset.slug!);
-        });
-        btn.disabled = false;
-        btn.classList.add('can-switch');
-        tooltip(btn, t('nav.switchTasting'));
-        // The one menu under the name, on phones too
-        const menu = document.getElementById('t-menu')!;
-        bindMenu(btn, menu);
-      }
-
-
       // Admin links for hosts and administrators
       async function showRoles(signedIn: boolean, isHost: boolean) {
         if (!signedIn) return;
@@ -225,7 +190,10 @@ const site = 'https://winetastr.com';
         const me = loadMe();
         if (inTasting && slug) {
           const code = await resolveGuestCode();
+          // Not invited (or no code): the tasting's head has nothing to show
+          const noHead = () => { document.getElementById('t-head')!.hidden = true; };
           if (!code) {
+            noHead();
             // Signed in, but not invited to this tasting: say so instead of "sign in"
             const who = await me;
             if (who?.signedIn) {
@@ -242,14 +210,13 @@ const site = 'https://winetastr.com';
           }
           const { data } = await supabase.rpc('get_invite', { code });
           const row = Array.isArray(data) ? data[0] : null;
-          if (!row) { signedIn(false); return; }
+          if (!row) { noHead(); signedIn(false); return; }
           showTasting(code);
           const who = await me;
           showName(who?.signedIn && who.name ? who.name : row.name);
           // Guests without an email must add one on the tasting page before continuing
           const home = tastingUrl(slug);
           if (!row.email && location.pathname !== home) { location.replace(home); return; }
-          initSwitcher();
           showRoles(!!who?.signedIn, !!who?.isHost);
           return;
         }

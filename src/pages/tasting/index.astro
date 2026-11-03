@@ -12,6 +12,12 @@ import SignInState from '../../components/ui/SignInState.astro';
 import Disclosure from '../../components/ui/Disclosure.astro';
 ---
 <Base title="page.tasting" tasting>
+  <!-- Over the tasting's name: the countdown and the guest's answer (TastingHead's chips) -->
+  <div slot="t-chips" id="t-chips" class="hero-chips" hidden>
+    <p id="t-countdown" class="chip wait" hidden></p>
+    <span id="h-answer" hidden></span>
+    <button id="change" type="button" class="text-btn small" hidden data-i18n="tastingHome.change">Change answer</button>
+  </div>
   <section class="wrap page-pad">
     <Loading text="gate.loadingTasting" />
     <SignInState id="invalid" title="gate.tastingTitle" />
@@ -25,10 +31,9 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     </form>
 
     <div id="invite" class="t-home" hidden>
-      <!-- The tasting at a glance: the one hero, its "tasting" variant (the region's map faint behind the heading) -->
-      <Hero variant="tasting" titleId="h-title" countdownId="t-countdown" backgroundId="hero-map">
-        <span slot="chips" id="h-answer" hidden></span>
-        <button slot="chips" id="change" type="button" class="text-btn small" hidden data-i18n="tastingHome.change">Change answer</button>
+      <!-- The tasting at a glance under its name and tabs (TastingHead): when, where, who, how many – the region's map
+           faint behind (the one hero, its "tasting" variant without a title) -->
+      <Hero variant="tasting" backgroundId="hero-map">
         <li id="f-when" hidden>
           <Icon name="calendar" />
           <span><span id="h-when"></span><button id="h-ics" type="button" class="text-btn small" data-i18n="tastingHome.calendar">Add to calendar</button></span>
@@ -176,7 +181,6 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     }
     headerDone = true;
     const title = String(info.title ?? '');
-    $('h-title').textContent = title;
     const starts = typeof info.starts_at === 'string' ? info.starts_at : null;
     const place = typeof info.place === 'string' && info.place ? info.place : null;
     if (starts) {
@@ -404,6 +408,8 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     if (!row.email) {
       $('step-name').textContent = row.name;
       $('email-step').hidden = false;
+      // First the email: the tasting's head and tabs come after
+      $('t-head').hidden = true;
       $<HTMLInputElement>('step-email').focus();
       return;
     }
@@ -412,6 +418,8 @@ import Disclosure from '../../components/ui/Disclosure.astro';
 
   function showProfile() {
     $('email-step').hidden = true;
+    $('t-head').hidden = false;
+    $('t-chips').hidden = false;
     $('invite').hidden = false;
     loadFee();
   }

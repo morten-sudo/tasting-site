@@ -142,10 +142,7 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 
 /* A tasting's admin: its name and the guest page, then its tabs */
 .admin-page .ta-head { margin-bottom: 0.9rem; }
-/* The name and, on its line to the right, the way to the guest page (as the gear on the guest page) */
-.admin-page .ta-head { flex-wrap: nowrap; align-items: center; }
-.admin-page .ta-head > .ph-text { flex: 1 1 auto; }
-.admin-page .ta-head > .ph-act { margin-top: 0; }
+/* The name and, on its line to the right (.title-row), the way to the guest page – as the gear on the guest page */
 .admin-page .ta-head .t-guest svg { width: 1.35rem; height: 1.35rem; }
 /* With the "Menu" button (below 60rem): the eye goes up in the corner, on the button's line – where the guest page
    has its gear */

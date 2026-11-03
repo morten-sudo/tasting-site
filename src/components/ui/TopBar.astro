@@ -1,16 +1,13 @@
 ---
 // Component 43 – the one top bar on every page: the logo, the cart (in a tasting) and the account menu (the one
-// menu, src/lib/ui/menu.ts) – with the language as its second view, and "Sign in" when not signed in. In a tasting a second row: the tasting (a switcher), its tabs
-// (the one tab bar, Tabs.astro) and, for its hosts, the way to its admin. Base.astro's script fills it in.
+// menu, src/lib/ui/menu.ts) – with the language as its second view, and "Sign in" when not signed in. A tasting's
+// name and tabs are in the page under it (TastingHead.astro). Base.astro's script fills it in.
 import Badge from './Badge.astro';
 import Icon from './Icon.astro';
-import Tabs from './Tabs.astro';
 import { SITE_NAME } from '../../lib/config';
 interface Props { tasting?: boolean; path: string }
 const { tasting = false, path } = Astro.props;
 const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect width="100" height="100" rx="22" fill="#6e0f1f" /><g transform="translate(50 50) scale(0.84) translate(-50 -50)"><rect x="0" y="43" width="100" height="100" fill="#fff" clip-path="url(#logo-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></g></svg>`;
-const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.startsWith('/tasting/wine') ? 'wines'
-  : path.startsWith('/tasting/quiz') ? 'quiz' : path.startsWith('/tasting/chat') ? 'chat' : undefined;
 ---
 <header class="site-header">
   <div class="wrap topbar">
@@ -54,30 +51,4 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
       </div>
     </div>
   </div>
-  {tasting && (
-    <div class="wrap ctx">
-      <div class="ctx-bar">
-        <button id="t-switch" type="button" class="t-switch" aria-haspopup="menu" disabled>
-          <span id="t-title" class="t-title"></span>
-          <Icon name="chev" class="chev" />
-        </button>
-        <Tabs id="t-tabs" label="Tasting menu" labelKey="nav.tastingMenu" current={tab} items={[
-          { id: 'tasting', label: 'nav.tasting', href: '/home/', attrs: { 'data-tpath': '' } },
-          { id: 'wines', label: 'nav.wines', href: '/home/', attrs: { 'data-tpath': 'wines/' } },
-          // Only when the tasting has a quiz (shown by the script)
-          { id: 'quiz', label: 'nav.quiz', href: '/home/', hidden: tab !== 'quiz', attrs: { 'data-tpath': 'quiz/', id: 't-quiz-tab' } },
-          { id: 'chat', label: 'nav.chat', href: '/home/', attrs: { 'data-tpath': 'chat/' } },
-        ]} />
-        <!-- The host's way into this tasting's admin: the settings icon (opens in a new tab) -->
-        <a id="t-admin" class="icon-act t-admin tip-below" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" aria-label="Manage this tasting" data-tip="Manage this tasting" data-i18n-attr="aria-label=nav.adminThisTitle;data-tip=nav.adminThisTitle" hidden><Icon name="gear" /></a>
-      </div>
-      <!-- The one menu under the name -->
-      <div id="t-menu" class="menu t-menu" role="menu" hidden>
-        <div class="m-group" role="presentation" data-i18n="nav.switchTasting">Switch tasting</div>
-        <div id="t-list" class="m-list"></div>
-        <hr />
-        <a id="t-all" class="opt-i act" role="menuitem" href="/home/#my-tastings" data-i18n="nav.allMyTastings">All my tastings</a>
-      </div>
-    </div>
-  )}
 </header>

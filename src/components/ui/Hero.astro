@@ -5,7 +5,8 @@
 //     or "fill" (fills its box – the sign-in page's photo side). titleTag: "p" when the page's <h1> is elsewhere.
 //   variant="tasting": the guest's tasting – the countdown chip, the title and the when / where lines with their
 //     icons and text links (put in the default slot as <li>s), a faint region map behind (backgroundId).
-//     Slot "chips": more chips (and a small text button) on the countdown's line, e.g. the guest's answer.
+//     Slot "chips": more chips (and a small text button) on the countdown's line. Without a title (the guest's tasting
+//     page: its name is in TastingHead) only the lines and the map.
 import { en } from '../../i18n/en';
 interface Props {
   variant?: 'photo' | 'tasting'; size?: 'full' | 'fill'; eyebrow?: string; title?: string; titleId?: string; titleTag?: 'h1' | 'p';
@@ -25,7 +26,7 @@ const T = titleTag;
         <slot name="chips" />
       </div>
     )}
-    <T id={titleId} class="hero-title" data-i18n={i18n(title)}>{tr(title)}</T>
+    {(titleId || title) && <T id={titleId} class="hero-title" data-i18n={i18n(title)}>{tr(title)}</T>}
     <ul id={whenId} class="hero-when"><slot /></ul>
   </header>
 ) : (
