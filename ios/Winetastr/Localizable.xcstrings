@@ -1,0 +1,2514 @@
+{
+ "sourceLanguage": "en",
+ "strings": {
+  "common.email": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "E-mail"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Email"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Netfang"
+     }
+    }
+   }
+  },
+  "common.save": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gem"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Save"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vista"
+     }
+    }
+   }
+  },
+  "common.saved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gemt."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Saved."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vistað."
+     }
+    }
+   }
+  },
+  "common.cancel": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Annullér"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Cancel"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hætta við"
+     }
+    }
+   }
+  },
+  "common.continue": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fortsæt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Continue"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Áfram"
+     }
+    }
+   }
+  },
+  "nav.myTastings": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mine smagninger"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "My tastings"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smakkanir mínar"
+     }
+    }
+   }
+  },
+  "nav.wines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vinene"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vínin"
+     }
+    }
+   }
+  },
+  "nav.signOut": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Log ud"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sign out"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skrá út"
+     }
+    }
+   }
+  },
+  "home.upcomingMany": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kommende smagninger"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Upcoming tastings"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smakkanir framundan"
+     }
+    }
+   }
+  },
+  "tastings.past": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tidligere"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Past"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Liðnar"
+     }
+    }
+   }
+  },
+  "tastingHome.about": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Om aftenen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "About the evening"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Um kvöldið"
+     }
+    }
+   }
+  },
+  "tastingHome.yourAnswer": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dit svar"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your answer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þitt svar"
+     }
+    }
+   }
+  },
+  "tastingHome.change": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ret svar"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Change answer"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Breyta svari"
+     }
+    }
+   }
+  },
+  "tastingHome.coming": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} kommer indtil nu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} are coming so far"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} mæta hingað til"
+     }
+    }
+   }
+  },
+  "tastingHome.host": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vært: {name}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Host: {name}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gestgjafi: {name}"
+     }
+    }
+   }
+  },
+  "tastingHome.closedHint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tilmeldingen er lukket. Kontakt værten, hvis du vil ændre dit svar."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sign-up is closed. Contact the host to change your answer."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skráningu er lokið. Hafðu samband við gestgjafann til að breyta svarinu."
+     }
+    }
+   }
+  },
+  "guest.fullHint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smagningen er fuld. Svarer du ja, kommer du på ventelisten."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The tasting is full. If you say yes, you go on the waiting list."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smökkunin er full. Ef þú segir já ferðu á biðlistann."
+     }
+    }
+   }
+  },
+  "guest.statusWaitlist": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du står på ventelisten. Bliver der en plads, rykker du automatisk op – det kan du se her."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You are on the waiting list. If a place becomes free, you move up automatically – you will see it here."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú ert á biðlistanum. Ef pláss losnar færist þú sjálfkrafa upp – þú sérð það hér."
+     }
+    }
+   }
+  },
+  "guest.statusYes": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du kommer. Vi ses!"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You're coming. See you there!"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú mætir. Sjáumst!"
+     }
+    }
+   }
+  },
+  "guest.statusNo": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du har meldt fra."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You have declined."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú hefur afboðað."
+     }
+    }
+   }
+  },
+  "guest.coming": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kommer du?"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Are you coming?"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kemur þú?"
+     }
+    }
+   }
+  },
+  "guest.note": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Besked til værten"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Message to the host"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skilaboð til gestgjafans"
+     }
+    }
+   }
+  },
+  "guest.canChange": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du kan ændre dit svar, så længe tilmeldingen er åben."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You can change your answer while sign-up is open."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú getur breytt svarinu á meðan skráning er opin."
+     }
+    }
+   }
+  },
+  "guest.welcome": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Velkommen,"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Welcome,"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Velkomin(n),"
+     }
+    }
+   }
+  },
+  "guest.emailLead": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Før du går videre, skal vi have din e-mail. Den bruges til at logge ind med en kode – fx hvis du skifter telefon."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Before you continue, we need your email. You use it to sign in with a code – for example if you switch phones."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Áður en þú heldur áfram þurfum við netfangið þitt. Þú notar það til að skrá þig inn með kóða – t.d. ef þú skiptir um síma."
+     }
+    }
+   }
+  },
+  "guest.yourEmail": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Din e-mail"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your email"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Netfangið þitt"
+     }
+    }
+   }
+  },
+  "guest.emailBad": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "E-mailen ser ikke rigtig ud. Ret den, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The email doesn't look right. Correct it and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Netfangið virðist ekki rétt. Leiðréttu það og reyndu aftur."
+     }
+    }
+   }
+  },
+  "guest.emailMissing": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv din e-mail for at fortsætte."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enter your email to continue."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sláðu inn netfangið þitt til að halda áfram."
+     }
+    }
+   }
+  },
+  "guest.emailTaken": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Den e-mail er allerede knyttet til en anden gæst."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "That email is already linked to another guest."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þetta netfang er þegar tengt öðrum gesti."
+     }
+    }
+   }
+  },
+  "guest.emailLocked": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "For at ændre din e-mail skal du logge ind med den e-mail, du har nu."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "To change your email, sign in with the email you have now."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Til að breyta netfanginu skaltu skrá þig inn með núverandi netfangi."
+     }
+    }
+   }
+  },
+  "guest.emailNotSaved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "E-mailen blev ikke gemt. Tjek din forbindelse, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The email was not saved. Check your connection and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Netfangið var ekki vistað. Athugaðu tenginguna og reyndu aftur."
+     }
+    }
+   }
+  },
+  "guest.chooseYesNo": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vælg, om du kommer eller ej."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Choose whether you are coming or not."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Veldu hvort þú kemur eða ekki."
+     }
+    }
+   }
+  },
+  "guest.answerNotSaved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dit svar blev ikke gemt. Tjek din forbindelse og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your answer was not saved. Check your connection and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svarið þitt var ekki vistað. Athugaðu tenginguna og reyndu aftur."
+     }
+    }
+   }
+  },
+  "guest.signupClosed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tilmeldingen er lukket. Skriv til værten, hvis du skal ændre noget."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sign-up is closed. Contact the host if you need to change anything."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skráningu er lokið. Hafðu samband við gestgjafann ef þú þarft að breyta einhverju."
+     }
+    }
+   }
+  },
+  "status.yes": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kommer"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Coming"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mætir"
+     }
+    }
+   }
+  },
+  "status.no": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kommer ikke"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Not coming"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mætir ekki"
+     }
+    }
+   }
+  },
+  "status.waitlist": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Venteliste"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Waiting list"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Biðlisti"
+     }
+    }
+   }
+  },
+  "rating.title": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Din vurdering"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your rating"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þín einkunn"
+     }
+    }
+   }
+  },
+  "rating.note": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dine noter"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Your notes"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þínar athugasemdir"
+     }
+    }
+   }
+  },
+  "blind.blind": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Blind"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Blind"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Blint"
+     }
+    }
+   }
+  },
+  "blind.hint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Blind – afsløres senere"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Blind – revealed later"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Blint – afhjúpað síðar"
+     }
+    }
+   }
+  },
+  "login.mailLead": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv din e-mail, så sender vi dig en kode."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enter your email and we will send you a code."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sláðu inn netfangið þitt og við sendum þér kóða."
+     }
+    }
+   }
+  },
+  "login.sendCode": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send kode"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send code"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Senda kóða"
+     }
+    }
+   }
+  },
+  "login.sentTo": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vi har sendt en kode til"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "We have sent a code to"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Við höfum sent kóða á"
+     }
+    }
+   }
+  },
+  "login.enterIt": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv den her."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enter it here."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sláðu hann inn hér."
+     }
+    }
+   }
+  },
+  "login.codeLabel": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kode fra mailen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Code from the email"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kóði úr tölvupóstinum"
+     }
+    }
+   }
+  },
+  "login.submit": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Log ind"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sign in"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skrá inn"
+     }
+    }
+   }
+  },
+  "login.resend": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send en ny kode"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Send a new code"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Senda nýjan kóða"
+     }
+    }
+   }
+  },
+  "login.otherEmail": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Brug en anden e-mail"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Use another email"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nota annað netfang"
+     }
+    }
+   }
+  },
+  "login.inviteSummary": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Har du dit invitationslink i stedet?"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Have your invitation link instead?"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ertu með boðshlekkinn í staðinn?"
+     }
+    }
+   }
+  },
+  "login.inviteHelp": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Indsæt linket fra din invitation."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Paste the link from your invitation."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Límdu inn hlekkinn úr boðinu."
+     }
+    }
+   }
+  },
+  "login.inviteLabel": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Invitationslink"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Invitation link"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Boðshlekkur"
+     }
+    }
+   }
+  },
+  "login.unknownEmail": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vi kender ikke {email}. Tjek stavningen, brug dit invitationslink, eller skriv til værten."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "We don't know {email}. Check the spelling, use your invitation link or contact the host."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Við þekkjum ekki {email}. Athugaðu stafsetninguna, notaðu boðshlekkinn eða hafðu samband við gestgjafann."
+     }
+    }
+   }
+  },
+  "login.tooManyMails": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Der er sendt for mange mails på kort tid. Vent et minut, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Too many emails have been sent in a short time. Wait a minute and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Of margir póstar hafa verið sendir á stuttum tíma. Bíddu í eina mínútu og reyndu aftur."
+     }
+    }
+   }
+  },
+  "login.sendFailed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mailen kunne ikke sendes. Prøv igen om lidt, eller brug dit invitationslink."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The email could not be sent. Try again shortly or use your invitation link."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki tókst að senda póstinn. Reyndu aftur eftir smá stund eða notaðu boðshlekkinn."
+     }
+    }
+   }
+  },
+  "login.wholeCode": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Skriv hele koden fra mailen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Enter the whole code from the email."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sláðu inn allan kóðann úr póstinum."
+     }
+    }
+   }
+  },
+  "login.tooManyTries": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "For mange forsøg. Vent et minut, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Too many attempts. Wait a minute and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Of margar tilraunir. Bíddu í eina mínútu og reyndu aftur."
+     }
+    }
+   }
+  },
+  "login.wrongCode": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Koden passer ikke eller er udløbet. Tjek den, eller få en ny."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The code is wrong or has expired. Check it or get a new one."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kóðinn er rangur eða útrunninn. Athugaðu hann eða fáðu nýjan."
+     }
+    }
+   }
+  },
+  "login.resent": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Der er sendt en ny kode. Brug den nyeste."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "A new code has been sent. Use the newest one."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nýr kóði hefur verið sendur. Notaðu þann nýjasta."
+     }
+    }
+   }
+  },
+  "login.pasteCode": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Indsæt dit link eller din kode."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Paste your link or your code."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Límdu inn hlekkinn eða kóðann."
+     }
+    }
+   }
+  },
+  "login.codeNotFound": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Koden blev ikke fundet. Tjek, at du har kopieret hele linket."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The code was not found. Check that you copied the whole link."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kóðinn fannst ekki. Athugaðu að þú hafir afritað allan hlekkinn."
+     }
+    }
+   }
+  },
+  "login.otherInvite": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Invitationen er til en anden e-mail end den, du er logget ind med."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "This invitation is for another email than the one you are signed in with."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þetta boð er á annað netfang en það sem þú ert skráð/ur inn með."
+     }
+    }
+   }
+  },
+  "login.tooManyChecks": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "For mange forsøg. Vent lidt og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Too many attempts. Wait a while and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Of margar tilraunir. Bíddu aðeins og reyndu aftur."
+     }
+    }
+   }
+  },
+  "nav.tasting": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smagningen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tasting"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Smökkunin"
+     }
+    }
+   }
+  },
+  "wines.intro": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Det her skænker vi i aften."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "This is what we are pouring tonight."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þetta hellum við í glösin í kvöld."
+     }
+    }
+   }
+  },
+  "wines.readMore": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Læs mere"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Read more"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Lesa meira"
+     }
+    }
+   }
+  },
+  "wines.position": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} af {total}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} of {total}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} af {total}"
+     }
+    }
+   }
+  },
+  "wine.all": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alle vinene"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "All wines"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Öll vínin"
+     }
+    }
+   }
+  },
+  "wine.vintage": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Årgang {year}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vintage {year}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Árgangur {year}"
+     }
+    }
+   }
+  },
+  "loginx.claim": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hele smagningen i lommen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The whole tasting in your pocket"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Öll smökkunin í vasanum"
+     }
+    }
+   }
+  },
+  "loginx.noPassword": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du skal ikke bruge en adgangskode – vi mailer dig en engangskode."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No password needed – we email you a one-time code."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekkert lykilorð þarf – við sendum þér einnota kóða."
+     }
+    }
+   }
+  },
+  "loginx.or": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "eller"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "or"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "eða"
+     }
+    }
+   }
+  },
+  "loginx.code": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kode"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Code"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kóði"
+     }
+    }
+   }
+  },
+  "login.title": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Log ind"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sign in"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Innskráning"
+     }
+    }
+   }
+  },
+  "rating.notePlaceholder": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Duft, smag, hvad den minder dig om …"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aroma, taste, what it reminds you of …"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ilmur, bragð, hvað það minnir þig á …"
+     }
+    }
+   }
+  },
+  "home2.hello": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hej"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hello"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hæ"
+     }
+    }
+   }
+  },
+  "login.lostHint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kender vi ikke din e-mail, så log ind med dit invitationslink og tilføj den på din side. Har du mistet begge dele, så skriv til værten."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "If we don't know your email, sign in with your invitation link and add it on your page. If you have lost both, contact the host."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ef við þekkjum ekki netfangið þitt skaltu skrá þig inn með boðshlekknum og bæta því við á síðunni þinni. Ef þú hefur týnt hvoru tveggja skaltu hafa samband við gestgjafann."
+     }
+    }
+   }
+  },
+  "style.Red": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rødvin"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Red wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rauðvín"
+     }
+    }
+   }
+  },
+  "style.WhiteWine": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hvidvin"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "White wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hvítvín"
+     }
+    }
+   }
+  },
+  "style.Rose": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rosé"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rosé"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Rósavín"
+     }
+    }
+   }
+  },
+  "style.Orange": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Orangevin"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Orange wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Appelsínuvín"
+     }
+    }
+   }
+  },
+  "style.Sparkling": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Mousserende"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sparkling"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Freyðivín"
+     }
+    }
+   }
+  },
+  "style.Sweet": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dessertvin"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Dessert wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Eftirréttavín"
+     }
+    }
+   }
+  },
+  "style.Fortified": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hedvin"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fortified wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Styrkt vín"
+     }
+    }
+   }
+  },
+  "style.Other": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Andet"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Other"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Annað"
+     }
+    }
+   }
+  },
+  "app.previous": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Forrige"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Previous"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fyrri"
+     }
+    }
+   }
+  },
+  "app.next": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Næste"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Next"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Næsta"
+     }
+    }
+   }
+  },
+  "app.retry": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Prøv igen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Try again"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Reyna aftur"
+     }
+    }
+   }
+  },
+  "app.offline": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen forbindelse"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No connection"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Engin tenging"
+     }
+    }
+   }
+  },
+  "app.loadFailedTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kunne ikke hentes"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Could not load"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tókst ekki að sækja"
+     }
+    }
+   }
+  },
+  "app.loadFailedText": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tjek din forbindelse, og prøv igen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Check your connection and try again."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Athugaðu tenginguna og reyndu aftur."
+     }
+    }
+   }
+  },
+  "app.spamHint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kan du ikke finde mailen, så kig i spam. Skriv koden her i appen."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Can’t find the email? Check your spam folder. Enter the code here in the app."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Finnurðu ekki póstinn? Athugaðu ruslpóstinn. Sláðu kóðann inn hér í appinu."
+     }
+    }
+   }
+  },
+  "app.addInvitation": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tilføj invitation"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Add invitation"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Bæta við boði"
+     }
+    }
+   }
+  },
+  "app.language": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Sprog"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Language"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tungumál"
+     }
+    }
+   }
+  },
+  "app.account": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Konto"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Account"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aðgangur"
+     }
+    }
+   }
+  },
+  "app.noTastingsTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen smagninger endnu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No tastings yet"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Engar smakkanir enn"
+     }
+    }
+   }
+  },
+  "tastings.noneHint": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Har du fået et link i en invitation, så indsæt det her."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Got a link in an invitation? Paste it here."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Fékkstu tengil í boði? Límdu hann hér."
+     }
+    }
+   }
+  },
+  "app.notAnswered": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ikke svaret"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Not answered"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki svarað"
+     }
+    }
+   }
+  },
+  "app.answer": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svar på invitationen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Answer the invitation"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Svara boðinu"
+     }
+    }
+   }
+  },
+  "app.yesTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ja, jeg kommer"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Yes, I’m coming"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Já, ég kem"
+     }
+    }
+   }
+  },
+  "app.noTitle": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nej, jeg kan ikke"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No, I can’t make it"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Nei, ég kemst ekki"
+     }
+    }
+   }
+  },
+  "app.notePlaceholder": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Valgfrit"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Optional"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Valfrjálst"
+     }
+    }
+   }
+  },
+  "app.winesSub": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vine – læs og bedøm"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} wines – read and rate"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vín – lestu og gefðu einkunn"
+     }
+    }
+   }
+  },
+  "app.noWines": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ingen vine endnu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "No wines yet"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Engin vín enn"
+     }
+    }
+   }
+  },
+  "app.blindName": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vin {n}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Wine {n}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vín {n}"
+     }
+    }
+   }
+  },
+  "app.starsLabel": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stjerner"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stars"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stjörnur"
+     }
+    }
+   }
+  },
+  "app.ratingNotePlaceholder": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Kun du kan se dem"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Only you can see them"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Aðeins þú sérð þær"
+     }
+    }
+   }
+  },
+  "app.notSaved": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ikke gemt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Not saved"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki vistað"
+     }
+    }
+   }
+  },
+  "app.aboutWine": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Om vinen"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "About the wine"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Um vínið"
+     }
+    }
+   }
+  },
+  "app.origin": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Oprindelse"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Origin"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Uppruni"
+     }
+    }
+   }
+  },
+  "app.grapes": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Druer"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Grapes"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þrúgur"
+     }
+    }
+   }
+  },
+  "app.foodPairing": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Passer til"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Goes with"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Passar með"
+     }
+    }
+   }
+  },
+  "app.serving": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Servering"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Serving"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Framreiðsla"
+     }
+    }
+   }
+  },
+  "app.abv": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alkohol"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Alcohol"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Áfengi"
+     }
+    }
+   }
+  }
+ },
+ "version": "1.0"
+}

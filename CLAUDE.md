@@ -35,3 +35,16 @@
 - Help: every new feature or change for hosts updates the help in the same commit – `src/lib/help-content.ts`
   (sections in Danish and English; link each step to its place with `t:<section>/…`, `?open=<button id>` or `#<id>`)
   and, for a setting that needs explaining, a `?` tip (`data-help="<key>"` + an entry in `TIPS`).
+
+## The iOS app (`ios/`)
+
+The site and the native SwiftUI guest app are one product, developed together by one chat. Read `ios/README.md`.
+
+- **Every change is decided for both.** A new feature or general fix that touches guests or the database is planned once and built in the same go in the database, on the site and in the app, unless the roadmap item says "web only" or "app later". Host and superadmin pages are web only (the app has no admin).
+- **Not done until both are checked.** A guest change is not finished before the site and the app (`ios/tools/simbuild.sh`, `ios/tools/simtest.sh`) have been looked at. Building the app needs a session linked to Morten's Mac.
+- **The site is the standard for look and words.** The app uses the site's fonts, colours, logo and icons (`ios/Winetastr/Theme.swift` mirrors `global.css` and `components.css`) and its dictionaries (`ios/tools/make_strings.py`). Change a shared colour, component or wording on both. No new icons, logos or styles in the app that the site does not have, unless Morten asks.
+- **Database calls are a contract.** Calls the app uses (`supabase/tests/app_contract.sql`) must not change name, arguments, columns or meaning: apps in people's phones cannot be updated with the database. Add optional arguments or new functions; remove old ones only when no app version in use needs them. Run `app_contract.sql` after every database change along with `security.sql`, and add new calls the app starts using.
+- **Order:** database first, then site, then app. Nothing may depend on the site and the app being released at the same moment.
+- **Business rules live in the database,** so they are not written twice.
+- **The repo is public:** no invite codes or secrets in `ios/` (test codes are in the untracked `ios/.env.local`).
+- `ios/` is not part of the website build.
