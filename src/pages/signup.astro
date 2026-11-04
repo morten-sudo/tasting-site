@@ -200,7 +200,12 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
     const btn = $('start-btn') as HTMLButtonElement;
     setLoading(btn, true, t('common.sending'));
-    const { data: taken } = await supabase.rpc('signup_email_taken', { e: email });
+    // Registers the sign-up first (WIN-284: the database only lets a user be created for a known email or one that
+    // signup_start() was called for) and says whether the email already has a host account
+    let { data: taken, error: startError } = await supabase.rpc('signup_start', { e: email });
+    if (startError?.message.includes('too_many')) { setLoading(btn, false); failed(t('login.tooManyChecks')); return; }
+    // A database without signup_start() yet (the order is database first, but a test database may lag behind)
+    if (startError) ({ data: taken } = await supabase.rpc('signup_email_taken', { e: email }));
     setExisting(taken === true);
     const ok = await sendCode();
     setLoading(btn, false);
