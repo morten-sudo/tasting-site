@@ -5,11 +5,14 @@ import { supabase } from './supabase';
 import { getCodes, tastingUrl } from './guest';
 import { statusChip } from './ui/status';
 import { listRow } from './ui/list-row';
-import { t, formatDate } from '../i18n';
+import { t, locale, formatDate } from '../i18n';
+import { nameWithSize } from './bottle';
 import { mk } from './ui/dom';
 
 export type OrderLine = { order_id: number; created_at: string; paid: boolean; slug: string; title: string;
-  wine_name: string; quantity: number; unit_price: number };
+  wine_name: string; quantity: number; unit_price: number;
+  /** The wine's size now (WIN-170); it follows the name, also for a wine made blind after the order */
+  bottle_cl?: number | null };
 
 export async function loadOrders(signedIn: boolean): Promise<OrderLine[]> {
   if (signedIn) {
@@ -39,7 +42,7 @@ export function orderCards(lines: OrderLine[]): HTMLElement[] {
     const first = ls[0];
     const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
     const ul = mk('ul');
-    for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${l.wine_name}`));
+    for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${nameWithSize(l.wine_name, l.bottle_cl, locale())}`));
     return listRow({
       variant: 'card', small: true, cardHref: tastingUrl(first.slug, 'cart/'),
       title: `${first.title} · ${t('pay.orderComment', { id: first.order_id })}`,

@@ -16,7 +16,8 @@ import { listRow } from './ui/list-row';
 import { formatKr } from './ui/kr';
 import { iconSvg } from './ui/icons';
 import { $, mk } from './ui/dom';
-import { t, formatWhen } from '../i18n';
+import { t, locale, formatWhen } from '../i18n';
+import { nameWithSize } from './bottle';
 
 type Info = { quiz_open?: boolean; quiz_count?: number; signup_open?: boolean; full?: boolean };
 type MapWine = { id: number; region: string | null; appellation: string | null; appellation_id: string | null; country: string | null };
@@ -181,7 +182,7 @@ function showMemories(past: MyTasting[], book: BookWine[]) {
     // A memory: the answer ("Coming") no longer says anything
     card.querySelector('.chips')?.remove();
     if (wines.length) {
-      const line = mk('p', 'lmeta memory', [plural(new Set(wines.map((w) => w.wine_id)).size), fav ? t('home3.favourite', { name: fav.name }) : null].filter(Boolean).join(' · '));
+      const line = mk('p', 'lmeta memory', [plural(new Set(wines.map((w) => w.wine_id)).size), fav ? t('home3.favourite', { name: nameWithSize(fav.name, fav.bottle_cl, locale()) }) : null].filter(Boolean).join(' · '));
       card.querySelector('.lmain')?.append(line);
     }
     return card;
