@@ -156,7 +156,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   }
 
   // The currency the page states for its prices (structured data); the model's reading of the page text is the fallback
-  const pageCurrency = currencyCode(offers?.priceCurrency ?? meta['og:price:currency'] ?? meta['product:price:currency']);
+  const pageCurrency = currencyCode(offers?.priceCurrency ?? meta['og:price:currency'] ?? meta['product:price:currency'] ?? meta['pricecurrency']);
 
   const title = decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').trim();
   const parts = [
