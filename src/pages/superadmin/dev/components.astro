@@ -1,55 +1,54 @@
 ---
-// /dev/components/ – every shared component (src/components/ui/* and the src/lib/ui/* builders) in its states, built
-// with the REAL components and the REAL stylesheet, grouped A–G as in the approved spec. For developers: hosts only
-// (signed in like the admin pages), noindex (Base.astro), not linked from any menu. A missing component is added to
+// /superadmin/dev/components/ – every shared component (src/components/ui/* and the src/lib/ui/* builders) in its states,
+// built with the REAL components and the REAL stylesheet, grouped A–G as in the approved spec. For developers: the
+// superadmin only (requireAdmin()), in the superadmin menu under Dev, noindex (Base.astro). A missing component is added to
 // src/components/ui or src/lib/ui first and shown here (CLAUDE.md "Components").
 // Hover and focus are shown by forcing them: the page's script copies every :hover / :focus-visible rule of the
 // stylesheets to .is-hover / .is-focus, so the forced states are exactly the real ones.
-import Base from '../../layouts/Base.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import PageHeader from '../../components/ui/PageHeader.astro';
-import SectionTitle from '../../components/ui/SectionTitle.astro';
-import Icon from '../../components/ui/Icon.astro';
-import CloseButton from '../../components/ui/CloseButton.astro';
-import SearchField from '../../components/ui/SearchField.astro';
-import Dropdown from '../../components/ui/Dropdown.astro';
-import ChoiceCards from '../../components/ui/ChoiceCards.astro';
-import Switch from '../../components/ui/Switch.astro';
-import Checkbox from '../../components/ui/Checkbox.astro';
-import DateTimeFields from '../../components/DateTimeFields.astro';
-import AddressFields from '../../components/AddressFields.astro';
-import Badge from '../../components/ui/Badge.astro';
-import Facts from '../../components/ui/Facts.astro';
-import AddRow from '../../components/ui/AddRow.astro';
-import Sheet from '../../components/ui/Sheet.astro';
-import Notice from '../../components/ui/Notice.astro';
-import EmptyState from '../../components/ui/EmptyState.astro';
-import Loading from '../../components/ui/Loading.astro';
-import Disclosure from '../../components/ui/Disclosure.astro';
-import Progress from '../../components/ui/Progress.astro';
-import Steps from '../../components/ui/Steps.astro';
-import Tabs from '../../components/ui/Tabs.astro';
-import MapBackground from '../../components/ui/MapBackground.astro';
-import Hero from '../../components/ui/Hero.astro';
-import Actions from '../../components/ui/Actions.astro';
-import Sr from '../../components/ui/Sr.astro';
-import SideSwitch from '../../components/ui/SideSwitch.astro';
-import ChatBox from '../../components/ChatBox.astro';
-import CartBar from '../../components/ui/CartBar.astro';
-import Ribbon from '../../components/ui/Ribbon.astro';
-import '../../styles/admin.css';
+import Base from '../../../layouts/Base.astro';
+import SuperNav from '../../../components/SuperNav.astro';
+import PageHeader from '../../../components/ui/PageHeader.astro';
+import SectionTitle from '../../../components/ui/SectionTitle.astro';
+import Icon from '../../../components/ui/Icon.astro';
+import CloseButton from '../../../components/ui/CloseButton.astro';
+import SearchField from '../../../components/ui/SearchField.astro';
+import Dropdown from '../../../components/ui/Dropdown.astro';
+import ChoiceCards from '../../../components/ui/ChoiceCards.astro';
+import Switch from '../../../components/ui/Switch.astro';
+import Checkbox from '../../../components/ui/Checkbox.astro';
+import DateTimeFields from '../../../components/DateTimeFields.astro';
+import AddressFields from '../../../components/AddressFields.astro';
+import Badge from '../../../components/ui/Badge.astro';
+import Facts from '../../../components/ui/Facts.astro';
+import AddRow from '../../../components/ui/AddRow.astro';
+import Sheet from '../../../components/ui/Sheet.astro';
+import Notice from '../../../components/ui/Notice.astro';
+import EmptyState from '../../../components/ui/EmptyState.astro';
+import Loading from '../../../components/ui/Loading.astro';
+import Disclosure from '../../../components/ui/Disclosure.astro';
+import Progress from '../../../components/ui/Progress.astro';
+import Steps from '../../../components/ui/Steps.astro';
+import Tabs from '../../../components/ui/Tabs.astro';
+import MapBackground from '../../../components/ui/MapBackground.astro';
+import Hero from '../../../components/ui/Hero.astro';
+import Actions from '../../../components/ui/Actions.astro';
+import Sr from '../../../components/ui/Sr.astro';
+import SideSwitch from '../../../components/ui/SideSwitch.astro';
+import ChatBox from '../../../components/ChatBox.astro';
+import CartBar from '../../../components/ui/CartBar.astro';
+import Ribbon from '../../../components/ui/Ribbon.astro';
+import '../../../styles/admin.css';
 
 const opts = [
   { value: 'red', label: 'Red wine' }, { value: 'white', label: 'White wine' }, { value: 'port', label: 'Port' },
   { value: 'sparkling', label: 'Sparkling' },
 ];
 ---
-<Base title="page.admin">
+<Base title="dev.components">
   <section class="wrap admin-page">
-    <AdminNav>
-    <div id="admin-main" class="dv" hidden>
-      <PageHeader title="Components" lead="Every shared component in its states – the real components and the real stylesheet. A missing one is added to src/components/ui or src/lib/ui first and shown here." />
-      <p class="dv-maps-link">All the site's maps, with where each is used: <a href="/dev/maps/">/dev/maps/</a> · The guest personas: <a href="/dev/personas/">/dev/personas/</a></p>
+    <SuperNav active="dev-components">
+    <div class="dv">
+      <PageHeader title="dev.components" lead="Every shared component in its states – the real components and the real stylesheet. A missing one is added to src/components/ui or src/lib/ui first and shown here." />
       <nav class="dv-toc" aria-label="Groups">
         <a href="#g-a">A. Basics</a><a href="#g-b">B. Choices</a><a href="#g-c">C. Display</a><a href="#g-d">D. Lists and rows</a>
         <a href="#g-e">E. Panels, messages and states</a><a href="#g-f">F. Page structure</a><a href="#g-g">G. Guest parts</a>
@@ -261,7 +260,7 @@ const opts = [
 
         <section id="c20" class="dv-comp">
           <SectionTitle level="h3" text="20 Avatar and wine thumbnail" />
-          <p class="help">avatar(), wineThumb() in src/lib/ui/thumb.ts</p>
+          <p class="help">avatar(), wineThumb() in src/lib/ui/thumb.ts · sizes small, normal, large, xl (a person's own page) · ring: solid, double, dashed (a group mark that is not colour alone)</p>
           <div class="dv-row" id="thumbs"></div>
         </section>
 
@@ -295,8 +294,10 @@ const opts = [
 
         <section id="c24" class="dv-comp">
           <SectionTitle level="h3" text="24 Table" />
-          <p class="help">table() in src/lib/ui/table.ts – sortable, numbers right, a card per row on phones; empty: the empty state</p>
+          <p class="help">table() in src/lib/ui/table.ts – sortable, numbers right, a card per row on phones; cls 'stack': text in every cell, the label over the value on phones; empty: the empty state</p>
           <div id="tbl"></div>
+          <div class="dv-gap"></div>
+          <div id="tbl-stack"></div>
           <div class="dv-gap"></div>
           <div id="tbl-empty"></div>
         </section>
@@ -576,14 +577,13 @@ const opts = [
         </section>
       </section>
     </div>
-    </AdminNav>
+    </SuperNav>
   </section>
 </Base>
 
 <style is:global>
   /* The page's own layout (global: the script builds parts of it; every class starts with dv-): the groups, one component after the other, a label column for the states */
   .dv { max-width: 60rem; }
-  .dv-maps-link { margin: -0.5rem 0 1rem; font-size: 0.92rem; }
   .dv-toc { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: -0.5rem 0 1rem; font-size: 0.92rem; }
   .dv-group { margin-top: 2.5rem; }
   .dv-comp { padding: 1.5rem 0; border-top: 1px solid var(--lodge-3); scroll-margin-top: 5rem; }
@@ -613,58 +613,60 @@ const opts = [
 </style>
 
 <script>
-  import { requireHost } from '../../lib/admin-common';
-  import { $, mk } from '../../lib/ui/dom';
-  import { fillMapBackgrounds } from '../../lib/ui/map-background';
+  import { requireAdmin } from '../../../lib/super-common';
+  import { enableImageZoom } from '../../../lib/admin-common';
+  import { t } from '../../../i18n';
+  import { $, mk } from '../../../lib/ui/dom';
+  import { fillMapBackgrounds } from '../../../lib/ui/map-background';
   fillMapBackgrounds();
-  import { button, setLoading } from '../../lib/ui/button';
-  import { textButton } from '../../lib/ui/text-button';
-  import { iconButton, closeButton, setIconLoading } from '../../lib/ui/icon-button';
-  import { iconSvg } from '../../lib/ui/icons';
-  import { fieldError } from '../../lib/field-error';
-  import { dropdown, getDropdown } from '../../lib/ui/dropdown';
-  import { menuItem, menuGroup } from '../../lib/ui/menu';
-  import { sideSwitcher } from '../../lib/ui/side-menu';
-  import { filterDropdown } from '../../lib/filter-dd';
-  import { combo } from '../../lib/combo';
-  import { choiceCards } from '../../lib/ui/choice-cards';
-  import { switchRow, bindSwitch } from '../../lib/ui/switch';
-  import { checkbox } from '../../lib/ui/checkbox';
-  import { initWhen } from '../../lib/datetime';
-  import { initAddress } from '../../lib/address';
-  import { imagePicker } from '../../lib/ui/image-picker';
-  import { starsInput, starsRo } from '../../lib/ui/stars';
-  import { stepper } from '../../lib/ui/stepper';
-  import { chip, statusChip, STATUS, type StatusName } from '../../lib/ui/status';
-  import { avatar, wineThumb } from '../../lib/ui/thumb';
-  import { price } from '../../lib/ui/price';
-  import { formatKr } from '../../lib/ui/kr';
-  import { facts, setFact } from '../../lib/ui/facts';
-  import { detailIcon } from '../../lib/ui/detail-icon';
-  import { loadMap, drawMap, DETAILED_MAPS } from '../../lib/region-map';
-  import { table } from '../../lib/ui/table';
-  import { listRow, personRow, activityRow } from '../../lib/ui/list-row';
-  import { addRow } from '../../lib/ui/add-row';
-  import { highlight } from '../../lib/ui/highlight';
-  import { deleteWithUndo } from '../../lib/ui/delete-undo';
-  import { reorder } from '../../lib/ui/reorder';
-  import { sheet, sheetPanel } from '../../lib/ui/sheet';
-  import { confirmModal } from '../../lib/ui/confirm';
-  import { toast } from '../../lib/ui/toast';
-  import { notice } from '../../lib/ui/notice';
-  import { setStatus, statusLine } from '../../lib/ui/status-line';
-  import { emptyState } from '../../lib/ui/empty';
-  import { pageLoading } from '../../lib/ui/loading';
-  import { initHelpTips } from '../../lib/help-tip';
-  import { tooltip } from '../../lib/ui/tooltip';
-  import { disclosure } from '../../lib/ui/disclosure';
-  import { progress, setProgress } from '../../lib/ui/progress';
-  import { sectionTitle } from '../../lib/ui/section-title';
-  import { styleTag } from '../../lib/wines';
-  import { initChat, type ChatMessage } from '../../lib/chat';
-  import { setPayee, payBox } from '../../lib/pay';
-  import { renderLeaderboard } from '../../lib/leaderboard';
-  import { FLAGS } from '../../i18n/flags';
+  import { button, setLoading } from '../../../lib/ui/button';
+  import { textButton } from '../../../lib/ui/text-button';
+  import { iconButton, closeButton, setIconLoading } from '../../../lib/ui/icon-button';
+  import { iconSvg } from '../../../lib/ui/icons';
+  import { fieldError } from '../../../lib/field-error';
+  import { dropdown, getDropdown } from '../../../lib/ui/dropdown';
+  import { menuItem, menuGroup } from '../../../lib/ui/menu';
+  import { sideSwitcher } from '../../../lib/ui/side-menu';
+  import { filterDropdown } from '../../../lib/filter-dd';
+  import { combo } from '../../../lib/combo';
+  import { choiceCards } from '../../../lib/ui/choice-cards';
+  import { switchRow, bindSwitch } from '../../../lib/ui/switch';
+  import { checkbox } from '../../../lib/ui/checkbox';
+  import { initWhen } from '../../../lib/datetime';
+  import { initAddress } from '../../../lib/address';
+  import { imagePicker } from '../../../lib/ui/image-picker';
+  import { starsInput, starsRo } from '../../../lib/ui/stars';
+  import { stepper } from '../../../lib/ui/stepper';
+  import { chip, statusChip, STATUS, type StatusName } from '../../../lib/ui/status';
+  import { avatar, wineThumb } from '../../../lib/ui/thumb';
+  import { price } from '../../../lib/ui/price';
+  import { formatKr } from '../../../lib/ui/kr';
+  import { facts, setFact } from '../../../lib/ui/facts';
+  import { detailIcon } from '../../../lib/ui/detail-icon';
+  import { loadMap, drawMap, DETAILED_MAPS } from '../../../lib/region-map';
+  import { table } from '../../../lib/ui/table';
+  import { listRow, personRow, activityRow } from '../../../lib/ui/list-row';
+  import { addRow } from '../../../lib/ui/add-row';
+  import { highlight } from '../../../lib/ui/highlight';
+  import { deleteWithUndo } from '../../../lib/ui/delete-undo';
+  import { reorder } from '../../../lib/ui/reorder';
+  import { sheet, sheetPanel } from '../../../lib/ui/sheet';
+  import { confirmModal } from '../../../lib/ui/confirm';
+  import { toast } from '../../../lib/ui/toast';
+  import { notice } from '../../../lib/ui/notice';
+  import { setStatus, statusLine } from '../../../lib/ui/status-line';
+  import { emptyState } from '../../../lib/ui/empty';
+  import { pageLoading } from '../../../lib/ui/loading';
+  import { initHelpTips } from '../../../lib/help-tip';
+  import { tooltip } from '../../../lib/ui/tooltip';
+  import { disclosure } from '../../../lib/ui/disclosure';
+  import { progress, setProgress } from '../../../lib/ui/progress';
+  import { sectionTitle } from '../../../lib/ui/section-title';
+  import { styleTag } from '../../../lib/wines';
+  import { initChat, type ChatMessage } from '../../../lib/chat';
+  import { setPayee, payBox } from '../../../lib/pay';
+  import { renderLeaderboard } from '../../../lib/leaderboard';
+  import { FLAGS } from '../../../i18n/flags';
 
   // Forced states: every :hover / :focus-visible / :focus-within rule of the site's stylesheets, again for .is-hover /
   // .is-focus – so the states shown are exactly the real ones (no copies of the component CSS on this page)
@@ -683,9 +685,9 @@ const opts = [
     document.head.append(st);
   }
 
-  const host = await requireHost();
-  if (host) {
-    $('admin-main').hidden = false;
+  // requireAdmin() does not set up the picture zoom the way requireHost() does: the thumbnails here get it themselves
+  if (await requireAdmin()) {
+    enableImageZoom(t('admin.close'));
     forceStates();
     build();
   }
@@ -795,6 +797,7 @@ const opts = [
     $('chip-tones').append(chip('Neutral'), chip('Coming', 'ok'), chip('Waiting list', 'wait'), chip('No price', 'warn'), chip('Not paid', 'err'), chip('Owner', 'strong'), chip('Not coming', 'neutral', { dashed: true }), chip('A link chip', 'neutral', { href: '#c18' }), starsRo(4, '', { chip: true }));
     $('chip-status').append(...(Object.keys(STATUS) as StatusName[]).map((n) => statusChip(n)));
     $('thumbs').append(avatar('Morten Hansen', { size: 'small' }), avatar('Morten Hansen'), avatar('Morten Hansen', { size: 'large' }), avatar('Anne Berg', { host: true }), avatar('', { add: true }),
+      avatar('Anne Berg', { ring: 'solid' }), avatar('Jens Holm', { ring: 'double' }), avatar('Ida Krog', { ring: 'dashed' }), avatar('Morten Hansen', { size: 'xl', ring: 'solid' }),
       wineThumb('/img/cellar-800.jpg', { size: 'small' }), wineThumb(null), wineThumb(null, { blind: true }), wineThumb('/img/cellar-800.jpg', { size: 'large' }));
     $('prices').append(price({ amount: 149.95 }), price({ amount: 129.95, was: 159.95, tiers: ['From 6 bottles: 119,95 kr. each'] }), price({ amount: null }), price({ amount: 595, size: 'large', was: 695 }), price({ amount: 89.5, align: 'right' }));
     setFact($('fs-1'), 'Saturday 14 November 2026, 19:00');
@@ -823,6 +826,13 @@ const opts = [
         { key: 'n', label: 'Bottles', num: true, sort: (r) => r.n }, { key: 'sum', label: 'Amount', num: true, nowrap: true, cell: (r) => formatKr(r.sum), sort: (r) => r.sum, desc: true },
         { key: 'when', label: 'When', nowrap: true }],
       rows: orders, sort: { key: 'sum', desc: true }, foot: (rs) => ['Total', '', String(rs.reduce((a, r) => a + r.n, 0)), formatKr(rs.reduce((a, r) => a + r.sum, 0)), ''], caption: 'Orders',
+    }).el);
+    type S = { what: string; a: string; b: string };
+    $('tbl-stack').append(table<S>({
+      cls: 'stack', caption: 'Shop and online',
+      columns: [{ key: 'what', label: 'What' }, { key: 'a', label: 'In the shop' }, { key: 'b', label: 'Online' }],
+      rows: [{ what: 'Delivery', a: 'The bottle goes home with you', b: 'A box with shipping, often six bottles and free shipping over an amount' },
+        { what: 'Stock', a: 'What is on the shelf', b: 'Has to match the webshop' }],
     }).el);
     $('tbl-empty').append(table<O>({ columns: [{ key: 'who', label: 'Guest' }], rows: [], empty: { icon: 'cart', title: 'No orders yet', text: 'Orders come in when the guests order bottles.' } }).el);
 

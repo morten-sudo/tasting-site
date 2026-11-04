@@ -1,4 +1,4 @@
-// A PROPOSAL, not used on the real pages (only on /dev/maps/): a wine's map in three tones on a region's detailed map
+// A PROPOSAL, not used on the real pages (only on /superadmin/dev/maps/): a wine's map in three tones on a region's detailed map
 // (public/maps/<region>.json, the same data as drawMap() in region-map.ts). The wine's lowest known area is dark, the
 // areas that contain it a middle tone, every other area light – with the borders of all areas kept.
 // Also the geometry the dev page needs to describe the maps: how big each area is and which areas lie in, contain or
@@ -13,7 +13,7 @@ export type ProposalOptions = {
   mid?: string[];
   /** a name shown large over the map when no area is dark (e.g. "Porto" on all of Douro) */
   label?: string;
-  /** area id → name: every area named (the structure maps on /dev/maps/) */
+  /** area id → name: every area named (the structure maps on /superadmin/dev/maps/) */
   names?: Map<string, string>;
   /** the dark area's name (defaults to names / the area's title) */
   darkName?: string;

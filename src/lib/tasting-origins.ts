@@ -1,6 +1,6 @@
 // "Where the wines come from" on the tasting's page (src/pages/tasting/index.astro): the main region's detailed map with
 // the wines' appellations, a legend, and a small country map for wines from another region – or, when no wine comes
-// from a region with a detailed map, the overview map with a numbered pin per place. Also drawn on /dev/maps/.
+// from a region with a detailed map, the overview map with a numbered pin per place. Also drawn on /superadmin/dev/maps/.
 import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from './region-map';
 import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, loadTowns, type Place } from './overview-map';
 import { mapZoom } from './ui/map-zoom';

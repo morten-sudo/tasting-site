@@ -1547,6 +1547,8 @@ export const en = {
   "bottle.cl150": "150 cl",
   "bottle.cl300": "300 cl",
   "meta.imageAlt": "Port wine barrels in a long cellar",
+  "dev.components": "Components",
+  "dev.personas": "Personas",
   "home3.waiting": "Waiting for you",
   "home3.answer": "Answer",
   "home3.seeWines": "See the wines",

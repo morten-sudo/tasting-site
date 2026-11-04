@@ -28,3 +28,10 @@
 /admin/wines/*            /admin/wines/              200
 # Host admin: one guest in the library, /admin/guests/<name>/ (served by the guests page, which finds the guest from the address)
 /admin/guests/*           /admin/guests/             200
+# The Dev pages moved under superadmin (old bookmarks)
+/dev/components           /superadmin/dev/components/   301
+/dev/components/          /superadmin/dev/components/   301
+/dev/maps                 /superadmin/dev/maps/         301
+/dev/maps/                /superadmin/dev/maps/         301
+/dev/personas             /superadmin/dev/personas/     301
+/dev/personas/            /superadmin/dev/personas/     301

@@ -28,7 +28,7 @@
 - **Components.** All UI is built from the shared components: static markup from `src/components/ui/*.astro`, DOM built
   in TypeScript from `src/lib/ui/*.ts` (both give the same markup); their CSS lives only in `src/styles/components.css`
   (`global.css` = base and page layout, `admin.css` = the admin's page layout, page `<style>` = that page's layout only).
-  A component that is missing is added there first and shown in all its states on `/dev/components/` – never built as a
+  A component that is missing is added there first and shown in all its states on `/superadmin/dev/components/` – never built as a
   one-off on a page. `scripts/check-ui.mjs` runs before every build (`npm run build`, also `npm run check:ui`) and must
   pass: no native `<select>`, no `alert/confirm/prompt`, no `style=""`, no old class names, no form fields in list rows,
   side panels only through `Sheet.astro`/`sheet()`, no other CSS files.

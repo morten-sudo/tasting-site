@@ -130,7 +130,7 @@ svg.i { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; strok
 .toast :focus-visible { outline-color: #fff; }
 
 /* ---------- 4–6 Fields: label over, help and error under ---------- */
-.field { display: grid; gap: 0.35rem; min-width: 0; align-content: start; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.35rem; min-width: 0; align-content: start; }
 label, .flabel { display: block; font-size: 0.85rem; font-weight: 500; color: #3d3433; margin: 0 0 0.4rem; }
 .field > label, .field > .flabel { margin: 0; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
 .opt { font-weight: 400; color: var(--muted); }
@@ -211,6 +211,8 @@ dialog .dd.full { max-width: none; }
 /* Filters on phones: 16 px, so iOS never zooms in when one is tapped (also the same size as the search field beside them) */
 @media (max-width: 47.99rem) { .filter-dd > .dd-btn.small { font-size: 1rem; } }
 .dd-btn > .dd-val { overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; text-align: left; display: flex; align-items: center; gap: 0.5rem; }
+/* A long choice is cut with … instead of pushing the button wider than its box (the text is a flex item) */
+.dd-btn > .dd-val > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .dd-btn > svg { width: 1rem; height: 1rem; flex: none; }
 .dd-btn > .chev { opacity: 0.7; transition: transform 0.15s; }
 .dd-btn[aria-expanded='true'] > .chev { transform: rotate(180deg); }
@@ -596,6 +598,13 @@ dialog .input { max-width: none; }
 .av.lg { width: 3.6rem; height: 3.6rem; font-size: 1.1rem; }
 .av.add { border-style: dashed; background: transparent; color: var(--amber); font-size: 1.2rem; font-weight: 400; }
 .av.host { border-color: var(--amber); color: var(--amber); }
+/* The head of a person's own page (the personas) */
+.av.xl { width: 4.5rem; height: 4.5rem; font-size: 1.35rem; }
+@media (min-width: 48rem) { .av.xl { width: 5.5rem; height: 5.5rem; font-size: 1.65rem; } }
+/* A group mark that does not rely on colour alone (the personas): a solid, a double or a dashed edge */
+.av.ring-solid { border: 2px solid var(--paper); color: var(--paper); }
+.av.ring-double { border: 4px double var(--amber); color: var(--amber); }
+.av.ring-dashed { border: 2px dashed var(--tawny); color: var(--tawny); }
 /* activityRow(): a sign in a circle – one line of what happened (the dashboard, a guest's page) */
 .av.act-icon { width: 2rem; height: 2rem; color: var(--amber); background: var(--lodge); font-size: 0.95rem; font-weight: 400; }
 .thumb {
@@ -724,7 +733,7 @@ dialog .input { max-width: none; }
 .region-map.background .rm-area.on { fill: currentColor; }
 .region-map.background .rm-river, .region-map.background .rm-coast, .region-map.background .rm-border { stroke: currentColor; }
 /* Small, on one wine */
-/* A PROPOSAL, only on /dev/maps/ (src/lib/map-proposal.ts): the wine's area dark, the areas that contain it a middle
+/* A PROPOSAL, only on /superadmin/dev/maps/ (src/lib/map-proposal.ts): the wine's area dark, the areas that contain it a middle
    tone, the rest light – every border kept (all fills first, then all lines) */
 .region-map.proposal {
   --tone-dark: #8e2c3a; --tone-dark-line: #5e0c19;
@@ -793,6 +802,10 @@ dialog .input { max-width: none; }
   .table td:first-child { display: block; font-weight: 500; min-width: 0; margin-bottom: 0.15rem; }
   .table td[data-label]::before { content: attr(data-label); color: var(--muted); font-weight: 400; flex: none; max-width: 60%; }
   .table td[data-label] { font-size: 0.88rem; }
+  /* cls 'stack': text in every cell (a comparison) – on phones the label sits over the value, so long text reads left to right */
+  .table.stack td[data-label] { display: block; }
+  .table.stack td[data-label]::before { display: block; max-width: none; font-size: 0.8rem; }
+  .table.stack td[data-label] + td[data-label] { margin-top: 0.35rem; }
   .table td:empty, .table td.wide { display: none; }
   .table td.num { white-space: nowrap; }
 }

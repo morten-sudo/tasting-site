@@ -1,23 +1,22 @@
 ---
-// /dev/maps/ – every map on the site, the way /dev/components/ shows every component: the map types as the real code
+// /superadmin/dev/maps/ – every map on the site, the way /superadmin/dev/components/ shows every component: the map types as the real code
 // draws them (with the files and every page that uses them), the structure of each detailed map (areas, levels,
 // overlaps measured in the browser), a PROPOSAL for a wine's map in three tones (src/lib/map-proposal.ts, not used on
 // the real pages), examples per country through the real wineMap() / showOrigins(), and the open questions.
-// For developers and Morten: hosts only (signed in like the admin pages), noindex (Base.astro), not in any menu.
+// For developers and Morten: the superadmin only (requireAdmin()), in the superadmin menu under Dev, noindex (Base.astro).
 // The page's text is Danish (it is for Morten); the examples are plain wine rows in the script, easy to change.
-import Base from '../../layouts/Base.astro';
-import AdminNav from '../../components/AdminNav.astro';
-import PageHeader from '../../components/ui/PageHeader.astro';
-import SectionTitle from '../../components/ui/SectionTitle.astro';
-import Notice from '../../components/ui/Notice.astro';
-import '../../styles/admin.css';
+import Base from '../../../layouts/Base.astro';
+import SuperNav from '../../../components/SuperNav.astro';
+import PageHeader from '../../../components/ui/PageHeader.astro';
+import SectionTitle from '../../../components/ui/SectionTitle.astro';
+import Notice from '../../../components/ui/Notice.astro';
+import '../../../styles/admin.css';
 ---
-<Base title="page.admin">
+<Base title="super.mapsTitle">
   <section class="wrap admin-page">
-    <AdminNav>
-    <div id="admin-main" class="dv" hidden>
-      <PageHeader title="Kort" lead="Alle sitets kort samlet: hvordan de ser ud i dag, hvilke filer der tegner dem, og hvor de bruges – og et forslag ved siden af, som ikke er besluttet. Kortene her tegnes af den rigtige kode med eksempeldata." />
-      <p class="dv-back"><a href="/dev/components/">Alle komponenter</a> · <a href="/dev/personas/">Gæstepersonaer</a></p>
+    <SuperNav active="dev-maps">
+    <div class="dv">
+      <PageHeader title="super.mapsTitle" lead="Alle sitets kort samlet: hvordan de ser ud i dag, hvilke filer der tegner dem, og hvor de bruges – og et forslag ved siden af, som ikke er besluttet. Kortene her tegnes af den rigtige kode med eksempeldata." />
       <nav class="dv-toc" aria-label="Afsnit">
         <a href="#s1">1. Korttyper i dag</a><a href="#s2">2. De detaljerede kort</a><a href="#s3">3. Forslag</a>
         <a href="#s4">4. Eksempler pr. land</a><a href="#s5">5. Åbne spørgsmål</a>
@@ -38,7 +37,7 @@ import '../../styles/admin.css';
             <li><code>src/pages/tasting/index.astro</code> → <code>showOrigins()</code> i <code>src/lib/tasting-origins.ts</code>: smagningens kort "Hvor vinene kommer fra" (antal, numre, navne, producentnåle), se e)</li>
             <li><code>src/lib/wine-map.ts</code> <code>wineMap()</code>: én vins kort, uden numre (<code>badges: false</code>), se c)</li>
             <li><code>src/lib/ui/map-background.ts</code>: de svage baggrundskort (<code>mode: 'background'</code>), se d)</li>
-            <li><code>src/pages/dev/components.astro</code>: komponent 23</li>
+            <li><code>src/pages/superadmin/dev/components.astro</code>: komponent 23</li>
           </ul>
         </section>
 
@@ -77,7 +76,7 @@ import '../../styles/admin.css';
           <SectionTitle level="eyebrow" as="h4" text="Bruges" />
           <ul class="dv-uses">
             <li><code>src/layouts/Base.astro</code> <code>pageBackground()</code>: hver side et fast regionskort øverst til højre, valgt ud fra adressen – undtagen hvor siden har sit eget</li>
-            <li><code>src/pages/signup.astro</code> (og /dev/components/) via <code>MapBackground.astro</code> + <code>fillMapBackgrounds()</code>: Bourgogne til venstre</li>
+            <li><code>src/pages/signup.astro</code> (og /superadmin/dev/components/) via <code>MapBackground.astro</code> + <code>fillMapBackgrounds()</code>: Bourgogne til venstre</li>
             <li><code>src/pages/tasting/index.astro</code> <code>#hero-map</code>: bag smagningens titel, med vinenes områder fyldt (fra <code>showOrigins()</code>)</li>
             <li><code>src/pages/home.astro</code> (gæst) og <code>src/pages/admin/index.astro</code> (vært) <code>#next-map</code> via <code>winesBackground()</code>: bag kortet med næste smagning, i hjørnet</li>
           </ul>
@@ -144,14 +143,13 @@ import '../../styles/admin.css';
         </ol>
       </section>
     </div>
-    </AdminNav>
+    </SuperNav>
   </section>
 </Base>
 
 <style is:global>
-  /* The page's own layout, as on /dev/components/ (every class starts with dv-): sections one after the other, grids of maps */
+  /* The page's own layout, as on /superadmin/dev/components/ (every class starts with dv-): sections one after the other, grids of maps */
   .dv { max-width: 60rem; }
-  .dv-back { margin: -0.5rem 0 0.5rem; font-size: 0.92rem; }
   .dv-toc { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0 0 1rem; font-size: 0.92rem; }
   .dv-toc.dv-sub { margin-top: 1rem; }
   .dv-group { margin-top: 2.5rem; scroll-margin-top: 5rem; }
@@ -196,20 +194,20 @@ import '../../styles/admin.css';
 </style>
 
 <script>
-  import { requireHost } from '../../lib/admin-common';
-  import { $, mk } from '../../lib/ui/dom';
-  import { sectionTitle } from '../../lib/ui/section-title';
-  import { chip } from '../../lib/ui/status';
-  import { table } from '../../lib/ui/table';
-  import { mapZoom } from '../../lib/ui/map-zoom';
-  import { fillMapBackgrounds, winesBackground } from '../../lib/ui/map-background';
-  import { loadMap, drawMap, mapIdFor, DETAILED_MAPS, type RegionMap } from '../../lib/region-map';
-  import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from '../../lib/overview-map';
-  import { wineMap, showMapCredit, setMapCredit, OVERVIEW_SOURCES, type WineOrigin, type MapHow } from '../../lib/wine-map';
-  import { showOrigins, type MapWine } from '../../lib/tasting-origins';
-  import { drawProposal, areaFacts, containersOf } from '../../lib/map-proposal';
-  import { loadAppellations, matchAppellation, countryName } from '../../lib/origin';
-  import { t } from '../../i18n';
+  import { requireAdmin } from '../../../lib/super-common';
+  import { $, mk } from '../../../lib/ui/dom';
+  import { sectionTitle } from '../../../lib/ui/section-title';
+  import { chip } from '../../../lib/ui/status';
+  import { table } from '../../../lib/ui/table';
+  import { mapZoom } from '../../../lib/ui/map-zoom';
+  import { fillMapBackgrounds, winesBackground } from '../../../lib/ui/map-background';
+  import { loadMap, drawMap, mapIdFor, DETAILED_MAPS, type RegionMap } from '../../../lib/region-map';
+  import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from '../../../lib/overview-map';
+  import { wineMap, showMapCredit, setMapCredit, OVERVIEW_SOURCES, type WineOrigin, type MapHow } from '../../../lib/wine-map';
+  import { showOrigins, type MapWine } from '../../../lib/tasting-origins';
+  import { drawProposal, areaFacts, containersOf } from '../../../lib/map-proposal';
+  import { loadAppellations, matchAppellation, countryName } from '../../../lib/origin';
+  import { t } from '../../../i18n';
 
   // ================= The example wines (plain rows, shaped like the wines table) =================
   type Wine = WineOrigin & { name: string };
@@ -374,7 +372,7 @@ import '../../styles/admin.css';
   const nameOf = (map: RegionMap, id: string) => NAMES.get(id) ?? map.areas[id]?.title ?? prettyId(id);
   /** Draws a part when it comes near the screen (the page has many maps) */
   const lazy = (el: HTMLElement, draw: () => Promise<void> | void) => {
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); Promise.resolve().then(draw).catch((e) => console.error('/dev/maps/', e)); } }, { rootMargin: '600px' });
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); Promise.resolve().then(draw).catch((e) => console.error('/superadmin/dev/maps/', e)); } }, { rootMargin: '600px' });
     io.observe(el);
   };
   /** A map in the one frame, with zoom and the credit line under it */
@@ -672,9 +670,7 @@ import '../../styles/admin.css';
   }
 
   // ================= Start =================
-  const host = await requireHost();
-  if (host) {
-    $('admin-main').hidden = false;
+  if (await requireAdmin()) {
     NAMES = new Map((await loadAppellations()).map((a) => [a.id, a.name]));
     showTypes();
     showStructure();

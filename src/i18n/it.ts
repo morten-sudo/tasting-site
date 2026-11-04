@@ -1548,6 +1548,8 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "bottle.cl150": "150 cl",
   "bottle.cl300": "300 cl",
   "meta.imageAlt": "Botti di porto in una lunga cantina",
+  "dev.components": "Componenti",
+  "dev.personas": "Personas",
   "home3.waiting": "Ti aspetta",
   "home3.answer": "Rispondi",
   "home3.seeWines": "Vedi i vini",
