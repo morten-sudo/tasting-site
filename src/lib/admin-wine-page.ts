@@ -9,6 +9,7 @@ import { t, formatWhen, locale } from '../i18n';
 import { styleName, wineSlug, wineFacts } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
 import { wineMap, showMapCredit } from './wine-map';
+import { boxWidth } from './region-map';
 import { mapZoom } from './ui/map-zoom';
 import { $, mk } from './ui/dom';
 import { fillFacts, type Fact } from './ui/facts';
@@ -114,7 +115,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     .filter((x, i, all) => x && all.findIndex((y) => y && y.toLowerCase() === x.toLowerCase()) === i);
   $('wd-origin-text').textContent = where.join(', ') || originFull(w) || '';
   $('wd-origin').hidden = !where.length;
-  const map = await wineMap(w);
+  const map = await wineMap(w, { width: boxWidth($('wd-map')) });
   $('wd-map').innerHTML = map?.svg ?? '';
   $('wd-map').hidden = !map;
   if (map) mapZoom($('wd-map'));

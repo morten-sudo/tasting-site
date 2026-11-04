@@ -1,7 +1,7 @@
-// Region maps for tastings: the wine region in an old atlas style, with the appellations of the
-// tasting's wines filled in. The map data (public/maps/<region>.json) is built from open geodata
+// Region maps for tastings: the wine region in an old atlas style – always the whole region with the borders of its
+// areas, the wines' lowest known areas strongest and the levels between lighter (WIN-293). The map data (public/maps/<region>.json) is built from open geodata
 // by scripts/build-maps.py.
-import { normOrigin, loadAppellations, type Appellation } from './origin';
+import { normOrigin, loadAppellations, matchAppellation, type Appellation } from './origin';
 import { esc } from './ui/dom';
 
 export type RegionMap = {
@@ -9,7 +9,10 @@ export type RegionMap = {
   land: string; coast: string; border: string;
   rivers: { name: string; d: string }[];
   areas: Record<string, { d: string; label: [number, number]; title?: string }>;
+  /** appellations that cover the whole region (Porto, Bourgogne AOC …): the region is their lowest level */
   whole: string[];
+  /** area id → the areas it lies in (scripts/map-hierarchy.py), largest first */
+  within?: Record<string, string[]>;
   towns: { name: string; x: number; y: number; size: 'big' | 'mid' | 'small' }[];
   sources: string;
   /** x = (lon - lon0) * k * s, y = (lat1 - lat) * s */
@@ -23,13 +26,26 @@ export function mapPoint(map: RegionMap, lon: number, lat: number): [number, num
   return x >= 0 && x <= map.w && y >= 0 && y <= map.h ? [x, y] : null;
 }
 
-/** A map pin whose tip is at (x, y). */
-export const pinSvg = (x: number, y: number, title = '', scale = 1) =>
-  `<g class="rm-pin" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})">${title ? `<title>${esc(title)}</title>` : ''}<g class="rm-s"><path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"/><circle cy="-22" r="4"/></g></g>`;
+/** A map pin whose tip is at (x, y). s: the labels' scale (labelScale()) */
+export const pinSvg = (x: number, y: number, title = '', scale = 1, s = 1) =>
+  `<g class="rm-pin" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${scale})">${title ? `<title>${esc(title)}</title>` : ''}<g class="rm-s"${s !== 1 ? ` transform="scale(${s.toFixed(3)})"` : ''}><path d="M0 0 C-3 -9 -11 -13 -11 -22 A11 11 0 1 1 11 -22 C11 -13 3 -9 0 0 Z"/><circle cy="-22" r="4"/></g></g>`;
 /** A marker or label anchored at (x, y): its content is drawn around 0 0 inside .rm-s, which the map's zoom
- *  (map-zoom.ts) scales back so names, numbers, pins and dots keep their size on screen at any zoom */
-export const anchored = (x: number, y: number, inner: string, cls = '') =>
-  `<g${cls ? ` class="${cls}"` : ''} transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g class="rm-s">${inner}</g></g>`;
+ *  (map-zoom.ts) scales back so names, numbers, pins and dots keep their size on screen at any zoom. s: the labels'
+ *  scale at the starting view (labelScale()) */
+export const anchored = (x: number, y: number, inner: string, cls = '', s = 1) =>
+  `<g${cls ? ` class="${cls}"` : ''} transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><g class="rm-s"${s !== 1 ? ` transform="scale(${s.toFixed(3)})"` : ''}>${inner}</g></g>`;
+
+/** How much bigger names, numbers and pins are drawn so the area's name is at least about 12.5 px on screen when the
+ *  whole region is shown in a box `width` px wide (a phone): 1 on a large screen. */
+export const labelScale = (map: RegionMap, width: number) => (width > 0 ? Math.max(1, 12.5 / (17 * (width / map.w))) : 1);
+/** The width of a map box, also while it (or a parent) is still hidden – measured without a paint in between. */
+export function boxWidth(el: HTMLElement): number {
+  const hidden: HTMLElement[] = [];
+  for (let e: HTMLElement | null = el; e; e = e.parentElement) if (e.hidden) { hidden.push(e); e.hidden = false; }
+  const w = el.clientWidth;
+  for (const e of hidden) e.hidden = true;
+  return w;
+}
 
 // Regions that have a map, by the region name stored on wines
 const MAPS: Record<string, string> = { bordeaux: 'bordeaux', douro: 'douro', bourgogne: 'bourgogne', burgundy: 'bourgogne', champagne: 'champagne', roussillon: 'roussillon',
@@ -73,35 +89,116 @@ export function mainRegion(wines: OriginWine[]): string | null {
   return best;
 }
 
-export type MapGroup = { key: string; title: string; count: number; inMap: boolean; whole: boolean; wines: number[] };
+// ---------- The wine's levels on the map (WIN-293) ----------
+// The map always shows the whole region, with the borders of every area. A wine's lowest known area is marked
+// strongest; the levels between the region and it (the areas it lies in on the map, and the other areas of its
+// sub-region on the appellation list, e.g. Médoc for Pauillac) in a lighter tone; the rest of the region is light.
+// Nothing new is asked of the host: the levels come from the map (`within`, scripts/map-hierarchy.py) and the list.
 
-/** Groups the wines by where they go on the map: an area, the whole region, or another region. */
+/** An area's name: the appellation list's, else the map's title, else its id written out ("le-mesnil-sur-oger" → "Le Mesnil-sur-Oger") */
+export function areaName(map: RegionMap, id: string, apps: Appellation[]): string {
+  return apps.find((a) => a.id === id)?.name ?? map.areas[id]?.title
+    ?? id.split('-').map((p, i) => (i && /^(sur|de|du|des|la|le|les|d|en|di|del|della)$/.test(p) ? p : p[0].toUpperCase() + p.slice(1))).join('-');
+}
+
+/** Where one wine goes on its region's map. */
+export type Level = {
+  /** 'area': an area of the map; 'pin': an appellation of the region with no area (a pin with its name);
+   *  'region': nothing below the region is known (or the appellation covers the whole region, `whole`) */
+  kind: 'area' | 'pin' | 'region';
+  /** the area's id (kind 'area'), else the appellation's id or '' */
+  id: string;
+  /** the lowest level's name: the area, the appellation or the region */
+  name: string;
+  /** the areas between the region and the lowest level (lighter tone) */
+  mid: string[];
+  /** the name of the level between, for the legend ("Médoc", "Côte de Nuits"), when there is one */
+  midName: string | null;
+  /** kind 'pin': the appellation's place */
+  pin?: { lon: number; lat: number };
+};
+
+type LevelWine = { appellation?: string | null; appellation_id?: string | null };
+
+/** The areas whose name is in a piece of text (the longest), for areas that are not on the appellation list (Ambonnay, Kasel …) */
+function areaInText(map: RegionMap, text: string | null | undefined, apps: Appellation[]): string | null {
+  const hay = ` ${normOrigin(text)} `;
+  if (!hay.trim()) return null;
+  let best: string | null = null, len = 0;
+  for (const id of Object.keys(map.areas)) {
+    for (const n of new Set([normOrigin(areaName(map, id, apps)), normOrigin(id)])) {
+      if (n && n.length > len && hay.includes(` ${n} `)) { best = id; len = n.length; }
+    }
+  }
+  return best;
+}
+
+/** The wine's lowest known level on the map and the levels between it and the region. */
+export function levelOf(map: RegionMap, w: LevelWine, apps: Appellation[]): Level {
+  const byId = new Map(apps.map((a) => [a.id, a]));
+  const aid = w.appellation_id || (w.appellation ? matchAppellation(apps, w.appellation)?.id ?? '' : '');
+  const app = aid ? byId.get(aid) : undefined;
+  // The levels between: the areas it lies in, and the areas of the same sub-region (or the area named after it)
+  const between = (self: string, sub: string | null | undefined) => {
+    const mid = new Set(map.within?.[self] ?? []);
+    const s = normOrigin(sub);
+    if (s) for (const id of Object.keys(map.areas)) {
+      if (normOrigin(byId.get(id)?.subregion) === s || normOrigin(areaName(map, id, apps)) === s) mid.add(id);
+    }
+    mid.delete(self);
+    const name = sub?.trim() || (map.within?.[self]?.[0] ? areaName(map, map.within[self][0], apps) : null);
+    return { mid: [...mid], midName: mid.size ? name : null };
+  };
+  const area = aid && map.areas[aid] ? aid : areaInText(map, w.appellation, apps);
+  if (area) return { kind: 'area', id: area, name: areaName(map, area, apps), ...between(area, byId.get(area)?.subregion) };
+  // An appellation of the region that the map cannot fill: a pin with its name, its sub-region lighter
+  if (app && !map.whole.includes(app.id) && mapIdFor(app.region) === map.id && app.lat != null && app.lon != null && mapPoint(map, app.lon, app.lat)) {
+    return { kind: 'pin', id: app.id, name: app.name, pin: { lon: app.lon, lat: app.lat }, ...between('', app.subregion) };
+  }
+  // Nothing lower is known: the region (named after the appellation when there is one, e.g. "Porto" on all of Douro)
+  return { kind: 'region', id: app?.id ?? '', name: app?.name || w.appellation?.trim() || map.name, mid: [], midName: null };
+}
+
+export type MapGroup = { key: string; title: string; count: number; inMap: boolean; whole: boolean; wines: number[]; level: Level };
+
+/** Groups the wines by their lowest level on the map: an area, an appellation's pin, or the whole region. */
 export async function groupWines<W extends OriginWine & { id: number }>(map: RegionMap, wines: W[]): Promise<MapGroup[]> {
-  const names = new Map((await loadAppellations()).map((a: Appellation) => [a.id, a.name]));
+  const apps = await loadAppellations();
   const groups = new Map<string, MapGroup>();
-  const add = (key: string, title: string, inMap: boolean, whole: boolean, w: W) => {
-    const g = groups.get(key) ?? { key, title, count: 0, inMap, whole, wines: [] };
+  for (const w of wines) {
+    const level = levelOf(map, w, apps);
+    const key = level.kind === 'area' ? level.id : `${level.kind}:${level.id || 'region'}`;
+    const g = groups.get(key) ?? { key, title: level.name, count: 0, inMap: level.kind !== 'region', whole: level.kind === 'region', wines: [], level };
     g.count++;
     g.wines.push(w.id);
     groups.set(key, g);
-  };
-  for (const w of wines) {
-    const aid = w.appellation_id ?? '';
-    const sameRegion = mapIdFor(w.region) === map.id;
-    if (aid && map.areas[aid]) add(aid, names.get(aid) ?? map.areas[aid].title ?? aid, true, false, w);
-    else if (sameRegion) add(`whole:${aid || 'region'}`, (aid && names.get(aid)) || w.appellation || map.name, false, true, w);
-    else add(`other:${normOrigin(w.region || w.appellation || '?')}`, w.region || w.appellation || '?', false, false, w);
   }
-  // In the map first (most wines first), then the whole region, then other regions
-  const rank = (g: MapGroup) => (g.inMap ? 0 : g.whole ? 1 : 2);
+  // On the map first (most wines first), then the whole region
+  const rank = (g: MapGroup) => (g.inMap ? 0 : 1);
   return [...groups.values()].sort((a, b) => rank(a) - rank(b) || b.count - a.count || a.title.localeCompare(b.title));
 }
 
+/** drawMap()'s options for a set of wines' groups: strongest wins (an area that is one wine's lowest and another's level
+ *  between is strong); the whole region is marked only when no wine has a lower level. */
+export function markings(groups: MapGroup[]): Pick<DrawOptions, 'counts' | 'titles' | 'mid' | 'wholeRegion' | 'named'> {
+  const counts = new Map<string, number>(), titles = new Map<string, string>(), mid = new Set<string>();
+  const named: NonNullable<DrawOptions['named']> = [];
+  for (const g of groups) {
+    const l = g.level;
+    if (l.kind === 'area') { counts.set(l.id, g.count); titles.set(l.id, l.name); }
+    if (l.kind === 'pin' && l.pin) named.push({ ...l.pin, title: l.name });
+    for (const m of l.mid) mid.add(m);
+  }
+  for (const id of counts.keys()) mid.delete(id);
+  return { counts, titles, mid, named, wholeRegion: !counts.size && !named.length && groups.some((g) => g.whole) };
+}
 
 type DrawOptions = {
-  /** area id → number of wines (filled and numbered) */
+  /** area id → number of wines: the wines' lowest known areas (strongest, numbered) */
   counts?: Map<string, number>;
-  /** fill every area lightly (wines from a region-wide appellation such as Porto) */
+  /** the levels between the region and the wines' areas (lighter tone) */
+  mid?: Set<string>;
+  /** the region itself is the lowest known level: every area strongest */
   wholeRegion?: boolean;
   /** 'full': the map (the tasting's and a wine's); 'background': faint, no labels, behind a heading */
   mode?: 'full' | 'background';
@@ -109,107 +206,143 @@ type DrawOptions = {
   badges?: boolean;
   /** area id → label shown next to the badge */
   titles?: Map<string, string>;
+  /** appellations the map cannot fill: a pin with the name beside it */
+  named?: { lon: number; lat: number; title: string }[];
   /** producers' exact places */
   pins?: { lon: number; lat: number; title?: string }[];
+  /** the labels' scale (labelScale()): names, numbers, pins and towns this much bigger, placed so they do not overlap */
+  scale?: number;
 };
 
 /** The map as an SVG string. */
 export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
-  const { counts = new Map(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [], badges: numbered = true } = opts;
-  const max = Math.max(1, ...counts.values());
-  const lines = mode === 'background';
+  const { counts = new Map(), mid = new Set(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [], named = [], badges: numbered = true, scale: S = 1 } = opts;
+  const strong = (id: string) => wholeRegion || (counts.get(id) ?? 0) > 0;
+  const tone = (id: string) => (strong(id) ? 'is-strong' : mid.has(id) ? 'is-mid' : 'is-light');
   const parts: string[] = [];
-  parts.push(`<svg class="region-map ${mode}" viewBox="0 0 ${map.w} ${map.h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(map.name)}">`);
+  parts.push(`<svg class="region-map ${mode}" viewBox="0 0 ${map.w} ${map.h}"${S !== 1 ? ` data-s="${S.toFixed(3)}"` : ''} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${esc(map.name)}">`);
+  if (mode === 'background') {
+    // Faint, behind a heading: the outlines, the wines' areas filled
+    for (const [id, a] of Object.entries(map.areas)) parts.push(`<path class="rm-area${strong(id) ? ' on' : ''}" data-area="${id}" d="${a.d}"/>`);
+    if (map.border) parts.push(`<path class="rm-border" d="${map.border}"/>`);
+    for (const r of map.rivers) parts.push(`<path class="rm-river" d="${r.d}"/>`);
+    parts.push(`<path class="rm-coast" d="${map.coast}"/></svg>`);
+    return parts.join('');
+  }
   // Sea, with fine engraving lines along the coast
   parts.push(`<rect class="rm-sea" width="${map.w}" height="${map.h}"/>`);
-  if (!lines) {
-    for (let i = 1; i <= 4; i++) parts.push(`<path class="rm-wave" d="${map.coast}" transform="translate(${-5 * i} 0)" opacity="${(0.5 - i * 0.1).toFixed(2)}"/>`);
-  }
+  for (let i = 1; i <= 4; i++) parts.push(`<path class="rm-wave" d="${map.coast}" transform="translate(${-5 * i} 0)" opacity="${(0.5 - i * 0.1).toFixed(2)}"/>`);
   parts.push(`<path class="rm-land" d="${map.land}"/>`);
-  // Appellations: dashed outlines; those with wines filled (darker with more wines)
-  for (const [id, a] of Object.entries(map.areas)) {
-    const n = counts.get(id) ?? 0;
-    const on = n > 0 || wholeRegion;
-    const op = n > 0 ? 0.35 + 0.45 * (n / max) : wholeRegion ? 0.28 : 0;
-    parts.push(`<path class="rm-area${on ? ' on' : ''}" data-area="${id}" d="${a.d}" style="fill-opacity:${op.toFixed(2)}"/>`);
-  }
+  // The whole region in three tones: light, the levels between, the lowest areas. Light first, then the lighter tone,
+  // then the strongest (the larger areas first within a tone); all fills before all outlines, so no area hides a border
+  const rank = (id: string) => (strong(id) ? 2 : mid.has(id) ? 1 : 0);
+  const ids = Object.keys(map.areas).sort((a, b) => rank(a) - rank(b) || map.areas[b].d.length - map.areas[a].d.length);
+  for (const id of ids) parts.push(`<path class="rm-fill ${tone(id)}" data-area="${id}" d="${map.areas[id].d}"/>`);
+  for (const id of ids) parts.push(`<path class="rm-line ${tone(id)}" d="${map.areas[id].d}"/>`);
   if (map.border) parts.push(`<path class="rm-border" d="${map.border}"/>`);
   for (const r of map.rivers) parts.push(`<path class="rm-river" d="${r.d}"/>`);
   parts.push(`<path class="rm-coast" d="${map.coast}"/>`);
-  if (mode === 'full') {
-    // Badges first, so labels can be placed around them without overlapping
-    type Box = { x0: number; y0: number; x1: number; y1: number };
-    const taken: Box[] = [];
-    const hits = (b: Box) => taken.some((t) => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
-    const badges = [...counts].filter(([id, n]) => n && map.areas[id]).map(([id, n]) => ({ id, n, x: map.areas[id].label[0], y: map.areas[id].label[1] }));
-    if (numbered) for (const b of badges) taken.push({ x0: b.x - 15, y0: b.y - 15, x1: b.x + 15, y1: b.y + 15 });
-    const titleSvg: string[] = [];
-    for (const b of badges) {
-      const title = titles.get(b.id) ?? map.areas[b.id].title ?? '';
-      if (!title) continue;
-      const w = title.length * 8.6, h = 18;
-      // Right, left, below, above – the first spot that is free
-      const spots: [number, number, string][] = numbered ? [
-        [b.x + 18, b.y + 6, 'start'], [b.x - 18, b.y + 6, 'end'], [b.x, b.y + 32, 'middle'], [b.x, b.y - 22, 'middle'],
-        [b.x + 18, b.y + 30, 'start'], [b.x - 18, b.y - 18, 'end'],
-      ] : [[b.x, b.y + 6, 'middle']];
-      const box = ([x, y, anchor]: [number, number, string]): Box => {
-        const x0 = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
-        return { x0, y0: y - h + 4, x1: x0 + w, y1: y + 4 };
-      };
-      const spot = spots.find((sp) => !hits(box(sp)) && box(sp).x0 >= 0 && box(sp).x1 <= map.w) ?? spots[0];
-      taken.push(box(spot));
-      titleSvg.push(anchored(b.x, b.y, `<text class="rm-badge-title" x="${(spot[0] - b.x).toFixed(0)}" y="${(spot[1] - b.y).toFixed(0)}" text-anchor="${spot[2]}">${esc(title)}</text>`));
-    }
-    // Towns, unless they would clash with a label or repeat an appellation's name
-    const named = [...titles.values()].map((t) => normOrigin(t));
-    for (const t of map.towns) {
-      const r = t.size === 'big' ? 4.5 : t.size === 'mid' ? 3.5 : 2.6;
-      const fs = t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 14;
-      const tb = { x0: t.x - 4, y0: t.y - 6 - fs, x1: t.x + 7 + t.name.length * fs * 0.48, y1: t.y + 4 };
-      if (t.size !== 'big' && (hits(tb) || named.some((n) => n.includes(normOrigin(t.name).split(' ')[0])))) continue;
-      taken.push(tb);
-      parts.push(anchored(t.x, t.y, `<circle r="${r}"/><text x="7" y="-6" font-size="${fs}">${esc(t.name)}</text>`, `rm-town ${t.size}`));
-    }
-    // The whole region lit (e.g. port from the Douro): name its parts quietly
-    if (wholeRegion && !badges.length) {
-      for (const a of Object.values(map.areas)) {
-        if (a.title) parts.push(anchored(a.label[0], a.label[1], `<text class="rm-part">${esc(a.title)}</text>`));
+  // Badges first, so labels can be placed around them without overlapping. Sizes and offsets are the labels' own (as
+  // drawn inside .rm-s), times S on the map
+  type Box = { x0: number; y0: number; x1: number; y1: number };
+  const taken: Box[] = [];
+  const hits = (b: Box) => taken.some((t) => b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0);
+  const around = (x: number, y: number, x0: number, y0: number, x1: number, y1: number): Box => ({ x0: x + x0 * S, y0: y + y0 * S, x1: x + x1 * S, y1: y + y1 * S });
+  const marks = [...counts].filter(([id, n]) => n && map.areas[id]).map(([id, n]) => ({ id, n, x: map.areas[id].label[0], y: map.areas[id].label[1], pin: false, title: titles.get(id) ?? map.areas[id].title ?? '' }));
+  const pinned = named.flatMap((p) => { const at = mapPoint(map, p.lon, p.lat); return at ? [{ id: '', n: 0, x: at[0], y: at[1], pin: true, title: p.title }] : []; });
+  // Badges of neighbouring areas (Saint-Estèphe, Pauillac, Saint-Julien on a phone) moved apart until they are free:
+  // each in turn (most wines first) at its area's point, else a little further out around it
+  if (numbered) {
+    const placed: { x: number; y: number }[] = [];
+    const R = 15 * S;
+    for (const b of [...marks].sort((a, c) => c.n - a.n || a.y - c.y)) {
+      const free = (x: number, y: number) => placed.every((q) => Math.hypot(q.x - x, q.y - y) >= 2 * R);
+      let at: [number, number] = [b.x, b.y];
+      search: for (let ring = 1; ring <= 4 && !free(...at); ring++) {
+        for (let k = 0; k < 8 * ring; k++) {
+          const a = (k / (8 * ring)) * 2 * Math.PI + Math.PI / 2;
+          const x = b.x + Math.cos(a) * R * 1.1 * ring, y = b.y + Math.sin(a) * R * 1.1 * ring;
+          if (free(x, y) && x > R && x < map.w - R && y > R && y < map.h - R) { at = [x, y]; break search; }
+        }
       }
-    }
-    parts.push(...titleSvg);
-    if (numbered) for (const b of badges) {
-      parts.push(anchored(b.x, b.y, `<circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text>`, 'rm-badge'));
+      [b.x, b.y] = at;
+      placed.push({ x: b.x, y: b.y });
+      taken.push(around(b.x, b.y, -15, -15, 15, 15));
     }
   }
-  if (mode !== 'background') {
-    for (const p of pins) {
-      const at = mapPoint(map, p.lon, p.lat);
-      if (at) parts.push(pinSvg(at[0], at[1], p.title, 1.2));
+  for (const p of pinned) taken.push(around(p.x, p.y, -14 * 1.2, -34 * 1.2, 14 * 1.2, 0));
+  // The big towns are always shown: placed before the names, so the names go around them
+  const townBox = (t: RegionMap['towns'][number], fs: number, left: boolean) => (left
+    ? around(t.x, t.y, -7 - t.name.length * fs * 0.48, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + t.name.length * fs * 0.48, 4));
+  const townSize = (t: RegionMap['towns'][number]) => (t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 14);
+  const bigSide = new Map<RegionMap['towns'][number], boolean>();
+  const bigBox = new Map<RegionMap['towns'][number], Box>();
+  for (const t of map.towns.filter((x) => x.size === 'big')) {
+    // Right of the dot, or left when the name would run off the map
+    const left = townBox(t, 22, false).x1 > map.w;
+    bigSide.set(t, left);
+    bigBox.set(t, townBox(t, 22, left));
+  }
+  const meets = (q: Box, t: Box) => q.x0 < t.x1 && q.x1 > t.x0 && q.y0 < t.y1 && q.y1 > t.y0;
+  const onBig = (q: Box) => [...bigBox.values()].some((t) => meets(q, t));
+  const titleSvg: string[] = [];
+  for (const b of [...marks, ...pinned]) {
+    if (!b.title) continue;
+    const w = b.title.length * 8.6, h = 18;
+    // Right, left, below, above – the first spot that is free (offsets from the mark)
+    const spots: [number, number, string][] = b.pin ? [[18, -22, 'start'], [-18, -22, 'end'], [0, 20, 'middle'], [0, -48, 'middle']]
+      : numbered ? [[18, 6, 'start'], [-18, 6, 'end'], [0, 32, 'middle'], [0, -22, 'middle'], [18, 30, 'start'], [-18, -18, 'end'], [-18, 30, 'end'], [18, -18, 'start']]
+      : [[0, 6, 'middle']];
+    const box = ([dx, dy, anchor]: [number, number, string]): Box => {
+      const x0 = anchor === 'start' ? dx : anchor === 'end' ? dx - w : dx - w / 2;
+      return around(b.x, b.y, x0, dy - h + 4, x0 + w, dy + 4);
+    };
+    // The first free spot inside the map (also clear of the big towns); else one that only covers a big town (the
+    // wine's name wins, the town is left out); else the one that covers the fewest names
+    const inside = spots.filter((sp) => box(sp).x0 >= 0 && box(sp).x1 <= map.w);
+    const clashes = (sp: [number, number, string]) => taken.filter((t) => meets(box(sp), t)).length;
+    const spot = inside.find((sp) => !hits(box(sp)) && !onBig(box(sp))) ?? inside.find((sp) => !hits(box(sp)))
+      ?? [...inside].sort((p, q) => clashes(p) - clashes(q))[0] ?? spots[0];
+    taken.push(box(spot));
+    for (const [t, q] of bigBox) if (meets(box(spot), q)) bigBox.delete(t);
+    titleSvg.push(anchored(b.x, b.y, `<text class="rm-badge-title" x="${spot[0]}" y="${spot[1]}" text-anchor="${spot[2]}">${esc(b.title)}</text>`, '', S));
+  }
+  // Towns, unless they would clash with a label or repeat an appellation's name
+  const named2 = [...marks, ...pinned].map((m) => normOrigin(m.title));
+  for (const t of map.towns) {
+    const r = t.size === 'big' ? 4.5 : t.size === 'mid' ? 3.5 : 2.6;
+    const fs = townSize(t);
+    let left = bigSide.get(t) ?? false;
+    if (t.size === 'big') {
+      const q = bigBox.get(t);
+      if (!q) continue;
+      taken.push(q);
+    } else {
+      if (named2.some((n) => n.includes(normOrigin(t.name).split(' ')[0]))) continue;
+      // Right of the dot, else left; never off the map or on a name
+      const ok = (l: boolean) => { const b = townBox(t, fs, l); return !hits(b) && b.x0 >= 0 && b.x1 <= map.w; };
+      if (ok(false)) left = false; else if (ok(true)) left = true; else continue;
+      taken.push(townBox(t, fs, left));
     }
+    parts.push(anchored(t.x, t.y, `<circle r="${r}"/><text x="${left ? -7 : 7}" y="-6" font-size="${fs}"${left ? ' text-anchor="end"' : ''}>${esc(t.name)}</text>`, `rm-town ${t.size}`, S));
+  }
+  // The whole region marked (e.g. port from the Douro): name its parts quietly
+  if (wholeRegion) {
+    for (const a of Object.values(map.areas)) {
+      if (a.title) parts.push(anchored(a.label[0], a.label[1], `<text class="rm-part">${esc(a.title)}</text>`, '', S));
+    }
+  }
+  for (const p of pinned) parts.push(pinSvg(p.x, p.y, p.title, 1.2, S));
+  for (const p of pins) {
+    const at = mapPoint(map, p.lon, p.lat);
+    if (at) parts.push(pinSvg(at[0], at[1], p.title, 1.2, S));
+  }
+  parts.push(...titleSvg);
+  if (numbered) for (const b of marks) {
+    parts.push(anchored(b.x, b.y, `<circle r="13"/><text class="rm-badge-n" y="5">${b.n}</text>`, 'rm-badge', S));
   }
   parts.push('</svg>');
   return parts.join('');
-}
-
-/** After drawing: zoom to the filled areas (with room around them) when they cover a small part of the map. */
-export function fitToAreas(svg: SVGSVGElement, map: RegionMap, minShare = 0.55) {
-  const on = [...svg.querySelectorAll<SVGPathElement>('.rm-area.on')];
-  if (!on.length) return;
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const p of on) {
-    const b = p.getBBox();
-    x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height);
-  }
-  const ratio = map.w / map.h;
-  let w = Math.max((x1 - x0) * 1.5, map.w * minShare);
-  let h = Math.max((y1 - y0) * 1.5, w / ratio);
-  w = Math.max(w, h * ratio);
-  if (w >= map.w * 0.95) return;
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
-  const x = Math.min(Math.max(cx - w / 2, 0), map.w - w);
-  const y = Math.min(Math.max(cy - h / 2, 0), map.h - h);
-  svg.setAttribute('viewBox', `${x.toFixed(0)} ${y.toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}`);
 }
 
 /** [1, 2, 3, 5, 9, 10] → "1–3, 5, 9–10" */

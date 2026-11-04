@@ -6,8 +6,9 @@ import { getCodes, tastingUrl, chatSeenKey, type MyTasting } from './guest';
 import { tastingCard } from './my-tastings';
 import { loadOrders, type OrderLine } from './my-orders';
 import { wineItem, type BookWine } from './wine-book';
-import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, loadTowns, type Place } from './overview-map';
+import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, detailFor, loadTowns, clusterPins, type Place } from './overview-map';
 import { OVERVIEW_SOURCES, setMapCredit } from './wine-map';
+import { loadAppellations, matchAppellation } from './origin';
 import { winesBackground } from './ui/map-background';
 import { mapZoom } from './ui/map-zoom';
 import { countdown } from './ui/ago';
@@ -151,13 +152,16 @@ function showBook(book: BookWine[], tastings: number, orders: OrderLine[]) {
 // ---------- 4. Where the wines come from: one numbered pin per place, on the overview map ----------
 async function showMap(book: BookWine[]) {
   const byWine = new Map(book.map((w) => [w.wine_id, w]));
-  const placed = (await Promise.all([...byWine.values()].map(async (w) => ({ w, p: await placeOf({ ...w, appellation_id: null }) }))))
+  // The wine book has the appellation's text, not its id: matched to the list as the wine form does, so a Pauillac is
+  // at Pauillac (not in the middle of Bordeaux) – the same place as on the tasting's and the wine's map
+  const apps = await loadAppellations();
+  const placed = (await Promise.all([...byWine.values()].map(async (w) => ({ w, p: await placeOf({ ...w, appellation_id: w.appellation ? matchAppellation(apps, w.appellation)?.id ?? null : null }) }))))
     .filter((x): x is { w: BookWine; p: Place } => !!x.p);
   if (!placed.length) return;
-  const groups = new Map<string, { p: Place; n: number }>();
-  for (const { p } of placed) {
-    const key = `${p.lon.toFixed(1)},${p.lat.toFixed(1)}`;
-    const g = groups.get(key) ?? { p, n: 0 };
+  const groups = new Map<string, { p: Place; n: number; region: string | null }>();
+  for (const { w, p } of placed) {
+    const key = `${p.lon.toFixed(2)},${p.lat.toFixed(2)}`;
+    const g = groups.get(key) ?? { p, n: 0, region: w.region };
     g.n++;
     groups.set(key, g);
   }
@@ -166,7 +170,10 @@ async function showMap(book: BookWine[]) {
   const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
   if (!ov) return;
   const box = $('home-map');
-  box.innerHTML = drawOverview(ov, list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.n, label: g.p.label })), focus, 'full', null, await loadTowns());
+  // Places that would lie on top of each other (Pauillac, Margaux and Saint-Julien on a map of Europe; the Wachau) as one
+  // numbered pin, named after their region
+  const pins = clusterPins(ov, list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.n, label: g.p.label, region: g.region })), focus);
+  box.innerHTML = drawOverview(ov, pins, focus, 'full', await detailFor(focus), await loadTowns());
   $('map-block').hidden = false;
   mapZoom(box);
   setMapCredit(box, OVERVIEW_SOURCES, false, $('home-map-source'));

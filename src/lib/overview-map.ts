@@ -44,6 +44,14 @@ const decode = (flat: number[]) => {
   }
   return out;
 };
+/** The detailed tiles for a map of `focus` when it is a small area (a few countries at most), with room around; else null. */
+export async function detailFor(focus: Box): Promise<Detail | null> {
+  const small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14;
+  if (!small) return null;
+  const margin = Math.max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35;
+  return loadDetail({ lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin });
+}
+
 /** The detailed land, coast, lakes, rivers and borders of an area, or null outside the tiles. */
 export async function loadDetail(area: Box): Promise<Detail | null> {
   const index = await tileIndex();
@@ -117,12 +125,44 @@ export async function focusFor(places: Place[], close = false): Promise<Box> {
   }
   const countries = await loadCountries();
   const boxes = [...new Set(places.map((p) => p.country).filter(Boolean))].map((c) => countries[c!]?.box).filter(Boolean) as Country['box'][];
+  // The places themselves too: a country's box is its mainland, so an island (Madeira, the Canaries) would be outside
+  for (const p of places) if (p.how !== 'country') boxes.push([p.lon - 0.5, p.lat - 0.5, p.lon + 0.5, p.lat + 0.5]);
   if (!boxes.length) return { lon0: -10, lat0: 36, lon1: 20, lat1: 55 };
   return { lon0: Math.min(...boxes.map((b) => b[0])), lat0: Math.min(...boxes.map((b) => b[1])), lon1: Math.max(...boxes.map((b) => b[2])), lat1: Math.max(...boxes.map((b) => b[3])) };
 }
 
 
 export type Pin = { lon: number; lat: number; label?: string; n?: number };
+
+/** Places that would lie on top of each other on the map (closer than a numbered pin is wide, at the view drawOverview()
+ *  gives `focus`) as one pin: the wines added up, named after the region they share (else the place with the most
+ *  wines), at their middle. The places with the most wines first. */
+export function clusterPins<P extends { lon: number; lat: number; n: number; label: string; region?: string | null }>(map: OverviewMap, places: P[], focus: Box): Pin[] {
+  const { lon0, lat1, k, s } = map.proj;
+  const xy = (lon: number, lat: number) => [(lon - lon0) * k * s, (lat1 - lat) * s];
+  const [ax, ay] = xy(focus.lon0, focus.lat1), [bx, by] = xy(focus.lon1, focus.lat0);
+  const pad = Math.max(bx - ax, by - ay) * 0.08;
+  const w0 = bx - ax + 2 * pad, h0 = by - ay + 2 * pad;
+  const u = Math.max(w0, h0 * 1.45) / 100;
+  type C = { items: P[]; x: number; y: number };
+  const out: C[] = [];
+  for (const p of [...places].sort((a, b) => b.n - a.n)) {
+    const [x, y] = xy(p.lon, p.lat);
+    const c = out.find((o) => Math.hypot(o.x - x, o.y - y) < u * 5.6);
+    if (c) {
+      c.items.push(p);
+      const n = c.items.reduce((t, i) => t + i.n, 0);
+      c.x += (x - c.x) * p.n / n; c.y += (y - c.y) * p.n / n;
+    } else out.push({ items: [p], x, y });
+  }
+  return out.map((c) => {
+    const n = c.items.reduce((t, i) => t + i.n, 0);
+    const lon = c.items.reduce((t, i) => t + i.lon * i.n, 0) / n, lat = c.items.reduce((t, i) => t + i.lat * i.n, 0) / n;
+    const regions = new Set(c.items.map((i) => normOrigin(i.region)));
+    const label = c.items.length > 1 && regions.size === 1 && c.items[0].region?.trim() ? c.items[0].region.trim() : c.items[0].label;
+    return { lon, lat, n, label };
+  });
+}
 
 /** The overview map, cut to `focus`, with a pin (and label or number) for each place. */
 export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'inset' = 'full', detail: Detail | null = null, towns: Town[] | null = null): string {

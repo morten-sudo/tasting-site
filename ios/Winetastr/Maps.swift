@@ -13,6 +13,10 @@ struct RegionMap: Decodable {
     let land: String; let coast: String; let border: String?
     let rivers: [River]; let areas: [String: Area]; let towns: [Town]?
     let sources: String?; let proj: Projection?
+    /// Appellations that cover the whole region (Porto, Bourgogne AOC …): the region is their lowest level
+    let whole: [String]?
+    /// area id → the areas it lies in (scripts/map-hierarchy.py), largest first – optional: older map files lack it
+    let within: [String: [String]]?
 }
 
 struct Projection: Decodable {
@@ -22,7 +26,7 @@ struct Projection: Decodable {
 
 struct OverviewMap: Decodable { let id: String; let w: Double; let h: Double; let proj: Projection; let land: String; let border: String }
 
-struct Appellation: Decodable { let id: String; let name: String; let region: String?; let country: String?; let aliases: [String]?; let lat: Double?; let lon: Double? }
+struct Appellation: Decodable { let id: String; let name: String; let region: String?; let country: String?; let aliases: [String]?; let lat: Double?; let lon: Double?; let subregion: String? }
 struct WineRegion: Decodable { let id: String; let name: String; let country: String; let aliases: [String]?; let lat: Double?; let lon: Double? }
 struct PlaceGuess: Decodable { let key: String; let name: String; let country: String; let lat: Double; let lon: Double }
 struct CountryBox: Decodable { let box: [Double]; let centre: [Double] }
@@ -148,6 +152,13 @@ private func decodeTile(_ flat: [Double]) -> [CGPoint] {
 
 struct GeoBox { var lon0: Double; var lat0: Double; var lon1: Double; var lat1: Double }
 
+/// detailFor(): the detailed tiles for a map of `focus` when it is a small area, with room around; else nil
+func detailFor(_ focus: GeoBox) async -> Detail? {
+    guard focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14 else { return nil }
+    let m = max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35
+    return await loadDetail(GeoBox(lon0: focus.lon0 - m, lat0: focus.lat0 - m, lon1: focus.lon1 + m, lat1: focus.lat1 + m))
+}
+
 func loadDetail(_ area: GeoBox) async -> Detail? {
     guard let index = await MapStore.shared.index() else { return nil }
     let size = index.size
@@ -224,7 +235,9 @@ func focusFor(_ places: [Place], close: Bool = false) async -> GeoBox {
         return GeoBox(lon0: cx - dx, lat0: cy - dy, lon1: cx + dx, lat1: cy + dy)
     }
     let countries = await MapStore.shared.countryList()
-    let boxes = Set(places.compactMap(\.country)).compactMap { countries[$0]?.box }
+    var boxes = Set(places.compactMap(\.country)).compactMap { countries[$0]?.box }
+    // The places themselves too: a country's box is its mainland, so an island (Madeira, the Canaries) would be outside
+    for p in places where p.how != "country" { boxes.append([p.lon - 0.5, p.lat - 0.5, p.lon + 0.5, p.lat + 0.5]) }
     guard !boxes.isEmpty else { return GeoBox(lon0: -10, lat0: 36, lon1: 20, lat1: 55) }
     return GeoBox(lon0: boxes.map { $0[0] }.min()!, lat0: boxes.map { $0[1] }.min()!, lon1: boxes.map { $0[2] }.max()!, lat1: boxes.map { $0[3] }.max()!)
 }
@@ -263,11 +276,80 @@ enum SVGPath {
     }
 }
 
+// MARK: - The wine's levels on the map (levelOf() in region-map.ts, WIN-293)
+
+/// areaName(): the appellation list's name, else the map's title, else the id written out
+func areaName(_ map: RegionMap, _ id: String, _ apps: [Appellation]) -> String {
+    if let a = apps.first(where: { $0.id == id }) { return a.name }
+    if let t = map.areas[id]?.title { return t }
+    let small: Set<String> = ["sur", "de", "du", "des", "la", "le", "les", "d", "en", "di", "del", "della"]
+    return id.split(separator: "-").enumerated().map { i, p in i > 0 && small.contains(String(p)) ? String(p) : p.prefix(1).uppercased() + p.dropFirst() }.joined(separator: "-")
+}
+
+/// Where one wine goes on its region's map: an area, an appellation the map cannot fill (a pin), or the region itself
+struct Level {
+    enum Kind { case area, pin, region }
+    let kind: Kind
+    /// the area's id (.area), else the appellation's id or ""
+    let id: String
+    let name: String
+    /// the areas between the region and the lowest level (lighter tone)
+    var mid: [String] = []
+    var midName: String? = nil
+    var pin: (lon: Double, lat: Double)? = nil
+}
+
+func levelOf(_ map: RegionMap, appellation: String?, appellationId: String?, _ apps: [Appellation]) -> Level {
+    let byId = Dictionary(apps.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+    var aid = appellationId ?? ""
+    if aid.isEmpty, let t = appellation { aid = matchAppellation(apps, t)?.id ?? "" }
+    let app = aid.isEmpty ? nil : byId[aid]
+    let whole = map.whole ?? []
+    func between(_ me: String, _ sub: String?) -> ([String], String?) {
+        var mid = Set(map.within?[me] ?? [])
+        let s = normOrigin(sub)
+        if !s.isEmpty { for id in map.areas.keys where normOrigin(byId[id]?.subregion) == s || normOrigin(areaName(map, id, apps)) == s { mid.insert(id) } }
+        mid.remove(me)
+        let trimmed = sub?.trimmingCharacters(in: .whitespaces) ?? ""
+        let name = !trimmed.isEmpty ? trimmed : map.within?[me]?.first.map { areaName(map, $0, apps) }
+        return (mid.sorted(), mid.isEmpty ? nil : name)
+    }
+    // The area: the appellation's own, else an area whose name is in the text (areas that are not on the list)
+    var area: String? = !aid.isEmpty && map.areas[aid] != nil ? aid : nil
+    if area == nil {
+        let hay = " \(normOrigin(appellation)) "
+        var len = 0
+        if !hay.trimmingCharacters(in: .whitespaces).isEmpty {
+            for id in map.areas.keys.sorted() {
+                for n in Set([normOrigin(areaName(map, id, apps)), normOrigin(id)]) where !n.isEmpty && n.count > len && hay.contains(" \(n) ") { area = id; len = n.count }
+            }
+        }
+    }
+    if let area {
+        let (mid, midName) = between(area, byId[area]?.subregion)
+        return Level(kind: .area, id: area, name: areaName(map, area, apps), mid: mid, midName: midName)
+    }
+    if let app, !whole.contains(app.id), mapIdFor(app.region) == map.id, let lat = app.lat, let lon = app.lon, let proj = map.proj {
+        let p = proj.xy(lon, lat)
+        if p.x >= 0 && p.x <= map.w && p.y >= 0 && p.y <= map.h {
+            let (mid, midName) = between("", app.subregion)
+            return Level(kind: .pin, id: app.id, name: app.name, mid: mid, midName: midName, pin: (lon, lat))
+        }
+    }
+    let typed = appellation?.trimmingCharacters(in: .whitespaces) ?? ""
+    return Level(kind: .region, id: app?.id ?? "", name: app?.name ?? (typed.isEmpty ? map.name : typed))
+}
+
+/// labelScale(): names, numbers and pins drawn bigger in a narrow box, so an area's name is about 12.5 pt on screen
+func labelScale(_ map: RegionMap, width: Double) -> Double { width > 0 ? max(1, 12.5 / (17 * (width / map.w))) : 1 }
+
 // MARK: - The region map (drawMap)
 
-/// A map drawn once: paths parsed and the labels placed, as drawMap() does.
+/// A map drawn once: paths parsed and the labels placed, as drawMap() does. The whole region in three tones: the wines'
+/// lowest known areas strongest, the levels between lighter, the rest light – all fills, then all outlines.
 struct RegionDrawing {
     enum Mode { case full, background }
+    enum Tone { case light, mid, strong }
     struct Label {
         let text: String; let at: CGPoint; let anchor: UnitPoint; let kind: Kind
         /// The point the label belongs to (badge, town): zooming keeps the label beside it at the same on-screen distance
@@ -279,68 +361,118 @@ struct RegionDrawing {
     let mode: Mode
     let land: Path, coast: Path, border: Path?
     let rivers: [Path]
-    let areas: [(path: Path, opacity: Double, on: Bool)]
+    /// Light first, then the lighter tone, then the strongest (the larger areas first within a tone)
+    let areas: [(path: Path, tone: Tone)]
     var labels: [Label] = []
     var badges: [Badge] = []
     var towns: [(at: CGPoint, r: Double)] = []
     var pins: [CGPoint] = []
     var view: CGRect
+    /// the labels' own scale at the starting view (labelScale())
+    var s: Double = 1
 
-    init(_ map: RegionMap, mode: Mode = .full, counts: [String: Int] = [:], titles: [String: String] = [:], wholeRegion: Bool = false,
-         numbered: Bool = true, pins pinList: [(lon: Double, lat: Double)] = []) {
-        self.map = map; self.mode = mode
+    init(_ map: RegionMap, mode: Mode = .full, counts: [String: Int] = [:], titles: [String: String] = [:], mid: Set<String> = [], wholeRegion: Bool = false,
+         numbered: Bool = true, named: [(lon: Double, lat: Double, title: String)] = [], pins pinList: [(lon: Double, lat: Double)] = [], scale S: Double = 1) {
+        self.map = map; self.mode = mode; self.s = S
         land = SVGPath.parse(map.land); coast = SVGPath.parse(map.coast)
         border = (map.border ?? "").isEmpty ? nil : SVGPath.parse(map.border!)
         rivers = map.rivers.map { SVGPath.parse($0.d) }
-        let maxN = Double(max(1, counts.values.max() ?? 1))
-        areas = map.areas.sorted { $0.key < $1.key }.map { id, a in
-            let n = Double(counts[id] ?? 0)
-            let op = n > 0 ? 0.35 + 0.45 * (n / maxN) : wholeRegion ? 0.28 : 0
-            return (SVGPath.parse(a.d), op, n > 0 || wholeRegion)
-        }
+        func tone(_ id: String) -> Tone { wholeRegion || (counts[id] ?? 0) > 0 ? .strong : mid.contains(id) ? .mid : .light }
+        func rank(_ t: Tone) -> Int { t == .strong ? 2 : t == .mid ? 1 : 0 }
+        areas = map.areas.sorted { a, b in
+            let ra = rank(tone(a.key)), rb = rank(tone(b.key))
+            return ra != rb ? ra < rb : a.value.d.count != b.value.d.count ? a.value.d.count > b.value.d.count : a.key < b.key
+        }.map { (SVGPath.parse($0.value.d), tone($0.key)) }
         view = CGRect(x: 0, y: 0, width: map.w, height: map.h)
         guard mode == .full else { return }
 
         struct Box { var x0, y0, x1, y1: Double }
         var taken: [Box] = []
-        func hits(_ b: Box) -> Bool { taken.contains { b.x0 < $0.x1 && b.x1 > $0.x0 && b.y0 < $0.y1 && b.y1 > $0.y0 } }
-        let list = counts.filter { $0.value > 0 && map.areas[$0.key] != nil }.sorted { $0.key < $1.key }
-            .map { (id: $0.key, n: $0.value, x: map.areas[$0.key]!.label[0], y: map.areas[$0.key]!.label[1]) }
-        if numbered { for b in list { taken.append(Box(x0: b.x - 15, y0: b.y - 15, x1: b.x + 15, y1: b.y + 15)) } }
+        func meets(_ b: Box, _ t: Box) -> Bool { b.x0 < t.x1 && b.x1 > t.x0 && b.y0 < t.y1 && b.y1 > t.y0 }
+        func hits(_ b: Box) -> Bool { taken.contains { meets(b, $0) } }
+        func around(_ x: Double, _ y: Double, _ x0: Double, _ y0: Double, _ x1: Double, _ y1: Double) -> Box { Box(x0: x + x0 * S, y0: y + y0 * S, x1: x + x1 * S, y1: y + y1 * S) }
+        struct Mark { let n: Int; var x: Double; var y: Double; let pin: Bool; let title: String }
+        var marks = counts.filter { $0.value > 0 && map.areas[$0.key] != nil }.sorted { $0.key < $1.key }
+            .map { Mark(n: $0.value, x: map.areas[$0.key]!.label[0], y: map.areas[$0.key]!.label[1], pin: false, title: titles[$0.key] ?? map.areas[$0.key]?.title ?? "") }
+        var pinned: [Mark] = []
+        if let proj = map.proj {
+            for p in named {
+                let at = proj.xy(p.lon, p.lat)
+                if at.x >= 0 && at.x <= map.w && at.y >= 0 && at.y <= map.h { pinned.append(Mark(n: 0, x: at.x, y: at.y, pin: true, title: p.title)) }
+            }
+        }
+        // Badges of neighbouring areas moved apart until they are free (most wines first)
+        if numbered {
+            let R = 15 * S
+            var placed: [CGPoint] = []
+            let order = marks.indices.sorted { marks[$0].n != marks[$1].n ? marks[$0].n > marks[$1].n : marks[$0].y < marks[$1].y }
+            for i in order {
+                func free(_ x: Double, _ y: Double) -> Bool { placed.allSatisfy { hypot($0.x - x, $0.y - y) >= 2 * R } }
+                var at = (marks[i].x, marks[i].y)
+                var ring = 1
+                search: while ring <= 4 && !free(at.0, at.1) {
+                    for k in 0..<(8 * ring) {
+                        let a = Double(k) / Double(8 * ring) * 2 * .pi + .pi / 2
+                        let x = marks[i].x + cos(a) * R * 1.1 * Double(ring), y = marks[i].y + sin(a) * R * 1.1 * Double(ring)
+                        if free(x, y) && x > R && x < map.w - R && y > R && y < map.h - R { at = (x, y); break search }
+                    }
+                    ring += 1
+                }
+                marks[i].x = at.0; marks[i].y = at.1
+                placed.append(CGPoint(x: at.0, y: at.1))
+                taken.append(around(at.0, at.1, -15, -15, 15, 15))
+            }
+        }
+        for p in pinned { taken.append(around(p.x, p.y, -14 * 1.2, -34 * 1.2, 14 * 1.2, 0)) }
+        // The big towns: their names reserved before the wines' names, which win when there is no other room
+        func townBox(_ t: RegionMap.Town, _ fs: Double, _ left: Bool) -> Box {
+            left ? around(t.x, t.y, -7 - Double(t.name.count) * fs * 0.48, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + Double(t.name.count) * fs * 0.48, 4)
+        }
+        var bigBox: [String: (box: Box, left: Bool)] = [:]
+        for t in map.towns ?? [] where t.size == "big" { let left = townBox(t, 22, false).x1 > map.w; bigBox[t.name] = (townBox(t, 22, left), left) }
         var titleLabels: [Label] = []
-        for b in list {
-            let title = titles[b.id] ?? map.areas[b.id]?.title ?? ""
-            guard !title.isEmpty else { continue }
-            let w = Double(title.count) * 8.6, h = 18.0
-            let spots: [(Double, Double, String)] = numbered ? [
-                (b.x + 18, b.y + 6, "start"), (b.x - 18, b.y + 6, "end"), (b.x, b.y + 32, "middle"), (b.x, b.y - 22, "middle"),
-                (b.x + 18, b.y + 30, "start"), (b.x - 18, b.y - 18, "end"),
-            ] : [(b.x, b.y + 6, "middle")]
+        for b in marks + pinned where !b.title.isEmpty {
+            let w = Double(b.title.count) * 8.6, h = 18.0
+            let spots: [(Double, Double, String)] = b.pin ? [(18, -22, "start"), (-18, -22, "end"), (0, 20, "middle"), (0, -48, "middle")]
+                : numbered ? [(18, 6, "start"), (-18, 6, "end"), (0, 32, "middle"), (0, -22, "middle"), (18, 30, "start"), (-18, -18, "end"), (-18, 30, "end"), (18, -18, "start")]
+                : [(0, 6, "middle")]
             func box(_ s: (Double, Double, String)) -> Box {
                 let x0 = s.2 == "start" ? s.0 : s.2 == "end" ? s.0 - w : s.0 - w / 2
-                return Box(x0: x0, y0: s.1 - h + 4, x1: x0 + w, y1: s.1 + 4)
+                return around(b.x, b.y, x0, s.1 - h + 4, x0 + w, s.1 + 4)
             }
-            let spot = spots.first { !hits(box($0)) && box($0).x0 >= 0 && box($0).x1 <= map.w } ?? spots[0]
+            func onBig(_ q: Box) -> Bool { bigBox.values.contains { meets(q, $0.box) } }
+            let inside = spots.filter { box($0).x0 >= 0 && box($0).x1 <= map.w }
+            let spot = inside.first { !hits(box($0)) && !onBig(box($0)) } ?? inside.first { !hits(box($0)) }
+                ?? inside.min { a, c in taken.filter { meets(box(a), $0) }.count < taken.filter { meets(box(c), $0) }.count } ?? spots[0]
             taken.append(box(spot))
-            titleLabels.append(Label(text: title, at: CGPoint(x: spot.0, y: spot.1),
+            for (k, v) in bigBox where meets(box(spot), v.box) { bigBox[k] = nil }
+            titleLabels.append(Label(text: b.title, at: CGPoint(x: b.x + spot.0 * S, y: b.y + spot.1 * S),
                                      anchor: spot.2 == "start" ? .leading : spot.2 == "end" ? .trailing : .center, kind: .badgeTitle, base: CGPoint(x: b.x, y: b.y)))
         }
-        let named = titles.values.map { normOrigin($0) }
+        let named2 = (marks + pinned).map { normOrigin($0.title) }
         for t in map.towns ?? [] {
             let r = t.size == "big" ? 4.5 : t.size == "mid" ? 3.5 : 2.6
             let fs = t.size == "big" ? 22.0 : t.size == "mid" ? 17.0 : 14.0
-            let tb = Box(x0: t.x - 4, y0: t.y - 6 - fs, x1: t.x + 7 + Double(t.name.count) * fs * 0.48, y1: t.y + 4)
-            let first = normOrigin(t.name).split(separator: " ").first.map(String.init) ?? ""
-            if t.size != "big" && (hits(tb) || named.contains { $0.contains(first) }) { continue }
-            taken.append(tb)
+            var left = false
+            if t.size == "big" {
+                guard let q = bigBox[t.name] else { continue }
+                taken.append(q.box); left = q.left
+            } else {
+                let first = normOrigin(t.name).split(separator: " ").first.map(String.init) ?? ""
+                if named2.contains(where: { $0.contains(first) }) { continue }
+                func ok(_ l: Bool) -> Bool { let q = townBox(t, fs, l); return !hits(q) && q.x0 >= 0 && q.x1 <= map.w }
+                if ok(false) { left = false } else if ok(true) { left = true } else { continue }
+                taken.append(townBox(t, fs, left))
+            }
             towns.append((CGPoint(x: t.x, y: t.y), r))
-            labels.append(Label(text: t.name, at: CGPoint(x: t.x + 7, y: t.y - 6), anchor: .leading, kind: .town(t.size), base: CGPoint(x: t.x, y: t.y)))
+            labels.append(Label(text: t.name, at: CGPoint(x: t.x + (left ? -7 : 7) * S, y: t.y - 6 * S), anchor: left ? .trailing : .leading, kind: .town(t.size), base: CGPoint(x: t.x, y: t.y)))
         }
-        if wholeRegion && list.isEmpty {
+        if wholeRegion {
             for a in map.areas.values { if let title = a.title { labels.append(Label(text: title.uppercased(), at: CGPoint(x: a.label[0], y: a.label[1]), anchor: .center, kind: .part)) } }
         }
         labels += titleLabels
-        if numbered { badges = list.map { Badge(n: $0.n, at: CGPoint(x: $0.x, y: $0.y)) } }
+        if numbered { badges = marks.map { Badge(n: $0.n, at: CGPoint(x: $0.x, y: $0.y)) } }
+        pins = pinned.map { CGPoint(x: $0.x, y: $0.y) }
         if let proj = map.proj {
             for p in pinList {
                 let at = proj.xy(p.lon, p.lat)
@@ -348,27 +480,14 @@ struct RegionDrawing {
             }
         }
     }
-
-    /// fitToAreas(): zoom to the filled areas when they cover a small part of the map.
-    mutating func fitToAreas(minShare: Double = 0.55) {
-        let on = areas.filter { $0.on && $0.opacity > 0 }.map { $0.path.boundingRect }
-        guard let first = on.first else { return }
-        let b = on.dropFirst().reduce(first) { $0.union($1) }
-        let ratio = map.w / map.h
-        var w = max(b.width * 1.5, map.w * minShare)
-        let h = max(b.height * 1.5, w / ratio)
-        w = max(w, h * ratio)
-        guard w < map.w * 0.95 else { return }
-        let hh = w / ratio
-        let x = min(max(b.midX - w / 2, 0), map.w - w), y = min(max(b.midY - hh / 2, 0), map.h - hh)
-        view = CGRect(x: x, y: y, width: w, height: hh)
-    }
 }
 
 private enum MapColor {
     static func hex(_ v: UInt32, _ a: Double = 1) -> Color { Color(red: Double((v >> 16) & 255) / 255, green: Double((v >> 8) & 255) / 255, blue: Double(v & 255) / 255).opacity(a) }
     static let sea = hex(0xE6ECEC), wave = hex(0x7D97A3), land = hex(0xFBF6EE), areaLine = hex(0x8A6A55), bordeaux = hex(0x6E0F1F)
     static let border = hex(0x8A7A70), water = hex(0x6F93A8), town = hex(0x3D2A22), coastLine = hex(0xC9B9A8)
+    /// The three tones (components.css: --tone-strong, --tone-mid, --tone-light and their lines)
+    static let strong = hex(0x8E2C3A), strongLine = hex(0x5E0C19), mid = hex(0xDFB3B6), midLine = hex(0x9A4A55), light = hex(0xF3E9E3), lightLine = hex(0xC4A597)
 }
 
 /// Draws text with the halo the site gets from paint-order: stroke
@@ -386,7 +505,9 @@ private func baseline(_ p: CGPoint, _ size: Double) -> CGPoint { CGPoint(x: p.x,
 extension RegionDrawing {
     /// Zooming makes only the geography bigger: names, numbers, dots, pins and line widths keep their size on screen.
     func draw(_ ctx: inout GraphicsContext, view v: CGRect, size: CGSize) {
-        let z = max(1, view.width / v.width)
+        let zoom = max(1, view.width / v.width)
+        // Labels: their own scale (bigger in a narrow box), kept the same size on screen when zooming
+        let z = zoom / s
         let k = min(size.width / v.width, size.height / v.height)
         ctx.translateBy(x: (size.width - v.width * k) / 2, y: (size.height - v.height * k) / 2)
         ctx.scaleBy(x: k, y: k)
@@ -397,25 +518,33 @@ extension RegionDrawing {
             ctx.fill(Path(CGRect(x: 0, y: 0, width: map.w, height: map.h)), with: .color(MapColor.sea))
             for i in 1...4 {
                 var c = ctx; c.translateBy(x: Double(-5 * i), y: 0)
-                c.stroke(coast, with: .color(MapColor.wave.opacity(0.5 - Double(i) * 0.1)), lineWidth: w(0.7))
+                c.stroke(coast, with: .color(MapColor.wave.opacity(0.5 - Double(i) * 0.1)), lineWidth: 0.7 / zoom)
             }
             ctx.fill(land, with: .color(MapColor.land))
         }
         let tone = MapColor.bordeaux
-        for a in areas {
-            if a.opacity > 0 { ctx.fill(a.path, with: .color(tone.opacity(a.opacity))) }
-            if bg { ctx.stroke(a.path, with: .color(tone), lineWidth: 1.1) }
-            else if a.on && a.opacity > 0 { ctx.stroke(a.path, with: .color(MapColor.bordeaux), style: StrokeStyle(lineWidth: w(1.2), lineJoin: .round)) }
-            else { ctx.stroke(a.path, with: .color(MapColor.areaLine), style: StrokeStyle(lineWidth: w(0.7), lineJoin: .round, dash: [w(3), w(3)])) }
+        // Line widths follow the zoom only (not the labels' scale)
+        func lw(_ x: Double) -> Double { x / zoom }
+        if bg {
+            for a in areas {
+                if a.tone == .strong { ctx.fill(a.path, with: .color(tone)) }
+                ctx.stroke(a.path, with: .color(tone), lineWidth: 1.1)
+            }
+        } else {
+            for a in areas { ctx.fill(a.path, with: .color(a.tone == .strong ? MapColor.strong : a.tone == .mid ? MapColor.mid : MapColor.light)) }
+            for a in areas {
+                let (c, width): (Color, Double) = a.tone == .strong ? (MapColor.strongLine, 1.6) : a.tone == .mid ? (MapColor.midLine, 1) : (MapColor.lightLine, 0.8)
+                ctx.stroke(a.path, with: .color(c), style: StrokeStyle(lineWidth: lw(width), lineJoin: .round))
+            }
         }
-        if let border { ctx.stroke(border, with: .color(bg ? tone : MapColor.border), style: StrokeStyle(lineWidth: w(1), dash: bg ? [] : [w(8), w(4), w(2), w(4)])) }
-        for r in rivers { ctx.stroke(r, with: .color(bg ? tone : MapColor.water), style: StrokeStyle(lineWidth: w(2.2), lineCap: .round, lineJoin: .round)) }
-        ctx.stroke(coast, with: .color(bg ? tone : MapColor.water), lineWidth: w(1.2))
+        if let border { ctx.stroke(border, with: .color(bg ? tone : MapColor.border), style: StrokeStyle(lineWidth: lw(1), dash: bg ? [] : [lw(8), lw(4), lw(2), lw(4)])) }
+        for r in rivers { ctx.stroke(r, with: .color(bg ? tone : MapColor.water), style: StrokeStyle(lineWidth: lw(2.2), lineCap: .round, lineJoin: .round)) }
+        ctx.stroke(coast, with: .color(bg ? tone : MapColor.water), lineWidth: lw(1.2))
         guard !bg else { return }
         for t in towns { let r = w(t.r); ctx.fill(Path(ellipseIn: CGRect(x: t.at.x - r, y: t.at.y - r, width: r * 2, height: r * 2)), with: .color(MapColor.town)) }
         for l in labels {
             // Kept beside its point at the same distance on screen
-            let p = l.base.map { CGPoint(x: $0.x + (l.at.x - $0.x) / z, y: $0.y + (l.at.y - $0.y) / z) } ?? l.at
+            let p = l.base.map { CGPoint(x: $0.x + (l.at.x - $0.x) / zoom, y: $0.y + (l.at.y - $0.y) / zoom) } ?? l.at
             switch l.kind {
             case .town(let sz):
                 let fs = w(sz == "big" ? 22.0 : sz == "mid" ? 17.0 : 14.0)
@@ -537,6 +666,31 @@ struct OverviewDrawing {
                          at: baseline(CGPoint(x: at.x + u * 3.4, y: at.y - u * 1.2), fs), anchor: .leading, width: fs * 0.25)
             }
         }
+    }
+}
+
+/// clusterPins() in overview-map.ts: places that would lie on top of each other on the map (closer than a numbered pin is
+/// wide, at the view OverviewDrawing gives `focus`) as one pin – the wines added up, named after the region they share
+/// (else the place with the most wines), at their middle.
+func clusterPins(_ map: OverviewMap, _ places: [(lon: Double, lat: Double, n: Int, label: String, region: String?)], focus: GeoBox) -> [OverviewDrawing.Pin] {
+    let a = map.proj.xy(focus.lon0, focus.lat1), b = map.proj.xy(focus.lon1, focus.lat0)
+    let pad = max(b.x - a.x, b.y - a.y) * 0.08
+    let u = max(b.x - a.x + 2 * pad, (b.y - a.y + 2 * pad) * 1.45) / 100
+    var out: [(items: [(lon: Double, lat: Double, n: Int, label: String, region: String?)], at: CGPoint)] = []
+    for p in places.sorted(by: { $0.n > $1.n }) {
+        let at = map.proj.xy(p.lon, p.lat)
+        if let i = out.firstIndex(where: { hypot($0.at.x - at.x, $0.at.y - at.y) < u * 5.6 }) {
+            out[i].items.append(p)
+            let n = Double(out[i].items.reduce(0) { $0 + $1.n })
+            out[i].at = CGPoint(x: out[i].at.x + (at.x - out[i].at.x) * Double(p.n) / n, y: out[i].at.y + (at.y - out[i].at.y) * Double(p.n) / n)
+        } else { out.append((items: [p], at: at)) }
+    }
+    return out.map { c in
+        let n = c.items.reduce(0) { $0 + $1.n }
+        let lon = c.items.reduce(0.0) { $0 + $1.lon * Double($1.n) } / Double(n), lat = c.items.reduce(0.0) { $0 + $1.lat * Double($1.n) } / Double(n)
+        let regions = Set(c.items.map { normOrigin($0.region) })
+        let shared = c.items[0].region?.trimmingCharacters(in: .whitespaces) ?? ""
+        return OverviewDrawing.Pin(lon: lon, lat: lat, label: c.items.count > 1 && regions.count == 1 && !shared.isEmpty ? shared : c.items[0].label, n: n)
     }
 }
 

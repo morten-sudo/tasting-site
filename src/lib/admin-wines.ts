@@ -11,6 +11,7 @@ import { $ } from './ui/dom';
 import { STYLES, styleName } from './wines';
 import { t, lang, locale, formatDate } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
+import { boxWidth } from './region-map';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
 import { iconButton, closeButton, sheetPanel } from './admin-common';
@@ -238,7 +239,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const lon = here ? here.lon : keep ? editing!.producer_lon ?? null : null;
       const origin = { appellation: appInput.value.trim() || null, region: regionInput.value.trim() || null, country: countrySelect.value || null,
         producer: producerNow.trim() || null, producer_lat: lat, producer_lon: lat == null ? null : lon };
-      const m = await wineMap(origin);
+      const m = await wineMap(origin, { width: boxWidth($('wf-map-svg')) });
       if (turn !== mapTurn) return;
       const box = $('wf-map');
       box.hidden = !m;

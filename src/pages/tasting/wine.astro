@@ -86,6 +86,7 @@ import CartBar from '../../components/ui/CartBar.astro';
   import { originFull } from '../../lib/origin';
   import { bulkNote } from '../../lib/bulk';
   import { wineMap, showMapCredit } from '../../lib/wine-map';
+  import { boxWidth } from '../../lib/region-map';
   import { mapZoom } from '../../lib/ui/map-zoom';
 
   // The wine from the address: its name (/wines/rivesaltes-ambre-1966/) or, on old links, its number
@@ -97,7 +98,7 @@ import CartBar from '../../components/ui/CartBar.astro';
 
   async function showMiniMap(w: Wine) {
     const box = $('mini-map');
-    const m = await wineMap(w);
+    const m = await wineMap(w, { width: boxWidth(box) });
     if (!m) return;
     box.innerHTML = m.svg;
     tooltip(box, originFull(w) ?? '');
