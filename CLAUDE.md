@@ -36,29 +36,29 @@
   (sections in Danish and English; link each step to its place with `t:<section>/…`, `?open=<button id>` or `#<id>`)
   and, for a setting that needs explaining, a `?` tip (`data-help="<key>"` + an entry in `TIPS`).
 
-## Work and requirements: Jira
+## Work and requirements: claude/work (Projects)
 
-- Jira (project WIN, winetastr.atlassian.net) is the only place for work, requirements, decisions and status.
-  `claude/roadmap.md` is an archive: do not update it. Background is in Confluence (space WT).
-  Full rules: `claude/jira-workflow.md` (Projects).
-- Requirements, success criteria and test cases live on the Story and are written by the product chat, approved by
-  Morten. Build what the issue says. If a requirement is wrong, missing or conflicts with something, comment on the
-  issue and stop that part. Do not change the requirements yourself.
-- Next work: project = WIN AND labels = klar AND status = "To Do" ORDER BY rank. Do not build an issue
-  without the label `klar`, or one with an open blocking issue.
+- Work, requirements, decisions and status live in the Project files under `claude/work/`. Read
+  `claude/work/README.md` for the rules. Jira and Discovery are no longer used: do not read or write them.
+  `claude/roadmap.md` and `claude/jira-workflow.md` are archives. Background is in Confluence (space WT), read only.
+- `claude/work/INDEX.md` lists every open issue with its status; status is changed only there. Each epic has one file
+  (`claude/work/WIN-<nr>-<name>.md`) with requirements, test cases and comments. Read only INDEX.md and the one epic
+  file you need. Read a file right before changing it (other chats write the same files) and write it back whole.
+- Requirements, success criteria and test cases are written by the product chat and approved by Morten. Build what
+  the issue says. If a requirement is wrong, missing or conflicts with something, write a comment under the issue and
+  stop that part. Do not change the requirements yourself.
+- Next work: issues in INDEX.md with status To Do and Klar = ja, in the order listed, with nothing under "Venter på".
 - Grooming: an issue you have reviewed goes to Open, with one comment on what is missing (verdict, gaps, questions,
-  blockers, size). It stays in Open while it waits for answers; the product chat moves it back to To Do when the
-  gaps are closed. Grooming never changes requirements, labels or other fields.
-- If Morten asks for something directly, create the issue first, with what he asked for and the label `klar`.
+  blockers, size). The product chat moves it back to To Do when the gaps are closed.
+- If Morten asks for something directly, add the issue first (next number from the top of INDEX.md), with Klar = ja.
   New features get For hvem, Vaerdi, success criteria and test cases marked as a proposal.
-- Create Tasks, Bugs and Subtasks yourself under the right epic. Add your own technical tests.
-- Status: In Progress as soon as you start building or testing, also for quick work. In Review when built, on the test address, checked on site and app, and every
-  test case has been run with the result in a comment on the issue. A failed test case goes back to In Progress.
-  After Morten approves against the success criteria and it is merged into `dev`, add the label `i-dev`.
-  Done only when it is live.
-- Site and app by default. Labels `kun-web` and `app-senere` are the only exceptions.
-- Each release has a Task under the releases epic listing its content and migrations.
-- Before reporting work as done, make sure the issue shows it. Refer to issues by key (WIN-123) in commits and branches.
+- Status: In Progress as soon as you start building or testing. In Review when built, on the test address, checked
+  on site and app, and every test case has been run with the result in a comment under the issue. A failed test case
+  goes back to In Progress. Approved and merged into `dev`: stays In Review with "i-dev" under its comments. Done only
+  when it is live.
+- Site and app by default. `kun-web` and `app-senere` are the only exceptions.
+- Keep comments short (result, deviations, what is missing). No background agent for small tasks.
+- Refer to issues by key (WIN-123) in commits and branches.
 
 ## Releases: dev, test database and going live
 
@@ -72,7 +72,7 @@
 - **Database changes.** A migration is applied to the test database first, with the track. It goes to the live
   database only when its release goes live – database first, then the merge to `main`. Every migration must keep the
   live site and every app version working (add, never change; see the app contract), because tracks share the test
-  database and a release may go out without some of them. Each release has a Task in Jira (under the releases epic)
+  database and a release may go out without some of them. Each release has an issue under WIN-84 in `claude/work/`
   listing its content and migrations.
 - **Tests.** `security.sql` (three parts) and `app_contract.sql` run on the test database with every change, and on the
   live database when a release goes live.
