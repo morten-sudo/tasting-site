@@ -2,9 +2,13 @@ import SwiftUI
 
 /// The site's /chat/ (ChatBox.astro and src/lib/chat.ts): the guests' and the host's messages in a white box, the day
 /// between them, your own on the right in bordeaux; new ones every four seconds while the screen is open.
+/// As on the site the page scrolls – the tasting's name and tabs at its top – and the messages scroll in their own
+/// box (.chat-list: min(60% of the screen, 36rem) tall), with the field to write in under it.
 struct ChatView: View {
     @Environment(AppModel.self) private var model
     let tasting: MyTasting
+    /// The tasting's name and tabs, at the top of the scrolling content
+    var head: AnyView = AnyView(EmptyView())
     @State private var messages: [ChatMessage] = []
     @State private var loaded = false
     @State private var text = ""
@@ -15,22 +19,40 @@ struct ChatView: View {
     private var lastId: Int { messages.last?.id ?? 0 }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 9.6) {
-            SectionHeading(text: L("page.chat")).padding(.top, 14)
-            Text(L("chat.intro")).font(.body()).foregroundStyle(Color.muted)
-            if !loaded {
-                LoadingState()
-            } else if messages.isEmpty {
-                EmptyBox(icon: "chat", title: L("chat.emptyTitle"), text: L("chat.emptyText")) { EmptyView() }
-                Spacer(minLength: 0)
-            } else {
-                list
+        ScrollViewReader { page in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    head
+                    VStack(alignment: .leading, spacing: 9.6) {
+                        SectionHeading(text: L("page.chat")).padding(.top, 14)
+                        Text(L("chat.intro")).font(.body()).foregroundStyle(Color.muted)
+                        if !loaded {
+                            LoadingState().padding(.vertical, 24)
+                        } else if messages.isEmpty {
+                            EmptyBox(icon: "chat", title: L("chat.emptyTitle"), text: L("chat.emptyText")) { EmptyView() }
+                        } else {
+                            list
+                        }
+                        composer.id(Self.composerId)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16).padding(.bottom, 10)
+                }
             }
-            composer
+            .scrollDismissesKeyboard(.interactively)
+            // Writing: the field (and the newest messages over it) up above the keyboard, once the keyboard is in
+            .onChange(of: focus) {
+                guard focus else { return }
+                Task {
+                    try? await Task.sleep(for: .milliseconds(350))
+                    withAnimation { page.scrollTo(Self.composerId, anchor: .bottom) }
+                }
+            }
         }
-        .padding(.horizontal, 16).padding(.bottom, 10)
         .task { await poll() }
     }
+
+    private static let composerId = "chat-composer"
 
     private var list: some View {
         ScrollViewReader { proxy in
@@ -43,6 +65,8 @@ struct ChatView: View {
                 }
                 .padding(12)
             }
+            // .chat-list's height: min(60dvh, 36rem) of the screen under the top bar
+            .containerRelativeFrame(.vertical) { h, _ in min(h * 0.6, 576) }
             .background(Color.surface, in: RoundedRectangle(cornerRadius: 8))
             .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.rule))
             .defaultScrollAnchor(.bottom)

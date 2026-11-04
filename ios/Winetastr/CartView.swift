@@ -113,10 +113,9 @@ struct CartView: View {
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
             Rectangle().fill(Color.rule).frame(height: 1)
-            TastingHead(title: tasting.title, tab: nil) { tab in model.tastingTab = tab; model.path.removeLast(model.path.count - 1) }
             ZStack(alignment: .top) {
                 PageBackground(path: "/t/cart/")
-                if !loaded { LoadingState() } else { content }
+                if !loaded { VStack(spacing: 0) { head; LoadingState() } } else { content }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -136,46 +135,55 @@ struct CartView: View {
         model.cart(tasting.slug).compactMap { id, n in wines[id].map { ($0, n) } }.sorted { ($0.0.sort_order ?? 0) < ($1.0.sort_order ?? 0) }
     }
 
+    /// The tasting's name and tabs, at the top of the scrolling content as on the site (WIN-238)
+    private var head: some View {
+        TastingHead(title: tasting.title, tab: nil) { tab in model.tastingTab = tab; model.path.removeLast(model.path.count - 1) }
+    }
+
     private var content: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                SectionHeading(text: L("page.cart"))
-                if !open { NoticeBox(text: L("cart.closed")) }
-                if let confirm {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(L("cart.thanks", ["id": "\(confirm.id)"])).font(.semibold(16)).foregroundStyle(Color.paper)
-                        if payLater { Text(L("bulk.payLater")).font(.body()).foregroundStyle(Color.paper) }
-                        else { PayBox(mobilepay: payee, amount: confirm.total, comment: L("pay.orderComment", ["id": "\(confirm.id)"]), toast: $toast) }
-                    }
-                    .padding(16)
-                    .background(Color.okBg, in: RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.okLine))
-                }
-                let list = lines
-                if list.isEmpty {
-                    if confirm == nil {
-                        EmptyBox(icon: "cart", title: L("cart.empty"), text: L("cart.emptyHelp")) {
-                            Button(L("cart.seeWines")) { model.tastingTab = .wines; model.path.removeLast(model.path.count - 1) }.buttonStyle(SecondaryButton())
+            VStack(alignment: .leading, spacing: 0) {
+                head
+                VStack(alignment: .leading, spacing: 16) {
+                    SectionHeading(text: L("page.cart"))
+                    if !open { NoticeBox(text: L("cart.closed")) }
+                    if let confirm {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(L("cart.thanks", ["id": "\(confirm.id)"])).font(.semibold(16)).foregroundStyle(Color.paper)
+                            if payLater { Text(L("bulk.payLater")).font(.body()).foregroundStyle(Color.paper) }
+                            else { PayBox(mobilepay: payee, amount: confirm.total, comment: L("pay.orderComment", ["id": "\(confirm.id)"]), toast: $toast) }
                         }
+                        .padding(16)
+                        .background(Color.okBg, in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.okLine))
                     }
-                } else {
-                    VStack(spacing: 0) {
-                        ForEach(list, id: \.0.id) { w, n in line(w, n) }
+                    let list = lines
+                    if list.isEmpty {
+                        if confirm == nil {
+                            EmptyBox(icon: "cart", title: L("cart.empty"), text: L("cart.emptyHelp")) {
+                                Button(L("cart.seeWines")) { model.tastingTab = .wines; model.path.removeLast(model.path.count - 1) }.buttonStyle(SecondaryButton())
+                            }
+                        }
+                    } else {
+                        VStack(spacing: 0) {
+                            ForEach(list, id: \.0.id) { w, n in line(w, n) }
+                        }
+                        HStack { Text(L("cart.total")).font(.medium()); Spacer(); Text(krText(total(list))).font(.display(28, light: false)) }
+                            .foregroundStyle(Color.paper).padding(.top, 4)
+                        Button { Task { await send(list) } } label: {
+                            if sending { HStack(spacing: 8) { ProgressView().tint(.white); Text(L("common.sending")) } } else { Text(L("cart.send")) }
+                        }
+                        .buttonStyle(PrimaryButton()).disabled(!open || sending)
+                        Text(L("cart.binding")).font(.body(13.6)).foregroundStyle(Color.muted)
                     }
-                    HStack { Text(L("cart.total")).font(.medium()); Spacer(); Text(krText(total(list))).font(.display(28, light: false)) }
-                        .foregroundStyle(Color.paper).padding(.top, 4)
-                    Button { Task { await send(list) } } label: {
-                        if sending { HStack(spacing: 8) { ProgressView().tint(.white); Text(L("common.sending")) } } else { Text(L("cart.send")) }
+                    if !orders.isEmpty {
+                        Text(L("cart.yourOrders")).font(.display(28, light: false, relativeTo: .title2)).foregroundStyle(Color.paper).padding(.top, 32)
+                        ForEach(groupOrders(orders).reversed(), id: \.first!.order_id) { ls in history(ls) }
                     }
-                    .buttonStyle(PrimaryButton()).disabled(!open || sending)
-                    Text(L("cart.binding")).font(.body(13.6)).foregroundStyle(Color.muted)
                 }
-                if !orders.isEmpty {
-                    Text(L("cart.yourOrders")).font(.display(28, light: false, relativeTo: .title2)).foregroundStyle(Color.paper).padding(.top, 32)
-                    ForEach(groupOrders(orders).reversed(), id: \.first!.order_id) { ls in history(ls) }
-                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16).padding(.bottom, 24)
             }
-            .padding(16).padding(.bottom, 24)
         }
         .refreshable { await load() }
     }

@@ -311,6 +311,8 @@ struct TopBar: View {
 
 /// The tasting's head in the page (as the site's, like the admin's): on the tasting's own tab the chips over it, then
 /// its name as the page title, then the tabs (the quiz only when the tasting has one) with the underline.
+/// It is the top of each tab's scrolling content (not pinned), so it scrolls away with the page as on the site; only
+/// the TopBar stays put (the site's sticky .site-header).
 struct TastingHead<Chips: View>: View {
     @Environment(AppModel.self) private var model
     let title: String
@@ -324,20 +326,34 @@ struct TastingHead<Chips: View>: View {
         VStack(alignment: .leading, spacing: 9.6) {
             chips
             PageTitle(text: title, lang: lang)
-            HStack(spacing: 22) {
-                ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
-                    Button { select(t) } label: {
-                        Text(t.title).font(.body(16.5)).foregroundStyle(t == tab ? Color.bordeaux : Color.muted)
-                            .padding(.vertical, 11)
-                            .overlay(alignment: .bottom) { if t == tab { Rectangle().fill(Color.bordeaux).frame(height: 2) } }
+            // .tabs on phones: one line that scrolls sideways (never two rows, never cut off with larger text); the
+            // right edge fades, and the last tab has room after it so it is not faded once scrolled to the end
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 22) {
+                    ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
+                        Button { select(t) } label: {
+                            Text(t.title).font(.body(16.5)).foregroundStyle(t == tab ? Color.bordeaux : Color.muted)
+                                .fixedSize()
+                                .padding(.vertical, 11)
+                                .overlay(alignment: .bottom) { if t == tab { Rectangle().fill(Color.bordeaux).frame(height: 2) } }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(t == tab ? .isSelected : [])
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(t == tab ? .isSelected : [])
                 }
-                Spacer()
+                .padding(.trailing, 24)
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            .fixedSize(horizontal: false, vertical: true)
+            .mask {
+                HStack(spacing: 0) {
+                    Rectangle()
+                    LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing).frame(width: 24)
+                }
             }
             .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16).padding(.top, 14)
     }
 }
