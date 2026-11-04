@@ -1093,6 +1093,8 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .logo:hover { color: var(--paper); }
 .logo > svg { flex: none; display: block; width: 1.9rem; height: 1.9rem; }
 .logo > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A test build (the test database): a chip by the logo, so nobody takes it for the live site */
+.tb-env { flex: none; margin: 0 auto 0 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
 .tb-right { display: flex; align-items: center; gap: 0.25rem; flex: none; }
 .tb-right [hidden] { display: none !important; }
 .tb-right > .icon-act svg { width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }

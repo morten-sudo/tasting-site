@@ -1,10 +1,10 @@
 ---
 // Component 43 – the one top bar on every page: the logo, the cart (in a tasting) and the account menu (the one
 // menu, src/lib/ui/menu.ts) – with the language as its second view, and "Sign in" when not signed in. A tasting's
-// name and tabs are in the page under it (TastingHead.astro). Base.astro's script fills it in.
+// name and tabs are in the page under it (TastingHead.astro). On a test build (IS_TEST) a "Test" chip sits by the logo. Base.astro's script fills it in.
 import Badge from './Badge.astro';
 import Icon from './Icon.astro';
-import { SITE_NAME } from '../../lib/config';
+import { SITE_NAME, IS_TEST } from '../../lib/config';
 interface Props { tasting?: boolean; path: string }
 const { tasting = false, path } = Astro.props;
 const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect width="100" height="100" rx="22" fill="#6e0f1f" /><g transform="translate(50 50) scale(0.84) translate(-50 -50)"><rect x="0" y="43" width="100" height="100" fill="#fff" clip-path="url(#logo-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></g></svg>`;
@@ -12,6 +12,7 @@ const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="tru
 <header class="site-header">
   <div class="wrap topbar">
     <a href={tasting ? '/home/' : '/'} class="logo" id="mark"><Fragment set:html={LOGO} /><span>{SITE_NAME}</span></a>
+    {IS_TEST && <span class="chip warn tb-env" title="Test version on the test database – nothing here is live">Test</span>}
     <div class="tb-right">
       {tasting && (
         <a href="/home/" data-tpath="cart/" id="nav-cart" class="icon-act md close tip-below" aria-label="Cart" data-tip="Cart" data-i18n-attr="aria-label=nav.cart;data-tip=nav.cart" hidden={!path.startsWith('/tasting/cart')}>

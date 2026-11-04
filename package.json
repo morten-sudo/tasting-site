@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "prebuild": "node scripts/check-ui.mjs",
+    "prebuild": "node scripts/db-target.mjs && node scripts/check-ui.mjs",
     "build": "astro build",
     "check:ui": "node scripts/check-ui.mjs",
     "preview": "astro preview"

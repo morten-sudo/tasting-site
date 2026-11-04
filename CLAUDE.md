@@ -36,6 +36,23 @@
   (sections in Danish and English; link each step to its place with `t:<section>/…`, `?open=<button id>` or `#<id>`)
   and, for a setting that needs explaining, a `?` tip (`data-help="<key>"` + an entry in `TIPS`).
 
+## Releases: dev, test database and going live
+
+- **Branches.** `main` is live (winetastr.com, the live database). Work happens on a branch per track
+  (`<track>`, e.g. `payment`), merged into `dev` when Morten approves it. `dev` is the next release; it goes live when
+  Morten says so, by merging `dev` into `main`. Never push work straight to `main` (only a hotfix Morten asks for).
+- **Test addresses.** Cloudflare Pages builds every branch other than `main` on its own preview address
+  (`<branch>.tasting-site.pages.dev`). `scripts/db-target.mjs` (prebuild) points those builds at the **test database**
+  (Supabase project `winetastr-test`, `piiuhgzsnphhuceojldz`); `main` uses the live one (`ydvdhhdpygzwalosbjcc`).
+  A test build shows a "Test" chip by the logo. Locally: `DB=test npm run build`.
+- **Database changes.** A migration is applied to the test database first, with the track. It goes to the live
+  database only when its release goes live – database first, then the merge to `main`. Every migration must keep the
+  live site and every app version working (add, never change; see the app contract), because tracks share the test
+  database and a release may go out without some of them. Keep track of which migrations each release carries in
+  `claude/roadmap.md` (Projects).
+- **Tests.** `security.sql` (three parts) and `app_contract.sql` run on the test database with every change, and on the
+  live database when a release goes live.
+
 ## The iOS app (`ios/`)
 
 The site and the native SwiftUI guest app are one product, developed together by one chat. Read `ios/README.md`.
