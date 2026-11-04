@@ -19,7 +19,7 @@ import CartBar from '../../components/ui/CartBar.astro';
     </EmptyState>
     <Notice id="load-error" tone="error" hidden>
       <p data-i18n="wines.loadError">The wines could not be loaded. Check your connection and reload the page.</p>
-      <div class="actions"><button class="btn small secondary" type="button" onclick="location.reload()" data-i18n="gate.reload">Reload</button></div>
+      <div class="actions"><button id="reload" class="btn small secondary" type="button" data-i18n="gate.reload">Reload</button></div>
     </Notice>
 
     <div id="wine-list" class="carousel" role="region" aria-roledescription="carousel" aria-label="Wines" data-i18n-attr="aria-roledescription=wines.carousel;aria-label=page.wines" tabindex="0"></div>
@@ -50,6 +50,9 @@ import CartBar from '../../components/ui/CartBar.astro';
   import { bottleText } from '../../lib/bottle';
   import { type Wine, wineSlugs, styleTag, vintageLabel, tierLabels, nameBlind, watchBlind } from '../../lib/wines';
   import { originLine } from '../../lib/origin';
+
+  // Reload after a failed load (a listener, not onclick=: the CSP blocks inline handlers)
+  document.getElementById('reload')!.addEventListener('click', () => location.reload());
 
   let myRatings = new Map<number, MyRating>();
 
