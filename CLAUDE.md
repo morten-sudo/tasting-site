@@ -44,12 +44,15 @@
 - Requirements, success criteria and test cases live on the Story and are written by the product chat, approved by
   Morten. Build what the issue says. If a requirement is wrong, missing or conflicts with something, comment on the
   issue and stop that part. Do not change the requirements yourself.
-- Next work: project = WIN AND labels = klar AND statusCategory = "To Do" ORDER BY rank. Do not build an issue
+- Next work: project = WIN AND labels = klar AND status = "To Do" ORDER BY rank. Do not build an issue
   without the label `klar`, or one with an open blocking issue.
+- Grooming: an issue you have reviewed goes to Open, with one comment on what is missing (verdict, gaps, questions,
+  blockers, size). It stays in Open while it waits for answers; the product chat moves it back to To Do when the
+  gaps are closed. Grooming never changes requirements, labels or other fields.
 - If Morten asks for something directly, create the issue first, with what he asked for and the label `klar`.
   New features get For hvem, Vaerdi, success criteria and test cases marked as a proposal.
 - Create Tasks, Bugs and Subtasks yourself under the right epic. Add your own technical tests.
-- Status: In Progress when you start. In Review when built, on the test address, checked on site and app, and every
+- Status: In Progress as soon as you start building or testing, also for quick work. In Review when built, on the test address, checked on site and app, and every
   test case has been run with the result in a comment on the issue. A failed test case goes back to In Progress.
   After Morten approves against the success criteria and it is merged into `dev`, add the label `i-dev`.
   Done only when it is live.
