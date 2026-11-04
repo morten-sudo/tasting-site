@@ -549,6 +549,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "nav.chat": "Czat",
   "chat.empty": "Brak wiadomości. Przywitaj się!",
   "chat.write": "Napisz wiadomość",
+  "chat.messages": "Wiadomości",
   "chat.send": "Wyślij",
   "chat.host": "gospodarz",
   "chat.delete": "Usuń",

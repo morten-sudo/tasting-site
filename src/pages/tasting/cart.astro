@@ -203,6 +203,10 @@ import SignInState from '../../components/ui/SignInState.astro';
     $('confirm').hidden = false;
     renderCart();
     await renderHistory();
+    // The send button is gone with the cart: focus moves to the thanks, so a screen reader reads it and how to pay
+    const confirm = $('confirm');
+    confirm.tabIndex = -1;
+    confirm.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 

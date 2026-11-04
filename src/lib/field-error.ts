@@ -8,7 +8,7 @@ export function fieldError(el: HTMLElement, text: string | null, after: Element 
   if (!text) {
     el.removeAttribute('aria-invalid');
     if (el.getAttribute('aria-describedby') === id) el.removeAttribute('aria-describedby');
-    if (m) m.hidden = true;
+    if (m) liveText(m, null);
     return;
   }
   if (!m) {
@@ -18,14 +18,28 @@ export function fieldError(el: HTMLElement, text: string | null, after: Element 
     m.setAttribute('aria-live', 'polite');
     after.after(m);
   }
-  m.textContent = text;
-  m.hidden = false;
+  liveText(m, text);
   el.setAttribute('aria-invalid', 'true');
   el.setAttribute('aria-describedby', id);
   // Gone again when the field is changed
   const clear = () => fieldError(el, null);
   el.addEventListener('input', clear, { once: true });
   el.addEventListener('change', clear, { once: true });
+}
+
+/** Sets the text of an error line (a polite live region) and shows it, or hides it (null). A region that appears
+ *  with its text already in it is often not read out (VoiceOver in particular), so a hidden or empty one is shown
+ *  empty first and filled just after. */
+export function liveText(m: HTMLElement, text: string | null) {
+  if (!text) { m.hidden = true; m.textContent = ''; return; }
+  if (!m.getAttribute('aria-live') && m.getAttribute('role') !== 'alert') m.setAttribute('aria-live', 'polite');
+  if (m.hidden || !m.textContent) {
+    m.textContent = '';
+    m.hidden = false;
+    const token = String(Math.random());
+    m.dataset.live = token;
+    window.setTimeout(() => { if (m.dataset.live === token && !m.hidden) m.textContent = text; }, 60);
+  } else { delete m.dataset.live; m.textContent = text; }
 }
 
 /** Puts the field in view (above a sticky footer) and focuses it. */

@@ -548,6 +548,7 @@ export const en = {
   "nav.chat": "Chat",
   "chat.empty": "No messages yet. Say hello!",
   "chat.write": "Write a message",
+  "chat.messages": "Messages",
   "chat.send": "Send",
   "chat.host": "host",
   "chat.delete": "Remove",
