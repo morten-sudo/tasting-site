@@ -241,7 +241,7 @@ struct Leaderboard: View {
         } else {
             VStack(spacing: 0) {
                 ForEach(Array(ranked.enumerated()), id: \.offset) { _, r in
-                    let mine = me != nil && r.row.name == me
+                    let mine = r.row.mine ?? (me != nil && r.row.name == me)
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text("\(r.rank)").font(.body()).foregroundStyle(Color.muted).monospacedDigit().frame(width: 32, alignment: .leading)
                         (Text(r.row.name).font(.medium()) + Text(mine ? " (\(L("hosts.you")))" : "").font(.body()))

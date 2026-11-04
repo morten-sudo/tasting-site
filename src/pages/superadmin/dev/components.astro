@@ -960,6 +960,6 @@ const opts = [
     labels[1].classList.add('right'); labels[1].append(mk('span', 'res', 'Right answer'));
     labels[2].classList.add('wrong'); labels[2].append(mk('span', 'res', 'Your answer'));
     $('quiz-cc').append(quiz.el);
-    renderLeaderboard($<HTMLOListElement>('board'), [{ name: 'Anne', points: 11, answered: 12 }, { name: 'Morten', points: 9, answered: 12 }, { name: 'Jens', points: 9, answered: 10 }, { name: 'Line', points: 6, answered: 7 }], 12, 'Morten');
+    renderLeaderboard($<HTMLOListElement>('board'), [{ name: 'Anne', points: 11, answered: 12 }, { name: 'Morten', points: 9, answered: 12, mine: true }, { name: 'Jens', points: 9, answered: 10 }, { name: 'Line', points: 6, answered: 7 }], 12);
   }
 </script>

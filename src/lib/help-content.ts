@@ -54,7 +54,7 @@ export const HELP: HelpSection[] = [
 <li><b>Svare på invitationen</b> – gæsterne kan svare ja eller nej.</li>
 <li><b>Svare på quizzen</b> og <b>Se quizzens facit</b> – se <a href="#evening">Under aftenen</a>.</li>
 </ul>
-<p>Under <i>Smagningen</i> finder du <b>Blindsmagning</b> (se <a href="#blind">Blindsmagning</a>), maks. antal gæster og linket til pointtavlen på tv’et.</p>
+<p>Under <i>Smagningen</i> finder du <b>Blindsmagning</b> (se <a href="#blind">Blindsmagning</a>), maks. antal gæster og linket til pointtavlen på tv’et. Tavlen kan åbnes uden login, så den viser kun gæsternes fornavne – med første bogstav i efternavnet, når to har samme fornavn (fx <i>Anna H.</i> og <i>Anna M.</i>). Det samme ser gæsterne i quizzen; du ser fulde navne under <a href="t:quiz/">Quiz</a>.</p>
 <h2 id="max-guests"><a href="t:settings/#max-guests">Max antal gæster og venteliste</a></h2>
 <p>Tryk <i>Rediger</i> ved <i>Maks. antal gæster</i>, og skriv et tal. Når smagningen er fuld, kommer gæster, der siger ja, på venteliste i den rækkefølge, de svarede. Melder en, der kommer, fra – eller hæver du loftet – rykker den første på ventelisten automatisk op. Tomt felt betyder intet loft. Gæsterne ser ikke, hvor mange pladser der er tilbage.</p>
 <h2>Medværter</h2>
@@ -74,7 +74,7 @@ export const HELP: HelpSection[] = [
 <li><b>Reply to the invitation</b> – guests can reply yes or no.</li>
 <li><b>Answer the quiz</b> and <b>See the quiz answers</b> – see <a href="#evening">During the evening</a>.</li>
 </ul>
-<p>Under <i>The tasting</i> you find <b>Blind tasting</b> (see <a href="#blind">Blind tasting</a>), the max number of guests and the link to the leaderboard for the TV.</p>
+<p>Under <i>The tasting</i> you find <b>Blind tasting</b> (see <a href="#blind">Blind tasting</a>), the max number of guests and the link to the leaderboard for the TV. The leaderboard opens without signing in, so it shows the guests' first names only – with the first letter of the surname when two share a first name (e.g. <i>Anna H.</i> and <i>Anna M.</i>). Guests see the same in the quiz; you see full names under <a href="t:quiz/">Quiz</a>.</p>
 <h2 id="max-guests"><a href="t:settings/#max-guests">Max number of guests and the waiting list</a></h2>
 <p>Press <i>Edit</i> by <i>Max. number of guests</i> and enter a number. When the tasting is full, guests who say yes go on the waiting list in the order they replied. When someone who is coming drops out – or you raise the limit – the first on the list moves up automatically. An empty field means no limit. Guests do not see how many places are left.</p>
 <h2>Co-hosts</h2>

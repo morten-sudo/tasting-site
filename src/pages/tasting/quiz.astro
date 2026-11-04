@@ -70,7 +70,6 @@ import Progress from '../../components/ui/Progress.astro';
 
   let questions: Q[] = [];
   const answers = new Map<number, string>();
-  let myName = '';
   let current = 0;
   let selected: string | null = null;
   let mode: 'closed' | 'open' | 'finished' | null = null;
@@ -119,6 +118,8 @@ import Progress from '../../components/ui/Progress.astro';
     const all = current >= questions.length;
     show('question', !all);
     show('done', all);
+    // How to answer is no use once every answer is locked (it also kept its untranslated placeholder then)
+    show('rules', !all);
     if (all) return;
 
     const q = questions[current];
@@ -185,7 +186,7 @@ import Progress from '../../components/ui/Progress.astro';
   async function refreshBoard() {
     const rows = await fetchLeaderboard({ code });
     if (!rows) return;
-    renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal || questions.length, myName);
+    renderLeaderboard($('board') as HTMLOListElement, rows, quizTotal || questions.length);
   }
 
   // ---------- Start ----------
@@ -230,7 +231,6 @@ import Progress from '../../components/ui/Progress.astro';
       $('no-code').hidden = false;
       return;
     }
-    myName = row.name;
     await start();
     // Poll for quiz open/close and the standings
     setInterval(start, 10000);

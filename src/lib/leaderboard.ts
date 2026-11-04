@@ -4,10 +4,13 @@ import { supabase } from './supabase';
 import { t } from '../i18n';
 import { mk } from './ui/dom';
 
-export type Row = { name: string; points: number; answered: number };
+/** A line on the board. Only the tasting's hosts get full names; everyone else gets the first name (plus the first
+ *  letter of the surname when the first name occurs twice) – the database decides (tasting_board, WIN-173).
+ *  `mine` is the line of the invite code the call was made with. */
+export type Row = { name: string; points: number; answered: number; mine?: boolean };
 
 export async function fetchLeaderboard(opts: { code?: string | null; slug?: string | null } = {}): Promise<Row[] | null> {
-  const { data, error } = await supabase.rpc('tasting_leaderboard', {
+  const { data, error } = await supabase.rpc('tasting_board', {
     code: opts.code ?? null,
     slug: opts.slug ?? null,
   });
@@ -16,13 +19,13 @@ export async function fetchLeaderboard(opts: { code?: string | null; slug?: stri
 }
 
 /** Renders the leaderboard into an <ol class="board">. Tied places share the same rank; total is the number of
- *  questions (0 when not known: the progress is left out). */
-export function renderLeaderboard(list: HTMLOListElement, rows: Row[], total: number, me?: string) {
+ *  questions (0 when not known: the progress is left out). The line marked `mine` is the guest's own. */
+export function renderLeaderboard(list: HTMLOListElement, rows: Row[], total: number) {
   let rank = 0;
   let prev = -1;
   list.replaceChildren(...rows.map((r, i) => {
     if (r.points !== prev) { rank = i + 1; prev = r.points; }
-    const mine = !!me && r.name === me;
+    const mine = r.mine === true;
     const li = mk('li', mine ? 'me' : '');
     if (mine) li.setAttribute('aria-current', 'true');
     const who = mk('span', 'who', r.name);

@@ -43,6 +43,7 @@ import '../../styles/components.css';
       const slug = currentSlug();
       const status = document.getElementById('tv-status')!;
       const board = document.getElementById('board') as HTMLOListElement;
+      const main = document.querySelector('.tv-main') as HTMLElement;
 
       async function tick() {
         const { data } = await supabase.rpc('get_tasting', { slug });
@@ -52,6 +53,12 @@ import '../../styles/components.css';
         const rows = await fetchLeaderboard({ slug });
         if (!rows) return;
         renderLeaderboard(board, rows, TOTAL);
+        // More than 6 guests: the board goes into two (over 30: three) columns on a wide screen, and the lines are
+        // sized to the screen's height, so everyone fits on the TV without scrolling
+        const cols = rows.length > 30 ? 3 : rows.length > 6 ? 2 : 1;
+        main.classList.toggle('cols-2', cols === 2);
+        main.classList.toggle('cols-3', cols === 3);
+        main.style.setProperty('--per-col', String(Math.max(1, Math.ceil(rows.length / cols))));
         const done = TOTAL ? rows.filter((r) => r.answered >= TOTAL).length : 0;
         if (s.quiz_finished === true) status.textContent = t('quiz.final');
         else if (s.quiz_open === true) status.textContent = t('board.doneCount', { done, total: rows.length });
@@ -86,9 +93,22 @@ import '../../styles/components.css';
       .tv-main .spectrum { margin: 3vh 0 2vh; }
       /* The big screen: the leaderboard (components.css) scaled to the screen */
       .tv-board > li { grid-template-columns: 3em minmax(0, 1fr) auto 3em; font-size: clamp(1.1rem, 2.6vw, 2.3rem); padding-block: 1.4vh; }
-      .tv-board .who { font-size: 1em; }
-      .tv-board .pts { font-size: 1.5em; }
-      .tv-board .pr { font-size: 0.7em; }
+      /* (.big from components.css is more specific – the TV's own sizes must win, or the names end up the smallest text) */
+      .tv-board.big .who { font-size: 1em; }
+      .tv-board.big .pts { font-size: 1.5em; }
+      .tv-board.big .pr { font-size: 0.7em; }
+      /* Many guests on a wide screen: columns, read top to bottom, sized to the screen's height as well */
+      @media (min-width: 60rem) {
+        .tv-main.cols-2, .tv-main.cols-3 { max-width: none; padding-block: 3vh; }
+        .tv-main.cols-2 .tv-head h1, .tv-main.cols-3 .tv-head h1 { font-size: clamp(3rem, min(6vw, 10vh), 7rem); }
+        .tv-main.cols-2 .tv-board { columns: 2; column-gap: 5vw; }
+        .tv-main.cols-3 .tv-board { columns: 3; column-gap: 3.5vw; }
+        .tv-main.cols-2 .tv-board > li, .tv-main.cols-3 .tv-board > li { break-inside: avoid; padding-block: 0.9vh; }
+        /* a line is about 1.7 × the font plus its padding; the board gets about 78 % of the screen's height */
+        .tv-main.cols-2 .tv-board > li { font-size: clamp(1rem, min(1.9vw, calc((78vh / var(--per-col) - 1.8vh) / 1.7)), 2.3rem); }
+        .tv-main.cols-3 .tv-board > li { font-size: clamp(1rem, min(1.3vw, calc((78vh / var(--per-col) - 1.8vh) / 1.7)), 2rem); }
+        .tv-main.cols-2 .tv-board.big .pts, .tv-main.cols-3 .tv-board.big .pts { font-size: 1.25em; line-height: 1.1; }
+      }
     </style>
   </body>
 </html>
