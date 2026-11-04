@@ -3,13 +3,15 @@
 -- emails, and the superadmin's list of an account's wines.
 -- Add, never change: each table function gets bottle_cl as a NEW LAST column (older apps ignore it – JSONDecoder skips
 -- unknown keys) and the jsonb results get new keys. Names, arguments and existing columns stay as they are. A changed
--- return type needs drop + create, so each such function gets exactly the grants it has today.
+-- return type needs a new function: the old one is renamed to *_pre170 with no grants (removed in a later clean-up),
+-- and the new one takes the name with exactly the grants it has today.
 -- A blind wine never shows its size to guests before it is revealed: it is not in the wine book at all (as before).
 -- On an order the size follows the name: the order line already names the wine, so it also gives the size (the guest
 -- bought it, nothing new is revealed). The size is the wine's current size, like the cart's order history.
 
 -- ---------- The guest's wine book (anon and authenticated, as today; WIN-176's cap and the '{}' default stay) ----------
-drop function if exists public.my_wine_book(text[]);
+alter function public.my_wine_book(text[]) rename to my_wine_book_pre170;
+revoke all on function public.my_wine_book_pre170(text[]) from public, anon, authenticated;
 create function public.my_wine_book(codes text[] default '{}'::text[])
  returns table(wine_id integer, name text, producer text, vintage text, style text, image_url text, appellation text, region text, country text, slug text, title text, starts_at timestamp with time zone, sort_order integer, rating smallint, note text, rated_at timestamp with time zone, bought integer, bottle_cl numeric)
  language sql stable security definer set search_path to 'public'
@@ -35,7 +37,8 @@ $function$;
 grant execute on function public.my_wine_book(text[]) to public, anon, authenticated, service_role;
 
 -- ---------- A guest's orders through an invite code (anon and authenticated, as today) ----------
-drop function if exists public.get_my_orders(text);
+alter function public.get_my_orders(text) rename to get_my_orders_pre170;
+revoke all on function public.get_my_orders_pre170(text) from public, anon, authenticated;
 create function public.get_my_orders(code text)
  returns table(order_id integer, created_at timestamp with time zone, paid boolean, wine_id integer, wine_name text, quantity integer, unit_price numeric, bottle_cl numeric)
  language sql stable security definer set search_path to 'public'
@@ -51,7 +54,8 @@ $function$;
 grant execute on function public.get_my_orders(text) to public, anon, authenticated, service_role;
 
 -- ---------- A signed-in guest's orders (authenticated only, never anon – as today) ----------
-drop function if exists public.my_orders();
+alter function public.my_orders() rename to my_orders_pre170;
+revoke all on function public.my_orders_pre170() from public, anon, authenticated;
 create function public.my_orders()
  returns table(order_id integer, created_at timestamp with time zone, paid boolean, slug text, title text, wine_name text, quantity integer, unit_price numeric, bottle_cl numeric)
  language sql stable security definer set search_path to 'public'
@@ -69,7 +73,8 @@ revoke all on function public.my_orders() from public, anon;
 grant execute on function public.my_orders() to authenticated, service_role;
 
 -- ---------- The superadmin's list of an account's wines (authenticated + is_admin() only, never anon – as today) ----------
-drop function if exists public.admin_tenant_wines(uuid);
+alter function public.admin_tenant_wines(uuid) rename to admin_tenant_wines_pre170;
+revoke all on function public.admin_tenant_wines_pre170(uuid) from public, anon, authenticated;
 create function public.admin_tenant_wines(tn uuid)
  returns table(id integer, name text, producer text, vintage text, style text, region text, country text, image_url text, retail_price_dkk numeric, tastings bigint, ratings bigint, bottle_cl numeric)
  language plpgsql stable security definer set search_path to 'public'
