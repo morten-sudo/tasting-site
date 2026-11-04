@@ -143,6 +143,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   import { payBox, setPayee } from '../../lib/pay';
   import { i18nReady, t, formatWhen, lang } from '../../i18n';
   import { showOrigins as drawOrigins, type MapWine } from '../../lib/tasting-origins';
+  import { watchBlind } from '../../lib/wines';
 
   await i18nReady;
 
@@ -223,8 +224,15 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     });
   }
 
-  // ---------- Where the wines come from (src/lib/tasting-origins.ts) ----------
+  // ---------- Where the wines come from (src/lib/tasting-origins.ts): a tab per region ----------
+  const fetchWines = async () => {
+    const { data, error } = await supabase.rpc('get_wines', { code });
+    if (error) throw error;
+    return (data ?? []) as MapWine[];
+  };
   function showOrigins(wines: MapWine[]) {
+    // While a wine is blind, the map follows the host revealing it: the wine comes into its region's tab
+    if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, async () => showOrigins(await fetchWines()));
     return drawOrigins(wines, { hero: $('hero-map'), block: $('origin-block'), box: $('origin-map'), legend: $('origin-legend'), credit: $('map-source') });
   }
 
@@ -421,15 +429,22 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   .t-home { overflow-x: clip; }
   /* Larger screens: the map at half width with the legend beside it */
   @media (min-width: 40rem) {
-    .origin-block:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.25rem; align-items: start; }
+    .origin-block:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 1.25rem; align-items: start; }
     .origin-block > h2 { grid-column: 1 / -1; }
-    .origin-block > .map-box { grid-column: 1; grid-row: 2; }
-    .origin-block > .map-credit { grid-column: 1; grid-row: 3; }
-    .origin-block > .map-legend { grid-column: 2; grid-row: 2 / span 2; margin-top: 0; grid-template-columns: 1fr; }
+    .origin-block > :global(.tabs) { grid-column: 1 / -1; grid-row: 2; }
+    .origin-block > .map-box { grid-column: 1; grid-row: 3; }
+    .origin-block > .map-credit { grid-column: 1; grid-row: 4; }
+    .origin-block > .map-legend { grid-column: 2; grid-row: 3 / span 2; margin-top: 0; grid-template-columns: 1fr; }
+    /* A region that cannot be drawn: its wines as a list across the width */
+    .origin-block > .map-box[hidden] + .map-legend { grid-column: 1 / -1; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
   }
+  /* The region tabs (WIN-256) above the map */
+  .origin-block > :global(.tabs) { margin-bottom: 0.9rem; }
 
   /* Two columns on large screens: the evening on the left, your answer on the right */
   .t-grid { display: grid; gap: 2.25rem; }
+  /* Never wider than the screen: the region tabs scroll inside their own bar */
+  .t-grid > *, .t-main > * { min-width: 0; }
   @media (min-width: 56rem) {
     .t-grid { grid-template-columns: minmax(0, 1fr) 21rem; align-items: start; gap: 3rem; }
     .t-side { grid-column: 2; grid-row: 1; position: sticky; top: 7.5rem; }

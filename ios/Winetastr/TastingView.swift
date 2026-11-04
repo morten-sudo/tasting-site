@@ -11,6 +11,10 @@ struct TastingView: View {
     @State private var toast: String?
     @State private var wines: [Wine] = []
     @State private var origins: Origins?
+    /// The map's region tabs (WIN-256), the chosen one and the faint map behind the heading
+    @State private var regions: [RegionTab] = []
+    @State private var region = ""
+    @State private var hero: RegionDrawing?
     @State private var payment: TastingPayment?
     @State private var addToCalendar = false
 
@@ -45,6 +49,8 @@ struct TastingView: View {
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
         .task { model.currentTasting = tasting.slug; await load() }
+        .task { await watchBlind() }
+        .onChange(of: region) { Task { await drawRegion() } }
         .onChange(of: model.online) { if model.online && failed { Task { await load() } } }
         .sheet(isPresented: $editing) {
             if let invite, let info {
@@ -90,7 +96,7 @@ struct TastingView: View {
         let countdown = info.start.flatMap(countdownText)
         return ZStack(alignment: .topLeading) {
             // The faint map of the wines' region behind the heading (.hero-bg) – it stays put while the page scrolls
-            if let hero = origins?.hero {
+            if let hero {
                 GeometryReader { geo in
                     MapBackdrop(drawing: hero).frame(width: geo.size.width * 1.2).offset(x: geo.size.width * 0.2, y: -16)
                 }
@@ -125,7 +131,7 @@ struct TastingView: View {
                             introText(intro, lang: info.language)
                         }
                     }
-                    if let origins { OriginsBlock(origins: origins) }
+                    if !regions.isEmpty { OriginsBlock(tabs: regions, selection: $region, origins: origins) }
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: L("tastingHome.during"))
                         Button { model.tastingTab = .wines } label: {
@@ -192,6 +198,33 @@ struct TastingView: View {
         }
     }
 
+    /// The map's tabs: one per region, the first region's tab open (or the chosen one, when it is still there)
+    private func showOrigins(_ list: [Wine]) async {
+        let tabs = regionTabs(list)
+        regions = tabs
+        hero = await tabsHero(tabs)
+        let open = tabs.first(where: { $0.id == region })?.id ?? tabs.first?.id ?? ""
+        if open != region { region = open } else { await drawRegion() }
+    }
+
+    private func drawRegion() async {
+        guard let tab = regions.first(where: { $0.id == region }) else { origins = nil; return }
+        let drawn = await buildOrigins(tab, all: wines)
+        if tab.id == region { origins = drawn }
+    }
+
+    /// While a wine is blind, the map follows the host revealing it (checked every 15 seconds, as on the site)
+    private func watchBlind() async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(15))
+            guard wines.contains(where: \.isBlind), let list = try? await Backend.wines(tasting.code) else { continue }
+            if list.map({ "\($0.id)\($0.isBlind)" }) != wines.map({ "\($0.id)\($0.isBlind)" }) {
+                wines = list
+                await showOrigins(list)
+            }
+        }
+    }
+
     private func load() async {
         do {
             async let i = Backend.tasting(tasting.code)
@@ -202,7 +235,7 @@ struct TastingView: View {
             payment = try? await Backend.payment(tasting.code)
             if let w = try? await Backend.wines(tasting.code) {
                 wines = w
-                if origins == nil { origins = await buildOrigins(w) }
+                if regions.isEmpty { await showOrigins(w) }
             }
             #if DEBUG
             if UserDefaults.standard.string(forKey: "route") == "rsvp", b?.email != nil { editing = true }

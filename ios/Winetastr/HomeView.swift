@@ -346,8 +346,7 @@ struct HomeView: View {
 
     /// winesBackground(corner): the region of the next tasting's wines, the appellations with wines filled
     private func cornerMap(_ wines: [Wine]) async -> RegionDrawing? {
-        guard let origins = await buildOrigins(wines, phone: false) else { return nil }
-        return origins.hero
+        await winesHero(wines)
     }
 
     /// Where the wines come from: one numbered pin per place (the number of different wines), on the overview map

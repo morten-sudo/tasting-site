@@ -62,6 +62,17 @@ export function tabButton(id: string, label: string, count?: number | string): H
   return b;
 }
 
+/** A bar of tab buttons made in TypeScript: the same markup as Tabs.astro without links; wire it with tabs() */
+export function tabBar(label: string, items: { id: string; label: string; count?: number | string }[] = []): HTMLDivElement {
+  const bar = document.createElement('div');
+  bar.className = 'tabs';
+  bar.setAttribute('role', 'tablist');
+  bar.setAttribute('aria-label', label);
+  bar.dataset.tabs = '';
+  bar.append(...items.map((it) => tabButton(it.id, it.label, it.count)));
+  return bar;
+}
+
 /** The number after a tab's name ("Coming 14") */
 export function setTabCount(tab: HTMLElement, count: number | string | null) {
   let n = tab.querySelector<HTMLElement>('.badge');

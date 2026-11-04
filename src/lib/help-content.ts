@@ -104,7 +104,7 @@ export const HELP: HelpSection[] = [
 <h2 id="delete-wine">Slet en vin</h2>
 <p>Åbn vinen, tryk <i>Rediger</i> og så <i>Slet vin</i> nederst. Du bliver spurgt først, og bagefter kan du trykke <i>Fortryd</i> i nogle sekunder. En vin, som gæster har bestilt, kan ikke slettes – fjern den fra smagningen i stedet.</p>
 <h2>Producent og kort</h2>
-<p>Producentens hjemmeside og adresse findes automatisk, mens du skriver. Adressen placeres som en nål på kortet, når den kan findes præcist. Oprindelse (land, region, appellation) farver regionen på kortet – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, Rhône, Toscana, Piemonte, Rioja og Mosel på et detaljeret kort.</p>
+<p>Producentens hjemmeside og adresse findes automatisk, mens du skriver. Adressen placeres som en nål på kortet, når den kan findes præcist. Oprindelse (land, region, appellation) farver regionen på kortet – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, Rhône, Toscana, Piemonte, Rioja og Mosel på et detaljeret kort. Kommer en smagnings vine fra flere regioner, får kortet på <a href="g:">smagningens side</a> en fane pr. region med antallet af vine – det er feltet <i>region</i>, der tæller, ikke underregionen. En vin uden region kommer ikke på kortet (den står stadig i vinlisten), og en blind vin kommer først med, når du afslører den.</p>
 <h2>Billede</h2>
 <p>Tryk <i>Vælg et billede</i>, træk et billede ind på feltet, eller indsæt et, du har kopieret (⌘V / Ctrl+V). Skraldespanden fjerner billedet. Tryk <i>Find et officielt billede</i> for at hente producentens eget flaskebillede.</p>
 <h2 id="tasting-wines">Vinene i en smagning</h2>
@@ -127,7 +127,7 @@ export const HELP: HelpSection[] = [
 <h2 id="delete-wine">Deleting a wine</h2>
 <p>Open the wine, press <i>Edit</i> and then <i>Delete wine</i> at the bottom. You are asked first, and afterwards you can press <i>Undo</i> for a few seconds. A wine that guests have ordered cannot be deleted – remove it from the tasting instead.</p>
 <h2>Producer and map</h2>
-<p>The producer's website and address are found automatically as you type. The address is placed as a pin on the map when it can be found exactly. The origin (country, region, appellation) colours the region on the map – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, the Rhône, Tuscany, Piedmont, Rioja and the Mosel on a detailed map.</p>
+<p>The producer's website and address are found automatically as you type. The address is placed as a pin on the map when it can be found exactly. The origin (country, region, appellation) colours the region on the map – for Bordeaux, Douro, Bourgogne, Champagne, Roussillon, the Rhône, Tuscany, Piedmont, Rioja and the Mosel on a detailed map. When a tasting's wines come from several regions, the map on <a href="g:">the tasting's page</a> gets a tab per region with the number of wines – it is the <i>region</i> field that counts, not the sub-region. A wine without a region is not on the map (it is still in the wine list), and a blind wine only comes on once you reveal it.</p>
 <h2>Picture</h2>
 <p>Press <i>Choose a picture</i>, drag a picture onto the box, or paste one you have copied (⌘V / Ctrl+V). The trash removes the picture. Press <i>Find an official picture</i> to fetch the producer's own bottle shot.</p>
 <h2 id="tasting-wines">The wines in a tasting</h2>

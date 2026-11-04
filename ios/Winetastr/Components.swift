@@ -6,20 +6,56 @@ import SwiftUI
 struct UnderlineTabs<T: Hashable>: View {
     let tabs: [(T, String)]
     @Binding var selection: T
+    /// The number after a tab's name (.badge.inline.neutral; on the chosen tab in bordeaux on pink)
+    var counts: [T: Int] = [:]
     var body: some View {
         HStack(spacing: 22) {
-            ForEach(tabs, id: \.0) { tab, title in
-                Button { selection = tab } label: {
-                    Text(title).font(.body(16.5)).foregroundStyle(tab == selection ? Color.bordeaux : Color.muted)
-                        .padding(.vertical, 11)
-                        .overlay(alignment: .bottom) { if tab == selection { Rectangle().fill(Color.bordeaux).frame(height: 2) } }
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(tab == selection ? .isSelected : [])
-            }
+            items
             Spacer()
         }
         .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
+    }
+    @ViewBuilder var items: some View {
+        ForEach(tabs, id: \.0) { tab, title in
+            Button { selection = tab } label: {
+                HStack(spacing: 6.4) {
+                    Text(title).font(.body(16.5)).foregroundStyle(tab == selection ? Color.bordeaux : Color.muted)
+                    if let n = counts[tab] {
+                        Text("\(n)").font(tab == selection ? .semibold(11.2) : .medium(11.2)).monospacedDigit()
+                            .foregroundStyle(tab == selection ? Color.bordeaux : Color.paper)
+                            .padding(.horizontal, 4.8).frame(minWidth: 19.2, minHeight: 19.2)
+                            .background(tab == selection ? Color.errBg : Color.rule, in: Capsule())
+                    }
+                }
+                .padding(.vertical, 11)
+                .overlay(alignment: .bottom) { if tab == selection { Rectangle().fill(Color.bordeaux).frame(height: 2) } }
+            }
+            .buttonStyle(.plain)
+            .id(tab)
+            .accessibilityAddTraits(tab == selection ? .isSelected : [])
+        }
+    }
+}
+
+/// The tab bar when there may be many tabs (the tasting's regions, WIN-256): one line that scrolls sideways, and the
+/// chosen tab is brought into view – as .tabs on a phone (selectTab() in src/lib/ui/tabs.ts)
+struct ScrollingTabs: View {
+    let tabs: [(id: String, name: String, count: Int)]
+    @Binding var selection: String
+    let label: String
+    var body: some View {
+        let bar = UnderlineTabs(tabs: tabs.map { ($0.id, $0.name) }, selection: $selection,
+                                counts: Dictionary(uniqueKeysWithValues: tabs.map { ($0.id, $0.count) }))
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 17.6) { bar.items }.padding(.trailing, 24)
+            }
+            .onAppear { proxy.scrollTo(selection, anchor: .leading) }
+            .onChange(of: selection) { withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(selection, anchor: .center) } }
+        }
+        .background(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(label)
     }
 }
 
