@@ -740,6 +740,104 @@ end $$;
 reset role;
 delete from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
 
+-- ---------- Bottle size (WIN-170): every call that names a wine gives its size; guests never see a blind wine's size ----------
+-- Wine A is a magnum, ordered (2 bottles) and rated by guest A
+update wines set bottle_cl = 150 where id = -1001;
+insert into order_lines (order_id, wine_id, quantity, unit_price) values (-2001, -1001, 2, 100);
+insert into wine_ratings (participant_id, wine_id, rating)
+  select '00000000-0000-4000-d000-00000000000a', -1001, 5
+  where not exists (select 1 from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001);
+update wine_ratings set rating = 5, updated_at = now() where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
+update hosts set notify_order = true where id = '00000000-0000-4000-a000-00000000000a';
+insert into notifications (tasting_id, kind, guest, detail, token) values
+  ('00000000-0000-4000-b000-00000000000a', 'order', 'Guest A', '{"order_id":-2001}', '00000000-0000-4000-9000-000000000170');
+do $$
+declare bad text; f text; who text; j jsonb;
+begin
+  -- The guarantee for new calls: a function whose result names a wine (wine_name, or name with wine_id or vintage) also
+  -- gives bottle_cl. The old functions kept for a later clean-up (*_pre170) are left out – they cannot be called.
+  select string_agg(p.proname, ', ') into bad from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname !~ '_pre170$'
+    and (pg_get_function_result(p.oid) ~ '\mwine_name\M'
+         or (pg_get_function_result(p.oid) ~ '\mname text\M' and pg_get_function_result(p.oid) ~ '\m(wine_id|vintage)\M'))
+    and pg_get_function_result(p.oid) !~ '\mbottle_cl\M';
+  assert bad is null, 'a function names a wine without its bottle size (WIN-170): ' || coalesce(bad, '');
+  -- The old functions from before WIN-170 cannot be called by anyone but the database itself
+  foreach f in array array['my_wine_book_pre170(text[])', 'get_my_orders_pre170(text)', 'my_orders_pre170()', 'admin_tenant_wines_pre170(uuid)'] loop
+    if to_regprocedure(f) is not null then
+      foreach who in array array['anon', 'authenticated'] loop
+        assert not has_function_privilege(who, f, 'execute'), who || ' can call ' || f;
+      end loop;
+    end if;
+  end loop;
+  -- The grants are the same as before: my_orders and admin_tenant_wines never for anon
+  assert not has_function_privilege('anon', 'my_orders()', 'execute'), 'anon can call my_orders';
+  assert not has_function_privilege('anon', 'admin_tenant_wines(uuid)', 'execute'), 'anon can call admin_tenant_wines';
+  assert has_function_privilege('anon', 'my_wine_book(text[])', 'execute') and has_function_privilege('anon', 'get_my_orders(text)', 'execute'),
+    'a guest with only an invite link cannot read the wine book or orders';
+  -- The host's order email: every line has its size (hosts always see it)
+  j := claim_notifications('00000000-0000-4000-9000-000000000170');
+  assert (select bool_and((l ->> 'cl')::numeric = 150) from jsonb_array_elements(j) m, jsonb_array_elements(m -> 'items') i,
+          jsonb_array_elements(i -> 'detail' -> 'lines') l where l ->> 'wine' = 'Wine A'), 'the order email has no bottle size';
+end $$;
+
+-- A guest with only an invite link
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare failed boolean;
+begin
+  assert (select bottle_cl from my_wine_book(array['selftestaa']) b where b.wine_id = -1001) = 150, 'the wine book has no bottle size';
+  assert (select bool_and(bottle_cl = 150) from get_my_orders('selftestaa') o where o.wine_id = -1001), 'the orders (invite link) have no bottle size';
+  assert not exists (select 1 from get_my_orders('selftestbb') o where o.order_id = -2001 or o.wine_id = -1001), 'code B sees A''s orders';
+  assert not exists (select 1 from my_wine_book(array['selftestbb']) b where b.wine_id = -1001), 'code B''s wine book shows wine A';
+  failed := false; begin perform * from my_orders(); exception when others then failed := true; end;
+  assert failed, 'my_orders can be called without signing in';
+  failed := false; begin perform * from admin_tenant_wines('00000000-0000-0000-0000-000000000000'); exception when others then failed := true; end;
+  assert failed, 'anyone can read an account''s wines';
+end $$;
+reset role;
+
+-- The host makes the tasting blind after the order: the order keeps name and size, the wine book and wine list hide it
+update tastings set blind = true where slug = 'selftest-a';
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$ begin
+  assert (select bool_and(wine_name = 'Wine A' and bottle_cl = 150) from get_my_orders('selftestaa') o where o.wine_id = -1001),
+    'an order on a wine made blind afterwards lost its name or size';
+  assert not exists (select 1 from my_wine_book(array['selftestaa']) b where b.wine_id = -1001), 'the wine book shows a blind wine';
+  assert (select bottle_cl from get_wines('selftestaa') w where w.id = -1001) is null, 'a blind wine shows its bottle size';
+end $$;
+reset role;
+update tastings set blind = false where slug = 'selftest-a';
+
+-- A guest signed in with email: their own orders with sizes, nobody else's; not a superadmin
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare failed boolean;
+begin
+  assert (select bool_and(bottle_cl = 150) from my_orders() o where o.wine_name = 'Wine A') and exists (select 1 from my_orders() o where o.wine_name = 'Wine A'),
+    'the orders (signed in) have no bottle size';
+  assert not exists (select 1 from my_orders() o where o.order_id = -2002), 'a signed-in guest sees another guest''s orders';
+  failed := false; begin perform * from admin_tenant_wines((select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a')); exception when others then failed := true; end;
+  assert failed, 'a guest can read an account''s wines';
+end $$;
+reset role;
+
+-- Host A: the overview's latest rating has the size
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare failed boolean;
+begin
+  assert (host_dashboard() -> 'latest_rating' ->> 'bottle_cl')::numeric = 150, 'the overview''s latest rating has no bottle size';
+  failed := false; begin perform * from admin_tenant_wines((select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a')); exception when others then failed := true; end;
+  assert failed, 'a host who is not a superadmin can read the superadmin''s wine list';
+end $$;
+reset role;
+update wines set bottle_cl = 75 where id = -1001;
+
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
 select set_config('request.jwt.claims', '', true);
