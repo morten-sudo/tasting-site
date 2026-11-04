@@ -3,7 +3,7 @@
 // Data access is controlled by the policies in supabase/schema.sql and supabase/migrations.
 
 // Two databases: the live one (winetastr.com, the main branch) and the test one (every other branch's preview
-// address on Cloudflare Pages). scripts/db-target.mjs sets DB_TARGET at build time; see claude/release-setup.md.
+// address on Cloudflare Pages). scripts/db-target.mjs sets DB_TARGET at build time; see "Releases" in CLAUDE.md.
 import { DB_TARGET } from './db-target';
 
 const DATABASES = {
