@@ -1,0 +1,205 @@
+---
+// /dev/personas/ – the four guest personas, the basis for working on the value for the guest (src/lib/guest-personas.ts).
+// Next to /dev/components/ and /dev/maps/: for developers and Morten, hosts only (signed in like the admin pages),
+// noindex (Base.astro), not in any menu. The page's text is Danish (it is for Morten).
+import Base from '../../layouts/Base.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import SectionTitle from '../../components/ui/SectionTitle.astro';
+import Notice from '../../components/ui/Notice.astro';
+import { PERSONAS } from '../../lib/guest-personas';
+import '../../styles/admin.css';
+
+const initials = (name: string) => name.split(' ').map((n) => n[0]).join('');
+const by = (id: string) => PERSONAS.find((p) => p.id === id)!;
+const MAP = [
+  { label: 'Erfaren', cells: [by('henrik'), by('birgitte')] },
+  { label: 'Ny i vin', cells: [by('camilla'), by('jonas')] },
+];
+---
+<Base title="page.admin">
+  <section class="wrap admin-page">
+    <AdminNav>
+    <div id="admin-main" class="dv" hidden>
+      <PageHeader title="Gæstepersonaer" lead="Fire typer gæster som grundlag for arbejdet med værdien for gæsten: hvem de er, hvad de vil have ud af aftenen, hvad de får i dag, og hvad de mangler." />
+      <p class="dv-back"><a href="/dev/components/">Alle komponenter</a> · <a href="/dev/maps/">Alle kort</a></p>
+      <nav class="dv-toc" aria-label="Afsnit">
+        <a href="#s1">1. Overblik</a><a href="#s2">2. Sammenligning</a><a href="#s3">3. De fire personaer</a>
+        <a href="#s4">4. Det går igen</a><a href="#s5">5. Ikke med</a>
+      </nav>
+
+      <Notice>
+        <p><b>Det her er antagelser, ikke research.</b> Personerne er opdigtede, og ingen gæster er spurgt endnu. Kun ”Får i dag” beskriver produktet, som det er, og det er tjekket mod koden den 4. november 2026.</p>
+      </Notice>
+
+      <section id="s1" class="dv-group">
+        <SectionTitle text="1. Overblik" />
+        <p>De fire adskiller sig på to ting: hvor erfarne de er med vin, og om værdien ligger i selve aftenen eller i det, de tager med sig bagefter.</p>
+        <div class="dv-map">
+          <span class="dv-map-col">Værdien ligger i aftenen</span>
+          <span class="dv-map-col">Værdien er det, de tager med hjem</span>
+          {MAP.map((row) => <Fragment>
+            <span class="dv-map-row">{row.label}</span>
+            {row.cells.map((p) => (
+              <a class="card dv-map-cell" href={`#${p.id}`}>
+                <span class="av" aria-hidden="true">{initials(p.name)}</span>
+                <b>{p.archetype}</b>
+                <span class="dv-map-name">{p.name.split(' ')[0]}, {p.age}</span>
+                <span class="dv-map-short">{p.short}</span>
+              </a>
+            ))}
+          </Fragment>)}
+        </div>
+      </section>
+
+      <section id="s2" class="dv-group">
+        <SectionTitle text="2. Sammenligning" />
+        <div id="compare"></div>
+      </section>
+
+      <section id="s3" class="dv-group">
+        <SectionTitle text="3. De fire personaer" />
+        {PERSONAS.map((p) => (
+          <article id={p.id} class="dv-comp">
+            <header class="dv-who">
+              <span class="av lg" aria-hidden="true">{initials(p.name)}</span>
+              <div>
+                <p class="eyebrow">{p.archetype}</p>
+                <h3>{p.name}, {p.age}</h3>
+              </div>
+            </header>
+            <blockquote class="dv-quote">”{p.quote}”</blockquote>
+            <p class="dv-story">{p.story}</p>
+
+            <dl class="facts dv-facts">
+              {p.facts.map(([k, v]) => <Fragment><dt>{k}</dt><dd>{v}</dd></Fragment>)}
+            </dl>
+
+            <div class="dv-two">
+              <div>
+                <h4>Vil gerne</h4>
+                <ul class="dv-list">{p.goals.map((g) => <li>{g}</li>)}</ul>
+              </div>
+              <div>
+                <h4>Frustreres af</h4>
+                <ul class="dv-list">{p.frustrations.map((f) => <li>{f}</li>)}</ul>
+              </div>
+            </div>
+
+            <h4>Aftenen set fra {p.name.split(' ')[0]}</h4>
+            <ol class="dv-steps">
+              <li class="card tight"><p class="eyebrow">Før</p><p>{p.evening.before}</p></li>
+              <li class="card tight"><p class="eyebrow">Under</p><p>{p.evening.during}</p></li>
+              <li class="card tight"><p class="eyebrow">Efter</p><p>{p.evening.after}</p></li>
+            </ol>
+
+            <div class="dv-two">
+              <div>
+                <h4>Får i dag</h4>
+                <ul class="dv-list">{p.today.map((x) => <li>{x}</li>)}</ul>
+              </div>
+              <div>
+                <h4>Mangler</h4>
+                <ul class="dv-list">{p.gaps.map((x) => <li>{x}</li>)}</ul>
+              </div>
+            </div>
+
+            <dl class="facts dv-facts dv-last">
+              <dt>Tegn på værdi</dt><dd>{p.signal}</dd>
+              <dt>Spørg en rigtig gæst</dt><dd>{p.check}</dd>
+            </dl>
+          </article>
+        ))}
+      </section>
+
+      <section id="s4" class="dv-group">
+        <SectionTitle text="4. Det går igen" />
+        <p>Tre foreløbige mønstre på tværs af de fire. De bygger på antagelserne ovenfor og er ikke målt:</p>
+        <ol class="dv-points">
+          <li><b>Mest værdi før og under aftenen.</b> Vinbogen og minderne findes, men alle fire har noget, de ikke kan bagefter: finde vinen, lære videre, få noterne med, købe igen.</li>
+          <li><b>Smagningen er social, men vurderingerne er private.</b> Quiz og chat er de eneste steder, gæsterne møder hinanden i appen. Stjerner og noter ser man kun selv, og værten ser kun gennemsnittet af stjernerne.</li>
+          <li><b>Samme vin, fire behov.</b> Camilla vil have ét ord at sige, Jonas en forklaring, Henrik de præcise data og Birgitte prisen. Alle får i dag den samme vinside.</li>
+        </ol>
+      </section>
+
+      <section id="s5" class="dv-group">
+        <SectionTitle text="5. Ikke med" />
+        <p>Bevidst holdt ude af de fire, så de kan tages op, hvis de viser sig at være vigtige:</p>
+        <ul class="dv-points">
+          <li><b>Gæsten, der ikke drikker,</b> fordi vedkommende kører, er gravid eller bare ikke vil. Er stadig med til aftenen.</li>
+          <li><b>Gæsten på et andet sprog.</b> Appen kan skifte sprog, men værtens vintekster bliver ikke oversat.</li>
+          <li><b>Værten og vinhandleren.</b> De er kunder, ikke gæster, men Henrik og Birgitte er vejen til dem.</li>
+        </ul>
+      </section>
+    </div>
+    </AdminNav>
+  </section>
+</Base>
+
+<style is:global>
+  /* The page's own layout, as on /dev/components/ and /dev/maps/ (every class starts with dv-) */
+  .dv { max-width: 60rem; }
+  .dv-back { margin: -0.5rem 0 0.5rem; font-size: 0.92rem; }
+  .dv-toc { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0 0 1rem; font-size: 0.92rem; }
+  .dv-group { margin-top: 2.5rem; scroll-margin-top: 5rem; }
+  .dv-comp { padding: 2rem 0; border-top: 1px solid var(--lodge-3); scroll-margin-top: 5rem; }
+  .dv-comp h4 { margin: 1.5rem 0 0.5rem; font-size: 1rem; }
+  .dv-comp p { margin: 0; }
+
+  /* The overview: two by two, the axes as labels */
+  .dv-map { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem 0.75rem; margin-top: 1rem; align-items: stretch; }
+  .dv-map-col { font-size: 0.85rem; font-weight: 600; align-self: end; }
+  .dv-map-row { grid-column: 1 / -1; margin-top: 0.5rem; color: var(--muted); font-size: 0.85rem; }
+  .dv-map-cell { display: grid; align-content: start; gap: 0.15rem; }
+  .dv-map-cell .av { margin-bottom: 0.4rem; }
+  .dv-map-name { color: var(--muted); font-size: 0.85rem; }
+  .dv-map-short { margin-top: 0.35rem; font-size: 0.92rem; line-height: 1.35; }
+
+  /* One persona */
+  .dv-who { display: flex; align-items: center; gap: 0.9rem; }
+  .admin-page .dv .dv-who h3 { margin: 0.1rem 0 0; font-size: 1.35rem; line-height: 1.2; }
+  .dv .dv-who .eyebrow { margin: 0; }
+  .dv-who .av { flex: none; }
+  .dv-comp .dv-quote { margin: 1rem 0 0.75rem; padding: 0; font-family: var(--display); font-style: italic; font-size: 1.45rem; line-height: 1.25; }
+  .dv-story { max-width: 42rem; }
+  .dv-facts { margin-top: 1.25rem; }
+  .dv-last { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--lodge-3); }
+  .dv-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 2rem; }
+  .dv-list, .dv-points { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.35rem; }
+  .dv-points { gap: 0.7rem; margin-top: 0.75rem; max-width: 46rem; }
+  .dv-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+  .dv-steps .eyebrow { margin-bottom: 0.3rem; }
+  @media (max-width: 48rem) {
+    .dv-two, .dv-steps { grid-template-columns: minmax(0, 1fr); }
+    .dv-facts { grid-template-columns: minmax(0, 1fr); gap: 0.1rem; }
+    .dv-facts dd { margin-bottom: 0.6rem; }
+  }
+</style>
+
+<script>
+  import { requireHost } from '../../lib/admin-common';
+  import { $ } from '../../lib/ui/dom';
+  import { table } from '../../lib/ui/table';
+  import { PERSONAS, type Persona } from '../../lib/guest-personas';
+
+  type Row = { what: string; values: Record<string, string> };
+  const ROWS: [string, keyof Persona['compare']][] = [
+    ['Kommer for', 'comesFor'], ['Viden om vin', 'knowledge'], ['Før aftenen', 'prepares'],
+    ['Telefonen', 'phone'], ['Vigtigste øjeblik', 'moment'], ['Frygter', 'fears'],
+  ];
+  const rows: Row[] = ROWS.map(([what, key]) => ({
+    what, values: Object.fromEntries(PERSONAS.map((p) => [p.id, p.compare[key]])),
+  }));
+
+  if (await requireHost()) {
+    $('admin-main').hidden = false;
+    $('compare').append(table<Row>({
+      caption: 'De fire personaer sammenlignet',
+      rows,
+      columns: [
+        { key: 'what', label: 'Hvad', cell: (r) => r.what },
+        ...PERSONAS.map((p) => ({ key: p.id, label: `${p.name.split(' ')[0]} · ${p.archetype}`, cell: (r: Row) => r.values[p.id] })),
+      ],
+    }).el);
+  }
+</script>
