@@ -260,7 +260,7 @@ const opts = [
 
         <section id="c20" class="dv-comp">
           <SectionTitle level="h3" text="20 Avatar and wine thumbnail" />
-          <p class="help">avatar(), wineThumb() in src/lib/ui/thumb.ts · sizes small, normal, large, xl (a person's own page) · ring: solid, double, dashed (a group mark that is not colour alone)</p>
+          <p class="help">avatar(), wineThumb() in src/lib/ui/thumb.ts · sizes small, normal, large</p>
           <div class="dv-row" id="thumbs"></div>
         </section>
 
@@ -797,7 +797,6 @@ const opts = [
     $('chip-tones').append(chip('Neutral'), chip('Coming', 'ok'), chip('Waiting list', 'wait'), chip('No price', 'warn'), chip('Not paid', 'err'), chip('Owner', 'strong'), chip('Not coming', 'neutral', { dashed: true }), chip('A link chip', 'neutral', { href: '#c18' }), starsRo(4, '', { chip: true }));
     $('chip-status').append(...(Object.keys(STATUS) as StatusName[]).map((n) => statusChip(n)));
     $('thumbs').append(avatar('Morten Hansen', { size: 'small' }), avatar('Morten Hansen'), avatar('Morten Hansen', { size: 'large' }), avatar('Anne Berg', { host: true }), avatar('', { add: true }),
-      avatar('Anne Berg', { ring: 'solid' }), avatar('Jens Holm', { ring: 'double' }), avatar('Ida Krog', { ring: 'dashed' }), avatar('Morten Hansen', { size: 'xl', ring: 'solid' }),
       wineThumb('/img/cellar-800.jpg', { size: 'small' }), wineThumb(null), wineThumb(null, { blind: true }), wineThumb('/img/cellar-800.jpg', { size: 'large' }));
     $('prices').append(price({ amount: 149.95 }), price({ amount: 129.95, was: 159.95, tiers: ['From 6 bottles: 119,95 kr. each'] }), price({ amount: null }), price({ amount: 595, size: 'large', was: 695 }), price({ amount: 89.5, align: 'right' }));
     setFact($('fs-1'), 'Saturday 14 November 2026, 19:00');

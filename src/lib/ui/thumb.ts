@@ -14,14 +14,10 @@ export function initials(name: string): string {
   return words.slice(0, 2).map((w) => w[0] ?? '').join('').toUpperCase() || '?';
 }
 
-/** The edge that marks a group without relying on colour alone (the personas: guests, hosts, commercial) */
-export type AvatarRing = 'solid' | 'double' | 'dashed';
-
-/** A person's initials in a circle; add: the dashed "+" of a new row; xl: the head of a person's own page */
-export function avatar(name: string, opts: { size?: ThumbSize | 'xl'; host?: boolean; add?: boolean; ring?: AvatarRing } = {}): HTMLSpanElement {
+/** A person's initials in a circle; add: the dashed "+" of a new row */
+export function avatar(name: string, opts: { size?: ThumbSize; host?: boolean; add?: boolean } = {}): HTMLSpanElement {
   const el = document.createElement('span');
-  const size = opts.size === 'xl' ? ' xl' : SIZE[opts.size ?? 'normal'];
-  el.className = 'av' + size + (opts.host ? ' host' : '') + (opts.add ? ' add' : '') + (opts.ring ? ' ring-' + opts.ring : '');
+  el.className = 'av' + SIZE[opts.size ?? 'normal'] + (opts.host ? ' host' : '') + (opts.add ? ' add' : '');
   el.textContent = opts.add ? '+' : initials(name);
   el.setAttribute('aria-hidden', 'true');
   return el;

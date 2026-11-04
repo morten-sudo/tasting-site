@@ -33,5 +33,8 @@
 /dev/components/          /superadmin/dev/components/   301
 /dev/maps                 /superadmin/dev/maps/         301
 /dev/maps/                /superadmin/dev/maps/         301
-/dev/personas             /superadmin/dev/personas/     301
-/dev/personas/            /superadmin/dev/personas/     301
+/dev/personas             /superadmin/dev/components/   301
+/dev/personas/            /superadmin/dev/components/   301
+# The personas page is gone (the personas live in Confluence)
+/superadmin/dev/personas  /superadmin/dev/components/   301
+/superadmin/dev/personas/ /superadmin/dev/components/   301

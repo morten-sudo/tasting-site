@@ -598,13 +598,6 @@ dialog .input { max-width: none; }
 .av.lg { width: 3.6rem; height: 3.6rem; font-size: 1.1rem; }
 .av.add { border-style: dashed; background: transparent; color: var(--amber); font-size: 1.2rem; font-weight: 400; }
 .av.host { border-color: var(--amber); color: var(--amber); }
-/* The head of a person's own page (the personas) */
-.av.xl { width: 4.5rem; height: 4.5rem; font-size: 1.35rem; }
-@media (min-width: 48rem) { .av.xl { width: 5.5rem; height: 5.5rem; font-size: 1.65rem; } }
-/* A group mark that does not rely on colour alone (the personas): a solid, a double or a dashed edge */
-.av.ring-solid { border: 2px solid var(--paper); color: var(--paper); }
-.av.ring-double { border: 4px double var(--amber); color: var(--amber); }
-.av.ring-dashed { border: 2px dashed var(--tawny); color: var(--tawny); }
 /* activityRow(): a sign in a circle – one line of what happened (the dashboard, a guest's page) */
 .av.act-icon { width: 2rem; height: 2rem; color: var(--amber); background: var(--lodge); font-size: 0.95rem; font-weight: 400; }
 .thumb {

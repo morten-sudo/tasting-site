@@ -740,52 +740,6 @@ end $$;
 reset role;
 delete from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
 
--- ---------- Dev docs: only the superadmin (the personas' texts in dev_docs) ----------
--- Read only by is_admin(); nobody writes from the site (the texts are put in with SQL)
-insert into dev_docs (id, body) values ('selftest-doc', '{"secret": true}');
-insert into admins (email) values ('admin@selftest.invalid') on conflict do nothing;
-select set_config('request.jwt.claims', '', true);
-set local role anon;
-do $$
-declare n int; failed boolean;
-begin
-  begin select count(*) into n from dev_docs; failed := n = 0; exception when others then failed := true; end;
-  assert failed, 'anyone can read the dev docs';
-  failed := false; begin insert into dev_docs (id, body) values ('selftest-anon', '{}'); exception when others then failed := true; end;
-  assert failed, 'anyone can add a dev doc';
-end $$;
-reset role;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
-set local role authenticated;
-do $$
-declare n int; failed boolean;
-begin
-  select count(*) into n from dev_docs;                                                                      assert n = 0, 'a host can read the dev docs';
-  failed := false; begin insert into dev_docs (id, body) values ('selftest-host', '{}'); exception when others then failed := true; end;
-  assert failed, 'a host can add a dev doc';
-  begin update dev_docs set body = '{}' where id = 'selftest-doc'; get diagnostics n = row_count; failed := n = 0; exception when others then failed := true; end;
-  assert failed, 'a host can change a dev doc';
-  begin delete from dev_docs where id = 'selftest-doc'; get diagnostics n = row_count; failed := n = 0; exception when others then failed := true; end;
-  assert failed, 'a host can delete a dev doc';
-end $$;
-reset role;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ad","email":"admin@selftest.invalid","role":"authenticated"}', true);
-set local role authenticated;
-do $$
-declare n int; failed boolean;
-begin
-  assert is_admin(), 'the test superadmin is not recognised';
-  select count(*) into n from dev_docs where id = 'selftest-doc';                                            assert n = 1, 'the superadmin cannot read the dev docs';
-  failed := false; begin insert into dev_docs (id, body) values ('selftest-admin', '{}'); exception when others then failed := true; end;
-  assert failed, 'the dev docs can be written from the site, even by the superadmin';
-  begin update dev_docs set body = '{}' where id = 'selftest-doc'; get diagnostics n = row_count; failed := n = 0; exception when others then failed := true; end;
-  assert failed, 'the superadmin can change a dev doc from the site';
-end $$;
-reset role;
-do $$ begin
-  assert (select body from dev_docs where id = 'selftest-doc') = '{"secret": true}'::jsonb, 'a dev doc was changed';
-end $$;
-
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
 select set_config('request.jwt.claims', '', true);
