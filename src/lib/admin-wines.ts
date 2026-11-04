@@ -26,7 +26,7 @@ import { listRow } from './ui/list-row';
 import { wineThumb } from './ui/thumb';
 import { highlight as highlightRow } from './ui/highlight';
 import { deleteWithUndo } from './ui/delete-undo';
-import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
+import { shrinkImage, labelDataUrl, locateAppellation, foreignPriceNote, type LabelResult, type LinkResult } from './wine-read';
 import { COMMON_CL, STANDARD_CL, bottleText, parseCl } from './bottle';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 import { dailyLimitText, throwIfDailyLimit, limitOr } from './daily-limit';
@@ -421,9 +421,11 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const offer = r.offer
         ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: formatKr(r.offer.price), n: r.offer.quantity })
         : '';
-      const foreign = r.foreign_currency && !field<HTMLInputElement>('wf-retail').value.trim()
-        ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
-      fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + foreign);
+      // A price in another currency is never converted (WIN-281): the shop's price is shown under the empty price
+      // field, and in the status line by the link, where the host is looking
+      const note = !field<HTMLInputElement>('wf-retail').value.trim() ? foreignPriceNote(r) : null;
+      retailHint(note);
+      fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + (note ? ' ' + note : ''));
       fillProducer();
     } catch (e) {
       labelStatus(limitOr(e, t('link.failed')), 'error');
@@ -431,6 +433,17 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       busyButton(btn, false);
     }
   }
+
+  /** The status line under the shop price: the shop's price in another currency (null hides it) – the same
+   *  "type it yourself" line as under the producer's address */
+  function retailHint(text: string | null) {
+    const input = field<HTMLInputElement>('wf-retail');
+    setStatus($('wf-retail-hint'), text ? 'warn' : null, text ?? '');
+    if (text) input.setAttribute('aria-describedby', 'wf-retail-hint');
+    else if (input.getAttribute('aria-describedby') === 'wf-retail-hint') input.removeAttribute('aria-describedby');
+  }
+  // Gone when the host types the price
+  field<HTMLInputElement>('wf-retail').addEventListener('input', () => retailHint(null));
 
   let previewUrl: string | null = null;
   function setPreview(url: string | null, name = '') {
@@ -456,6 +469,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     producerStatus('', '', 'wf-image-status');
     $('wf-image-options').hidden = true;
     form.reset();
+    retailHint(null);
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
     field<HTMLInputElement>('wf-name').value = w.name ?? '';

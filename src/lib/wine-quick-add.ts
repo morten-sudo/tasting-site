@@ -13,7 +13,7 @@ import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang, locale } from '../i18n';
 import { STANDARD_CL, bottleIn, bottleText, withoutBottle } from './bottle';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
-import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
+import { shrinkImage, labelDataUrl, locateAppellation, foreignPriceNote, type LabelResult, type LinkResult } from './wine-read';
 import { attachImageInput } from './ui/image-picker';
 import { addRow, hitButton, type Hit } from './ui/add-row';
 import { listRow } from './ui/list-row';
@@ -39,8 +39,9 @@ type Opts = {
   href: (w: QuickWine) => string;
   /** A new wine is saved (tasting page: put it in the tasting straight away). */
   saved?: (id: number) => Promise<void>;
-  /** Everything has come in: show the wine in the list. */
-  done: (id: number, name: string) => Promise<void>;
+  /** Everything has come in: show the wine in the list. note: a line the page's toast adds (the shop's price
+   *  in another currency, which is not saved – WIN-281). */
+  done: (id: number, name: string, note: string | null) => Promise<void>;
 };
 
 type Source = { kind: 'link'; url: string } | { kind: 'photo'; blob: Blob; preview: string } | { kind: 'name' };
@@ -375,7 +376,8 @@ export function initQuickAdd(o: Opts) {
       } catch { /* the wine form looks again when the wine is opened */ }
     }
     say(li, t('qa.saved'), 'ok');
-    await o.done(id, [name, vintage].filter(Boolean).join(' '));
+    // A price in another currency than kroner is not saved: the toast gives the shop's price
+    await o.done(id, [name, vintage].filter(Boolean).join(' '), src.kind === 'link' ? foreignPriceNote(r) : null);
     // The wine is in the list now (highlighted): the card goes in the same moment, so the wine is never shown twice
     li.remove();
     closeWhenDone();

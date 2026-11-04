@@ -312,10 +312,11 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       await atTop((sort) => supabase.from('tasting_wines').insert({ tasting_id: tastingId, wine_id: id, sort_order: sort, price_dkk: startPrice(w),
         price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [] }));
     },
-    done: async (id, name) => {
+    done: async (id, name, note) => {
       await load();
       highlight(list.querySelector(`[data-id="${id}"]`));
-      toast(t('adminTasting.wineAdded', { name }), { kind: 'ok', action: { label: t('wineLib.open'), href: wineHref(id) } });
+      toast([t('adminTasting.wineAdded', { name }), note].filter(Boolean).join(' '),
+        { kind: 'ok', action: { label: t('wineLib.open'), href: wineHref(id) }, ...(note ? { duration: 12000 } : {}) });
     },
   });
   // The empty tasting's button opens the same new-wine line

@@ -3,6 +3,8 @@
 import { supabase } from './supabase';
 import { forgetGuesses } from './overview-map';
 import { loadAppellations, matchAppellation, normOrigin } from './origin';
+import { formatCurrency } from './ui/kr';
+import { t } from '../i18n';
 
 const MAX_IMAGE_SIDE = 1400;
 
@@ -40,7 +42,17 @@ export type LinkResult = LabelResult & {
   description: string | null; image: string | null; images?: string[]; price: number | null; source_url: string;
   food?: string | null; serving?: string | null;
   offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
+  /** The shop's own price and currency (never converted); price and offer are only filled when it is DKK */
+  shop_price?: { amount: number; currency: string } | null;
 };
+
+/** The note for a price the shop shows in another currency than kroner ("Butikkens pris er 25,00 €. Skriv prisen
+ *  i kroner."), or null when the price came in kroner or the page had none. */
+export function foreignPriceNote(r: Partial<LinkResult>): string | null {
+  const p = r.shop_price;
+  if (!p || p.currency === 'DKK' || r.price != null) return null;
+  return t('link.foreignPrice', { price: formatCurrency(p.amount, p.currency) });
+}
 
 /** Asks Cloudflare AI where an unknown appellation lies and saves it (checked against the country in the database). */
 export async function locateAppellation(appellation: string | null, region: string | null, country: string | null) {
