@@ -75,6 +75,7 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, locale, formatWhen, type Key } from '../../i18n';
+  import { nameWithSize } from '../../lib/bottle';
   import { initWizard } from '../../lib/tasting-wizard';
   import { tastingRoles, visibleRoles } from '../../lib/admin-side';
 
@@ -83,7 +84,7 @@ import '../../styles/admin.css';
     next: { slug: string; title: string; starts_at: string | null; place: string | null; invited: number; coming: number; no_reply: number; wines: number } | null;
     latest_signup: { name: string; status: string; at: string; tasting: string; slug: string } | null;
     latest_order: { id: number; name: string; at: string; paid: boolean; tasting: string; slug: string; bottles: number; amount: number } | null;
-    latest_rating: { wine: string; rating: number; at: string; tasting: string; slug: string } | null;
+    latest_rating: { wine: string; rating: number; at: string; tasting: string; slug: string; bottle_cl?: number | null } | null;
     unpaid_orders: { count: number; amount: number };
     unpaid_fees: { count: number; amount: number };
   };
@@ -186,7 +187,7 @@ import '../../styles/admin.css';
       : activity('🛒', 'dash.latestOrder', t('dash.none'), '', null));
     const r = d.latest_rating;
     list.append(r
-      ? activity('★', 'dash.latestRating', [starsRo(r.rating), ' ' + r.wine], [r.tasting, ago(r.at)].join(' · '), adminUrl(r.slug, 'wines/'))
+      ? activity('★', 'dash.latestRating', [starsRo(r.rating), ' ' + nameWithSize(r.wine, r.bottle_cl, locale())], [r.tasting, ago(r.at)].join(' · '), adminUrl(r.slug, 'wines/'))
       : activity('★', 'dash.latestRating', t('dash.none'), '', null));
   }
 
