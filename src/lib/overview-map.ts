@@ -6,6 +6,7 @@ import { supabase } from './supabase';
 import { esc } from './ui/dom';
 import { anchored } from './region-map';
 import { loadAppellations, loadRegions, matchRegion, normOrigin, countryName } from './origin';
+import { lang } from '../i18n';
 
 export type OverviewMap = { id: string; w: number; h: number; proj: { lon0: number; lat1: number; k: number; s: number }; land: string; border: string };
 type Country = { box: [number, number, number, number]; centre: [number, number] };
@@ -19,10 +20,14 @@ export const loadOverview = (id: 'europe' | 'world') => {
   if (!overviews.has(id)) overviews.set(id, getJson<OverviewMap>(`/maps/${id}.json`));
   return overviews.get(id)!;
 };
-// ---------- Towns: Natural Earth's populated places (public/maps/places.json: [lon, lat, name, scalerank, capital]),
-// the bigger first – drawn as on the detailed region maps (a dot and an italic name with a light halo) ----------
-export type Town = [number, number, string, number, number];
+// ---------- Towns: Natural Earth's populated places (public/maps/places.json: [lon, lat, name, scalerank, capital,
+// names?]), the bigger first – drawn as on the detailed region maps (a dot and a name with a light halo). The optional
+// sixth item holds the names that differ per language ({ da: 'Wien', is: 'Vín' }, scripts/town-names.py); without
+// one the English name is used. The app reads the same file from the live site: only add items, never change them. ----------
+export type Town = [number, number, string, number, number, Partial<Record<string, string>>?];
 export const loadTowns = once(() => getJson<Town[]>('/maps/places.json'));
+/** A town's name in the site's language, else its English name. */
+export const townName = (town: Town, l: string = lang()) => town[5]?.[l] ?? town[5]?.en ?? town[2];
 
 // ---------- Detailed tiles (scripts/build-detail-tiles.py) for a map zoomed in on a small area ----------
 type Tile = { land: number[][]; lakes: number[][]; rivers: number[][]; coast: number[][]; border: number[][] };
@@ -149,45 +154,105 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
     parts.push(`<path class="rm-land" d="${map.land}" style="stroke:#c9b9a8;stroke-width:${zw(u * 0.12)}"/>`,
       `<path class="rm-border" d="${map.border}" style="${dash}"/>`);
   }
-  // Towns for orientation: the biggest in view, never on top of each other or of a pin and its name
-  if (towns && mode === 'full') {
-    const taken: [number, number, number, number][] = pins.map((p) => { const [x, y] = xy(p.lon, p.lat); return [x - u * 4, y - u * 5.5, x + u * (4 + (p.label?.length ?? 0) * 1.75), y + u * 4]; });
-    const fs = u * 3.1;
-    let n = 0;
-    for (const [lon, lat, name, , cap] of towns) {
-      if (n >= 9) break;
-      const [x, y] = xy(lon, lat);
-      if (x < x0 + u * 1.5 || x > x0 + w - u * 1.5 || y < y0 + u * 4.5 || y > y0 + h - u * 1.5) continue;
-      // The name goes to the right of the dot, or to the left where the right edge is too close
-      const tw = name.length * fs * 0.5;
-      const hit = (b: number[]) => b[0] < x0 || b[2] > x0 + w || taken.some((t) => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
-      const right: [number, number, number, number] = [x - u * 1.5, y - u * 4.5, x + u * 1.3 + tw, y + u * 1.5];
-      const leftBox: [number, number, number, number] = [x - u * 1.3 - tw, y - u * 4.5, x + u * 1.5, y + u * 1.5];
-      // The name to the right of the dot, else to the left (the edge or a neighbour in the way)
-      const left = hit(right);
-      if (left && hit(leftBox)) continue;
-      const box = left ? leftBox : right;
-      taken.push(box);
-      n++;
-      parts.push(anchored(x, y, `<circle r="${(u * (cap ? 0.8 : 0.6)).toFixed(2)}"/><text x="${(left ? -u * 1.3 : u * 1.3).toFixed(1)}" y="${(-u * 1.1).toFixed(1)}"${left ? ' text-anchor="end"' : ''} style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.24).toFixed(2)}px">${esc(name)}</text>`, `rm-town${cap ? ' big' : ''}`));
+  // Pins, dots and names are drawn at a fixed scale (one unit of the map's width = 10) and scaled down: on a map of a
+  // large area the sizes would be fractions of a pixel, and browsers space such tiny letters unevenly
+  const q = (v: number) => (v * 10 / u).toFixed(1);
+  const sc = (inner: string) => `<g transform="scale(${(u / 10).toPrecision(4)})">${inner}</g>`;
+  type Rect = [number, number, number, number];
+  const meets = (a: Rect, b: Rect) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+  const inside = (b: Rect, m = u * 0.8) => b[0] >= x0 + m && b[2] <= x0 + w - m && b[1] >= y0 + m && b[3] <= y0 + h - m;
+  // The zoom buttons (+ and −) lie on the map's top right corner: no names there (measured on a phone)
+  const buttons: Rect = [x0 + w - u * 12.5, y0, x0 + w, y0 + u * 23.5];
+  const at = pins.map((p) => xy(p.lon, p.lat));
+  const marks: Rect[] = pins.map((p, i) => { const [x, y] = at[i]; const r = p.n ? u * 2.8 : u * 1.9; return [x - r, y - r, x + r, y + r]; });
+  const names: Rect[] = [];
+  const townSvg: string[] = [];
+  // Towns for orientation: the biggest in the area the map is about first, then the rest of the view. The name goes
+  // right of the dot, else left, above or below – never on a pin, a pin's name, the zoom buttons or another town.
+  // All names have one size (3.4 % of the map's width, as the pins' names); a town without room is left out
+  const fs = u * 3.4;
+  const about = (lon: number, lat: number) => lon >= focus.lon0 && lon <= focus.lon1 && lat >= focus.lat0 && lat <= focus.lat1;
+  const inView = towns && mode === 'full' ? towns.filter(([lon, lat]) => { const [x, y] = xy(lon, lat); return x > x0 + u * 1.5 && x < x0 + w - u * 1.5 && y > y0 + u * 1.5 && y < y0 + h - u * 1.5; }) : [];
+  // Within the same size, a capital first, then the town nearest the wines
+  const near = (lon: number, lat: number) => { const [x, y] = xy(lon, lat); return Math.min(...at.map(([px, py]) => Math.hypot(px - x, py - y)), Infinity); };
+  const order = inView.map((t, i) => ({ t, i, a: about(t[0], t[1]) ? 0 : 1, d: near(t[0], t[1]) }))
+    .sort((p, o) => p.a - o.a || p.t[3] - o.t[3] || o.t[4] - p.t[4] || p.d - o.d || p.i - o.i).map((o) => o.t);
+  /** Draws the town when its name finds a free spot; `onPin`: its dot may lie under a pin (the main town). */
+  const placeTown = (town: Town, onPin = false) => {
+    const [lon, lat, , , cap] = town;
+    const name = townName(town);
+    const [x, y] = xy(lon, lat);
+    const r = u * (cap ? 0.95 : 0.75);
+    const dot: Rect = [x - r * 1.6, y - r * 1.6, x + r * 1.6, y + r * 1.6];
+    if (meets(dot, buttons) || names.some((t) => meets(dot, t)) || (!onPin && marks.some((t) => meets(dot, t)))) return false;
+    const tw = name.length * fs * (cap ? 0.58 : 0.57);
+    const base = y - u * 1.1, top = base - fs * 0.86, bottom = base + fs * 0.28;
+    // Each spot: the name's box, where the text starts and its anchor (the dot is checked above)
+    const spots: [Rect, number, number, string][] = [
+      [[x - tw, y + u * 1.4, x, y + u * 1.6 + fs], 0, y + u * 1.6 + fs * 0.74, ' text-anchor="end"'],
+      [[x, y + u * 1.4, x + tw, y + u * 1.6 + fs], 0, y + u * 1.6 + fs * 0.74, ''],
+      [[x - tw, y - u * 1.6 - fs, x, y - u * 1.4], 0, y - u * 1.6 - fs * 0.22, ' text-anchor="end"'],
+      [[x, y - u * 1.6 - fs, x + tw, y - u * 1.4], 0, y - u * 1.6 - fs * 0.22, ''],
+    ];
+    // Right, left, above and below the dot first; for the main town among pins also a little further out
+    for (const d of onPin ? [6, 3, 0] : [0]) spots.unshift(
+      [[x + u * (1.1 + d), top, x + u * (1.3 + d) + tw, bottom], u * (1.3 + d), base, ''],
+      [[x - u * (1.3 + d) - tw, top, x - u * (1.1 + d), bottom], -u * (1.3 + d), base, ' text-anchor="end"'],
+      [[x - tw / 2, y - u * (1.6 + d) - fs * 1.08, x + tw / 2, y - u * (1.4 + d)], 0, y - u * (1.6 + d) - fs * 0.22, ' text-anchor="middle"'],
+      [[x - tw / 2, y + u * (1.4 + d), x + tw / 2, y + u * (1.6 + d) + fs * 1.08], 0, y + u * (1.6 + d) + fs * 0.74, ' text-anchor="middle"'],
+    );
+    const spot = spots.find(([b]) => inside(b) && !meets(b, buttons) && ![...names, ...marks].some((t) => meets(b, t)));
+    if (!spot) return false;
+    const [box, tx, ty, anchor] = spot;
+    names.push(box, dot);
+    townSvg.push(anchored(x, y, sc(`<circle r="${q(r)}"/><text x="${q(tx)}" y="${q(ty - y)}"${anchor} style="font-size:${q(fs)}px;stroke-width:${q(fs * 0.24)}px">${esc(name)}</text>`), `rm-town${cap ? ' big' : ''}`));
+    return true;
+  };
+  // The main town (the capital or the biggest town of the area) always comes first, even before the pins' names
+  const main = order.find((town) => placeTown(town, true));
+  // The pins' names: the places with the most wines first, to the right of the pin or else to the left – never on
+  // another pin or name, nor outside the map (the number stays; the legend and the list name every wine)
+  const pfs = u * 3.4;
+  const side = new Map<number, 'right' | 'left'>();
+  if (mode === 'full') {
+    const byWines = pins.map((_, i) => i).sort((a, b) => (pins[b].n ?? 1) - (pins[a].n ?? 1));
+    for (const i of byWines) {
+      const label = pins[i].label;
+      if (!label) continue;
+      const [x, y] = at[i];
+      const tw = label.length * pfs * 0.6, top = y - u * 1.2 - pfs * 0.86, bottom = y - u * 1.2 + pfs * 0.28;
+      const free = (b: Rect) => inside(b, u * 0.4) && !meets(b, buttons) && !names.some((t) => meets(b, t)) && !marks.some((m, j) => j !== i && meets(b, m));
+      const right: Rect = [x + u * 3.1, top, x + u * 3.4 + tw, bottom], left: Rect = [x - u * 3.4 - tw, top, x - u * 3.1, bottom];
+      const s = free(right) ? 'right' : free(left) ? 'left' : null;
+      if (!s) continue;
+      side.set(i, s);
+      names.push(s === 'right' ? right : left);
     }
   }
-  for (const p of pins) {
-    const [x, y] = xy(p.lon, p.lat);
+  // Then the other towns, at most seven in all
+  let n = main ? 1 : 0;
+  for (const town of order) {
+    if (n >= 7) break;
+    if (town !== main && placeTown(town)) n++;
+  }
+  parts.push(...townSvg);
+  for (const [i, p] of pins.entries()) {
+    const [x, y] = at[i];
     const r = mode === 'inset' ? u * 3.2 : u * 1.6;
     // Drawn around 0 0 at the place (anchored): the zoom keeps pins, numbers and names their size on screen
-    const m: string[] = [`<circle r="${(r * 2.6).toFixed(1)}" fill="#6e0f1f" fill-opacity=".14"/>`];
+    // A pin whose name has no room on the map gets it as a tip (hover)
+    const m: string[] = [p.label && mode === 'full' && !side.has(i) ? `<title>${esc(p.label)}</title>` : '', `<circle r="${q(r * 2.6)}" fill="#6e0f1f" fill-opacity=".14"/>`];
     if (p.n) {
       const rr = u * 2.6;
-      m.push(`<g class="rm-badge"><circle r="${rr.toFixed(1)}" style="stroke-width:${(u * 0.4).toFixed(2)}"/><text class="rm-badge-n" y="${(u * 1.1).toFixed(1)}" style="font-size:${(u * 3).toFixed(1)}px">${p.n}</text></g>`);
+      m.push(`<g class="rm-badge"><circle r="${q(rr)}" style="stroke-width:${q(u * 0.4)}"/><text class="rm-badge-n" y="${q(u * 1.1)}" style="font-size:${q(u * 3)}px">${p.n}</text></g>`);
     } else {
-      m.push(`<circle r="${r.toFixed(1)}" fill="#6e0f1f" stroke="#fff" stroke-width="${(u * 0.5).toFixed(2)}"/>`);
+      m.push(`<circle r="${q(r)}" fill="#6e0f1f" stroke="#fff" stroke-width="${q(u * 0.5)}"/>`);
     }
-    if (p.label && mode !== 'inset') {
-      const fs = u * 3.4;
-      m.push(`<text class="rm-badge-title" x="${(u * 3.4).toFixed(1)}" y="${(-u * 1.2).toFixed(1)}" style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.25).toFixed(1)}px">${esc(p.label)}</text>`);
+    const s = side.get(i);
+    if (p.label && s) {
+      m.push(`<text class="rm-badge-title" x="${q(s === 'left' ? -pfs : pfs)}" y="${q(-u * 1.2)}"${s === 'left' ? ' text-anchor="end"' : ''} style="font-size:${q(pfs)}px;stroke-width:${q(pfs * 0.25)}px">${esc(p.label)}</text>`);
     }
-    parts.push(anchored(x, y, m.join('')));
+    parts.push(anchored(x, y, sc(m.join(''))));
   }
   parts.push('</svg>');
   return parts.join('');
