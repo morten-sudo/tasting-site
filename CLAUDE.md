@@ -36,6 +36,27 @@
   (sections in Danish and English; link each step to its place with `t:<section>/…`, `?open=<button id>` or `#<id>`)
   and, for a setting that needs explaining, a `?` tip (`data-help="<key>"` + an entry in `TIPS`).
 
+## Work and requirements: Jira
+
+- Jira (project WIN, winetastr.atlassian.net) is the only place for work, requirements, decisions and status.
+  `claude/roadmap.md` is an archive: do not update it. Background is in Confluence (space WT).
+  Full rules: `claude/jira-workflow.md` (Projects).
+- Requirements, success criteria and test cases live on the Story and are written by the product chat, approved by
+  Morten. Build what the issue says. If a requirement is wrong, missing or conflicts with something, comment on the
+  issue and stop that part. Do not change the requirements yourself.
+- Next work: project = WIN AND labels = klar AND statusCategory = "To Do" ORDER BY rank. Do not build an issue
+  without the label `klar`, or one with an open blocking issue.
+- If Morten asks for something directly, create the issue first, with what he asked for and the label `klar`.
+  New features get For hvem, Vaerdi, success criteria and test cases marked as a proposal.
+- Create Tasks, Bugs and Subtasks yourself under the right epic. Add your own technical tests.
+- Status: In Progress when you start. In Review when built, on the test address, checked on site and app, and every
+  test case has been run with the result in a comment on the issue. A failed test case goes back to In Progress.
+  After Morten approves against the success criteria and it is merged into `dev`, add the label `i-dev`.
+  Done only when it is live.
+- Site and app by default. Labels `kun-web` and `app-senere` are the only exceptions.
+- Each release has a Task under the releases epic listing its content and migrations.
+- Before reporting work as done, make sure the issue shows it. Refer to issues by key (WIN-123) in commits and branches.
+
 ## Releases: dev, test database and going live
 
 - **Branches.** `main` is live (winetastr.com, the live database). Work happens on a branch per track
@@ -48,8 +69,8 @@
 - **Database changes.** A migration is applied to the test database first, with the track. It goes to the live
   database only when its release goes live – database first, then the merge to `main`. Every migration must keep the
   live site and every app version working (add, never change; see the app contract), because tracks share the test
-  database and a release may go out without some of them. Keep track of which migrations each release carries in
-  `claude/roadmap.md` (Projects).
+  database and a release may go out without some of them. Each release has a Task in Jira (under the releases epic)
+  listing its content and migrations.
 - **Tests.** `security.sql` (three parts) and `app_contract.sql` run on the test database with every change, and on the
   live database when a release goes live.
 
@@ -57,7 +78,7 @@
 
 The site and the native SwiftUI guest app are one product, developed together by one chat. Read `ios/README.md`.
 
-- **Every change is decided for both.** A new feature or general fix that touches guests or the database is planned once and built in the same go in the database, on the site and in the app, unless the roadmap item says "web only" or "app later". Host and superadmin pages are web only (the app has no admin).
+- **Every change is decided for both.** A new feature or general fix that touches guests or the database is planned once and built in the same go in the database, on the site and in the app, unless the issue has the label `kun-web` or `app-senere`. Host and superadmin pages are web only (the app has no admin).
 - **Not done until both are checked.** A guest change is not finished before the site and the app (`ios/tools/simbuild.sh`, `ios/tools/simtest.sh`) have been looked at. Building the app needs a session linked to Morten's Mac.
 - **The site is the standard for look and words.** The app uses the site's fonts, colours, logo and icons (`ios/Winetastr/Theme.swift` mirrors `global.css` and `components.css`) and its dictionaries (`ios/tools/make_strings.py`). Change a shared colour, component or wording on both. No new icons, logos or styles in the app that the site does not have, unless Morten asks.
 - **Database calls are a contract.** Calls the app uses (`supabase/tests/app_contract.sql`) must not change name, arguments, columns or meaning: apps in people's phones cannot be updated with the database. Add optional arguments or new functions; remove old ones only when no app version in use needs them. Run `app_contract.sql` after every database change along with `security.sql`, and add new calls the app starts using.
