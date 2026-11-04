@@ -673,6 +673,7 @@ dialog .input { max-width: none; }
 /* Phones: the label over its value – not in the payment box, where the labels are short and the copy buttons line up */
 @media (max-width: 26rem) { .facts:not(:has(dd > .icon-act)) { grid-template-columns: minmax(0, 1fr); row-gap: 0.1rem; } .facts:not(:has(dd > .icon-act)) dd { margin-bottom: 0.5rem; } .facts dd:last-child { margin-bottom: 0; } }
 
+/* Map labels (towns, parts, titles) in the body font, upright, without letter-spacing – as easy to read as the area names */
 /* ---------- 23 Map with flag and credit (src/lib/region-map.ts, overview-map.ts, wine-map.ts) ----------
    One frame and one look for every map (the tasting's, a wine's), the credit line under it at the right; zoom with map-zoom.ts. */
 .map-box { border: 1px solid var(--lodge-3); border-radius: var(--radius); overflow: hidden; background: #fbf6ee; line-height: 0; min-width: 0; }
@@ -710,11 +711,11 @@ dialog .input { max-width: none; }
 .region-map .rm-river { fill: none; stroke: #6f93a8; stroke-width: calc(var(--z, 1) * 2.2px); stroke-linecap: round; stroke-linejoin: round; }
 .region-map .rm-coast { fill: none; stroke: #6f93a8; stroke-width: calc(var(--z, 1) * 1.2px); }
 .region-map .rm-town circle { fill: #3d2a22; }
-.region-map .rm-town text { fill: #3d2a22; font-style: italic; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
-.region-map .rm-part { fill: #6e0f1f; font-family: var(--body); font-size: 15px; font-weight: 600; letter-spacing: 0.25em; text-anchor: middle; opacity: 0.75; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; }
+.region-map .rm-town text { fill: #3d2a22; font-family: var(--body); paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
+.region-map .rm-part { fill: #3d2a22; font-family: var(--body); font-size: 15px; font-weight: 500; text-anchor: middle; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
 .region-map .rm-badge circle { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }
 .region-map .rm-badge-n { fill: #fff; font-family: var(--body); font-size: 14px; font-weight: 600; text-anchor: middle; }
-.region-map .rm-badge-title { fill: #6e0f1f; font-size: 17px; font-weight: 600; font-style: italic; paint-order: stroke; stroke: #fbf6ee; stroke-width: 4px; stroke-linejoin: round; }
+.region-map .rm-badge-title { fill: #6e0f1f; font-family: var(--body); font-size: 17px; font-weight: 600; paint-order: stroke; stroke: #fbf6ee; stroke-width: 4px; stroke-linejoin: round; }
 .region-map .rm-pin path { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }
 .region-map .rm-pin circle { fill: #fff; }
 /* Faint, behind a heading */
@@ -739,7 +740,7 @@ dialog .input { max-width: none; }
 .region-map.proposal .mp-line.is-dark { stroke: var(--tone-dark-line); stroke-width: calc(var(--z, 1) * 2px); }
 .region-map.proposal .rm-town text { stroke-width: 4px; }
 .region-map.proposal .mp-lead, .region-map.proposal .mp-name { text-anchor: middle; paint-order: stroke; stroke: #fbf6ee; stroke-linejoin: round; }
-.region-map.proposal .mp-lead { fill: var(--tone-dark-line); font-size: 20px; font-weight: 600; font-style: italic; stroke-width: 5px; }
+.region-map.proposal .mp-lead { fill: var(--tone-dark-line); font-family: var(--body); font-size: 20px; font-weight: 600; stroke-width: 5px; }
 .region-map.proposal .mp-lead.big { font-size: 34px; stroke-width: 7px; }
 .region-map.proposal .mp-name { fill: #3d2a22; font-family: var(--body); font-size: 14px; stroke-width: 3px; }
 .region-map.proposal .mp-name.is-dark { fill: var(--tone-dark-line); font-weight: 600; }

@@ -6,7 +6,7 @@ import { getCodes, tastingUrl, chatSeenKey, type MyTasting } from './guest';
 import { tastingCard } from './my-tastings';
 import { loadOrders, type OrderLine } from './my-orders';
 import { wineItem, type BookWine } from './wine-book';
-import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
+import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, loadTowns, type Place } from './overview-map';
 import { OVERVIEW_SOURCES, setMapCredit } from './wine-map';
 import { winesBackground } from './ui/map-background';
 import { mapZoom } from './ui/map-zoom';
@@ -166,7 +166,7 @@ async function showMap(book: BookWine[]) {
   const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
   if (!ov) return;
   const box = $('home-map');
-  box.innerHTML = drawOverview(ov, list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.n, label: g.p.label })), focus, 'full');
+  box.innerHTML = drawOverview(ov, list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.n, label: g.p.label })), focus, 'full', null, await loadTowns());
   $('map-block').hidden = false;
   mapZoom(box);
   setMapCredit(box, OVERVIEW_SOURCES, false, $('home-map-source'));

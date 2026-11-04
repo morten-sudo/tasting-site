@@ -174,7 +174,7 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
     // The whole region lit (e.g. port from the Douro): name its parts quietly
     if (wholeRegion && !badges.length) {
       for (const a of Object.values(map.areas)) {
-        if (a.title) parts.push(anchored(a.label[0], a.label[1], `<text class="rm-part">${esc(a.title.toUpperCase())}</text>`));
+        if (a.title) parts.push(anchored(a.label[0], a.label[1], `<text class="rm-part">${esc(a.title)}</text>`));
       }
     }
     parts.push(...titleSvg);

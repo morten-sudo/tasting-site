@@ -151,18 +151,25 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
   }
   // Towns for orientation: the biggest in view, never on top of each other or of a pin and its name
   if (towns && mode === 'full') {
-    const taken: [number, number, number, number][] = pins.map((p) => { const [x, y] = xy(p.lon, p.lat); return [x - u * 3, y - u * 5, x + u * 26, y + u * 3]; });
-    const fs = u * 2.5;
+    const taken: [number, number, number, number][] = pins.map((p) => { const [x, y] = xy(p.lon, p.lat); return [x - u * 4, y - u * 5.5, x + u * (4 + (p.label?.length ?? 0) * 1.75), y + u * 4]; });
+    const fs = u * 3.1;
     let n = 0;
     for (const [lon, lat, name, , cap] of towns) {
       if (n >= 9) break;
       const [x, y] = xy(lon, lat);
-      if (x < x0 + u * 2 || x > x0 + w - u * 14 || y < y0 + u * 4 || y > y0 + h - u * 2) continue;
-      const box: [number, number, number, number] = [x - u * 1.5, y - u * 4, x + u * 1.6 + name.length * fs * 0.52, y + u * 1.5];
-      if (taken.some((t) => box[0] < t[2] && box[2] > t[0] && box[1] < t[3] && box[3] > t[1])) continue;
+      if (x < x0 + u * 1.5 || x > x0 + w - u * 1.5 || y < y0 + u * 4.5 || y > y0 + h - u * 1.5) continue;
+      // The name goes to the right of the dot, or to the left where the right edge is too close
+      const tw = name.length * fs * 0.5;
+      const hit = (b: number[]) => b[0] < x0 || b[2] > x0 + w || taken.some((t) => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+      const right: [number, number, number, number] = [x - u * 1.5, y - u * 4.5, x + u * 1.3 + tw, y + u * 1.5];
+      const leftBox: [number, number, number, number] = [x - u * 1.3 - tw, y - u * 4.5, x + u * 1.5, y + u * 1.5];
+      // The name to the right of the dot, else to the left (the edge or a neighbour in the way)
+      const left = hit(right);
+      if (left && hit(leftBox)) continue;
+      const box = left ? leftBox : right;
       taken.push(box);
       n++;
-      parts.push(anchored(x, y, `<circle r="${(u * (cap ? 0.75 : 0.55)).toFixed(2)}"/><text x="${(u * 1.3).toFixed(1)}" y="${(-u * 1.1).toFixed(1)}" style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.22).toFixed(2)}px">${esc(name)}</text>`, `rm-town${cap ? ' big' : ''}`));
+      parts.push(anchored(x, y, `<circle r="${(u * (cap ? 0.8 : 0.6)).toFixed(2)}"/><text x="${(left ? -u * 1.3 : u * 1.3).toFixed(1)}" y="${(-u * 1.1).toFixed(1)}"${left ? ' text-anchor="end"' : ''} style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.24).toFixed(2)}px">${esc(name)}</text>`, `rm-town${cap ? ' big' : ''}`));
     }
   }
   for (const p of pins) {

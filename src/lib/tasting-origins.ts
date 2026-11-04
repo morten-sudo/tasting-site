@@ -2,7 +2,7 @@
 // the wines' appellations, a legend, and a small country map for wines from another region – or, when no wine comes
 // from a region with a detailed map, the overview map with a numbered pin per place. Also drawn on /dev/maps/.
 import { loadMap, mainRegion, groupWines, drawMap, fitToAreas, numberRanges } from './region-map';
-import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
+import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, loadTowns, type Place } from './overview-map';
 import { mapZoom } from './ui/map-zoom';
 import { mk } from './ui/dom';
 import { countryName } from './origin';
@@ -76,7 +76,7 @@ async function showOverviewOrigins(wines: MapWine[], el: OriginParts) {
   const [ov, focus] = await Promise.all([loadOverview(overviewFor(places)), focusFor(places)]);
   if (!ov) return;
   const pins = list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.wines.length, label: g.p.label }));
-  el.box.innerHTML = drawOverview(ov, pins, focus, 'full');
+  el.box.innerHTML = drawOverview(ov, pins, focus, 'full', null, await loadTowns());
   mapZoom(el.box);
   el.hero.innerHTML = '';
   const no = new Map(wines.map((w, i) => [w.id, i + 1]));
