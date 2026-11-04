@@ -82,3 +82,15 @@ export function nameWithSize(name: string, cl: number | string | null | undefine
   const size = bottleText(cl, locale);
   return size ? `${name} · ${size}` : name;
 }
+
+/** What a wine line needs: the type (already in words), vintage, size and producer. */
+export type MetaWine = { style?: string | null; vintage?: string | null; producer?: string | null; bottle_cl?: number | string | null };
+
+/** The one meta line wherever a wine is listed (WIN-170): "Rød · 2019 · 150 cl · producer" – the size after the vintage,
+ *  no size at 75 cl. The parts, without empties and repeats; a list row joins them with " · ". `styleLabel` turns the
+ *  stored type into words (styleName in the browser). Every list builds its line with this, so a new place gets the
+ *  size too – scripts/check-ui.mjs fails a file that shows a wine without importing from here. */
+export function wineMeta(w: MetaWine, locale = 'da-DK', styleLabel: (s: string) => string = (s) => s): string[] {
+  const parts = [w.style ? styleLabel(w.style) : null, w.vintage ?? null, bottleText(w.bottle_cl, locale), w.producer ?? null];
+  return parts.filter((x, i, arr): x is string => !!x && arr.indexOf(x) === i);
+}

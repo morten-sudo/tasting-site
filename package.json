@@ -8,6 +8,7 @@
     "prebuild": "node scripts/db-target.mjs && node scripts/check-ui.mjs",
     "build": "astro build",
     "check:ui": "node scripts/check-ui.mjs",
+    "test:check-ui": "node scripts/check-ui.test.mjs",
     "preview": "astro preview"
   },
   "dependencies": {

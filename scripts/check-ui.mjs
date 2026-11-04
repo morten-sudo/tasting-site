@@ -11,6 +11,8 @@
 //      a list shows, the side panel edits
 //   6. a <dialog class="sheet"> that does not come from Sheet.astro or sheet() in src/lib/ui/sheet.ts
 //   7. a CSS file other than the three allowed ones, or a CSS import of another file
+//   8. a file that shows a wine's name (wine_name, title: w.name, textContent = w.name, an order line's .wine) without
+//      importing from src/lib/bottle.ts – every place that shows a wine shows its size the same way (WIN-170)
 // It also WARNS (does not fail) about class names in markup that no stylesheet defines – usually JS hooks, sometimes a
 // typo or a leftover. CHECK_UI_VERBOSE=1 lists them all.
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -53,6 +55,17 @@ const STYLE_ALLOW = [
   { file: 'src/server/mail-texts.ts' },
 ];
 // A custom property only (style="--tone: …") passes a value to the stylesheet and is allowed everywhere
+
+// 8. Files that show a wine's name without its size, and why (WIN-170: toasts, screen-reader texts, tips, quiz and chat
+// are not covered – they point at a wine that is already on the screen with its size)
+const WINE_NAME = /\bwine_name\b|\btitle:\s*\(?(?:w|wine)\.name\b|\.textContent\s*=\s*(?:w|wine)\.name\b|\b(?:l|r|it|line|fav)\.wine\b/;
+const BOTTLE_IMPORT = /from\s+['"](?:\.\.?\/)+(?:lib\/)?bottle['"]/;
+const WINE_NAME_ALLOW = [
+  // The shop-link log: what a host looked up in a shop, not a wine in the database (it has no size)
+  { file: 'src/pages/superadmin/pictures.astro' },
+  // The component gallery's made-up table rows (a column called "wine"), no real wines
+  { file: 'src/pages/superadmin/dev/components.astro' },
+];
 const STYLE_VAR_ONLY = /^\s*(--[\w-]+\s*:[^;]+;?\s*)+$/;
 
 const errors = [];
@@ -112,6 +125,9 @@ const defined = new Set();
 const addDefined = (css) => { for (const m of css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/url\([^)]*\)/g, '').matchAll(/\.([A-Za-z_][\w-]*)/g)) defined.add(m[1]); };
 
 const files = walk(SRC).filter((p) => ['.astro', '.ts', '.css', '.mjs', '.js'].includes(extname(p)));
+// CHECK_UI_EXTRA=<file>: also check this file as if it were in src/ (scripts/check-ui.test.mjs uses it for its
+// deliberately failing cases)
+const EXTRA = process.env.CHECK_UI_EXTRA ? [process.env.CHECK_UI_EXTRA] : [];
 for (const p of files) {
   const rel = relative(ROOT, p).split('\\').join('/');
   const ext = extname(p);
@@ -122,8 +138,8 @@ for (const p of files) {
 const bannedRe = new RegExp(`(?<![\\w-])(${BANNED.map((b) => b.replace(/[-]/g, '\\-')).join('|')})(?![\\w-])`);
 const used = new Map();
 
-for (const p of files) {
-  const rel = relative(ROOT, p).split('\\').join('/');
+for (const p of [...files, ...EXTRA]) {
+  const rel = EXTRA.includes(p) ? `src/check-ui-test/${p.split(/[\\/]/).pop()}` : relative(ROOT, p).split('\\').join('/');
   const ext = extname(p);
   const raw = readFileSync(p, 'utf8');
   const generated = rel.startsWith('src/i18n/');
@@ -205,6 +221,12 @@ for (const p of files) {
     const body = code.slice(m.index, end < 0 ? undefined : end);
     const f = body.match(FIELD);
     if (f) err(rel, lineOf(code, m.index + f.index), 'form field inside a list row (.lrow/.lcard) – a list shows, the side panel edits');
+  }
+
+  // 8. a wine's name without the shared size helpers (src/lib/bottle.ts itself defines them)
+  if (rel !== 'src/lib/bottle.ts' && !WINE_NAME_ALLOW.some((a) => a.file === rel) && !BOTTLE_IMPORT.test(code)) {
+    const m = code.match(WINE_NAME);
+    if (m) err(rel, lineOf(code, m.index), `shows a wine ("${m[0]}") without its bottle size – use wineMeta()/nameWithSize()/bottleText() from src/lib/bottle.ts (WIN-170), or add the file to WINE_NAME_ALLOW with the reason`);
   }
 
   // 6. side panels only through Sheet.astro / sheet()

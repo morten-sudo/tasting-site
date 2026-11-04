@@ -16,7 +16,7 @@ import { detailIcon } from './ui/detail-icon';
 import { wineThumb } from './ui/thumb';
 import { fetchedWhen, type AdminWine } from './admin-wines';
 import { tooltip } from './ui/tooltip';
-import { bottleText } from './bottle';
+import { wineMeta } from './bottle';
 
 type Detail = Omit<AdminWine, 'tasting_wines'> & {
   tasting_wines: { price_dkk: number | null; tastings: { id: string; slug: string; title: string; starts_at: string | null } | null }[];
@@ -53,7 +53,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   // The one wine picture (20), large; without one the quiet bottle outline
   $('wd-pic').replaceChildren(wineThumb(w, { size: 'large' }));
   $('wd-name').textContent = w.name;
-  $('wd-meta').textContent = [w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer].filter(Boolean).join(' · ');
+  $('wd-meta').textContent = wineMeta(w, locale(), styleName).join(' · ');
   $('wd-edit').onclick = actions.edit;
 
   // Facts
