@@ -58,7 +58,7 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
       </li>
       <li class="card">
         <Icon name="globe" />
-        <div><h3 data-i18n="signup.f6Title">In your guests' language</h3><p data-i18n="signup.f6Text">Nine languages. Each tasting has its own, and every guest can switch for themselves.</p></div>
+        <div><h3 data-i18n="signup.f6Title">The app in your guests' language</h3><p data-i18n="signup.f6Text">Buttons, pages and emails in nine languages, and every guest can switch. Your own texts – the introduction and the wine descriptions – stay as you write them.</p></div>
       </li>
     </ul>
     <p class="ld-more"><a class="text-btn fwd" href="/plans/"><span data-i18n="landing.moreLink">All features and plans</span><Icon name="right" /></a></p>
@@ -67,7 +67,7 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
   <!-- Closing call to action -->
   <section class="wrap ld-final">
     <SectionTitle text="signup.finalTitle" />
-    <p data-i18n="landing.finalText">It takes two minutes to create an account and your first tasting.</p>
+    <p id="final-text" data-i18n="landing.finalText">It takes two minutes to create an account and your first tasting.</p>
     <div id="final-out" class="actions ld-final-ctas">
       <a class="btn" href="/signup/" data-i18n="signup.formTitle">Create your free account</a>
       <a class="text-btn" href="/login/" data-i18n="landing.haveAccount">I already have an account</a>
@@ -81,7 +81,7 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
 <script>
   import { supabase } from '../lib/supabase';
   import { getCodes } from '../lib/guest';
-  import { i18nReady } from '../i18n';
+  import { i18nReady, t } from '../i18n';
 
   await i18nReady;
   const { data } = await supabase.auth.getSession();
@@ -92,6 +92,10 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
     document.getElementById('invited-note')!.hidden = true;
     document.getElementById('final-out')!.hidden = true;
     document.getElementById('final-in')!.hidden = false;
+    // …and no talk of creating an account (WIN-119)
+    const ft = document.getElementById('final-text')!;
+    ft.dataset.i18n = 'landing.finalTextIn';
+    ft.textContent = t('landing.finalTextIn');
   }
 </script>
 
