@@ -26,6 +26,8 @@ struct UnderlineTabs<T: Hashable>: View {
 /// .notice: a quiet box with an icon and a text, and an action under it
 struct NoticeBox<Actions: View>: View {
     enum Tone { case neutral, ok }
+    /// .n-title: a bold first line (Notice.astro's title)
+    var title: String? = nil
     let text: String
     var tone = Tone.neutral
     @ViewBuilder var actions: Actions
@@ -33,7 +35,10 @@ struct NoticeBox<Actions: View>: View {
         HStack(alignment: .top, spacing: 11) {
             SiteIcon(tone == .ok ? "check" : "info", size: 18).foregroundStyle(tone == .ok ? Color.okText : Color.muted).padding(.top, 1)
             VStack(alignment: .leading, spacing: 9) {
-                Text(text).font(.body(15.2)).foregroundStyle(Color.paper).fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let title { Text(title).font(.semibold(15.2)).foregroundStyle(Color.paper) }
+                    Text(text).font(.body(15.2)).foregroundStyle(Color.paper).fixedSize(horizontal: false, vertical: true)
+                }
                 actions
             }
             Spacer(minLength: 0)
@@ -44,7 +49,7 @@ struct NoticeBox<Actions: View>: View {
     }
 }
 extension NoticeBox where Actions == EmptyView {
-    init(text: String, tone: Tone = .neutral) { self.text = text; self.tone = tone; actions = EmptyView() }
+    init(title: String? = nil, text: String, tone: Tone = .neutral) { self.title = title; self.text = text; self.tone = tone; actions = EmptyView() }
 }
 
 /// .btn.secondary.small

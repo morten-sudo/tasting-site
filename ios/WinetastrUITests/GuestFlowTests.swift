@@ -19,7 +19,8 @@ final class GuestFlowTests: XCTestCase {
         row.tap()
     }
 
-    func testUnknownEmailShowsError() {
+    /// WIN-181: an unknown email gets the same next step as a known one – the app never says which
+    func testUnknownEmailShowsSameMessage() {
         let a = app(["-resetData", "YES"])
         let field = a.textFields["E-mail"]
         XCTAssertTrue(field.waitForExistence(timeout: 15))
@@ -27,8 +28,10 @@ final class GuestFlowTests: XCTestCase {
         XCTAssertTrue(a.staticTexts["Skriv din e-mail for at fortsætte."].waitForExistence(timeout: 5), "empty email")
         field.tap(); field.typeText("findes-ikke-apptest@example.com")
         a.buttons["Send kode"].tap()
-        let msg = a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Vi kender ikke'")).firstMatch
-        XCTAssertTrue(msg.waitForExistence(timeout: 15), "unknown email message")
+        let msg = a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'hvis vi kender mailen'")).firstMatch
+        XCTAssertTrue(msg.waitForExistence(timeout: 15), "the shared message")
+        XCTAssertTrue(a.staticTexts["Ingen kode?"].exists, "help when no code arrives")
+        XCTAssertFalse(a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Vi kender ikke'")).firstMatch.exists, "no unknown-email message")
     }
 
     func testPasteInviteLink() {

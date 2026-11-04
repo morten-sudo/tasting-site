@@ -289,6 +289,8 @@ export const HELP: HelpSection[] = [
 <p>Når du er logget ind, ser du kun invitationer til den e-mail, du er logget ind med. Er du inviteret med en anden e-mail, så åbn invitationslinket og vælg <i>Log ud og åbn invitationen</i> – eller bed værten rette din e-mail på gæstelisten.</p>
 <h2>Gæsten har mistet sit link</h2>
 <p>Send invitationen igen, eller lad gæsten logge ind på winetastr.com med sin e-mail.</p>
+<h2 id="no-login-code">En gæst får ingen kode ved login</h2>
+<p>Login siger det samme til alle: at koden er sendt, hvis vi kender mailen. Siden fortæller ikke, om en e-mail står på en gæsteliste – så ingen kan prøve sig frem. Tjek gæstens e-mail under <a href="t:guests/">Gæster</a>, og bed gæsten kigge i spam eller logge ind med linket fra invitationen (kopier det i gæstens række, og send det på sms).</p>
 <h2>"Kontoen har brugt dagens …"</h2>
 <p>Hver konto kan sende 300 mails og lave 500 automatiske opslag om dagen (læse links og etiketter, finde billeder og producenter, AI-tekster og quizforslag) – langt mere end en smagning bruger. Når grænsen er nået, kan du stadig udfylde vinene selv og <a href="t:guests/">kopiere gæsternes links</a> og sende dem selv. Grænsen nulstilles ved midnat (UTC).</p>`,
       en: `<h2>The guest has not received the invitation</h2>
@@ -305,6 +307,8 @@ export const HELP: HelpSection[] = [
 <p>When you are signed in, you only see invitations to the email you are signed in with. If you were invited with another email, open the invitation link and choose <i>Sign out and open the invitation</i> – or ask the host to correct your email on the guest list.</p>
 <h2>A guest has lost their link</h2>
 <p>Send the invitation again, or let the guest sign in at winetastr.com with their email.</p>
+<h2 id="no-login-code">A guest gets no code when signing in</h2>
+<p>Sign-in says the same to everyone: that the code has been sent if we know the email. The page does not tell whether an email is on a guest list – so nobody can try their way through. Check the guest's email under <a href="t:guests/">Guests</a>, and ask the guest to look in their spam folder or sign in with the link from the invitation (copy it in the guest's row and send it by text message).</p>
 <h2>"Your account has used today's …"</h2>
 <p>Each account can send 300 emails and make 500 automatic look-ups a day (reading links and labels, finding pictures and producers, AI texts and quiz suggestions) – far more than a tasting uses. When the limit is reached you can still fill in the wines yourself and <a href="t:guests/">copy the guests' links</a> and send them yourself. The limit resets at midnight (UTC).</p>`,
     },

@@ -903,46 +903,68 @@
     }
    }
   },
-  "login.sentTo": {
+  "login.sentIfKnown": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Vi har sendt en kode til"
+      "value": "Vi har sendt en kode til {email}, hvis vi kender mailen. Skriv den her."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "We have sent a code to"
+      "value": "We have sent a code to {email} if we know the email. Enter it here."
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Við höfum sent kóða á"
+      "value": "Við höfum sent kóða á {email} ef við þekkjum netfangið. Sláðu hann inn hér."
      }
     }
    }
   },
-  "login.enterIt": {
+  "login.noCodeTitle": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Skriv den her."
+      "value": "Ingen kode?"
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "Enter it here."
+      "value": "No code?"
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Sláðu hann inn hér."
+      "value": "Enginn kóði?"
+     }
+    }
+   }
+  },
+  "login.noCodeHelp": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Tjek, at mailen er stavet rigtigt, og kig i spam. Du kan også logge ind med linket fra din invitation."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Check that the email is spelled correctly and look in your spam folder. You can also sign in with the link from your invitation."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Athugaðu að netfangið sé rétt stafað og skoðaðu ruslpóstinn. Þú getur líka skráð þig inn með hlekknum úr boðinu."
      }
     }
    }
@@ -1097,28 +1119,6 @@
      "stringUnit": {
       "state": "translated",
       "value": "Boðshlekkur"
-     }
-    }
-   }
-  },
-  "login.unknownEmail": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Vi kender ikke {email}. Tjek stavningen, brug dit invitationslink, eller skriv til værten."
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "We don't know {email}. Check the spelling, use your invitation link or contact the host."
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Við þekkjum ekki {email}. Athugaðu stafsetninguna, notaðu boðshlekkinn eða hafðu samband við gestgjafann."
      }
     }
    }
@@ -1317,28 +1317,6 @@
      "stringUnit": {
       "state": "translated",
       "value": "Þetta boð er á annað netfang en það sem þú ert skráð/ur inn með."
-     }
-    }
-   }
-  },
-  "login.tooManyChecks": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "For mange forsøg. Vent lidt og prøv igen."
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Too many attempts. Wait a while and try again."
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Of margar tilraunir. Bíddu aðeins og reyndu aftur."
      }
     }
    }
@@ -5805,28 +5783,6 @@
      "stringUnit": {
       "state": "translated",
       "value": "Athugaðu tenginguna og reyndu aftur."
-     }
-    }
-   }
-  },
-  "app.spamHint": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Kan du ikke finde mailen, så kig i spam. Skriv koden her i appen."
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Can’t find the email? Check your spam folder. Enter the code here in the app."
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Finnurðu ekki póstinn? Athugaðu ruslpóstinn. Sláðu kóðann inn hér í appinu."
      }
     }
    }

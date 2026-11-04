@@ -112,7 +112,8 @@ struct LoginView: View {
 
     private var codeStep: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(L("login.sentTo") + " " + email + ". " + L("login.enterIt")).font(.body()).foregroundStyle(Color.paper)
+            // The same words whether the email is known or not (WIN-181); the email in bold, so a typo is easy to see
+            sentLead.font(.body()).foregroundStyle(Color.paper)
             FieldLabel(text: L("login.codeLabel")).padding(.top, 6)
             TextField("", text: $otp)
                 .accessibilityLabel(L("login.codeLabel"))
@@ -122,13 +123,21 @@ struct LoginView: View {
             Button { Task { await verify() } } label: { busyLabel(L("login.submit")) }
                 .buttonStyle(PrimaryButton()).disabled(busy).padding(.top, 6)
             if let note { Text(note).font(.body(14.4)).foregroundStyle(Color.okText) }
-            Text(L("app.spamHint")).font(.body(14.4)).foregroundStyle(Color.muted)
             HStack {
                 Button(L("login.resend")) { Task { if await sendCode() { note = L("login.resent") } } }.buttonStyle(TextButton())
                 Spacer()
                 Button(L("login.otherEmail")) { step = .email; otp = ""; error = nil; note = nil }.buttonStyle(TextButton())
             }
+            NoticeBox(title: L("login.noCodeTitle"), text: L("login.noCodeHelp")).padding(.top, 2)
         }
+    }
+
+    /// login.sentIfKnown with the email in bold
+    private var sentLead: Text {
+        let parts = L("login.sentIfKnown").components(separatedBy: "{email}")
+        guard parts.count == 2 else { return Text(verbatim: L("login.sentIfKnown", ["email": email])) }
+        let bold = Text(verbatim: email).font(.semibold())
+        return Text("\(Text(verbatim: parts[0]))\(bold)\(Text(verbatim: parts[1]))")
     }
 
     private var inviteBox: some View {
@@ -170,21 +179,19 @@ struct LoginView: View {
         if await sendCode() { step = .code; focus = true }
     }
 
+    /// Asks Supabase to send a code. The answer looks the same whether the email is known or not, so the app
+    /// shows the same next step for both (WIN-181) and no longer asks login_email_known. Only problems that do
+    /// not depend on the email are shown: the connection, or too many emails in a short time.
     private func sendCode() async -> Bool {
         busy = true; error = nil; defer { busy = false }
-        do {
-            guard try await Backend.emailKnown(email) else {
-                error = L("login.unknownEmail", ["email": email]); return false
-            }
-        } catch {
-            self.error = dbMessage(error).contains("too_many") ? L("login.tooManyChecks") : L("login.sendFailed")
-            return false
-        }
         do {
             try await supabase.auth.signInWithOTP(email: email, shouldCreateUser: true, data: ["lang": .string(appLanguageCode)])
             await Backend.logLogin()
             return true
         } catch {
+            let code = (error as? AuthError)?.errorCode.rawValue ?? ""
+            // Answers that would only come for an email we do not know (if sign-ups are turned off) are shown as sent
+            if ["otp_disabled", "signup_disabled", "user_not_found"].contains(code) { return true }
             let rate = (error as? AuthError)?.errorCode == .overEmailSendRateLimit || String(describing: error).contains("429")
             self.error = rate ? L("login.tooManyMails") : L("login.sendFailed")
             return false
