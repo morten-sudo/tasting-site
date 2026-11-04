@@ -86,14 +86,60 @@ struct Disclosure<Content: View>: View {
     }
 }
 
-/// A facts list of label and value (the details "Label: text", the producer's website and address)
+/// detailIcon() in src/lib/ui/detail-icon.ts: the icon for a heading in a wine's details, from the heading's words
+/// (Danish, English, Icelandic), info when none fits. The same rules in the same order – the first match wins.
+private let detailIconRules: [(String, String)] = [
+    (#"hjemmeside|website|vefs"#, "globe"),
+    (#"adresse|address|heimilisfang"#, "pin"),
+    (#"smag|taste|palate|finish|bragð"#, "taste"),
+    (#"duft|næse|aroma|nose|bouquet|ilm"#, "wind"),
+    (#"drue|grape|þrúg"#, "grapes"),
+    (#"vinmark|mark\b|vineyard|parcel|terroir|jordbund|soil|víngarð"#, "vineyard"),
+    (#"producent|huset|producer|house|winery|quinta|framleiðand"#, "winery"),
+    (#"oprindelse|område|region|origin|appellation|uppruni|svæði"#, "map"),
+    (#"året|årgang|\byear\b|vintage|høst|harvest|klima|weather|árgang"#, "sun"),
+    (#"farve|colou?r|litur"#, "drop"),
+    (#"balance|struktur|structure|syre|acid|tannin|sødme|sweetness"#, "scale"),
+    (#"fremstilling|produktion|vinifi|production|making|framleiðsl"#, "barrel-grapes"),
+    (#"lagring|holdbar|modning|ageing|aging|cellar|drikkevindue|geymsl"#, "barrel"),
+    (#"udvikling|potentiale|development|potential|þróun"#, "trend"),
+    (#"alkohol|alcohol|abv|áfengi"#, "percent"),
+    (#"flaske|bottle|flask"#, "bottle"),
+    (#"anmeldelse|point|score|review|rating|bedømmelse|umsögn"#, "star"),
+    (#"sammenlign|compared|comparison|samanbur"#, "compare"),
+    (#"sjælden|rarity|\brare\b|fágæt"#, "gem"),
+    (#"\bmad\b|food|pairing|matur"#, "food"),
+    (#"servering|serving|serve|temperatur|framreiðsl"#, "serving"),
+    (#"stil|hvad er det|style|\btype\b|what it is|tegund"#, "glass"),
+].map { pattern, icon in
+    // JavaScript's \b only knows ASCII word characters (æ, ø, å are not), ICU's knows all letters: spell out JavaScript's
+    let js = pattern.replacingOccurrences(of: #"\b"#, with: #"(?:(?<![A-Za-z0-9_])(?=[A-Za-z0-9_])|(?<=[A-Za-z0-9_])(?![A-Za-z0-9_]))"#)
+    return (js, icon)
+}
+private let detailIconRegexes: [(NSRegularExpression, String)] = detailIconRules.map { (try! NSRegularExpression(pattern: $0.0), $0.1) }
+
+func detailIcon(_ label: String) -> String {
+    let l = label.lowercased()
+    let range = NSRange(l.startIndex..., in: l)
+    for (re, icon) in detailIconRegexes where re.firstMatch(in: l, range: range) != nil { return icon }
+    return "info"
+}
+
+/// A facts list of label and value (the details "Label: text", the producer's website and address); an icon before
+/// the label when it has one (.facts dt svg), in the label's muted colour
 struct FactsRows: View {
-    let rows: [(label: String?, value: AnyView)]
+    let rows: [(label: String?, icon: String?, value: AnyView)]
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
                 VStack(alignment: .leading, spacing: 1.6) {
-                    if let l = r.label, !l.isEmpty { Text(l).font(.body(13.6)).foregroundStyle(Color.muted) }
+                    if let l = r.label, !l.isEmpty {
+                        HStack(alignment: .center, spacing: 8) {
+                            if let icon = r.icon { SiteIcon(icon, size: 18.4) }
+                            Text(l).font(.body(13.6))
+                        }
+                        .foregroundStyle(Color.muted)
+                    }
                     r.value
                 }
                 .padding(.vertical, 9.6)

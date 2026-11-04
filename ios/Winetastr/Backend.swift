@@ -17,6 +17,8 @@ struct TastingInfo: Decodable {
     let coming: Int?; let full: Bool?; let signup_open: Bool?
     let ends_at: String?; let quiz_count: Int?; let quiz_open: Bool?; let quiz_finished: Bool?
     let orders_open: Bool?; let mobilepay: String?; let bulk_mode: String?
+    /// The language the host writes the tasting in (the site marks its name and introduction with it)
+    let language: String?
     var start: Date? { parseDate(starts_at) }
     var end: Date? { parseDate(ends_at) }
     var hosts: String? {
@@ -45,7 +47,11 @@ struct Wine: Decodable, Hashable, Identifiable {
     let producer_address: String?; let grapes: String?; let food_pairing: String?; let serving: String?; let blind: Bool?
     let appellation_id: String?; let producer_lat: Double?; let producer_lon: Double?
     let orderable: Bool?; let ordered: Int?; let price_tiers: [PriceTier]?
+    /// The bottle's size in cl (wines.bottle_cl, numeric): 75 unless set, null for a blind wine and from older databases
+    var bottle_cl: FlexNumber?
     var isBlind: Bool { blind ?? false }
+    /// "150 cl" / "37,5 cl" when the bottle is not an ordinary 75 cl one (bottleText in src/lib/bottle.ts)
+    var bottleLine: String? { bottleText(bottle_cl?.value) }
     var imageURL: URL? {
         guard let image_url, !image_url.isEmpty else { return nil }
         return URL(string: image_url.hasPrefix("/") ? "https://winetastr.com" + image_url : image_url)
@@ -68,6 +74,30 @@ struct Wine: Decodable, Hashable, Identifiable {
             return (nil, line)
         }
     }
+}
+
+/// A Postgres numeric: a JSON number, or a string should the server ever send one – never a reason to drop the wine
+struct FlexNumber: Decodable, Hashable {
+    let value: Double?
+    init(_ value: Double?) { self.value = value }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if let d = try? c.decode(Double.self) { value = d }
+        else if let s = try? c.decode(String.self) { value = Double(s.replacingOccurrences(of: ",", with: ".")) }
+        else { value = nil }
+    }
+}
+
+/// bottleText() in src/lib/bottle.ts: "150 cl", "37,5 cl" (Danish, Icelandic) or "37.5 cl" (English) – nil for an
+/// ordinary 75 cl bottle or no size
+func bottleText(_ cl: Double?) -> String? {
+    guard let n = cl, n.isFinite, n != 75 else { return nil }
+    return "\(n.formatted(.number.locale(appLocale).precision(.fractionLength(0...1)).grouping(.never))) cl"
+}
+
+/// nameWithSize(): "Quinta do Noval LBV · 150 cl" where only the wine's name is shown (order lines); the name alone at 75 cl
+func nameWithSize(_ name: String, _ cl: Double?) -> String {
+    bottleText(cl).map { "\(name) · \($0)" } ?? name
 }
 
 /// A quantity price: from qty bottles, price each
@@ -130,7 +160,14 @@ enum Backend {
         return try? decode(data)
     }
     static func wines(_ code: String) async throws -> [Wine] {
-        try decode(try await supabase.rpc("get_wines", params: CodeParam(code: code)).execute().data)
+        var list: [Wine] = try decode(try await supabase.rpc("get_wines", params: CodeParam(code: code)).execute().data)
+        #if DEBUG
+        // Screenshots of a size that is not 75 cl, without changing the test data: -bottleMock 150 sets the first wine's
+        if let s = UserDefaults.standard.string(forKey: "bottleMock"), let v = Double(s), let i = list.firstIndex(where: { !$0.isBlind }) {
+            list[i].bottle_cl = FlexNumber(v)
+        }
+        #endif
+        return list
     }
     static func ratings(_ code: String) async throws -> [Int: MyRating] {
         let rows: [MyRating] = try decode(try await supabase.rpc("get_my_ratings", params: CodeParam(code: code)).execute().data)

@@ -183,7 +183,8 @@ struct CalendarSheet: UIViewControllerRepresentable {
 
 // MARK: - The payment box (component 51, payBox in src/lib/pay.ts)
 
-/// On a phone: the button to the MobilePay app, then the number, the amount and the message with a copy button each.
+/// How to pay in one line, then the number, the amount and the message with a copy button each. No button into
+/// MobilePay: its mobilepay://send link is refused on real phones (the site took it out too, src/lib/pay.ts).
 struct PayBox: View {
     let mobilepay: String?
     let amount: Double
@@ -202,21 +203,15 @@ struct PayBox: View {
                 Text(L("pay.noNumber", ["amount": krText(amount)])).font(.body()).foregroundStyle(Color.paper)
             } else {
                 Text(L("pay.lead", ["amount": krText(amount)])).font(.medium()).foregroundStyle(Color.paper)
-                if let url = deepLink { Link(L("pay.open"), destination: url).buttonStyle(PrimaryButton()) }
+                Text(L("pay.how")).font(.body(13.6)).foregroundStyle(Color.muted).fixedSize(horizontal: false, vertical: true)
                 VStack(spacing: 0) {
                     copyRow(L("pay.number"), pretty, number)
                     copyRow(L("pay.amount"), krText(amount), String(format: "%.2f", amount).replacingOccurrences(of: ".", with: ","))
                     copyRow(L("pay.message"), comment, comment, last: true)
                 }
-                Text(L("pay.fallback")).font(.body(13.6)).foregroundStyle(Color.muted)
+                .accessibilityIdentifier("payFacts")
             }
         }
-    }
-
-    private var deepLink: URL? {
-        var c = URLComponents(); c.scheme = "mobilepay"; c.host = "send"
-        c.queryItems = [.init(name: "phone", value: number), .init(name: "amount", value: String(format: "%.2f", amount)), .init(name: "comment", value: comment)]
-        return c.url
     }
 
     /// .facts with a copy button: the label, the value and the quiet copy icon

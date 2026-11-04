@@ -161,7 +161,7 @@ struct WineCard: View {
                 StyleEyebrow(wine: wine)
                 Text(wineTitle(wine, number: number)).font(.display(26, light: false, relativeTo: .title2)).foregroundStyle(Color.paper)
                     .lineLimit(2).multilineTextAlignment(.leading)
-                Text(wine.isBlind ? L("blind.hint") : [vintageText(wine.vintage), wine.originLine].compactMap { $0 }.joined(separator: " · "))
+                Text(wine.isBlind ? L("blind.hint") : [vintageText(wine.vintage), wine.bottleLine, wine.originLine].compactMap { $0 }.joined(separator: " · "))
                     .font(.body(14.4)).foregroundStyle(Color.muted).lineLimit(2)
                 HStack(alignment: .firstTextBaseline) {
                     if wine.isBlind { Chip(text: L("blind.blind")) } else { PriceLine(wine: wine) }
@@ -248,7 +248,7 @@ struct WineDetailView: View {
                         if wine.isBlind {
                             Text(L("blind.hint")).font(.body()).foregroundStyle(Color.muted).padding(.top, 8)
                         } else {
-                            let meta = [vintageText(wine.vintage), wine.producer, wine.abv.map { "\($0.formatted(.number.locale(appLocale))) %" }].compactMap { $0 }.filter { !$0.isEmpty }
+                            let meta = [vintageText(wine.vintage), wine.bottleLine, wine.producer, wine.abv.map { "\($0.formatted(.number.locale(appLocale))) %" }].compactMap { $0 }.filter { !$0.isEmpty }
                             if !meta.isEmpty { Text(meta.joined(separator: " · ")).font(.body()).foregroundStyle(Color.muted).padding(.top, 8) }
                             if let o = originFull(wine) {
                                 HStack(spacing: 6.4) {
@@ -376,13 +376,14 @@ struct WineDetailView: View {
         }
     }
 
-    private var moreRows: [(label: String?, value: AnyView)] {
-        var rows: [(label: String?, value: AnyView)] = []
+    /// The producer's website (globe) and address (pin), then the details – each heading with its icon (detailIcon)
+    private var moreRows: [(label: String?, icon: String?, value: AnyView)] {
+        var rows: [(label: String?, icon: String?, value: AnyView)] = []
         if let site = wine.producer_website, let url = URL(string: site), ["http", "https"].contains(url.scheme ?? "") {
-            rows.append((L("producer.websiteShort"), AnyView(Link(url.host?.replacingOccurrences(of: "www.", with: "") ?? site, destination: url).font(.body(15.2)).foregroundStyle(Color.bordeaux))))
+            rows.append((L("producer.websiteShort"), "globe", AnyView(Link(url.host?.replacingOccurrences(of: "www.", with: "") ?? site, destination: url).font(.body(15.2)).foregroundStyle(Color.bordeaux))))
         }
-        if let a = wine.producer_address, !a.isEmpty { rows.append((L("producer.addressShort"), AnyView(Text(a).font(.body(15.2)).foregroundStyle(Color.paper)))) }
-        for l in wine.detailLines { rows.append((l.label, AnyView(Text(l.text).font(.body(15.2)).foregroundStyle(Color.paper)))) }
+        if let a = wine.producer_address, !a.isEmpty { rows.append((L("producer.addressShort"), "pin", AnyView(Text(a).font(.body(15.2)).foregroundStyle(Color.paper)))) }
+        for l in wine.detailLines { rows.append((l.label, l.label.flatMap { $0.isEmpty ? nil : detailIcon($0) }, AnyView(Text(l.text).font(.body(15.2)).foregroundStyle(Color.paper)))) }
         return rows
     }
 

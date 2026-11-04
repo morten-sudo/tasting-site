@@ -91,7 +91,12 @@ struct CartView: View {
     @Environment(\.dismiss) private var dismiss
     let tasting: MyTasting
     @State private var wines: [Int: Wine] = [:]
+    /// Every wine's bottle size, also of wines no longer for sale, for the order lines ("2 × … · 150 cl")
+    @State private var sizes: [Int: Double] = [:]
     @State private var info: TastingInfo?
+    /// Debug only (payMock): a MobilePay number for screenshots of the payment box
+    @State private var mockPayee: String?
+    private var payee: String? { info?.mobilepay ?? mockPayee }
     @State private var orders: [OrderLine] = []
     @State private var loaded = false
     @State private var sending = false
@@ -140,7 +145,7 @@ struct CartView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(L("cart.thanks", ["id": "\(confirm.id)"])).font(.semibold(16)).foregroundStyle(Color.paper)
                         if payLater { Text(L("bulk.payLater")).font(.body()).foregroundStyle(Color.paper) }
-                        else { PayBox(mobilepay: info?.mobilepay, amount: confirm.total, comment: L("pay.orderComment", ["id": "\(confirm.id)"]), toast: $toast) }
+                        else { PayBox(mobilepay: payee, amount: confirm.total, comment: L("pay.orderComment", ["id": "\(confirm.id)"]), toast: $toast) }
                     }
                     .padding(16)
                     .background(Color.okBg, in: RoundedRectangle(cornerRadius: 8))
@@ -188,7 +193,7 @@ struct CartView: View {
             WineThumb(url: w.imageURL, blind: w.isBlind)
             VStack(alignment: .leading, spacing: 4) {
                 Text(name).font(.semibold(16)).foregroundStyle(Color.paper)
-                Text([L("cart.perBottle", ["price": krText(price)]), nextTierLabel(w, counted)].compactMap { $0 }.joined(separator: " · "))
+                Text([w.bottleLine, L("cart.perBottle", ["price": krText(price)]), nextTierLabel(w, counted)].compactMap { $0 }.joined(separator: " · "))
                     .font(.body(14.4)).foregroundStyle(Color.muted)
                 if let note = bulkNote(w, mode: info?.bulk_mode, inCart: n) { Text(note).font(.body(14.4)).foregroundStyle(Color.bordeaux) }
                 HStack {
@@ -211,12 +216,12 @@ struct CartView: View {
         let total = ls.reduce(0.0) { $0 + Double($1.quantity) * $1.unit_price }
         let id = ls[0].order_id
         return VStack(alignment: .leading, spacing: 0) {
-            orderCard(ls, withTasting: false)
+            orderCard(ls, withTasting: false, sizes: sizes)
             if !ls[0].paid {
                 if payLater { Text(L("bulk.payLater")).font(.body(14.4)).foregroundStyle(Color.muted).padding(.top, 8) }
                 else {
                     Disclosure(summary: L("cart.howToPay")) {
-                        PayBox(mobilepay: info?.mobilepay, amount: total, comment: L("pay.orderComment", ["id": "\(id)"]), toast: $toast)
+                        PayBox(mobilepay: payee, amount: total, comment: L("pay.orderComment", ["id": "\(id)"]), toast: $toast)
                     }
                     .padding(.top, 8)
                 }
@@ -259,8 +264,16 @@ struct CartView: View {
         async let o = try? Backend.myOrders(tasting.code)
         let (list, settings, mine) = await (w, t, o)
         wines = Dictionary(((list ?? []).filter { $0.orderable == true }).map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        if let list { sizes = Dictionary(list.compactMap { w in w.bottle_cl?.value.map { (w.id, $0) } }, uniquingKeysWith: { a, _ in a }) }
         info = settings ?? info
         orders = mine ?? orders
+        #if DEBUG
+        // Screenshots of the payment box, without changing the test data: one unpaid order (and a number if the host has none)
+        if UserDefaults.standard.bool(forKey: "payMock"), orders.isEmpty, let w = list?.first(where: { !$0.isBlind }) {
+            mockPayee = "12345678"
+            orders = [OrderLine(order_id: 101, created_at: "2026-11-03T19:30:00Z", paid: false, wine_id: w.id, wine_name: w.name ?? "", quantity: 2, unit_price: w.price_dkk ?? 0)]
+        }
+        #endif
         loaded = true
     }
 

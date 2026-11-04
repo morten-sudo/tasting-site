@@ -10,7 +10,8 @@ const names = process.argv[2] === '--flags' ? [] : process.argv.slice(2);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 48, height: 48 }, deviceScaleFactor: 3 });
 for (const name of names) {
-  const m = src.match(new RegExp(`^\\s+${name}: '([^']+)'`, 'm'));
+  // A name with a dash is quoted in icons.ts ('barrel-grapes': …)
+  const m = src.match(new RegExp(`^\\s+'?${name}'?: '([^']+)'`, 'm'));
   if (!m) { console.error('no icon', name); continue; }
   await page.setContent(`<html><body style="margin:0;background:transparent"><svg viewBox="0 0 24 24" width="48" height="48"
     style="display:block;fill:none;stroke:#000;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round">${m[1]}</svg></body></html>`);

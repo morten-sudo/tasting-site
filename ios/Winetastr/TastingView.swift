@@ -19,7 +19,7 @@ struct TastingView: View {
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
             Rectangle().fill(Color.rule).frame(height: 1)
-            TastingHead(title: info?.title ?? tasting.title, tab: model.tastingTab, select: { model.tastingTab = $0 }) {
+            TastingHead(title: info?.title ?? tasting.title, lang: info?.language, tab: model.tastingTab, select: { model.tastingTab = $0 }) {
                 if model.tastingTab == .home, let info, let invite, invite.email != nil { headChips(info, invite) }
             }
             Group {
@@ -122,7 +122,7 @@ struct TastingView: View {
                     if let intro = info.intro?.trimmingCharacters(in: .whitespacesAndNewlines), !intro.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             Eyebrow(text: L("tastingHome.about"))
-                            introText(intro)
+                            introText(intro, lang: info.language)
                         }
                     }
                     if let origins { OriginsBlock(origins: origins) }
@@ -155,14 +155,14 @@ struct TastingView: View {
     }
 
     /// The host's introduction: blank lines part the paragraphs, the first in the display face (.h-intro)
-    private func introText(_ intro: String) -> some View {
+    private func introText(_ intro: String, lang: String?) -> some View {
         let paras = intro.components(separatedBy: "\n").reduce(into: [[String]]([[]])) { acc, line in
             if line.trimmingCharacters(in: .whitespaces).isEmpty { if !(acc.last ?? []).isEmpty { acc.append([]) } } else { acc[acc.count - 1].append(line) }
         }.filter { !$0.isEmpty }.map { $0.joined(separator: "\n") }
         return VStack(alignment: .leading, spacing: 14.4) {
             ForEach(Array(paras.enumerated()), id: \.offset) { i, p in
-                if i == 0 { Text(p).font(.display(23, relativeTo: .title2)).foregroundStyle(Color.paper).lineSpacing(4) }
-                else { Text(p).font(.body(16.8)).foregroundStyle(Color.paper).lineSpacing(6) }
+                if i == 0 { langText(p, lang).font(.display(23, relativeTo: .title2)).foregroundStyle(Color.paper).lineSpacing(4) }
+                else { langText(p, lang).font(.body(16.8)).foregroundStyle(Color.paper).lineSpacing(6) }
             }
         }
     }

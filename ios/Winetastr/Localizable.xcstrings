@@ -2096,19 +2096,19 @@
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Købt {n} fl."
+      "value": "Bestilt {n} fl."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "Bought {n}"
+      "value": "Ordered {n}"
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Keypt {n}"
+      "value": "Pantað {n}"
      }
     }
    }
@@ -2905,24 +2905,24 @@
     }
    }
   },
-  "pay.open": {
+  "pay.how": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Åbn MobilePay"
+      "value": "Åbn MobilePay på din telefon, vælg Send, og brug nummer, beløb og besked herunder – hver har en kopiknap."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "Open MobilePay"
+      "value": "Open MobilePay on your phone, choose Send, and use the number, amount and message below – each has a copy button."
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Opna MobilePay"
+      "value": "Opnaðu MobilePay í símanum, veldu Senda og notaðu númerið, upphæðina og skilaboðin hér fyrir neðan – hvert hefur afritunarhnapp."
      }
     }
    }
@@ -3037,24 +3037,24 @@
     }
    }
   },
-  "pay.fallback": {
+  "bottle.label": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Virker knappen ikke, så åbn MobilePay selv og brug oplysningerne ovenfor."
+      "value": "Flaskestørrelse"
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "If the button doesn't work, open MobilePay yourself and use the details above."
+      "value": "Bottle size"
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Ef hnappurinn virkar ekki skaltu opna MobilePay sjálf(ur) og nota upplýsingarnar hér að ofan."
+      "value": "Flöskustærð"
      }
     }
    }

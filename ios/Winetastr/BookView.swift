@@ -179,7 +179,8 @@ func groupOrders(_ lines: [OrderLine]) -> [[OrderLine]] {
 }
 
 /// One card per order: tasting and number, paid or not, the date, the lines and the total
-func orderCard(_ lines: [OrderLine], withTasting: Bool) -> some View {
+/// sizes: the wines' bottle sizes by id, where they are known (the cart), shown after the name when not 75 cl
+func orderCard(_ lines: [OrderLine], withTasting: Bool, sizes: [Int: Double] = [:]) -> some View {
     let first = lines[0]
     let total = lines.reduce(0.0) { $0 + Double($1.quantity) * $1.unit_price }
     let number = L("pay.orderComment", ["id": "\(first.order_id)"])
@@ -193,7 +194,7 @@ func orderCard(_ lines: [OrderLine], withTasting: Bool) -> some View {
     } content: {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(lines.enumerated()), id: \.offset) { _, l in
-                Text("\(l.quantity) × \(l.wine_name)").font(.body(14.4)).foregroundStyle(Color.paper)
+                Text("\(l.quantity) × \(nameWithSize(l.wine_name, l.wine_id.flatMap { sizes[$0] }))").font(.body(14.4)).foregroundStyle(Color.paper)
             }
         }
         .padding(.top, 4)

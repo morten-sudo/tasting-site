@@ -122,7 +122,17 @@ struct ListCard<Pic: View, Aside: View, Body: View>: View {
 /// The page heading (PageHeader.astro): the title in the display face
 struct PageTitle: View {
     let text: String
-    var body: some View { Text(text).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader) }
+    /// The text's own language (the host's), so VoiceOver reads it right – the site's lang attribute
+    var lang: String? = nil
+    var body: some View { langText(text, lang).font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader) }
+}
+
+/// A text read aloud in its own language when it differs from the app's (the host's name of the tasting, the introduction)
+func langText(_ s: String, _ lang: String?) -> Text {
+    guard let lang, !lang.isEmpty, lang != appLanguageCode else { return Text(s) }
+    var a = AttributedString(s)
+    a.languageIdentifier = lang
+    return Text(a)
 }
 
 /// A section's heading under the tasting's tabs (Vinene, Quiz, Chat, Kurv): smaller than the page title

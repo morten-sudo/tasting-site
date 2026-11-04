@@ -314,6 +314,8 @@ struct TopBar: View {
 struct TastingHead<Chips: View>: View {
     @Environment(AppModel.self) private var model
     let title: String
+    /// The tasting's language (the host writes its name in it)
+    var lang: String? = nil
     /// None on the cart and a wine's page's parent, which are not tabs themselves
     let tab: TastingTab?
     let select: (TastingTab) -> Void
@@ -321,7 +323,7 @@ struct TastingHead<Chips: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 9.6) {
             chips
-            PageTitle(text: title)
+            PageTitle(text: title, lang: lang)
             HStack(spacing: 22) {
                 ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
                     Button { select(t) } label: {
@@ -340,7 +342,7 @@ struct TastingHead<Chips: View>: View {
     }
 }
 extension TastingHead where Chips == EmptyView {
-    init(title: String, tab: TastingTab?, select: @escaping (TastingTab) -> Void) { self.init(title: title, tab: tab, select: select) { EmptyView() } }
+    init(title: String, lang: String? = nil, tab: TastingTab?, select: @escaping (TastingTab) -> Void) { self.init(title: title, lang: lang, tab: tab, select: select) { EmptyView() } }
 }
 
 enum TastingTab: CaseIterable, Hashable {
