@@ -667,6 +667,11 @@ import '../../styles/admin.css';
       showMapCredit(f.querySelector<HTMLElement>('.map-box')!, m);
       pair.append(f);
       if (prop) pair.append(mapFig(prop.svg, capt('Forslag', prop.mid.length ? `mellemtone: ${prop.mid.join(', ')}` : 'ingen mellemtone'), { sources: prop.sources, osm: prop.osm }));
+      // Overview maps: the proposal is the same map with towns, drawn as on the detailed maps (easier to read where you are)
+      else if (!type.startsWith('detaljeret')) {
+        const t = await wineMap(v, { towns: true });
+        if (t) { const g = mapFig(t.svg, capt('Forslag', 'med byer som på de detaljerede kort')); showMapCredit(g.querySelector<HTMLElement>('.map-box')!, t); pair.append(g); }
+      }
     });
     return card;
   }

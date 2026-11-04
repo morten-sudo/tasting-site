@@ -1,7 +1,7 @@
 // The small map for one wine: its appellation on the detailed region map when there is one,
 // otherwise a pin on the overview map. Used on the guest's wine page and in the host's wine form.
 import { loadMap, mapIdFor, drawMap, mapPoint } from './region-map';
-import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
+import { placeOf, loadOverview, loadDetail, loadTowns, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
 import { loadAppellations, matchAppellation } from './origin';
 import { t } from '../i18n';
 
@@ -11,7 +11,7 @@ export type WineOrigin = { appellation?: string | null; appellation_id?: string 
 export type MapHow = 'area' | 'regionWide' | 'region' | Place['how'];
 
 /** The map as an SVG string and how the wine was placed, or null when not even the country is known. */
-export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow; sources: string } | null> {
+export async function wineMap(w: WineOrigin, opts: { towns?: boolean } = {}): Promise<{ svg: string; how: MapHow; sources: string } | null> {
   // A typed appellation that is on the list counts as chosen (the database links it when saving)
   let appellationId = w.appellation_id ?? null;
   if (!appellationId && w.appellation) appellationId = matchAppellation(await loadAppellations(), w.appellation)?.id ?? null;
@@ -37,7 +37,9 @@ export async function wineMap(w: WineOrigin): Promise<{ svg: string; how: MapHow
   const small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14;
   const margin = Math.max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35;
   const detail = small ? await loadDetail({ lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin }) : null;
-  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'full', detail), how: place.how, sources: OVERVIEW_SOURCES };
+  // Towns for orientation (proposal on /dev/maps/ only, for now)
+  const towns = opts.towns ? await loadTowns() : null;
+  return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'full', detail, towns), how: place.how, sources: OVERVIEW_SOURCES };
 }
 
 /** Where the overview maps come from */

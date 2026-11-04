@@ -19,6 +19,11 @@ export const loadOverview = (id: 'europe' | 'world') => {
   if (!overviews.has(id)) overviews.set(id, getJson<OverviewMap>(`/maps/${id}.json`));
   return overviews.get(id)!;
 };
+// ---------- Towns: Natural Earth's populated places (public/maps/places.json: [lon, lat, name, scalerank, capital]),
+// the bigger first – drawn as on the detailed region maps (a dot and an italic name with a light halo) ----------
+export type Town = [number, number, string, number, number];
+export const loadTowns = once(() => getJson<Town[]>('/maps/places.json'));
+
 // ---------- Detailed tiles (scripts/build-detail-tiles.py) for a map zoomed in on a small area ----------
 type Tile = { land: number[][]; lakes: number[][]; rivers: number[][]; coast: number[][]; border: number[][] };
 /** Shapes in longitude/latitude, per layer; land as one list per tile (drawn tile by tile, so overlaps show no seams). */
@@ -115,7 +120,7 @@ export async function focusFor(places: Place[], close = false): Promise<Box> {
 export type Pin = { lon: number; lat: number; label?: string; n?: number };
 
 /** The overview map, cut to `focus`, with a pin (and label or number) for each place. */
-export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'inset' = 'full', detail: Detail | null = null): string {
+export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'full' | 'inset' = 'full', detail: Detail | null = null, towns: Town[] | null = null): string {
   const { lon0, lat1, k, s } = map.proj;
   const xy = (lon: number, lat: number) => [(lon - lon0) * k * s, (lat1 - lat) * s];
   let [x0, y0] = xy(focus.lon0, focus.lat1);
@@ -143,6 +148,22 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
   } else {
     parts.push(`<path class="rm-land" d="${map.land}" style="stroke:#c9b9a8;stroke-width:${zw(u * 0.12)}"/>`,
       `<path class="rm-border" d="${map.border}" style="${dash}"/>`);
+  }
+  // Towns for orientation: the biggest in view, never on top of each other or of a pin and its name
+  if (towns && mode === 'full') {
+    const taken: [number, number, number, number][] = pins.map((p) => { const [x, y] = xy(p.lon, p.lat); return [x - u * 3, y - u * 5, x + u * 26, y + u * 3]; });
+    const fs = u * 2.5;
+    let n = 0;
+    for (const [lon, lat, name, , cap] of towns) {
+      if (n >= 9) break;
+      const [x, y] = xy(lon, lat);
+      if (x < x0 + u * 2 || x > x0 + w - u * 14 || y < y0 + u * 4 || y > y0 + h - u * 2) continue;
+      const box: [number, number, number, number] = [x - u * 1.5, y - u * 4, x + u * 1.6 + name.length * fs * 0.52, y + u * 1.5];
+      if (taken.some((t) => box[0] < t[2] && box[2] > t[0] && box[1] < t[3] && box[3] > t[1])) continue;
+      taken.push(box);
+      n++;
+      parts.push(anchored(x, y, `<circle r="${(u * (cap ? 0.75 : 0.55)).toFixed(2)}"/><text x="${(u * 1.3).toFixed(1)}" y="${(-u * 1.1).toFixed(1)}" style="font-size:${fs.toFixed(1)}px;stroke-width:${(fs * 0.22).toFixed(2)}px">${esc(name)}</text>`, `rm-town${cap ? ' big' : ''}`));
+    }
   }
   for (const p of pins) {
     const [x, y] = xy(p.lon, p.lat);
