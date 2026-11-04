@@ -697,7 +697,7 @@ dialog .input { max-width: none; }
 .map-legend { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; gap: 0.45rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
 .map-legend > li { display: flex; gap: 0.6rem; align-items: flex-start; }
 .map-legend .no { flex: none; display: grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--amber); color: #fff; font-size: 0.78rem; font-weight: 600; }
-.map-legend li.whole .no { background: #b07a85; }
+.map-legend li.whole .no { background: #9a5f6c; } /* 4.97:1 with white */
 .map-legend li.other .no { background: transparent; color: var(--amber); box-shadow: inset 0 0 0 1.5px var(--amber); }
 .map-legend b { display: block; font-weight: 600; font-size: 0.95rem; }
 .map-legend .sub { display: block; font-size: 0.82rem; color: var(--muted); }
