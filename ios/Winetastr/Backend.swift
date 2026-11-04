@@ -17,6 +17,8 @@ struct TastingInfo: Decodable {
     let coming: Int?; let full: Bool?; let signup_open: Bool?
     let ends_at: String?; let quiz_count: Int?; let quiz_open: Bool?; let quiz_finished: Bool?
     let orders_open: Bool?; let mobilepay: String?; let bulk_mode: String?
+    /// The name of the person who gets the money; the database gives mobilepay only together with it (WIN-278)
+    let mobilepay_name: String?
     /// The language the host writes the tasting in (the site marks its name and introduction with it)
     let language: String?
     var start: Date? { parseDate(starts_at) }

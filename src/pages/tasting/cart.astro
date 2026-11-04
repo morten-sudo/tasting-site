@@ -155,7 +155,7 @@ import SignInState from '../../components/ui/SignInState.astro';
       const body: Node[] = [ul];
       if (!ls[0].paid && payLater()) body.push(mk('p', 'lmeta', t('bulk.payLater')));
       else if (!ls[0].paid) {
-        body.push(disclosure(t('cart.howToPay'), [payBox(total, t('pay.orderComment', { id }))]));
+        body.push(disclosure(t('cart.howToPay'), [payBox(total)]));
       }
       return listRow({
         variant: 'card', small: true, title: t('pay.orderComment', { id }),
@@ -195,7 +195,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     $('confirm-title').textContent = t('cart.thanks', { id: String(data) });
     $('confirm-pay').replaceChildren(payLater()
       ? Object.assign(document.createElement('p'), { textContent: t('bulk.payLater') })
-      : payBox(total, t('pay.orderComment', { id: String(data) })));
+      : payBox(total));
     // The counts changed: fetch them again
     const { data: fresh } = await supabase.rpc('get_wines', { code });
     keepSizes((fresh ?? []) as Wine[]);
@@ -221,7 +221,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     const settings = ((s.data ?? {}) as Record<string, unknown>);
     open = settings.orders_open === true;
     bulkMode = (settings.bulk_mode as 'guest' | 'pooled' | null) ?? null;
-    setPayee(settings.mobilepay ?? null);
+    setPayee(settings.mobilepay, settings.mobilepay_name);
     $('loading').hidden = true;
     $('closed').hidden = open;
     renderCart();

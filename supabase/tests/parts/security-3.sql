@@ -1,5 +1,5 @@
 -- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 3 of 3.
--- Sections: Fixtures, Host A, Not signed in, Blind tasting. Rolled back at the end.
+-- Sections: Fixtures, Host A, Not signed in, Payment recipient, Blind tasting. Rolled back at the end.
 begin;
 
 -- ---------- Fixtures: host A and host B, each with a tasting, wine, guest, order and quiz question ----------
@@ -327,6 +327,64 @@ do $$ begin
   assert (select last_seen_at from participants where invite_code = 'selftestaa') is not null, 'opening the invitation is not noted';
   assert (select count(*) from events where kind = 'login.link' and detail->>'tasting' is not null
           and actor = (select lower(email) from participants where invite_code = 'selftestaa')) = 1, 'opening the invitation is not logged once';
+end $$;
+
+-- ---------- Payment recipient (WIN-278): a guest sees a MobilePay number only with the recipient's name ----------
+-- Tasting A has a number of its own (11111111) that is not host A's (A has none); co-host C is never the recipient
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare j jsonb; failed boolean;
+begin
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' is null and j ->> 'mobilepay_name' is null, 'a tasting''s own number is shown without its recipient''s name';
+  failed := false; begin perform tasting_payee('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can call tasting_payee';
+  failed := false; begin update tastings set mobilepay_name = 'X' where slug = 'selftest-a'; exception when others then failed := true; end;
+  assert coalesce(get_tasting('selftestaa', null) ->> 'mobilepay_name', '') <> 'X', 'a guest can write the recipient''s name';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare j jsonb; failed boolean;
+begin
+  update tastings set mobilepay_name = '  Anne Jensen ' where slug = 'selftest-a';
+  assert (select mobilepay_name from tastings where slug = 'selftest-a') = 'Anne Jensen', 'host A cannot write the recipient''s name';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '11111111' and j ->> 'mobilepay_name' = 'Anne Jensen', 'the tasting''s own number and recipient are not shown';
+  failed := false; begin update tastings set mobilepay_name = '   ' where slug = 'selftest-a'; exception when others then failed := true; end;
+  assert failed, 'the recipient''s name can be blank while the tasting has its own number';
+  failed := false; begin update tastings set mobilepay_name = null where slug = 'selftest-a'; exception when others then failed := true; end;
+  assert failed, 'the recipient''s name can be removed while the tasting has its own number';
+  -- The tasting's own number is the creator's: the creator's name
+  update hosts set mobilepay = '11 11 11 11' where email = 'host-a@selftest.invalid';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '11111111' and j ->> 'mobilepay_name' = 'Host A', 'the creator''s own number does not show the creator''s name';
+  -- A number needs the host's name, and the name cannot be removed while there is a number
+  failed := false; begin update hosts set name = '  ' where email = 'host-a@selftest.invalid'; exception when others then failed := true; end;
+  assert failed, 'a host can remove their name while they have a number';
+  update hosts set mobilepay = null, name = 'Host A' where email = 'host-a@selftest.invalid';
+end $$;
+reset role;
+do $$
+declare j jsonb; failed boolean;
+begin
+  update hosts set name = null where email = 'host-b@selftest.invalid';
+  failed := false; begin update hosts set mobilepay = '22223333' where email = 'host-b@selftest.invalid'; exception when others then failed := true; end;
+  assert failed, 'a number can be saved without the host''s name';
+  -- A host with a number and no name from before WIN-278: guests get no number, also in older apps
+  alter table hosts disable trigger hosts_payee_named;
+  update tastings set mobilepay = null where slug = 'selftest-b';
+  update hosts set mobilepay = '22223333' where email = 'host-b@selftest.invalid';
+  alter table hosts enable trigger hosts_payee_named;
+  j := get_tasting('selftestbb', null);
+  assert j ->> 'mobilepay' is null and j ->> 'mobilepay_name' is null, 'a host''s number is shown without the host''s name';
+  update hosts set name = 'Host B' where email = 'host-b@selftest.invalid';
+  j := get_tasting('selftestbb', null);
+  assert j ->> 'mobilepay' = '22223333' and j ->> 'mobilepay_name' = 'Host B', 'the number is not shown once the host''s name is written';
+  update hosts set notify_yes = notify_yes where email = 'host-b@selftest.invalid';
+  update tastings set mobilepay = '22222222' where slug = 'selftest-b';
 end $$;
 
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------

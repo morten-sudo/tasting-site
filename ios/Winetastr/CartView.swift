@@ -94,9 +94,10 @@ struct CartView: View {
     /// Every wine's bottle size, also of wines no longer for sale, for the order lines ("2 × … · 150 cl")
     @State private var sizes: [Int: Double] = [:]
     @State private var info: TastingInfo?
-    /// Debug only (payMock): a MobilePay number for screenshots of the payment box
-    @State private var mockPayee: String?
-    private var payee: String? { info?.mobilepay ?? mockPayee }
+    /// Debug only (payMock): a MobilePay number and recipient for screenshots of the payment box
+    @State private var mockPayee: (number: String, name: String)?
+    private var payee: String? { info?.mobilepay ?? mockPayee?.number }
+    private var recipient: String? { info?.mobilepay == nil ? mockPayee?.name : info?.mobilepay_name }
     @State private var orders: [OrderLine] = []
     @State private var loaded = false
     @State private var sending = false
@@ -145,7 +146,7 @@ struct CartView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(L("cart.thanks", ["id": "\(confirm.id)"])).font(.semibold(16)).foregroundStyle(Color.paper)
                         if payLater { Text(L("bulk.payLater")).font(.body()).foregroundStyle(Color.paper) }
-                        else { PayBox(mobilepay: payee, amount: confirm.total, comment: L("pay.orderComment", ["id": "\(confirm.id)"]), toast: $toast) }
+                        else { PayBox(mobilepay: payee, recipient: recipient, amount: confirm.total, toast: $toast) }
                     }
                     .padding(16)
                     .background(Color.okBg, in: RoundedRectangle(cornerRadius: 8))
@@ -221,7 +222,7 @@ struct CartView: View {
                 if payLater { Text(L("bulk.payLater")).font(.body(14.4)).foregroundStyle(Color.muted).padding(.top, 8) }
                 else {
                     Disclosure(summary: L("cart.howToPay")) {
-                        PayBox(mobilepay: payee, amount: total, comment: L("pay.orderComment", ["id": "\(id)"]), toast: $toast)
+                        PayBox(mobilepay: payee, recipient: recipient, amount: total, toast: $toast)
                     }
                     .padding(.top, 8)
                 }
@@ -270,7 +271,7 @@ struct CartView: View {
         #if DEBUG
         // Screenshots of the payment box, without changing the test data: one unpaid order (and a number if the host has none)
         if UserDefaults.standard.bool(forKey: "payMock"), orders.isEmpty, let w = list?.first(where: { !$0.isBlind }) {
-            mockPayee = "12345678"
+            mockPayee = ("12345678", "Morten Kruse")
             orders = [OrderLine(order_id: 101, created_at: "2026-11-03T19:30:00Z", paid: false, wine_id: w.id, wine_name: w.name ?? "", quantity: 2, unit_price: w.price_dkk ?? 0)]
         }
         #endif

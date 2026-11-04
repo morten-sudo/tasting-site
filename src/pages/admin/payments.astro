@@ -1,6 +1,10 @@
 ---
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
+import Sheet from '../../components/ui/Sheet.astro';
+import Notice from '../../components/ui/Notice.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import Facts from '../../components/ui/Facts.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
 ---
@@ -10,22 +14,55 @@ import '../../styles/admin.css';
     <div id="admin-main" hidden>
       <PageHeader title="adminNav.payments" lead="payments.intro" />
 
-      <section class="block">
-        <h2>MobilePay</h2>
-        <form id="mp-form" class="add-form tasting-form" novalidate>
-          <label for="mp-number" data-i18n="admin.mobilepay">MobilePay number</label>
-          <input class="input" id="mp-number" type="tel" inputmode="numeric" autocomplete="tel" placeholder="12 34 56 78" />
-          <p class="hint" data-i18n="payments.mpHint">Guests get a button that opens MobilePay with the amount and a message filled in. Leave it empty to hide MobilePay.</p>
-          <div class="actions tight">
-            <button id="mp-save" class="btn small" type="submit" data-i18n="common.save">Save</button>
-          </div>
-        </form>
+      <!-- The host's MobilePay: number and name are shown here and edited in the side panel (WIN-278) -->
+      <section class="block" id="mobilepay">
+        <PageHeader size="section">
+          <Fragment slot="title">MobilePay</Fragment>
+          <Fragment slot="actions">
+          <button id="mp-edit" class="text-btn" type="button" hidden data-i18n="admin.edit">Edit</button>
+          </Fragment>
+        </PageHeader>
+        <!-- A number without a name (from before the name was required): guests do not see the number yet -->
+        <Notice id="mp-name-missing" tone="warn" hidden>
+          <p data-i18n="payments.nameMissing">Write your name so guests can see who they are paying. Until then they do not see your MobilePay number.</p>
+          <div class="actions"><button id="mp-name-fix" class="btn small" type="button" data-i18n="payments.writeName">Write your name</button></div>
+        </Notice>
+        <Facts id="mp-facts" items={[{ label: 'pay.number', id: 'mp-f-number' }, { label: 'pay.recipient', id: 'mp-f-name' }]} />
+        <EmptyState id="mp-empty" icon="edit" title="payments.noNumberTitle" text="payments.noNumberText" hidden>
+          <button id="mp-add" class="btn small secondary" type="button" data-i18n="payments.addNumber">Add MobilePay number</button>
+        </EmptyState>
+      </section>
+
+      <!-- Older tastings with a number of their own that is not the host's: the recipient's name for each -->
+      <section class="block" id="own-block" hidden>
+        <PageHeader size="section" title="payments.ownTitle" />
+        <p class="hint" data-i18n="payments.ownText">These older tastings have a MobilePay number of their own instead of yours. Guests see it with the recipient’s name you write for the tasting.</p>
+        <div id="own-notices" class="own-notices"></div>
+        <ul id="own-list" class="list"></ul>
       </section>
 
       <section class="block">
         <h2 data-i18n="payments.moreTitle">More payment methods</h2>
         <p class="hint" data-i18n="payments.moreText">More ways to pay can be added here later.</p>
       </section>
+
+      <Sheet id="mp-panel" titleId="mp-panel-title" form="mp-form">
+        <label for="mp-name" data-i18n="payments.yourName">Your name</label>
+        <input class="input" id="mp-name" type="text" autocomplete="name" maxlength="80" />
+        <p class="help" data-i18n="payments.nameHint">Guests also see this name as the host of your tastings.</p>
+        <label for="mp-number" data-i18n="admin.mobilepay">MobilePay number</label>
+        <input class="input" id="mp-number" type="tel" inputmode="numeric" autocomplete="tel" placeholder="12 34 56 78" />
+        <p class="help" data-i18n="payments.mpHint">Guests see your number, your name and the amount. Leave the field empty to hide MobilePay.</p>
+        <button slot="foot" id="mp-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+      </Sheet>
+
+      <Sheet id="own-panel" titleId="own-title" form="own-form">
+        <dl class="facts"><dt data-i18n="pay.number">MobilePay number</dt><dd id="own-number"></dd></dl>
+        <label for="own-name" data-i18n="payments.recipientLabel">Recipient’s name</label>
+        <input class="input" id="own-name" type="text" autocomplete="off" maxlength="120" aria-describedby="own-hint" />
+        <p class="help" id="own-hint"></p>
+        <button slot="foot" id="own-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+      </Sheet>
     </div>
     </AdminNav>
   </section>
@@ -34,29 +71,162 @@ import '../../styles/admin.css';
 <script>
   import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
-  import { requireHost, $ } from '../../lib/admin-common';
+  import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
   import { t } from '../../i18n';
   import { toast } from '../../lib/ui/toast';
   import { setLoading } from '../../lib/ui/button';
   import { fieldError } from '../../lib/field-error';
+  import { setFact } from '../../lib/ui/facts';
+  import { listRow } from '../../lib/ui/list-row';
+  import { notice } from '../../lib/ui/notice';
+  import { prettyNumber } from '../../lib/pay';
+
+  type Own = { id: string; title: string; mobilepay: string; mobilepay_name: string | null };
+  const digits = (s: string | null | undefined) => (s ?? '').replace(/\s/g, '');
+  const wide = () => matchMedia('(min-width: 48rem)').matches;
 
   const host = await requireHost();
-  if (host) {
-    $('admin-main').hidden = false;
-    $<HTMLInputElement>('mp-number').value = (host.mobilepay ?? '').replace(/(\d{2})(?=\d)/g, '$1 ');
-    followHelpLink();
+  let myName = host?.name?.trim() ?? '';
+  let myNumber = digits(host?.mobilepay);
+  let tastings: Own[] = [];
+
+  // ---------- The host's number and name ----------
+  function showMine() {
+    const has = !!myNumber;
+    setFact($('mp-f-number'), has ? prettyNumber(myNumber) : '');
+    setFact($('mp-f-name'), has ? myName : '');
+    $('mp-facts').hidden = !has;
+    $('mp-empty').hidden = has;
+    $('mp-edit').hidden = !has;
+    $('mp-name-missing').hidden = !(has && !myName);
   }
+
+  const nameInput = $<HTMLInputElement>('mp-name');
+  const numberInput = $<HTMLInputElement>('mp-number');
+  const mpPanel = sheetPanel($<HTMLDialogElement>('mp-panel'), { dirty: 'form' });
+  $('mp-panel-title').textContent = 'MobilePay';
+  function openMine(focus: 'name' | 'number' = 'number') {
+    nameInput.value = myName;
+    numberInput.value = prettyNumber(myNumber);
+    fieldError(nameInput, null);
+    fieldError(numberInput, null);
+    mpPanel.open();
+    if (wide() || focus === 'name') (focus === 'name' || !myName ? nameInput : numberInput).focus();
+  }
+  $('mp-edit').addEventListener('click', () => openMine());
+  $('mp-add').addEventListener('click', () => openMine());
+  $('mp-name-fix').addEventListener('click', () => openMine('name'));
 
   $('mp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const raw = $<HTMLInputElement>('mp-number').value.replace(/\s/g, '');
-    const field = $<HTMLInputElement>('mp-number');
-    if (raw && !/^\+?\d{4,15}$/.test(raw)) { fieldError(field, t('payments.badNumber')); field.focus(); return; }
+    const name = nameInput.value.trim();
+    const raw = digits(numberInput.value);
+    fieldError(nameInput, null);
+    fieldError(numberInput, null);
+    // The name is required with the number, and cannot be removed while there is one (the database refuses it too)
+    if (raw && !name) { fieldError(nameInput, myName ? t('payments.nameKeep') : t('payments.nameNeeded')); nameInput.focus(); return; }
+    if (!name && myName) { fieldError(nameInput, t('host.nameMissing')); nameInput.focus(); return; }
+    if (raw && !/^\+?\d{4,15}$/.test(raw)) { fieldError(numberInput, t('payments.badNumber')); numberInput.focus(); return; }
     const btn = $<HTMLButtonElement>('mp-save');
     setLoading(btn, true);
-    const { error } = await supabase.from('hosts').update({ mobilepay: raw || null }).eq('id', host!.id);
+    const change: { mobilepay: string | null; name?: string } = { mobilepay: raw || null };
+    if (name) change.name = name;
+    const { error } = await supabase.from('hosts').update(change).eq('id', host!.id);
+    if (error) {
+      setLoading(btn, false);
+      if (error.message.includes('mobilepay_name_missing')) { fieldError(nameInput, t('payments.nameNeeded')); nameInput.focus(); }
+      else toast(t('admin.changesNotSaved'), { kind: 'error' });
+      return;
+    }
+    // The same name on the account (as the profile page does)
+    if (name && name !== myName) {
+      await supabase.auth.updateUser({ data: { name } }).catch(() => undefined);
+      try { localStorage.setItem('display_name', name); } catch {}
+    }
     setLoading(btn, false);
-    if (error) toast(t('admin.changesNotSaved'), { kind: 'error' });
-    else toast(t('common.saved'));
+    myName = name || myName;
+    myNumber = raw;
+    mpPanel.close();
+    toast(t('common.saved'));
+    showMine();
+    showOwn();
   });
+
+  // ---------- Tastings with a number of their own ----------
+  async function loadOwn() {
+    const { data } = await supabase.from('tastings').select('id, title, mobilepay, mobilepay_name')
+      .eq('host_id', host!.id).not('mobilepay', 'is', null).order('starts_at', { ascending: false, nullsFirst: false });
+    tastings = ((data ?? []) as Own[]).map((r) => ({ ...r, mobilepay: digits(r.mobilepay) })).filter((r) => r.mobilepay);
+    showOwn();
+  }
+
+  // Only a number that is not the host's own needs a name of its own (the same rule as tasting_payee in the database)
+  function showOwn() {
+    const list = tastings.filter((r) => r.mobilepay !== myNumber);
+    $('own-block').hidden = !list.length;
+    $('own-notices').replaceChildren(...list.filter((r) => !r.mobilepay_name).map((r) => {
+      const fix = mk('button', 'btn small', t('payments.writeRecipient')) as HTMLButtonElement;
+      fix.type = 'button';
+      fix.addEventListener('click', () => openOwn(r));
+      return notice('warn', { text: t('payments.ownMissing', { title: r.title }), actions: [fix] });
+    }));
+    $('own-list').replaceChildren(...list.map((r) => {
+      const edit = iconButton('edit', `${t('admin.edit')}: ${r.title}`);
+      edit.addEventListener('click', () => openOwn(r));
+      return listRow({
+        id: r.id, title: r.title, onOpen: () => openOwn(r),
+        meta: [[prettyNumber(r.mobilepay), r.mobilepay_name ? `${t('pay.recipient')}: ${r.mobilepay_name}` : null]],
+        chips: r.mobilepay_name ? [] : [{ text: t('payments.recipientMissing'), tone: 'warn' }],
+        actions: [edit],
+      });
+    }));
+  }
+
+  const ownInput = $<HTMLInputElement>('own-name');
+  const ownPanel = sheetPanel($<HTMLDialogElement>('own-panel'), { dirty: 'form' });
+  let editing: Own | null = null;
+  function openOwn(r: Own) {
+    editing = r;
+    $('own-title').textContent = r.title;
+    $('own-number').textContent = prettyNumber(r.mobilepay);
+    $('own-hint').textContent = t('payments.recipientHint', { number: prettyNumber(r.mobilepay) });
+    ownInput.value = r.mobilepay_name ?? '';
+    fieldError(ownInput, null);
+    ownPanel.open();
+    ownInput.focus();
+  }
+
+  $('own-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!editing) return;
+    const r = editing;
+    const name = ownInput.value.trim();
+    fieldError(ownInput, null);
+    if (!name) { fieldError(ownInput, r.mobilepay_name ? t('payments.recipientKeep') : t('payments.recipientNeeded')); ownInput.focus(); return; }
+    const btn = $<HTMLButtonElement>('own-save');
+    setLoading(btn, true);
+    const { error } = await supabase.from('tastings').update({ mobilepay_name: name }).eq('id', r.id);
+    setLoading(btn, false);
+    if (error) {
+      if (error.message.includes('mobilepay_name_missing')) { fieldError(ownInput, t('payments.recipientNeeded')); ownInput.focus(); }
+      else toast(t('admin.changesNotSaved'), { kind: 'error' });
+      return;
+    }
+    r.mobilepay_name = name;
+    ownPanel.close();
+    toast(t('common.saved'));
+    showOwn();
+  });
+
+  if (host) {
+    showMine();
+    await loadOwn();
+    $('admin-main').hidden = false;
+    followHelpLink();
+  }
 </script>
+
+<style>
+  .own-notices { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
+  .own-notices:empty { display: none; }
+</style>

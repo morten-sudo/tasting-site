@@ -183,15 +183,18 @@ struct CalendarSheet: UIViewControllerRepresentable {
 
 // MARK: - The payment box (component 51, payBox in src/lib/pay.ts)
 
-/// How to pay in one line, then the number, the amount and the message with a copy button each. No button into
-/// MobilePay: its mobilepay://send link is refused on real phones (the site took it out too, src/lib/pay.ts).
+/// The MobilePay number (with the one copy button), the recipient's name and the amount – nothing else (WIN-278).
+/// The database gives the number only with the recipient's name (get_tasting: mobilepay and mobilepay_name); without
+/// both the guest sees the amount and that the host tells how to pay. No button into MobilePay: its mobilepay://send
+/// link is refused on real phones (the site took it out too, src/lib/pay.ts).
 struct PayBox: View {
     let mobilepay: String?
+    let recipient: String?
     let amount: Double
-    let comment: String
     @Binding var toast: String?
 
     private var number: String { (mobilepay ?? "").replacingOccurrences(of: " ", with: "") }
+    private var name: String { (recipient ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
     private var pretty: String {
         var out = ""; for (i, c) in number.enumerated() { if i > 0 && i % 2 == 0 { out.append(" ") }; out.append(c) }
         return out
@@ -199,34 +202,38 @@ struct PayBox: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12.8) {
-            if number.isEmpty {
+            // Never a number without the recipient's name
+            if number.isEmpty || name.isEmpty {
                 Text(L("pay.noNumber", ["amount": krText(amount)])).font(.body()).foregroundStyle(Color.paper)
             } else {
-                Text(L("pay.lead", ["amount": krText(amount)])).font(.medium()).foregroundStyle(Color.paper)
-                Text(L("pay.how")).font(.body(13.6)).foregroundStyle(Color.muted).fixedSize(horizontal: false, vertical: true)
                 VStack(spacing: 0) {
-                    copyRow(L("pay.number"), pretty, number)
-                    copyRow(L("pay.amount"), krText(amount), String(format: "%.2f", amount).replacingOccurrences(of: ".", with: ","))
-                    copyRow(L("pay.message"), comment, comment, last: true)
+                    factRow(L("pay.number"), pretty) {
+                        Button {
+                            UIPasteboard.general.string = number
+                            toast = "\(L("pay.copied")): \(pretty)"
+                        } label: {
+                            SiteIcon("copy", size: 18).foregroundStyle(Color.muted).frame(width: 44, height: 44)
+                        }
+                        .accessibilityLabel(L("pay.copyNumber"))
+                    }
+                    factRow(L("pay.recipient"), name) { EmptyView() }
+                    factRow(L("pay.amount"), krText(amount), last: true) { EmptyView() }
                 }
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("payFacts")
             }
         }
     }
 
-    /// .facts with a copy button: the label, the value and the quiet copy icon
-    private func copyRow(_ label: String, _ shown: String, _ copy: String, last: Bool = false) -> some View {
+    /// .facts: the label and the value (the number has its quiet copy icon after it)
+    private func factRow<Trailing: View>(_ label: String, _ shown: String, last: Bool = false, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
-            Text(label).font(.body(14.4)).foregroundStyle(Color.muted).frame(width: 90, alignment: .leading)
+            Text(label).font(.body(14.4)).foregroundStyle(Color.muted).frame(width: 130, alignment: .leading)
             Text(shown).font(.medium(15.2)).foregroundStyle(Color.paper).frame(maxWidth: .infinity, alignment: .leading)
-            Button {
-                UIPasteboard.general.string = copy
-                toast = "\(L("pay.copied")): \(shown)"
-            } label: {
-                SiteIcon("copy", size: 18).foregroundStyle(Color.muted).frame(width: 44, height: 44)
-            }
-            .accessibilityLabel(L("pay.copyLabel", ["what": label.lowercased()]))
+            trailing()
         }
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .contain)
         .overlay(alignment: .bottom) { if !last { Rectangle().fill(Color.rule).frame(height: 1) } }
     }
 }
@@ -236,7 +243,7 @@ struct FeeCard: View {
     let amount: Double
     let paid: Bool
     let mobilepay: String?
-    let name: String
+    let recipient: String?
     @Binding var toast: String?
     var body: some View {
         Card {
@@ -245,7 +252,7 @@ struct FeeCard: View {
                 NoticeBox(text: L("guest.feePaid"), tone: .ok)
             } else {
                 Text(L("guest.feeText")).font(.body(14.7)).foregroundStyle(Color.muted)
-                PayBox(mobilepay: mobilepay, amount: amount, comment: L("pay.feeComment", ["name": name]), toast: $toast)
+                PayBox(mobilepay: mobilepay, recipient: recipient, amount: amount, toast: $toast)
             }
         }
     }

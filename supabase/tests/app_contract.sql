@@ -46,5 +46,11 @@ begin
   if not (select has_function_privilege('anon', 'get_invite(text)', 'execute') and has_function_privilege('anon', 'rate_wine(text,int,int,text)', 'execute')) then
     raise exception 'app contract broken: anon access';
   end if;
+  -- get_tasting's keys the app reads for payment: mobilepay (every version) and mobilepay_name (WIN-278 on)
+  if (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname = 'get_tasting'
+        and p.prosrc like '%''mobilepay''%' and p.prosrc like '%''mobilepay_name''%' and p.prosrc like '%''host_name''%') <> 1 then
+    raise exception 'app contract broken: get_tasting payment keys';
+  end if;
   raise notice 'app contract passed';
 end $$;

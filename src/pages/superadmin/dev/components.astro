@@ -560,8 +560,11 @@ const opts = [
 
         <section id="c51" class="dv-comp">
           <SectionTitle level="h3" text="51 Payment box" />
-          <p class="help">payBox() in src/lib/pay.ts (copy buttons with a toast) – on a computer the QR code (54, src/lib/ui/qr.ts) instead of the app button; on a phone the button</p>
-          <div class="card dv-narrow" id="paybox"></div>
+          <p class="help">payBox() in src/lib/pay.ts: the MobilePay number (one copy button, a toast says it is copied), the recipient and the amount – nothing else. Without a number, or without the recipient's name, only the amount and that the host tells how to pay (get_tasting gives the number only with the name).</p>
+          <div class="dv-row">
+            <div class="card dv-narrow" id="paybox"></div>
+            <div class="card dv-narrow" id="paybox-none"></div>
+          </div>
         </section>
 
         <section id="c52" class="dv-comp">
@@ -950,8 +953,10 @@ const opts = [
     }
     const bar = document.querySelector<HTMLElement>('.dv-cartbar .cartbar');
     if (bar) { bar.hidden = false; const b = bar.querySelector('b'); if (b) b.textContent = '3 bottles'; const sm = bar.querySelector('small'); if (sm) sm.textContent = formatKr(1049.7); }
-    setPayee('12345678');
-    $('paybox').append(payBox(1049.7, 'Portvin 2026 – Anne'));
+    setPayee('12345678', 'Anders Holm');
+    $('paybox').append(payBox(1049.7));
+    setPayee(null);
+    $('paybox-none').append(payBox(1049.7));
     $('quiz-prog').append(progress({ label: 'Question 3 of 12', value: 2, max: 12, text: '2 answered' }));
     const quiz = choiceCards({ options: [{ value: 'a', label: 'Touriga Nacional' }, { value: 'b', label: 'Cabernet Sauvignon' }, { value: 'c', label: 'Tinta Roriz' }], value: 'c' });
     quiz.el.classList.add('locked');
