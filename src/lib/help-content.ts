@@ -289,6 +289,8 @@ export const HELP: HelpSection[] = [
 <p>Når du er logget ind, ser du kun invitationer til den e-mail, du er logget ind med. Er du inviteret med en anden e-mail, så åbn invitationslinket og vælg <i>Log ud og åbn invitationen</i> – eller bed værten rette din e-mail på gæstelisten.</p>
 <h2>Gæsten har mistet sit link</h2>
 <p>Send invitationen igen, eller lad gæsten logge ind på winetastr.com med sin e-mail.</p>
+<h2 id="signup-existing">Jeg har oprettet mig igen med en mail, der allerede har en konto</h2>
+<p>Det gør ikke noget. Siden <a href="/signup/">Opret konto</a> siger det samme til alle, så ingen kan se, om en e-mail har en konto. Har mailen allerede en konto, logger koden dig ind på den – der oprettes ikke en ny, og du mister intet.</p>
 <h2>"Kontoen har brugt dagens …"</h2>
 <p>Hver konto kan sende 300 mails og lave 500 automatiske opslag om dagen (læse links og etiketter, finde billeder og producenter, AI-tekster og quizforslag) – langt mere end en smagning bruger. Når grænsen er nået, kan du stadig udfylde vinene selv og <a href="t:guests/">kopiere gæsternes links</a> og sende dem selv. Grænsen nulstilles ved midnat (UTC).</p>`,
       en: `<h2>The guest has not received the invitation</h2>
@@ -305,6 +307,8 @@ export const HELP: HelpSection[] = [
 <p>When you are signed in, you only see invitations to the email you are signed in with. If you were invited with another email, open the invitation link and choose <i>Sign out and open the invitation</i> – or ask the host to correct your email on the guest list.</p>
 <h2>A guest has lost their link</h2>
 <p>Send the invitation again, or let the guest sign in at winetastr.com with their email.</p>
+<h2 id="signup-existing">I signed up again with an email that already has an account</h2>
+<p>That is fine. The <a href="/signup/">sign-up page</a> says the same to everyone, so nobody can tell whether an email has an account. If the email already has one, the code signs you in to it – no new account is made, and you lose nothing.</p>
 <h2>"Your account has used today's …"</h2>
 <p>Each account can send 300 emails and make 500 automatic look-ups a day (reading links and labels, finding pictures and producers, AI texts and quiz suggestions) – far more than a tasting uses. When the limit is reached you can still fill in the wines yourself and <a href="t:guests/">copy the guests' links</a> and send them yourself. The limit resets at midnight (UTC).</p>`,
     },
