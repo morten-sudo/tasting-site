@@ -218,9 +218,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     $('tile-quiz-sub').textContent = info.quiz_finished ? t('tastingHome.quizDone')
       : info.quiz_open ? t('tastingHome.quizOpen') : t('tastingHome.quizLater');
     supabase.rpc('get_wines', { code }).then(({ data: wines }) => {
-      const list = (Array.isArray(wines) ? wines : []) as MapWine[];
-      $('tile-wines-sub').textContent = list.length ? t('tastingHome.winesSub', { n: list.length }) : '';
-      showOrigins(list);
+      showOrigins((Array.isArray(wines) ? wines : []) as MapWine[]);
     });
   }
 
@@ -231,8 +229,11 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     return (data ?? []) as MapWine[];
   };
   function showOrigins(wines: MapWine[]) {
-    // While a wine is blind, the map follows the host revealing it: the wine comes into its region's tab
-    if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, async () => showOrigins(await fetchWines()));
+    // The Wines tile counts them again when the host shows a wine
+    $('tile-wines-sub').textContent = wines.length ? t('tastingHome.winesSub', { n: wines.length }) : '';
+    // The map follows the host revealing a wine: the wine comes into its region's tab. Watched also with no blind wine
+    // on the page: a wine the host has not shown yet is not sent at all, and comes when it is shown (WIN-293)
+    watchBlind(fetchWines, wines, async () => showOrigins(await fetchWines()));
     return drawOrigins(wines, { hero: $('hero-map'), block: $('origin-block'), box: $('origin-map'), legend: $('origin-legend'), credit: $('map-source') });
   }
 

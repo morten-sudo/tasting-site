@@ -166,7 +166,7 @@ import CartBar from '../../components/ui/CartBar.astro';
     const tr = track();
     const card = cards[Math.min(at, cards.length - 1)];
     if (tr && card) tr.scrollLeft = leftOf(tr, card);
-    if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, refresh);
+    watchBlind(fetchWines, wines, refresh);
   }
 
   async function load() {
@@ -187,8 +187,8 @@ import CartBar from '../../components/ui/CartBar.astro';
     if (!winesRes.data?.length) { $('no-wines').hidden = false; return; }
     wines = nameBlind(winesRes.data as Wine[]);
     slugs = wineSlugs(wines);
-    // While a wine is blind, the list follows the host revealing it
-    if (wines.some((w) => w.blind)) watchBlind(fetchWines, wines, refresh);
+    // The list follows the host revealing a wine – also one not shown yet, which the database does not send at all
+    watchBlind(fetchWines, wines, refresh);
 
     const settings = ((settingsRes.data ?? {}) as Record<string, unknown>);
     if (settings.orders_open === true) {
