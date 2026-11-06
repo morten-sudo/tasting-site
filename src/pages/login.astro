@@ -66,16 +66,20 @@ import Disclosure from '../components/ui/Disclosure.astro';
 
           <!-- Step 2: code from the email -->
           <form id="otp-form" class="login-form" novalidate hidden>
-            <p class="lp-lead"><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
+            <!-- The same words whether the email is known or not (WIN-181): the page never says which -->
+            <p class="lp-lead" id="sent-lead"></p>
             <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
             <input id="otp" class="input code" type="text" inputmode="numeric" autocomplete="one-time-code"
                    pattern="[0-9]*" maxlength="10" required />
             <button class="btn" type="submit" id="otp-btn" data-i18n="login.submit">Sign in</button>
             <p class="hint small-links">
-              <button id="resend" class="text-btn" type="button" data-i18n="login.resend">Send a new code</button> ·
+              <button id="resend" class="text-btn" type="button" data-i18n="login.resend">Send a new code</button>
+              <span aria-hidden="true">·</span>
               <button id="other-mail" class="text-btn" type="button" data-i18n="login.otherEmail">Use another email</button>
             </p>
-            <p class="hint lp-fine" data-i18n="login.spamHint">Can't find the email? Check your spam folder. You can also tap the link in the email.</p>
+            <Notice id="no-code" title="login.noCodeTitle" class="lp-nocode">
+              <p data-i18n="login.noCodeHelp">Check that the email is spelled correctly and look in your spam folder. You can also sign in with the link from your invitation.</p>
+            </Notice>
           </form>
 
           <p class="lp-or"><span data-i18n="loginx.or">or</span></p>
@@ -209,22 +213,25 @@ import Disclosure from '../components/ui/Disclosure.astro';
     ($('email') as HTMLInputElement).focus();
   }
 
+  // Asks Supabase to send a code. The answer looks the same whether the email is known or not, so
+  // the page shows the same next step for both (WIN-181). Only problems that do not depend on the
+  // email are shown: the connection, or too many emails in a short time.
+  const NOT_SENT_FOR_UNKNOWN = ['otp_disabled', 'signup_disabled', 'user_not_found'];
+  // With the "Before User Created" hook on (WIN-284), an unknown email gets HTTP 403 from the hook
+  // (no error code, or a hook/unexpected_failure/unknown code; the real answer is 403 with error_code "unknown"). Nothing else on /otp answers 403. Shown as sent too.
+  const rejectedByHook = (error: { status?: number; code?: string } | null) =>
+    error?.status === 403 && (!error.code || /hook|unexpected_failure|unknown/.test(error.code));
   async function sendCode(): Promise<boolean> {
-    const { data: known, error: checkError } = await supabase.rpc('login_email_known', { e: email });
-    if (checkError) {
-      // Too many attempts from this connection (limited so emails cannot be tested in bulk)
-      failed(checkError.message.includes('too_many') ? t('login.tooManyChecks') : t('login.sendFailed'));
-      return false;
-    }
-    if (!known) {
-      bad('email', wantsAdmin ? t('login.notHost', { email }) : t('login.unknownEmail', { email }));
-      return false;
-    }
     const redirect = location.origin + '/login/' + (next ? '?next=' + encodeURIComponent(next) : '');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirect, shouldCreateUser: true, data: { lang: lang() } },
     });
+    // Answers that would only come for an email we do not know are shown as sent
+    if (error?.code && NOT_SENT_FOR_UNKNOWN.includes(error.code)) return true;
+    if (rejectedByHook(error)) return true;
+    // Supabase's own check of the address (e.g. an invisible character): said under the field, not as a send error
+    if (error?.code === 'validation_failed') { bad('email', t('common.invalidEmail')); return false; }
     if (error?.status === 429) {
       failed(t('login.tooManyMails'));
       return false;
@@ -251,13 +258,22 @@ import Disclosure from '../components/ui/Disclosure.astro';
     setLoading(btn, false);
     if (!ok) return;
 
-    $('sent-to').textContent = email;
+    showSentLead();
     $('mail-form').hidden = true;
     $('otp-form').hidden = false;
     fieldError($('otp'), null);
     ($('otp') as HTMLInputElement).value = '';
     ($('otp') as HTMLInputElement).focus();
   });
+
+  // "We have sent a code to <email> if we know the email": the email in bold, so a typo is easy to see
+  function showSentLead() {
+    const lead = $('sent-lead');
+    const [before, after = ''] = t('login.sentIfKnown').split('{email}');
+    const strong = document.createElement('strong');
+    strong.textContent = email;
+    lead.replaceChildren(before, strong, after);
+  }
 
   // ---------- Step 2: verify the code ----------
   $('otp-form').addEventListener('submit', async (e) => {
@@ -381,12 +397,15 @@ import Disclosure from '../components/ui/Disclosure.astro';
   .login-form { display: grid; gap: 0.6rem; }
   .login-form .btn { justify-self: stretch; margin-top: 0.3rem; }
   .lp-fine { font-size: 0.85rem; margin: 0.2rem 0 0; }
-  .small-links { margin: 0.2rem 0 0; text-align: center; }
+  .small-links { margin: 0.2rem 0 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0 0.5rem; }
+  /* The email on a line of its own rather than broken at a hyphen, so a typo is easy to see */
+  #sent-lead :global(strong) { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
 
   .lp-or { display: flex; align-items: center; gap: 0.75rem; margin: 1.4rem 0 0.6rem; color: var(--muted); font-size: 0.82rem; }
   .lp-or::before, .lp-or::after { content: ''; flex: 1; height: 1px; background: var(--lodge-3); }
   #alt-invite .login-form { padding-bottom: 0.2rem; }
   .lp-lost { margin-top: 1.2rem; }
+  .lp-nocode { margin-top: 0.5rem; font-size: 0.9rem; }
   code { font-size: 0.9em; color: var(--amber); }
 
 

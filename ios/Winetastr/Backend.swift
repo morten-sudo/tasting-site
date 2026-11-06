@@ -149,7 +149,6 @@ struct OrderLine: Decodable {
 }
 
 private struct CodeParam: Encodable, Sendable { let code: String }
-private struct EmailParam: Encodable, Sendable { let e: String }
 private struct SetEmail: Encodable, Sendable { let code: String; let e: String }
 private struct Respond: Encodable, Sendable { let code: String; let attending: Bool; let note: String? }
 private struct Rate: Encodable, Sendable { let code: String; let w_id: Int; let stars: Int?; let note: String? }
@@ -208,9 +207,6 @@ enum Backend {
     }
     static func myTastings() async throws -> [MyTasting] {
         try decode(try await supabase.rpc("my_tastings").execute().data)
-    }
-    static func emailKnown(_ email: String) async throws -> Bool {
-        try decode(try await supabase.rpc("login_email_known", params: EmailParam(e: email)).execute().data)
     }
     static func inviteIsMine(_ code: String) async -> Bool {
         guard let data = try? await supabase.rpc("invite_is_mine", params: CodeParam(code: code)).execute().data else { return true }

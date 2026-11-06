@@ -13,7 +13,7 @@ begin
     ('respond_invite','code text, attending boolean, diet text, note text',''),
     ('set_my_email','code text, e text',''),
     ('my_tastings','','code,slug,title,starts_at,place,status'),
-    ('login_email_known','e text',''),
+    ('login_email_known','e text',''),  -- only app builds from before WIN-181 call it; keep it until none of them is in use
     ('invite_is_mine','code text',''),
     ('link_me_tastings','',''),
     ('my_wine_book','codes text[]','wine_id,name,producer,vintage,style,image_url,appellation,region,country,slug,title,starts_at,sort_order,rating,note,rated_at,bought,bottle_cl'),
