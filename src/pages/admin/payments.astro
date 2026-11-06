@@ -51,7 +51,7 @@ import '../../styles/admin.css';
 
       <Sheet id="mp-panel" titleId="mp-panel-title" form="mp-form">
         <Switch title="payments.mpOn" hint="payments.mpOnHint" id="mp-on" />
-        <!-- Only while MobilePay is on: both are required. Off keeps what is saved, untouched -->
+        <!-- Always shown; editable only while MobilePay is on (both required). Off keeps what is saved, untouched -->
         <div id="mp-fields" class="mp-fields">
           <label for="mp-name" data-i18n="payments.yourName">Your name</label>
           <input class="input" id="mp-name" type="text" autocomplete="name" maxlength="80" />
@@ -114,14 +114,13 @@ import '../../styles/admin.css';
   }
 
   const onInput = $<HTMLInputElement>('mp-on');
-  const fields = $('mp-fields');
   const nameInput = $<HTMLInputElement>('mp-name');
   const numberInput = $<HTMLInputElement>('mp-number');
   const mpPanel = sheetPanel($<HTMLDialogElement>('mp-panel'), { dirty: 'form' });
   $('mp-panel-title').textContent = 'MobilePay';
-  // The fields only while the switch is on; turning it off keeps what was typed until the panel closes
+  // The fields stay visible; they can only be changed while the switch is on. Turning it off keeps what was typed
   function showFields() {
-    fields.hidden = !onInput.checked;
+    nameInput.disabled = numberInput.disabled = !onInput.checked;
     if (!onInput.checked) { fieldError(nameInput, null); fieldError(numberInput, null); }
   }
   onInput.addEventListener('change', () => {
