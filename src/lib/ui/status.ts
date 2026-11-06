@@ -27,6 +27,9 @@ export const STATUS = {
   'wine.hidden': { key: 'twe.hidden', tone: 'neutral', dashed: true },
   'wine.orderable': { key: 'admin.orderable', tone: 'neutral' },
   'wine.notOrderable': { key: 'twe.notOrderable', tone: 'neutral', dashed: true },
+  // The host's MobilePay (Payments page)
+  'pay.on': { key: 'payments.on', tone: 'ok' },
+  'pay.off': { key: 'payments.off', tone: 'neutral', dashed: true },
   // Orders
   'order.paid': { key: 'cart.paid', tone: 'ok' },
   'order.unpaid': { key: 'cart.awaiting', tone: 'err' },

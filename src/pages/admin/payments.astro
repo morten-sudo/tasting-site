@@ -5,6 +5,7 @@ import Sheet from '../../components/ui/Sheet.astro';
 import Notice from '../../components/ui/Notice.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import Facts from '../../components/ui/Facts.astro';
+import Switch from '../../components/ui/Switch.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
 ---
@@ -17,11 +18,13 @@ import '../../styles/admin.css';
       <!-- The host's MobilePay: number and name are shown here and edited in the side panel (WIN-278) -->
       <section class="block" id="mobilepay">
         <PageHeader size="section">
-          <Fragment slot="title">MobilePay</Fragment>
+          <Fragment slot="title">MobilePay <span id="mp-chip"></span></Fragment>
           <Fragment slot="actions">
           <button id="mp-edit" class="text-btn" type="button" hidden data-i18n="admin.edit">Edit</button>
           </Fragment>
         </PageHeader>
+        <!-- Switched off: guests see no MobilePay; the number and name are kept -->
+        <p id="mp-off" class="hint" data-i18n="payments.offText" hidden>MobilePay is off.</p>
         <!-- A number without a name (from before the name was required): guests do not see the number yet -->
         <Notice id="mp-name-missing" tone="warn" hidden>
           <p data-i18n="payments.nameMissing">Write your name so guests can see who they are paying. Until then they do not see your MobilePay number.</p>
@@ -47,12 +50,16 @@ import '../../styles/admin.css';
       </section>
 
       <Sheet id="mp-panel" titleId="mp-panel-title" form="mp-form">
-        <label for="mp-name" data-i18n="payments.yourName">Your name</label>
-        <input class="input" id="mp-name" type="text" autocomplete="name" maxlength="80" />
-        <p class="help" data-i18n="payments.nameHint">Guests also see this name as the host of your tastings.</p>
-        <label for="mp-number" data-i18n="admin.mobilepay">MobilePay number</label>
-        <input class="input" id="mp-number" type="tel" inputmode="numeric" autocomplete="tel" placeholder="12 34 56 78" />
-        <p class="help" data-i18n="payments.mpHint">Guests see your number, your name and the amount. Leave the field empty to hide MobilePay.</p>
+        <Switch title="payments.mpOn" hint="payments.mpOnHint" id="mp-on" />
+        <!-- Only while MobilePay is on: both are required. Off keeps what is saved, untouched -->
+        <div id="mp-fields" class="mp-fields">
+          <label for="mp-name" data-i18n="payments.yourName">Your name</label>
+          <input class="input" id="mp-name" type="text" autocomplete="name" maxlength="80" />
+          <p class="help" data-i18n="payments.nameHint">Guests also see this name as the host of your tastings.</p>
+          <label for="mp-number" data-i18n="admin.mobilepay">MobilePay number</label>
+          <input class="input" id="mp-number" type="tel" inputmode="numeric" autocomplete="tel" placeholder="12 34 56 78" />
+          <p class="help" data-i18n="payments.mpHint">Guests see your number, your name and the amount.</p>
+        </div>
         <button slot="foot" id="mp-save" class="btn" type="submit" data-i18n="common.save">Save</button>
       </Sheet>
 
@@ -80,6 +87,7 @@ import '../../styles/admin.css';
   import { listRow } from '../../lib/ui/list-row';
   import { notice } from '../../lib/ui/notice';
   import { prettyNumber } from '../../lib/pay';
+  import { statusChip } from '../../lib/ui/status';
 
   type Own = { id: string; title: string; mobilepay: string; mobilepay_name: string | null };
   const digits = (s: string | null | undefined) => (s ?? '').replace(/\s/g, '');
@@ -88,6 +96,8 @@ import '../../styles/admin.css';
   const host = await requireHost();
   let myName = host?.name?.trim() ?? '';
   let myNumber = digits(host?.mobilepay);
+  // MobilePay on/off (WIN-278): off hides it from guests everywhere (the database's rule); number and name are kept
+  let myOn = true;
   let tastings: Own[] = [];
 
   // ---------- The host's number and name ----------
@@ -98,39 +108,61 @@ import '../../styles/admin.css';
     $('mp-facts').hidden = !has;
     $('mp-empty').hidden = has;
     $('mp-edit').hidden = !has;
-    $('mp-name-missing').hidden = !(has && !myName);
+    $('mp-chip').replaceChildren(...(has ? [statusChip(myOn ? 'pay.on' : 'pay.off')] : []));
+    $('mp-off').hidden = !(has && !myOn);
+    $('mp-name-missing').hidden = !(has && myOn && !myName);
   }
 
+  const onInput = $<HTMLInputElement>('mp-on');
+  const fields = $('mp-fields');
   const nameInput = $<HTMLInputElement>('mp-name');
   const numberInput = $<HTMLInputElement>('mp-number');
   const mpPanel = sheetPanel($<HTMLDialogElement>('mp-panel'), { dirty: 'form' });
   $('mp-panel-title').textContent = 'MobilePay';
-  function openMine(focus: 'name' | 'number' = 'number') {
+  // The fields only while the switch is on; turning it off keeps what was typed until the panel closes
+  function showFields() {
+    fields.hidden = !onInput.checked;
+    if (!onInput.checked) { fieldError(nameInput, null); fieldError(numberInput, null); }
+  }
+  onInput.addEventListener('change', () => {
+    showFields();
+    if (onInput.checked) (!nameInput.value.trim() ? nameInput : numberInput).focus();
+  });
+  function openMine(focus: 'name' | 'number' = 'number', turnOn = false) {
+    onInput.checked = turnOn || myOn;
     nameInput.value = myName;
     numberInput.value = prettyNumber(myNumber);
     fieldError(nameInput, null);
     fieldError(numberInput, null);
+    showFields();
     mpPanel.open();
+    if (!onInput.checked) { if (wide()) onInput.focus(); return; }
     if (wide() || focus === 'name') (focus === 'name' || !myName ? nameInput : numberInput).focus();
   }
   $('mp-edit').addEventListener('click', () => openMine());
-  $('mp-add').addEventListener('click', () => openMine());
-  $('mp-name-fix').addEventListener('click', () => openMine('name'));
+  // Adding a number means turning MobilePay on
+  $('mp-add').addEventListener('click', () => openMine('number', true));
+  $('mp-name-fix').addEventListener('click', () => openMine('name', true));
 
   $('mp-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const on = onInput.checked;
     const name = nameInput.value.trim();
     const raw = digits(numberInput.value);
     fieldError(nameInput, null);
     fieldError(numberInput, null);
-    // The name is required with the number, and cannot be removed while there is one (the database refuses it too)
-    if (raw && !name) { fieldError(nameInput, myName ? t('payments.nameKeep') : t('payments.nameNeeded')); nameInput.focus(); return; }
-    if (!name && myName) { fieldError(nameInput, t('host.nameMissing')); nameInput.focus(); return; }
-    if (raw && !/^\+?\d{4,15}$/.test(raw)) { fieldError(numberInput, t('payments.badNumber')); numberInput.focus(); return; }
+    // On: both the number and the recipient's name are required (the database refuses a number without a name too)
+    if (on) {
+      let first: HTMLInputElement | null = null;
+      if (!name) { fieldError(nameInput, t('payments.nameNeeded')); first = nameInput; }
+      if (!raw) { fieldError(numberInput, t('payments.numberNeeded')); first ??= numberInput; }
+      else if (!/^\+?\d{4,15}$/.test(raw)) { fieldError(numberInput, t('payments.badNumber')); first ??= numberInput; }
+      if (first) { first.focus(); return; }
+    }
     const btn = $<HTMLButtonElement>('mp-save');
     setLoading(btn, true);
-    const change: { mobilepay: string | null; name?: string } = { mobilepay: raw || null };
-    if (name) change.name = name;
+    // Off: only the switch is saved – the number and name stay as they are, for when it is turned on again
+    const change: { mobilepay_on: boolean; mobilepay?: string; name?: string } = on ? { mobilepay_on: true, mobilepay: raw, name } : { mobilepay_on: false };
     const { error } = await supabase.from('hosts').update(change).eq('id', host!.id);
     if (error) {
       setLoading(btn, false);
@@ -139,13 +171,13 @@ import '../../styles/admin.css';
       return;
     }
     // The same name on the account (as the profile page does)
-    if (name && name !== myName) {
+    if (on && name !== myName) {
       await supabase.auth.updateUser({ data: { name } }).catch(() => undefined);
       try { localStorage.setItem('display_name', name); } catch {}
     }
     setLoading(btn, false);
-    myName = name || myName;
-    myNumber = raw;
+    myOn = on;
+    if (on) { myName = name; myNumber = raw; }
     mpPanel.close();
     toast(t('common.saved'));
     showMine();
@@ -161,9 +193,10 @@ import '../../styles/admin.css';
   }
 
   // Only a number that is not the host's own needs a name of its own (the same rule as tasting_payee in the database)
+  // While MobilePay is off guests see none of these numbers either, so the section is not shown (nothing is lost)
   function showOwn() {
     const list = tastings.filter((r) => r.mobilepay !== myNumber);
-    $('own-block').hidden = !list.length;
+    $('own-block').hidden = !list.length || !myOn;
     $('own-notices').replaceChildren(...list.filter((r) => !r.mobilepay_name).map((r) => {
       const fix = mk('button', 'btn small', t('payments.writeRecipient')) as HTMLButtonElement;
       fix.type = 'button';
@@ -219,6 +252,8 @@ import '../../styles/admin.css';
   });
 
   if (host) {
+    const { data: pay } = await supabase.from('hosts').select('mobilepay_on').eq('id', host.id).maybeSingle();
+    myOn = (pay as { mobilepay_on?: boolean } | null)?.mobilepay_on !== false;
     showMine();
     await loadOwn();
     $('admin-main').hidden = false;
