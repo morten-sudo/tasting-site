@@ -49,8 +49,7 @@ import '../../../styles/admin.css';
           <SectionTitle level="eyebrow" as="h4" text="Bruges" />
           <ul class="dv-uses">
             <li><code>src/pages/home.astro</code> → <code>showMap()</code> i <code>src/lib/guest-home.ts</code>: gæstens forside, "Hvor vinene kommer fra" (alle vine i vinbogen, nummererede nåle)</li>
-            <li><code>src/lib/tasting-origins.ts</code> <code>showOverviewOrigins()</code>: smagningens kort, når ingen vin er fra en region med detaljeret kort</li>
-            <li><code>src/lib/tasting-origins.ts</code> <code>showOrigins()</code>: det lille kort (<code>inset</code>) ved "Anden region" i forklaringen</li>
+            <li><code>src/lib/tasting-origins.ts</code> <code>drawOverviewTab()</code>: en fane (eller smagningens eneste region) uden detaljeret kort</li>
             <li><code>src/lib/wine-map.ts</code> <code>wineMap()</code>: én vins kort uden for de detaljerede regioner (med detaljefliser)</li>
           </ul>
         </section>
@@ -84,8 +83,8 @@ import '../../../styles/admin.css';
 
         <section id="m-e" class="dv-comp">
           <SectionTitle level="h3" text="e) Smagningens oprindelse" />
-          <p class="help">showOrigins() i src/lib/tasting-origins.ts (flyttet fra src/pages/tasting/index.astro uden ændringer) · mainRegion(), groupWines(), numberRanges() i region-map.ts</p>
-          <p>Hovedregionen er den region med detaljeret kort, flest vine kommer fra. Den tegnes med antal og navne; forklaringen har én linje pr. område, "Hele &lt;region&gt;" og "Anden region". Vine fra en anden region får et lille landekort (<code>inset</code>) i forklaringen – også når deres egen region har et detaljeret kort. Det er det, der virker forvirrende: Bordeaux, Piemonte og Roussillon vises som en prik på et Frankrig- eller Italien-kort, mens de selv har et detaljeret kort.</p>
+          <p class="help">showOrigins(), regionTabs() i src/lib/tasting-origins.ts · groupWines(), numberRanges() i region-map.ts · tabBar() i src/lib/ui/tabs.ts</p>
+          <p>WIN-256: én fane pr. værdi i vinenes felt <i>region</i> (ikke underregion), med regionens navn og antal vine, i rækkefølgen af hver regions første vin. Med én region er der ingen faner. Hver fane viser regionens detaljerede kort med antal og navne, og forklaringen har én linje pr. område og "Hele &lt;region&gt;". En region uden detaljeret kort får oversigtskortet med en nål pr. sted; kan den slet ikke placeres, står dens vine som en liste. Blinde vine, der ikke er afsløret, og vine uden region er ikke med – heller ikke i antal og rækkefølge.</p>
           <div id="e-demo"></div>
         </section>
 
@@ -138,8 +137,6 @@ import '../../../styles/admin.css';
         <ol class="dv-questions">
           <li><b>Hvad er "vinregionen" for hver vin?</b> Hele Bordeaux for en Pauillac, hele Barolo eller hele Piemonte for en Barolo, hele Douro for en portvin? Og hvilke områder "indeholder" en appellation, når kortet ikke tegner dem inden i hinanden (Haut-Médoc har et hul, hvor Pauillac ligger)?</li>
           <li><b>Kommuner og landsbyer.</b> Barolo (11 comuni), Bourgogne og Champagne har brug for kommune- eller landsbygrænser for at vise "hele Barolo, Monforte d'Alba mørk". Data skal hentes og bygges ind i scripts/build-maps.py.</li>
-          <li><b>Det lille kort ved "Anden region".</b> Fjernes, erstattes af regionens eget detaljerede kort, eller bliver det, men kun for regioner uden detaljeret kort?</li>
-          <li><b>Smagninger med vine fra flere regioner.</b> Faner pr. region blev foreslået og accepteret tidligere – hvordan ser fanerne ud, hvilken fane vises først, og hvor står vine fra regioner uden detaljeret kort?</li>
         </ol>
       </section>
     </div>
@@ -351,16 +348,16 @@ import '../../../styles/admin.css';
   const tw = (name: string, appellation: string | null, appellation_id: string | null, region: string | null, country: string | null, pin?: [number, number]) =>
     ({ name, appellation, appellation_id, region, country, producer: name.split(' ')[0], producer_lat: pin?.[0] ?? null, producer_lon: pin?.[1] ?? null });
   const TASTINGS: { title: string; note: string; wines: ReturnType<typeof tw>[] }[] = [
-    { title: 'Portvin med gæster fra andre regioner', note: 'Douro er hovedregionen (flest vine). Portvinene får "Hele Douro"; Bordeaux, Piemonte og Roussillon har egne detaljerede kort, men står som "Anden region" med et lille landekort.',
+    { title: 'Portvin med gæster fra andre regioner', note: 'Fem faner i vinenes rækkefølge: Douro (3) først, så Bordeaux, Piemonte og Roussillon med deres egne detaljerede kort, og Tokaj på oversigtskortet.',
       wines: [tw('Quinta do Noval LBV', 'Porto', 'porto', 'Douro', 'PT'), tw('Kopke Colheita 2008', 'Porto', 'porto', 'Douro', 'PT'), tw('Quinta do Vesuvio 2019', 'Porto', 'porto', 'Douro', 'PT', [41.135, -7.268]),
         tw('Château Chauvin 2020', 'Saint-Émilion Grand Cru', 'saint-emilion-grand-cru', 'Bordeaux', 'FR'), tw('Barolo Bricco San Pietro 2022', 'Barolo', 'barolo', 'Piemonte', 'IT'),
         tw('Rivesaltes Ambré 1966', 'Rivesaltes', 'rivesaltes', 'Roussillon', 'FR'), tw('Tokaji Aszú 5 Puttonyos', 'Tokaji', null, 'Tokaj', 'HU')] },
-    { title: 'Bordeaux-aften med én Bourgogne', note: 'Bordeaux er hovedregionen med antal pr. appellation; Bourgogne AOC er fra en anden region og får et lille Frankrig-kort.',
+    { title: 'Bordeaux-aften med én Bourgogne', note: 'To faner: Bordeaux (6) med antal pr. appellation, og Bourgogne (1) på Bourgognes eget kort.',
       wines: [tw('Château Pichon Baron 2016', 'Pauillac', 'pauillac', 'Bordeaux', 'FR'), tw('Château Latour 2015', 'Pauillac', 'pauillac', 'Bordeaux', 'FR', [45.1803, -0.7448]),
         tw('Château Palmer 2014', 'Margaux', 'margaux', 'Bordeaux', 'FR'), tw('Château Chauvin 2020', 'Saint-Émilion Grand Cru', 'saint-emilion-grand-cru', 'Bordeaux', 'FR'),
         tw('Château Figeac 2017', 'Saint-Émilion Grand Cru', 'saint-emilion-grand-cru', 'Bordeaux', 'FR'), tw('Bordeaux Supérieur 2019', 'Bordeaux Supérieur', 'bordeaux-superieur', 'Bordeaux', 'FR'),
         tw('Bourgogne Pinot Noir 2021', 'Bourgogne', 'bourgogne', 'Bourgogne', 'FR')] },
-    { title: 'Ingen vin fra en region med detaljeret kort', note: 'Ingen hovedregion: oversigtskortet med en nummereret nål pr. sted (showOverviewOrigins()), og ingen baggrund bag titlen.',
+    { title: 'Ingen vin fra en region med detaljeret kort', note: 'Ingen region har et detaljeret kort: hver fane viser oversigtskortet med en nål (drawOverviewTab()), og der er ingen baggrund bag titlen.',
       wines: [tw('Sancerre 2022', 'Sancerre', 'sancerre', 'Loire', 'FR'), tw('Alsace Riesling 2020', 'Alsace', 'alsace-aoc', 'Alsace', 'FR'), tw('Ribera del Duero 2019', 'Ribera del Duero', 'ribera-del-duero', 'Castilla y León', 'ES'),
         tw('Grüner Veltliner Smaragd 2021', 'Wachau', 'wachau', 'Niederösterreich', 'AT'), tw('Amarone 2017', 'Amarone della Valpolicella', 'amarone-della-valpolicella', 'Veneto', 'IT')] },
   ];
@@ -433,7 +430,7 @@ import '../../../styles/admin.css';
         capt('full + loadDetail()', 'tæt på ét sted med de detaljerede fliser – som én vins kort'), { sources: OVERVIEW_SOURCES }));
       const fr = places.filter((p) => p.country === 'FR');
       const ffr = await focusFor(fr);
-      $('b-maps').append(mapFig(drawOverview(eu, fr.map((p) => ({ lon: p.lon, lat: p.lat })), ffr, 'inset'), capt('inset', 'det lille kort ved "Anden region" (her i fuld bredde; på siden 9rem)'), { sources: OVERVIEW_SOURCES }));
+      $('b-maps').append(mapFig(drawOverview(eu, fr.map((p) => ({ lon: p.lon, lat: p.lat })), ffr, 'inset'), capt('inset', 'det lille kort uden navne (smagningens side bruger det ikke længere efter WIN-256)'), { sources: OVERVIEW_SOURCES }));
     }
     if (world && far.length) {
       const focus = await focusFor(far);
@@ -632,7 +629,7 @@ import '../../../styles/admin.css';
     sec.id = 'c-tastings';
     const cards = mk('div', 'dv-cases');
     sec.append(sectionTitle('h3', 'Smagninger med vine fra flere regioner', 'h3'),
-      mk('p', '', 'Smagningens kort "Hvor vinene kommer fra", tegnet af showOrigins() som på smagningens side. Det lille kort ved "Anden region" er det, Morten finder forvirrende.'), cards);
+      mk('p', '', 'Smagningens kort "Hvor vinene kommer fra", tegnet af showOrigins() som på smagningens side: en fane pr. region (WIN-256).'), cards);
     cards.append(...TASTINGS.map(originsDemo));
     $('s4-groups').append(sec);
   }

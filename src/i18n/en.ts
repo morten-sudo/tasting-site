@@ -696,6 +696,7 @@ export const en = {
   "map.wineNumbers": "Wine {list}",
   "map.wholeRegion": "All of {region}",
   "map.otherRegion": "Another region",
+  "map.regions": "Regions",
   "map.source": "Map: {sources}",
   "section.details": "Details",
   "adminBar.label": "Tasting admin",

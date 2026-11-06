@@ -697,6 +697,7 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "map.wineNumbers": "Vino {list}",
   "map.wholeRegion": "Tutta {region}",
   "map.otherRegion": "Altra regione",
+  "map.regions": "Regioni",
   "map.source": "Mappa: {sources}",
   "section.details": "Dettagli",
   "adminBar.label": "Gestione della degustazione",
