@@ -2,10 +2,28 @@ import Foundation
 import Security
 import Supabase
 
-// The same project and public key as the website. Access is enforced in the database.
+/// Which database the app talks to, chosen when it is built, never in the app (as the site's src/lib/config.ts):
+/// the test build (Debug, com.winetastr.app.dev) uses the test database `winetastr-test` and shows a "Test" chip by
+/// the logo; the real build (Release, com.winetastr.app) uses the live one. DB_TEST is set only in the app target's
+/// Debug configuration (Winetastr.xcodeproj). Only the public (publishable) keys are here: access is enforced in the database.
+enum AppDatabase {
+#if DB_TEST
+    static let isTest = true
+    static let url = URL(string: "https://piiuhgzsnphhuceojldz.supabase.co")!
+    static let key = "sb_publishable_fgw-aZhF7pXyTjdG-AgDjg_Pfqd_SIW"
+#else
+    static let isTest = false
+    static let url = URL(string: "https://ydvdhhdpygzwalosbjcc.supabase.co")!
+    static let key = "sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC"
+#endif
+}
+#if DB_TEST && !DEBUG
+#error("The test database is for the test build (Debug) only: a release build must use the live database")
+#endif
+
 let supabase = SupabaseClient(
-    supabaseURL: URL(string: "https://ydvdhhdpygzwalosbjcc.supabase.co")!,
-    supabaseKey: "sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC",
+    supabaseURL: AppDatabase.url,
+    supabaseKey: AppDatabase.key,
     options: SupabaseClientOptions(auth: .init(emitLocalSessionAsInitialSession: true))
 )
 
@@ -249,7 +267,8 @@ func dbMessage(_ error: Error) -> String {
 
 /// The invite codes on this device, kept in the keychain (they give access to the guest's invitation).
 enum CodeStore {
-    private static let account = "guest_codes"
+    /// The test build keeps its own codes, so a code from one database is never sent to the other
+    private static let account = AppDatabase.isTest ? "guest_codes_test" : "guest_codes"
     private static var query: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrAccount as String: account, kSecAttrService as String: "com.winetastr.app"]
     }
