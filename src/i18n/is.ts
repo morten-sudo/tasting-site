@@ -132,7 +132,6 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "mp.numberNeeded": "Skrifaðu MobilePay-númerið.",
   "mp.nameNeeded": "Skrifaðu nafn þess sem fær peningana.",
   "mp.badNumber": "Skrifaðu danskt farsímanúmer með 8 tölustöfum (t.d. 12 34 56 78) eða MobilePay Box-númer með 4–6 tölustöfum.",
-  "mp.proposed": "Úr síðustu smökkuninni þinni – breyttu því ef það er annað núna.",
   "mp.offView": "Slökkt",
   "mp.onSummary": "Gestir sjá númerið, nafnið og upphæðina.",
   "mp.offSummary": "Gestir sjá upphæðina og að þú segir þeim hvernig þeir greiða. Númerið og nafnið eru geymd.",

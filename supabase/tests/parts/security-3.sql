@@ -428,32 +428,29 @@ begin
 end $$;
 reset role;
 
--- ---------- New tasting's MobilePay (WIN-278): a new tasting gets the host's last used number and name ----------
--- Tasting A is on with 11111111 / Anne Jensen (from the section above)
+-- ---------- New tasting's MobilePay (WIN-278): a new tasting starts empty, with MobilePay off ----------
+-- Tasting A is on with 11111111 / Anne Jensen (from the section above) – a new tasting does not take them over
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
 set local role authenticated;
 do $$
-declare p record; t tastings; e text;
+declare t tastings; e text;
 begin
-  select * into p from my_last_payee();
-  assert p.number = '11111111' and p.recipient = 'Anne Jensen', 'my_last_payee does not give the host''s last used number and name';
-  -- create_tasting without a number (as the site calls it): the last used number and name, MobilePay on
+  -- create_tasting without a number (as the site calls it): no number, no name, MobilePay off
   t := create_tasting('Selftest pay');
-  assert t.mobilepay = '11111111' and t.mobilepay_name = 'Anne Jensen' and t.mobilepay_on, 'a new tasting does not get the last used number and name';
-  -- The newest tasting with a number and a name is the last used one
-  update tastings set mobilepay = '87654321', mobilepay_name = 'Bo Holm' where id = t.id;
-  select * into p from my_last_payee();
-  assert p.number = '87654321' and p.recipient = 'Bo Holm', 'my_last_payee does not follow the newest tasting';
-  -- A new tasting can be created with MobilePay off and without a number
+  assert t.mobilepay is null and t.mobilepay_name is null and not t.mobilepay_on, 'a new tasting does not start with empty MobilePay fields';
+  -- The new site's next step: the form's number and name with MobilePay on
+  update tastings set mobilepay_on = true, mobilepay = '87654321', mobilepay_name = 'Bo Holm' where id = t.id;
+  assert (select mobilepay = '87654321' and mobilepay_name = 'Bo Holm' and mobilepay_on from tastings where id = t.id), 'a new tasting cannot get its own number';
+  -- Turning it on without a number is refused
   t := create_tasting('Selftest pay off');
-  update tastings set mobilepay_on = false, mobilepay = null, mobilepay_name = null where id = t.id;
-  assert (select not mobilepay_on from tastings where id = t.id), 'a new tasting cannot have MobilePay off';
+  e := null; begin update tastings set mobilepay_on = true where id = t.id; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_number_missing', 'MobilePay can be turned on without a number';
   -- Inserting a number without a name while on is refused
   e := null; begin insert into tastings (host_id, slug, title, mobilepay) values ('00000000-0000-4000-a000-00000000000a', 'selftest-pay-x', 'x', '12345678'); exception when others then e := sqlerrm; end;
   assert e = 'mobilepay_name_missing', 'a tasting can be created with a number and no name';
 end $$;
 reset role;
--- Host B has no number with a name anywhere: a new tasting starts with MobilePay off, and B never sees A's number
+-- Host B: a new tasting starts empty too, and B never sees A's number (my_last_payee stays, unused by the site)
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000b","email":"host-b@selftest.invalid","role":"authenticated"}', true);
 set local role authenticated;
 do $$

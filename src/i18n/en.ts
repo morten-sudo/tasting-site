@@ -131,7 +131,6 @@ export const en = {
   "mp.numberNeeded": "Write the MobilePay number.",
   "mp.nameNeeded": "Write the name of the person who gets the money.",
   "mp.badNumber": "Write a Danish mobile number with 8 digits (e.g. 12 34 56 78) or a MobilePay Box number with 4–6 digits.",
-  "mp.proposed": "From your last tasting – change it if this one is different.",
   "mp.offView": "Off",
   "mp.onSummary": "Guests see the number, the name and the amount.",
   "mp.offSummary": "Guests see the amount and that you will tell them how to pay. The number and name are kept.",

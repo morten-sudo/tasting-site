@@ -132,7 +132,6 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "mp.numberNeeded": "Skriv MobilePay-nummeret.",
   "mp.nameNeeded": "Skriv navnet på den, der får pengene.",
   "mp.badNumber": "Skriv et dansk mobilnummer med 8 cifre (fx 12 34 56 78) eller et MobilePay Box-nummer med 4–6 cifre.",
-  "mp.proposed": "Fra din seneste smagning – ret det, hvis det er anderledes denne gang.",
   "mp.offView": "Slået fra",
   "mp.onSummary": "Gæsterne ser nummeret, navnet og beløbet.",
   "mp.offSummary": "Gæsterne ser beløbet, og at du fortæller, hvordan de betaler. Nummer og navn er gemt.",

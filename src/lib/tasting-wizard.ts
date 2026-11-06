@@ -1,5 +1,5 @@
-// New tasting: one form with its details (title, date and times, max guests, place, introduction) and MobilePay – the
-// host's last used number and name, proposed by the database (my_last_payee) and ready to change (WIN-278).
+// New tasting: one form with its details (title, date and times, max guests, place, introduction) and MobilePay – empty
+// and off; nothing is taken over from the host's last tasting (WIN-278, Morten 6 Nov).
 // "Create tasting" creates it and goes to its page, where the "Get started" card leads on to wines, guests and payment.
 import { setLoading } from './ui/button';
 import { supabase } from './supabase';
@@ -23,12 +23,11 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   const val = (id: string) => $<HTMLInputElement>(id).value;
   const FIELDS = ['wz-title-input', 'wz-date-show', 'wz-time', 'wz-end', 'wz-max'];
   const mp = mobilePayForm('wz');
-  let proposed = '';
-
+  let empty = '';
 
   /** Has anything been typed? Then closing asks first. */
   const typed = () => [...dialog.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[type=text]:not(#wz-mp-name), input[type=hidden], textarea')]
-    .some((x) => x.value.trim() && !x.readOnly) || JSON.stringify(mp.read()) !== proposed;
+    .some((x) => x.value.trim() && !x.readOnly) || JSON.stringify(mp.read()) !== empty;
 
   function reset() {
     created = null;
@@ -40,17 +39,7 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     writeAddress('wz', {});
     for (const id of FIELDS) fieldError($(id), null);
     mp.set({ on: false, number: '', name: '' });
-    proposed = JSON.stringify(mp.read());
-  }
-
-  /** The host's last used MobilePay number and name (on when there is one) */
-  async function propose() {
-    const { data } = await supabase.rpc('my_last_payee');
-    const p = (Array.isArray(data) ? data[0] : data) as { number: string | null; recipient: string | null } | null;
-    const has = !!(p?.number && p?.recipient);
-    mp.set({ on: has, number: p?.number ?? '', name: p?.recipient ?? host.name?.trim() ?? '' });
-    $('wz-mp-from').hidden = !has;
-    proposed = JSON.stringify(mp.read());
+    empty = JSON.stringify(mp.read());
   }
 
   async function create() {
@@ -115,7 +104,6 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
 
   function open() {
     reset();
-    void propose();
     dialog.showModal();
     if (matchMedia('(min-width: 48rem)').matches) $('wz-title-input').focus();
     // Phones: the keyboard would cover the form – start on the heading, not on × (which would show its tip)

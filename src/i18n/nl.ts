@@ -132,7 +132,6 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "mp.numberNeeded": "Vul het MobilePay-nummer in.",
   "mp.nameNeeded": "Vul de naam in van wie het geld krijgt.",
   "mp.badNumber": "Vul een Deens mobiel nummer met 8 cijfers in (bijv. 12 34 56 78) of een MobilePay Box-nummer met 4–6 cijfers.",
-  "mp.proposed": "Van je laatste proeverij – pas het aan als het deze keer anders is.",
   "mp.offView": "Uit",
   "mp.onSummary": "Gasten zien het nummer, de naam en het bedrag.",
   "mp.offSummary": "Gasten zien het bedrag en dat jij vertelt hoe ze betalen. Nummer en naam blijven bewaard.",

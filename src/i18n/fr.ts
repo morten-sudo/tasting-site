@@ -132,7 +132,6 @@ export const fr: Partial<Record<keyof typeof en, string>> = {
   "mp.numberNeeded": "Saisissez le numéro MobilePay.",
   "mp.nameNeeded": "Saisissez le nom de la personne qui reçoit l’argent.",
   "mp.badNumber": "Saisissez un numéro de portable danois à 8 chiffres (p. ex. 12 34 56 78) ou un numéro MobilePay Box à 4–6 chiffres.",
-  "mp.proposed": "De votre dernière dégustation – modifiez-le si c’est différent cette fois.",
   "mp.offView": "Désactivé",
   "mp.onSummary": "Les invités voient le numéro, le nom et le montant.",
   "mp.offSummary": "Les invités voient le montant et que vous leur direz comment payer. Le numéro et le nom sont conservés.",
