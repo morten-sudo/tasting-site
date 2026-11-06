@@ -224,6 +224,8 @@ import Disclosure from '../components/ui/Disclosure.astro';
     // Answers that would only come for an email we do not know are shown as sent
     if (error?.code && NOT_SENT_FOR_UNKNOWN.includes(error.code)) return true;
     if (rejectedByHook(error)) return true;
+    // Supabase's own check of the address (e.g. an invisible character): said under the field, not as a send error
+    if (error?.code === 'validation_failed') { bad('email', t('common.invalidEmail')); return false; }
     if (error?.status === 429) {
       failed(t('login.tooManyMails'));
       return false;
