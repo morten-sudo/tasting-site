@@ -405,7 +405,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "payments.yourName": "Dit navn",
   "payments.nameHint": "Gæsterne ser også dette navn som vært for dine smagninger.",
   "payments.nameNeeded": "Skriv dit navn, så gæsterne kan se, hvem de betaler til.",
-  "payments.nameKeep": "Navnet skal stå der, så længe der er et nummer. Fjern nummeret først, hvis du vil fjerne navnet.",
+  "payments.nameKeep": "Navnet skal stå der, så længe der er et nummer. Slet nummeret først, hvis du vil fjerne navnet.",
   "payments.nameMissing": "Skriv dit navn, så gæsterne kan se, hvem de betaler til. Indtil da ser de ikke dit MobilePay-nummer.",
   "payments.writeName": "Skriv dit navn",
   "payments.noNumberTitle": "Intet MobilePay-nummer",

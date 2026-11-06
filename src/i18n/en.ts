@@ -404,7 +404,7 @@ export const en = {
   "payments.yourName": "Your name",
   "payments.nameHint": "Guests also see this name as the host of your tastings.",
   "payments.nameNeeded": "Write your name so guests can see who they are paying.",
-  "payments.nameKeep": "Your name stays as long as there is a number. Remove the number first if you want to remove your name.",
+  "payments.nameKeep": "Your name stays as long as there is a number. Delete the number first if you want to remove your name.",
   "payments.nameMissing": "Write your name so guests can see who they are paying. Until then they do not see your MobilePay number.",
   "payments.writeName": "Write your name",
   "payments.noNumberTitle": "No MobilePay number",
