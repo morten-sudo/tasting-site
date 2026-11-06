@@ -96,8 +96,9 @@ struct CartView: View {
     @State private var info: TastingInfo?
     /// Debug only (payMock): a MobilePay number and recipient for screenshots of the payment box
     @State private var mockPayee: (number: String, name: String)?
-    private var payee: String? { info?.mobilepay ?? mockPayee?.number }
-    private var recipient: String? { info?.mobilepay == nil ? mockPayee?.name : info?.mobilepay_name }
+    // The mock (set only with -payMock) wins over the database, so the box looks the same whatever the database has
+    private var payee: String? { mockPayee?.number ?? info?.mobilepay }
+    private var recipient: String? { mockPayee?.name ?? info?.mobilepay_name }
     @State private var orders: [OrderLine] = []
     @State private var loaded = false
     @State private var sending = false
