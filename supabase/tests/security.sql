@@ -11,8 +11,18 @@ insert into hosts (id, email, name) values
   ('00000000-0000-4000-a000-00000000000b', 'host-b@selftest.invalid', 'Host B'),
   ('00000000-0000-4000-a000-00000000000c', 'host-c@selftest.invalid', 'Host C');
 insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
-  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', '11111111', true, true, true),
-  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', '22222222', true, true, true);
+  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', null, true, true, true),
+  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', null, true, true, true);
+-- Each tasting has a MobilePay number. Where the database has a recipient's name (WIN-278, on the test database before
+-- its release), the number gets one too, so this file runs on both the test and the live database.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
+    execute $q$update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end,
+      mobilepay_name = case slug when 'selftest-a' then 'Host A' else 'Host B' end where slug in ('selftest-a', 'selftest-b')$q$;
+  else
+    update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b');
+  end if;
+end $$;
 insert into wines (id, host_id, name) values
   (-1001, '00000000-0000-4000-a000-00000000000a', 'Wine A'),
   (-1002, '00000000-0000-4000-a000-00000000000b', 'Wine B'),
