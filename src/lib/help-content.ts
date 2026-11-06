@@ -211,7 +211,7 @@ export const HELP: HelpSection[] = [
 <li><b>Alle gæster sammen</b> – god til vinklubber og fællesindkøb: når gæsterne tilsammen bestiller 6, får alle mængdeprisen. Gæsterne ser "Sammen har I bestilt 4 af 6 – 2 flasker mere …". Priserne er foreløbige, indtil du lukker for bestillinger, og gæsterne bliver bedt om at vente med at betale til da.</li>
 </ul>
 <p>Når grænsen er nået, gælder den billige pris for alle flasker – også dem ud over 6. Betalte bestillinger beholder deres pris.</p>
-<p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger – én række pr. bestilling med <i>Betalt</i> eller <i>Ikke betalt</i>. Fluebenet i rækken markerer den betalt (pilen tilbage gør den ikke betalt igen), og du kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren.</p>
+<p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger – én række pr. bestilling med <i>Betalt</i> eller <i>Ikke betalt</i>. Fluebenet i rækken markerer den betalt (pilen tilbage gør den ikke betalt igen), og du kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren – med vin, flaskestørrelse i cl, antal og pris.</p>
 <p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne ser så dit nummer, beløbet og en besked, hver med en kopiknap, og betaler selv i MobilePay – både til bestillinger og deltagergebyr.</p>`,
       en: `<p>When <a href="t:orders/">Orders → Order wine</a> is on, guests can put the wines that can be ordered in the cart and send the order. On a wine's page the guest chooses the number of bottles with − and + and presses <i>Add to cart</i>; a bar at the bottom shows how many bottles are in the cart and what they cost, with the way to the cart. Quantity prices apply automatically. Every amount is written the same way in all languages, e.g. 1.393,90 kr.</p>
 <h2 id="bulk">Quantity prices – each guest or everyone together</h2>
@@ -221,7 +221,7 @@ export const HELP: HelpSection[] = [
 <li><b>All guests together</b> – good for wine clubs and joint orders: when the guests together order 6, everyone gets the quantity price. Guests see "Together you have ordered 4 of 6 – 2 more …". Prices are provisional until you close ordering, and guests are asked to wait with paying until then.</li>
 </ul>
 <p>Once the quantity is reached, the lower price applies to every bottle – also those beyond 6. Paid orders keep their price.</p>
-<p>On the <a href="t:orders/">Orders</a> tab you see all orders – one row per order with <i>Paid</i> or <i>Not paid</i>. The tick in the row marks it paid (the arrow back marks it not paid again), and you can <a href="t:orders/#csv">download them as CSV</a> for the supplier.</p>
+<p>On the <a href="t:orders/">Orders</a> tab you see all orders – one row per order with <i>Paid</i> or <i>Not paid</i>. The tick in the row marks it paid (the arrow back marks it not paid again), and you can <a href="t:orders/#csv">download them as CSV</a> for the supplier – with wine, bottle size in cl, quantity and price.</p>
 <p>Under <a href="/admin/payments/#mp-number">Payments</a> you enter your MobilePay number. Guests then see your number, the amount and a message, each with a copy button, and pay in MobilePay themselves – for orders and the tasting fee.</p>`,
     },
   },

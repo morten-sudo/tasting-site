@@ -21,7 +21,7 @@ import { toast } from './toast';
 import { confirmModal } from './ui/confirm';
 import { initQuickAdd } from './wine-quick-add';
 import { winePaths } from './wine-paths';
-import { bottleText } from './bottle';
+import { wineMeta } from './bottle';
 
 type LibWine = { id: number; name: string; producer: string | null; style: string | null; vintage: string | null;
   country: string | null; region: string | null; appellation: string | null;
@@ -42,7 +42,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
 
   /** A wine's address in the library (its real one, worked out from all the account's wines) */
   const wineHref = (id: number) => winePaths(library).get(id) ?? '/admin/wines/';
-  const meta = (w: LibWine) => [w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer].filter(Boolean).join(' · ');
+  const meta = (w: LibWine) => wineMeta(w, locale(), styleName).join(' · ');
 
   async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'blind' | 'sort_order' | 'price_tiers'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)

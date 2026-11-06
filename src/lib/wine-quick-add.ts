@@ -11,7 +11,7 @@ import { $, mk } from './ui/dom';
 import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang, locale } from '../i18n';
-import { STANDARD_CL, bottleIn, bottleText, withoutBottle } from './bottle';
+import { STANDARD_CL, bottleIn, wineMeta, withoutBottle } from './bottle';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
 import { attachImageInput } from './ui/image-picker';
@@ -134,7 +134,7 @@ export function initQuickAdd(o: Opts) {
       .slice(0, 5).map((x) => x.w);
   }
   const metaOf = (w: Pick<QuickWine, 'style' | 'vintage' | 'producer' | 'bottle_cl'>) =>
-    [w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer].filter(Boolean).join(' · ');
+    wineMeta(w, locale(), styleName).join(' · ');
 
   function renderHits(list?: QuickWine[], head?: string) {
     const text = input.value.trim();

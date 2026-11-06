@@ -320,6 +320,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "csv.time": "Tijd",
   "csv.guest": "Gast",
   "csv.wine": "Wijn",
+  "csv.bottle": "Fles (cl)",
   "csv.qty": "Aantal",
   "csv.unit": "Prijs per fles",
   "csv.amount": "Bedrag",

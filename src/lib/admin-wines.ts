@@ -27,7 +27,7 @@ import { wineThumb } from './ui/thumb';
 import { highlight as highlightRow } from './ui/highlight';
 import { deleteWithUndo } from './ui/delete-undo';
 import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
-import { COMMON_CL, STANDARD_CL, bottleText, parseCl } from './bottle';
+import { COMMON_CL, STANDARD_CL, bottleText, parseCl, wineMeta } from './bottle';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 import { dailyLimitText, throwIfDailyLimit, limitOr } from './daily-limit';
 
@@ -648,7 +648,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       edit.addEventListener('click', () => openForm(w));
       return listRow({
         id: w.id, pic: wineThumb(w), title: w.name, href: paths().get(w.id) ?? '/admin/wines/',
-        meta: [[w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer], originLine(w),
+        meta: [wineMeta(w, locale(), styleName), originLine(w),
           [w.retail_price_dkk != null ? t('admin.normally', { price: formatKr(w.retail_price_dkk) }) : null, offer]],
         chips: chips.length ? chips : [{ text: t('wineLib.unused'), dashed: true }],
         actions: [edit],

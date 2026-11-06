@@ -9,12 +9,15 @@ import { chip } from './ui/status';
 import { mk } from './ui/dom';
 import { wineThumb } from './ui/thumb';
 import { t, locale, formatDate } from '../i18n';
+import { wineMeta } from './bottle';
 
 export type BookWine = {
     wine_id: number; name: string; producer: string | null; vintage: string | null; style: string | null;
     image_url: string | null; appellation: string | null; region: string | null; country: string | null;
     slug: string; title: string; starts_at: string | null; sort_order: number;
     rating: number | null; note: string | null; rated_at: string | null; bought: number;
+    /** Centilitres (WIN-170); missing from an older database, null for a blind wine (never in the book) */
+    bottle_cl?: number | null;
 };
 
 // A wine as the card variant of the one list row: picture, name, what it is, origin, my note, where I tasted it –
@@ -35,7 +38,7 @@ export function wineItem(w: BookWine) {
     variant: 'card',
     // By number: the wine page turns it into the name address (unique also for two vintages of one wine)
     cardHref: tastingUrl(w.slug, `wines/${w.wine_id}/`), pic: wineThumb(w), title: w.name,
-    meta: [[w.style ? styleName(w.style) : null, w.vintage, w.producer].filter((x, i, arr) => x && arr.indexOf(x) === i), originLine(w), note, where],
+    meta: [wineMeta(w, locale(), styleName), originLine(w), note, where],
     aside: side.childNodes.length ? side : null,
   });
 }

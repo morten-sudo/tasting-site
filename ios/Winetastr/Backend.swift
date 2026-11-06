@@ -100,6 +100,14 @@ func nameWithSize(_ name: String, _ cl: Double?) -> String {
     bottleText(cl).map { "\(name) · \($0)" } ?? name
 }
 
+/// wineMeta() in src/lib/bottle.ts (WIN-170): the one meta line wherever a wine is listed – "Rød · 2019 · 150 cl ·
+/// producer", the size after the vintage and none at 75 cl; without empties and repeats
+func wineMeta(style: String?, vintage: String?, cl: Double?, producer: String?) -> String? {
+    var out: [String] = []
+    for x in [styleName(style), vintage, bottleText(cl), producer].compactMap({ $0 }) where !x.isEmpty && !out.contains(x) { out.append(x) }
+    return out.isEmpty ? nil : out.joined(separator: " · ")
+}
+
 /// A quantity price: from qty bottles, price each
 struct PriceTier: Decodable, Hashable { let qty: Int; let price: Double }
 
@@ -121,6 +129,8 @@ struct BookWine: Decodable, Identifiable {
     let wine_id: Int; let name: String; let producer: String?; let vintage: String?; let style: String?; let image_url: String?
     let appellation: String?; let region: String?; let country: String?; let slug: String; let title: String; let starts_at: String?
     let sort_order: Int?; let rating: Int?; let note: String?; let rated_at: String?; let bought: Int
+    /// The bottle's size in cl (WIN-170); missing from older databases, null for a blind wine (never in the book)
+    var bottle_cl: FlexNumber?
     var id: String { "\(slug)-\(wine_id)" }
     var imageURL: URL? {
         guard let image_url, !image_url.isEmpty else { return nil }
@@ -132,6 +142,9 @@ struct BookWine: Decodable, Identifiable {
 struct OrderLine: Decodable {
     let order_id: Int; let created_at: String; let paid: Bool; var slug: String?; var title: String?
     let wine_id: Int?; let wine_name: String; let quantity: Int; let unit_price: Double
+    /// The wine's size now in cl (WIN-170): it follows the name, also for a wine made blind after the order; missing
+    /// from older databases
+    var bottle_cl: FlexNumber?
 }
 
 private struct CodeParam: Encodable, Sendable { let code: String }
@@ -150,6 +163,15 @@ private struct Board: Encodable, Sendable { let code: String; let slug: String? 
 
 enum Backend {
     private static func decode<T: Decodable>(_ data: Data) throws -> T { try JSONDecoder().decode(T.self, from: data) }
+    /// -bottleMock 150 (DEBUG): the first order line gets that size, for screenshots of the orders
+    private static func mockOrderSize(_ lines: [OrderLine]) -> [OrderLine] {
+        #if DEBUG
+        if let s = UserDefaults.standard.string(forKey: "bottleMock"), let v = Double(s), !lines.isEmpty {
+            var out = lines; out[0].bottle_cl = FlexNumber(v); return out
+        }
+        #endif
+        return lines
+    }
 
     static func invite(_ code: String) async throws -> Invite? {
         let rows: [Invite] = try decode(try await supabase.rpc("get_invite", params: CodeParam(code: code)).execute().data)
@@ -224,14 +246,19 @@ enum Backend {
         return rows.first
     }
     static func wineBook(_ codes: [String]) async throws -> [BookWine] {
-        try decode(try await supabase.rpc("my_wine_book", params: Codes(codes: codes)).execute().data)
+        var list: [BookWine] = try decode(try await supabase.rpc("my_wine_book", params: Codes(codes: codes)).execute().data)
+        #if DEBUG
+        // -bottleMock 150: the first wine of the book gets that size (screenshots without changing the test data)
+        if let s = UserDefaults.standard.string(forKey: "bottleMock"), let v = Double(s), !list.isEmpty { list[0].bottle_cl = FlexNumber(v) }
+        #endif
+        return list
     }
     static func myOrders(_ code: String) async throws -> [OrderLine] {
-        try decode(try await supabase.rpc("get_my_orders", params: CodeParam(code: code)).execute().data)
+        mockOrderSize(try decode(try await supabase.rpc("get_my_orders", params: CodeParam(code: code)).execute().data))
     }
     /// Signed in: every order of the email, with the tasting
     static func allMyOrders() async throws -> [OrderLine] {
-        try decode(try await supabase.rpc("my_orders").execute().data)
+        mockOrderSize(try decode(try await supabase.rpc("my_orders").execute().data))
     }
     static func profile() async throws -> Profile? {
         try? decode(try await supabase.rpc("my_profile").execute().data)

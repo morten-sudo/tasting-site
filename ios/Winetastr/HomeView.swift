@@ -227,7 +227,7 @@ struct HomeView: View {
         guard !wines.isEmpty else { return nil }
         let n = Set(wines.map(\.wine_id)).count
         let fav = wines.filter { ($0.rating ?? 0) >= 4 }.max { ($0.rating ?? 0) < ($1.rating ?? 0) }
-        return [n == 1 ? L("home3.winesOne") : L("home3.winesMany", ["n": "\(n)"]), fav.map { L("home3.favourite", ["name": $0.name]) }].compactMap { $0 }.joined(separator: " · ")
+        return [n == 1 ? L("home3.winesOne") : L("home3.winesMany", ["n": "\(n)"]), fav.map { L("home3.favourite", ["name": nameWithSize($0.name, $0.bottle_cl?.value)]) }].compactMap { $0 }.joined(separator: " · ")
     }
 
     // MARK: Loading
