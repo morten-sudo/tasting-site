@@ -141,8 +141,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       <section id="controls" class="block set-card" data-section="settings">
         <h2 data-i18n="set.guestsCan">The guests can</h2>
         <Switch title="wizard.signupTitle" hint="wizard.signupHint" data-key="signup_open" />
-        <Switch title="set.quizOpen" hint="set.quizOpenHint" help="quiz" data-key="quiz_open" />
-        <Switch title="set.quizDone" hint="set.quizDoneHint" data-key="quiz_finished" />
       </section>
 
       <section class="block set-card" data-section="settings">
@@ -151,10 +149,6 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <div id="max-guests-row" class="set-row">
           <span><b><span data-i18n="wizard.maxGuests">Max. number of guests</span><span data-help="max-guests"></span></b><small id="max-guests-view"></small></span>
           <button id="max-guests-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
-        </div>
-        <div class="set-row">
-          <span><b data-i18n="set.tv">Leaderboard for the TV</b><small><a id="tv-link" href="/" target="_blank"></a></small></span>
-          <button id="tv-copy" class="icon-act strong" type="button" aria-label="Copy link" data-tip="Copy link" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
         </div>
       </section>
 
@@ -362,9 +356,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
           <button id="q-add-toggle" class="btn small secondary" type="button" data-i18n="aq.add">Add question</button>
           </Fragment>
         </PageHeader>
-        <div class="tab-switches">
+        <!-- What the guests can do in the quiz (saves at once) and the link for the TV -->
+        <div id="quiz-controls" class="tab-switches">
           <Switch title="set.quizOpen" hint="set.quizOpenHint" help="quiz" data-key="quiz_open" class="tab-switch" />
           <Switch title="set.quizDone" hint="set.quizDoneHint" data-key="quiz_finished" class="tab-switch" />
+          <div id="tv-board" class="set-row tab-switch">
+            <span><b data-i18n="set.tv">Leaderboard for the TV</b><small><a id="tv-link" href="/" target="_blank"></a></small></span>
+            <button id="tv-copy" class="icon-act strong" type="button" aria-label="Copy link" data-tip="Copy link" data-i18n-attr="aria-label=hosts.copyLink;data-tip=hosts.copyLink"><Icon name="copy" /></button>
+          </div>
         </div>
         <Notice id="q-open-note" hidden><p data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p></Notice>
 
@@ -443,7 +442,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { supabase } from '../../lib/supabase';
   import { currentSlug, tastingUrl } from '../../lib/guest';
   import { initHosts } from '../../lib/admin-hosts';
-  import { fetchLeaderboard, renderLeaderboard } from '../../lib/leaderboard';
+  import { fetchStandings, renderLeaderboard } from '../../lib/leaderboard';
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, sheetPanel, toNumber, iconButton, type Host } from '../../lib/admin-common';
@@ -1221,13 +1220,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   $('csv').addEventListener('click', () => {
     const wineById = new Map(wines.map((w) => [w.id, w]));
     const pById = new Map(participants.map((p) => [p.id, p]));
-    const rows = [(['csv.order', 'csv.time', 'csv.guest', 'csv.wine', 'csv.qty', 'csv.unit', 'csv.amount', 'csv.paid'] as Key[]).map((k) => t(k))];
+    const rows = [(['csv.order', 'csv.time', 'csv.guest', 'csv.wine', 'csv.bottle', 'csv.qty', 'csv.unit', 'csv.amount', 'csv.paid'] as Key[]).map((k) => t(k))];
     for (const o of [...orders].sort((a, b) => a.id - b.id)) {
       for (const l of o.order_lines) {
         const price = Number(l.unit_price);
         rows.push([
           String(o.id), new Date(o.created_at).toLocaleString(locale()),
-          pById.get(o.participant_id)?.name ?? '', wineById.has(l.wine_id) ? wineName(wineById.get(l.wine_id)) : '',
+          pById.get(o.participant_id)?.name ?? '', wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'),
+          String(Number(wineById.get(l.wine_id)?.bottle_cl ?? 75)).replace('.', ','),
           String(l.quantity), String(price).replace('.', ','),
           String(price * l.quantity).replace('.', ','), o.paid ? t('common.yes') : t('common.no'),
         ]);
@@ -1480,7 +1480,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     renderOrders();
     renderSetup();
     followHelpLink();
-    const rows = await fetchLeaderboard({ slug: tasting.slug });
+    const rows = await fetchStandings(tasting.slug);
     if (rows) showBoard(rows);
   }
 
@@ -1518,7 +1518,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
       if (!tasting) return;
       const [o, rows] = await Promise.all([
         supabase.from('orders').select(ORDER_SELECT).eq('tasting_id', tasting!.id),
-        fetchLeaderboard({ slug: tasting!.slug }),
+        fetchStandings(tasting!.slug),
       ]);
       if (o.data) { orders = o.data as O[]; renderOrders(); }
       if (rows) showBoard(rows);

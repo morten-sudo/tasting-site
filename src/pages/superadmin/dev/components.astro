@@ -854,7 +854,7 @@ const opts = [
     );
     // Activity: a sign in a circle, what happened (a link, or plain text when there is nowhere to go), where and when
     $('act-rows').append(
-      activityRow({ icon: '✓', title: 'Said yes to Portvin 2026', href: '#c25', meta: ['Portvin 2026', '2 hours ago'] }),
+      activityRow({ icon: '✓', title: 'Coming to Portvin 2026', href: '#c25', meta: ['Portvin 2026', '2 hours ago'] }),
       activityRow({ icon: '🛒', title: 'Ordered 6 bottles (1.134,00 kr.)', href: '#c25', meta: ['Portvin 2026', 'Awaiting payment', 'yesterday'] }),
       activityRow({ icon: '★', title: [starsRo(4), ' Quinta do Noval LBV'], href: '#c25', meta: ['Portvin 2026', '3 days ago'] }),
       activityRow({ icon: '→', title: 'Signed in', meta: ['last week'] }),
@@ -965,6 +965,6 @@ const opts = [
     labels[1].classList.add('right'); labels[1].append(mk('span', 'res', 'Right answer'));
     labels[2].classList.add('wrong'); labels[2].append(mk('span', 'res', 'Your answer'));
     $('quiz-cc').append(quiz.el);
-    renderLeaderboard($<HTMLOListElement>('board'), [{ name: 'Anne', points: 11, answered: 12 }, { name: 'Morten', points: 9, answered: 12 }, { name: 'Jens', points: 9, answered: 10 }, { name: 'Line', points: 6, answered: 7 }], 12, 'Morten');
+    renderLeaderboard($<HTMLOListElement>('board'), [{ name: 'Anne', points: 11, answered: 12 }, { name: 'Morten', points: 9, answered: 12, mine: true }, { name: 'Jens', points: 9, answered: 10 }, { name: 'Line', points: 6, answered: 7 }], 12);
   }
 </script>

@@ -73,7 +73,8 @@ import '../../styles/admin.css';
   import { confirmModal } from '../../lib/ui/confirm';
   import { setLoading } from '../../lib/ui/button';
   import { supabase } from '../../lib/supabase';
-  import { t, type Key } from '../../i18n';
+  import { t, locale, type Key } from '../../i18n';
+  import { nameWithSize } from '../../lib/bottle';
   import { requireAdmin, $, mk, dateFmt, timeFmt, TENANT_SECTIONS, showTenantInMenu, markTenantSection, tenantUrl, rememberTenantSlug } from '../../lib/super-common';
   import { personRow } from '../../lib/ui/list-row';
   import { eventText, eventGroup, GROUP_TONE } from '../../lib/super-events';
@@ -161,8 +162,9 @@ import '../../styles/admin.css';
     },
     async wines() {
       const { data } = await supabase.rpc('admin_tenant_wines', { tn: id });
-      type R = { name: string; producer: string | null; vintage: string | null; style: string | null; region: string | null; image_url: string | null; retail_price_dkk: number | null; tastings: number; ratings: number };
-      const name = (r: R) => [r.name, r.vintage].filter(Boolean).join(' ');
+      type R = { name: string; producer: string | null; vintage: string | null; style: string | null; region: string | null; image_url: string | null; retail_price_dkk: number | null; tastings: number; ratings: number; bottle_cl?: number | null };
+      // Name and vintage, then the size when it is not 75 cl (WIN-170): "Quinta do Noval LBV 2019 · 150 cl"
+      const name = (r: R) => nameWithSize([r.name, r.vintage].filter(Boolean).join(' '), r.bottle_cl, locale());
       fillTable<R>('wines', (data ?? []) as R[], [
         // The wine with its picture (the one thumbnail, 20, small) and its type under the name
         { key: 'name', label: t('admin.name'), sort: (r) => name(r), cell: (r) => {

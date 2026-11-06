@@ -2,7 +2,7 @@
 -- calls must keep their arguments and columns. Read-only. Run after every database change; expect 'app contract passed'.
 -- Need something else? Add a new optional argument with a default (and update the list here) or a new function.
 do $$
-declare r record; res text; missing text := '';
+declare r record; res text; missing text := ''; v_code text; v_t uuid; n int;
 begin
   for r in select * from (values
     ('get_invite','code text','name,status,note,email'),
@@ -13,18 +13,19 @@ begin
     ('respond_invite','code text, attending boolean, diet text, note text',''),
     ('set_my_email','code text, e text',''),
     ('my_tastings','','code,slug,title,starts_at,place,status'),
-    ('login_email_known','e text',''),
+    ('login_email_known','e text',''),  -- only app builds from before WIN-181 call it; keep it until none of them is in use
     ('invite_is_mine','code text',''),
     ('link_me_tastings','',''),
-    ('my_wine_book','codes text[]','wine_id,name,producer,vintage,style,image_url,appellation,region,country,slug,title,starts_at,sort_order,rating,note,rated_at,bought'),
-    ('get_my_orders','code text','order_id,created_at,paid,wine_id,wine_name,quantity,unit_price'),
-    ('my_orders','','order_id,created_at,paid,slug,title,wine_name,quantity,unit_price'),
+    ('my_wine_book','codes text[]','wine_id,name,producer,vintage,style,image_url,appellation,region,country,slug,title,starts_at,sort_order,rating,note,rated_at,bought,bottle_cl'),
+    ('get_my_orders','code text','order_id,created_at,paid,wine_id,wine_name,quantity,unit_price,bottle_cl'),
+    ('my_orders','','order_id,created_at,paid,slug,title,wine_name,quantity,unit_price,bottle_cl'),
     ('my_profile','',''),
     ('get_tasting_payment','code text','amount,paid'),
     ('get_quiz','code text','id,sort_order,question,options,correct_key,explanation'),
     ('get_my_answers','code text','question_id,answer_key'),
     ('submit_answer','code text, q_id integer, a_key text',''),
     ('tasting_leaderboard','code text, slug text','name,points,answered'),
+    ('tasting_board','code text, slug text','name,points,answered,mine'),
     ('get_chat','code text, after_id bigint','id,author,body,created_at,from_host,mine'),
     ('post_chat','code text, body text',''),
     ('place_order','code text, items jsonb',''),
@@ -51,6 +52,21 @@ begin
       where n.nspname = 'public' and p.proname = 'get_tasting'
         and p.prosrc like '%''mobilepay''%' and p.prosrc like '%''mobilepay_name''%' and p.prosrc like '%''host_name''%') <> 1 then
     raise exception 'app contract broken: get_tasting payment keys';
+  end if;
+  -- WIN-303: get_chat's `mine` is never null, also for the host's messages (no participant_id). A host message is
+  -- added in a sub-block that is always rolled back, so this stays read-only.
+  select p.invite_code, p.tasting_id into v_code, v_t from participants p where p.invite_code is not null limit 1;
+  if v_code is not null then
+    begin
+      insert into chat_messages (tasting_id, from_host, author, body) values (v_t, true, 'Host', 'app contract check');
+      raise exception using errcode = 'WT303', message = (
+        select count(*) filter (where c.mine is null) || ',' || count(*) filter (where c.from_host and c.mine = false)
+        from get_chat(v_code, 0) c);
+    exception when sqlstate 'WT303' then
+      if split_part(sqlerrm, ',', 1) <> '0' or split_part(sqlerrm, ',', 2) = '0' then
+        raise exception 'app contract broken: get_chat mine is null for host messages (%)', sqlerrm;
+      end if;
+    end;
   end if;
   raise notice 'app contract passed';
 end $$;

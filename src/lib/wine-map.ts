@@ -1,7 +1,7 @@
 // The small map for one wine: its appellation on the detailed region map when there is one,
 // otherwise a pin on the overview map. Used on the guest's wine page and in the host's wine form.
-import { loadMap, mapIdFor, drawMap, mapPoint } from './region-map';
-import { placeOf, loadOverview, loadDetail, loadTowns, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
+import { loadMap, mapIdFor, drawMap, mapPoint, levelOf, labelScale } from './region-map';
+import { placeOf, loadOverview, detailFor, loadTowns, overviewFor, focusFor, drawOverview, type Place } from './overview-map';
 import { loadAppellations, matchAppellation } from './origin';
 import { t } from '../i18n';
 
@@ -11,34 +11,34 @@ export type WineOrigin = { appellation?: string | null; appellation_id?: string 
 export type MapHow = 'area' | 'regionWide' | 'region' | Place['how'];
 
 /** The map as an SVG string and how the wine was placed, or null when not even the country is known. */
-export async function wineMap(w: WineOrigin, opts: { towns?: boolean } = { towns: true }): Promise<{ svg: string; how: MapHow; sources: string } | null> {
+/** opts.width: the map box's width in px (boxWidth()), so names are drawn big enough to read in a small box */
+export async function wineMap(w: WineOrigin, opts: { towns?: boolean; width?: number } = {}): Promise<{ svg: string; how: MapHow; sources: string } | null> {
   // A typed appellation that is on the list counts as chosen (the database links it when saving)
   let appellationId = w.appellation_id ?? null;
   if (!appellationId && w.appellation) appellationId = matchAppellation(await loadAppellations(), w.appellation)?.id ?? null;
   const mapId = mapIdFor(w.region);
   const map = mapId ? await loadMap(mapId) : null;
   if (map) {
-    const inMap = !!(appellationId && map.areas[appellationId]);
-    // The producer's exact place as a pin on top of its appellation
+    // The same rule as the tasting's map (WIN-293): the whole region, the wine's lowest known area strongest and named
+    // (no number), the levels between lighter; an appellation the map cannot fill as a pin with its name
+    const level = levelOf(map, { ...w, appellation_id: appellationId }, await loadAppellations());
     const pin = w.producer_lat != null && w.producer_lon != null && mapPoint(map, w.producer_lon, w.producer_lat)
       ? [{ lon: w.producer_lon, lat: w.producer_lat, title: w.producer ?? '' }] : [];
-    // The same map as the tasting's: the wine's appellation filled and named (no number), or the whole region lit
-    const name = inMap ? map.areas[appellationId!].title ?? w.appellation ?? '' : '';
-    const svg = drawMap(map, { counts: inMap ? new Map([[appellationId!, 1]]) : new Map(), titles: inMap && name ? new Map([[appellationId!, name]]) : new Map(),
-      badges: false, wholeRegion: !inMap, pins: pin });
+    const area = level.kind === 'area';
+    const svg = drawMap(map, { counts: area ? new Map([[level.id, 1]]) : new Map(), titles: area ? new Map([[level.id, level.name]]) : new Map(),
+      mid: new Set(level.mid), named: level.kind === 'pin' && level.pin ? [{ ...level.pin, title: level.name }] : [],
+      badges: false, wholeRegion: level.kind === 'region', pins: pin, scale: labelScale(map, opts.width ?? 0), box: opts.width ?? 0 });
     // An appellation on the list that is not an area covers the whole region (e.g. Porto)
-    return { svg, how: pin.length ? 'producer' : inMap ? 'area' : appellationId ? 'regionWide' : 'region', sources: map.sources };
+    return { svg, how: pin.length ? 'producer' : area ? 'area' : level.kind === 'pin' ? 'appellation' : appellationId ? 'regionWide' : 'region', sources: map.sources };
   }
   const place = await placeOf({ ...w, appellation_id: appellationId });
   if (!place) return null;
   const [overview, focus] = await Promise.all([loadOverview(overviewFor([place])), focusFor([place], true)]);
   if (!overview) return null;
   // Zoomed in on a small area: the detailed tiles instead of the coarse overview
-  const small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14;
-  const margin = Math.max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35;
-  const detail = small ? await loadDetail({ lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin }) : null;
+  const detail = await detailFor(focus);
   // Towns for orientation, as on the detailed region maps
-  const towns = opts.towns ? await loadTowns() : null;
+  const towns = opts.towns !== false ? await loadTowns() : null;
   return { svg: drawOverview(overview, [{ lon: place.lon, lat: place.lat, label: place.label }], focus, 'full', detail, towns), how: place.how, sources: OVERVIEW_SOURCES };
 }
 

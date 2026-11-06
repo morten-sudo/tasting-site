@@ -7,12 +7,12 @@ home.upcomingMany tastings.past tastingHome.about tastingHome.yourAnswer tasting
 tastingHome.closedHint guest.fullHint guest.coming guest.note guest.canChange
 guest.welcome guest.emailLead guest.yourEmail guest.emailBad guest.emailMissing guest.emailTaken guest.emailLocked guest.emailNotSaved
 guest.chooseYesNo guest.answerNotSaved guest.signupClosed status.yes status.no status.waitlist rating.title rating.note blind.blind blind.hint
-login.mailLead login.sendCode login.sentTo login.enterIt login.codeLabel login.submit login.resend login.otherEmail login.inviteSummary
-login.inviteHelp login.inviteLabel login.unknownEmail login.tooManyMails login.sendFailed login.wholeCode login.tooManyTries login.wrongCode
-login.resent login.pasteCode login.codeNotFound login.otherInvite login.tooManyChecks
+login.mailLead login.sendCode login.sentIfKnown login.noCodeTitle login.noCodeHelp login.codeLabel login.submit login.resend login.otherEmail login.inviteSummary
+login.inviteHelp login.inviteLabel login.tooManyMails login.sendFailed login.wholeCode login.tooManyTries login.wrongCode
+login.resent login.pasteCode login.codeNotFound login.otherInvite
 nav.tasting wines.intro wines.readMore wines.position wine.all wine.vintage loginx.claim loginx.noPassword loginx.or loginx.code login.title rating.notePlaceholder home2.hello login.lostHint
 nav.home nav.profile nav.userMenu book.title book.linkText book.statWines book.statTastings book.statBottles book.linkOnly book.tabWines book.tabTastings book.tabOrders book.sort book.sortRecent book.sortRating book.sortName book.noWines book.noWinesTitle book.noMatch book.tastedAt book.bought book.ordersSum book.showAll book.noOrdersText tastings.none profile.name profile.nameHint profile.linkOnly profile.language profile.edit profile.noOrders profile.emailConfirm profile.emailNotChanged host.nameMissing admin.changesNotSaved adminTasting.search pay.orderComment cart.total cart.paid cart.awaiting
-tastingHome.calendar tastingHome.map tastingHome.during tastingHome.winesSub map.title map.wineNumbers map.wholeRegion map.otherRegion map.source map.zoomIn map.zoomOut guest.feeTitle guest.feeText guest.feePaid pay.noNumber pay.copied pay.number pay.recipient pay.amount pay.copyNumber bottle.label
+tastingHome.calendar tastingHome.map tastingHome.during tastingHome.winesSub map.title map.wineNumbers map.wholeRegion map.otherRegion map.regions map.source map.zoomIn map.zoomOut guest.feeTitle guest.feeText guest.feePaid pay.noNumber pay.copied pay.number pay.recipient pay.amount pay.copyNumber bottle.label
 wizard.back
 rating.saved rating.notSaved rating.private wine.readLess wine.moreAbout wine.prev wine.next wine.others label.grapes wineFields.food wineFields.serving producer.websiteShort producer.addressShort price.bulk bulk.reached bulk.reachedAll bulk.togetherMore bulk.youMore
 nav.quiz nav.chat page.quiz page.chat tastingHome.quizOpen tastingHome.quizLater tastingHome.quizDone tastingHome.chatSub quiz.closed quiz.rules quiz.lock quiz.locking quiz.done quiz.over quiz.standingsNow quiz.final quiz.count quiz.closedForAnswers quiz.notSaved quiz.unanswered quiz.right quiz.wrong quiz.allAnswered quiz.answeredOf quiz.correctAnswer quiz.yourAnswer board.done board.noAnswers hosts.you chat.intro chat.write chat.send chat.host chat.tooMany chat.notSent chat.emptyTitle chat.emptyText
@@ -28,7 +28,6 @@ APP = {
  'app.offline': ('Ingen forbindelse','No connection','Engin tenging'),
  'app.loadFailedTitle': ('Kunne ikke hentes','Could not load','Tókst ekki að sækja'),
  'app.loadFailedText': ('Tjek din forbindelse, og prøv igen.','Check your connection and try again.','Athugaðu tenginguna og reyndu aftur.'),
- 'app.spamHint': ('Kan du ikke finde mailen, så kig i spam. Skriv koden her i appen.','Can’t find the email? Check your spam folder. Enter the code here in the app.','Finnurðu ekki póstinn? Athugaðu ruslpóstinn. Sláðu kóðann inn hér í appinu.'),
  'app.addInvitation': ('Tilføj invitation','Add invitation','Bæta við boði'),
  'app.language': ('Sprog','Language','Tungumál'),
  'app.account': ('Konto','Account','Aðgangur'),

@@ -1,5 +1,5 @@
--- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 2 of 3.
--- Sections: Fixtures, Host D, Host A removes D, Host E, Host C, A signed-in guest. Rolled back at the end.
+-- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 2 of 5.
+-- Sections: Fixtures, Host D, Host A removes D, Host E, Host C, A signed-in guest, Sign-up gate. Rolled back at the end.
 begin;
 
 -- ---------- Fixtures: host A and host B, each with a tasting, wine, guest, order and quiz question ----------
@@ -7,10 +7,25 @@ insert into hosts (id, email, name) values
   ('00000000-0000-4000-a000-00000000000a', 'host-a@selftest.invalid', 'Host A'),
   ('00000000-0000-4000-a000-00000000000b', 'host-b@selftest.invalid', 'Host B'),
   ('00000000-0000-4000-a000-00000000000c', 'host-c@selftest.invalid', 'Host C');
--- MobilePay off in both (a number without a name, WIN-278)
-insert into tastings (id, host_id, slug, title, place, intro, mobilepay, mobilepay_on, orders_open, quiz_open, signup_open) values
-  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', '11111111', false, true, true, true),
-  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', '22222222', false, true, true, true);
+insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
+  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', null, true, true, true),
+  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', null, true, true, true);
+-- Each tasting has a MobilePay number, so this file runs on every database the release passes through:
+--   * with WIN-278's switch (tastings.mobilepay_on): MobilePay off in both, a number without a name (the WIN-278
+--     sections below start from that);
+--   * with only a recipient's name (WIN-278's first migration): the number gets a name too;
+--   * before WIN-278: only the number.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_on') then
+    execute $q$update tastings set mobilepay_on = false, mobilepay_name = null,
+      mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b')$q$;
+  elsif exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
+    execute $q$update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end,
+      mobilepay_name = case slug when 'selftest-a' then 'Host A' else 'Host B' end where slug in ('selftest-a', 'selftest-b')$q$;
+  else
+    update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b');
+  end if;
+end $$;
 insert into wines (id, host_id, name) values
   (-1001, '00000000-0000-4000-a000-00000000000a', 'Wine A'),
   (-1002, '00000000-0000-4000-a000-00000000000b', 'Wine B'),
@@ -317,6 +332,55 @@ begin
   assert host_dashboard() is null, 'a guest gets a host overview';
 end $$;
 reset role;
+
+-- ---------- Sign-up gate (WIN-284): Auth creates a user only for a known email or a fresh sign-up ----------
+-- hook_before_user_created is Supabase Auth's "before user created" hook: {} lets the user be created, an error stops it
+do $$
+declare ok jsonb := '{}'::jsonb;
+begin
+  assert hook_before_user_created('{"user":{"email":"nobody-gate@selftest.invalid"}}') ? 'error', 'an unknown email can become a user';
+  assert (hook_before_user_created('{"user":{"email":"nobody-gate@selftest.invalid"}}') -> 'error' ->> 'http_code')::int = 403, 'the hook does not answer 403';
+  assert hook_before_user_created('{"user":{"phone":"+4500000000","is_anonymous":true}}') ? 'error', 'a user without an email can be created';
+  assert hook_before_user_created('{"user":{"email":"Guest-W@selftest.invalid"}}') = ok, 'a guest on a guest list cannot become a user';
+  assert hook_before_user_created('{"user":{"email":"host-b@selftest.invalid"}}') = ok, 'a host cannot become a user';
+  assert hook_before_user_created('{"user":{"email":"host-c@selftest.invalid"}}') = ok, 'an invited co-host cannot become a user';
+  -- Only Supabase Auth calls the hook
+  assert has_function_privilege('supabase_auth_admin', 'public.hook_before_user_created(jsonb)', 'execute'), 'Supabase Auth cannot call the hook';
+  assert not has_function_privilege('anon', 'public.hook_before_user_created(jsonb)', 'execute'), 'anyone can call the hook';
+  assert not has_function_privilege('authenticated', 'public.hook_before_user_created(jsonb)', 'execute'), 'a signed-in user can call the hook';
+end $$;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare failed boolean; n int;
+begin
+  perform set_config('request.headers', '{"cf-connecting-ip":"203.0.113.84"}', true);
+  -- The sign-up page registers the email first; it says whether a host account exists (a guest is not one)
+  assert not signup_start('New-Host@SelfTest.invalid'), 'a new email is said to have an account';
+  assert not signup_start('guest-a@selftest.invalid'), 'the sign-up start reveals a guest';
+  assert (select prosrc from pg_proc where oid = 'public.signup_start(text)'::regprocedure) !~* 'return\s+exists', 'the sign-up start reveals whether an email has an account (WIN-289)';
+  failed := false; begin perform signup_start('bad<x>@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the sign-up start takes a malformed email';
+  -- Nobody reads or writes the sign-ups directly, nor calls the hook
+  begin select count(*) into n from signup_intents; failed := false; exception when others then failed := true; end;
+  assert failed, 'anyone can read the sign-ups';
+  failed := false; begin insert into signup_intents (email) values ('sneak@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can add a sign-up without the check';
+  failed := false; begin perform hook_before_user_created('{"user":{"email":"x@selftest.invalid"}}'); exception when others then failed := true; end;
+  assert failed, 'anyone can call the hook';
+  -- One connection is limited (15 an hour, shared with the sign-in check)
+  for i in 1..13 loop perform signup_start('flood' || i || '@selftest.invalid'); end loop;
+  failed := false; begin perform signup_start('one-more@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'one connection can start sign-ups without limit';
+  perform set_config('request.headers', '', true);
+end $$;
+reset role;
+do $$
+begin
+  assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') = '{}'::jsonb, 'a new host from the sign-up page cannot become a user';
+  update signup_intents set at = now() - interval '31 minutes' where email = 'new-host@selftest.invalid';
+  assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') ? 'error', 'an old sign-up still lets a user be created';
+end $$;
 
 select 'security part 2 passed' as result;
 rollback;

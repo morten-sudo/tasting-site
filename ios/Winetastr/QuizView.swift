@@ -5,6 +5,8 @@ import SwiftUI
 struct QuizView: View {
     @Environment(AppModel.self) private var model
     let tasting: MyTasting
+    /// The tasting's name and tabs, at the top of the scrolling content
+    var head: AnyView = AnyView(EmptyView())
     enum Mode { case closed, open, finished }
     @State private var mode: Mode?
     @State private var total = 0
@@ -22,8 +24,8 @@ struct QuizView: View {
     var body: some View {
         ZStack(alignment: .top) {
             PageBackground(path: "/t/quiz/")
-            if failed && mode == nil { ErrorState { Task { await start(force: true) } } }
-            else if mode == nil { LoadingState() }
+            if failed && mode == nil { VStack(spacing: 0) { head; ErrorState { Task { await start(force: true) } } } }
+            else if mode == nil { VStack(spacing: 0) { head; LoadingState() } }
             else { content }
         }
         .toast($toast)
@@ -32,20 +34,24 @@ struct QuizView: View {
 
     private var content: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                SectionHeading(text: L("page.quiz"))
-                switch mode {
-                case .closed: NoticeBox(text: L("quiz.closed"))
-                case .open: play
-                case .finished:
-                    Text(L("quiz.over")).font(.body()).foregroundStyle(Color.paper)
-                    boardBlock(L("quiz.final"))
-                    results.padding(.top, 24)
-                default: EmptyView()
+            VStack(alignment: .leading, spacing: 0) {
+                head
+                VStack(alignment: .leading, spacing: 16) {
+                    SectionHeading(text: L("page.quiz"))
+                    switch mode {
+                    case .closed: NoticeBox(text: L("quiz.closed"))
+                    case .open: play
+                    case .finished:
+                        Text(L("quiz.over")).font(.body()).foregroundStyle(Color.paper)
+                        boardBlock(L("quiz.final"))
+                        results.padding(.top, 24)
+                    default: EmptyView()
+                    }
+                    if mode == .open { boardBlock(L("quiz.standingsNow")).padding(.top, 24) }
                 }
-                if mode == .open { boardBlock(L("quiz.standingsNow")).padding(.top, 24) }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
             }
-            .padding(16)
         }
         .refreshable { await start(force: true) }
     }
@@ -241,7 +247,7 @@ struct Leaderboard: View {
         } else {
             VStack(spacing: 0) {
                 ForEach(Array(ranked.enumerated()), id: \.offset) { _, r in
-                    let mine = me != nil && r.row.name == me
+                    let mine = r.row.mine ?? (me != nil && r.row.name == me)
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text("\(r.rank)").font(.body()).foregroundStyle(Color.muted).monospacedDigit().frame(width: 32, alignment: .leading)
                         (Text(r.row.name).font(.medium()) + Text(mine ? " (\(L("hosts.you")))" : "").font(.body()))

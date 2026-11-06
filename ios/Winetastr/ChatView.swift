@@ -2,9 +2,14 @@ import SwiftUI
 
 /// The site's /chat/ (ChatBox.astro and src/lib/chat.ts): the guests' and the host's messages in a white box, the day
 /// between them, your own on the right in bordeaux; new ones every four seconds while the screen is open.
+/// Like Messages (Morten, 6 Nov 2026 – WIN-238): the tasting's name and tabs stay at the top and the field to write in
+/// at the bottom; only what is between them scrolls – the heading, the intro and the box of messages, newest at the
+/// bottom. (The other tabs scroll their name and tabs away, as on the site.)
 struct ChatView: View {
     @Environment(AppModel.self) private var model
     let tasting: MyTasting
+    /// The tasting's name and tabs, fixed above the messages
+    var head: AnyView = AnyView(EmptyView())
     @State private var messages: [ChatMessage] = []
     @State private var loaded = false
     @State private var text = ""
@@ -15,40 +20,62 @@ struct ChatView: View {
     private var lastId: Int { messages.last?.id ?? 0 }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 9.6) {
-            SectionHeading(text: L("page.chat")).padding(.top, 14)
-            Text(L("chat.intro")).font(.body()).foregroundStyle(Color.muted)
-            if !loaded {
-                LoadingState()
-            } else if messages.isEmpty {
-                EmptyBox(icon: "chat", title: L("chat.emptyTitle"), text: L("chat.emptyText")) { EmptyView() }
-                Spacer(minLength: 0)
-            } else {
-                list
+        VStack(spacing: 0) {
+            head
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 9.6) {
+                        SectionHeading(text: L("page.chat")).padding(.top, 14)
+                        Text(L("chat.intro")).font(.body()).foregroundStyle(Color.muted)
+                        if !loaded {
+                            LoadingState().padding(.vertical, 24)
+                        } else if messages.isEmpty {
+                            EmptyBox(icon: "chat", title: L("chat.emptyTitle"), text: L("chat.emptyText")) { EmptyView() }
+                        } else {
+                            list
+                        }
+                        Color.clear.frame(height: 1).id(Self.endId)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16).padding(.bottom, 6)
+                }
+                // The newest messages show first, as in Messages; scrolling up reads back
+                .newestAtBottom()
+                .scrollDismissesKeyboard(.interactively)
+                // A new message, and the keyboard coming in: the newest message just over the field
+                .onChange(of: lastId) { withAnimation { proxy.scrollTo(Self.endId, anchor: .bottom) } }
+                .onChange(of: focus) {
+                    guard focus else { return }
+                    Task {
+                        try? await Task.sleep(for: .milliseconds(350))
+                        withAnimation { proxy.scrollTo(Self.endId, anchor: .bottom) }
+                    }
+                }
             }
             composer
+                .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 10)
+                .background(Color.lodge)
+                .overlay(alignment: .top) { Rectangle().fill(Color.rule).frame(height: 1) }
         }
-        .padding(.horizontal, 16).padding(.bottom, 10)
         .task { await poll() }
     }
 
+    private static let endId = "chat-end"
+
+    /// The messages in their white box (.chat-list); the box grows with them and the page around it scrolls
     private var list: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 8) {
-                    ForEach(Array(messages.enumerated()), id: \.element.id) { i, m in
-                        if i == 0 || !Calendar.current.isDate(m.date, inSameDayAs: messages[i - 1].date) { day(m.date) }
-                        bubble(m).id(m.id)
-                    }
-                }
-                .padding(12)
+        // Not lazy: with the scroll view anchored at the bottom, a LazyVStack left a long chat blank when the messages
+        // arrived after the first, empty layout (WIN-303). A chat holds at most 200 messages (get_chat), so drawing
+        // them all is fine.
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(messages.enumerated()), id: \.element.id) { i, m in
+                if i == 0 || !Calendar.current.isDate(m.date, inSameDayAs: messages[i - 1].date) { day(m.date) }
+                bubble(m).id(m.id)
             }
-            .background(Color.surface, in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.rule))
-            .defaultScrollAnchor(.bottom)
-            .onChange(of: lastId) { withAnimation { proxy.scrollTo(lastId, anchor: .bottom) } }
-            .scrollDismissesKeyboard(.interactively)
         }
+        .padding(12)
+        .background(Color.surface, in: RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.rule))
     }
 
     private func day(_ d: Date) -> some View {
@@ -139,6 +166,20 @@ struct ChatView: View {
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(4))
             await fetch()
+        }
+    }
+}
+
+private extension View {
+    /// Opens at the newest message and stays there as messages come; a short chat (or none yet) sits at the top under
+    /// the heading instead of sinking to the field
+    @ViewBuilder func newestAtBottom() -> some View {
+        if #available(iOS 18.0, *) {
+            defaultScrollAnchor(.top, for: .alignment)
+                .defaultScrollAnchor(.bottom, for: .initialOffset)
+                .defaultScrollAnchor(.bottom, for: .sizeChanges)
+        } else {
+            defaultScrollAnchor(.bottom)
         }
     }
 }

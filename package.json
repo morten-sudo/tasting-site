@@ -8,7 +8,10 @@
     "prebuild": "node scripts/db-target.mjs && node scripts/check-ui.mjs",
     "build": "astro build",
     "check:ui": "node scripts/check-ui.mjs",
-    "preview": "astro preview"
+    "test:check-ui": "node scripts/check-ui.test.mjs",
+    "preview": "astro preview",
+    "postbuild": "node scripts/check-csp.mjs",
+    "check:csp": "node scripts/check-csp.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

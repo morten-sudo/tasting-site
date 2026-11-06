@@ -10,10 +10,25 @@ insert into hosts (id, email, name) values
   ('00000000-0000-4000-a000-00000000000a', 'host-a@selftest.invalid', 'Host A'),
   ('00000000-0000-4000-a000-00000000000b', 'host-b@selftest.invalid', 'Host B'),
   ('00000000-0000-4000-a000-00000000000c', 'host-c@selftest.invalid', 'Host C');
--- MobilePay off in both (a number without a name, WIN-278)
-insert into tastings (id, host_id, slug, title, place, intro, mobilepay, mobilepay_on, orders_open, quiz_open, signup_open) values
-  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', '11111111', false, true, true, true),
-  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', '22222222', false, true, true, true);
+insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
+  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', null, true, true, true),
+  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', null, true, true, true);
+-- Each tasting has a MobilePay number, so this file runs on every database the release passes through:
+--   * with WIN-278's switch (tastings.mobilepay_on): MobilePay off in both, a number without a name (the WIN-278
+--     sections below start from that);
+--   * with only a recipient's name (WIN-278's first migration): the number gets a name too;
+--   * before WIN-278: only the number.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_on') then
+    execute $q$update tastings set mobilepay_on = false, mobilepay_name = null,
+      mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b')$q$;
+  elsif exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
+    execute $q$update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end,
+      mobilepay_name = case slug when 'selftest-a' then 'Host A' else 'Host B' end where slug in ('selftest-a', 'selftest-b')$q$;
+  else
+    update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b');
+  end if;
+end $$;
 insert into wines (id, host_id, name) values
   (-1001, '00000000-0000-4000-a000-00000000000a', 'Wine A'),
   (-1002, '00000000-0000-4000-a000-00000000000b', 'Wine B'),
@@ -133,6 +148,8 @@ begin
   update wine_regions set name = 'hacked' where id = 'pt-douro'; get diagnostics n = row_count;           assert n = 0, 'a host can change the wine regions';
   failed := false; begin perform link_participant_guest(); exception when others then failed := true; end;
   assert failed, 'a host can call the linking trigger function';
+  failed := false; begin perform wines_retail_foreign(); exception when others then failed := true; end;
+  assert failed, 'a host can call the converted-price trigger function';
   -- The guest page of another host's tasting stays closed
   assert host_guest_code('selftest-b') is null, 'host A gets a guest code for host B''s tasting';
   -- Hosts are managed only by the owner of the tasting
@@ -653,6 +670,17 @@ begin
   assert failed, 'a wine''s shop link can be something that is not a web address';
   update wines set source_url = 'https://shop.example.com/wine?id=1' where id = -1001;
   update wines set source_url = null where id = -1001;
+  -- WIN-281: the shop's price in another currency (retail_foreign) is a small object, and goes when the price is changed
+  failed := false; begin update wines set retail_foreign = '{"amount":"<b>x</b>","currency":"EUR","rate":7.46}' where id = -1001; exception when check_violation then failed := true; end;
+  assert failed, 'a wine''s foreign shop price can be something that is not an amount';
+  failed := false; begin update wines set retail_foreign = '{"amount":12.97,"currency":"euro"}' where id = -1001; exception when check_violation then failed := true; end;
+  assert failed, 'a wine''s foreign shop price can have a currency that is not a code';
+  update wines set retail_price_dkk = 96.76, retail_foreign = '{"amount":12.97,"currency":"EUR","rate":7.46}' where id = -1001;
+  update wines set retail_price_dkk = 96.76, name = name where id = -1001;
+  assert (select retail_foreign from wines where id = -1001) is not null, 'the converted-price note goes when the price is saved unchanged';
+  update wines set retail_price_dkk = 90 where id = -1001;
+  assert (select retail_foreign from wines where id = -1001) is null, 'the converted-price note stays when the host changes the price';
+  update wines set retail_price_dkk = null where id = -1001;
   -- New invitations get long codes (80 bits); the old 10-character ones keep working
   insert into participants (tasting_id, name, invite_code) values ('00000000-0000-4000-b000-00000000000b', 'Code check', default);
   assert (select length(invite_code) from participants where name = 'Code check') = 20, 'a new invitation does not get a 20-character code';
@@ -873,6 +901,226 @@ begin
   assert t.mobilepay is null and not t.mobilepay_on, 'a new tasting without a last used number has MobilePay on';
 end $$;
 reset role;
+-- ---------- Bottle size (WIN-170): every call that names a wine gives its size; guests never see a blind wine's size ----------
+-- Wine A is a magnum, ordered (2 bottles) and rated by guest A
+update wines set bottle_cl = 150 where id = -1001;
+insert into order_lines (order_id, wine_id, quantity, unit_price) values (-2001, -1001, 2, 100);
+insert into wine_ratings (participant_id, wine_id, rating)
+  select '00000000-0000-4000-d000-00000000000a', -1001, 5
+  where not exists (select 1 from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001);
+update wine_ratings set rating = 5, updated_at = now() where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
+update hosts set notify_order = true where id = '00000000-0000-4000-a000-00000000000a';
+insert into notifications (tasting_id, kind, guest, detail, token) values
+  ('00000000-0000-4000-b000-00000000000a', 'order', 'Guest A', '{"order_id":-2001}', '00000000-0000-4000-9000-000000000170');
+do $$
+declare bad text; f text; who text; j jsonb;
+begin
+  -- The guarantee for new calls: a function whose result names a wine (wine_name, or name with wine_id or vintage) also
+  -- gives bottle_cl. The old functions kept for a later clean-up (*_pre170) are left out – they cannot be called.
+  select string_agg(p.proname, ', ') into bad from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname !~ '_pre170$'
+    and (pg_get_function_result(p.oid) ~ '\mwine_name\M'
+         or (pg_get_function_result(p.oid) ~ '\mname text\M' and pg_get_function_result(p.oid) ~ '\m(wine_id|vintage)\M'))
+    and pg_get_function_result(p.oid) !~ '\mbottle_cl\M';
+  assert bad is null, 'a function names a wine without its bottle size (WIN-170): ' || coalesce(bad, '');
+  -- The old functions from before WIN-170 cannot be called by anyone but the database itself
+  foreach f in array array['my_wine_book_pre170(text[])', 'get_my_orders_pre170(text)', 'my_orders_pre170()', 'admin_tenant_wines_pre170(uuid)'] loop
+    if to_regprocedure(f) is not null then
+      foreach who in array array['anon', 'authenticated'] loop
+        assert not has_function_privilege(who, f, 'execute'), who || ' can call ' || f;
+      end loop;
+    end if;
+  end loop;
+  -- The grants are the same as before: my_orders and admin_tenant_wines never for anon
+  assert not has_function_privilege('anon', 'my_orders()', 'execute'), 'anon can call my_orders';
+  assert not has_function_privilege('anon', 'admin_tenant_wines(uuid)', 'execute'), 'anon can call admin_tenant_wines';
+  assert has_function_privilege('anon', 'my_wine_book(text[])', 'execute') and has_function_privilege('anon', 'get_my_orders(text)', 'execute'),
+    'a guest with only an invite link cannot read the wine book or orders';
+  -- The host's order email: every line has its size (hosts always see it)
+  j := claim_notifications('00000000-0000-4000-9000-000000000170');
+  assert (select bool_and((l ->> 'cl')::numeric = 150) from jsonb_array_elements(j) m, jsonb_array_elements(m -> 'items') i,
+          jsonb_array_elements(i -> 'detail' -> 'lines') l where l ->> 'wine' = 'Wine A'), 'the order email has no bottle size';
+end $$;
+
+-- A guest with only an invite link
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare failed boolean;
+begin
+  assert (select bottle_cl from my_wine_book(array['selftestaa']) b where b.wine_id = -1001) = 150, 'the wine book has no bottle size';
+  assert (select bool_and(bottle_cl = 150) from get_my_orders('selftestaa') o where o.wine_id = -1001), 'the orders (invite link) have no bottle size';
+  assert not exists (select 1 from get_my_orders('selftestbb') o where o.order_id = -2001 or o.wine_id = -1001), 'code B sees A''s orders';
+  assert not exists (select 1 from my_wine_book(array['selftestbb']) b where b.wine_id = -1001), 'code B''s wine book shows wine A';
+  failed := false; begin perform * from my_orders(); exception when others then failed := true; end;
+  assert failed, 'my_orders can be called without signing in';
+  failed := false; begin perform * from admin_tenant_wines('00000000-0000-0000-0000-000000000000'); exception when others then failed := true; end;
+  assert failed, 'anyone can read an account''s wines';
+end $$;
+reset role;
+
+-- The host makes the tasting blind after the order: the order keeps name and size, the wine book and wine list hide it
+update tastings set blind = true where slug = 'selftest-a';
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$ begin
+  assert (select bool_and(wine_name = 'Wine A' and bottle_cl = 150) from get_my_orders('selftestaa') o where o.wine_id = -1001),
+    'an order on a wine made blind afterwards lost its name or size';
+  assert not exists (select 1 from my_wine_book(array['selftestaa']) b where b.wine_id = -1001), 'the wine book shows a blind wine';
+  assert (select bottle_cl from get_wines('selftestaa') w where w.id = -1001) is null, 'a blind wine shows its bottle size';
+end $$;
+reset role;
+update tastings set blind = false where slug = 'selftest-a';
+
+-- A guest signed in with email: their own orders with sizes, nobody else's; not a superadmin
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare failed boolean;
+begin
+  assert (select bool_and(bottle_cl = 150) from my_orders() o where o.wine_name = 'Wine A') and exists (select 1 from my_orders() o where o.wine_name = 'Wine A'),
+    'the orders (signed in) have no bottle size';
+  assert not exists (select 1 from my_orders() o where o.order_id = -2002), 'a signed-in guest sees another guest''s orders';
+  failed := false; begin perform * from admin_tenant_wines((select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a')); exception when others then failed := true; end;
+  assert failed, 'a guest can read an account''s wines';
+end $$;
+reset role;
+
+-- Host A: the overview's latest rating has the size
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare failed boolean;
+begin
+  assert (host_dashboard() -> 'latest_rating' ->> 'bottle_cl')::numeric = 150, 'the overview''s latest rating has no bottle size';
+  failed := false; begin perform * from admin_tenant_wines((select tenant_id from hosts where id = '00000000-0000-4000-a000-00000000000a')); exception when others then failed := true; end;
+  assert failed, 'a host who is not a superadmin can read the superadmin''s wine list';
+end $$;
+reset role;
+update wines set bottle_cl = 75 where id = -1001;
+
+-- ---------- Leaderboard names (A01-001): short names for everyone (also hosts), full names only in tasting_standings ----------
+insert into tastings (id, host_id, slug, title, quiz_open) values
+  ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-00000000000a', 'selftest-lb', 'Test board', true);
+insert into participants (id, tasting_id, name, invite_code, status) values
+  ('00000000-0000-4000-d000-0000000000b1', '00000000-0000-4000-b000-0000000000b1', 'Anna Hansen', 'selftestb1', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b2', '00000000-0000-4000-b000-0000000000b1', 'Anna Madsen', 'selftestb2', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b3', '00000000-0000-4000-b000-0000000000b1', '  anna   Holm ', 'selftestb3', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b4', '00000000-0000-4000-b000-0000000000b1', 'Bo Holm', 'selftestb4', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b5', '00000000-0000-4000-b000-0000000000b1', 'Carl', 'selftestb5', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b6', '00000000-0000-4000-b000-0000000000b1', 'Carl', 'selftestb6', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b7', '00000000-0000-4000-b000-0000000000b1', 'Dorte Kjær Nielsen', 'selftestb7', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b8', '00000000-0000-4000-b000-0000000000b1', 'Eva Invited', 'selftestb8', 'invited');
+insert into quiz_questions (id, tasting_id, sort_order, question, options, correct_key) values
+  (-3101, '00000000-0000-4000-b000-0000000000b1', 1, 'Q board', '[{"key":"a","text":"x"},{"key":"b","text":"y"}]', 'a');
+insert into quiz_answers (participant_id, question_id, answer_key) values
+  ('00000000-0000-4000-d000-0000000000b1', -3101, 'a'),
+  ('00000000-0000-4000-d000-0000000000b2', -3101, 'b');
+-- ("  anna   Holm " is shown as typed, tidied; first names are compared without case. Hansen and Holm share an H, so
+-- both get two letters; Madsen needs one. The two identical Carls: "Carl" and "Carl 2".)
+-- Not signed in (the TV, and a guest with only the invite code)
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare names text; failed boolean;
+begin
+  select string_agg(name, '|' order by name) into names from tasting_leaderboard(null, 'selftest-lb');
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'the TV board does not show first names only: ' || coalesce(names, 'nothing');
+  assert (select points from tasting_leaderboard(null, 'selftest-lb') where name = 'Anna Ha.' order by points desc limit 1) = 1, 'the board lost the points';
+  select string_agg(name, '|' order by name) into names from tasting_leaderboard('selftestb2', 'selftest-lb');
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a guest with a code sees more than first names: ' || coalesce(names, 'nothing');
+  select string_agg(name, '|' order by name) into names from tasting_leaderboard('selftestb2', null);
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'the code alone does not give the first names board';
+  assert (select string_agg(name, '|') from tasting_board('selftestb2', null) where mine) = 'Anna M.', 'the guest''s own line is not marked (only)';
+  assert not exists (select 1 from tasting_board(null, 'selftest-lb') where mine), 'a line is marked without a code';
+  failed := false; begin perform get_leaderboard(); exception when others then failed := true; end;
+  assert failed, 'get_leaderboard() can still be called';
+  failed := false; begin perform get_quiz(); exception when others then failed := true; end;
+  assert failed, 'get_quiz() without a code can still be called';
+end $$;
+reset role;
+-- A signed-in guest who is not a host of the tasting sees the same
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert (select string_agg(name, '|' order by name) from tasting_leaderboard(null, 'selftest-lb')) = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a signed-in guest sees full names on the board';
+end $$;
+reset role;
+-- A signed-in guest gets nothing from the host's standings, and anon may not call them
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert not exists (select 1 from tasting_standings('selftest-lb')), 'a guest gets the host''s standings with full names';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$ declare failed boolean := false; begin
+  begin perform tasting_standings('selftest-lb'); exception when others then failed := true; end;
+  assert failed, 'anon can call tasting_standings';
+end $$;
+reset role;
+-- The tasting's host gets the same short names on the board (the TV may be signed in as the host) and full names only
+-- in the standings
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert (select string_agg(name, '|' order by name) from tasting_board(null, 'selftest-lb')) = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a signed-in host gets full names on the board';
+  assert (select count(*) from tasting_standings('selftest-lb') where name in ('Anna Hansen', 'Anna Madsen', 'Dorte Kjær Nielsen')) = 3, 'the host does not see full names in the standings';
+  assert (select count(*) from tasting_standings('selftest-lb')) = 7, 'the host standings do not have every guest who comes';
+  assert (select points from tasting_standings('selftest-lb') where name = 'Anna Hansen') = 1, 'the standings lost the points';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
+
+-- ---------- Sign-up gate (WIN-284): Auth creates a user only for a known email or a fresh sign-up ----------
+-- hook_before_user_created is Supabase Auth's "before user created" hook: {} lets the user be created, an error stops it
+do $$
+declare ok jsonb := '{}'::jsonb;
+begin
+  assert hook_before_user_created('{"user":{"email":"nobody-gate@selftest.invalid"}}') ? 'error', 'an unknown email can become a user';
+  assert (hook_before_user_created('{"user":{"email":"nobody-gate@selftest.invalid"}}') -> 'error' ->> 'http_code')::int = 403, 'the hook does not answer 403';
+  assert hook_before_user_created('{"user":{"phone":"+4500000000","is_anonymous":true}}') ? 'error', 'a user without an email can be created';
+  assert hook_before_user_created('{"user":{"email":"Guest-W@selftest.invalid"}}') = ok, 'a guest on a guest list cannot become a user';
+  assert hook_before_user_created('{"user":{"email":"host-b@selftest.invalid"}}') = ok, 'a host cannot become a user';
+  assert hook_before_user_created('{"user":{"email":"host-c@selftest.invalid"}}') = ok, 'an invited co-host cannot become a user';
+  -- Only Supabase Auth calls the hook
+  assert has_function_privilege('supabase_auth_admin', 'public.hook_before_user_created(jsonb)', 'execute'), 'Supabase Auth cannot call the hook';
+  assert not has_function_privilege('anon', 'public.hook_before_user_created(jsonb)', 'execute'), 'anyone can call the hook';
+  assert not has_function_privilege('authenticated', 'public.hook_before_user_created(jsonb)', 'execute'), 'a signed-in user can call the hook';
+end $$;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare failed boolean; n int;
+begin
+  perform set_config('request.headers', '{"cf-connecting-ip":"203.0.113.84"}', true);
+  -- The sign-up page registers the email first; it says whether a host account exists (a guest is not one)
+  assert not signup_start('New-Host@SelfTest.invalid'), 'a new email is said to have an account';
+  assert not signup_start('guest-a@selftest.invalid'), 'the sign-up start reveals a guest';
+  assert (select prosrc from pg_proc where oid = 'public.signup_start(text)'::regprocedure) !~* 'return\s+exists', 'the sign-up start reveals whether an email has an account (WIN-289)';
+  failed := false; begin perform signup_start('bad<x>@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the sign-up start takes a malformed email';
+  -- Nobody reads or writes the sign-ups directly, nor calls the hook
+  begin select count(*) into n from signup_intents; failed := false; exception when others then failed := true; end;
+  assert failed, 'anyone can read the sign-ups';
+  failed := false; begin insert into signup_intents (email) values ('sneak@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can add a sign-up without the check';
+  failed := false; begin perform hook_before_user_created('{"user":{"email":"x@selftest.invalid"}}'); exception when others then failed := true; end;
+  assert failed, 'anyone can call the hook';
+  -- One connection is limited (15 an hour, shared with the sign-in check)
+  for i in 1..13 loop perform signup_start('flood' || i || '@selftest.invalid'); end loop;
+  failed := false; begin perform signup_start('one-more@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'one connection can start sign-ups without limit';
+  perform set_config('request.headers', '', true);
+end $$;
+reset role;
+do $$
+begin
+  assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') = '{}'::jsonb, 'a new host from the sign-up page cannot become a user';
+  update signup_intents set at = now() - interval '31 minutes' where email = 'new-host@selftest.invalid';
+  assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') ? 'error', 'an old sign-up still lets a user be created';
+end $$;
 
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';

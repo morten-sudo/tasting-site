@@ -43,7 +43,10 @@ export function toast(text: string, opts: ToastOptions = {}) {
   el.className = 'toast' + (error ? ' error' : '');
   el.setAttribute('role', error ? 'alert' : 'status');
   el.innerHTML = iconSvg(error ? 'warn' : 'check', 't-ic');
-  el.append(Object.assign(document.createElement('span'), { className: 't-msg', textContent: text }));
+  // The text goes in just after the live region is in the page: a region that arrives with its text already
+  // in it is often not read out (VoiceOver in particular), so "Kopieret" and errors would be silent.
+  const msg = Object.assign(document.createElement('span'), { className: 't-msg' });
+  el.append(msg);
   if (opts.action) {
     const a = opts.action;
     const btn = 'href' in a ? Object.assign(document.createElement('a'), { href: a.href }) : document.createElement('button');
@@ -63,6 +66,7 @@ export function toast(text: string, opts: ToastOptions = {}) {
   // Above an open dialog too (a modal dialog is in the top layer)
   ([...document.querySelectorAll('dialog[open]')].pop() ?? document.body).append(host);
   requestAnimationFrame(() => el.classList.add('shown'));
+  window.setTimeout(() => { msg.textContent = text; }, 60);
   const me = { host, el, timer: 0, done: opts.onTimeout };
   current = me;
   if (error) return;

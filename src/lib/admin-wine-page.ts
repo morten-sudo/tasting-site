@@ -9,6 +9,7 @@ import { t, formatWhen, locale } from '../i18n';
 import { styleName, wineSlug, wineFacts } from './wines';
 import { countryName, loadAppellations, matchAppellation, originFull } from './origin';
 import { wineMap, showMapCredit } from './wine-map';
+import { boxWidth } from './region-map';
 import { mapZoom } from './ui/map-zoom';
 import { $, mk } from './ui/dom';
 import { fillFacts, type Fact } from './ui/facts';
@@ -16,7 +17,8 @@ import { detailIcon } from './ui/detail-icon';
 import { wineThumb } from './ui/thumb';
 import { fetchedWhen, type AdminWine } from './admin-wines';
 import { tooltip } from './ui/tooltip';
-import { bottleText } from './bottle';
+import { wineMeta } from './bottle';
+import { retailForeignNote } from './wine-read';
 
 type Detail = Omit<AdminWine, 'tasting_wines'> & {
   tasting_wines: { price_dkk: number | null; tastings: { id: string; slug: string; title: string; starts_at: string | null } | null }[];
@@ -53,13 +55,21 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   // The one wine picture (20), large; without one the quiet bottle outline
   $('wd-pic').replaceChildren(wineThumb(w, { size: 'large' }));
   $('wd-name').textContent = w.name;
-  $('wd-meta').textContent = [w.style ? styleName(w.style) : null, w.vintage, bottleText(w.bottle_cl, locale()), w.producer].filter(Boolean).join(' · ');
+  $('wd-meta').textContent = wineMeta(w, locale(), styleName).join(' · ');
   $('wd-edit').onclick = actions.edit;
 
   // Facts
   const facts: Fact[] = [];
   if (w.abv != null) facts.push({ label: t('admin.abv').replace(/\s*\(%\)/, ''), value: `${String(w.abv).replace('.', ',')} %` });
-  if (w.retail_price_dkk != null) facts.push({ label: t('admin.retail').replace(/\s*\(.*\)/, ''), value: formatKr(w.retail_price_dkk) });
+  // The shop price, and – when it came in another currency – what it was converted from (WIN-281): "96,76 kr. ·
+  // Regnet om fra 12,97 € (kurs 7,46)"; without a fixed rate there is no price yet, only the shop's price to type
+  const foreign = retailForeignNote(w.retail_foreign);
+  if (w.retail_price_dkk != null || foreign) {
+    const box = mk('span');
+    if (w.retail_price_dkk != null) box.append(formatKr(w.retail_price_dkk));
+    if (foreign) box.append(...(w.retail_price_dkk != null ? [' · '] : []), mk('span', 'source-when', foreign));
+    facts.push({ label: t('admin.retail').replace(/\s*\(.*\)/, ''), value: box });
+  }
   if (w.offer_price_dkk != null) {
     facts.push({ label: t('wineLib.offer'), value: t((w.offer_quantity ?? 1) > 1 ? 'link.offerMany' : 'link.offerOne',
       { price: formatKr(w.offer_price_dkk), n: w.offer_quantity ?? 1 }).replace(/^[^:]*:\s*/, '') });
@@ -114,7 +124,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
     .filter((x, i, all) => x && all.findIndex((y) => y && y.toLowerCase() === x.toLowerCase()) === i);
   $('wd-origin-text').textContent = where.join(', ') || originFull(w) || '';
   $('wd-origin').hidden = !where.length;
-  const map = await wineMap(w);
+  const map = await wineMap(w, { width: boxWidth($('wd-map')) });
   $('wd-map').innerHTML = map?.svg ?? '';
   $('wd-map').hidden = !map;
   if (map) mapZoom($('wd-map'));

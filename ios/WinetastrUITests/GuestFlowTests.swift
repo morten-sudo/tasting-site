@@ -1,6 +1,6 @@
 import XCTest
 
-/// Runs against the real database with the "App-test" tasting. Danish UI.
+/// Runs the test build against the test database (winetastr-test) with its "App-test" tasting. Danish UI.
 final class GuestFlowTests: XCTestCase {
     // Invite codes for the test tasting come from ios/.env.local (the repo is public), see tools/simtest.sh
     private let code = ProcessInfo.processInfo.environment["APP_TEST_CODE"] ?? ""
@@ -19,7 +19,8 @@ final class GuestFlowTests: XCTestCase {
         row.tap()
     }
 
-    func testUnknownEmailShowsError() {
+    /// WIN-181: an unknown email gets the same next step as a known one – the app never says which
+    func testUnknownEmailShowsSameMessage() {
         let a = app(["-resetData", "YES"])
         let field = a.textFields["E-mail"]
         XCTAssertTrue(field.waitForExistence(timeout: 15))
@@ -27,8 +28,12 @@ final class GuestFlowTests: XCTestCase {
         XCTAssertTrue(a.staticTexts["Skriv din e-mail for at fortsætte."].waitForExistence(timeout: 5), "empty email")
         field.tap(); field.typeText("findes-ikke-apptest@example.com")
         a.buttons["Send kode"].tap()
-        let msg = a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Vi kender ikke'")).firstMatch
-        XCTAssertTrue(msg.waitForExistence(timeout: 15), "unknown email message")
+        let msg = a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'hvis vi kender mailen'")).firstMatch
+        XCTAssertTrue(msg.waitForExistence(timeout: 15), "the shared message")
+        XCTAssertTrue(a.staticTexts["Ingen kode?"].exists, "help when no code arrives")
+        XCTAssertFalse(a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Vi kender ikke'")).firstMatch.exists, "no unknown-email message")
+        // With the sign-up hook on, the database answers 403 for this email – still no error
+        XCTAssertFalse(a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Mailen kunne ikke sendes'")).firstMatch.exists, "no send error")
     }
 
     func testPasteInviteLink() {

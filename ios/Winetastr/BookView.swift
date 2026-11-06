@@ -179,7 +179,8 @@ func groupOrders(_ lines: [OrderLine]) -> [[OrderLine]] {
 }
 
 /// One card per order: tasting and number, paid or not, the date, the lines and the total
-/// sizes: the wines' bottle sizes by id, where they are known (the cart), shown after the name when not 75 cl
+/// The size follows the name (WIN-170): the line's own bottle_cl, else sizes – the wines' sizes by id from get_wines
+/// (the cart, against a database from before WIN-170)
 func orderCard(_ lines: [OrderLine], withTasting: Bool, sizes: [Int: Double] = [:]) -> some View {
     let first = lines[0]
     let total = lines.reduce(0.0) { $0 + Double($1.quantity) * $1.unit_price }
@@ -194,7 +195,7 @@ func orderCard(_ lines: [OrderLine], withTasting: Bool, sizes: [Int: Double] = [
     } content: {
         VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(lines.enumerated()), id: \.offset) { _, l in
-                Text("\(l.quantity) × \(nameWithSize(l.wine_name, l.wine_id.flatMap { sizes[$0] }))").font(.body(14.4)).foregroundStyle(Color.paper)
+                Text("\(l.quantity) × \(nameWithSize(l.wine_name, l.bottle_cl?.value ?? l.wine_id.flatMap { sizes[$0] }))").font(.body(14.4)).foregroundStyle(Color.paper)
             }
         }
         .padding(.top, 4)
@@ -260,11 +261,10 @@ struct BookWineCard: View {
     var body: some View {
         let w = wine
         let start = parseDate(w.starts_at)
-        let what = [styleName(w.style), w.vintage, w.producer].compactMap { $0 }.filter { !$0.isEmpty }
-        var uniq: [String] = []; for x in what where !uniq.contains(x) { uniq.append(x) }
         let origin = originLine(w.appellation, w.region, w.country)
         let note = (w.note ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let meta = [uniq.isEmpty ? nil : uniq.joined(separator: " · "), origin].compactMap { $0 }
+        // "Rød · 2019 · 150 cl · producer" – the same line as the site's wine book (wineMeta)
+        let meta = [wineMeta(style: w.style, vintage: w.vintage, cl: w.bottle_cl?.value, producer: w.producer), origin].compactMap { $0 }
         let whereText = start.map { L("book.tastedAt", ["tasting": w.title, "when": dateText($0)]) } ?? w.title
         return ListCard(title: w.name, meta: meta, note: note.isEmpty ? nil : "“\(note)”") {
             WineThumb(url: w.imageURL)

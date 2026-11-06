@@ -3,6 +3,7 @@
 // attachImageInput() gives the same button, drop and paste to another place (the quick-add row). Both check that it
 // is a picture and not too big, and say so under the box.
 import { t } from '../../i18n';
+import { liveText } from '../field-error';
 import { iconSvg } from './icons';
 import { iconButton } from './icon-button';
 
@@ -102,7 +103,7 @@ export function imagePicker(o: Omit<ImageInputOptions, 'drop' | 'button'> & { on
   wrap.className = 'pick-wrap';
   wrap.append(el, err);
 
-  const setError = (m: string | null) => { err.textContent = m ?? ''; err.hidden = !m; el.classList.toggle('err', !!m); };
+  const setError = (m: string | null) => { liveText(err, m); el.classList.toggle('err', !!m); };
   const files = attachImageInput({ ...o, button: choose, drop: el, paste: o.paste ?? el, onError: (m) => { setError(m); o.onError?.(m); },
     onFile: (f) => { setError(null); o.onFile(f); } });
   remove.addEventListener('click', () => { setError(null); o.onRemove?.(); });

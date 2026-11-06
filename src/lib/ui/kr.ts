@@ -7,3 +7,14 @@ const KR = new Intl.NumberFormat('da-DK', { minimumFractionDigits: 2, maximumFra
 export function formatKr(amount: number | string): string {
   return `${KR.format(Number(amount) || 0)} kr.`;
 }
+
+/** A shop's price in another currency, as the shop shows it and never converted (WIN-281), in the same Danish
+ *  number format: 25 EUR → "25,00 €", 19.5 USD → "19,50 US$". An unknown code is written after the number. */
+export function formatCurrency(amount: number | string, currency: string): string {
+  if (currency === 'DKK') return formatKr(amount);
+  try {
+    return new Intl.NumberFormat('da-DK', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(amount) || 0);
+  } catch {
+    return `${KR.format(Number(amount) || 0)} ${currency}`;
+  }
+}

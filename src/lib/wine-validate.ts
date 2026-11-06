@@ -1,6 +1,7 @@
 // Checking the wine form: each field says what is wrong right under it (inline), when it is left and
 // before "Next" or "Save". Amounts accept both "144,95" and "144.95" (and "1.234,50", "kr.").
 import { t } from '../i18n';
+import { liveText } from './field-error';
 import { parseCl, validCl } from './bottle';
 
 /** A price or other amount typed by a person, or NaN when it is not a number. Empty → null. */
@@ -96,8 +97,7 @@ export function wineChecks(form: HTMLFormElement) {
     });
     const first = errs.find(Boolean);
     const m = messageFor(id);
-    m.textContent = first ? t(first as Parameters<typeof t>[0]) : '';
-    m.hidden = !first;
+    liveText(m, first ? t(first as Parameters<typeof t>[0]) : null);
     return !err;
   }
   /** Checks all fields in a part of the form; focuses the first wrong one. */

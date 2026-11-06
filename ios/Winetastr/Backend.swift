@@ -2,10 +2,28 @@ import Foundation
 import Security
 import Supabase
 
-// The same project and public key as the website. Access is enforced in the database.
+/// Which database the app talks to, chosen when it is built, never in the app (as the site's src/lib/config.ts):
+/// the test build (Debug, com.winetastr.app.dev) uses the test database `winetastr-test` and shows a "Test" chip by
+/// the logo; the real build (Release, com.winetastr.app) uses the live one. DB_TEST is set only in the app target's
+/// Debug configuration (Winetastr.xcodeproj). Only the public (publishable) keys are here: access is enforced in the database.
+enum AppDatabase {
+#if DB_TEST
+    static let isTest = true
+    static let url = URL(string: "https://piiuhgzsnphhuceojldz.supabase.co")!
+    static let key = "sb_publishable_fgw-aZhF7pXyTjdG-AgDjg_Pfqd_SIW"
+#else
+    static let isTest = false
+    static let url = URL(string: "https://ydvdhhdpygzwalosbjcc.supabase.co")!
+    static let key = "sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC"
+#endif
+}
+#if DB_TEST && !DEBUG
+#error("The test database is for the test build (Debug) only: a release build must use the live database")
+#endif
+
 let supabase = SupabaseClient(
-    supabaseURL: URL(string: "https://ydvdhhdpygzwalosbjcc.supabase.co")!,
-    supabaseKey: "sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC",
+    supabaseURL: AppDatabase.url,
+    supabaseKey: AppDatabase.key,
     options: SupabaseClientOptions(auth: .init(emitLocalSessionAsInitialSession: true))
 )
 
@@ -102,6 +120,14 @@ func nameWithSize(_ name: String, _ cl: Double?) -> String {
     bottleText(cl).map { "\(name) · \($0)" } ?? name
 }
 
+/// wineMeta() in src/lib/bottle.ts (WIN-170): the one meta line wherever a wine is listed – "Rød · 2019 · 150 cl ·
+/// producer", the size after the vintage and none at 75 cl; without empties and repeats
+func wineMeta(style: String?, vintage: String?, cl: Double?, producer: String?) -> String? {
+    var out: [String] = []
+    for x in [styleName(style), vintage, bottleText(cl), producer].compactMap({ $0 }) where !x.isEmpty && !out.contains(x) { out.append(x) }
+    return out.isEmpty ? nil : out.joined(separator: " · ")
+}
+
 /// A quantity price: from qty bottles, price each
 struct PriceTier: Decodable, Hashable { let qty: Int; let price: Double }
 
@@ -111,7 +137,19 @@ struct ChatMessage: Decodable, Identifiable {
     let id: Int; let author: String; let body: String; let created_at: String; let from_host: Bool; let mine: Bool
     var date: Date { parseDate(created_at) ?? .now }
 }
-struct BoardRow: Decodable { let name: String; let points: Int; let answered: Int }
+extension ChatMessage {
+    private enum CodingKeys: String, CodingKey { case id, author, body, created_at, from_host, mine }
+    /// `mine` is read as optional and defaults to false: databases from before WIN-303 sent null for the host's messages.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(id: try c.decode(Int.self, forKey: .id), author: try c.decode(String.self, forKey: .author),
+                  body: try c.decode(String.self, forKey: .body), created_at: try c.decode(String.self, forKey: .created_at),
+                  from_host: try c.decodeIfPresent(Bool.self, forKey: .from_host) ?? false,
+                  mine: try c.decodeIfPresent(Bool.self, forKey: .mine) ?? false)
+    }
+}
+/// A line on the leaderboard (tasting_board): first names only for guests (WIN-173); `mine` marks the guest's own line
+struct BoardRow: Decodable { let name: String; let points: Int; let answered: Int; var mine: Bool? = nil }
 
 struct TastingPayment: Decodable { let amount: Double; let paid: Bool }
 
@@ -123,6 +161,8 @@ struct BookWine: Decodable, Identifiable {
     let wine_id: Int; let name: String; let producer: String?; let vintage: String?; let style: String?; let image_url: String?
     let appellation: String?; let region: String?; let country: String?; let slug: String; let title: String; let starts_at: String?
     let sort_order: Int?; let rating: Int?; let note: String?; let rated_at: String?; let bought: Int
+    /// The bottle's size in cl (WIN-170); missing from older databases, null for a blind wine (never in the book)
+    var bottle_cl: FlexNumber?
     var id: String { "\(slug)-\(wine_id)" }
     var imageURL: URL? {
         guard let image_url, !image_url.isEmpty else { return nil }
@@ -134,10 +174,12 @@ struct BookWine: Decodable, Identifiable {
 struct OrderLine: Decodable {
     let order_id: Int; let created_at: String; let paid: Bool; var slug: String?; var title: String?
     let wine_id: Int?; let wine_name: String; let quantity: Int; let unit_price: Double
+    /// The wine's size now in cl (WIN-170): it follows the name, also for a wine made blind after the order; missing
+    /// from older databases
+    var bottle_cl: FlexNumber?
 }
 
 private struct CodeParam: Encodable, Sendable { let code: String }
-private struct EmailParam: Encodable, Sendable { let e: String }
 private struct SetEmail: Encodable, Sendable { let code: String; let e: String }
 private struct Respond: Encodable, Sendable { let code: String; let attending: Bool; let note: String? }
 private struct Rate: Encodable, Sendable { let code: String; let w_id: Int; let stars: Int?; let note: String? }
@@ -152,6 +194,15 @@ private struct Board: Encodable, Sendable { let code: String; let slug: String? 
 
 enum Backend {
     private static func decode<T: Decodable>(_ data: Data) throws -> T { try JSONDecoder().decode(T.self, from: data) }
+    /// -bottleMock 150 (DEBUG): the first order line gets that size, for screenshots of the orders
+    private static func mockOrderSize(_ lines: [OrderLine]) -> [OrderLine] {
+        #if DEBUG
+        if let s = UserDefaults.standard.string(forKey: "bottleMock"), let v = Double(s), !lines.isEmpty {
+            var out = lines; out[0].bottle_cl = FlexNumber(v); return out
+        }
+        #endif
+        return lines
+    }
 
     static func invite(_ code: String) async throws -> Invite? {
         let rows: [Invite] = try decode(try await supabase.rpc("get_invite", params: CodeParam(code: code)).execute().data)
@@ -188,9 +239,6 @@ enum Backend {
     static func myTastings() async throws -> [MyTasting] {
         try decode(try await supabase.rpc("my_tastings").execute().data)
     }
-    static func emailKnown(_ email: String) async throws -> Bool {
-        try decode(try await supabase.rpc("login_email_known", params: EmailParam(e: email)).execute().data)
-    }
     static func inviteIsMine(_ code: String) async -> Bool {
         guard let data = try? await supabase.rpc("invite_is_mine", params: CodeParam(code: code)).execute().data else { return true }
         return (try? JSONDecoder().decode(Bool.self, from: data)) ?? true
@@ -218,7 +266,7 @@ enum Backend {
         try await supabase.rpc("submit_answer", params: Answer(code: code, q_id: question, a_key: key)).execute()
     }
     static func leaderboard(_ code: String) async throws -> [BoardRow] {
-        try decode(try await supabase.rpc("tasting_leaderboard", params: Board(code: code, slug: nil)).execute().data)
+        try decode(try await supabase.rpc("tasting_board", params: Board(code: code, slug: nil)).execute().data)
     }
     /// The tasting's own price for the guest, when the host has set one
     static func payment(_ code: String) async throws -> TastingPayment? {
@@ -226,14 +274,19 @@ enum Backend {
         return rows.first
     }
     static func wineBook(_ codes: [String]) async throws -> [BookWine] {
-        try decode(try await supabase.rpc("my_wine_book", params: Codes(codes: codes)).execute().data)
+        var list: [BookWine] = try decode(try await supabase.rpc("my_wine_book", params: Codes(codes: codes)).execute().data)
+        #if DEBUG
+        // -bottleMock 150: the first wine of the book gets that size (screenshots without changing the test data)
+        if let s = UserDefaults.standard.string(forKey: "bottleMock"), let v = Double(s), !list.isEmpty { list[0].bottle_cl = FlexNumber(v) }
+        #endif
+        return list
     }
     static func myOrders(_ code: String) async throws -> [OrderLine] {
-        try decode(try await supabase.rpc("get_my_orders", params: CodeParam(code: code)).execute().data)
+        mockOrderSize(try decode(try await supabase.rpc("get_my_orders", params: CodeParam(code: code)).execute().data))
     }
     /// Signed in: every order of the email, with the tasting
     static func allMyOrders() async throws -> [OrderLine] {
-        try decode(try await supabase.rpc("my_orders").execute().data)
+        mockOrderSize(try decode(try await supabase.rpc("my_orders").execute().data))
     }
     static func profile() async throws -> Profile? {
         try? decode(try await supabase.rpc("my_profile").execute().data)
@@ -251,7 +304,8 @@ func dbMessage(_ error: Error) -> String {
 
 /// The invite codes on this device, kept in the keychain (they give access to the guest's invitation).
 enum CodeStore {
-    private static let account = "guest_codes"
+    /// The test build keeps its own codes, so a code from one database is never sent to the other
+    private static let account = AppDatabase.isTest ? "guest_codes_test" : "guest_codes"
     private static var query: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrAccount as String: account, kSecAttrService as String: "com.winetastr.app"]
     }

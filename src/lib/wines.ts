@@ -126,7 +126,8 @@ export function nameBlind<T extends Pick<Wine, 'name' | 'blind'>>(wines: T[]): T
   return wines;
 }
 
-/** Calls back when the host reveals (or blinds) a wine: checks every 15 seconds while the page is open. */
+/** Calls back when the host reveals, blinds, shows or hides a wine (the list of ids or a blind flag changes): checks every
+ *  15 seconds while the page is open. */
 export function watchBlind(load: () => Promise<{ id: number; blind?: boolean }[]>, current: { id: number; blind?: boolean }[], changed: () => void) {
   const sig = (list: { id: number; blind?: boolean }[]) => list.map((w) => `${w.id}${w.blind ? 'b' : ''}`).join(',');
   let last = sig(current);

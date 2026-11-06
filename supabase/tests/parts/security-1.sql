@@ -1,4 +1,4 @@
--- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 1 of 3.
+-- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 1 of 5.
 -- Sections: Fixtures, Host A, A guest's page, Host D, Host A removes D, Security batch. Rolled back at the end.
 begin;
 
@@ -7,10 +7,25 @@ insert into hosts (id, email, name) values
   ('00000000-0000-4000-a000-00000000000a', 'host-a@selftest.invalid', 'Host A'),
   ('00000000-0000-4000-a000-00000000000b', 'host-b@selftest.invalid', 'Host B'),
   ('00000000-0000-4000-a000-00000000000c', 'host-c@selftest.invalid', 'Host C');
--- MobilePay off in both (a number without a name, WIN-278)
-insert into tastings (id, host_id, slug, title, place, intro, mobilepay, mobilepay_on, orders_open, quiz_open, signup_open) values
-  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', '11111111', false, true, true, true),
-  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', '22222222', false, true, true, true);
+insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
+  ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', null, true, true, true),
+  ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', null, true, true, true);
+-- Each tasting has a MobilePay number, so this file runs on every database the release passes through:
+--   * with WIN-278's switch (tastings.mobilepay_on): MobilePay off in both, a number without a name (the WIN-278
+--     sections below start from that);
+--   * with only a recipient's name (WIN-278's first migration): the number gets a name too;
+--   * before WIN-278: only the number.
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_on') then
+    execute $q$update tastings set mobilepay_on = false, mobilepay_name = null,
+      mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b')$q$;
+  elsif exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
+    execute $q$update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end,
+      mobilepay_name = case slug when 'selftest-a' then 'Host A' else 'Host B' end where slug in ('selftest-a', 'selftest-b')$q$;
+  else
+    update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b');
+  end if;
+end $$;
 insert into wines (id, host_id, name) values
   (-1001, '00000000-0000-4000-a000-00000000000a', 'Wine A'),
   (-1002, '00000000-0000-4000-a000-00000000000b', 'Wine B'),
@@ -130,6 +145,8 @@ begin
   update wine_regions set name = 'hacked' where id = 'pt-douro'; get diagnostics n = row_count;           assert n = 0, 'a host can change the wine regions';
   failed := false; begin perform link_participant_guest(); exception when others then failed := true; end;
   assert failed, 'a host can call the linking trigger function';
+  failed := false; begin perform wines_retail_foreign(); exception when others then failed := true; end;
+  assert failed, 'a host can call the converted-price trigger function';
   -- The guest page of another host's tasting stays closed
   assert host_guest_code('selftest-b') is null, 'host A gets a guest code for host B''s tasting';
   -- Hosts are managed only by the owner of the tasting
@@ -324,6 +341,17 @@ begin
   assert failed, 'a wine''s shop link can be something that is not a web address';
   update wines set source_url = 'https://shop.example.com/wine?id=1' where id = -1001;
   update wines set source_url = null where id = -1001;
+  -- WIN-281: the shop's price in another currency (retail_foreign) is a small object, and goes when the price is changed
+  failed := false; begin update wines set retail_foreign = '{"amount":"<b>x</b>","currency":"EUR","rate":7.46}' where id = -1001; exception when check_violation then failed := true; end;
+  assert failed, 'a wine''s foreign shop price can be something that is not an amount';
+  failed := false; begin update wines set retail_foreign = '{"amount":12.97,"currency":"euro"}' where id = -1001; exception when check_violation then failed := true; end;
+  assert failed, 'a wine''s foreign shop price can have a currency that is not a code';
+  update wines set retail_price_dkk = 96.76, retail_foreign = '{"amount":12.97,"currency":"EUR","rate":7.46}' where id = -1001;
+  update wines set retail_price_dkk = 96.76, name = name where id = -1001;
+  assert (select retail_foreign from wines where id = -1001) is not null, 'the converted-price note goes when the price is saved unchanged';
+  update wines set retail_price_dkk = 90 where id = -1001;
+  assert (select retail_foreign from wines where id = -1001) is null, 'the converted-price note stays when the host changes the price';
+  update wines set retail_price_dkk = null where id = -1001;
   -- New invitations get long codes (80 bits); the old 10-character ones keep working
   insert into participants (tasting_id, name, invite_code) values ('00000000-0000-4000-b000-00000000000b', 'Code check', default);
   assert (select length(invite_code) from participants where name = 'Code check') = 20, 'a new invitation does not get a 20-character code';

@@ -1,4 +1,5 @@
 // The emails the site sends, in the site's languages (the sender's language is used).
+import { nameWithSize } from '../lib/bottle';
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -114,6 +115,7 @@ type UpdateText = {
   subject: string; intro: string; button: string; footer: string; settings: string;
   yes: string; waitlist: string; promoted: string; no: string; note: string; diet: string; chat: string; order: string; someone: string;
 };
+const MAIL_LOCALE: Record<string, string> = { da: 'da-DK', en: 'en-GB' };
 const UPDATES: Record<string, UpdateText> = {
   da: { subject: 'Nyt fra {tasting}', intro: 'Det her er sket i {tasting}:', button: 'Åbn smagningen', footer: 'Du får denne mail, fordi du har valgt det i din profil.', settings: 'Ret hvad du får mail om',
     yes: '{guest} kommer', waitlist: '{guest} er på ventelisten', promoted: '{guest} er rykket op fra ventelisten og kommer', no: '{guest} kommer ikke',
@@ -126,6 +128,8 @@ const UPDATES: Record<string, UpdateText> = {
 /** One email to a host about what happened in one tasting: answers, notes, chat messages and orders */
 export function updatesMail(lang: string, v: { tasting: string; items: Item[]; link: string; settings: string; money: (n: number) => string }) {
   const x = UPDATES[lang] ?? UPDATES.en;
+  // Sizes as the mail's text is written: a language without its own text (Icelandic) gets the English mail, so "37.5 cl"
+  const sizeLocale = UPDATES[lang] ? MAIL_LOCALE[lang] : MAIL_LOCALE.en;
   const lines = v.items.map((it) => {
     const who = it.guest || x.someone;
     const d = it.detail ?? {};
@@ -136,9 +140,10 @@ export function updatesMail(lang: string, v: { tasting: string; items: Item[]; l
       case 'note': return [d.note ? `${say(x.note)}: “${d.note}”` : '', d.diet ? `${d.note ? '' : who + ' – '}${x.diet}: ${d.diet}` : ''].filter(Boolean).join(' · ');
       case 'chat': return `${say(x.chat)}: “${d.body}”`;
       case 'order': {
-        const ls = (d.lines as { qty: number; wine: string; price: number }[] | undefined) ?? [];
+        // Hosts always see the size (WIN-170), also for a blind wine: "2 × Quinta do Noval LBV · 150 cl"
+        const ls = (d.lines as { qty: number; wine: string; price: number; cl?: number | null }[] | undefined) ?? [];
         const total = ls.reduce((s, l) => s + l.qty * Number(l.price), 0);
-        return `${say(x.order)}: ${ls.map((l) => `${l.qty} × ${l.wine}`).join(', ')}${total ? ` (${v.money(total)})` : ''}`;
+        return `${say(x.order)}: ${ls.map((l) => `${l.qty} × ${nameWithSize(l.wine, l.cl, sizeLocale)}`).join(', ')}${total ? ` (${v.money(total)})` : ''}`;
       }
       default: return '';
     }

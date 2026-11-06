@@ -1,4 +1,4 @@
-// Splits supabase/tests/security.sql into three smaller scripts (supabase/tests/parts/security-1…3.sql) that can each be
+// Splits supabase/tests/security.sql into smaller scripts (supabase/tests/parts/security-1…N.sql) that can each be
 // run on their own – the whole file is too long to send in one go through some tools. Each part starts from the same
 // fixtures and the sections it depends on, runs inside its own transaction and is rolled back. Together they run every
 // check in security.sql. Run: node scripts/security-parts.mjs – then each part must end with "security part N passed".
@@ -26,9 +26,14 @@ const blindBody = blind.slice(0, blind.findIndex((l, i) => i > 0 && l.startsWith
 const fixtures = section('Fixtures');
 const parts = [
   ['Host A', "A guest's page", 'Host D', 'Host A removes D', 'Security batch'],
-  ['Host D', 'Host A removes D', 'Host E', 'Host C', 'A signed-in guest'],
+  ['Host D', 'Host A removes D', 'Host E', 'Host C', 'A signed-in guest', 'Sign-up gate'],
+  ['Host A', 'Not signed in', 'Bottle size', 'Blind tasting'],
+  ['Host A', 'Not signed in', 'Leaderboard names', 'Blind tasting'],
   ['Host A', 'Not signed in', 'Payment recipient', 'MobilePay off', "New tasting's MobilePay", 'Blind tasting'],
 ];
+// Every section of security.sql must be in a part (Fixtures goes into all of them)
+const missing = names.filter((n) => n !== names[0] && !parts.some((list) => list.some((s) => n.startsWith(s))));
+if (missing.length) throw new Error(`Sections in no part: ${missing.join('; ')} – add them to a part above`);
 fs.mkdirSync(new URL('../supabase/tests/parts/', import.meta.url), { recursive: true });
 parts.forEach((list, i) => {
   const n = i + 1;

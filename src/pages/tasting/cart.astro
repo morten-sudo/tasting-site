@@ -66,6 +66,8 @@ import SignInState from '../../components/ui/SignInState.astro';
   type Line = {
     order_id: number; created_at: string; paid: boolean;
     wine_id: number; wine_name: string; quantity: number; unit_price: number;
+    /** The wine's size now (WIN-170) – also for a wine made blind after the order, where get_wines hides it */
+    bottle_cl?: number | null;
   };
 
   await i18nReady;
@@ -73,7 +75,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   const code = await resolveGuestCode();
   const slug = currentSlug() ?? '';
   let wines = new Map<number, Wine>();
-  // Every revealed wine's size (also wines that can no longer be ordered), for the order history
+  // Every revealed wine's size, for the order history when the database does not give it on the line (before WIN-170)
   let sizes = new Map<number, number | null>();
   const keepSizes = (list: Wine[]) => { sizes = new Map(list.map((x) => [x.id, x.bottle_cl ?? null])); };
   let open = false;
@@ -151,7 +153,7 @@ import SignInState from '../../components/ui/SignInState.astro';
     box.replaceChildren(...[...byOrder].reverse().map(([id, ls]) => {
       const total = ls.reduce((s, l) => s + l.quantity * Number(l.unit_price), 0);
       const ul = mk('ul');
-      for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${nameWithSize(l.wine_name, sizes.get(l.wine_id), locale())}`));
+      for (const l of ls) ul.append(mk('li', '', `${l.quantity} × ${nameWithSize(l.wine_name, l.bottle_cl !== undefined ? l.bottle_cl : sizes.get(l.wine_id), locale())}`));
       const body: Node[] = [ul];
       if (!ls[0].paid && payLater()) body.push(mk('p', 'lmeta', t('bulk.payLater')));
       else if (!ls[0].paid) {
@@ -203,6 +205,10 @@ import SignInState from '../../components/ui/SignInState.astro';
     $('confirm').hidden = false;
     renderCart();
     await renderHistory();
+    // The send button is gone with the cart: focus moves to the thanks, so a screen reader reads it and how to pay
+    const confirm = $('confirm');
+    confirm.tabIndex = -1;
+    confirm.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 

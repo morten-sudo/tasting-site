@@ -14,123 +14,186 @@ struct LegendItem: Identifiable {
     let count: Int
     let title: String
     let sub: String
-    var inset: OverviewDrawing? = nil
 }
 
 struct Origins {
-    let map: MapDrawing
+    /// nil: the region cannot be placed at all – its wines are listed (the legend) without a map
+    let map: MapDrawing?
     let legend: [LegendItem]
     let sources: String?
     let osm: Bool
-    /// The faint map behind the heading (none when the wines have no detailed map)
+    /// The faint map behind the heading (none when the region has no detailed map)
     let hero: RegionDrawing?
 }
 
-/// The same as the site: the main region's map with the appellations of the wines filled and numbered, or – with no
-/// detailed map – the overview map with a numbered pin per place.
-func buildOrigins(_ wines: [Wine], phone: Bool = true) async -> Origins? {
-    let numbers = Dictionary(uniqueKeysWithValues: wines.enumerated().map { ($0.element.id, $0.offset + 1) })
-    func nums(_ ids: [Int]) -> String { L("map.wineNumbers", ["list": numberRanges(ids.compactMap { numbers[$0] })]) }
-    guard let region = mainRegion(wines), let map = await MapStore.shared.map(region) else { return await overviewOrigins(wines, nums) }
-
-    // groupWines(): an area of the map, the whole region, or another region
-    let names = Dictionary((await MapStore.shared.appellationList()).map { ($0.id, $0.name) }, uniquingKeysWith: { a, _ in a })
-    struct Group { let key: String; let title: String; var ids: [Int]; let inMap: Bool; let whole: Bool }
-    var groups: [String: Group] = [:]; var order: [String] = []
-    func add(_ key: String, _ title: String, _ inMap: Bool, _ whole: Bool, _ w: Wine) {
-        if groups[key] == nil { groups[key] = Group(key: key, title: title, ids: [], inMap: inMap, whole: whole); order.append(key) }
-        groups[key]!.ids.append(w.id)
-    }
-    for w in wines {
-        let aid = w.appellation_id ?? ""
-        if !aid.isEmpty, map.areas[aid] != nil { add(aid, names[aid] ?? map.areas[aid]?.title ?? aid, true, false, w) }
-        else if mapIdFor(w.region) == map.id { add("whole:\(aid.isEmpty ? "region" : aid)", (aid.isEmpty ? nil : names[aid]) ?? w.appellation ?? map.name, false, true, w) }
-        else { add("other:\(normOrigin(w.region ?? w.appellation ?? "?"))", w.region ?? w.appellation ?? "?", false, false, w) }
-    }
-    func rank(_ g: Group) -> Int { g.inMap ? 0 : g.whole ? 1 : 2 }
-    func before(_ a: Group, _ b: Group) -> Bool {
-        if rank(a) != rank(b) { return rank(a) < rank(b) }
-        if a.ids.count != b.ids.count { return a.ids.count > b.ids.count }
-        return a.title.localizedCompare(b.title) == .orderedAscending
-    }
-    let list = order.map { groups[$0]! }.sorted(by: before)
-    var counts: [String: Int] = [:]; var titles: [String: String] = [:]
-    for g in list where g.inMap { counts[g.key] = g.ids.count; titles[g.key] = g.title }
-    let whole = list.contains { $0.whole }
-    let hero = RegionDrawing(map, mode: .background, counts: counts, wholeRegion: whole && counts.isEmpty)
-    // Producers with an exact place get a pin (one per producer)
-    var seen = Set<String>(); var pins: [(lon: Double, lat: Double)] = []
-    for w in wines { if let lat = w.producer_lat, let lon = w.producer_lon, seen.insert("\(lat),\(lon)").inserted { pins.append((lon, lat)) } }
-    var full = RegionDrawing(map, counts: counts, titles: titles, wholeRegion: whole && counts.isEmpty, pins: pins)
-    if phone { full.fitToAreas() }
-
-    var legend: [LegendItem] = []
-    for g in list {
-        let n = nums(g.ids)
-        if g.inMap { legend.append(LegendItem(kind: .inMap, count: g.ids.count, title: g.title, sub: n)) }
-        else if g.whole { legend.append(LegendItem(kind: .whole, count: g.ids.count, title: g.title, sub: "\(L("map.wholeRegion", ["region": map.name])) · \(n)")) }
-        else {
-            // Wines from another region: a small map of their country with the place marked
-            var places: [Place] = []
-            for id in g.ids { if let w = wines.first(where: { $0.id == id }), let p = await placeOf(w) { places.append(p) } }
-            var inset: OverviewDrawing?
-            if !places.isEmpty, let ov = await MapStore.shared.overview(overviewFor(places)) {
-                inset = OverviewDrawing(ov, pins: places.map { .init(lon: $0.lon, lat: $0.lat) }, focus: await focusFor(places), inset: true)
-            }
-            legend.append(LegendItem(kind: .other, count: g.ids.count, title: g.title, sub: "\(L("map.otherRegion")) · \(n)", inset: inset))
-        }
-    }
-    return Origins(map: .region(full), legend: legend, sources: map.sources, osm: !full.pins.isEmpty, hero: hero)
+/// One tab on the tasting's map (WIN-256, regionTabs() in src/lib/tasting-origins.ts): a value of the wines' region
+/// field (compared without case and accents), its wines in the evening's order
+struct RegionTab: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let wines: [Wine]
 }
 
-private func overviewOrigins(_ wines: [Wine], _ nums: ([Int]) -> String) async -> Origins? {
-    var groups: [String: (p: Place, wines: [Wine])] = [:]; var order: [String] = []
+/// The tabs in the order of each region's first wine. Blind wines that are not revealed (the database sends no origin
+/// for them) and wines without a region get none, so neither the counts nor the order give a blind wine away.
+func regionTabs(_ wines: [Wine]) -> [RegionTab] {
+    var order: [String] = []; var names: [String: String] = [:]; var list: [String: [Wine]] = [:]
+    for w in wines where !w.isBlind {
+        guard let r = w.region?.trimmingCharacters(in: .whitespaces), !r.isEmpty else { continue }
+        let key = normOrigin(r)
+        if list[key] == nil { order.append(key); names[key] = r; list[key] = [] }
+        list[key]!.append(w)
+    }
+    return order.map { RegionTab(id: $0, name: names[$0]!, wines: list[$0]!) }
+}
+
+/// The faint map behind a heading: the wines' main region with their lowest areas filled (winesBackground() in
+/// src/lib/ui/map-background.ts – the home screen's corner)
+func winesHero(_ wines: [Wine]) async -> RegionDrawing? {
+    guard let region = mainRegion(wines), let map = await MapStore.shared.map(region) else { return nil }
+    let g = await groupForMap(map, wines)
+    return RegionDrawing(map, mode: .background, counts: g.counts, wholeRegion: g.wholeRegion)
+}
+
+/// The faint map behind the tasting's heading: the first region tab with a detailed map (drawHero() on the site)
+func tabsHero(_ tabs: [RegionTab]) async -> RegionDrawing? {
+    for tab in tabs {
+        guard let id = mapIdFor(tab.name), let map = await MapStore.shared.map(id) else { continue }
+        let g = await groupForMap(map, tab.wines)
+        return RegionDrawing(map, mode: .background, counts: g.counts, wholeRegion: g.wholeRegion)
+    }
+    return nil
+}
+
+private struct MapGroup { let key: String; let title: String; var ids: [Int]; let level: Level; var inMap: Bool { level.kind != .region } }
+/// markings() on the site: strongest wins (an area that is one wine's lowest and another's level between is strong);
+/// the whole region is marked only when no wine has a lower level
+private struct Grouped {
+    let list: [MapGroup]; let counts: [String: Int]; let titles: [String: String]; let mid: Set<String>
+    let named: [(lon: Double, lat: Double, title: String)]; let wholeRegion: Bool
+}
+
+/// groupWines(): each wine's lowest level on the map (WIN-293, levelOf()) – an area, an appellation's pin or the region
+private func groupForMap(_ map: RegionMap, _ wines: [Wine]) async -> Grouped {
+    let apps = await MapStore.shared.appellationList()
+    var groups: [String: MapGroup] = [:]; var order: [String] = []
     for w in wines {
-        guard let p = await placeOf(w) else { continue }
+        let level = levelOf(map, appellation: w.appellation, appellationId: w.appellation_id, apps)
+        let key = level.kind == .area ? level.id : "\(level.kind):\(level.id.isEmpty ? "region" : level.id)"
+        if groups[key] == nil { groups[key] = MapGroup(key: key, title: level.name, ids: [], level: level); order.append(key) }
+        groups[key]!.ids.append(w.id)
+    }
+    let list = order.map { groups[$0]! }.sorted {
+        if $0.inMap != $1.inMap { return $0.inMap }
+        if $0.ids.count != $1.ids.count { return $0.ids.count > $1.ids.count }
+        return $0.title.localizedCompare($1.title) == .orderedAscending
+    }
+    var counts: [String: Int] = [:]; var titles: [String: String] = [:]; var mid = Set<String>(); var named: [(lon: Double, lat: Double, title: String)] = []
+    for g in list {
+        if g.level.kind == .area { counts[g.level.id] = g.ids.count; titles[g.level.id] = g.level.name }
+        if g.level.kind == .pin, let p = g.level.pin { named.append((lon: p.lon, lat: p.lat, title: g.level.name)) }
+        mid.formUnion(g.level.mid)
+    }
+    mid.subtract(counts.keys)
+    return Grouped(list: list, counts: counts, titles: titles, mid: mid, named: named,
+                   wholeRegion: counts.isEmpty && named.isEmpty && list.contains { !$0.inMap })
+}
+
+/// One region tab, the same as the site's drawTab(): the whole region's detailed map, each wine's lowest known area
+/// strongest and numbered, the levels between lighter – or, with no detailed map, the overview map with a numbered pin
+/// per place, or, when the region cannot be placed at all, its wines listed by name. all: every wine of the tasting
+/// (their numbers in the evening). width: the map box's width (the names are drawn bigger in a narrow box).
+func buildOrigins(_ tab: RegionTab, all: [Wine], width: Double = 358) async -> Origins? {
+    let numbers = Dictionary(uniqueKeysWithValues: all.enumerated().map { ($0.element.id, $0.offset + 1) })
+    func nums(_ ids: [Int]) -> String { L("map.wineNumbers", ["list": numberRanges(ids.compactMap { numbers[$0] })]) }
+    guard let id = mapIdFor(tab.name), let map = await MapStore.shared.map(id) else { return await overviewOrigins(tab, nums) }
+    let g = await groupForMap(map, tab.wines)
+    let hero = RegionDrawing(map, mode: .background, counts: g.counts, wholeRegion: g.wholeRegion)
+    // Producers with an exact place get a pin (one per producer)
+    var seen = Set<String>(); var pins: [(lon: Double, lat: Double)] = []
+    for w in tab.wines { if let lat = w.producer_lat, let lon = w.producer_lon, seen.insert("\(lat),\(lon)").inserted { pins.append((lon, lat)) } }
+    // The same view on every screen: the whole region (not zoomed to the wines' areas)
+    let full = RegionDrawing(map, counts: g.counts, titles: g.titles, mid: g.mid, wholeRegion: g.wholeRegion, named: g.named, pins: pins, scale: labelScale(map, width: width), boxWidth: width)
+    let whole = L("map.wholeRegion", ["region": map.name])
+    let legend = g.list.map { x -> LegendItem in
+        // Only the region: "Hele Bordeaux"; an appellation covering it: "Porto", "Hele Douro"; else the level between ("Médoc")
+        if !x.inMap && normOrigin(x.title) == normOrigin(map.name) { return LegendItem(kind: .whole, count: x.ids.count, title: whole, sub: nums(x.ids)) }
+        let between = x.level.midName.flatMap { normOrigin($0) == normOrigin(x.title) ? nil : $0 }
+        let where_ = x.inMap ? between : whole
+        return LegendItem(kind: x.inMap ? .inMap : .whole, count: x.ids.count, title: x.title, sub: [where_, nums(x.ids)].compactMap { $0 }.joined(separator: " · "))
+    }
+    return Origins(map: .region(full), legend: legend, sources: map.sources, osm: !pins.isEmpty, hero: hero)
+}
+
+private func overviewOrigins(_ tab: RegionTab, _ nums: ([Int]) -> String) async -> Origins? {
+    var groups: [String: (p: Place, wines: [Wine])] = [:]; var order: [String] = []; var unplaced: [Wine] = []
+    for w in tab.wines {
+        guard let p = await placeOf(w) else { unplaced.append(w); continue }
         let key = String(format: "%.2f,%.2f", p.lon, p.lat)
         if groups[key] == nil { groups[key] = (p, []); order.append(key) }
         groups[key]!.wines.append(w)
     }
-    guard !order.isEmpty else { return nil }
     let list = order.map { groups[$0]! }.sorted { $0.wines.count > $1.wines.count }
     let places = list.map(\.p)
-    guard let ov = await MapStore.shared.overview(overviewFor(places)) else { return nil }
-    let drawing = OverviewDrawing(ov, pins: list.map { .init(lon: $0.p.lon, lat: $0.p.lat, label: $0.p.label, n: $0.wines.count) }, focus: await focusFor(places))
-    let legend = list.map { g -> LegendItem in
-        var parts: [String] = []
-        for x in [g.wines[0].region, countryName(g.p.country)].compactMap({ $0 }) where !x.isEmpty && !parts.contains(x) { parts.append(x) }
-        let sub = [parts.isEmpty ? nil : parts.joined(separator: ", "), nums(g.wines.map(\.id))].compactMap { $0 }.joined(separator: " · ")
-        return LegendItem(kind: .inMap, count: g.wines.count, title: g.p.label, sub: sub)
+    var drawing: OverviewDrawing?
+    if !places.isEmpty, let ov = await MapStore.shared.overview(overviewFor(places)) {
+        let focus = await focusFor(places)
+        // A small area (one country, an island): the detailed tiles, so Madeira is land under its pin
+        drawing = OverviewDrawing(ov, pins: list.map { .init(lon: $0.p.lon, lat: $0.p.lat, label: $0.p.label, n: $0.wines.count) }, focus: focus, detail: await detailFor(focus))
     }
-    return Origins(map: .overview(drawing), legend: legend, sources: "Natural Earth", osm: false, hero: nil)
+    var legend: [LegendItem] = []
+    if drawing != nil {
+        legend = list.map { g -> LegendItem in
+            var parts: [String] = []
+            for x in [g.wines[0].region, countryName(g.p.country)].compactMap({ $0 }) where !x.isEmpty && !parts.contains(x) { parts.append(x) }
+            let sub = [parts.isEmpty ? nil : parts.joined(separator: ", "), nums(g.wines.map(\.id))].compactMap { $0 }.joined(separator: " · ")
+            return LegendItem(kind: .inMap, count: g.wines.count, title: g.p.label, sub: sub)
+        }
+    } else { unplaced = tab.wines }
+    // Nothing to place them by: the wine by name, with the region, so no wine is left out
+    for w in unplaced {
+        var parts: [String] = []
+        for x in [w.appellation, tab.name, countryName(w.country)].compactMap({ $0 }) where !x.isEmpty && !parts.contains(x) { parts.append(x) }
+        let sub = [parts.isEmpty ? nil : parts.joined(separator: ", "), nums([w.id])].compactMap { $0 }.joined(separator: " · ")
+        legend.append(LegendItem(kind: .other, count: 1, title: w.name ?? tab.name, sub: sub))
+    }
+    return Origins(map: drawing.map { MapDrawing.overview($0) }, legend: legend, sources: drawing == nil ? nil : "Natural Earth", osm: false, hero: nil)
 }
 
-/// The map card with its legend (component 23)
+/// The map card with the region tabs (component 42, scrolling sideways when there are many) and its legend (component 23)
 struct OriginsBlock: View {
-    let origins: Origins
+    let tabs: [RegionTab]
+    @Binding var selection: String
+    let origins: Origins?
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Eyebrow(text: L("map.title"))
-            VStack(alignment: .trailing, spacing: 4.8) {
-                MapBox(drawing: origins.map, label: L("map.title"))
-                MapCredit(sources: origins.sources, osm: origins.osm)
+            if tabs.count > 1 {
+                ScrollingTabs(tabs: tabs.map { ($0.id, $0.name, $0.wines.count) }, selection: $selection, label: L("map.regions"))
+                    .padding(.bottom, 4)
             }
-            VStack(alignment: .leading, spacing: 7.2) {
-                ForEach(origins.legend) { item in
-                    HStack(alignment: .top, spacing: 9.6) {
-                        LegendNumber(kind: item.kind, n: item.count)
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(item.title).font(.semibold(15.2)).foregroundStyle(Color.paper)
-                            Text(item.sub).font(.body(13.1)).foregroundStyle(Color.muted)
-                            if let inset = item.inset {
-                                MapBox(drawing: .overview(inset), zoomable: false).frame(width: 144).padding(.top, 6.4)
+            if let origins {
+                if let map = origins.map {
+                    VStack(alignment: .trailing, spacing: 4.8) {
+                        MapBox(drawing: map, label: tabs.first(where: { $0.id == selection })?.name ?? L("map.title"))
+                            .id(selection)
+                        MapCredit(sources: origins.sources, osm: origins.osm)
+                    }
+                }
+                VStack(alignment: .leading, spacing: 7.2) {
+                    ForEach(origins.legend) { item in
+                        HStack(alignment: .top, spacing: 9.6) {
+                            LegendNumber(kind: item.kind, n: item.count)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(item.title).font(.semibold(15.2)).foregroundStyle(Color.paper)
+                                Text(item.sub).font(.body(13.1)).foregroundStyle(Color.muted)
                             }
                         }
+                        .accessibilityElement(children: .combine)
                     }
-                    .accessibilityElement(children: .combine)
                 }
+                .padding(.top, 4.4)
             }
-            .padding(.top, 4.4)
         }
     }
 }
@@ -142,7 +205,7 @@ struct LegendNumber: View {
     var body: some View {
         Text("\(n)").font(.semibold(12.5)).foregroundStyle(kind == .other ? Color.bordeaux : Color.white)
             .frame(width: 25.6, height: 25.6)
-            .background(kind == .inMap ? Color.bordeaux : kind == .whole ? Color(red: 0xB0 / 255, green: 0x7A / 255, blue: 0x85 / 255) : Color.clear, in: Circle())
+            .background(kind == .inMap ? Color.bordeaux : kind == .whole ? Color(red: 0x9A / 255, green: 0x5F / 255, blue: 0x6C / 255) : Color.clear, in: Circle())
             .overlay(Circle().strokeBorder(kind == .other ? Color.bordeaux : Color.clear, lineWidth: 1.5))
     }
 }
