@@ -332,6 +332,8 @@ struct TopBar: View {
 
 /// The tasting's head in the page (as the site's, like the admin's): on the tasting's own tab the chips over it, then
 /// its name as the page title, then the tabs (the quiz only when the tasting has one) with the underline.
+/// It is the top of each tab's scrolling content (not pinned), so it scrolls away with the page as on the site; only
+/// the TopBar stays put (the site's sticky .site-header).
 struct TastingHead<Chips: View>: View {
     @Environment(AppModel.self) private var model
     let title: String
@@ -341,25 +343,56 @@ struct TastingHead<Chips: View>: View {
     let tab: TastingTab?
     let select: (TastingTab) -> Void
     @ViewBuilder var chips: Chips
+    @State private var tabsScrolled = false
     var body: some View {
         VStack(alignment: .leading, spacing: 9.6) {
             chips
             PageTitle(text: title, lang: lang)
-            HStack(spacing: 22) {
-                ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
-                    Button { select(t) } label: {
-                        Text(t.title).font(.body(16.5)).foregroundStyle(t == tab ? Color.bordeaux : Color.muted)
-                            .padding(.vertical, 11)
-                            .overlay(alignment: .bottom) { if t == tab { Rectangle().fill(Color.bordeaux).frame(height: 2) } }
+            // .tabs on phones: one line that scrolls sideways (never two rows, never cut off with larger text); the
+            // right edge fades, and the last tab has room after it so it is not faded once scrolled to the end.
+            // As showChosen() in tabs.ts: the chosen tab is brought into view, and the left edge fades once scrolled.
+            ScrollViewReader { bar in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 22) {
+                    ForEach(TastingTab.allCases.filter { $0 != .quiz || model.tastingHasQuiz }, id: \.self) { t in
+                        Button { select(t) } label: {
+                            Text(t.title).font(.body(16.5)).foregroundStyle(t == tab ? Color.bordeaux : Color.muted)
+                                .fixedSize()
+                                .padding(.vertical, 11)
+                                .overlay(alignment: .bottom) { if t == tab { Rectangle().fill(Color.bordeaux).frame(height: 2) } }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(t == tab ? .isSelected : [])
+                        .id(t)
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(t == tab ? .isSelected : [])
                 }
-                Spacer()
+                .padding(.trailing, 24)
+            }
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            .fixedSize(horizontal: false, vertical: true)
+            .modifier(TabsScrolled(scrolled: $tabsScrolled))
+            .mask {
+                HStack(spacing: 0) {
+                    if tabsScrolled { LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing).frame(width: 24) }
+                    Rectangle()
+                    LinearGradient(colors: [.black, .clear], startPoint: .leading, endPoint: .trailing).frame(width: 24)
+                }
+            }
+            .onAppear { if let tab { bar.scrollTo(tab, anchor: .center) } }
             }
             .overlay(alignment: .bottom) { Rectangle().fill(Color.rule).frame(height: 1) }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16).padding(.top, 14)
+    }
+}
+/// The tabs' strip is scrolled from its start (the site's .tabs.scrolled: then the left edge fades too); iOS 18 and later
+private struct TabsScrolled: ViewModifier {
+    @Binding var scrolled: Bool
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollGeometryChange(for: Bool.self) { $0.contentOffset.x > 4 } action: { _, now in scrolled = now }
+        } else { content }
     }
 }
 extension TastingHead where Chips == EmptyView {

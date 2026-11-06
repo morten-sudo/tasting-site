@@ -23,24 +23,23 @@ struct TastingView: View {
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
             Rectangle().fill(Color.rule).frame(height: 1)
-            TastingHead(title: info?.title ?? tasting.title, lang: info?.language, tab: model.tastingTab, select: { model.tastingTab = $0 }) {
-                if model.tastingTab == .home, let info, let invite, invite.email != nil { headChips(info, invite) }
-            }
+            // The name and tabs are the top of each tab's own scrolling content (WIN-238). Each tab is its own view, so a
+            // new tab opens at its top with the name and tabs showing – as on the site, where a tab is a new page.
             Group {
                 if let info, let invite {
-                    if invite.email == nil { EmailStep(code: tasting.code, name: invite.name) { Task { await load() } } }
+                    if invite.email == nil { EmailStep(code: tasting.code, name: invite.name, head: AnyView(head)) { Task { await load() } } }
                     else {
                         switch model.tastingTab {
                         case .home: details(info, invite)
-                        case .wines: WinesView(tasting: tasting)
-                        case .quiz: QuizView(tasting: tasting)
-                        case .chat: ChatView(tasting: tasting)
+                        case .wines: WinesView(tasting: tasting, head: AnyView(head))
+                        case .quiz: QuizView(tasting: tasting, head: AnyView(head))
+                        case .chat: ChatView(tasting: tasting, head: AnyView(head))
                         }
                     }
                 } else if failed {
-                    ErrorState { Task { await load() } }
+                    VStack(spacing: 0) { head; ErrorState { Task { await load() } } }
                 } else {
-                    LoadingState()
+                    VStack(spacing: 0) { head; LoadingState() }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -69,6 +68,13 @@ struct TastingView: View {
         .toast($toast)
     }
 
+    /// The tasting's name and tabs (TastingHead), with the countdown and answer over it on the tasting's own tab
+    private var head: some View {
+        TastingHead(title: info?.title ?? tasting.title, lang: info?.language, tab: model.tastingTab, select: { model.tastingTab = $0 }) {
+            if model.tastingTab == .home, let info, let invite, invite.email != nil { headChips(info, invite) }
+        }
+    }
+
     /// The countdown and, once answered, the answer as its chip with "Ret svar" beside it
     @ViewBuilder private func headChips(_ info: TastingInfo, _ invite: Invite) -> some View {
         let open = info.signup_open ?? true
@@ -95,63 +101,68 @@ struct TastingView: View {
         let done = answered(invite)
         let countdown = info.start.flatMap(countdownText)
         return ZStack(alignment: .topLeading) {
-            // The faint map of the wines' region behind the heading (.hero-bg) – it stays put while the page scrolls
+            // The faint map of the wines' region behind the heading (.hero-light > .hero-bg) – it stays put while the
+            // page, the tasting's name and tabs with it, scrolls over it
             if let hero {
                 GeometryReader { geo in
                     MapBackdrop(drawing: hero).frame(width: geo.size.width * 1.2).offset(x: geo.size.width * 0.2, y: -16)
                 }
             }
             ScrollView {
-                VStack(alignment: .leading, spacing: 36) {
-                    VStack(alignment: .leading, spacing: 9.6) {
-                        if let d = info.start {
-                            factLine("calendar", whenText(d)) { Button(L("tastingHome.calendar")) { addToCalendar = true }.buttonStyle(TextButton(size: 14.4, minHeight: 20)) }
+                VStack(alignment: .leading, spacing: 0) {
+                    head
+                    VStack(alignment: .leading, spacing: 36) {
+                        VStack(alignment: .leading, spacing: 9.6) {
+                            if let d = info.start {
+                                factLine("calendar", whenText(d)) { Button(L("tastingHome.calendar")) { addToCalendar = true }.buttonStyle(TextButton(size: 14.4, minHeight: 20)) }
+                            }
+                            if let p = info.place, !p.isEmpty {
+                                factLine("pin", p) {
+                                    if let url = URL(string: "https://maps.apple.com/?q=" + (p.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")) {
+                                        Link(L("tastingHome.map"), destination: url).buttonStyle(TextButton(size: 14.4, minHeight: 20))
+                                    }
+                                }
+                            }
+                            if let h = info.hostLine { factLine("user", h) { EmptyView() } }
+                            if let n = info.coming, n > 0 { factLine("users", L("tastingHome.coming", ["n": "\(n)"])) { EmptyView() } }
                         }
-                        if let p = info.place, !p.isEmpty {
-                            factLine("pin", p) {
-                                if let url = URL(string: "https://maps.apple.com/?q=" + (p.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")) {
-                                    Link(L("tastingHome.map"), destination: url).buttonStyle(TextButton(size: 14.4, minHeight: 20))
+                        if !done || (payment.map { $0.amount > 0 } ?? false) {
+                            VStack(spacing: 16) {
+                                if !done { answerCard(info, open: open) }
+                                if let payment, payment.amount > 0 {
+                                    FeeCard(amount: payment.amount, paid: payment.paid, mobilepay: info.mobilepay, name: invite.name, toast: $toast)
                                 }
                             }
                         }
-                        if let h = info.hostLine { factLine("user", h) { EmptyView() } }
-                        if let n = info.coming, n > 0 { factLine("users", L("tastingHome.coming", ["n": "\(n)"])) { EmptyView() } }
-                    }
-                    if !done || (payment.map { $0.amount > 0 } ?? false) {
-                        VStack(spacing: 16) {
-                            if !done { answerCard(info, open: open) }
-                            if let payment, payment.amount > 0 {
-                                FeeCard(amount: payment.amount, paid: payment.paid, mobilepay: info.mobilepay, name: invite.name, toast: $toast)
+                        if let intro = info.intro?.trimmingCharacters(in: .whitespacesAndNewlines), !intro.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Eyebrow(text: L("tastingHome.about"))
+                                introText(intro, lang: info.language)
                             }
                         }
-                    }
-                    if let intro = info.intro?.trimmingCharacters(in: .whitespacesAndNewlines), !intro.isEmpty {
+                        if !regions.isEmpty { OriginsBlock(tabs: regions, selection: $region, origins: origins) }
                         VStack(alignment: .leading, spacing: 10) {
-                            Eyebrow(text: L("tastingHome.about"))
-                            introText(intro, lang: info.language)
-                        }
-                    }
-                    if !regions.isEmpty { OriginsBlock(tabs: regions, selection: $region, origins: origins) }
-                    VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow(text: L("tastingHome.during"))
-                        Button { model.tastingTab = .wines } label: {
-                            EveningTile(icon: "glass", title: L("nav.wines"), sub: wines.isEmpty ? nil : L("tastingHome.winesSub", ["n": "\(wines.count)"]))
-                        }
-                        .buttonStyle(.plain)
-                        if (info.quiz_count ?? 0) > 0 {
-                            Button { model.tastingTab = .quiz } label: {
-                                EveningTile(icon: "question", title: L("nav.quiz"),
-                                            sub: L(info.quiz_finished == true ? "tastingHome.quizDone" : info.quiz_open == true ? "tastingHome.quizOpen" : "tastingHome.quizLater"))
+                            Eyebrow(text: L("tastingHome.during"))
+                            Button { model.tastingTab = .wines } label: {
+                                EveningTile(icon: "glass", title: L("nav.wines"), sub: wines.isEmpty ? nil : L("tastingHome.winesSub", ["n": "\(wines.count)"]))
+                            }
+                            .buttonStyle(.plain)
+                            if (info.quiz_count ?? 0) > 0 {
+                                Button { model.tastingTab = .quiz } label: {
+                                    EveningTile(icon: "question", title: L("nav.quiz"),
+                                                sub: L(info.quiz_finished == true ? "tastingHome.quizDone" : info.quiz_open == true ? "tastingHome.quizOpen" : "tastingHome.quizLater"))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            Button { model.tastingTab = .chat } label: {
+                                EveningTile(icon: "chat", title: L("nav.chat"), sub: L("tastingHome.chatSub"))
                             }
                             .buttonStyle(.plain)
                         }
-                        Button { model.tastingTab = .chat } label: {
-                            EveningTile(icon: "chat", title: L("nav.chat"), sub: L("tastingHome.chatSub"))
-                        }
-                        .buttonStyle(.plain)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16).padding(.top, 8).padding(.bottom, 16)
                 }
-                .padding(16).padding(.top, 8).padding(.bottom, 16)
             }
             #if DEBUG
             .defaultScrollAnchor(UserDefaults.standard.bool(forKey: "scrollBottom") ? .bottom : .top)
@@ -250,6 +261,8 @@ struct TastingView: View {
 struct EmailStep: View {
     let code: String
     let name: String
+    /// The tasting's name and tabs, at the top of the scrolling content
+    var head: AnyView = AnyView(EmptyView())
     let done: () -> Void
     @State private var email = ""
     @State private var error: String?
@@ -257,21 +270,25 @@ struct EmailStep: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("\(L("guest.welcome")) \(name)").font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper)
-                Text(L("guest.emailLead")).font(.body()).foregroundStyle(Color.muted)
-                FieldLabel(text: L("guest.yourEmail")).padding(.top, 8)
-                TextField("", text: $email)
-                    .accessibilityLabel(L("guest.yourEmail"))
-                    .keyboardType(.emailAddress).textContentType(.emailAddress)
-                    .textInputAutocapitalization(.never).autocorrectionDisabled().wtField(invalid: error != nil)
-                FieldError(text: error)
-                Button { Task { await save() } } label: {
-                    if busy { ProgressView().tint(.white) } else { Text(L("common.continue")) }
+            VStack(alignment: .leading, spacing: 0) {
+                head
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("\(L("guest.welcome")) \(name)").font(.display(38, relativeTo: .largeTitle)).foregroundStyle(Color.paper)
+                    Text(L("guest.emailLead")).font(.body()).foregroundStyle(Color.muted)
+                    FieldLabel(text: L("guest.yourEmail")).padding(.top, 8)
+                    TextField("", text: $email)
+                        .accessibilityLabel(L("guest.yourEmail"))
+                        .keyboardType(.emailAddress).textContentType(.emailAddress)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().wtField(invalid: error != nil)
+                    FieldError(text: error)
+                    Button { Task { await save() } } label: {
+                        if busy { ProgressView().tint(.white) } else { Text(L("common.continue")) }
+                    }
+                    .buttonStyle(PrimaryButton()).disabled(busy).padding(.top, 6)
                 }
-                .buttonStyle(PrimaryButton()).disabled(busy).padding(.top, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
             }
-            .padding(16)
         }
     }
 

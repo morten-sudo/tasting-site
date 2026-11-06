@@ -4,6 +4,8 @@ import SwiftUI
 struct WinesView: View {
     @Environment(AppModel.self) private var model
     let tasting: MyTasting
+    /// The tasting's name and tabs, at the top of the scrolling content
+    var head: AnyView = AnyView(EmptyView())
     @State private var wines: [Wine] = []
     @State private var ratings: [Int: MyRating] = [:]
     @State private var loaded = false
@@ -17,14 +19,24 @@ struct WinesView: View {
     var body: some View {
         Group {
             if failed && wines.isEmpty {
-                ErrorState { Task { await load() } }
+                VStack(spacing: 0) { head; ErrorState { Task { await load() } } }
             } else if !loaded {
-                LoadingState()
+                VStack(spacing: 0) { head; LoadingState() }
             } else if wines.isEmpty {
-                Text(L("app.noWines")).font(.body()).foregroundStyle(Color.muted).padding(16)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                VStack(spacing: 0) {
+                    head
+                    Text(L("app.noWines")).font(.body()).foregroundStyle(Color.muted).padding(16)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                }
             } else {
-                content
+                // The name and tabs scroll away above the carousel; the carousel is as tall as the screen under the top
+                // bar, so once they are gone the cards fill it (as before, now with the head's room too)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        head
+                        content.containerRelativeFrame(.vertical)
+                    }
+                }
             }
         }
         .overlay(alignment: .bottom) { CartBar(tasting: tasting, wines: wines) }
@@ -224,11 +236,12 @@ struct WineDetailView: View {
         VStack(spacing: 0) {
             TopBar(tasting: tasting)
             Rectangle().fill(Color.rule).frame(height: 1)
-            TastingHead(title: tasting.title, tab: .wines) { tab in
-                model.tastingTab = tab; dismiss()
-            }
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    // The tasting's name and tabs scroll with the page, as on the site (WIN-238)
+                    TastingHead(title: tasting.title, tab: .wines) { tab in
+                        model.tastingTab = tab; dismiss()
+                    }
                     Button { dismiss() } label: {
                         HStack(spacing: 6) { SiteIcon("left", size: 17); Text(L("wine.all")) }
                     }
