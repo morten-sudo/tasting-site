@@ -198,6 +198,10 @@ const opts = [
             <span class="dv-lab">States</span>
             <div class="dv-col" id="ck-col"><Checkbox label="login.remember" id="ck-1" checked /><Checkbox label="login.remember" id="ck-2" /><Checkbox label="login.remember" id="ck-3" disabled /><Checkbox label="login.remember" id="ck-4" small /></div>
           </div>
+          <div class="dv-states">
+            <span class="dv-lab">Check cards</span>
+            <div class="dv-col dv-narrow" id="ck-cards"></div>
+          </div>
         </section>
 
         <section id="c13" class="dv-comp">
@@ -631,7 +635,7 @@ const opts = [
   import { combo } from '../../../lib/combo';
   import { choiceCards } from '../../../lib/ui/choice-cards';
   import { switchRow, bindSwitch } from '../../../lib/ui/switch';
-  import { checkbox } from '../../../lib/ui/checkbox';
+  import { checkbox, checkCards } from '../../../lib/ui/checkbox';
   import { initWhen } from '../../../lib/datetime';
   import { initAddress } from '../../../lib/address';
   import { imagePicker } from '../../../lib/ui/image-picker';
@@ -749,6 +753,18 @@ const opts = [
 
     const levels = [{ value: 'easy', label: 'Easy', hint: 'For guests who are new to wine' }, { value: 'mid', label: 'Medium', hint: 'Some knowledge helps' }, { value: 'hard', label: 'Hard', hint: 'For the experts' }];
     $('cc-1').append(choiceCards({ legend: 'Difficulty', options: levels, value: 'mid' }).el);
+    // Check cards: choose several rich items (the AI quiz suggestions) – ticked, unticked, disabled, error
+    const qa = (opts: string[], right: number) => { const ul = document.createElement('ul'); ul.className = 'q-options';
+      opts.forEach((o, i) => { const li = document.createElement('li'); li.textContent = o; if (i === right) li.className = 'correct'; ul.append(li); }); return ul; };
+    const ckc = checkCards({ legend: 'Tick the questions to add', options: [
+      { value: '1', label: 'Which grape is the backbone of most vintage port?', body: [qa(['Touriga Nacional', 'Tempranillo', 'Syrah', 'Merlot'], 0)] },
+      { value: '2', label: 'How long has a 20 Year Old Tawny aged on average?', body: [qa(['10 years', '20 years', '30 years'], 1)] }] });
+    ckc.inputs()[1].checked = false;
+    $('ck-cards').append(ckc.el);
+    const ckd = checkCards({ legend: 'Disabled (while it saves)', options: [{ value: '1', label: 'Which river runs through the Douro?', body: [qa(['Douro', 'Tejo'], 0)] }] }); ckd.setDisabled(true);
+    const cke = checkCards({ id: 'ck-cards-err', legend: 'Error (none ticked)', checked: false, options: [{ value: '1', label: 'What makes port sweet?', body: [qa(['Fortifying during fermentation', 'Adding sugar'], 0)] }] });
+    $('ck-cards').append(ckd.el, cke.el);
+    fieldError(cke.el, 'Tick at least one question – or close the panel to add none.');
     $('cc-2').append(choiceCards({ legend: 'Are you coming?', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'maybe', label: 'Maybe' }], value: 'yes', compact: true }).el);
     const dis = choiceCards({ legend: 'Disabled', options: levels.slice(0, 2), value: 'easy' }); dis.setDisabled(true);
     $('cc-3').append(dis.el);

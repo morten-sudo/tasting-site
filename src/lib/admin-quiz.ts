@@ -12,6 +12,8 @@ import { listRow } from './ui/list-row';
 import { reorder } from './ui/reorder';
 import { highlight } from './ui/highlight';
 import { dailyLimitOf } from './daily-limit';
+import { checkCards } from './ui/checkbox';
+import { setSteps } from './ui/progress';
 
 export type AdminQuestion = {
   id: number; tasting_id: string; sort_order: number; question: string;
@@ -214,71 +216,129 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     await load();
   });
 
-  // ---------- Suggestions from AI ----------
-  // Shown under the quiz; nothing is added before the host presses Add on a suggestion.
-  const aiList = $<HTMLOListElement>('q-ai-list');
-  async function suggest() {
-    const status = $('q-ai-status');
-    const level = document.querySelector<HTMLInputElement>('input[name="q-ai-level"]:checked')?.value ?? 'medium';
-    setStatus(status, 'busy', t('aiQuiz.writing'));
-    $<HTMLButtonElement>('q-ai').disabled = true;
-    $<HTMLButtonElement>('q-ai-more').disabled = true;
-    try {
-      const { data: s } = await supabase.auth.getSession();
-      // Neither the quiz nor the suggestions already shown are asked again
-      const shown = [...aiList.querySelectorAll<HTMLElement>('.ai-q .ltitle')].map((x) => x.textContent ?? '');
-      const res = await fetch('/api/suggest-quiz', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
-        body: JSON.stringify({ tasting_id: tastingId, lang: quizLang(), level, existing: [...questions.map((q) => q.question), ...shown] }),
-      });
-      const out = (await res.json().catch(() => ({}))) as { questions?: Suggestion[]; error?: string };
-      if (!res.ok || !out.questions?.length) {
-        setStatus(status, 'error', dailyLimitOf(res.status, out) ?? t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed'));
-        return;
-      }
-      aiList.append(...out.questions.map(suggestionCard));
-      aiList.hidden = false;
-      $('q-ai-warn').hidden = false;
-      $('q-ai-more').hidden = false;
-      setStatus(status, 'ok', t('aiQuiz.pick'));
-    } catch {
-      setStatus(status, 'error', t('aiQuiz.failed'));
-    } finally {
-      $<HTMLButtonElement>('q-ai').disabled = false;
-      $<HTMLButtonElement>('q-ai-more').disabled = false;
+  // ---------- New questions from AI: a flow in its own side panel ----------
+  // 1 How hard (and how many) → "Make suggestions"; 2 tick the ones to add → "Add N questions". Nothing is saved before
+  // that, and the questions already in the quiz are never changed – the new ones go at the end, like a question
+  // written by hand.
+  const aiForm = $<HTMLFormElement>('q-ai-form');
+  const aiGo = $<HTMLButtonElement>('q-ai-go');
+  const aiStatus = $('q-ai-status');
+  const aiSteps = $('q-ai-steps');
+  let aiStep: 1 | 2 = 1;
+  let shown: Suggestion[] = [];
+  const cards = checkCards({ id: 'q-ai-picked', legend: t('aiQuiz.cardsLegend'), onChange: () => { fieldError(cards.el, null); syncAdd(); } });
+  cards.el.querySelector('legend')!.classList.add('sr');
+  $('q-ai-cards').append(cards.el);
+  const aiPanel = sheetPanel($<HTMLDialogElement>('q-ai-panel'), { dirty: () => aiStep === 2 && cards.values().length > 0 });
+  const levelOf = () => document.querySelector<HTMLInputElement>('input[name="q-ai-level"]:checked')?.value ?? 'medium';
+  const countOf = () => Number(document.querySelector<HTMLInputElement>('input[name="q-ai-count"]:checked')?.value ?? 5);
+
+  function syncAdd() {
+    if (aiStep !== 2) return;
+    const n = cards.values().length;
+    aiGo.textContent = n ? t('aiQuiz.addN', { n }) : t('aiQuiz.add0');
+  }
+
+  function showStep(step: 1 | 2) {
+    aiStep = step;
+    setSteps(aiSteps, step - 1);
+    $('q-ai-step1').hidden = step !== 1;
+    $('q-ai-step2').hidden = step !== 2;
+    if (step === 1) aiGo.textContent = t('aiQuiz.make');
+    else {
+      $('q-ai-summary').textContent = t('aiQuiz.summary', { n: shown.length, level: t(`aiQuiz.${levelOf()}` as 'aiQuiz.easy') });
+      syncAdd();
     }
   }
 
-  // A suggestion: the same row as the questions, with "Add to the quiz" and "Skip" as its icons
-  function suggestionCard(sg: Suggestion) {
+  function openAi() {
+    shown = [];
+    cards.clear();
+    fieldError(cards.el, null);
+    setStatus(aiStatus, null);
+    showStep(1);
+    aiPanel.open();
+  }
+
+  /** A suggestion as a check card: the question, its answers with the right one marked, the explanation */
+  function suggestionCard(sg: Suggestion, i: number) {
     const body: Node[] = [answers(sg.options, sg.correct)];
     if (sg.explanation) body.push(mk('p', 'lmeta', sg.explanation));
-    const add = iconButton('plus', t('aiQuiz.add'), { strong: true });
-    const skip = iconButton('x', t('aiQuiz.skip'), { quiet: true });
-    const li = listRow({ title: sg.question, body, actions: [add, skip], cls: 'ai-q' });
-    const gone = () => { li.remove(); if (!aiList.children.length) { aiList.hidden = true; $('q-ai-warn').hidden = true; } };
-    add.addEventListener('click', async () => {
-      add.disabled = true;
-      const { error } = await supabase.from('quiz_questions').insert({
-        tasting_id: tastingId,
-        sort_order: questions.reduce((m, q) => Math.max(m, q.sort_order), 0) + 1,
-        question: sg.question,
-        options: sg.options.map((text, i) => ({ key: KEYS[i], text })),
-        correct_key: KEYS[sg.correct],
-        explanation: sg.explanation,
-      });
-      if (error) { add.disabled = false; toast(t('aq.notSaved'), { kind: 'error' }); return; }
-      toast(t('aiQuiz.added'));
-      gone();
-      await load();
-      highlight(list.lastElementChild);
-    });
-    skip.addEventListener('click', gone);
-    return li;
+    return { value: String(i), label: sg.question, body };
   }
-  $('q-ai').addEventListener('click', suggest);
-  $('q-ai-more').addEventListener('click', suggest);
+
+  async function suggest(more: boolean) {
+    const busy = more ? $<HTMLButtonElement>('q-ai-more') : aiGo;
+    setStatus(aiStatus, 'busy', t('aiQuiz.writing'));
+    setLoading(busy, true);
+    aiGo.disabled = true;
+    $<HTMLButtonElement>('q-ai-more').disabled = true;
+    $<HTMLButtonElement>('q-ai-back').disabled = true;
+    try {
+      const { data: s } = await supabase.auth.getSession();
+      // Neither the quiz nor the suggestions already shown are asked again
+      const res = await fetch('/api/suggest-quiz', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${s.session?.access_token ?? ''}` },
+        body: JSON.stringify({ tasting_id: tastingId, lang: quizLang(), level: levelOf(), count: countOf(),
+          existing: [...questions.map((q) => q.question), ...shown.map((x) => x.question)] }),
+      });
+      const out = (await res.json().catch(() => ({}))) as { questions?: Suggestion[]; error?: string };
+      if (!res.ok || !out.questions?.length) {
+        setStatus(aiStatus, 'error', dailyLimitOf(res.status, out) ?? t(out.error === 'no_wines' ? 'aiQuiz.noWines' : 'aiQuiz.failed'));
+        return;
+      }
+      const from = shown.length;
+      shown.push(...out.questions);
+      cards.add(out.questions.map((q, k) => suggestionCard(q, from + k)));
+      setStatus(aiStatus, null);
+      showStep(2);
+      if (more) cards.inputs()[from]?.closest('label')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      else $('q-ai-step2').closest('.sh-body')?.scrollTo({ top: 0 });
+    } catch {
+      setStatus(aiStatus, 'error', t('aiQuiz.failed'));
+    } finally {
+      setLoading(busy, false);
+      aiGo.disabled = false;
+      $<HTMLButtonElement>('q-ai-more').disabled = false;
+      $<HTMLButtonElement>('q-ai-back').disabled = false;
+      syncAdd();
+    }
+  }
+
+  // Step 2: the ticked suggestions are added together, at the end of the quiz
+  async function addPicked() {
+    const picked = cards.values().map((v) => shown[Number(v)]).filter(Boolean);
+    if (!picked.length) { fieldError(cards.el, t('aiQuiz.noneChosen')); return; }
+    const start = questions.reduce((m, q) => Math.max(m, q.sort_order), 0) + 1;
+    setLoading(aiGo, true);
+    const { error } = await supabase.from('quiz_questions').insert(picked.map((sg, k) => ({
+      tasting_id: tastingId,
+      sort_order: start + k,
+      question: sg.question,
+      options: sg.options.map((text, i) => ({ key: KEYS[i], text })),
+      correct_key: KEYS[sg.correct],
+      explanation: sg.explanation,
+    })));
+    setLoading(aiGo, false);
+    if (error) { toast(t('aq.notSaved'), { kind: 'error' }); syncAdd(); return; }
+    const before = new Set(questions.map((q) => q.id));
+    aiPanel.close();
+    toast(t('aiQuiz.addedN', { n: picked.length }));
+    await load();
+    const added = [...list.children].filter((li) => !before.has(Number((li as HTMLElement).dataset.id)));
+    added.forEach((li, k) => highlight(li, { scroll: k === 0 }));
+  }
+
+  aiForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    // A new round from step 1 (e.g. after changing the difficulty) starts a fresh set of suggestions
+    if (aiStep === 1) { shown = []; cards.clear(); fieldError(cards.el, null); suggest(false); } else addPicked();
+  });
+  $('q-ai-more').addEventListener('click', () => suggest(true));
+  $('q-ai-back').addEventListener('click', () => { setStatus(aiStatus, null); showStep(1); });
+  $('q-ai-open').addEventListener('click', openAi);
+  $('q-empty-ai').addEventListener('click', openAi);
 
   return { load };
 }
