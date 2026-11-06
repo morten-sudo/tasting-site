@@ -2,7 +2,7 @@
 -- calls must keep their arguments and columns. Read-only. Run after every database change; expect 'app contract passed'.
 -- Need something else? Add a new optional argument with a default (and update the list here) or a new function.
 do $$
-declare r record; res text; missing text := '';
+declare r record; res text; missing text := ''; v_code text; v_t uuid; n int;
 begin
   for r in select * from (values
     ('get_invite','code text','name,status,note,email'),
@@ -46,6 +46,21 @@ begin
   end if;
   if not (select has_function_privilege('anon', 'get_invite(text)', 'execute') and has_function_privilege('anon', 'rate_wine(text,int,int,text)', 'execute')) then
     raise exception 'app contract broken: anon access';
+  end if;
+  -- WIN-303: get_chat's `mine` is never null, also for the host's messages (no participant_id). A host message is
+  -- added in a sub-block that is always rolled back, so this stays read-only.
+  select p.invite_code, p.tasting_id into v_code, v_t from participants p where p.invite_code is not null limit 1;
+  if v_code is not null then
+    begin
+      insert into chat_messages (tasting_id, from_host, author, body) values (v_t, true, 'Host', 'app contract check');
+      raise exception using errcode = 'WT303', message = (
+        select count(*) filter (where c.mine is null) || ',' || count(*) filter (where c.from_host and c.mine = false)
+        from get_chat(v_code, 0) c);
+    exception when sqlstate 'WT303' then
+      if split_part(sqlerrm, ',', 1) <> '0' or split_part(sqlerrm, ',', 2) = '0' then
+        raise exception 'app contract broken: get_chat mine is null for host messages (%)', sqlerrm;
+      end if;
+    end;
   end if;
   raise notice 'app contract passed';
 end $$;

@@ -135,6 +135,17 @@ struct ChatMessage: Decodable, Identifiable {
     let id: Int; let author: String; let body: String; let created_at: String; let from_host: Bool; let mine: Bool
     var date: Date { parseDate(created_at) ?? .now }
 }
+extension ChatMessage {
+    private enum CodingKeys: String, CodingKey { case id, author, body, created_at, from_host, mine }
+    /// `mine` is read as optional and defaults to false: databases from before WIN-303 sent null for the host's messages.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(id: try c.decode(Int.self, forKey: .id), author: try c.decode(String.self, forKey: .author),
+                  body: try c.decode(String.self, forKey: .body), created_at: try c.decode(String.self, forKey: .created_at),
+                  from_host: try c.decodeIfPresent(Bool.self, forKey: .from_host) ?? false,
+                  mine: try c.decodeIfPresent(Bool.self, forKey: .mine) ?? false)
+    }
+}
 /// A line on the leaderboard (tasting_board): first names only for guests (WIN-173); `mine` marks the guest's own line
 struct BoardRow: Decodable { let name: String; let points: Int; let answered: Int; var mine: Bool? = nil }
 

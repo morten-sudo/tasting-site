@@ -35,7 +35,9 @@ struct ChatView: View {
     private var list: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 8) {
+                // Not lazy: with the box anchored at the bottom, a LazyVStack left a long chat blank (WIN-303). A chat
+                // holds at most 200 messages (get_chat), so drawing them all is fine.
+                VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(messages.enumerated()), id: \.element.id) { i, m in
                         if i == 0 || !Calendar.current.isDate(m.date, inSameDayAs: messages[i - 1].date) { day(m.date) }
                         bubble(m).id(m.id)
