@@ -198,8 +198,11 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
 const TOWN_FS = { big: 22, mid: 17, small: 14 } as const;
 /** The smallest name on screen, in px (WIN-259: also on a 390px phone) */
 const MIN_PX = 11;
+/** The badges' numbers and the areas' names next to them, in map units (as in components.css) */
+const BADGE_N_FS = 14, BADGE_TITLE_FS = 17;
 
-/** Once the map is on screen (mapZoom() calls it, also when the map changes width): town and area names at least
+/** Once the map is on screen (mapZoom() calls it, also when the map changes width): the badges' numbers, the areas'
+ *  names, town and area names at least
  *  11px on screen, the towns in the wine areas first (the main towns before the small ones), then the rest; a name
  *  goes above right of its dot, else above left, below right, below left, above or below, and a town whose name has no free spot
  *  is left out rather than drawn smaller. `homeW`: the width of the starting view in map units. */
@@ -220,9 +223,72 @@ export function fitTowns(svg: SVGSVGElement, homeW: number) {
   const meets = (a: R, b: R) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
   const gap = (a: R, b: R) => Math.hypot(Math.max(0, b.l - a.r, a.l - b.r), Math.max(0, b.t - a.b, a.t - b.b));
   const frame = rect(svg);
-  const taken: R[] = [...svg.querySelectorAll('.rm-badge, .rm-badge-title, .rm-pin, .rm-part')].map((e) => rect(e, 1));
   const buttons = svg.parentElement?.querySelector('.map-zoom');
-  if (buttons) taken.push(rect(buttons, 4));
+  const inFrame = (b: R) => b.l >= frame.l && b.r <= frame.r && b.t >= frame.t && b.b <= frame.b;
+  // The numbered badges and the areas' names: the number at least 11px, the name with it (WIN-259). Names go to the
+  // first free spot around their badge, the areas with the most wines first; a name without room is left out (the
+  // legend names every area) – the number always stays
+  const fb = Math.max(1, MIN_PX / (BADGE_N_FS * k));
+  const badges = [...svg.querySelectorAll<SVGGElement>('.rm-badge')];
+  for (const g of badges) {
+    const c = g.querySelector('circle'), n = g.querySelector('text');
+    c?.setAttribute('r', (13 * fb).toFixed(1));
+    c?.style.setProperty('stroke-width', `${(2 * fb).toFixed(1)}px`);
+    n?.style.setProperty('font-size', `${(BADGE_N_FS * fb).toFixed(1)}px`);
+    n?.setAttribute('y', (5 * fb).toFixed(1));
+  }
+  // Badges that now touch are moved apart, the one with fewer wines a little away from the other, so every number
+  // stays readable (its name moves with it)
+  const titleOf = new Map(badges.map((b) => [b, [...svg.querySelectorAll('.rm-badge-title')].map((t) => t.parentElement?.parentElement)
+    .find((t) => t?.getAttribute('transform') === b.getAttribute('transform'))]));
+  const pos = badges.map((b) => (b.getAttribute('transform')?.match(/-?[\d.]+/g) ?? ['0', '0']).map(Number));
+  const wines = badges.map((b) => Number(b.textContent ?? 0));
+  const need = 2 * 14 * fb + 3 / k; // two badges with their white rims, and a little room
+  for (let round = 0; round < 30; round++) {
+    let moved = false;
+    for (let i = 0; i < pos.length; i++) for (let j = i + 1; j < pos.length; j++) {
+      const dx = pos[j][0] - pos[i][0], dy = pos[j][1] - pos[i][1], d = Math.hypot(dx, dy);
+      if (d >= need) continue;
+      const [a, b] = wines[j] <= wines[i] ? [j, i] : [i, j];
+      const ux = d ? (pos[a][0] - pos[b][0]) / d : 1, uy = d ? (pos[a][1] - pos[b][1]) / d : 0;
+      pos[a] = [pos[a][0] + ux * (need - d), pos[a][1] + uy * (need - d)];
+      moved = true;
+    }
+    if (!moved) break;
+  }
+  for (const [i, b] of badges.entries()) {
+    const tr = `translate(${pos[i][0].toFixed(1)} ${pos[i][1].toFixed(1)})`;
+    titleOf.get(b)?.setAttribute('transform', tr);
+    b.setAttribute('transform', tr);
+  }
+  const fixed: R[] = [...badges, ...svg.querySelectorAll('.rm-pin')].map((e) => rect(e, 1));
+  if (buttons) fixed.push(rect(buttons, 4));
+  const where = (g: Element | null | undefined) => g?.getAttribute('transform') ?? '';
+  const count = (g: Element | null | undefined) => Number(badges.find((b) => where(b) === where(g))?.textContent ?? 0);
+  const titles = [...svg.querySelectorAll<SVGTextElement>('.rm-badge-title')]
+    .map((text) => ({ text, g: text.parentElement?.parentElement }))
+    .sort((a, b) => count(b.g) - count(a.g));
+  const tfs = BADGE_TITLE_FS * Math.max(fb, MIN_PX / (BADGE_TITLE_FS * k));
+  for (const { text, g } of titles) {
+    g?.classList.remove('rm-off');
+    text.style.fontSize = `${tfs.toFixed(1)}px`;
+    text.style.strokeWidth = `${(tfs * 0.24).toFixed(1)}px`;
+    const numbered = badges.some((b) => where(b) === where(g));
+    const sp = (x: number, y: number, a: string): [number, number, string] => [x * fb, y * fb, a];
+    const spots: [number, number, string][] = numbered
+      ? [sp(18, 6, 'start'), sp(-18, 6, 'end'), sp(0, 32, 'middle'), sp(0, -22, 'middle'), sp(18, 30, 'start'), sp(-18, -18, 'end'), sp(18, -18, 'start'), sp(-18, 30, 'end')]
+      : [[0, 6 * fb, 'middle']];
+    const free = spots.find(([x, y, a]) => {
+      text.setAttribute('x', x.toFixed(1));
+      text.setAttribute('y', y.toFixed(1));
+      text.setAttribute('text-anchor', a);
+      const box = rect(text, 1);
+      return inFrame(box) && !fixed.some((o) => meets(box, o));
+    });
+    if (free || !numbered) { if (!free) { const [x, y, a] = spots[0]; text.setAttribute('x', x.toFixed(1)); text.setAttribute('y', y.toFixed(1)); text.setAttribute('text-anchor', a); } fixed.push(rect(text, 1)); }
+    else g?.classList.add('rm-off');
+  }
+  const taken: R[] = [...fixed, ...[...svg.querySelectorAll('.rm-part')].map((e) => rect(e, 1))];
   const areas = [...svg.querySelectorAll<SVGPathElement>('.rm-area')];
   const rank = { big: 0, mid: 1, small: 2 } as Record<string, number>;
   const towns = [...svg.querySelectorAll<SVGGElement>('.rm-town')].map((g, i) => {

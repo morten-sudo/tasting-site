@@ -714,8 +714,8 @@ dialog .input { max-width: none; }
 .region-map .rm-coast { fill: none; stroke: #6f93a8; stroke-width: calc(var(--z, 1) * 1.2px); }
 .region-map .rm-town circle { fill: #3d2a22; }
 .region-map .rm-town text { fill: #3d2a22; font-family: var(--body); paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
-/* A town whose name has no room at 11px or more (fitTowns() in region-map.ts) */
-.region-map .rm-town.rm-off { display: none; }
+/* A town or an area's name without room at 11px or more (fitTowns() in region-map.ts) */
+.region-map .rm-off { display: none; }
 /* Overview maps: a capital's name a little heavier. The names are 3.4 % of the map's width: on a map narrower than
    20rem they would be smaller than 11px, so the towns are left out there (the host's small wine map) – on the
    detailed region maps too (and their area names), where fitTowns() would leave room for hardly any */
