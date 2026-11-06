@@ -266,6 +266,14 @@ export const HELP: HelpSection[] = [
     },
   },
   {
+    id: 'news',
+    title: { da: 'Nyt i Winetastr', en: 'What’s new in Winetastr' },
+    body: {
+      da: `<p>Under <a href="/admin/news/">Hjælp → Nyt i Winetastr</a> står det, der er kommet til eller ændret sig, med et par korte linjer for hver udgivelse – det nyeste øverst. Kun det, du og dine gæster vil lægge mærke til.</p>`,
+      en: `<p>Under <a href="/admin/news/">Help → What’s new in Winetastr</a> you find what has been added or changed, in a few short lines per release – newest at the top. Only what you and your guests will notice.</p>`,
+    },
+  },
+  {
     id: 'faq',
     title: { da: 'Spørgsmål og svar', en: 'Questions and answers' },
     body: {

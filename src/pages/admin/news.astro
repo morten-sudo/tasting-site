@@ -1,0 +1,50 @@
+---
+// What's new in Winetastr: a few plain lines per release, newest first (src/lib/release-notes.ts). Signed-in hosts only.
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/ui/PageHeader.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import AdminNav from '../../components/AdminNav.astro';
+import '../../styles/admin.css';
+---
+<Base title="news.title">
+  <section class="wrap admin-page">
+    <AdminNav active="news">
+    <div id="admin-main" hidden>
+      <PageHeader title="news.title" lead="news.intro" />
+      <div id="news-list" class="news-list"></div>
+      <EmptyState id="news-none" class="news-empty" icon="star" title="news.emptyTitle" text="news.emptyText" hidden>
+        <a class="btn small" href="/admin/help/" data-i18n="news.toHelp">Read the help</a>
+      </EmptyState>
+    </div>
+    </AdminNav>
+  </section>
+</Base>
+
+<script>
+  import { requireHost, $ } from '../../lib/admin-common';
+  import { byDay } from '../../lib/release-notes';
+  import { formatDate } from '../../i18n';
+
+  const host = await requireHost();
+  if (host) {
+    $('admin-main').hidden = false;
+    const days = byDay();
+    // One card per day: the date as its heading, the lines under it
+    $('news-list').replaceChildren(...days.map((d) => {
+      const card = document.createElement('section');
+      card.className = 'card news-day';
+      const h = document.createElement('h2');
+      h.className = 'h3';
+      const time = document.createElement('time');
+      time.dateTime = d.date;
+      time.textContent = formatDate(`${d.date}T12:00:00Z`, { year: true });
+      h.append(time);
+      const ul = document.createElement('ul');
+      ul.append(...d.lines.map((line) => Object.assign(document.createElement('li'), { textContent: line })));
+      card.append(h, ul);
+      return card;
+    }));
+    $('news-list').hidden = !days.length;
+    $('news-none').hidden = days.length > 0;
+  }
+</script>
