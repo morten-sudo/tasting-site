@@ -260,7 +260,7 @@ export const en = {
   "admin.confirmDelete": "Tap again to delete",
   "admin.noWines": "No wines yet. Add the first one.",
   "admin.noPrice": "No price",
-  "admin.normally": "(regular {price})",
+  "admin.normally": "Shop price: {price}",
   "admin.hidden": "Hidden from guests",
   "admin.notOrderable": "Cannot be ordered",
   "admin.moveUp": "Move {name} up",

@@ -261,7 +261,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "admin.confirmDelete": "Pulsa otra vez para eliminar",
   "admin.noWines": "Aún no hay vinos. Añade el primero.",
   "admin.noPrice": "Sin precio",
-  "admin.normally": "(normalmente {price})",
+  "admin.normally": "Precio en tienda: {price}",
   "admin.hidden": "Oculto a los invitados",
   "admin.notOrderable": "No se puede pedir",
   "admin.moveUp": "Subir {name}",

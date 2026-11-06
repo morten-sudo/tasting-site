@@ -261,7 +261,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "admin.confirmDelete": "Smelltu aftur til að eyða",
   "admin.noWines": "Engin vín enn. Bættu við því fyrsta.",
   "admin.noPrice": "Ekkert verð",
-  "admin.normally": "(almennt {price})",
+  "admin.normally": "Verð í búð: {price}",
   "admin.hidden": "Falið gestum",
   "admin.notOrderable": "Ekki hægt að panta",
   "admin.moveUp": "Færa {name} upp",

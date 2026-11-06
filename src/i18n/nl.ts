@@ -261,7 +261,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "admin.confirmDelete": "Tik nogmaals om te verwijderen",
   "admin.noWines": "Nog geen wijnen. Voeg de eerste toe.",
   "admin.noPrice": "Geen prijs",
-  "admin.normally": "(normaal {price})",
+  "admin.normally": "Winkelprijs: {price}",
   "admin.hidden": "Verborgen voor gasten",
   "admin.notOrderable": "Niet te bestellen",
   "admin.moveUp": "{name} omhoog",
