@@ -32,6 +32,8 @@ final class GuestFlowTests: XCTestCase {
         XCTAssertTrue(msg.waitForExistence(timeout: 15), "the shared message")
         XCTAssertTrue(a.staticTexts["Ingen kode?"].exists, "help when no code arrives")
         XCTAssertFalse(a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Vi kender ikke'")).firstMatch.exists, "no unknown-email message")
+        // With the sign-up hook on, the database answers 403 for this email – still no error
+        XCTAssertFalse(a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Mailen kunne ikke sendes'")).firstMatch.exists, "no send error")
     }
 
     func testPasteInviteLink() {

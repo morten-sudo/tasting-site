@@ -192,6 +192,12 @@ struct LoginView: View {
             let code = (error as? AuthError)?.errorCode.rawValue ?? ""
             // Answers that would only come for an email we do not know (if sign-ups are turned off) are shown as sent
             if ["otp_disabled", "signup_disabled", "user_not_found"].contains(code) { return true }
+            // With the "Before User Created" hook on (WIN-284), an unknown email gets HTTP 403 from the hook
+            // (no error code, or a hook/unexpected_failure code). Nothing else on /otp answers 403. Shown as sent too.
+            if case let .api(_, errorCode, _, response)? = error as? AuthError, response.statusCode == 403 {
+                let c = errorCode.rawValue
+                if c.isEmpty || c == "unknown" || c.contains("hook") || c == "unexpected_failure" { return true }
+            }
             let rate = (error as? AuthError)?.errorCode == .overEmailSendRateLimit || String(describing: error).contains("429")
             self.error = rate ? L("login.tooManyMails") : L("login.sendFailed")
             return false

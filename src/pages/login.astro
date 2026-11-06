@@ -211,14 +211,19 @@ import Disclosure from '../components/ui/Disclosure.astro';
   // the page shows the same next step for both (WIN-181). Only problems that do not depend on the
   // email are shown: the connection, or too many emails in a short time.
   const NOT_SENT_FOR_UNKNOWN = ['otp_disabled', 'signup_disabled', 'user_not_found'];
+  // With the "Before User Created" hook on (WIN-284), an unknown email gets HTTP 403 from the hook
+  // (no error code, or a hook/unexpected_failure code). Nothing else on /otp answers 403. Shown as sent too.
+  const rejectedByHook = (error: { status?: number; code?: string } | null) =>
+    error?.status === 403 && (!error.code || /hook|unexpected_failure/.test(error.code));
   async function sendCode(): Promise<boolean> {
     const redirect = location.origin + '/login/' + (next ? '?next=' + encodeURIComponent(next) : '');
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirect, shouldCreateUser: true, data: { lang: lang() } },
     });
-    // Answers that would only come for an email we do not know (if sign-ups are turned off) are shown as sent
+    // Answers that would only come for an email we do not know are shown as sent
     if (error?.code && NOT_SENT_FOR_UNKNOWN.includes(error.code)) return true;
+    if (rejectedByHook(error)) return true;
     if (error?.status === 429) {
       failed(t('login.tooManyMails'));
       return false;
