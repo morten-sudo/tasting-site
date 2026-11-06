@@ -2,7 +2,7 @@
 // Component 57 – the head of a tasting's guest pages (/t/<slug>/…), the same as the admin's: chips over the name
 // (slot "chips": the countdown and the guest's answer on the tasting page), the tasting's name with – for its hosts –
 // the way to its admin in the corner (the gear), and its tabs (the one tab bar) under it. Base.astro fills it in.
-import Icon from './Icon.astro';
+import AdminLink from './AdminLink.astro';
 import Tabs from './Tabs.astro';
 import PageHeader from './PageHeader.astro';
 interface Props { path: string }
@@ -14,7 +14,7 @@ const tab = path === '/tasting/' || path === '/tasting' ? 'tasting' : path.start
   {Astro.slots.has('chips') && <slot name="chips" />}
   <PageHeader id="t-title" class="title-row">
     <!-- The host's way into this tasting's admin: the gear (opens in a new tab) -->
-    <a slot="actions" id="t-admin" class="icon-act t-admin tip-below" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" aria-label="Manage this tasting" data-tip="Manage this tasting" data-i18n-attr="aria-label=nav.adminThisTitle;data-tip=nav.adminThisTitle" hidden><Icon name="gear" /></a>
+    <AdminLink slot="actions" id="t-admin" class="t-admin tip-below" href="/admin/" target="_blank" rel="noopener" data-tpath="admin/" what="nav.thisTasting" hidden />
   </PageHeader>
   <Tabs id="t-tabs" label="Tasting menu" labelKey="nav.tastingMenu" current={tab} items={[
     { id: 'tasting', label: 'nav.tasting', href: '/home/', attrs: { 'data-tpath': '' } },

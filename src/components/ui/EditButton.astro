@@ -1,5 +1,6 @@
 ---
-// Component 3 – the one edit button (WIN-299): a gear with the tip "Edit"; screen readers hear "Edit: <what>".
+// Component 3 – the one edit button (WIN-299): the pencil with the tip "Edit"; screen readers hear "Edit: <what>".
+// For changing things here (a side panel). Going to an area that is managed is the gear: AdminLink.astro.
 // editButton() in src/lib/ui/icon-button.ts builds the same markup in TypeScript. what: an i18n key for what it edits –
 // leave it out when the script fills it in (setEditWhat()). size: "small" (36 px, rows and section heads) or "normal".
 import Icon from './Icon.astro';
@@ -8,4 +9,4 @@ interface Props { id?: string; what?: string; size?: 'small' | 'normal'; class?:
 const { id, what, size = 'small', class: cls, ...rest } = Astro.props;
 const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
 ---
-<button type="button" id={id} class:list={['icon-act', { md: size === 'normal' }, cls]} data-tip={tr('admin.edit')} data-i18n-attr="data-tip=admin.edit" {...rest}><Icon name="gear" /><span class="sr"><span data-i18n="admin.edit">{tr('admin.edit')}</span><span class="eb-what">{what && <Fragment>: <span data-i18n={what}>{tr(what)}</span></Fragment>}</span></span></button>
+<button type="button" id={id} class:list={['icon-act', { md: size === 'normal' }, cls]} data-tip={tr('admin.edit')} data-i18n-attr="data-tip=admin.edit" {...rest}><Icon name="edit" /><span class="sr"><span data-i18n="admin.edit">{tr('admin.edit')}</span><span class="eb-what">{what && <Fragment>: <span data-i18n={what}>{tr(what)}</span></Fragment>}</span></span></button>
