@@ -181,6 +181,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       email,
       options: { emailRedirectTo: location.origin + '/signup/', shouldCreateUser: true, data: { lang: lang() } },
     });
+    // Supabase's own check of the address (e.g. an invisible character): said under the field, not as a send error
+    if (error?.code === 'validation_failed') { bad('email', t('common.invalidEmail')); return false; }
     if (error?.status === 429) { failed(t('login.tooManyMails')); return false; }
     if (error) { failed(t('login.sendFailed')); return false; }
     // Counted for the superadmin's Usage page (the code is sent through Resend)
@@ -200,7 +202,12 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
     const btn = $('start-btn') as HTMLButtonElement;
     setLoading(btn, true, t('common.sending'));
-    const { data: taken } = await supabase.rpc('signup_email_taken', { e: email });
+    // Registers the sign-up first (WIN-284: the database only lets a user be created for a known email or one that
+    // signup_start() was called for) and says whether the email already has a host account
+    let { data: taken, error: startError } = await supabase.rpc('signup_start', { e: email });
+    if (startError?.message.includes('too_many')) { setLoading(btn, false); failed(t('login.tooManyChecks')); return; }
+    // A database without signup_start() yet (the order is database first, but a test database may lag behind)
+    if (startError) ({ data: taken } = await supabase.rpc('signup_email_taken', { e: email }));
     setExisting(taken === true);
     const ok = await sendCode();
     setLoading(btn, false);

@@ -912,6 +912,54 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', '', true);
 
+-- ---------- Sign-up gate (WIN-284): Auth creates a user only for a known email or a fresh sign-up ----------
+-- hook_before_user_created is Supabase Auth's "before user created" hook: {} lets the user be created, an error stops it
+do $$
+declare ok jsonb := '{}'::jsonb;
+begin
+  assert hook_before_user_created('{"user":{"email":"nobody-gate@selftest.invalid"}}') ? 'error', 'an unknown email can become a user';
+  assert (hook_before_user_created('{"user":{"email":"nobody-gate@selftest.invalid"}}') -> 'error' ->> 'http_code')::int = 403, 'the hook does not answer 403';
+  assert hook_before_user_created('{"user":{"phone":"+4500000000","is_anonymous":true}}') ? 'error', 'a user without an email can be created';
+  assert hook_before_user_created('{"user":{"email":"Guest-W@selftest.invalid"}}') = ok, 'a guest on a guest list cannot become a user';
+  assert hook_before_user_created('{"user":{"email":"host-b@selftest.invalid"}}') = ok, 'a host cannot become a user';
+  assert hook_before_user_created('{"user":{"email":"host-c@selftest.invalid"}}') = ok, 'an invited co-host cannot become a user';
+  -- Only Supabase Auth calls the hook
+  assert has_function_privilege('supabase_auth_admin', 'public.hook_before_user_created(jsonb)', 'execute'), 'Supabase Auth cannot call the hook';
+  assert not has_function_privilege('anon', 'public.hook_before_user_created(jsonb)', 'execute'), 'anyone can call the hook';
+  assert not has_function_privilege('authenticated', 'public.hook_before_user_created(jsonb)', 'execute'), 'a signed-in user can call the hook';
+end $$;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare failed boolean; n int;
+begin
+  perform set_config('request.headers', '{"cf-connecting-ip":"203.0.113.84"}', true);
+  -- The sign-up page registers the email first; it says whether a host account exists (a guest is not one)
+  assert not signup_start('New-Host@SelfTest.invalid'), 'a new email is said to have an account';
+  assert not signup_start('guest-a@selftest.invalid'), 'the sign-up start reveals a guest';
+  failed := false; begin perform signup_start('bad<x>@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'the sign-up start takes a malformed email';
+  -- Nobody reads or writes the sign-ups directly, nor calls the hook
+  begin select count(*) into n from signup_intents; failed := false; exception when others then failed := true; end;
+  assert failed, 'anyone can read the sign-ups';
+  failed := false; begin insert into signup_intents (email) values ('sneak@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'anyone can add a sign-up without the check';
+  failed := false; begin perform hook_before_user_created('{"user":{"email":"x@selftest.invalid"}}'); exception when others then failed := true; end;
+  assert failed, 'anyone can call the hook';
+  -- One connection is limited (15 an hour, shared with the sign-in check)
+  for i in 1..13 loop perform signup_start('flood' || i || '@selftest.invalid'); end loop;
+  failed := false; begin perform signup_start('one-more@selftest.invalid'); exception when others then failed := true; end;
+  assert failed, 'one connection can start sign-ups without limit';
+  perform set_config('request.headers', '', true);
+end $$;
+reset role;
+do $$
+begin
+  assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') = '{}'::jsonb, 'a new host from the sign-up page cannot become a user';
+  update signup_intents set at = now() - interval '31 minutes' where email = 'new-host@selftest.invalid';
+  assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') ? 'error', 'an old sign-up still lets a user be created';
+end $$;
+
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
 select set_config('request.jwt.claims', '', true);
