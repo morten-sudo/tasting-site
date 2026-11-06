@@ -1,10 +1,12 @@
 ---
 import CloseButton from './ui/CloseButton.astro';
-// New tasting: one form with the details. Wines, guests and payment are added afterwards on the tasting's page,
+// New tasting: one form with the details and MobilePay (proposed from the host's last tasting, WIN-278). Wines and
+// guests are added afterwards on the tasting's page,
 // where a "Get started" card leads to each of them. A centred window on larger screens, a bottom sheet on phones –
 // with the side panel's head (title, ×) and foot (the primary button first, then Cancel).
 import AddressFields from './AddressFields.astro';
 import DateTimeFields from './DateTimeFields.astro';
+import MobilePayFields from './MobilePayFields.astro';
 ---
 <dialog id="wizard" class="wizard" aria-labelledby="wz-title">
   <div class="sh-grab" aria-hidden="true"></div>
@@ -15,7 +17,7 @@ import DateTimeFields from './DateTimeFields.astro';
 
   <!-- The tasting's details; everything else is added on its page afterwards -->
   <div class="sh-body tasting-form">
-    <p class="help" data-i18n="wizard.createNote">Only the title is needed. Wines, guests and payment you add afterwards, on the tasting's own page.</p>
+    <p class="help" data-i18n="wizard.createNote">Only the title is needed. Wines and guests you add afterwards, on the tasting's own page.</p>
     <label for="wz-title-input"><span data-i18n="admin.title">Title</span> <span class="req" aria-hidden="true">*</span></label>
     <input class="input" id="wz-title-input" type="text" placeholder="E.g. Port wine evening" data-i18n-attr="placeholder=admin.titlePlaceholder" required aria-required="true" />
     <DateTimeFields prefix="wz" />
@@ -25,6 +27,10 @@ import DateTimeFields from './DateTimeFields.astro';
     <AddressFields prefix="wz" />
     <label for="wz-intro"><span data-i18n="admin.intro">Introduction</span> <span class="opt" data-i18n="admin.introHint">(what is going to happen – shown to your guests)</span></label>
     <textarea class="input" id="wz-intro" rows="4" maxlength="4000" placeholder="E.g. We start with a glass of white port…" data-i18n-attr="placeholder=admin.introPlaceholder"></textarea>
+    <!-- MobilePay: the host's last used number and name, ready to change -->
+    <MobilePayFields prefix="wz">
+      <p id="wz-mp-from" class="help" data-i18n="mp.proposed" hidden>From your last tasting – change it if this one is different.</p>
+    </MobilePayFields>
   </div>
 
   <div class="sh-foot">

@@ -4,6 +4,7 @@ import SearchField from '../../components/ui/SearchField.astro';
 import Sheet from '../../components/ui/Sheet.astro';
 import AddRow from '../../components/ui/AddRow.astro';
 import Switch from '../../components/ui/Switch.astro';
+import MobilePayFields from '../../components/MobilePayFields.astro';
 import ChoiceCards from '../../components/ui/ChoiceCards.astro';
 import Checkbox from '../../components/ui/Checkbox.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
@@ -166,7 +167,21 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </div>
       </section>
 
+      <!-- MobilePay: on each tasting – shown here, edited in the side panel (WIN-278) -->
+      <section id="mobilepay" class="block set-card" data-section="settings">
+        <h2><span>MobilePay</span><span data-help="mobilepay"></span></h2>
+        <div class="set-row">
+          <span><b id="mp-view"></b><small id="mp-summary"></small></span>
+          <button id="mp-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+        </div>
+      </section>
+
       <!-- Side panels for the settings above -->
+      <Sheet id="mp-panel" titleId="mp-title" form="mp-form">
+        <MobilePayFields prefix="set" />
+        <button slot="foot" id="mp-save" class="btn" type="submit" data-i18n="common.save">Save</button>
+      </Sheet>
+
       <Sheet id="mg-panel" title="wizard.maxGuests" titleId="mg-title" form="mg-form">
         <label for="max-guests" data-i18n="wizard.maxGuests">Max. number of guests</label>
         <div class="affix w-num u-long"><input id="max-guests" class="input" type="text" inputmode="numeric" autocomplete="off" /><span class="unit" data-i18n="set.guestsUnit">guests</span></div>
@@ -455,6 +470,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { tooltip } from '../../lib/ui/tooltip';
   import { nameWithSize } from '../../lib/bottle';
   import { dailyLimitOf } from '../../lib/daily-limit';
+  import { mobilePayForm } from '../../lib/mobilepay-form';
+  import { prettyNumber } from '../../lib/pay';
 
   await i18nReady;
 
@@ -686,6 +703,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   function loadSettings() {
     if (!tasting) return;
     renderMaxGuests();
+    renderMobilePay();
     feeTotal = Number(tasting.tasting_total) || 0;
     feeAmount = Number(tasting.tasting_fee) || 0;
     document.querySelectorAll<HTMLInputElement>('input[data-key]').forEach((box) => {
@@ -800,6 +818,48 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     feePanel.close();
     renderFee();
     renderParticipants();
+    toast(t('common.saved'), { kind: 'ok' });
+  });
+
+  // ---------- MobilePay (WIN-278): on each tasting – a switch, a number and a name; shown here, edited in the panel ----------
+  const mpPanel = sheetPanel($('mp-panel') as HTMLDialogElement, { dirty: 'form' });
+  const mpForm = mobilePayForm('set');
+  $('mp-title').textContent = 'MobilePay';
+  const mpNow = () => ({
+    on: tasting?.mobilepay_on !== false,
+    number: String(tasting?.mobilepay ?? '').replace(/\s/g, ''),
+    name: String(tasting?.mobilepay_name ?? '').trim(),
+  });
+  function renderMobilePay() {
+    if (!tasting) return;
+    const v = mpNow();
+    const shown = v.on && !!v.number && !!v.name;
+    $('mp-view').textContent = shown ? `${prettyNumber(v.number)} · ${v.name}` : t('mp.offView');
+    $('mp-summary').textContent = shown ? t('mp.onSummary') : v.number ? t('mp.offSummary') : t('mp.noneSummary');
+  }
+  $('mp-edit').addEventListener('click', () => {
+    if (!tasting) return;
+    const v = mpNow();
+    // Off with nothing saved yet: opening it to set it up turns it on
+    mpForm.set({ ...v, on: v.on || !v.number });
+    mpPanel.open();
+    if (matchMedia('(min-width: 48rem)').matches) mpForm.focus();
+  });
+  $('mp-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!tasting || !mpForm.check()) return;
+    const btn = $('mp-save') as HTMLButtonElement;
+    const patch = mpForm.patch();
+    setLoading(btn, true);
+    const { error } = await supabase.from('tastings').update(patch).eq('id', tasting.id);
+    setLoading(btn, false);
+    if (error) {
+      if (!mpForm.showError(error.message)) toast(t('admin.couldNotSave'), { kind: 'error' });
+      return;
+    }
+    Object.assign(tasting, patch);
+    mpPanel.close();
+    renderMobilePay();
     toast(t('common.saved'), { kind: 'ok' });
   });
 
