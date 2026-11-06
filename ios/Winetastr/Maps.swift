@@ -372,7 +372,7 @@ struct RegionDrawing {
     var s: Double = 1
 
     init(_ map: RegionMap, mode: Mode = .full, counts: [String: Int] = [:], titles: [String: String] = [:], mid: Set<String> = [], wholeRegion: Bool = false,
-         numbered: Bool = true, named: [(lon: Double, lat: Double, title: String)] = [], pins pinList: [(lon: Double, lat: Double)] = [], scale S: Double = 1) {
+         numbered: Bool = true, named: [(lon: Double, lat: Double, title: String)] = [], pins pinList: [(lon: Double, lat: Double)] = [], scale S: Double = 1, boxWidth: Double = 0) {
         self.map = map; self.mode = mode; self.s = S
         land = SVGPath.parse(map.land); coast = SVGPath.parse(map.coast)
         border = (map.border ?? "").isEmpty ? nil : SVGPath.parse(map.border!)
@@ -424,6 +424,8 @@ struct RegionDrawing {
             }
         }
         for p in pinned { taken.append(around(p.x, p.y, -14 * 1.2, -34 * 1.2, 14 * 1.2, 0)) }
+        // The zoom buttons (MapBox: 2 × 44 pt plus padding, top right) at the starting view: no name under them
+        if boxWidth > 0 { let k = boxWidth / map.w; taken.append(Box(x0: map.w - 56 / k, y0: 0, x1: map.w, y1: 106 / k)) }
         // The big towns: their names reserved before the wines' names, which win when there is no other room
         func townBox(_ t: RegionMap.Town, _ fs: Double, _ left: Bool) -> Box {
             left ? around(t.x, t.y, -7 - Double(t.name.count) * fs * 0.48, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + Double(t.name.count) * fs * 0.48, 4)
@@ -450,7 +452,40 @@ struct RegionDrawing {
                                      anchor: spot.2 == "start" ? .leading : spot.2 == "end" ? .trailing : .center, kind: .badgeTitle, base: CGPoint(x: b.x, y: b.y)))
         }
         let named2 = (marks + pinned).map { normOrigin($0.title) }
-        for t in map.towns ?? [] {
+        // The whole region marked (e.g. port from the Douro): its parts named quietly, after the big and mid towns
+        // (Peso da Régua, Pinhão) and before the small ones. Each name at its area's point, else moved a little within
+        // its area, so it never covers a town, a wine's name, the zoom buttons or the map's edge; with no free spot it
+        // is left out
+        var partLabels: [Label] = []
+        func placeParts() {
+            let fs = 15 * S
+            for (_, a) in map.areas.sorted(by: { $0.key < $1.key }) {
+                guard let title = a.title?.uppercased() else { continue }
+                let area = SVGPath.parse(a.d)
+                let w = Double(title.count) * fs * 0.95, h = fs * 1.3
+                func box(_ x: Double, _ y: Double) -> Box { Box(x0: x - w / 2, y0: y - fs * 0.36 - h / 2, x1: x + w / 2, y1: y - fs * 0.36 + h / 2) }
+                var spots: [(Double, Double)] = []
+                for dy in [0.0, -0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -2.5, 2.5, -3, 3] {
+                    for dx in [0.0, -0.15, 0.15, -0.3, 0.3] {
+                        // Kept inside the map's edges
+                        let x = min(max(a.label[0] + dx * w, w / 2 + 4), map.w - w / 2 - 4), y = a.label[1] + dy * fs
+                        spots.append((x, y))
+                    }
+                }
+                spots.sort { hypot($0.0 - a.label[0], $0.1 - a.label[1]) < hypot($1.0 - a.label[0], $1.1 - a.label[1]) }
+                let spot = spots.first { s in
+                    let q = box(s.0, s.1)
+                    return q.x0 >= 0 && q.x1 <= map.w && q.y0 >= 0 && q.y1 <= map.h && !hits(q) && area.contains(CGPoint(x: s.0, y: s.1 - fs * 0.36))
+                }
+                guard let spot else { continue }
+                taken.append(box(spot.0, spot.1))
+                partLabels.append(Label(text: title, at: CGPoint(x: spot.0, y: spot.1), anchor: .center, kind: .part))
+            }
+        }
+        let sizeRank = ["big": 0, "mid": 1]
+        var partsPlaced = !wholeRegion
+        for t in (map.towns ?? []).enumerated().sorted(by: { (sizeRank[$0.element.size] ?? 2, $0.offset) < (sizeRank[$1.element.size] ?? 2, $1.offset) }).map(\.element) {
+            if !partsPlaced && t.size != "big" && t.size != "mid" { placeParts(); partsPlaced = true }
             let r = t.size == "big" ? 4.5 : t.size == "mid" ? 3.5 : 2.6
             let fs = t.size == "big" ? 22.0 : t.size == "mid" ? 17.0 : 14.0
             var left = false
@@ -467,10 +502,8 @@ struct RegionDrawing {
             towns.append((CGPoint(x: t.x, y: t.y), r))
             labels.append(Label(text: t.name, at: CGPoint(x: t.x + (left ? -7 : 7) * S, y: t.y - 6 * S), anchor: left ? .trailing : .leading, kind: .town(t.size), base: CGPoint(x: t.x, y: t.y)))
         }
-        if wholeRegion {
-            for a in map.areas.values { if let title = a.title { labels.append(Label(text: title.uppercased(), at: CGPoint(x: a.label[0], y: a.label[1]), anchor: .center, kind: .part)) } }
-        }
-        labels += titleLabels
+        if !partsPlaced { placeParts() }
+        labels += partLabels + titleLabels
         if numbered { badges = marks.map { Badge(n: $0.n, at: CGPoint(x: $0.x, y: $0.y)) } }
         pins = pinned.map { CGPoint(x: $0.x, y: $0.y) }
         if let proj = map.proj {

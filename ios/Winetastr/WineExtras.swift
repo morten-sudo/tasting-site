@@ -23,7 +23,7 @@ func wineMap(_ w: Wine, width: Double = 358) async -> WineMap? {
         var named: [(lon: Double, lat: Double, title: String)] = []
         if level.kind == .pin, let p = level.pin { named = [(lon: p.lon, lat: p.lat, title: level.name)] }
         let d = RegionDrawing(map, counts: area ? [level.id: 1] : [:], titles: area ? [level.id: level.name] : [:], mid: Set(level.mid),
-                              wholeRegion: level.kind == .region, numbered: false, named: named, pins: pins, scale: labelScale(map, width: width))
+                              wholeRegion: level.kind == .region, numbered: false, named: named, pins: pins, scale: labelScale(map, width: width), boxWidth: width)
         return WineMap(drawing: .region(d), sources: map.sources ?? "", osm: !pins.isEmpty)
     }
     guard let place = await placeOf(w, appellationId: aid), let ov = await MapStore.shared.overview(overviewFor([place])) else { return nil }

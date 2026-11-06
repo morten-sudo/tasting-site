@@ -113,7 +113,7 @@ func buildOrigins(_ tab: RegionTab, all: [Wine], width: Double = 358) async -> O
     var seen = Set<String>(); var pins: [(lon: Double, lat: Double)] = []
     for w in tab.wines { if let lat = w.producer_lat, let lon = w.producer_lon, seen.insert("\(lat),\(lon)").inserted { pins.append((lon, lat)) } }
     // The same view on every screen: the whole region (not zoomed to the wines' areas)
-    let full = RegionDrawing(map, counts: g.counts, titles: g.titles, mid: g.mid, wholeRegion: g.wholeRegion, named: g.named, pins: pins, scale: labelScale(map, width: width))
+    let full = RegionDrawing(map, counts: g.counts, titles: g.titles, mid: g.mid, wholeRegion: g.wholeRegion, named: g.named, pins: pins, scale: labelScale(map, width: width), boxWidth: width)
     let whole = L("map.wholeRegion", ["region": map.name])
     let legend = g.list.map { x -> LegendItem in
         // Only the region: "Hele Bordeaux"; an appellation covering it: "Porto", "Hele Douro"; else the level between ("Médoc")
