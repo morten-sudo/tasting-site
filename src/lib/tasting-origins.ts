@@ -114,7 +114,7 @@ async function drawTab(tab: RegionTab, st: State, el: OriginParts) {
     el.box.hidden = false;
     // The same view on every screen: the whole region (it is not zoomed to the wines' areas)
     // Names and numbers drawn bigger on a narrow box, so the area's name can be read on a phone
-    el.box.innerHTML = drawMap(map, { ...marks, pins, scale: labelScale(map, el.box.clientWidth) });
+    el.box.innerHTML = drawMap(map, { ...marks, pins, scale: labelScale(map, el.box.clientWidth), box: el.box.clientWidth });
     mapZoom(el.box);
     // The legend: number of wines per area, the level between ("Médoc"), and their numbers in the evening
     el.legend.replaceChildren(...groups.map((g) => {

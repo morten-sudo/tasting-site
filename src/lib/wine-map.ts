@@ -27,7 +27,7 @@ export async function wineMap(w: WineOrigin, opts: { towns?: boolean; width?: nu
     const area = level.kind === 'area';
     const svg = drawMap(map, { counts: area ? new Map([[level.id, 1]]) : new Map(), titles: area ? new Map([[level.id, level.name]]) : new Map(),
       mid: new Set(level.mid), named: level.kind === 'pin' && level.pin ? [{ ...level.pin, title: level.name }] : [],
-      badges: false, wholeRegion: level.kind === 'region', pins: pin, scale: labelScale(map, opts.width ?? 0) });
+      badges: false, wholeRegion: level.kind === 'region', pins: pin, scale: labelScale(map, opts.width ?? 0), box: opts.width ?? 0 });
     // An appellation on the list that is not an area covers the whole region (e.g. Porto)
     return { svg, how: pin.length ? 'producer' : area ? 'area' : level.kind === 'pin' ? 'appellation' : appellationId ? 'regionWide' : 'region', sources: map.sources };
   }

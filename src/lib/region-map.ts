@@ -212,11 +212,26 @@ type DrawOptions = {
   pins?: { lon: number; lat: number; title?: string }[];
   /** the labels' scale (labelScale()): names, numbers, pins and towns this much bigger, placed so they do not overlap */
   scale?: number;
+  /** the map box's width in px (boxWidth()): the zoom buttons' corner (map-zoom.ts) is kept free of every label */
+  box?: number;
 };
+
+/** Whether (x, y) lies inside an area's outline (an SVG path of M, L and Z; even-odd, as the outlines do not cross) */
+function inPath(d: string, x: number, y: number): boolean {
+  let inside = false;
+  for (const sub of d.split(/(?=M)/)) {
+    const n = (sub.match(/-?[\d.]+/g) ?? []).map(Number);
+    for (let i = 0, j = n.length - 2; i < n.length - 1; j = i, i += 2) {
+      const [xi, yi, xj, yj] = [n[i], n[i + 1], n[j], n[j + 1]];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+    }
+  }
+  return inside;
+}
 
 /** The map as an SVG string. */
 export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
-  const { counts = new Map(), mid = new Set(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [], named = [], badges: numbered = true, scale: S = 1 } = opts;
+  const { counts = new Map(), mid = new Set(), wholeRegion = false, mode = 'full', titles = new Map(), pins = [], named = [], badges: numbered = true, scale: S = 1, box: boxPx = 0 } = opts;
   const strong = (id: string) => wholeRegion || (counts.get(id) ?? 0) > 0;
   const tone = (id: string) => (strong(id) ? 'is-strong' : mid.has(id) ? 'is-mid' : 'is-light');
   const parts: string[] = [];
@@ -271,15 +286,23 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
     }
   }
   for (const p of pinned) taken.push(around(p.x, p.y, -14 * 1.2, -34 * 1.2, 14 * 1.2, 0));
+  // The zoom buttons (.map-zoom: 0.5rem from the corner, two 2.25rem buttons 0.25rem apart, top right) at the starting
+  // view, with a little room: no name under them
+  if (boxPx > 0) { const k = boxPx / map.w; taken.push({ x0: map.w - 52 / k, y0: 0, x1: map.w, y1: 92 / k }); }
   // The big towns are always shown: placed before the names, so the names go around them
+  // Names' widths: Inter measured at about 0.57 of the font size per letter (towns) and up to 0.61 (the wines'
+  // names, weight 600), a little room added so no two names touch
   const townBox = (t: RegionMap['towns'][number], fs: number, left: boolean) => (left
-    ? around(t.x, t.y, -7 - t.name.length * fs * 0.48, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + t.name.length * fs * 0.48, 4));
+    ? around(t.x, t.y, -7 - t.name.length * fs * 0.6, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + t.name.length * fs * 0.6, 4));
   const townSize = (t: RegionMap['towns'][number]) => (t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 14);
   const bigSide = new Map<RegionMap['towns'][number], boolean>();
   const bigBox = new Map<RegionMap['towns'][number], Box>();
   for (const t of map.towns.filter((x) => x.size === 'big')) {
-    // Right of the dot, or left when the name would run off the map
-    const left = townBox(t, 22, false).x1 > map.w;
+    // Right of the dot, else left: on the map and clear of the wines' numbers, pins and the zoom buttons; with no
+    // such side the name is left out
+    const fits = (l: boolean) => { const q = townBox(t, 22, l); return q.x0 >= 0 && q.x1 <= map.w && !hits(q); };
+    if (!fits(false) && !fits(true)) continue;
+    const left = !fits(false);
     bigSide.set(t, left);
     bigBox.set(t, townBox(t, 22, left));
   }
@@ -288,7 +311,7 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
   const titleSvg: string[] = [];
   for (const b of [...marks, ...pinned]) {
     if (!b.title) continue;
-    const w = b.title.length * 8.6, h = 18;
+    const w = b.title.length * 17 * 0.64, h = 18;
     // Right, left, below, above – the first spot that is free (offsets from the mark)
     const spots: [number, number, string][] = b.pin ? [[18, -22, 'start'], [-18, -22, 'end'], [0, 20, 'middle'], [0, -48, 'middle']]
       : numbered ? [[18, 6, 'start'], [-18, 6, 'end'], [0, 32, 'middle'], [0, -22, 'middle'], [18, 30, 'start'], [-18, -18, 'end'], [-18, 30, 'end'], [18, -18, 'start']]
@@ -298,18 +321,53 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
       return around(b.x, b.y, x0, dy - h + 4, x0 + w, dy + 4);
     };
     // The first free spot inside the map (also clear of the big towns); else one that only covers a big town (the
-    // wine's name wins, the town is left out); else the one that covers the fewest names
-    const inside = spots.filter((sp) => box(sp).x0 >= 0 && box(sp).x1 <= map.w);
+    // wine's name wins, the town is left out). On the tasting's numbered map a name with no free spot is left out: its
+    // number stays and the legend names it. A wine's own map (one name) takes the spot that covers the fewest names
+    const inside = spots.filter((sp) => box(sp).x0 >= 0 && box(sp).x1 <= map.w && box(sp).y0 >= 0 && box(sp).y1 <= map.h);
     const clashes = (sp: [number, number, string]) => taken.filter((t) => meets(box(sp), t)).length;
     const spot = inside.find((sp) => !hits(box(sp)) && !onBig(box(sp))) ?? inside.find((sp) => !hits(box(sp)))
-      ?? [...inside].sort((p, q) => clashes(p) - clashes(q))[0] ?? spots[0];
+      ?? (numbered ? undefined : [...inside].sort((p, q) => clashes(p) - clashes(q))[0] ?? spots[0]);
+    if (!spot) continue;
     taken.push(box(spot));
     for (const [t, q] of bigBox) if (meets(box(spot), q)) bigBox.delete(t);
     titleSvg.push(anchored(b.x, b.y, `<text class="rm-badge-title" x="${spot[0]}" y="${spot[1]}" text-anchor="${spot[2]}">${esc(b.title)}</text>`, '', S));
   }
   // Towns, unless they would clash with a label or repeat an appellation's name
   const named2 = [...marks, ...pinned].map((m) => normOrigin(m.title));
-  for (const t of map.towns) {
+  // The whole region marked (e.g. port from the Douro): its parts named quietly, after the big and mid towns (Peso da
+  // Régua, Pinhão) and before the small ones. Each name at its area's point, else moved a little within its area, so it
+  // never covers a town, a wine's name, the zoom buttons or the map's edge; with no free spot it is left out
+  const partSvg: string[] = [];
+  const placeParts = () => {
+    const fs = 15 * S;
+    for (const [, a] of Object.entries(map.areas).sort(([p], [q]) => (p < q ? -1 : p > q ? 1 : 0))) {
+      if (!a.title) continue;
+      // The site writes the names as they are (body font, no capitals since the maps' lettering was made one style)
+      const title = a.title;
+      const w = title.length * fs * 0.6, h = fs * 1.3;
+      const box = (x: number, y: number): Box => ({ x0: x - w / 2, y0: y - fs * 0.36 - h / 2, x1: x + w / 2, y1: y - fs * 0.36 + h / 2 });
+      const spots: [number, number][] = [];
+      for (const dy of [0, -0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -2.5, 2.5, -3, 3]) {
+        for (const dx of [0, -0.15, 0.15, -0.3, 0.3]) {
+          // Kept inside the map's edges
+          spots.push([Math.min(Math.max(a.label[0] + dx * w, w / 2 + 4), map.w - w / 2 - 4), a.label[1] + dy * fs]);
+        }
+      }
+      const dist = ([x, y]: [number, number]) => Math.hypot(x - a.label[0], y - a.label[1]);
+      spots.sort((p, q) => dist(p) - dist(q));
+      const spot = spots.find(([x, y]) => {
+        const q = box(x, y);
+        return q.x0 >= 0 && q.x1 <= map.w && q.y0 >= 0 && q.y1 <= map.h && !hits(q) && inPath(a.d, x, y - fs * 0.36);
+      });
+      if (!spot) continue;
+      taken.push(box(...spot));
+      partSvg.push(anchored(spot[0], spot[1], `<text class="rm-part">${esc(title)}</text>`, '', S));
+    }
+  };
+  const sizeRank = (t: RegionMap['towns'][number]) => (t.size === 'big' ? 0 : t.size === 'mid' ? 1 : 2);
+  let partsPlaced = !wholeRegion;
+  for (const t of map.towns.map((t, i) => ({ t, i })).sort((p, q) => sizeRank(p.t) - sizeRank(q.t) || p.i - q.i).map((o) => o.t)) {
+    if (!partsPlaced && sizeRank(t) === 2) { placeParts(); partsPlaced = true; }
     const r = t.size === 'big' ? 4.5 : t.size === 'mid' ? 3.5 : 2.6;
     const fs = townSize(t);
     let left = bigSide.get(t) ?? false;
@@ -326,12 +384,8 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
     }
     parts.push(anchored(t.x, t.y, `<circle r="${r}"/><text x="${left ? -7 : 7}" y="-6" font-size="${fs}"${left ? ' text-anchor="end"' : ''}>${esc(t.name)}</text>`, `rm-town ${t.size}`, S));
   }
-  // The whole region marked (e.g. port from the Douro): name its parts quietly
-  if (wholeRegion) {
-    for (const a of Object.values(map.areas)) {
-      if (a.title) parts.push(anchored(a.label[0], a.label[1], `<text class="rm-part">${esc(a.title)}</text>`, '', S));
-    }
-  }
+  if (!partsPlaced) placeParts();
+  parts.push(...partSvg);
   for (const p of pinned) parts.push(pinSvg(p.x, p.y, p.title, 1.2, S));
   for (const p of pins) {
     const at = mapPoint(map, p.lon, p.lat);
