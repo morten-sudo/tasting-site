@@ -768,6 +768,15 @@ begin
   assert failed, 'the recipient''s name can be blank while the tasting has its own number';
   failed := false; begin update tastings set mobilepay_name = null where slug = 'selftest-a'; exception when others then failed := true; end;
   assert failed, 'the recipient''s name can be removed while the tasting has its own number';
+  -- The host can change the tasting's own number together with its name; both are checked
+  update tastings set mobilepay = '44445555', mobilepay_name = 'Bo Holm' where slug = 'selftest-a';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '44445555' and j ->> 'mobilepay_name' = 'Bo Holm', 'host A cannot change the tasting''s own number and name';
+  failed := false; begin update tastings set mobilepay = '12ab' where slug = 'selftest-a'; exception when others then failed := true; end;
+  assert failed, 'a tasting''s own number can be saved when it is not a phone number';
+  failed := false; begin update tastings set mobilepay = '55556666', mobilepay_name = ' ' where slug = 'selftest-a'; exception when others then failed := true; end;
+  assert failed, 'a tasting''s new number can be saved without a name';
+  update tastings set mobilepay = '11111111', mobilepay_name = 'Anne Jensen' where slug = 'selftest-a';
   -- The tasting's own number is the creator's: the creator's name
   update hosts set mobilepay = '11 11 11 11' where email = 'host-a@selftest.invalid';
   j := get_tasting('selftestaa', null);
@@ -795,7 +804,12 @@ begin
   j := get_tasting('selftestbb', null);
   assert j ->> 'mobilepay' = '22223333' and j ->> 'mobilepay_name' = 'Host B', 'the number is not shown once the host''s name is written';
   update hosts set notify_yes = notify_yes where email = 'host-b@selftest.invalid';
+  -- A new number without a name is refused (WIN-278); the fixture's number from before is put back as it was
+  failed := false; begin update tastings set mobilepay = '22222222' where slug = 'selftest-b'; exception when others then failed := true; end;
+  assert failed, 'a tasting''s new number can be saved without a name';
+  alter table tastings disable trigger tastings_payee_named;
   update tastings set mobilepay = '22222222' where slug = 'selftest-b';
+  alter table tastings enable trigger tastings_payee_named;
 end $$;
 
 -- ---------- MobilePay off (WIN-278): with the host's switch off guests see no MobilePay, and nothing is lost ----------
