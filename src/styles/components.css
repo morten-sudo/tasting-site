@@ -714,6 +714,11 @@ dialog .input { max-width: none; }
 .region-map .rm-coast { fill: none; stroke: #6f93a8; stroke-width: calc(var(--z, 1) * 1.2px); }
 .region-map .rm-town circle { fill: #3d2a22; }
 .region-map .rm-town text { fill: #3d2a22; font-family: var(--body); paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
+/* Overview maps: a capital's name a little heavier. The names are 3.4 % of the map's width: on a map narrower than
+   20rem they would be smaller than 11px, so the towns are left out there (the host's small wine map) */
+.region-map.overview .rm-town.big text { font-weight: 500; }
+.map-box { container-type: inline-size; }
+@container (max-width: 20rem) { .region-map.overview .rm-town { display: none; } }
 .region-map .rm-part { fill: #3d2a22; font-family: var(--body); font-size: 15px; font-weight: 500; text-anchor: middle; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
 .region-map .rm-badge circle { fill: #6e0f1f; stroke: #fff; stroke-width: 2; }
 .region-map .rm-badge-n { fill: #fff; font-family: var(--body); font-size: 14px; font-weight: 600; text-anchor: middle; }
@@ -725,27 +730,22 @@ dialog .input { max-width: none; }
 .region-map.background .rm-area { stroke: currentColor; stroke-dasharray: none; stroke-width: 1.1; }
 .region-map.background .rm-area.on { fill: currentColor; }
 .region-map.background .rm-river, .region-map.background .rm-coast, .region-map.background .rm-border { stroke: currentColor; }
-/* Small, on one wine */
-/* A PROPOSAL, only on /superadmin/dev/maps/ (src/lib/map-proposal.ts): the wine's area dark, the areas that contain it a middle
-   tone, the rest light – every border kept (all fills first, then all lines) */
-.region-map.proposal {
-  --tone-dark: #8e2c3a; --tone-dark-line: #5e0c19;
-  --tone-mid: #d9a9ad; --tone-mid-line: #9a4a55;
-  --tone-light: #f1e6e0; --tone-light-line: #c9ada2;
+/* The whole region in three tones (WIN-293): the wine's lowest known area strongest, the levels between lighter, the rest
+   of the region light – every border kept (all fills first, then all lines, in region-map.ts) */
+.region-map {
+  --tone-strong: #8e2c3a; --tone-strong-line: #5e0c19;
+  --tone-mid: #dfb3b6; --tone-mid-line: #9a4a55;
+  --tone-light: #f3e9e3; --tone-light-line: #c4a597;
 }
-.region-map.proposal .mp-line { fill: none; stroke-linejoin: round; }
-.region-map.proposal .mp-fill.is-light { fill: var(--tone-light); }
-.region-map.proposal .mp-fill.is-mid { fill: var(--tone-mid); }
-.region-map.proposal .mp-fill.is-dark { fill: var(--tone-dark); }
-.region-map.proposal .mp-line.is-light { stroke: var(--tone-light-line); stroke-width: calc(var(--z, 1) * 1px); }
-.region-map.proposal .mp-line.is-mid { stroke: var(--tone-mid-line); stroke-width: calc(var(--z, 1) * 1.3px); }
-.region-map.proposal .mp-line.is-dark { stroke: var(--tone-dark-line); stroke-width: calc(var(--z, 1) * 2px); }
-.region-map.proposal .rm-town text { stroke-width: 4px; }
-.region-map.proposal .mp-lead, .region-map.proposal .mp-name { text-anchor: middle; paint-order: stroke; stroke: #fbf6ee; stroke-linejoin: round; }
-.region-map.proposal .mp-lead { fill: var(--tone-dark-line); font-family: var(--body); font-size: 20px; font-weight: 600; stroke-width: 5px; }
-.region-map.proposal .mp-lead.big { font-size: 34px; stroke-width: 7px; }
-.region-map.proposal .mp-name { fill: #3d2a22; font-family: var(--body); font-size: 14px; stroke-width: 3px; }
-.region-map.proposal .mp-name.is-dark { fill: var(--tone-dark-line); font-weight: 600; }
+.region-map .rm-line { fill: none; stroke-linejoin: round; }
+.region-map .rm-fill.is-light { fill: var(--tone-light); }
+.region-map .rm-fill.is-mid { fill: var(--tone-mid); }
+.region-map .rm-fill.is-strong { fill: var(--tone-strong); }
+.region-map .rm-line.is-light { stroke: var(--tone-light-line); stroke-width: calc(var(--z, 1) * 0.8px); }
+.region-map .rm-line.is-mid { stroke: var(--tone-mid-line); stroke-width: calc(var(--z, 1) * 1px); }
+.region-map .rm-line.is-strong { stroke: var(--tone-strong-line); stroke-width: calc(var(--z, 1) * 1.6px); }
+/* Every area named (the structure maps on /superadmin/dev/maps/) */
+.region-map .rm-name { fill: #3d2a22; font-family: var(--body); font-size: 14px; text-anchor: middle; paint-order: stroke; stroke: #fbf6ee; stroke-width: 3px; stroke-linejoin: round; }
 
 /* ---------- 55 Stat tiles (<ul class="stats"> with <li class="card stat">): a number and what it counts – the wine book, the home page ---------- */
 .stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }

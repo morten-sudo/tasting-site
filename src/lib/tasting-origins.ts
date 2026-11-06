@@ -1,11 +1,12 @@
 // "Where the wines come from" on the tasting's page (src/pages/tasting/index.astro), also seen by the host there:
 // one tab per region (the wines' region field, WIN-256) – none with one region. Each tab shows its region: the
-// detailed map with the wines' appellations and a legend, or – with no detailed map – the overview map with a
+// detailed map of the whole region with each wine's lowest known area strongest and the levels between lighter
+// (WIN-293, levelOf() in region-map.ts) and a legend, or – with no detailed map – the overview map with a
 // numbered pin per place, or, when the region cannot be placed at all, its wines as a list. Blind wines that are not
 // revealed (the database sends no origin for them) and wines without a region are left out, also from the counts and
 // the order of the tabs. Also drawn on /superadmin/dev/maps/.
-import { loadMap, mapIdFor, groupWines, drawMap, fitToAreas, numberRanges } from './region-map';
-import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, loadTowns, type Place } from './overview-map';
+import { loadMap, mapIdFor, groupWines, markings, drawMap, labelScale, numberRanges } from './region-map';
+import { placeOf, loadOverview, overviewFor, focusFor, drawOverview, detailFor, loadTowns, type Place } from './overview-map';
 import { mapZoom } from './ui/map-zoom';
 import { mk } from './ui/dom';
 import { tabBar, tabs, selectTab, currentTab } from './ui/tabs';
@@ -84,9 +85,8 @@ async function drawHero(list: RegionTab[], el: OriginParts) {
     const id = mapIdFor(r.name);
     const map = id ? await loadMap(id) : null;
     if (!map) continue;
-    const groups = await groupWines(map, r.wines);
-    const counts = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.count]));
-    el.hero.innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion: groups.some((g) => g.whole) && !counts.size });
+    const { counts, wholeRegion } = markings(await groupWines(map, r.wines));
+    el.hero.innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion });
     return;
   }
   el.hero.innerHTML = '';
@@ -106,21 +106,24 @@ async function drawTab(tab: RegionTab, st: State, el: OriginParts) {
   if (map) {
     const groups = await groupWines(map, tab.wines);
     if (!fresh()) return;
-    const counts = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.count]));
-    const titles = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.title]));
-    const whole = groups.some((g) => g.whole);
+    // The whole region, every wine's lowest known area strongest and the levels between lighter (WIN-293)
+    const marks = markings(groups);
     // Producers with an exact place get a pin (one per producer)
     const pins = [...new Map(tab.wines.filter((w) => w.producer_lat != null && w.producer_lon != null)
       .map((w) => [`${w.producer_lat},${w.producer_lon}`, { lon: w.producer_lon!, lat: w.producer_lat!, title: w.producer ?? '' }])).values()];
     el.box.hidden = false;
-    el.box.innerHTML = drawMap(map, { counts, titles, wholeRegion: whole && !counts.size, pins });
-    // On phones it zooms to the filled appellations (sizes can only be measured on a visible map)
-    if (matchMedia('(max-width: 40rem)').matches) fitToAreas(el.box.querySelector('svg')!, map);
+    // The same view on every screen: the whole region (it is not zoomed to the wines' areas)
+    // Names and numbers drawn bigger on a narrow box, so the area's name can be read on a phone
+    el.box.innerHTML = drawMap(map, { ...marks, pins, scale: labelScale(map, el.box.clientWidth), box: el.box.clientWidth });
     mapZoom(el.box);
-    // The legend: number of wines per appellation, with their numbers in the evening
+    // The legend: number of wines per area, the level between ("Médoc"), and their numbers in the evening
     el.legend.replaceChildren(...groups.map((g) => {
       const nums = t('map.wineNumbers', { list: numberRanges(g.wines.map((wid) => no.get(wid) ?? 0)) });
-      return legendItem(g.inMap ? 'in-map' : 'whole', g.count, g.title, g.inMap ? nums : `${t('map.wholeRegion', { region: map.name })} · ${nums}`);
+      const whole = t('map.wholeRegion', { region: map.name });
+      // A wine with only the region: "Hele Bordeaux"; with an appellation that covers it: "Porto", "Hele Douro"
+      if (g.whole && normOrigin(g.title) === normOrigin(map.name)) return legendItem('whole', g.count, whole, nums);
+      const where = g.whole ? whole : g.level.midName && normOrigin(g.level.midName) !== normOrigin(g.title) ? g.level.midName : null;
+      return legendItem(g.inMap ? 'in-map' : 'whole', g.count, g.title, [where, nums].filter(Boolean).join(' · '));
     }));
     el.credit.hidden = false;
     setMapCredit(el.box, map.sources, pins.length > 0, el.credit);
@@ -145,12 +148,14 @@ async function drawOverviewTab(tab: RegionTab, no: Map<number, number>, el: Orig
   const list = [...groups.values()].sort((a, b) => b.wines.length - a.wines.length);
   const places = list.map((g) => g.p);
   const [ov, focus, towns] = places.length ? await Promise.all([loadOverview(overviewFor(places)), focusFor(places), loadTowns()]) : [null, null, null];
+  // A small area (one country, an island): the detailed tiles, so Madeira is land under its pin
+  const detail = focus ? await detailFor(focus) : null;
   if (!fresh()) return;
   const items: HTMLLIElement[] = [];
   if (ov) {
     const pins = list.map((g) => ({ lon: g.p.lon, lat: g.p.lat, n: g.wines.length, label: g.p.label }));
     el.box.hidden = false;
-    el.box.innerHTML = drawOverview(ov, pins, focus, 'full', null, towns);
+    el.box.innerHTML = drawOverview(ov, pins, focus, 'full', detail, towns);
     mapZoom(el.box);
     el.credit.hidden = false;
     setMapCredit(el.box, OVERVIEW_SOURCES, false, el.credit);

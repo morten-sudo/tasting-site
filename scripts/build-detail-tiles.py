@@ -9,7 +9,8 @@ around the wine countries. The site loads only the squares a map shows.
 Output: public/maps/tiles/<lon>_<lat>.json (the square's south-west corner) and public/maps/tiles/index.json.
 Each tile: {"land": [...], "lakes": [...], "rivers": [...], "coast": [...], "border": [...]} (land is drawn without an outline; the coast is its own line, so the tiles show no seams), every shape a flat list of
 longitude/latitude pairs in thousandths of a degree, the first pair absolute and the rest as steps.
-Usage: python3 scripts/build-detail-tiles.py <data folder with the ne_10m_*.geojson files>
+Usage: python3 scripts/build-detail-tiles.py <data folder with the ne_10m_*.geojson files> [<lon>_<lat> …]
+With squares given, only those are (re)built and added to the index; the other tiles are kept.
 """
 import json, math, os, sys
 from shapely.geometry import shape, box
@@ -21,6 +22,8 @@ OUT = os.path.join(ROOT, 'public', 'maps', 'tiles')
 SIZE = 5          # degrees per tile
 TOL = 0.004       # simplification, degrees (about 400 m)
 PAD = 0.05        # tiles overlap a little so shapes meet without a seam
+# Wine islands outside their country's mainland box (countries.json): Madeira, the Canaries and the Azores (lon0, lat0, lon1, lat1)
+ISLANDS = [(-17.4, 32.5, -16.2, 33.2), (-18.3, 27.5, -13.3, 29.5), (-31.4, 36.8, -24.9, 39.8)]
 
 
 def load(name):
@@ -67,6 +70,13 @@ def main():
         for lon in range(math.floor((x0 - 3) / SIZE) * SIZE, math.ceil((x1 + 3) / SIZE) * SIZE, SIZE):
             for lat in range(math.floor((y0 - 3) / SIZE) * SIZE, math.ceil((y1 + 3) / SIZE) * SIZE, SIZE):
                 cells.add((lon, lat))
+    for x0, y0, x1, y1 in ISLANDS:
+        for lon in range(math.floor(x0 / SIZE) * SIZE, math.ceil(x1 / SIZE) * SIZE, SIZE):
+            for lat in range(math.floor(y0 / SIZE) * SIZE, math.ceil(y1 / SIZE) * SIZE, SIZE):
+                cells.add((lon, lat))
+    only = {tuple(int(v) for v in a.split('_')) for a in sys.argv[2:]}
+    if only:
+        cells &= only
     layers = {
         'land': (load('ne_10m_land.geojson'), True),
         'lakes': (load('ne_10m_lakes.geojson'), True),
@@ -76,9 +86,13 @@ def main():
     }
     trees = {k: STRtree(g) for k, (g, _) in layers.items()}
     os.makedirs(OUT, exist_ok=True)
-    for f in os.listdir(OUT):
-        os.remove(os.path.join(OUT, f))
     written, total = [], 0
+    if only:
+        # Keep the other tiles: start from the index there is
+        written = [t for t in json.load(open(os.path.join(OUT, 'index.json')))['tiles'] if tuple(t) not in only]
+    else:
+        for f in os.listdir(OUT):
+            os.remove(os.path.join(OUT, f))
     for lon, lat in sorted(cells):
         cell = box(lon - PAD, lat - PAD, lon + SIZE + PAD, lat + SIZE + PAD)
         tile = {k: shapes_in(trees[k], g, cell, poly) for k, (g, poly) in layers.items()}
@@ -89,6 +103,7 @@ def main():
             json.dump(tile, fh, separators=(',', ':'))
         total += os.path.getsize(path)
         written.append([lon, lat])
+    written.sort()
     with open(os.path.join(OUT, 'index.json'), 'w') as fh:
         json.dump({'size': SIZE, 'tiles': written, 'sources': 'Natural Earth 10m'}, fh, separators=(',', ':'))
     print(len(written), 'tiles,', total // 1024, 'KB')

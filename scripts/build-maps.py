@@ -24,6 +24,7 @@ lists closely, but an appellation may in reality cover only part of a municipali
 Usage: python3 scripts/build-maps.py <data folder> <output folder> [region id …]  (all regions when none is given)
 """
 import json, math, sys, os
+sys.path.insert(0, os.path.dirname(__file__))
 from shapely.geometry import shape, mapping, box, LineString, MultiLineString, Polygon, MultiPolygon
 from shapely.ops import unary_union
 from shapely import transform as _transform
@@ -144,6 +145,8 @@ def build(region):
         'rivers': rivers,
         'areas': areas,
         'whole': region['whole'],
+        # The areas that lie inside another (scripts/map-hierarchy.py): the map's own levels, for the lighter tone
+        'within': __import__('importlib').import_module('map-hierarchy').within(areas),
         'labels': region.get('labels_fn', lambda p: [])(p),
         'towns': towns,
         'sources': region['sources'],

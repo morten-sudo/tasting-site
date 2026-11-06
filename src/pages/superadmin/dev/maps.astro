@@ -1,8 +1,8 @@
 ---
 // /superadmin/dev/maps/ – every map on the site, the way /superadmin/dev/components/ shows every component: the map types as the real code
 // draws them (with the files and every page that uses them), the structure of each detailed map (areas, levels,
-// overlaps measured in the browser), a PROPOSAL for a wine's map in three tones (src/lib/map-proposal.ts, not used on
-// the real pages), examples per country through the real wineMap() / showOrigins(), and the open questions.
+// overlaps measured in the browser), the rule for a wine's map in three tones (WIN-293, decided in WIN-258) with the
+// cases of WIN-293, examples per country through the real wineMap() / showOrigins(), and the open questions.
 // For developers and Morten: the superadmin only (requireAdmin()), in the superadmin menu under Dev, noindex (Base.astro).
 // The page's text is Danish (it is for Morten); the examples are plain wine rows in the script, easy to change.
 import Base from '../../../layouts/Base.astro';
@@ -16,9 +16,9 @@ import '../../../styles/admin.css';
   <section class="wrap admin-page">
     <SuperNav active="dev-maps">
     <div class="dv">
-      <PageHeader title="super.mapsTitle" lead="Alle sitets kort samlet: hvordan de ser ud i dag, hvilke filer der tegner dem, og hvor de bruges – og et forslag ved siden af, som ikke er besluttet. Kortene her tegnes af den rigtige kode med eksempeldata." />
+      <PageHeader title="super.mapsTitle" lead="Alle sitets kort samlet: hvordan de ser ud, hvilke filer der tegner dem, og hvor de bruges – og reglen for, hvad en vins kort viser (WIN-293). Kortene her tegnes af den rigtige kode med eksempeldata." />
       <nav class="dv-toc" aria-label="Afsnit">
-        <a href="#s1">1. Korttyper i dag</a><a href="#s2">2. De detaljerede kort</a><a href="#s3">3. Forslag</a>
+        <a href="#s1">1. Korttyper i dag</a><a href="#s2">2. De detaljerede kort</a><a href="#s3">3. Reglen (WIN-293)</a>
         <a href="#s4">4. Eksempler pr. land</a><a href="#s5">5. Åbne spørgsmål</a>
       </nav>
 
@@ -29,8 +29,8 @@ import '../../../styles/admin.css';
 
         <section id="m-a" class="dv-comp">
           <SectionTitle level="h3" text="a) Det detaljerede regionskort" />
-          <p class="help">drawMap() i src/lib/region-map.ts · data: public/maps/&lt;region&gt;.json (scripts/build-maps.py) · zoom: mapZoom() i src/lib/ui/map-zoom.ts · fitToAreas() zoomer ind på telefoner</p>
-          <p>Regionen i en gammel atlas-stil med appellationerne som stiplede omrids. Et område med vine fyldes (mørkere jo flere vine) og får et nummer og sit navn. Uden noget område lyser hele regionen svagt, og underområderne navngives med versaler.</p>
+          <p class="help">drawMap() i src/lib/region-map.ts · data: public/maps/&lt;region&gt;.json (scripts/build-maps.py) · niveauer: levelOf(), markings() og within i kortets JSON (scripts/map-hierarchy.py) · zoom: mapZoom() i src/lib/ui/map-zoom.ts</p>
+          <p>Hele regionen i en gammel atlas-stil, med grænser mellem alle områder, i tre toner (WIN-293): vinenes laveste kendte områder stærkest, med et nummer (antal vine) og navn; niveauerne imellem lysere; resten af regionen lys. Er regionen selv det laveste kendte niveau, er hele regionen stærk, og underområderne navngives. En appellation, kortet ikke kan farve ind, får en nål med navnet. Udsnittet er det samme på telefon og stor skærm.</p>
           <div class="dv-grid" id="a-maps"></div>
           <SectionTitle level="eyebrow" as="h4" text="Bruges" />
           <ul class="dv-uses">
@@ -107,7 +107,7 @@ import '../../../styles/admin.css';
         <SectionTitle text="2. De detaljerede kort" />
         <p>De ti kort i <code>public/maps/</code>, hvert med alle områder tegnet og navngivet. Forholdet mellem områderne er målt her i browseren (hvert område tegnes på et lille lærred, og pixels tælles): "ligger i" betyder mindst 90 % inde i et andet område.</p>
         <Notice tone="warn">
-          <p><b>Kortene blander niveauer.</b> Douros, Riojas og Mosels hovedområder er underområder, der ligger side om side. Piemontes, Roussillons, Bourgognes og Champagnes er appellationer og landsbyer, der overlapper eller ligger inden i hinanden – Rivesaltes dækker for eksempel det meste af Roussillon, og Langhe det meste af Barolo og Barbaresco. Navnene under "Hele regionen" (<code>whole</code>) står i filerne, men koden læser dem ikke.</p>
+          <p><b>Kortene blander niveauer.</b> Douros, Riojas og Mosels hovedområder er underområder, der ligger side om side. Piemontes, Roussillons, Bourgognes og Champagnes er appellationer og landsbyer, der overlapper eller ligger inden i hinanden – Rivesaltes dækker for eksempel det meste af Roussillon, og Langhe det meste af Barolo og Barbaresco. Siden WIN-293 læser koden <code>whole</code> (appellationer, der dækker hele regionen) og <code>within</code> (de områder, et område ligger i – målt af scripts/map-hierarchy.py med samme 90 %-regel som tabellerne, uden områder der dækker halvdelen af kortet eller mere).</p>
         </Notice>
         <nav class="dv-toc dv-sub" aria-label="Regioner" id="s2-toc"></nav>
         <div id="s2-maps"></div>
@@ -115,9 +115,9 @@ import '../../../styles/admin.css';
 
       <!-- ======================= 3 ======================= -->
       <section id="s3" class="dv-group">
-        <SectionTitle text="3. Forslag – ikke besluttet" />
+        <SectionTitle text="3. Reglen (WIN-293)" />
         <p class="dv-chips" id="s3-chip"></p>
-        <p>Reglen, der er til diskussion: kortet viser vinens hele vinregion, som folk kender den. Vinens laveste kendte område er mørkt, de områder der indeholder det, får en mellemtone, og resten er lyst – med grænserne mellem alle områder bevaret. Til venstre i dag (<code>wineMap()</code>), til højre forslaget (<code>drawProposal()</code> i <code>src/lib/map-proposal.ts</code>, kun på denne side).</p>
+        <p>Besluttet af Morten i WIN-258: kortet viser hele vinens region (feltet <i>region</i>) med grænser mellem områderne. Vinens laveste kendte område er stærkest, niveauerne mellem regionen og det er lysere, og resten af regionen er lys. Niveauerne imellem findes uden noget nyt fra værten: de områder på kortet, området ligger i (<code>within</code>), og de andre områder i samme underregion på appellationslisten (Pauillac → Médoc, Gevrey-Chambertin → Côte de Nuits). Er et område laveste for én vin og imellem for en anden, er det stærkest. Kortene nedenfor er smagningens kort, tegnet af <code>showOrigins()</code> som på smagningens side – testcasene i WIN-293.</p>
         <div class="dv-tones" id="s3-tones"></div>
         <div class="dv-cases" id="s3-cases"></div>
       </section>
@@ -125,7 +125,7 @@ import '../../../styles/admin.css';
       <!-- ======================= 4 ======================= -->
       <section id="s4" class="dv-group">
         <SectionTitle text="4. Eksempler pr. land" />
-        <p>Eksempelvine fra hvert land i appellationslisten og oversigtskortet, med hvert tilfælde koden håndterer i dag. Kortet er tegnet af <code>wineMap()</code> præcis som på vinens side; linjen under kortet siger, hvilke data der afgjorde det. Hvor der er et detaljeret kort, står forslaget ved siden af. Vinene er almindelige rækker øverst i sidens script.</p>
+        <p>Eksempelvine fra hvert land i appellationslisten og oversigtskortet, med hvert tilfælde koden håndterer i dag. Kortet er tegnet af <code>wineMap()</code> præcis som på vinens side; linjen under kortet siger, hvilke data der afgjorde det. Vinene er almindelige rækker øverst i sidens script.</p>
         <nav class="dv-toc dv-sub" aria-label="Lande" id="s4-toc"></nav>
         <div id="s4-groups" class="dv-countries"></div>
       </section>
@@ -133,9 +133,9 @@ import '../../../styles/admin.css';
       <!-- ======================= 5 ======================= -->
       <section id="s5" class="dv-group">
         <SectionTitle text="5. Åbne spørgsmål" />
-        <p>Morten beslutter:</p>
+        <p>Morten beslutter (det første er afgjort):</p>
         <ol class="dv-questions">
-          <li><b>Hvad er "vinregionen" for hver vin?</b> Hele Bordeaux for en Pauillac, hele Barolo eller hele Piemonte for en Barolo, hele Douro for en portvin? Og hvilke områder "indeholder" en appellation, når kortet ikke tegner dem inden i hinanden (Haut-Médoc har et hul, hvor Pauillac ligger)?</li>
+          <li><b>Hvad er "vinregionen" for hver vin?</b> Besluttet i WIN-258 og bygget i WIN-293: hele regionen (feltet <i>region</i>), laveste kendte område stærkest, niveauerne imellem lysere – se afsnit 3.</li>
           <li><b>Kommuner og landsbyer.</b> Barolo (11 comuni), Bourgogne og Champagne har brug for kommune- eller landsbygrænser for at vise "hele Barolo, Monforte d'Alba mørk". Data skal hentes og bygges ind i scripts/build-maps.py.</li>
         </ol>
       </section>
@@ -195,45 +195,45 @@ import '../../../styles/admin.css';
   import { $, mk } from '../../../lib/ui/dom';
   import { sectionTitle } from '../../../lib/ui/section-title';
   import { chip } from '../../../lib/ui/status';
+  import { button } from '../../../lib/ui/button';
   import { table } from '../../../lib/ui/table';
   import { mapZoom } from '../../../lib/ui/map-zoom';
   import { fillMapBackgrounds, winesBackground } from '../../../lib/ui/map-background';
-  import { loadMap, drawMap, mapIdFor, DETAILED_MAPS, type RegionMap } from '../../../lib/region-map';
+  import { loadMap, drawMap, mapIdFor, labelScale, boxWidth, DETAILED_MAPS, type RegionMap } from '../../../lib/region-map';
   import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from '../../../lib/overview-map';
   import { wineMap, showMapCredit, setMapCredit, OVERVIEW_SOURCES, type WineOrigin, type MapHow } from '../../../lib/wine-map';
   import { showOrigins, type MapWine } from '../../../lib/tasting-origins';
-  import { drawProposal, areaFacts, containersOf } from '../../../lib/map-proposal';
+  import { drawStructure, areaFacts } from '../../../lib/map-facts';
   import { loadAppellations, matchAppellation, countryName } from '../../../lib/origin';
   import { t } from '../../../i18n';
 
   // ================= The example wines (plain rows, shaped like the wines table) =================
   type Wine = WineOrigin & { name: string };
-  /** One example: the case, the wine, why the map looks as it does (Danish), and the proposal's middle tone when it is
-   *  not what the geometry gives (the areas that contain the wine's area) */
-  type Example = { case: string; wine: Wine; note: string; mid?: string[] };
+  /** One example: the case, the wine, and why the map looks as it does (Danish) */
+  type Example = { case: string; wine: Wine; note: string };
   const w = (name: string, producer: string | null, appellation: string | null, region: string | null, country: string | null, pin?: [number, number]): Wine =>
     ({ name, producer, appellation, appellation_id: null, region, country, producer_lat: pin?.[0] ?? null, producer_lon: pin?.[1] ?? null });
 
   const EXAMPLES: { country: string; title?: string; items: Example[] }[] = [
     { country: 'FR', items: [
-      { case: 'Appellation der er et område', wine: w('Château Pichon Baron 2016', 'Château Pichon Baron', 'Pauillac', 'Bordeaux', 'FR'), mid: ['haut-medoc'],
-        note: 'Pauillac er på appellationslisten og er et område på Bordeaux-kortet, så området fyldes og navngives. Detaljeret kort, afgjort af appellationen (appellation_id) og regionen.' },
+      { case: 'Appellation der er et område', wine: w('Château Pichon Baron 2016', 'Château Pichon Baron', 'Pauillac', 'Bordeaux', 'FR'),
+        note: 'Pauillac er på appellationslisten og er et område på Bordeaux-kortet, så det er stærkest og navngives. Médoc (underregionen på listen: Médoc, Haut-Médoc, Saint-Estèphe, Saint-Julien, Margaux, Listrac, Moulis) er lysere – Haut-Médoc har et hul, hvor Pauillac ligger, så geometrien alene finder det ikke.' },
       { case: 'Appellation der overlapper en anden', wine: w('Château Chauvin 2020', 'Château Chauvin', 'Saint-Émilion Grand Cru', 'Bordeaux', 'FR'),
-        note: 'Saint-Émilion Grand Cru er et område; kortet har også "Saint-Émilion", der ligger oven på det. I dag fyldes kun Grand Cru-området.' },
-      { case: 'Producentnål på detaljeret kort', wine: w('Château Latour 2015', 'Château Latour', 'Pauillac', 'Bordeaux', 'FR', [45.1803, -0.7448]), mid: ['haut-medoc'],
-        note: 'Producentens sted (producer_lat/lon, fundet fra adressen) giver en nål oven på det fyldte område, og kreditlinjen får "© OpenStreetMap".' },
+        note: 'Saint-Émilion Grand Cru er stærkest. "Saint-Émilion" har samme form og hører, som resten af Libournais (Pomerol, Fronsac …), til underregionen, der er lysere.' },
+      { case: 'Producentnål på detaljeret kort', wine: w('Château Latour 2015', 'Château Latour', 'Pauillac', 'Bordeaux', 'FR', [45.1803, -0.7448]),
+        note: 'Producentens sted (producer_lat/lon, fundet fra adressen) giver en nål oven på det stærke område, og kreditlinjen får "© OpenStreetMap".' },
       { case: 'Appellation der dækker hele regionen', wine: w('Bourgogne Pinot Noir 2021', 'Domaine Faiveley', 'Bourgogne', 'Bourgogne', 'FR'),
-        note: 'Bourgogne AOC er på listen, men er ikke et område på kortet, så hele regionen lyser svagt (wholeRegion), og formularen skriver "Appellationen dækker hele regionen".' },
+        note: 'Bourgogne AOC står i kortets whole: regionen er det laveste kendte niveau, så hele regionen er stærk (wholeRegion), og formularen skriver "Appellationen dækker hele regionen".' },
       { case: 'Appellation der dækker hele regionen', wine: w('Côtes du Rhône Rouge 2020', 'E. Guigal', 'Côtes du Rhône', 'Rhône', 'FR'),
-        note: 'Côtes du Rhône er på listen, men kortet har kun Côtes du Rhône Villages som område, så hele Rhône-kortet lyser svagt.' },
+        note: 'Côtes du Rhône står i kortets whole, så hele Rhône er stærk.' },
       { case: 'Appellation på listen uden område', wine: w('Ventoux Rouge 2022', 'La Vieille Ferme', 'Ventoux', 'Rhône', 'FR'),
-        note: 'Ventoux er på listen under Rhône, men har intet område på kortet. Koden behandler det som "dækker hele regionen" og lyser alle områder op – også Côte-Rôtie og Hermitage, som Ventoux ikke har noget med at gøre.' },
+        note: 'Ventoux er på listen under Rhône, men har intet område på kortet: en nål med navnet ved appellationens punkt, og Rhône Sud (underregionen) lysere. Før WIN-293 lyste hele regionen, også Côte-Rôtie og Hermitage.' },
       { case: 'Område der dækker det meste af kortet', wine: w('Rivesaltes Ambré 1966', 'Domaine Cazes', 'Rivesaltes', 'Roussillon', 'FR'),
-        note: 'Rivesaltes er et område – men det dækker det meste af Roussillon, så det fyldte område ligner hele regionen.' },
+        note: 'Rivesaltes er et område – men det dækker det meste af Roussillon, så det stærke område ligner hele regionen. Det er derfor heller aldrig et niveau imellem for de små appellationer (within springer områder over halvdelen af kortet over).' },
       { case: 'Alias for regionens appellation', wine: w('Champagne Grand Cru Brut', 'Egly-Ouriet', 'Champagne Grand Cru', 'Champagne', 'FR'),
-        note: '"Champagne Grand Cru" er et andet navn for Champagne på listen, så hele regionen lyser. Grand Cru-landsbyerne (Ambonnay, Bouzy …) er områder på kortet, men ikke på listen, så en vin kan aldrig ramme dem.' },
+        note: '"Champagne Grand Cru" er et andet navn for Champagne på listen (whole), så hele regionen er stærk. Grand Cru-landsbyerne (Ambonnay, Bouzy …) er ikke på listen, men står navnet i appellationsfeltet ("Champagne Grand Cru Ambonnay"), bliver landsbyen stærkest og Montagne de Reims lysere.' },
       { case: 'Region med kort, ingen appellation', wine: w('Bordeaux Rouge 2019', 'Maison Sichel', null, 'Bordeaux', 'FR'),
-        note: 'Kun regionen er kendt. Bordeaux har et detaljeret kort, så hele regionen lyser svagt, og formularen beder om en appellation.' },
+        note: 'Kun regionen er kendt: hele Bordeaux er stærk, uden mellemtone, og formularen beder om en appellation.' },
       { case: 'Uden detaljeret kort', wine: w('Sancerre Blanc 2022', 'Domaine Vacheron', 'Sancerre', 'Loire', 'FR'),
         note: 'Loire har intet detaljeret kort. Sancerre er på listen med et punkt, så oversigtskortet zoomer ind på det med de detaljerede fliser og én nål.' },
       { case: 'Kun regionen, uden kort', wine: w('Languedoc Rouge 2021', 'Gérard Bertrand', null, 'Languedoc', 'FR'),
@@ -243,13 +243,13 @@ import '../../../styles/admin.css';
     ] },
     { country: 'IT', items: [
       { case: 'Appellation der er et område', wine: w('Barolo Bricco San Pietro 2022', 'Broccardo', 'Barolo', 'Piemonte', 'IT'),
-        note: 'Barolo er et område på Piemonte-kortet og fyldes. Vinmarken Bricco San Pietro (i Monforte d\'Alba) kan ikke vises: kortet har ingen comuni.' },
+        note: 'Barolo er et område på Piemonte-kortet og er stærkest; Langhe (underregionen og de DOC-områder, Barolo ligger i) er lysere. Vinmarken Bricco San Pietro (i Monforte d\'Alba) kan ikke vises: kortet har ingen comuni.' },
       { case: 'Appellation der er et område', wine: w('Brunello di Montalcino 2018', 'Biondi-Santi', 'Brunello di Montalcino', 'Toscana', 'IT'),
-        note: 'Brunello di Montalcino er et område på Toscana-kortet og fyldes; Rosso di Montalcino har samme område.' },
+        note: 'Brunello di Montalcino er stærkest; Rosso di Montalcino har samme område og samme underregion (Montalcino), så det er lysere neden under.' },
       { case: 'Område på kortet, ikke på listen', wine: w('Rosso di Montepulciano 2021', 'Avignonesi', 'Rosso di Montepulciano', 'Toscana', 'IT'),
-        note: 'Kortet har et område "rosso-di-montepulciano", men appellationen er ikke på listen. Uden appellation_id lyser hele Toscana i stedet.' },
+        note: 'Kortet har et område "rosso-di-montepulciano", men appellationen er ikke på listen. Siden WIN-293 findes området ud fra navnet i appellationsfeltet, så det er stærkest.' },
       { case: 'Region med kort, ingen appellation', wine: w('Vino Rosso', 'Cascina Fontana', null, 'Piemonte', 'IT'),
-        note: 'Kun regionen er kendt, så hele Piemonte lyser svagt.' },
+        note: 'Kun regionen er kendt, så hele Piemonte er stærk.' },
       { case: 'Uden detaljeret kort', wine: w('Amarone della Valpolicella 2017', 'Allegrini', 'Amarone della Valpolicella', 'Veneto', 'IT'),
         note: 'Veneto har intet detaljeret kort; appellationens punkt fra listen giver én nål på oversigtskortet med detaljefliser.' },
       { case: 'Uden detaljeret kort', wine: w('Etna Rosso 2021', 'Tenuta delle Terre Nere', 'Etna', 'Sicilia', 'IT'),
@@ -257,9 +257,9 @@ import '../../../styles/admin.css';
     ] },
     { country: 'ES', items: [
       { case: 'Område (underområde)', wine: w('Viña Ardanza Reserva 2016', 'La Rioja Alta', 'Rioja Alta', 'Rioja', 'ES'),
-        note: 'Rioja Alta er på listen og er et af Riojas tre underområder, så det fyldes.' },
+        note: 'Rioja Alta er på listen og er et af Riojas tre underområder, så det er stærkest; der er intet niveau imellem.' },
       { case: 'Alias der dækker hele regionen', wine: w('Rioja Reserva 2018', 'Marqués de Murrieta', 'Rioja Reserva', 'Rioja', 'ES'),
-        note: '"Rioja Reserva" er et andet navn for Rioja på listen, som ikke er et område, så hele Rioja lyser svagt.' },
+        note: '"Rioja Reserva" er et andet navn for Rioja på listen (whole), så hele Rioja er stærk.' },
       { case: 'Uden detaljeret kort', wine: w('Ribera del Duero 2019', 'Pago de Carraovejas', 'Ribera del Duero', 'Castilla y León', 'ES'),
         note: 'Spanien uden for Rioja har ingen detaljerede kort: appellationens punkt på oversigtskortet.' },
       { case: 'Uden detaljeret kort', wine: w('Fino Sherry', 'Bodegas Tradición', 'Jerez-Xérès-Sherry', 'Andalucía', 'ES'),
@@ -269,33 +269,33 @@ import '../../../styles/admin.css';
     ] },
     { country: 'PT', items: [
       { case: 'Appellation der dækker hele regionen', wine: w('Quinta do Noval LBV 2018', 'Quinta do Noval', 'Porto', 'Douro', 'PT'),
-        note: 'Porto er på listen, men er ikke et område (Douros områder er de tre underområder), så hele Douro lyser svagt med underområdernes navne.' },
+        note: 'Porto står i kortets whole (Douros områder er de tre underområder), så hele Douro er stærk med underområdernes navne.' },
       { case: 'Appellation der dækker hele regionen', wine: w('Redoma Tinto 2020', 'Niepoort', 'Douro', 'Douro', 'PT'),
         note: 'Douro DOC er heller ikke et område – samme kort som portvin.' },
       { case: 'Producentnål på detaljeret kort', wine: w('Quinta do Vesuvio Vintage 2019', 'Symington', 'Porto', 'Douro', 'PT', [41.135, -7.268]),
-        note: 'Hele Douro lyser, og producentens sted giver en nål i Douro Superior. Underområdet kendes ikke af koden – det står kun på kortet.' },
+        note: 'Hele Douro er stærk, og producentens sted giver en nål i Douro Superior. Underområdet kendes ikke af koden – det står kun på kortet.' },
       { case: 'Uden detaljeret kort', wine: w('Vinho Verde Alvarinho 2023', 'Soalheiro', 'Vinho Verde', 'Vinho Verde', 'PT'),
         note: 'Appellationens punkt på oversigtskortet.' },
       { case: 'Uden for Europa-kortet', wine: w('Madeira 10 Years Malmsey', 'Blandy\'s', 'Madeira', 'Madeira', 'PT'),
-        note: 'Madeira ligger syd for Europa-kortets kant, så verdenskortet bruges. Der er ingen detaljeflise for øen, og verdenskortet har den ikke med – nålen står i havet.' },
+        note: 'Madeira ligger syd for Europa-kortets kant, så verdenskortet bruges, zoomet ind med detaljefliser. Siden WIN-293 er der fliser for Madeira, De Kanariske Øer og Azorerne (scripts/build-detail-tiles.py), så øen står under nålen – før stod nålen i havet. Smagningens kort tager nu også stedet med i udsnittet, ikke kun landets fastland.' },
       { case: 'Uden detaljeret kort', wine: w('Dão Tinto 2019', 'Quinta dos Roques', 'Dão', 'Dão', 'PT'),
         note: 'Appellationens punkt på oversigtskortet.' },
     ] },
     { country: 'DE', items: [
       { case: 'Landsby der er et område', wine: w('Piesporter Goldtröpfchen Spätlese 2019', 'Reinhold Haart', 'Piesport', 'Mosel', 'DE'),
-        note: 'Piesport er på listen og er et område (en landsby) på Mosel-kortet, inde i Bereich Bernkastel.' },
+        note: 'Piesport er på listen og er et område (en landsby) på Mosel-kortet; Bereich Bernkastel, som den ligger i, er lysere.' },
       { case: 'Underområde der er et område', wine: w('Saar Riesling 2021', 'Egon Müller', 'Saar', 'Mosel', 'DE'),
-        note: 'Saar er både på listen og et af Mosels underområder; det fyldes.' },
+        note: 'Saar er både på listen og et af Mosels underområder; det er stærkest.' },
       { case: 'Appellation der dækker hele regionen', wine: w('Mosel Riesling Kabinett 2022', 'Dr. Loosen', 'Mosel', 'Mosel', 'DE'),
-        note: 'Mosel er på listen, men er ikke et område, så hele Mosel lyser svagt.' },
+        note: 'Mosel står i kortets whole, så hele Mosel er stærk.' },
       { case: 'Område på kortet, ikke på listen', wine: w('Kaseler Nies\'chen Kabinett 2020', 'Erben von Beulwitz', 'Kasel', 'Mosel', 'DE'),
-        note: 'Kasel er et område på kortet, men ikke på listen, så hele Mosel lyser i stedet.' },
+        note: 'Kasel er et område på kortet, men ikke på listen. Siden WIN-293 findes det ud fra navnet i appellationsfeltet: Kasel stærkest, Ruwertal lysere.' },
       { case: 'Tyskland uden for Mosel', wine: w('Rheingau Riesling Trocken 2022', 'Robert Weil', 'Rheingau', 'Rheingau', 'DE'),
         note: 'Rheingau har intet detaljeret kort: appellationens punkt på oversigtskortet.' },
     ] },
     { country: 'AT', items: [
       { case: 'Uden detaljeret kort', wine: w('Grüner Veltliner Smaragd 2021', 'Prager', 'Wachau', 'Niederösterreich', 'AT'),
-        note: 'Wachau er på listen med et punkt: én nål på oversigtskortet med detaljefliser.' },
+        note: 'Wachau er på listen med et punkt: én nål på oversigtskortet med detaljefliser. Wachau har intet detaljeret kort, så WIN-293s regel gælder ikke her.' },
       { case: 'Kun landet', wine: w('Zweigelt 2022', 'Weingut Umathum', null, null, 'AT'),
         note: 'Kun landet: nålen står midt i Østrig.' },
     ] },
@@ -372,15 +372,19 @@ import '../../../styles/admin.css';
     const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); Promise.resolve().then(draw).catch((e) => console.error('/superadmin/dev/maps/', e)); } }, { rootMargin: '600px' });
     io.observe(el);
   };
-  /** A map in the one frame, with zoom and the credit line under it */
-  const mapFig = (svg: string, caption?: string | Node[], credit?: { sources: string | null; osm?: boolean }) => {
+  /** A map in the one frame, with zoom and the credit line under it. `svg` as a function: drawn once the box is on the
+   *  page, for its width – names' size and the zoom buttons' free corner as on the tasting's and the wine's page */
+  const mapFig = (svg: string | ((width: number) => string | Promise<string>), caption?: string | Node[], credit?: { sources: string | null; osm?: boolean }) => {
     const fig = mk('figure', 'dv-fig');
     const box = mk('div', 'map-box');
-    box.innerHTML = svg;
+    if (typeof svg === 'string') box.innerHTML = svg;
     fig.append(box);
     if (credit) setMapCredit(box, credit.sources, credit.osm ?? false);
     if (caption) { const c = mk('figcaption'); if (typeof caption === 'string') c.textContent = caption; else c.append(...caption); fig.append(c); }
-    requestAnimationFrame(() => mapZoom(box));
+    requestAnimationFrame(async () => {
+      if (typeof svg !== 'string') box.innerHTML = await svg(boxWidth(box));
+      mapZoom(box);
+    });
     return fig;
   };
   const capt = (bold: string, text: string) => { const b = mk('b', '', bold); return [b, document.createTextNode(` – ${text}`)]; };
@@ -405,10 +409,10 @@ import '../../../styles/admin.css';
     const titles = new Map([...counts.keys()].map((id) => [id, nameOf(bdx, id)]));
     const pin = [{ lon: -7.268, lat: 41.135, title: 'Quinta do Vesuvio' }];
     $('a-maps').append(
-      mapFig(drawMap(bdx, { counts, titles }), capt('full, counts + titles', 'smagningens kort: antal vine pr. område, numre og navne'), { sources: bdx.sources }),
-      mapFig(drawMap(bdx, { counts: new Map([['pauillac', 1]]), titles: new Map([['pauillac', nameOf(bdx, 'pauillac')]]), badges: false }), capt('badges: false', 'én vins kort: området fyldt og navngivet, uden nummer'), { sources: bdx.sources }),
-      mapFig(drawMap(douro, { wholeRegion: true }), capt('wholeRegion', 'hele regionen svagt (Porto), underområderne med versaler'), { sources: douro.sources }),
-      mapFig(drawMap(douro, { wholeRegion: true, pins: pin }), capt('pins', 'producentens nål oven på kortet'), { sources: douro.sources, osm: true }),
+      mapFig((w) => drawMap(bdx, { counts, titles, scale: labelScale(bdx, w), box: w }), capt('full, counts + titles', 'smagningens kort: antal vine pr. område, numre og navne'), { sources: bdx.sources }),
+      mapFig((w) => drawMap(bdx, { counts: new Map([['pauillac', 1]]), titles: new Map([['pauillac', nameOf(bdx, 'pauillac')]]), badges: false, scale: labelScale(bdx, w), box: w }), capt('badges: false', 'én vins kort: området fyldt og navngivet, uden nummer'), { sources: bdx.sources }),
+      mapFig((w) => drawMap(douro, { wholeRegion: true, scale: labelScale(douro, w), box: w }), capt('wholeRegion', 'hele regionen stærk (Porto), underområderne navngivet efter de store og mellemstore byer, fri af byer, zoomknapper og kanten'), { sources: douro.sources }),
+      mapFig((w) => drawMap(douro, { wholeRegion: true, pins: pin, scale: labelScale(douro, w), box: w }), capt('pins', 'producentens nål oven på kortet'), { sources: douro.sources, osm: true }),
     );
     // b) the overview map: Europe and the world, numbered pins, the inset, detail tiles
     const places = (await Promise.all([
@@ -443,7 +447,7 @@ import '../../../styles/admin.css';
     ] as const) {
       const m = await wineMap(wine);
       if (!m) continue;
-      const fig = mapFig(m.svg, capt(`how: ${m.how}`, `formularen: "${t(`wineMap.${m.how}` as Parameters<typeof t>[0])}"`));
+      const fig = mapFig(async (width) => (await wineMap(wine, { width }))?.svg ?? m.svg, capt(`how: ${m.how}`, `formularen: "${t(`wineMap.${m.how}` as Parameters<typeof t>[0])}"`));
       showMapCredit(fig.querySelector<HTMLElement>('.map-box')!, m);
       fig.dataset.case = label;
       $('c-maps').append(fig);
@@ -480,9 +484,11 @@ import '../../../styles/admin.css';
   }
 
   /** A tasting's "Where the wines come from", drawn by the real showOrigins(); the background behind the title in a card */
-  function originsDemo(x: (typeof TASTINGS)[number]) {
+  /** A tasting's "Where the wines come from", drawn by the real showOrigins(); the background behind the title in a card.
+   *  A blind wine is sent as the database sends it before it is revealed (no origin); reveal: a button that reveals it. */
+  function originsDemo(x: { title: string; note: string; wines: (ReturnType<typeof tw> & { blind?: boolean })[] }, reveal = false) {
     const wrap = mk('div', 'card dv-ex dv-origin');
-    wrap.append(sectionTitle('h3', x.title, 'h3'), mk('p', 'dv-wine', x.wines.map((v, i) => `${i + 1}. ${v.name}`).join(' · ')));
+    wrap.append(sectionTitle('h3', x.title, 'h3'), mk('p', 'dv-wine', x.wines.map((v, i) => `${i + 1}. ${v.name}${v.blind ? ' (blind)' : ''}`).join(' · ')));
     const block = mk('section');
     block.hidden = true;
     const box = mk('div', 'map-box origin-map'), legend = mk('ul', 'map-legend'), credit = mk('p', 'map-credit');
@@ -494,9 +500,17 @@ import '../../../styles/admin.css';
     const c = mk('figcaption');
     c.append(...capt('#hero-map', 'baggrunden bag smagningens titel'));
     bgFig.append(card, c);
-    wrap.append(block, bgFig, mk('p', '', x.note));
-    const wines: MapWine[] = x.wines.map((v, i) => ({ id: 1000 + i, sort_order: i + 1, ...v }));
-    lazy(wrap, () => showOrigins(wines, { hero, block, box, legend, credit }));
+    const parts = { hero, block, box, legend, credit };
+    const hidden = (v: (typeof x.wines)[number]) => (v.blind ? { ...v, appellation: null, appellation_id: null, region: null, country: null, producer: null, producer_lat: null, producer_lon: null } : v);
+    const rows = (open: boolean): MapWine[] => x.wines.map((v, i) => ({ id: 1000 + i, sort_order: i + 1, ...(open ? { ...v, blind: false } : hidden(v)) }));
+    wrap.append(block);
+    if (reveal) {
+      const b = button('Afslør vin 1', { variant: 'secondary', small: true });
+      b.addEventListener('click', () => { b.disabled = true; b.textContent = 'Vin 1 er afsløret'; void showOrigins(rows(true), parts); });
+      wrap.append(b);
+    }
+    wrap.append(bgFig, mk('p', '', x.note));
+    lazy(wrap, () => showOrigins(rows(false), parts));
     return wrap;
   }
 
@@ -529,11 +543,12 @@ import '../../../styles/admin.css';
         side.append(
           line('Områder', `${nApp} appellationer, ${nSub} underområder${nOff ? `, ${nOff} ikke på appellationslisten (kan aldrig fyldes)` : ''}.`),
           line('Overlap', nOver ? `${nOver} af områderne ligger i, dækker eller overlapper et andet.` : 'Ingen – områderne ligger side om side.'),
-          line('Hele regionen (whole)', `${map.whole.join(', ')} – står i filen, men læses ikke af koden.`),
-          line('Lyser hele regionen i dag', regionApps.length ? `${regionApps.join(', ')} (på listen, intet område)` : 'ingen appellationer på listen uden område'),
+          line('Hele regionen (whole)', `${map.whole.join(', ')} – regionen er vinens laveste niveau, hele regionen stærk.`),
+          line('Niveauer på kortet (within)', Object.keys(map.within ?? {}).length ? Object.entries(map.within!).map(([id, up]) => `${names.get(id)} i ${up.map((u) => names.get(u)).join(', ')}`).join(' · ') : 'ingen – områderne ligger side om side (niveauet imellem kommer fra underregionen på listen).'),
+          line('Nål i stedet for område', regionApps.filter((n) => !map.whole.some((id) => NAMES.get(id) === n)).join(', ') || 'ingen appellationer på listen uden område'),
           line('Kilder', map.sources),
         );
-        top.append(mapFig(drawProposal(map, { names })), side);
+        top.append(mapFig(drawStructure(map, names)), side);
         type Row = (typeof facts)[number] & { name: string; kind: string };
         const rows: Row[] = facts.map((f) => ({ ...f, name: names.get(f.id)!, kind: kind(f.id) }));
         const list = (ids: string[]) => ids.map((id) => names.get(id) ?? id).join(', ');
@@ -560,56 +575,44 @@ import '../../../styles/admin.css';
     }
   }
 
-  // ================= 3. The proposal =================
-  const PROPOSALS: { title: string; wine: Wine; mid?: string[]; label?: string; note: string }[] = [
-    { title: 'Pauillac', wine: w('Château Pichon Baron 2016', null, 'Pauillac', 'Bordeaux', 'FR'), mid: ['haut-medoc'],
-      note: 'Bordeaux, Pauillac mørk, Haut-Médoc i mellemtone. Kortet tegner Haut-Médoc uden Pauillac (et hul), så mellemtonen sættes her med hånden – geometrien alene finder den ikke.' },
-    { title: 'Saint-Émilion Grand Cru', wine: w('Château Chauvin 2020', null, 'Saint-Émilion Grand Cru', 'Bordeaux', 'FR'),
-      note: 'Bordeaux, Saint-Émilion Grand Cru mørk. Kortets område "Saint-Émilion" har samme form, så der er intet større område til mellemtonen.' },
-    { title: 'Porto', wine: w('Quinta do Noval LBV 2018', null, 'Porto', 'Douro', 'PT'), label: 'Porto',
-      note: 'Hele Douro. Underområdet er ukendt, så alle tre er lyse, og navnet "Porto" står over kortet.' },
-    { title: 'Barolo, Bricco San Pietro', wine: w('Barolo Bricco San Pietro 2022', 'Broccardo', 'Barolo', 'Piemonte', 'IT'),
-      note: 'Dagens Piemonte-kort med Barolo mørk. "Hele Barolo med sine 11 comuni, Monforte d\'Alba mørk" kræver kommunegrænser, som sitet ikke har endnu.' },
-    { title: 'Rivesaltes', wine: w('Rivesaltes Ambré 1966', 'Domaine Cazes', 'Rivesaltes', 'Roussillon', 'FR'),
-      note: 'Roussillon, Rivesaltes mørk. Det dækker det meste af regionen, så kortet bliver næsten helt mørkt – her ses, at niveauerne er blandet.' },
+  // ================= 3. The rule (WIN-293): its test cases on the tasting's map =================
+  type Case = { title: string; note: string; wines: (ReturnType<typeof tw> & { blind?: boolean })[]; reveal?: boolean };
+  const CASES: Case[] = [
+    { title: 'Bordeaux med tre niveauer: Pauillac i Médoc', note: 'Hele Bordeaux med grænser, Médoc lysere (underregionen på listen), Pauillac stærkest og navngivet.',
+      wines: [tw('Château Pichon Baron 2016', 'Pauillac', 'pauillac', 'Bordeaux', 'FR')] },
+    { title: 'Barolo: regionen Barolo, området La Morra', note: 'Barolo har intet detaljeret kort: Piemonte-kortet har ingen comuni (La Morra, Monforte …), så fanen viser oversigtskortet med en nål. Hele Barolo med La Morra stærkest kræver kommunegrænser – se WIN-293.',
+      wines: [tw('Barolo La Morra 2019', 'La Morra', null, 'Barolo', 'IT')] },
+    { title: 'Piemonte med Barolo', note: 'Hele Piemonte, Barolo stærkest, Langhe lysere (de DOC-områder Barolo ligger i og resten af underregionen Langhe).',
+      wines: [tw('Barolo Bricco San Pietro 2022', 'Barolo', 'barolo', 'Piemonte', 'IT')] },
+    { title: 'Bourgogne: Gevrey-Chambertin i Côte de Nuits', note: 'Hele Bourgogne, Côte de Nuits lysere, Gevrey-Chambertin stærkest.',
+      wines: [tw('Gevrey-Chambertin 2020', 'Gevrey-Chambertin', 'gevrey-chambertin', 'Bourgogne', 'FR')] },
+    { title: 'Kun regionen: Bordeaux', note: 'Regionen er det laveste kendte niveau: hele Bordeaux stærk med grænserne, ingen mellemtone.',
+      wines: [tw('Bordeaux Rouge 2019', null, null, 'Bordeaux', 'FR')] },
+    { title: 'Kun landet sammen med Bordeaux', note: 'Vinen med kun land (Frankrig) er ikke på kortet og får ingen fane; den står stadig i vinlisten.',
+      wines: [tw('Vin de France Rouge', null, null, null, 'FR'), tw('Château Palmer 2014', 'Margaux', 'margaux', 'Bordeaux', 'FR')] },
+    { title: 'Et område, der ikke kan farves ind: Ventoux', note: 'Ventoux har intet område på Rhône-kortet: hele Rhône, en nål med navnet, Rhône Sud lysere.',
+      wines: [tw('Ventoux Rouge 2022', 'Ventoux', 'ventoux', 'Rhône', 'FR')] },
+    { title: 'Blind Pauillac, ikke afsløret', note: 'Databasen sender ingen oprindelse for en blind vin, der ikke er afsløret: ingen fane, ingen nål, ingen markering af Pauillac eller Médoc.',
+      wines: [{ ...tw('Château Latour 2015', 'Pauillac', 'pauillac', 'Bordeaux', 'FR'), blind: true }, tw('Bourgogne Pinot Noir 2021', 'Bourgogne', 'bourgogne', 'Bourgogne', 'FR')] },
+    { title: 'Samme blinde vin afsløres', note: 'Tryk på knappen: showOrigins() tegnes igen med vinen afsløret, som når siden henter vinene hvert 15. sekund – Médoc og Pauillac kommer frem uden genindlæsning.',
+      wines: [{ ...tw('Château Latour 2015', 'Pauillac', 'pauillac', 'Bordeaux', 'FR'), blind: true }, tw('Bourgogne Pinot Noir 2021', 'Bourgogne', 'bourgogne', 'Bourgogne', 'FR')], reveal: true },
+    { title: 'To vine: Pauillac og Médoc', note: 'Médoc er laveste område for den ene vin og niveauet imellem for den anden: begge er stærkest.',
+      wines: [tw('Château Pichon Baron 2016', 'Pauillac', 'pauillac', 'Bordeaux', 'FR'), tw('Château Potensac 2016', 'Médoc', 'medoc', 'Bordeaux', 'FR')] },
+    { title: 'Bordeaux og Douro', note: 'Hver fane viser hele regionen efter samme regel: Bordeaux med Saint-Julien og Pomerol stærkest, Médoc og Libournais lysere; Douro (Porto, whole) hele regionen stærk.',
+      wines: [tw('Château Léoville Barton 2016', 'Saint-Julien', 'saint-julien', 'Bordeaux', 'FR'), tw('Quinta do Noval LBV', 'Porto', 'porto', 'Douro', 'PT'),
+        tw('Château Gazin 2015', 'Pomerol', 'pomerol', 'Bordeaux', 'FR'), tw('Kopke Colheita 2008', 'Porto', 'porto', 'Douro', 'PT')] },
   ];
 
-  /** The proposal for a wine: dark = its appellation's area, middle = the areas that contain it, else all light with a name */
-  async function proposalFor(wine: Wine, opts: { mid?: string[]; label?: string } = {}) {
-    const mapId = mapIdFor(wine.region);
-    const map = mapId ? await loadMap(mapId) : null;
-    if (!map) return null;
-    const apps = await loadAppellations();
-    const id = wine.appellation_id ?? (wine.appellation ? matchAppellation(apps, wine.appellation)?.id ?? null : null);
-    const inMap = !!(id && map.areas[id]);
-    const pins = wine.producer_lat != null && wine.producer_lon != null ? [{ lon: wine.producer_lon, lat: wine.producer_lat, title: wine.producer ?? '' }] : [];
-    const mid = inMap ? opts.mid ?? containersOf(map, id!) : [];
-    const label = inMap ? undefined : opts.label ?? (id ? apps.find((a) => a.id === id)?.name : null) ?? wine.appellation ?? map.name;
-    return { svg: drawProposal(map, { dark: inMap ? [id!] : [], mid, label, darkName: inMap ? nameOf(map, id!) : undefined, pins }), sources: map.sources,
-      mid: mid.map((m) => nameOf(map, m)), osm: pins.length > 0 };
-  }
-
-  function showProposals() {
-    $('s3-chip').append(chip('Forslag – ikke besluttet', 'warn'));
+  function showRule() {
+    $('s3-chip').append(chip('Besluttet – WIN-258', 'ok'));
     const swatch = (cls: string, text: string) => {
       const s = mk('span');
-      s.innerHTML = `<svg class="region-map proposal" viewBox="0 0 32 20" aria-hidden="true"><rect class="mp-fill ${cls}" x="1" y="1" width="30" height="18"/><rect class="mp-line ${cls}" x="1" y="1" width="30" height="18"/></svg>`;
+      s.innerHTML = `<svg class="region-map" viewBox="0 0 32 20" aria-hidden="true"><rect class="rm-fill ${cls}" x="1" y="1" width="30" height="18"/><rect class="rm-line ${cls}" x="1" y="1" width="30" height="18"/></svg>`;
       s.append(text);
       return s;
     };
-    $('s3-tones').append(swatch('is-dark', 'Mørk: vinens laveste kendte område'), swatch('is-mid', 'Mellem: områder der indeholder det'), swatch('is-light', 'Lys: resten af regionen'));
-    for (const p of PROPOSALS) {
-      const card = mk('article', 'card dv-ex');
-      card.append(sectionTitle('h3', p.title, 'h3'), mk('p', 'dv-wine', [p.wine.name, p.wine.appellation, p.wine.region].filter(Boolean).join(' · ')));
-      const pair = mk('div', 'dv-pair');
-      card.append(pair, mk('p', '', p.note));
-      $('s3-cases').append(card);
-      lazy(card, async () => {
-        const [today, prop] = await Promise.all([wineMap(p.wine), proposalFor(p.wine, p)]);
-        if (today) { const f = mapFig(today.svg, capt('I dag', `wineMap(), how: ${today.how}`)); showMapCredit(f.querySelector<HTMLElement>('.map-box')!, today); pair.append(f); }
-        if (prop) pair.append(mapFig(prop.svg, capt('Forslag', prop.mid.length ? `mellemtone: ${prop.mid.join(', ')}` : 'ingen mellemtone'), { sources: prop.sources, osm: prop.osm }));
-      });
-    }
+    $('s3-tones').append(swatch('is-strong', 'Stærkest: vinens laveste kendte område'), swatch('is-mid', 'Lysere: niveauerne imellem'), swatch('is-light', 'Lys: resten af regionen'));
+    $('s3-cases').append(...CASES.map((c) => originsDemo({ ...c, title: c.title }, c.reveal)));
   }
 
   // ================= 4. Examples per country =================
@@ -644,7 +647,7 @@ import '../../../styles/admin.css';
     const how = mk('p', 'dv-how');
     card.append(pair, how, mk('p', '', ex.note));
     lazy(card, async () => {
-      const [m, prop] = await Promise.all([wineMap(v), proposalFor(v, { mid: ex.mid })]);
+      const m = await wineMap(v);
       if (!m) {
         pair.append(mk('div', 'dv-nomap', 'Intet kort'));
         how.textContent = 'wineMap() → null';
@@ -658,10 +661,9 @@ import '../../../styles/admin.css';
         type = `oversigtskort: ${place && overviewFor([place]) === 'world' ? 'verden' : 'Europa'}${m.svg.includes('fill-rule="evenodd"') ? ' med detaljefliser' : ''}`;
       }
       how.textContent = `${type} · how: ${m.how} – ${HOW[m.how]}`;
-      const f = mapFig(m.svg, capt('I dag', 'wineMap()'));
+      const f = mapFig(async (width) => (await wineMap(v, { width }))?.svg ?? m.svg, capt('Vinens kort', 'wineMap()'));
       showMapCredit(f.querySelector<HTMLElement>('.map-box')!, m);
       pair.append(f);
-      if (prop) pair.append(mapFig(prop.svg, capt('Forslag', prop.mid.length ? `mellemtone: ${prop.mid.join(', ')}` : 'ingen mellemtone'), { sources: prop.sources, osm: prop.osm }));
     });
     return card;
   }
@@ -671,7 +673,7 @@ import '../../../styles/admin.css';
     NAMES = new Map((await loadAppellations()).map((a) => [a.id, a.name]));
     showTypes();
     showStructure();
-    showProposals();
+    showRule();
     showExamples();
   }
 </script>

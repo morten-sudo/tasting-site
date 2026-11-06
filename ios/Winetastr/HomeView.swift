@@ -349,27 +349,33 @@ struct HomeView: View {
         await winesHero(wines)
     }
 
-    /// Where the wines come from: one numbered pin per place (the number of different wines), on the overview map
+    /// Where the wines come from: one numbered pin per place (the number of different wines), on the overview map.
+    /// The appellation's text is matched to the list (a Pauillac at Pauillac, not in the middle of Bordeaux), and places
+    /// that would lie on top of each other (the Médoc, the Wachau) are one pin named after their region (WIN-293).
     private func bookMap() async -> OverviewDrawing? {
         struct Spot: MapWine {
             let id: Int; let region: String?; let appellation: String?; let appellation_id: String?; let country: String?
             let producer: String?; let producer_lat: Double?; let producer_lon: Double?
         }
+        let apps = await MapStore.shared.appellationList()
         var byWine: [Int: BookWine] = [:]
         for w in book where byWine[w.wine_id] == nil { byWine[w.wine_id] = w }
-        var groups: [String: (p: Place, n: Int)] = [:]; var order: [String] = []
+        var groups: [String: (p: Place, n: Int, region: String?)] = [:]; var order: [String] = []
         for w in byWine.values.sorted(by: { $0.wine_id < $1.wine_id }) {
-            let spot = Spot(id: w.wine_id, region: w.region, appellation: w.appellation, appellation_id: nil, country: w.country, producer: w.producer, producer_lat: nil, producer_lon: nil)
+            let aid = w.appellation.flatMap { matchAppellation(apps, $0)?.id }
+            let spot = Spot(id: w.wine_id, region: w.region, appellation: w.appellation, appellation_id: aid, country: w.country, producer: w.producer, producer_lat: nil, producer_lon: nil)
             guard let p = await placeOf(spot) else { continue }
-            let key = String(format: "%.1f,%.1f", p.lon, p.lat)
-            if groups[key] == nil { groups[key] = (p, 0); order.append(key) }
+            let key = String(format: "%.2f,%.2f", p.lon, p.lat)
+            if groups[key] == nil { groups[key] = (p, 0, w.region); order.append(key) }
             groups[key]!.n += 1
         }
         guard !order.isEmpty else { return nil }
         let list = order.map { groups[$0]! }
         let places = list.map(\.p)
         guard let ov = await MapStore.shared.overview(overviewFor(places)) else { return nil }
-        return OverviewDrawing(ov, pins: list.map { .init(lon: $0.p.lon, lat: $0.p.lat, label: $0.p.label, n: $0.n) }, focus: await focusFor(places))
+        let focus = await focusFor(places)
+        let pins = clusterPins(ov, list.map { (lon: $0.p.lon, lat: $0.p.lat, n: $0.n, label: $0.p.label, region: $0.region) }, focus: focus)
+        return OverviewDrawing(ov, pins: pins, focus: focus, detail: await detailFor(focus))
     }
 }
 

@@ -224,11 +224,12 @@ struct TastingView: View {
         if tab.id == region { origins = drawn }
     }
 
-    /// While a wine is blind, the map follows the host revealing it (checked every 15 seconds, as on the site)
+    /// The map follows the host revealing a wine (checked every 15 seconds, as on the site) – also with no blind wine:
+    /// a wine the host has not shown yet is not sent at all, and comes when it is shown (WIN-293)
     private func watchBlind() async {
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(15))
-            guard wines.contains(where: \.isBlind), let list = try? await Backend.wines(tasting.code) else { continue }
+            guard let list = try? await Backend.wines(tasting.code) else { continue }
             if list.map({ "\($0.id)\($0.isBlind)" }) != wines.map({ "\($0.id)\($0.isBlind)" }) {
                 wines = list
                 await showOrigins(list)

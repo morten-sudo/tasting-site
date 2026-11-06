@@ -2,30 +2,33 @@ import SwiftUI
 
 // The parts of the site's wine page (src/pages/tasting/wine.astro) beyond the heading and the rating.
 
-/// wineMap() in src/lib/wine-map.ts: the wine's appellation on the detailed region map (filled and named, or the whole
-/// region lit), its producer's pin; otherwise a pin on the overview map – with the detailed tiles when zoomed in close.
+/// wineMap() in src/lib/wine-map.ts: the wine's region on the detailed map with its lowest known area strongest and named,
+/// the levels between lighter (or the whole region marked), its producer's pin; otherwise a pin on the overview map – with the detailed tiles when zoomed in close.
 struct WineMap { let drawing: MapDrawing; let sources: String; let osm: Bool }
 
-func wineMap(_ w: Wine) async -> WineMap? {
+func wineMap(_ w: Wine, width: Double = 358) async -> WineMap? {
+    let apps = await MapStore.shared.appellationList()
     var aid = w.appellation_id
-    if aid == nil, let a = w.appellation { aid = matchAppellation(await MapStore.shared.appellationList(), a)?.id }
+    if aid == nil, let a = w.appellation { aid = matchAppellation(apps, a)?.id }
     if let mapId = mapIdFor(w.region), let map = await MapStore.shared.map(mapId) {
-        let inMap = aid.map { map.areas[$0] != nil } ?? false
+        // The same rule as the tasting's map (WIN-293): the whole region, the wine's lowest known area strongest and named
+        // (no number), the levels between lighter; an appellation the map cannot fill as a pin with its name
+        let level = levelOf(map, appellation: w.appellation, appellationId: aid, apps)
         var pins: [(lon: Double, lat: Double)] = []
         if let lat = w.producer_lat, let lon = w.producer_lon, let proj = map.proj {
             let p = proj.xy(lon, lat)
             if p.x >= 0 && p.x <= map.w && p.y >= 0 && p.y <= map.h { pins = [(lon, lat)] }
         }
-        let name = inMap ? (map.areas[aid!]?.title ?? w.appellation ?? "") : ""
-        let d = RegionDrawing(map, counts: inMap ? [aid!: 1] : [:], titles: inMap && !name.isEmpty ? [aid!: name] : [:],
-                              wholeRegion: !inMap, numbered: false, pins: pins)
+        let area = level.kind == .area
+        var named: [(lon: Double, lat: Double, title: String)] = []
+        if level.kind == .pin, let p = level.pin { named = [(lon: p.lon, lat: p.lat, title: level.name)] }
+        let d = RegionDrawing(map, counts: area ? [level.id: 1] : [:], titles: area ? [level.id: level.name] : [:], mid: Set(level.mid),
+                              wholeRegion: level.kind == .region, numbered: false, named: named, pins: pins, scale: labelScale(map, width: width), boxWidth: width)
         return WineMap(drawing: .region(d), sources: map.sources ?? "", osm: !pins.isEmpty)
     }
     guard let place = await placeOf(w, appellationId: aid), let ov = await MapStore.shared.overview(overviewFor([place])) else { return nil }
     let focus = await focusFor([place], close: true)
-    let small = focus.lon1 - focus.lon0 < 20 && focus.lat1 - focus.lat0 < 14
-    let margin = max(focus.lon1 - focus.lon0, focus.lat1 - focus.lat0) * 0.35
-    let detail = small ? await loadDetail(GeoBox(lon0: focus.lon0 - margin, lat0: focus.lat0 - margin, lon1: focus.lon1 + margin, lat1: focus.lat1 + margin)) : nil
+    let detail = await detailFor(focus)
     let d = OverviewDrawing(ov, pins: [.init(lon: place.lon, lat: place.lat, label: place.label)], focus: focus, detail: detail)
     return WineMap(drawing: .overview(d), sources: "Natural Earth", osm: place.how == "producer")
 }

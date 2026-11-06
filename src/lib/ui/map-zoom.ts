@@ -14,7 +14,7 @@ export function mapZoom(box: HTMLElement) {
   const svg = box.querySelector<SVGSVGElement>('svg');
   if (!svg) return;
   const read = (): Box => { const [x, y, w, h] = (svg.getAttribute('viewBox') ?? '0 0 100 100').split(/[\s,]+/).map(Number); return { x, y, w, h }; };
-  const home = read();     // the starting view (after fitToAreas) – zooming out never goes past it
+  const home = read();     // the starting view – zooming out never goes past it
   let view = { ...home };
   const set = (v: Box) => {
     const w = Math.min(home.w, Math.max(home.w / MAX, v.w)), h = w * (home.h / home.w);
@@ -26,7 +26,9 @@ export function mapZoom(box: HTMLElement) {
     // the lines keep their width (--z in the maps' CSS)
     const z = w / home.w;
     svg.style.setProperty('--z', z.toFixed(4));
-    for (const g of svg.querySelectorAll('.rm-s')) g.setAttribute('transform', `scale(${z.toFixed(4)})`);
+    // data-s: the labels' own scale at the starting view (labelScale() in region-map.ts, bigger on a phone)
+    const base = Number(svg.dataset.s || 1);
+    for (const g of svg.querySelectorAll('.rm-s')) g.setAttribute('transform', `scale(${(z * base).toFixed(4)})`);
     const zoomed = w < home.w - 0.5;
     box.classList.toggle('zoomed', zoomed);
     out.disabled = !zoomed;

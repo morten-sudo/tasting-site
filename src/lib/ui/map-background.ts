@@ -1,7 +1,7 @@
 // The faint background maps (MapBackground.astro: <div class="hero-bg" data-map-bg="bourgogne">).
 // fillMapBackgrounds(): a fixed region, the whole region lightly filled (the sign-up page).
 // winesBackground(): the map of a tasting's wines, the same as behind the tasting's title (the dashboard's next tasting).
-import { loadMap, drawMap, mainRegion, groupWines, DETAILED_MAPS } from '../region-map';
+import { loadMap, drawMap, mainRegion, groupWines, markings, DETAILED_MAPS } from '../region-map';
 
 export async function fillMapBackgrounds(root: ParentNode = document) {
   await Promise.all([...root.querySelectorAll<HTMLElement>('[data-map-bg]')].map(async (box) => {
@@ -17,9 +17,8 @@ export async function winesBackground(box: HTMLElement, wines: W[], corner = fal
   const region = mainRegion(wines);
   const map = region ? await loadMap(region) : null;
   if (!map) { box.replaceChildren(); return; }
-  const groups = await groupWines(map, wines);
-  const counts = new Map(groups.filter((g) => g.inMap).map((g) => [g.key, g.count]));
-  box.innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion: groups.some((g) => g.whole) && !counts.size });
+  const { counts, wholeRegion } = markings(await groupWines(map, wines));
+  box.innerHTML = drawMap(map, { mode: 'background', counts, wholeRegion });
   if (corner) box.querySelector('svg')?.setAttribute('preserveAspectRatio', 'xMaxYMax meet');
 }
 
