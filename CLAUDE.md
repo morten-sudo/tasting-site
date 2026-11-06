@@ -5,7 +5,7 @@
 - Supabase: access is enforced in the database (RLS for hosts, security-definer RPCs keyed by invite code for guests).
   Keep a copy of every applied migration in `supabase/migrations/`.
 - After every database change, run `supabase/tests/security.sql` (it rolls back) and expect `security test passed`.
-  It is too long for some tools in one go: `node scripts/security-parts.mjs` writes it as three parts in
+  It is too long for some tools in one go: `node scripts/security-parts.mjs` writes it as parts (now four) in
   `supabase/tests/parts/` (each rolls back on its own); run them one after the other and expect `security part N passed`.
   When a section is added to security.sql, add its heading to a part in the script.
 - UX rule: a list shows, the side panel edits. Rows in a list are read-only (what it is, its status as small chips,
@@ -74,7 +74,7 @@
   live site and every app version working (add, never change; see the app contract), because tracks share the test
   database and a release may go out without some of them. Each release has an issue under WIN-84 in `claude/work/`
   listing its content and migrations.
-- **Tests.** `security.sql` (three parts) and `app_contract.sql` run on the test database with every change, and on the
+- **Tests.** `security.sql` (all parts) and `app_contract.sql` run on the test database with every change, and on the
   live database when a release goes live.
 
 ## The iOS app (`ios/`)
