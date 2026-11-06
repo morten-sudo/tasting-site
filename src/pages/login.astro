@@ -130,6 +130,7 @@ import Disclosure from '../components/ui/Disclosure.astro';
   import { supabase, setRememberMe, rememberMe, lastEmail } from '../lib/supabase';
   import { fetchMyTastings, setCode, tastingUrl, signOut as guestSignOut } from '../lib/guest';
   import { landingUrl } from '../lib/landing';
+  import { linkMe } from '../lib/link-me';
   import { i18nReady, lang, t } from '../i18n';
 
   await i18nReady;
@@ -169,8 +170,13 @@ import Disclosure from '../components/ui/Disclosure.astro';
     $('forms').hidden = true;
     $('checking').hidden = false;
 
-    // A link that asked for sign-in goes back there; otherwise everyone lands on their home
+    // First sign-in of an invited co-host or account member: make them a host (link_me) before deciding where
+    // they belong – otherwise current_host_id is still empty and they would be told they are on no list
+    const linked = await linkMe();
+    // A link that asked for sign-in goes back there; a new co-host goes to the tasting they were invited to;
+    // otherwise everyone lands on their home
     if (next) { location.replace(next); return true; }
+    if (linked.length) { location.replace(`/t/${linked[0].slug}/admin/`); return true; }
     const [mine, hostRes, adminRes] = await Promise.all([
       fetchMyTastings(),
       supabase.rpc('current_host_id'),

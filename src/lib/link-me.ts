@@ -5,16 +5,18 @@ import { supabase } from './supabase';
 type Linked = { slug: string; title: string };
 const KEY = 'cohost_welcome';
 let pending: Linked[] = [];
-let running: Promise<void> | null = null;
+let running: Promise<Linked[]> | null = null;
 
-/** Runs once per page, whoever asks first (the header or the admin page) */
-export function linkMe(): Promise<void> {
+/** Runs once per page, whoever asks first (the sign-in page, the header or the admin page).
+ *  Gives the tastings this call just made me co-host of. */
+export function linkMe(): Promise<Linked[]> {
   return (running ??= (async () => {
     const { data } = await supabase.rpc('link_me_tastings');
     const rows = (data ?? []) as Linked[];
-    if (!rows.length) return;
+    if (!rows.length) return rows;
     pending = rows;
     try { sessionStorage.setItem(KEY, JSON.stringify(rows)); } catch { /* kept in memory */ }
+    return rows;
   })());
 }
 
