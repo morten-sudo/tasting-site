@@ -72,6 +72,8 @@ import '../../styles/admin.css';
   import { listRow, activityRow } from '../../lib/ui/list-row';
   import { starsRo } from '../../lib/ui/stars';
   import { iconSvg } from '../../lib/ui/icons';
+  import { facts } from '../../lib/ui/facts';
+  import { textButton } from '../../lib/ui/text-button';
   import { supabase } from '../../lib/supabase';
   import { requireHost, $, mk } from '../../lib/admin-common';
   import { t, locale, formatWhen, type Key } from '../../i18n';
@@ -140,6 +142,14 @@ import '../../styles/admin.css';
     await winesBackground($('next-map'), wines as NonNullable<typeof wines[number]>[], true);
   }
 
+  // "13 of 22 coming", and on a line of its own "6 with no reply yet" (a line that wraps mid-phrase reads badly)
+  function guestsFact(coming: number, invited: number, noReply: number): Node {
+    const f = document.createDocumentFragment();
+    f.append(t('dash.coming', { coming, n: invited }));
+    if (noReply) f.append(mk('br'), t('dash.noReply', { n: noReply }));
+    return f;
+  }
+
   function render(d: Dash) {
     $('s-tastings').textContent = String(d.tastings);
     $('s-upcoming').textContent = t('dash.upcoming', { n: d.upcoming });
@@ -151,15 +161,27 @@ import '../../styles/admin.css';
     const next = $('next');
     if (d.next) {
       const n = d.next;
+      // The numbers as plain facts (WIN-297), and where to go next as text links: the guests and wines, or – when
+      // there are none yet – inviting the first guests and adding the first wines
+      const nf = facts([
+        { label: t('adminNav.guests'), icon: 'users', value: n.invited ? guestsFact(n.coming, n.invited, n.no_reply) : t('dash.noGuests') },
+        { label: t('adminNav.wines'), icon: 'bottle', value: n.wines ? String(n.wines) : t('dash.noWines') },
+      ], 'next-facts');
       const ul = mk('ul', 'list flush');
       ul.append(listRow({
         title: n.title, href: adminUrl(n.slug), cls: 'big',
         meta: [[n.starts_at ? formatWhen(n.starts_at) : null, n.place]],
-        chips: [{ text: t('tastingsAdmin.guests', { coming: n.coming, n: n.invited }), tone: 'ok' },
-          ...(n.no_reply ? [{ text: t('dash.noReply', { n: n.no_reply }), tone: 'wait' as const }] : []),
-          { text: t('tastingsAdmin.wines', { n: n.wines }) }],
+        body: nf ? [nf] : [],
       }));
-      next.replaceChildren(ul);
+      // Guests can be invited only once the tasting has a wine (the guests tab says so), so with no wines the way
+      // forward is adding them – not an invite that would not open
+      const links = mk('p', 'next-links');
+      if (n.invited) links.append(textButton(t('dash.seeGuests'), { arrow: 'forward', href: adminUrl(n.slug, 'guests/') }));
+      else if (n.wines) links.append(textButton(t('dash.inviteGuests'), { arrow: 'forward', href: adminUrl(n.slug, 'guests/?open=g-invite-toggle') }));
+      links.append(n.wines
+        ? textButton(t('dash.seeWines'), { arrow: 'forward', href: adminUrl(n.slug, 'wines/') })
+        : textButton(t('dash.addWines'), { arrow: 'forward', href: adminUrl(n.slug, 'wines/?open=tw-add-toggle') }));
+      next.replaceChildren(ul, links);
       showNextMap(n.slug);
     } else {
       $('next-map').replaceChildren();
