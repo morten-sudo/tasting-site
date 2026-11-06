@@ -1161,13 +1161,14 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   $('csv').addEventListener('click', () => {
     const wineById = new Map(wines.map((w) => [w.id, w]));
     const pById = new Map(participants.map((p) => [p.id, p]));
-    const rows = [(['csv.order', 'csv.time', 'csv.guest', 'csv.wine', 'csv.qty', 'csv.unit', 'csv.amount', 'csv.paid'] as Key[]).map((k) => t(k))];
+    const rows = [(['csv.order', 'csv.time', 'csv.guest', 'csv.wine', 'csv.bottle', 'csv.qty', 'csv.unit', 'csv.amount', 'csv.paid'] as Key[]).map((k) => t(k))];
     for (const o of [...orders].sort((a, b) => a.id - b.id)) {
       for (const l of o.order_lines) {
         const price = Number(l.unit_price);
         rows.push([
           String(o.id), new Date(o.created_at).toLocaleString(locale()),
-          pById.get(o.participant_id)?.name ?? '', wineById.has(l.wine_id) ? wineName(wineById.get(l.wine_id)) : '',
+          pById.get(o.participant_id)?.name ?? '', wineById.get(l.wine_id)?.name ?? t('admin.unknownWine'),
+          String(Number(wineById.get(l.wine_id)?.bottle_cl ?? 75)).replace('.', ','),
           String(l.quantity), String(price).replace('.', ','),
           String(price * l.quantity).replace('.', ','), o.paid ? t('common.yes') : t('common.no'),
         ]);

@@ -319,6 +319,7 @@ export const en = {
   "csv.time": "Time",
   "csv.guest": "Guest",
   "csv.wine": "Wine",
+  "csv.bottle": "Bottle (cl)",
   "csv.qty": "Quantity",
   "csv.unit": "Price per bottle",
   "csv.amount": "Amount",
