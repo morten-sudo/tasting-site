@@ -199,7 +199,7 @@ import '../../../styles/admin.css';
   import { table } from '../../../lib/ui/table';
   import { mapZoom } from '../../../lib/ui/map-zoom';
   import { fillMapBackgrounds, winesBackground } from '../../../lib/ui/map-background';
-  import { loadMap, drawMap, mapIdFor, DETAILED_MAPS, type RegionMap } from '../../../lib/region-map';
+  import { loadMap, drawMap, mapIdFor, labelScale, boxWidth, DETAILED_MAPS, type RegionMap } from '../../../lib/region-map';
   import { placeOf, loadOverview, loadDetail, overviewFor, focusFor, drawOverview, type Place } from '../../../lib/overview-map';
   import { wineMap, showMapCredit, setMapCredit, OVERVIEW_SOURCES, type WineOrigin, type MapHow } from '../../../lib/wine-map';
   import { showOrigins, type MapWine } from '../../../lib/tasting-origins';
@@ -372,15 +372,19 @@ import '../../../styles/admin.css';
     const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); Promise.resolve().then(draw).catch((e) => console.error('/superadmin/dev/maps/', e)); } }, { rootMargin: '600px' });
     io.observe(el);
   };
-  /** A map in the one frame, with zoom and the credit line under it */
-  const mapFig = (svg: string, caption?: string | Node[], credit?: { sources: string | null; osm?: boolean }) => {
+  /** A map in the one frame, with zoom and the credit line under it. `svg` as a function: drawn once the box is on the
+   *  page, for its width – names' size and the zoom buttons' free corner as on the tasting's and the wine's page */
+  const mapFig = (svg: string | ((width: number) => string | Promise<string>), caption?: string | Node[], credit?: { sources: string | null; osm?: boolean }) => {
     const fig = mk('figure', 'dv-fig');
     const box = mk('div', 'map-box');
-    box.innerHTML = svg;
+    if (typeof svg === 'string') box.innerHTML = svg;
     fig.append(box);
     if (credit) setMapCredit(box, credit.sources, credit.osm ?? false);
     if (caption) { const c = mk('figcaption'); if (typeof caption === 'string') c.textContent = caption; else c.append(...caption); fig.append(c); }
-    requestAnimationFrame(() => mapZoom(box));
+    requestAnimationFrame(async () => {
+      if (typeof svg !== 'string') box.innerHTML = await svg(boxWidth(box));
+      mapZoom(box);
+    });
     return fig;
   };
   const capt = (bold: string, text: string) => { const b = mk('b', '', bold); return [b, document.createTextNode(` – ${text}`)]; };
@@ -405,10 +409,10 @@ import '../../../styles/admin.css';
     const titles = new Map([...counts.keys()].map((id) => [id, nameOf(bdx, id)]));
     const pin = [{ lon: -7.268, lat: 41.135, title: 'Quinta do Vesuvio' }];
     $('a-maps').append(
-      mapFig(drawMap(bdx, { counts, titles }), capt('full, counts + titles', 'smagningens kort: antal vine pr. område, numre og navne'), { sources: bdx.sources }),
-      mapFig(drawMap(bdx, { counts: new Map([['pauillac', 1]]), titles: new Map([['pauillac', nameOf(bdx, 'pauillac')]]), badges: false }), capt('badges: false', 'én vins kort: området fyldt og navngivet, uden nummer'), { sources: bdx.sources }),
-      mapFig(drawMap(douro, { wholeRegion: true }), capt('wholeRegion', 'hele regionen svagt (Porto), underområderne med versaler'), { sources: douro.sources }),
-      mapFig(drawMap(douro, { wholeRegion: true, pins: pin }), capt('pins', 'producentens nål oven på kortet'), { sources: douro.sources, osm: true }),
+      mapFig((w) => drawMap(bdx, { counts, titles, scale: labelScale(bdx, w), box: w }), capt('full, counts + titles', 'smagningens kort: antal vine pr. område, numre og navne'), { sources: bdx.sources }),
+      mapFig((w) => drawMap(bdx, { counts: new Map([['pauillac', 1]]), titles: new Map([['pauillac', nameOf(bdx, 'pauillac')]]), badges: false, scale: labelScale(bdx, w), box: w }), capt('badges: false', 'én vins kort: området fyldt og navngivet, uden nummer'), { sources: bdx.sources }),
+      mapFig((w) => drawMap(douro, { wholeRegion: true, scale: labelScale(douro, w), box: w }), capt('wholeRegion', 'hele regionen stærk (Porto), underområderne navngivet efter de store og mellemstore byer, fri af byer, zoomknapper og kanten'), { sources: douro.sources }),
+      mapFig((w) => drawMap(douro, { wholeRegion: true, pins: pin, scale: labelScale(douro, w), box: w }), capt('pins', 'producentens nål oven på kortet'), { sources: douro.sources, osm: true }),
     );
     // b) the overview map: Europe and the world, numbered pins, the inset, detail tiles
     const places = (await Promise.all([
@@ -443,7 +447,7 @@ import '../../../styles/admin.css';
     ] as const) {
       const m = await wineMap(wine);
       if (!m) continue;
-      const fig = mapFig(m.svg, capt(`how: ${m.how}`, `formularen: "${t(`wineMap.${m.how}` as Parameters<typeof t>[0])}"`));
+      const fig = mapFig(async (width) => (await wineMap(wine, { width }))?.svg ?? m.svg, capt(`how: ${m.how}`, `formularen: "${t(`wineMap.${m.how}` as Parameters<typeof t>[0])}"`));
       showMapCredit(fig.querySelector<HTMLElement>('.map-box')!, m);
       fig.dataset.case = label;
       $('c-maps').append(fig);
@@ -657,7 +661,7 @@ import '../../../styles/admin.css';
         type = `oversigtskort: ${place && overviewFor([place]) === 'world' ? 'verden' : 'Europa'}${m.svg.includes('fill-rule="evenodd"') ? ' med detaljefliser' : ''}`;
       }
       how.textContent = `${type} · how: ${m.how} – ${HOW[m.how]}`;
-      const f = mapFig(m.svg, capt('Vinens kort', 'wineMap()'));
+      const f = mapFig(async (width) => (await wineMap(v, { width }))?.svg ?? m.svg, capt('Vinens kort', 'wineMap()'));
       showMapCredit(f.querySelector<HTMLElement>('.map-box')!, m);
       pair.append(f);
     });

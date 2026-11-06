@@ -294,7 +294,9 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
   // names, weight 600), a little room added so no two names touch
   const townBox = (t: RegionMap['towns'][number], fs: number, left: boolean) => (left
     ? around(t.x, t.y, -7 - t.name.length * fs * 0.6, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + t.name.length * fs * 0.6, 4));
-  const townSize = (t: RegionMap['towns'][number]) => (t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 14);
+  // A small town's name 15 (not 14): at least 11 px on screen also on a phone (labelScale() gives the names 12.5/17 of
+  // their size there); one that then has no room is left out by the order below
+  const townSize = (t: RegionMap['towns'][number]) => (t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 15);
   const bigSide = new Map<RegionMap['towns'][number], boolean>();
   const bigBox = new Map<RegionMap['towns'][number], Box>();
   for (const t of map.towns.filter((x) => x.size === 'big')) {
