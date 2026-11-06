@@ -88,7 +88,7 @@ svg.i { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; strok
 .text-btn.loading { cursor: progress; color: var(--muted); }
 .text-btn[hidden] { display: none; }
 
-/* ---------- 3 Icon button (src/lib/ui/icon-button.ts, src/components/ui/CloseButton.astro) ---------- */
+/* ---------- 3 Icon button (src/lib/ui/icon-button.ts, src/components/ui/CloseButton.astro, EditButton.astro) ---------- */
 .icon-act {
   position: relative; display: inline-grid; place-items: center; width: var(--h-sm); height: var(--h-sm); padding: 0; margin: 0; flex: none;
   border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--amber); cursor: pointer;

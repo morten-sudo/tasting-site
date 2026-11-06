@@ -1276,7 +1276,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.addedNoMail": "{name} er tilføjet. Kopiér linket med 🔗 i rækken, og send det selv.",
   "guestInvite.mailing": "{name} er tilføjet – sender invitationen …",
   "guestInvite.mailed": "{name} er tilføjet, og invitationen er sendt på mail.",
-  "guestInvite.mailFailed": "{name} er tilføjet, men invitationen kunne ikke sendes. Prøv igen under blyanten.",
+  "guestInvite.mailFailed": "{name} er tilføjet, men invitationen kunne ikke sendes. Prøv igen under tandhjulet.",
   "guestInvite.alreadyAll": "Er allerede tilføjet smagningen",
   "twe.shopPriceLabel": "Butikspris",
   "twe.shopPriceHint": "Butiksprisen gemmes på vinen i dit bibliotek, så den følger vinen med til andre smagninger.",

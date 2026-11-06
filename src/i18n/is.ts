@@ -1276,7 +1276,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.addedNoMail": "{name} er bætt við. Afritaðu tengilinn með 🔗 í röðinni og sendu hann sjálf(ur).",
   "guestInvite.mailing": "{name} er bætt við – sendi boðið …",
   "guestInvite.mailed": "{name} er bætt við og boðið er sent í tölvupósti.",
-  "guestInvite.mailFailed": "{name} er bætt við en ekki tókst að senda boðið. Reyndu aftur með blýantinum.",
+  "guestInvite.mailFailed": "{name} er bætt við en ekki tókst að senda boðið. Reyndu aftur með tannhjólinu.",
   "guestInvite.alreadyAll": "Þegar bætt við smökkunina",
   "twe.shopPriceLabel": "Búðarverð",
   "twe.shopPriceHint": "Búðarverðið er vistað á víninu í safninu og fylgir því í aðrar smakkanir.",

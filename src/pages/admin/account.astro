@@ -4,6 +4,7 @@ import EmptyState from '../../components/ui/EmptyState.astro';
 import Notice from '../../components/ui/Notice.astro';
 import Icon from '../../components/ui/Icon.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
+import EditButton from '../../components/ui/EditButton.astro';
 import Base from '../../layouts/Base.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import '../../styles/admin.css';
@@ -18,7 +19,7 @@ import '../../styles/admin.css';
       <section class="block">
         <PageHeader size="section" title="account.nameTitle">
           <Fragment slot="actions">
-          <button id="name-edit" class="text-btn" type="button" hidden data-i18n="admin.edit">Edit</button>
+          <EditButton id="name-edit" what="account.nameTitle" hidden />
           </Fragment>
         </PageHeader>
         <p id="acc-name" class="acc-name"></p>

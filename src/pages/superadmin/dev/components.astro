@@ -11,6 +11,7 @@ import PageHeader from '../../../components/ui/PageHeader.astro';
 import SectionTitle from '../../../components/ui/SectionTitle.astro';
 import Icon from '../../../components/ui/Icon.astro';
 import CloseButton from '../../../components/ui/CloseButton.astro';
+import EditButton from '../../../components/ui/EditButton.astro';
 import SearchField from '../../../components/ui/SearchField.astro';
 import Dropdown from '../../../components/ui/Dropdown.astro';
 import ChoiceCards from '../../../components/ui/ChoiceCards.astro';
@@ -92,11 +93,12 @@ const opts = [
 
         <section id="c3" class="dv-comp">
           <SectionTitle level="h3" text="3 Icon button" />
-          <p class="help">.icon-act · iconButton(), closeButton(), setIconLoading() in src/lib/ui/icon-button.ts · CloseButton.astro</p>
+          <p class="help">.icon-act · iconButton(), closeButton(), editButton(), setEditWhat(), setIconLoading() in src/lib/ui/icon-button.ts · CloseButton.astro, EditButton.astro</p>
           <div class="dv-states">
             <span class="dv-lab">Small (rows)</span><div class="dv-row" id="ib-small"></div>
             <span class="dv-lab">Hover / focus (tip)</span><div class="dv-row dv-tips" id="ib-forced"></div>
             <span class="dv-lab">Normal, large, close</span><div class="dv-row" id="ib-sizes"><CloseButton /><CloseButton size="small" /></div>
+            <span class="dv-lab">Edit – the gear, everywhere (tip "Edit", screen readers "Edit: …")</span><div class="dv-row dv-tips" id="ib-edit"><EditButton what="section.details" /><EditButton what="wizard.maxGuests" size="normal" /></div>
           </div>
         </section>
 
@@ -621,7 +623,7 @@ const opts = [
   fillMapBackgrounds();
   import { button, setLoading } from '../../../lib/ui/button';
   import { textButton } from '../../../lib/ui/text-button';
-  import { iconButton, closeButton, setIconLoading } from '../../../lib/ui/icon-button';
+  import { iconButton, closeButton, setIconLoading, editButton } from '../../../lib/ui/icon-button';
   import { iconSvg } from '../../../lib/ui/icons';
   import { fieldError } from '../../../lib/field-error';
   import { dropdown, getDropdown } from '../../../lib/ui/dropdown';
@@ -702,15 +704,17 @@ const opts = [
     $('tb-ts').append(textButton('All wines', { arrow: 'forward' }), textButton('Back', { arrow: 'back' }), textButton('Remove', { danger: true }), textButton('Help', { href: '/admin/help/' }));
     const loadingIcon = iconButton('mail', 'Sending');
     setIconLoading(loadingIcon, true);
-    const disabledIcon = iconButton('edit', 'Edit');
+    const disabledIcon = editButton('Kopke Colheita 2008');
     disabledIcon.disabled = true;
-    $('ib-small').append(iconButton('edit', 'Edit'), iconButton('mail', 'Invite', { strong: true }), iconButton('reveal', 'Reveal'), iconButton('trash', 'Remove', { quiet: true }), disabledIcon, loadingIcon);
-    const h = iconButton('edit', 'Edit (hover)'); h.classList.add('is-hover');
+    $('ib-small').append(editButton('Kopke Colheita 2008'), iconButton('mail', 'Invite', { strong: true }), iconButton('reveal', 'Reveal'), iconButton('trash', 'Remove', { quiet: true }), disabledIcon, loadingIcon);
+    const h = editButton('Kopke Colheita 2008'); h.classList.add('is-hover');
     const f = iconButton('mail', 'Invite (focus)', { strong: true }); f.classList.add('is-focus');
     const q = iconButton('trash', 'Remove (hover)', { quiet: true }); q.classList.add('is-hover');
     const s = iconButton('mail', 'Strong (hover)', { strong: true }); s.classList.add('is-hover');
     $('ib-forced').append(h, f, s, q);
-    $('ib-sizes').prepend(iconButton('edit', 'Edit', { size: 'normal' }), iconButton('right', 'Next', { size: 'large' }), closeButton());
+    const eh = editButton('Kopke Colheita 2008'); eh.classList.add('is-hover');
+    $('ib-edit').append(eh, editButton('Portvin 2026', { href: '#c3' }));
+    $('ib-sizes').prepend(editButton('Kopke Colheita 2008', { size: 'normal' }), iconButton('right', 'Next', { size: 'large' }), closeButton());
     fieldError($('f-6'), 'Write the whole email address, e.g. name@example.dk');
     fieldError($('f-num-err'), 'Write an amount, e.g. 149,95');
     $('dv-search2').classList.add('is-focus');
@@ -836,7 +840,7 @@ const opts = [
     $('tbl-empty').append(table<O>({ columns: [{ key: 'who', label: 'Guest' }], rows: [], empty: { icon: 'cart', title: 'No orders yet', text: 'Orders come in when the guests order bottles.' } }).el);
 
     // ---------- D ----------
-    const edit = () => iconButton('edit', 'Edit');
+    const edit = () => editButton('Kopke Colheita 2008');
     const remove = () => iconButton('trash', 'Remove', { quiet: true });
     $('rows').append(
       listRow({ id: 1, grip: { label: 'Move Kopke Colheita 2008' }, no: 1, pic: wineThumb('/img/hero-800.jpg'), title: 'Kopke Colheita 2008', onOpen: () => {},

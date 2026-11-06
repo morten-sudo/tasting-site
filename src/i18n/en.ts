@@ -1275,7 +1275,7 @@ export const en = {
   "guestInvite.addedNoMail": "{name} is added. Copy the link with 🔗 in the row and send it yourself.",
   "guestInvite.mailing": "{name} is added – sending the invitation …",
   "guestInvite.mailed": "{name} is added, and the invitation is sent by email.",
-  "guestInvite.mailFailed": "{name} is added, but the invitation could not be sent. Try again with the pencil.",
+  "guestInvite.mailFailed": "{name} is added, but the invitation could not be sent. Try again with the gear.",
   "guestInvite.alreadyAll": "Already added to this tasting",
   "twe.shopPriceLabel": "Shop price",
   "twe.shopPriceHint": "The shop’s price is saved on the wine in your library, so it follows the wine into other tastings.",

@@ -1276,7 +1276,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.addedNoMail": "{name} is toegevoegd. Kopieer de link met 🔗 en stuur hem zelf.",
   "guestInvite.mailing": "{name} is toegevoegd – uitnodiging wordt verstuurd …",
   "guestInvite.mailed": "{name} is toegevoegd en de uitnodiging is per e-mail verstuurd.",
-  "guestInvite.mailFailed": "{name} is toegevoegd, maar de uitnodiging kon niet worden verstuurd. Probeer opnieuw via het potlood.",
+  "guestInvite.mailFailed": "{name} is toegevoegd, maar de uitnodiging kon niet worden verstuurd. Probeer opnieuw via het tandwiel.",
   "guestInvite.alreadyAll": "Al toegevoegd aan deze proeverij",
   "twe.shopPriceLabel": "Winkelprijs",
   "twe.shopPriceHint": "De winkelprijs wordt bij de wijn in je bibliotheek bewaard en gaat mee naar andere proeverijen.",

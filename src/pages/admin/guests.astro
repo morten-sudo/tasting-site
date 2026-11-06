@@ -5,6 +5,7 @@ import Sheet from '../../components/ui/Sheet.astro';
 import AddRow from '../../components/ui/AddRow.astro';
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
+import EditButton from '../../components/ui/EditButton.astro';
 import SectionTitle from '../../components/ui/SectionTitle.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import AdminNav from '../../components/AdminNav.astro';
@@ -25,7 +26,7 @@ import '../../styles/admin.css';
             <div id="gd-pic" class="wd-pic"></div>
             <PageHeader id="gd-name" class="wd-ph">
               <p id="gd-meta" class="wd-meta"></p>
-              <button slot="actions" id="gd-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+              <EditButton slot="actions" id="gd-edit" size="normal" />
             </PageHeader>
           </div>
           <div class="wd-grid">
@@ -98,11 +99,11 @@ import '../../styles/admin.css';
   import { setLoading } from '../../lib/ui/button';
   import { followHelpLink } from '../../lib/help-tip';
   import { supabase } from '../../lib/supabase';
-  import { requireHost, $, mk, sheetPanel, iconButton } from '../../lib/admin-common';
+  import { requireHost, $, mk, sheetPanel, iconButton, editButton } from '../../lib/admin-common';
   import { personRow } from '../../lib/ui/list-row';
   import { missing } from '../../lib/ui/list-row';
   import { avatar } from '../../lib/ui/thumb';
-  import { addRow, hitButton } from '../../lib/ui/add-row';
+  import { addRow } from '../../lib/ui/add-row';
   import { highlight as highlightRow } from '../../lib/ui/highlight';
   import { deleteWithUndo } from '../../lib/ui/delete-undo';
   import { fieldError } from '../../lib/field-error';
@@ -152,8 +153,7 @@ import '../../styles/admin.css';
     else setEmpty($('guest-empty'), { icon: 'user', title: t('guestLib.emptyTitle'), text: t('guestLib.emptyText'),
       action: { label: t('guestLib.addBtn'), icon: 'plus', onClick: () => $('add-toggle').click() } });
     $('guest-list').replaceChildren(...shown.map((g) => {
-      const edit = iconButton('edit', `${t('admin.edit')}: ${g.name}`);
-      edit.dataset.tip = t('admin.edit');
+      const edit = editButton(g.name);
       edit.addEventListener('click', () => openForm(g));
       const del = iconButton('trash', `${t('guestLib.delete')}: ${g.name}`, { quiet: true });
       del.dataset.tip = t('guestLib.delete');
@@ -202,7 +202,7 @@ import '../../styles/admin.css';
       && ((q.length >= 2 && norm(`${g.name} ${g.email ?? ''}`).includes(q)) || (e.length >= 3 && g.email?.toLowerCase().includes(e)))).slice(0, 5);
     // The one menu's look: a heading, then a row per guest with "Edit"
     add.setHits(found.map((g) => ({ lead: avatar(g.name, { size: 'small' }), title: g.name, sub: g.email ?? t('admin.noEmail'),
-      action: hitButton(t('admin.edit'), () => openForm(g)) })), t('guestLib.already'));
+      action: (() => { const b = editButton(g.name); b.addEventListener('click', () => openForm(g)); return b; })() })), t('guestLib.already'));
   }
 
   async function addGuest() {

@@ -1276,7 +1276,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "guestInvite.addedNoMail": "{name} añadido. Copia el enlace con 🔗 y envíalo tú.",
   "guestInvite.mailing": "{name} añadido: enviando la invitación …",
   "guestInvite.mailed": "{name} añadido y la invitación enviada por correo.",
-  "guestInvite.mailFailed": "{name} añadido, pero no se pudo enviar la invitación. Inténtalo con el lápiz.",
+  "guestInvite.mailFailed": "{name} añadido, pero no se pudo enviar la invitación. Inténtalo con el engranaje.",
   "guestInvite.alreadyAll": "Ya añadido a esta cata",
   "twe.shopPriceLabel": "Precio en tienda",
   "twe.shopPriceHint": "El precio en tienda se guarda en el vino de tu biblioteca y lo acompaña a otras catas.",
