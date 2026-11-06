@@ -212,9 +212,9 @@ import Disclosure from '../components/ui/Disclosure.astro';
   // email are shown: the connection, or too many emails in a short time.
   const NOT_SENT_FOR_UNKNOWN = ['otp_disabled', 'signup_disabled', 'user_not_found'];
   // With the "Before User Created" hook on (WIN-284), an unknown email gets HTTP 403 from the hook
-  // (no error code, or a hook/unexpected_failure code). Nothing else on /otp answers 403. Shown as sent too.
+  // (no error code, or a hook/unexpected_failure/unknown code; the real answer is 403 with error_code "unknown"). Nothing else on /otp answers 403. Shown as sent too.
   const rejectedByHook = (error: { status?: number; code?: string } | null) =>
-    error?.status === 403 && (!error.code || /hook|unexpected_failure/.test(error.code));
+    error?.status === 403 && (!error.code || /hook|unexpected_failure|unknown/.test(error.code));
   async function sendCode(): Promise<boolean> {
     const redirect = location.origin + '/login/' + (next ? '?next=' + encodeURIComponent(next) : '');
     const { error } = await supabase.auth.signInWithOtp({
