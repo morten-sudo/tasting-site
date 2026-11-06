@@ -1,4 +1,4 @@
--- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 1 of 3.
+-- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 1 of 4.
 -- Sections: Fixtures, Host A, A guest's page, Host D, Host A removes D, Security batch. Rolled back at the end.
 begin;
 

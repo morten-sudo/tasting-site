@@ -1,4 +1,4 @@
--- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 2 of 3.
+-- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 2 of 4.
 -- Sections: Fixtures, Host D, Host A removes D, Host E, Host C, A signed-in guest, Sign-up gate. Rolled back at the end.
 begin;
 
