@@ -427,14 +427,23 @@ struct RegionDrawing {
         // The zoom buttons (MapBox: 2 × 44 pt plus padding, top right) at the starting view: no name under them
         if boxWidth > 0 { let k = boxWidth / map.w; taken.append(Box(x0: map.w - 56 / k, y0: 0, x1: map.w, y1: 106 / k)) }
         // The big towns: their names reserved before the wines' names, which win when there is no other room
+        // Names' widths (drawMap()): about 0.6 of the font size per letter for towns and 0.64 for the wines' names, a
+        // little room added so no two names touch
         func townBox(_ t: RegionMap.Town, _ fs: Double, _ left: Bool) -> Box {
-            left ? around(t.x, t.y, -7 - Double(t.name.count) * fs * 0.48, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + Double(t.name.count) * fs * 0.48, 4)
+            left ? around(t.x, t.y, -7 - Double(t.name.count) * fs * 0.6, -6 - fs, 4, 4) : around(t.x, t.y, -4, -6 - fs, 7 + Double(t.name.count) * fs * 0.6, 4)
         }
         var bigBox: [String: (box: Box, left: Bool)] = [:]
-        for t in map.towns ?? [] where t.size == "big" { let left = townBox(t, 22, false).x1 > map.w; bigBox[t.name] = (townBox(t, 22, left), left) }
+        for t in map.towns ?? [] where t.size == "big" {
+            // Right of the dot, else left: on the map and clear of the wines' numbers, pins and the zoom buttons; with no
+            // such side the name is left out
+            func fits(_ l: Bool) -> Bool { let q = townBox(t, 22, l); return q.x0 >= 0 && q.x1 <= map.w && !hits(q) }
+            if !fits(false) && !fits(true) { continue }
+            let left = !fits(false)
+            bigBox[t.name] = (townBox(t, 22, left), left)
+        }
         var titleLabels: [Label] = []
         for b in marks + pinned where !b.title.isEmpty {
-            let w = Double(b.title.count) * 8.6, h = 18.0
+            let w = Double(b.title.count) * 17 * 0.64, h = 18.0
             let spots: [(Double, Double, String)] = b.pin ? [(18, -22, "start"), (-18, -22, "end"), (0, 20, "middle"), (0, -48, "middle")]
                 : numbered ? [(18, 6, "start"), (-18, 6, "end"), (0, 32, "middle"), (0, -22, "middle"), (18, 30, "start"), (-18, -18, "end"), (-18, 30, "end"), (18, -18, "start")]
                 : [(0, 6, "middle")]
@@ -443,9 +452,14 @@ struct RegionDrawing {
                 return around(b.x, b.y, x0, s.1 - h + 4, x0 + w, s.1 + 4)
             }
             func onBig(_ q: Box) -> Bool { bigBox.values.contains { meets(q, $0.box) } }
-            let inside = spots.filter { box($0).x0 >= 0 && box($0).x1 <= map.w }
-            let spot = inside.first { !hits(box($0)) && !onBig(box($0)) } ?? inside.first { !hits(box($0)) }
-                ?? inside.min { a, c in taken.filter { meets(box(a), $0) }.count < taken.filter { meets(box(c), $0) }.count } ?? spots[0]
+            // The first free spot inside the map (also clear of the big towns); else one that only covers a big town
+            // (the wine's name wins, the town is left out). On the tasting's numbered map a name with no free spot is
+            // left out: its number stays and the legend names it. A wine's own map (one name) takes the spot that
+            // covers the fewest names
+            let inside = spots.filter { box($0).x0 >= 0 && box($0).x1 <= map.w && box($0).y0 >= 0 && box($0).y1 <= map.h }
+            let fewest = inside.min { a, c in taken.filter { meets(box(a), $0) }.count < taken.filter { meets(box(c), $0) }.count } ?? spots[0]
+            guard let spot = inside.first(where: { !hits(box($0)) && !onBig(box($0)) }) ?? inside.first(where: { !hits(box($0)) })
+                ?? (numbered ? nil : fewest) else { continue }
             taken.append(box(spot))
             for (k, v) in bigBox where meets(box(spot), v.box) { bigBox[k] = nil }
             titleLabels.append(Label(text: b.title, at: CGPoint(x: b.x + spot.0 * S, y: b.y + spot.1 * S),
@@ -487,7 +501,8 @@ struct RegionDrawing {
         for t in (map.towns ?? []).enumerated().sorted(by: { (sizeRank[$0.element.size] ?? 2, $0.offset) < (sizeRank[$1.element.size] ?? 2, $1.offset) }).map(\.element) {
             if !partsPlaced && t.size != "big" && t.size != "mid" { placeParts(); partsPlaced = true }
             let r = t.size == "big" ? 4.5 : t.size == "mid" ? 3.5 : 2.6
-            let fs = t.size == "big" ? 22.0 : t.size == "mid" ? 17.0 : 14.0
+            // A small town's name 15 (not 14): at least 11 pt on screen also on a phone
+            let fs = t.size == "big" ? 22.0 : t.size == "mid" ? 17.0 : 15.0
             var left = false
             if t.size == "big" {
                 guard let q = bigBox[t.name] else { continue }
@@ -580,7 +595,7 @@ extension RegionDrawing {
             let p = l.base.map { CGPoint(x: $0.x + (l.at.x - $0.x) / zoom, y: $0.y + (l.at.y - $0.y) / zoom) } ?? l.at
             switch l.kind {
             case .town(let sz):
-                let fs = w(sz == "big" ? 22.0 : sz == "mid" ? 17.0 : 14.0)
+                let fs = w(sz == "big" ? 22.0 : sz == "mid" ? 17.0 : 15.0)
                 haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.town),
                          Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: l.anchor, width: w(3))
