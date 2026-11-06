@@ -302,7 +302,8 @@ struct TopBar: View {
             Button { model.openMenu = nil; model.path = [] } label: {
                 HStack(spacing: 10) {
                     Image("Logo").resizable().frame(width: 30, height: 30)
-                    Text("Winetastr").font(.medium(17)).foregroundStyle(Color.paper)
+                    // The name is the logo: never broken over two lines, also with the "Test" chip beside it
+                    Text("Winetastr").font(.medium(17)).foregroundStyle(Color.paper).lineLimit(1).fixedSize()
                 }
             }
             .buttonStyle(.plain)
@@ -325,6 +326,8 @@ struct TopBar: View {
             MenuButton(id: .account, accessibilityLabel: L("nav.userMenu")) { SiteIcon("user", size: 23).foregroundStyle(Color.paper) }
         }
         .padding(.leading, 16).padding(.trailing, 8).frame(minHeight: 54)
+        // The bar grows with the text up to the first accessibility size, so the logo, the chip and the menu fit a phone
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(Color.surface)
         .zIndex(10)
     }
