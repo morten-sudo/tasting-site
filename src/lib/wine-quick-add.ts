@@ -13,7 +13,7 @@ import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang, locale } from '../i18n';
 import { STANDARD_CL, bottleIn, bottleText, withoutBottle } from './bottle';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
-import { shrinkImage, labelDataUrl, locateAppellation, foreignPriceNote, type LabelResult, type LinkResult } from './wine-read';
+import { shrinkImage, labelDataUrl, locateAppellation, retailForeign, retailForeignNote, retailForeignToast, type LabelResult, type LinkResult } from './wine-read';
 import { attachImageInput } from './ui/image-picker';
 import { addRow, hitButton, type Hit } from './ui/add-row';
 import { listRow } from './ui/list-row';
@@ -40,7 +40,7 @@ type Opts = {
   /** A new wine is saved (tasting page: put it in the tasting straight away). */
   saved?: (id: number) => Promise<void>;
   /** Everything has come in: show the wine in the list. note: a line the page's toast adds (the shop's price
-   *  in another currency, which is not saved – WIN-281). */
+   *  in another currency and how it became kroner – WIN-281). */
   done: (id: number, name: string, note: string | null) => Promise<void>;
 };
 
@@ -305,6 +305,8 @@ export function initQuickAdd(o: Opts) {
     fact(li, metaOf({ style, vintage, producer: r.producer ?? null, bottle_cl: bottle }) || null);
     fact(li, originLine({ appellation: r.appellation ?? null, region: r.region ?? null, country }));
     if (r.price != null) fact(li, t('qa.price', { price: formatKr(r.price) }));
+    // A price in another currency: converted from euro, or left for the host (WIN-281)
+    if (src.kind === 'link') fact(li, retailForeignNote(retailForeign(r)));
 
     // The same wine is in the library already (same name and vintage): use that one
     const twin = o.library().find((w) => norm(w.name) === norm(name) && (w.vintage ?? '') === (vintage ?? '') && sameSize(w, bottle));
@@ -345,6 +347,8 @@ export function initQuickAdd(o: Opts) {
       image_url,
       source_url: src.kind === 'link' ? r.source_url ?? src.url : null,
       source_fetched_at: src.kind === 'link' ? new Date().toISOString() : null,
+      // The shop's price in another currency, shown on the wine by its price ("Regnet om fra 12,97 € (kurs 7,46)")
+      retail_foreign: src.kind === 'link' ? retailForeign(r) : null,
     };
     const { data, error } = await supabase.from('wines').insert(row).select('id').single();
     const id = (data as { id: number } | null)?.id;
@@ -376,8 +380,8 @@ export function initQuickAdd(o: Opts) {
       } catch { /* the wine form looks again when the wine is opened */ }
     }
     say(li, t('qa.saved'), 'ok');
-    // A price in another currency than kroner is not saved: the toast gives the shop's price
-    await o.done(id, [name, vintage].filter(Boolean).join(' '), src.kind === 'link' ? foreignPriceNote(r) : null);
+    // A price in another currency: the toast says it was converted (it also stays on the wine, by its price)
+    await o.done(id, [name, vintage].filter(Boolean).join(' '), src.kind === 'link' ? retailForeignToast(row.retail_foreign) : null);
     // The wine is in the list now (highlighted): the card goes in the same moment, so the wine is never shown twice
     li.remove();
     closeWhenDone();

@@ -105,6 +105,10 @@ export const currencyCode = (v: unknown) => {
   return SYMBOLS[s] ?? (/^[A-Z]{3}$/.test(s) ? s : null);
 };
 
+/** Kroner per unit of a currency with a fixed rate: the krone is pegged to the euro (ERM II, central rate 7,46038),
+ *  so a euro price is converted at 7,46 (WIN-281). Other currencies float and are never converted. */
+export const KRONER_PER: Record<string, number> = { DKK: 1, EUR: 7.46 };
+
 const price = (v: unknown) => {
   const n = Number(String(v ?? '').replace(/\s/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
   return Number.isFinite(n) && n > 0 && n < 1_000_000 ? Math.round(n * 100) / 100 : null;
@@ -239,10 +243,13 @@ ${text}`;
     price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price);
   // Never use the offer price as the regular price
   const shopPrice = regular ?? (offer && structured === offer.price ? null : structured);
-  // Winetastr never converts an amount (WIN-281): only a price in kroner fills the wine's prices. A page that
-  // states no currency at all is taken as kroner (Danish shops often leave it out).
+  // The wine's prices are kroner (WIN-281, Morten 6 November 2026): a euro price is converted at the fixed rate and
+  // the host is told on the wine ("Regnet om fra 12,97 € (kurs 7,46)"); another currency has no fixed rate, so its
+  // price is left for the host to type. A page that states no currency at all is taken as kroner (Danish shops often
+  // leave it out).
   const currency = pageCurrency ?? currencyCode(answer.currency) ?? 'DKK';
-  const inKroner = currency === 'DKK';
+  const rate = KRONER_PER[currency] ?? null;
+  const kr = (n: number | null) => (n == null || rate == null ? null : Math.round(n * rate * 100) / 100);
 
   await logLinkRead(request, url.href, source, images.length || (image ? 1 : 0), str(answer.name));
   return json({
@@ -252,13 +259,14 @@ ${text}`;
     serving: str(answer.serving)?.slice(0, 300) ?? null,
     image,
     images,
-    // In kroner only (the wine's prices are kroner); null when the shop shows another currency
-    price: inKroner ? shopPrice : null,
-    offer: inKroner ? offer : null,
-    // The shop's own price and currency, as the page shows it – never converted
+    // In kroner (converted from euro); null when the shop shows a currency without a fixed rate
+    price: kr(shopPrice),
+    offer: offer && rate != null ? { ...offer, price: kr(offer.price)! } : null,
+    // The shop's own price and currency, as the page shows it
     shop_price: shopPrice != null ? { amount: shopPrice, currency } : null,
-    // A price in another currency than kroner: the host types the price in kroner (link.foreignPrice)
-    foreign_currency: !inKroner && shopPrice != null ? currency : null,
+    // A price in another currency than kroner (the wine keeps it as retail_foreign, with the rate when converted)
+    foreign_currency: currency !== 'DKK' && shopPrice != null ? currency : null,
+    converted: currency !== 'DKK' && rate != null && shopPrice != null ? { amount: shopPrice, currency, rate } : null,
     source_url: url.href,
   });
 };

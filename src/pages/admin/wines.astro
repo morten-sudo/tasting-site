@@ -203,7 +203,8 @@ import '../../styles/admin.css';
           <p class="hint wf-prices-note" data-i18n="wineLib.pricesNote">The shop's prices – what the wine costs to buy. When you put the wine in a tasting, they become the guest price and quantity price, which you can change under the tasting's wines.</p>
           <label for="wf-retail"><span data-i18n="twe.shopPriceLabel">Shop price</span> <span class="opt" data-i18n="unit.perBottleParen">(per bottle)</span></label>
           <div class="affix w-num"><input class="input" id="wf-retail" type="text" inputmode="decimal" /><span class="unit" data-i18n="unit.kr">kr.</span></div>
-          <!-- A shop link with the price in another currency: the shop's price, never converted (WIN-281) -->
+          <!-- A shop link with the price in another currency: "Regnet om fra 12,97 € (kurs 7,46)" while the price is the
+               converted one, or the shop's price to type in kroner (WIN-281) -->
           <p id="wf-retail-hint" class="status" hidden aria-live="polite"></p>
           <label for="wf-offer-price"><span data-i18n="wineLib.offer">Shop offer</span> <span class="opt" data-i18n="wineLib.offerHint">(optional – becomes the quantity price when you add the wine to a tasting)</span></label>
           <div class="field-row offer-row">
@@ -280,9 +281,11 @@ import '../../styles/admin.css';
       library: () => admin.wines(),
       href: (w) => admin.paths().get(w.id) ?? '/admin/wines/',
       done: async (id, name, note) => {
+        // The new wine comes in at the top of the list (where its card was), not in its place by name
+        admin.addedOnTop(id);
         await admin.load();
         const shown = admin.highlight(id);
-        // A shop price in another currency (not saved, WIN-281) is said in the same toast, with longer to read it
+        // A shop price in another currency (converted, WIN-281) is said in the same toast, with longer to read it
         toast([t('wineLib.createdToast', { name }), note].filter(Boolean).join(' '), {
           kind: 'ok', ...(note ? { duration: 12000 } : {}),
           action: shown ? { label: t('admin.edit'), run: () => admin.edit(id) } : { label: t('wineLib.open'), href: admin.paths().get(id) ?? '/admin/wines/' },

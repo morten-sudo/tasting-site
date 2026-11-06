@@ -42,17 +42,43 @@ export type LinkResult = LabelResult & {
   description: string | null; image: string | null; images?: string[]; price: number | null; source_url: string;
   food?: string | null; serving?: string | null;
   offer: { price: number; quantity: number } | null; foreign_currency?: string | null;
-  /** The shop's own price and currency (never converted); price and offer are only filled when it is DKK */
+  /** The shop's own price and currency, as the page shows it */
   shop_price?: { amount: number; currency: string } | null;
+  /** A euro price converted to kroner (price and offer are then in kroner) */
+  converted?: { amount: number; currency: string; rate: number } | null;
 };
 
-/** The note for a price the shop shows in another currency than kroner ("Butikkens pris er 25,00 €. Skriv prisen
- *  i kroner."), or null when the price came in kroner or the page had none. */
-export function foreignPriceNote(r: Partial<LinkResult>): string | null {
+/** The shop's price in another currency than kroner, kept on the wine (wines.retail_foreign, WIN-281): with the rate
+ *  when the shop price was converted to kroner, without one when the host must type the price. */
+export type RetailForeign = { amount: number; currency: string; rate: number | null };
+
+/** What a link reading gives for wines.retail_foreign, or null when the price came in kroner or there was none. */
+export function retailForeign(r: Partial<LinkResult>): RetailForeign | null {
+  if (r.converted) return { amount: r.converted.amount, currency: r.converted.currency, rate: r.converted.rate };
   const p = r.shop_price;
-  if (!p || p.currency === 'DKK' || r.price != null) return null;
-  return t('link.foreignPrice', { price: formatCurrency(p.amount, p.currency) });
+  if (p && p.currency !== 'DKK' && r.price == null) return { amount: p.amount, currency: p.currency, rate: null };
+  return null;
 }
+
+/** The note on the wine's shop price: "Regnet om fra 12,97 € (kurs 7,46)", or "Butikkens pris er 19,50 US$. Skriv
+ *  prisen i kroner." when there is no fixed rate; null without a foreign price. */
+export function retailForeignNote(f: RetailForeign | null | undefined): string | null {
+  if (!f) return null;
+  const price = formatCurrency(f.amount, f.currency);
+  return f.rate != null
+    ? t('link.converted', { price, rate: RATE.format(f.rate) })
+    : t('link.foreignPrice', { price });
+}
+/** The same, as a sentence for the toast after a quick add ("Butiksprisen er regnet om fra 12,97 € (kurs 7,46).") */
+export function retailForeignToast(f: RetailForeign | null | undefined): string | null {
+  if (!f) return null;
+  const price = formatCurrency(f.amount, f.currency);
+  return f.rate != null
+    ? t('link.convertedToast', { price, rate: RATE.format(f.rate) })
+    : t('link.foreignPrice', { price });
+}
+// The rate in the site's Danish number format, as the amounts (7.46 → "7,46")
+const RATE = new Intl.NumberFormat('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
 /** Asks Cloudflare AI where an unknown appellation lies and saves it (checked against the country in the database). */
 export async function locateAppellation(appellation: string | null, region: string | null, country: string | null) {
