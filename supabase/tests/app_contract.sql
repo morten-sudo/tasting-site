@@ -25,6 +25,7 @@ begin
     ('get_my_answers','code text','question_id,answer_key'),
     ('submit_answer','code text, q_id integer, a_key text',''),
     ('tasting_leaderboard','code text, slug text','name,points,answered'),
+    ('tasting_board','code text, slug text','name,points,answered,mine'),
     ('get_chat','code text, after_id bigint','id,author,body,created_at,from_host,mine'),
     ('post_chat','code text, body text',''),
     ('place_order','code text, items jsonb',''),

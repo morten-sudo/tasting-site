@@ -293,10 +293,12 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .wf-similar ul { margin: 0; padding-left: 1.1rem; }
 .admin-page .wf-similar[hidden] { display: none; }
 
-/* Switches repeated on the tab they belong to (Orders, Quiz) */
+/* Switches on the tab they belong to (Orders, Quiz) */
 .admin-page .tab-switch { margin: 0 0 0.8rem; max-width: 46rem; border-top: 0; border-bottom: 1px solid var(--lodge-3); }
 .admin-page .tab-switches { display: grid; max-width: 46rem; margin-bottom: 0.8rem; }
 .admin-page .tab-switches .tab-switch { margin: 0; }
+/* A value row among them (the Quiz tab's link for the TV): the same line under it, none above */
+.admin-page .tab-switches .set-row.tab-switch { border-top: 0; }
 .admin-page #orders-total[hidden] { display: none; }
 .admin-page #orders-total { margin-top: 1.75rem; }
 

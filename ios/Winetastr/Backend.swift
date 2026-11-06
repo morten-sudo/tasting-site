@@ -117,7 +117,8 @@ struct ChatMessage: Decodable, Identifiable {
     let id: Int; let author: String; let body: String; let created_at: String; let from_host: Bool; let mine: Bool
     var date: Date { parseDate(created_at) ?? .now }
 }
-struct BoardRow: Decodable { let name: String; let points: Int; let answered: Int }
+/// A line on the leaderboard (tasting_board): first names only for guests (WIN-173); `mine` marks the guest's own line
+struct BoardRow: Decodable { let name: String; let points: Int; let answered: Int; var mine: Bool? = nil }
 
 struct TastingPayment: Decodable { let amount: Double; let paid: Bool }
 
@@ -238,7 +239,7 @@ enum Backend {
         try await supabase.rpc("submit_answer", params: Answer(code: code, q_id: question, a_key: key)).execute()
     }
     static func leaderboard(_ code: String) async throws -> [BoardRow] {
-        try decode(try await supabase.rpc("tasting_leaderboard", params: Board(code: code, slug: nil)).execute().data)
+        try decode(try await supabase.rpc("tasting_board", params: Board(code: code, slug: nil)).execute().data)
     }
     /// The tasting's own price for the guest, when the host has set one
     static func payment(_ code: String) async throws -> TastingPayment? {

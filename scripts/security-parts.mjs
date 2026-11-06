@@ -27,7 +27,7 @@ const fixtures = section('Fixtures');
 const parts = [
   ['Host A', "A guest's page", 'Host D', 'Host A removes D', 'Security batch'],
   ['Host D', 'Host A removes D', 'Host E', 'Host C', 'A signed-in guest'],
-  ['Host A', 'Not signed in', 'Bottle size', 'Blind tasting'],
+  ['Host A', 'Not signed in', 'Bottle size', 'Leaderboard names', 'Blind tasting'],
 ];
 fs.mkdirSync(new URL('../supabase/tests/parts/', import.meta.url), { recursive: true });
 parts.forEach((list, i) => {

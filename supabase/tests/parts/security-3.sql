@@ -1,5 +1,5 @@
 -- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 3 of 3.
--- Sections: Fixtures, Host A, Not signed in, Bottle size, Blind tasting. Rolled back at the end.
+-- Sections: Fixtures, Host A, Not signed in, Bottle size, Leaderboard names, Blind tasting. Rolled back at the end.
 begin;
 
 -- ---------- Fixtures: host A and host B, each with a tasting, wine, guest, order and quiz question ----------
@@ -426,6 +426,80 @@ begin
 end $$;
 reset role;
 update wines set bottle_cl = 75 where id = -1001;
+
+-- ---------- Leaderboard names (A01-001): short names for everyone (also hosts), full names only in tasting_standings ----------
+insert into tastings (id, host_id, slug, title, quiz_open) values
+  ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-00000000000a', 'selftest-lb', 'Test board', true);
+insert into participants (id, tasting_id, name, invite_code, status) values
+  ('00000000-0000-4000-d000-0000000000b1', '00000000-0000-4000-b000-0000000000b1', 'Anna Hansen', 'selftestb1', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b2', '00000000-0000-4000-b000-0000000000b1', 'Anna Madsen', 'selftestb2', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b3', '00000000-0000-4000-b000-0000000000b1', '  anna   Holm ', 'selftestb3', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b4', '00000000-0000-4000-b000-0000000000b1', 'Bo Holm', 'selftestb4', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b5', '00000000-0000-4000-b000-0000000000b1', 'Carl', 'selftestb5', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b6', '00000000-0000-4000-b000-0000000000b1', 'Carl', 'selftestb6', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b7', '00000000-0000-4000-b000-0000000000b1', 'Dorte Kjær Nielsen', 'selftestb7', 'yes'),
+  ('00000000-0000-4000-d000-0000000000b8', '00000000-0000-4000-b000-0000000000b1', 'Eva Invited', 'selftestb8', 'invited');
+insert into quiz_questions (id, tasting_id, sort_order, question, options, correct_key) values
+  (-3101, '00000000-0000-4000-b000-0000000000b1', 1, 'Q board', '[{"key":"a","text":"x"},{"key":"b","text":"y"}]', 'a');
+insert into quiz_answers (participant_id, question_id, answer_key) values
+  ('00000000-0000-4000-d000-0000000000b1', -3101, 'a'),
+  ('00000000-0000-4000-d000-0000000000b2', -3101, 'b');
+-- ("  anna   Holm " is shown as typed, tidied; first names are compared without case. Hansen and Holm share an H, so
+-- both get two letters; Madsen needs one. The two identical Carls: "Carl" and "Carl 2".)
+-- Not signed in (the TV, and a guest with only the invite code)
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare names text; failed boolean;
+begin
+  select string_agg(name, '|' order by name) into names from tasting_leaderboard(null, 'selftest-lb');
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'the TV board does not show first names only: ' || coalesce(names, 'nothing');
+  assert (select points from tasting_leaderboard(null, 'selftest-lb') where name = 'Anna Ha.' order by points desc limit 1) = 1, 'the board lost the points';
+  select string_agg(name, '|' order by name) into names from tasting_leaderboard('selftestb2', 'selftest-lb');
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a guest with a code sees more than first names: ' || coalesce(names, 'nothing');
+  select string_agg(name, '|' order by name) into names from tasting_leaderboard('selftestb2', null);
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'the code alone does not give the first names board';
+  assert (select string_agg(name, '|') from tasting_board('selftestb2', null) where mine) = 'Anna M.', 'the guest''s own line is not marked (only)';
+  assert not exists (select 1 from tasting_board(null, 'selftest-lb') where mine), 'a line is marked without a code';
+  failed := false; begin perform get_leaderboard(); exception when others then failed := true; end;
+  assert failed, 'get_leaderboard() can still be called';
+  failed := false; begin perform get_quiz(); exception when others then failed := true; end;
+  assert failed, 'get_quiz() without a code can still be called';
+end $$;
+reset role;
+-- A signed-in guest who is not a host of the tasting sees the same
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert (select string_agg(name, '|' order by name) from tasting_leaderboard(null, 'selftest-lb')) = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a signed-in guest sees full names on the board';
+end $$;
+reset role;
+-- A signed-in guest gets nothing from the host's standings, and anon may not call them
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert not exists (select 1 from tasting_standings('selftest-lb')), 'a guest gets the host''s standings with full names';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$ declare failed boolean := false; begin
+  begin perform tasting_standings('selftest-lb'); exception when others then failed := true; end;
+  assert failed, 'anon can call tasting_standings';
+end $$;
+reset role;
+-- The tasting's host gets the same short names on the board (the TV may be signed in as the host) and full names only
+-- in the standings
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert (select string_agg(name, '|' order by name) from tasting_board(null, 'selftest-lb')) = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a signed-in host gets full names on the board';
+  assert (select count(*) from tasting_standings('selftest-lb') where name in ('Anna Hansen', 'Anna Madsen', 'Dorte Kjær Nielsen')) = 3, 'the host does not see full names in the standings';
+  assert (select count(*) from tasting_standings('selftest-lb')) = 7, 'the host standings do not have every guest who comes';
+  assert (select points from tasting_standings('selftest-lb') where name = 'Anna Hansen') = 1, 'the standings lost the points';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
 
 -- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
