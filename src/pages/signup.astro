@@ -44,16 +44,15 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
 
         <!-- Step 2: code from the email -->
         <form id="otp-form" class="login-form" novalidate hidden>
-          <!-- The email already has an account: the same code signs in instead -->
-          <Notice id="su-exists" title="signup.existsTitle" hidden>
-            <p data-i18n="signup.existsText">There is already an account with this email. Enter the code from the email to sign in.</p>
-          </Notice>
+          <!-- The same words whether the email has an account or not (WIN-289): the page never says which.
+               With an account, the code signs in to it; without one, it creates it -->
           <p><span data-i18n="login.sentTo">We have sent a code to</span> <strong id="sent-to"></strong>. <span data-i18n="login.enterIt">Enter it here.</span></p>
           <label for="otp" data-i18n="login.codeLabel">Code from the email</label>
           <input id="otp" class="input code" type="text" inputmode="numeric" autocomplete="one-time-code"
                  pattern="[0-9]*" maxlength="10" required />
-          <button class="btn" type="submit" id="otp-btn" data-i18n="signup.create">Create my account</button>
-          <p id="otp-terms" class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
+          <button class="btn" type="submit" id="otp-btn" data-i18n="signup.continue">Continue</button>
+          <p class="hint su-fine" data-i18n="signup.codeSignsIn">If you already have an account, the code signs you in to it.</p>
+          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
           <p class="hint">
             <button id="back" class="text-btn" type="button" data-i18n="host.back">Change name or email</button>
           </p>
@@ -165,17 +164,6 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     ($('start-form') as HTMLFormElement).dataset.signedIn = '1';
   }
 
-  // An existing account: say so and sign in with the same code (nothing is created)
-  let existing = false;
-  function setExisting(on: boolean) {
-    existing = on;
-    $('su-exists').hidden = !on;
-    $('otp-terms').hidden = on;
-    const b = $('otp-btn') as HTMLButtonElement;
-    b.dataset.i18n = on ? 'login.submit' : 'signup.create';
-    b.textContent = t(on ? 'login.submit' : 'signup.create');
-  }
-
   async function sendCode() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -203,12 +191,12 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
     const btn = $('start-btn') as HTMLButtonElement;
     setLoading(btn, true, t('common.sending'));
     // Registers the sign-up first (WIN-284: the database only lets a user be created for a known email or one that
-    // signup_start() was called for) and says whether the email already has a host account
-    let { data: taken, error: startError } = await supabase.rpc('signup_start', { e: email });
-    if (startError?.message.includes('too_many')) { setLoading(btn, false); failed(t('login.tooManyChecks')); return; }
-    // A database without signup_start() yet (the order is database first, but a test database may lag behind)
-    if (startError) ({ data: taken } = await supabase.rpc('signup_email_taken', { e: email }));
-    setExisting(taken === true);
+    // signup_start() was called for). Its answer (whether the email already has a host account) is not used: the page
+    // shows the same next step for every email (WIN-289), and after the code an existing host is simply signed in.
+    // Only problems that do not depend on the email are shown: too many attempts from this connection, or (from
+    // sending the code) the connection or too many emails.
+    const { error: startError } = await supabase.rpc('signup_start', { e: email });
+    if (startError?.message?.includes('too_many')) { setLoading(btn, false); failed(t('login.tooManyChecks')); return; }
     const ok = await sendCode();
     setLoading(btn, false);
     if (!ok) return;
@@ -237,8 +225,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       bad('otp', error.status === 429 ? t('login.tooManyTries') : t('login.wrongCode'));
       return;
     }
-    // Already a host (said so above, or found now): signed in – nothing to create
-    if (existing || (await supabase.rpc('current_host_id')).data) {
+    // Already a host: signed in to the existing account – nothing is created
+    if ((await supabase.rpc('current_host_id')).data) {
       try { localStorage.removeItem(NAME_KEY); } catch {}
       location.replace('/admin/');
       return;

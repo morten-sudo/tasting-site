@@ -937,6 +937,7 @@ begin
   -- The sign-up page registers the email first; it says whether a host account exists (a guest is not one)
   assert not signup_start('New-Host@SelfTest.invalid'), 'a new email is said to have an account';
   assert not signup_start('guest-a@selftest.invalid'), 'the sign-up start reveals a guest';
+  assert (select prosrc from pg_proc where oid = 'public.signup_start(text)'::regprocedure) !~* 'return\s+exists', 'the sign-up start reveals whether an email has an account (WIN-289)';
   failed := false; begin perform signup_start('bad<x>@selftest.invalid'); exception when others then failed := true; end;
   assert failed, 'the sign-up start takes a malformed email';
   -- Nobody reads or writes the sign-ups directly, nor calls the hook
