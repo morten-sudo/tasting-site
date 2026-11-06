@@ -53,9 +53,9 @@ import CartBar from '../../components/ui/CartBar.astro';
       </Disclosure>
 
       <nav id="pager" class="pager" aria-label="Other wines" data-i18n-attr="aria-label=wine.others" hidden>
-        <a id="prev" class="icon-act lg" aria-disabled="true"><Icon name="left" /></a>
+        <a id="prev" class="icon-act lg" role="link" aria-disabled="true"><Icon name="left" /></a>
         <p id="pager-count" class="count"></p>
-        <a id="next" class="icon-act lg" aria-disabled="true"><Icon name="right" /></a>
+        <a id="next" class="icon-act lg" role="link" aria-disabled="true"><Icon name="right" /></a>
       </nav>
       </div>
     </div>
@@ -109,7 +109,9 @@ import CartBar from '../../components/ui/CartBar.astro';
   // Previous and next: the round icon buttons around "2 of 11"; the wine's name is their name and tip
   function pager(index: number) {
     const link = (a: HTMLAnchorElement, w: Wine | undefined, dir: string) => {
-      if (!w) { a.removeAttribute('href'); a.setAttribute('aria-disabled', 'true'); a.setAttribute('aria-label', dir); return; }
+      // No wine that way: a disabled link (role="link" keeps aria-label valid on an <a> without href)
+      if (!w) { a.removeAttribute('href'); a.setAttribute('role', 'link'); a.setAttribute('aria-disabled', 'true'); a.setAttribute('aria-label', dir); delete a.dataset.tip; return; }
+      a.removeAttribute('role');
       a.href = tastingUrl(slug, `wines/${slugs.get(w.id)}/`);
       a.removeAttribute('aria-disabled');
       a.setAttribute('aria-label', `${dir}: ${w.name}`);

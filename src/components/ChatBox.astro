@@ -5,7 +5,7 @@ import EmptyState from './ui/EmptyState.astro';
 const { prefix } = Astro.props as { prefix: string };
 ---
 <div class="chat" id={`${prefix}-chat`}>
-  <ol id={`${prefix}-messages`} class="chat-list" aria-live="polite"></ol>
+  <ol id={`${prefix}-messages`} class="chat-list" aria-live="polite" tabindex="0" aria-label="Messages" data-i18n-attr="aria-label=chat.messages"></ol>
   <EmptyState id={`${prefix}-empty`} class="chat-empty" icon="chat" title="chat.emptyTitle" text="chat.emptyText" hidden />
   <form id={`${prefix}-form`} class="chat-form" novalidate>
     <label for={`${prefix}-input`} class="sr" data-i18n="chat.write">Write a message</label>

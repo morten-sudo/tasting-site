@@ -98,6 +98,17 @@ function absolute(src: unknown, base: URL) {
   } catch { return null; }
 }
 
+/** "eur" or "€" → "EUR", "kr." → "DKK"; null when it is not a currency. */
+const SYMBOLS: Record<string, string> = { '€': 'EUR', '£': 'GBP', '$': 'USD', 'KR': 'DKK', 'KR.': 'DKK', 'DKR': 'DKK', ',-': 'DKK' };
+export const currencyCode = (v: unknown) => {
+  const s = String(v ?? '').trim().toUpperCase();
+  return SYMBOLS[s] ?? (/^[A-Z]{3}$/.test(s) ? s : null);
+};
+
+/** Kroner per unit of a currency with a fixed rate: the krone is pegged to the euro (ERM II, central rate 7,46038),
+ *  so a euro price is converted at 7,46 (WIN-281). Other currencies float and are never converted. */
+export const KRONER_PER: Record<string, number> = { DKK: 1, EUR: 7.46 };
+
 const price = (v: unknown) => {
   const n = Number(String(v ?? '').replace(/\s/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.'));
   return Number.isFinite(n) && n > 0 && n < 1_000_000 ? Math.round(n * 100) / 100 : null;
@@ -148,8 +159,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
     } catch {}
   }
 
-  // The page's currency; prices in other currencies than kroner and euro are left out (the host types the price)
-  const currency = String(offers?.priceCurrency ?? meta['og:price:currency'] ?? meta['product:price:currency'] ?? '').trim().toUpperCase() || null;
+  // The currency the page states for its prices (structured data); the model's reading of the page text is the fallback
+  const pageCurrency = currencyCode(offers?.priceCurrency ?? meta['og:price:currency'] ?? meta['product:price:currency'] ?? meta['pricecurrency']);
 
   const title = decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '').trim();
   const parts = [
@@ -160,22 +171,23 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
     shop?.title && `Product name: ${shop.title}`,
     shop?.vendor && `Vendor: ${shop.vendor}`,
     shop?.product_type && `Product type: ${shop.product_type}`,
-    shop?.variants?.length && `Variants (title: price DKK, before: regular price):\n` + shop.variants
+    shop?.variants?.length && `Variants (title: price, before: regular price):\n` + shop.variants
       .map((v) => `- ${v.title ?? ''}: ${v.price}${v.compare_at_price ? `, before ${v.compare_at_price}` : ''}`).join('\n'),
     str(first(product.brand) && (first(product.brand) as Record<string, unknown>).name) &&
       `Brand: ${(first(product.brand) as Record<string, unknown>).name}`,
     (meta['og:description'] || meta['description']) && `Summary: ${meta['og:description'] || meta['description']}`,
     str(product.description) && `Description: ${htmlToText(String(product.description))}`,
     shop?.body_html && `Description: ${htmlToText(shop.body_html)}`,
-    currency && `Currency of the prices: ${currency}`,
+    pageCurrency && `Currency of the prices: ${pageCurrency}`,
     `Page text:\n${htmlToText(html)}`,
   ].filter(Boolean).join('\n');
   const text = parts.slice(0, MAX_TEXT);
 
   const prompt = `Below is text from a web shop's product page for a wine. Return ONLY a JSON object with these keys:
 ${FIELDS_SPEC},
-"regular_price": the normal, non-discounted price for ONE bottle as a number (often shown crossed out or as "normal price"/"vejl. pris") – only when the page shows it in Danish kroner (DKK/kr.) or euro (EUR/€), otherwise null,
+"regular_price": the normal, non-discounted price for ONE bottle as a number, in the currency the page shows it in (often shown crossed out or as "normal price"/"vejl. pris"), or null,
 "offer_price": a discounted price per bottle as a number in the same currency, or null,
+"currency": the ISO 4217 code of the currency of those prices (e.g. "DKK" for kr./DKK, "EUR" for €), or null,
 "offer_quantity": how many bottles must be bought to get offer_price (1 if it applies to a single bottle), or null,
 "description": two or three sentences in ${LANG_NAMES[lang]} about the wine's style and taste, written in your own words – do not copy sentences from the page, and leave out prices, discounts, points and marketing,
 "food": the dishes the page suggests the wine with, as a short comma-separated list in ${LANG_NAMES[lang]} (e.g. "grilled fish, salads, cheese"), or null,
@@ -217,22 +229,27 @@ ${text}`;
       if (res.ok) image = `${bottle}_pb_x600.png`;
     } catch {}
   }
-  // Regular price per bottle: what the page calls the normal price, else the structured price
+  // Regular price per bottle: what the page calls the normal price, else the structured price – in the shop's currency
   const v0 = shop?.variants?.[0];
-  // Euro is pegged to the krone; any other currency gives no price
-  const toDkk = (n: number | null) => (n == null ? null : !currency || currency === 'DKK' ? n : currency === 'EUR' ? Math.round(n * 7.46) : null);
-  const regular = toDkk(price(answer.regular_price)) ??
+  const regular = price(answer.regular_price) ??
     (v0?.compare_at_price && price(v0.compare_at_price)! > price(v0.price)! && /^(1|default|1 ?stk\.?|1 ?fl\.?)?$/i.test((v0.title ?? '').trim().replace(/^default title$/i, ''))
       ? price(v0.compare_at_price) : null);
-  const offerPrice = toDkk(price(answer.offer_price));
+  const offerPrice = price(answer.offer_price);
   const offerQty = Number(answer.offer_quantity);
   const offer = offerPrice && (!regular || offerPrice < regular)
     ? { price: offerPrice, quantity: Number.isInteger(offerQty) && offerQty > 0 && offerQty < 100 ? offerQty : 1 }
     : null;
-  const structured = toDkk(price(offers?.price) ?? price(offers?.lowPrice) ??
-    price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price));
+  const structured = price(offers?.price) ?? price(offers?.lowPrice) ??
+    price(meta['og:price:amount'] ?? meta['product:price:amount']) ?? price(shop?.variants?.[0]?.price);
   // Never use the offer price as the regular price
   const shopPrice = regular ?? (offer && structured === offer.price ? null : structured);
+  // The wine's prices are kroner (WIN-281, Morten 6 November 2026): a euro price is converted at the fixed rate and
+  // the host is told on the wine ("Regnet om fra 12,97 € (kurs 7,46)"); another currency has no fixed rate, so its
+  // price is left for the host to type. A page that states no currency at all is taken as kroner (Danish shops often
+  // leave it out).
+  const currency = pageCurrency ?? currencyCode(answer.currency) ?? 'DKK';
+  const rate = KRONER_PER[currency] ?? null;
+  const kr = (n: number | null) => (n == null || rate == null ? null : Math.round(n * rate * 100) / 100);
 
   await logLinkRead(request, url.href, source, images.length || (image ? 1 : 0), str(answer.name));
   return json({
@@ -242,10 +259,14 @@ ${text}`;
     serving: str(answer.serving)?.slice(0, 300) ?? null,
     image,
     images,
-    price: shopPrice,
-    offer,
-    // Prices shown in a currency we do not convert: the host types the price
-    foreign_currency: currency && currency !== 'DKK' && currency !== 'EUR' ? currency : null,
+    // In kroner (converted from euro); null when the shop shows a currency without a fixed rate
+    price: kr(shopPrice),
+    offer: offer && rate != null ? { ...offer, price: kr(offer.price)! } : null,
+    // The shop's own price and currency, as the page shows it
+    shop_price: shopPrice != null ? { amount: shopPrice, currency } : null,
+    // A price in another currency than kroner (the wine keeps it as retail_foreign, with the rate when converted)
+    foreign_currency: currency !== 'DKK' && shopPrice != null ? currency : null,
+    converted: currency !== 'DKK' && rate != null && shopPrice != null ? { amount: shopPrice, currency, rate } : null,
     source_url: url.href,
   });
 };

@@ -26,7 +26,7 @@ import { listRow } from './ui/list-row';
 import { wineThumb } from './ui/thumb';
 import { highlight as highlightRow } from './ui/highlight';
 import { deleteWithUndo } from './ui/delete-undo';
-import { shrinkImage, labelDataUrl, locateAppellation, type LabelResult, type LinkResult } from './wine-read';
+import { shrinkImage, labelDataUrl, locateAppellation, retailForeign, retailForeignNote, type LabelResult, type LinkResult, type RetailForeign } from './wine-read';
 import { COMMON_CL, STANDARD_CL, bottleText, parseCl, wineMeta } from './bottle';
 import { WINE_COUNTRIES, countryName, loadAppellations, loadRegions, matchAppellation, matchRegion, normOrigin, originLine, type Appellation, type WineRegion } from './origin';
 import { dailyLimitText, throwIfDailyLimit, limitOr } from './daily-limit';
@@ -36,6 +36,8 @@ export type AdminWine = {
   style: string | null; vintage: string | null; abv: number | null;
   retail_price_dkk: number | null; description: string | null; details: string | null;
   image_url: string | null; source_url: string | null; source_fetched_at?: string | null;
+  /** The shop's price in another currency (WIN-281): what the shop price was converted from, or what to type */
+  retail_foreign?: RetailForeign | null;
   grapes?: string | null; food_pairing?: string | null; serving?: string | null;
   country: string | null; region: string | null; appellation: string | null; appellation_id: string | null;
   offer_price_dkk: number | null; offer_quantity: number | null;
@@ -46,7 +48,7 @@ export type AdminWine = {
   tasting_wines?: { price_dkk?: number | null; price_tiers?: { qty: number; price: number }[] | null; tastings: { slug: string; title: string } | null }[];
 };
 
-const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, bottle_cl, country, region, appellation, appellation_id, retail_price_dkk, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(price_dkk, price_tiers, tastings(slug, title))';
+const COLUMNS = 'id, host_id, name, producer, style, vintage, abv, bottle_cl, country, region, appellation, appellation_id, retail_price_dkk, retail_foreign, offer_price_dkk, offer_quantity, description, details, image_url, source_url, source_fetched_at, grapes, food_pairing, serving, producer_website, producer_address, producer_lat, producer_lon, producer_source, producer_checked_at, tasting_wines(price_dkk, price_tiers, tastings(slug, title))';
 const BUCKET = 'wine-images';
 
 /** A typed web address as https://…, or null. */
@@ -371,6 +373,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     btn.addEventListener('click', () => {
       f.changes.forEach((c) => c.apply());
       syncOrigin();
+      syncRetailHint();
       labelStatus(t('fill.applied', { n: names.length }), 'ok');
     });
     // Under the line: what differs (when something was also filled) and the button that takes the new values
@@ -421,9 +424,13 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const offer = r.offer
         ? ' ' + t(r.offer.quantity > 1 ? 'link.offerMany' : 'link.offerOne', { price: formatKr(r.offer.price), n: r.offer.quantity })
         : '';
-      const foreign = r.foreign_currency && !field<HTMLInputElement>('wf-retail').value.trim()
-        ? ' ' + t('link.foreignPrice', { currency: r.foreign_currency }) : '';
-      fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + foreign);
+      // A price in another currency (WIN-281): a euro price came converted to kroner – the line under the shop price
+      // says from what, for as long as the price is the converted one; else it gives the shop's price to type
+      const foreign = retailForeign(r);
+      if (foreign) retailFrom = { foreign, kr: r.price };
+      else if (r.price != null) retailFrom = null;
+      const note = syncRetailHint();
+      fillStatus(f, t('link.filled', { n: '{n}' }), t('link.nothing'), offer + (note ? ' ' + note : ''));
       fillProducer();
     } catch (e) {
       labelStatus(limitOr(e, t('link.failed')), 'error');
@@ -431,6 +438,26 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       busyButton(btn, false);
     }
   }
+
+  /** The shop's price in another currency (wines.retail_foreign) and the kroner it became (null: none to type) */
+  let retailFrom: { foreign: RetailForeign; kr: number | null } | null = null;
+  /** True while the shop price field still holds the converted price (or, without a rate, is still empty) */
+  function retailStillForeign() {
+    if (!retailFrom) return false;
+    const now = parseAmount(field<HTMLInputElement>('wf-retail').value);
+    return retailFrom.foreign.rate != null ? now != null && now === retailFrom.kr : now == null;
+  }
+  /** The status line under the shop price: "Regnet om fra 12,97 € (kurs 7,46)" while the price is the converted
+   *  one, or the shop's price to type in kroner; hidden once the host types another price. Returns the text. */
+  function syncRetailHint(): string | null {
+    const input = field<HTMLInputElement>('wf-retail');
+    const text = retailStillForeign() ? retailForeignNote(retailFrom!.foreign) : null;
+    setStatus($('wf-retail-hint'), text ? (retailFrom!.foreign.rate != null ? 'info' : 'warn') : null, text ?? '');
+    if (text) input.setAttribute('aria-describedby', 'wf-retail-hint');
+    else if (input.getAttribute('aria-describedby') === 'wf-retail-hint') input.removeAttribute('aria-describedby');
+    return text;
+  }
+  field<HTMLInputElement>('wf-retail').addEventListener('input', () => syncRetailHint());
 
   let previewUrl: string | null = null;
   function setPreview(url: string | null, name = '') {
@@ -456,6 +483,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     producerStatus('', '', 'wf-image-status');
     $('wf-image-options').hidden = true;
     form.reset();
+    retailFrom = w.retail_foreign ? { foreign: w.retail_foreign, kr: w.retail_price_dkk } : null;
     labelStatus('');
     form.querySelectorAll('.from-label').forEach((el) => el.classList.remove('from-label'));
     field<HTMLInputElement>('wf-name').value = w.name ?? '';
@@ -466,6 +494,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     field<HTMLInputElement>('wf-vintage').value = w.vintage ?? '';
     field<HTMLInputElement>('wf-abv').value = amountText(w.abv, locale());
     field<HTMLInputElement>('wf-retail').value = amountText(w.retail_price_dkk, locale());
+    syncRetailHint();
     field<HTMLInputElement>('wf-offer-price').value = amountText(w.offer_price_dkk, locale());
     field<HTMLInputElement>('wf-offer-qty').value = w.offer_quantity != null ? String(w.offer_quantity) : '';
     renderInTastings(w);
@@ -624,11 +653,23 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     render();
   });
 
+  /** Wines added on this page (quick add or the panel), newest first: shown at the top of the list until a reload */
+  const onTop: number[] = [];
+  function addedOnTop(id: number) {
+    const i = onTop.indexOf(id);
+    if (i >= 0) onTop.splice(i, 1);
+    onTop.unshift(id);
+  }
+
   function render() {
     list.replaceChildren();
     $('wine-empty').hidden = wines.length > 0;
     list.hidden = !wines.length;
-    const shown = wines.filter((w) => !pendingDelete.has(w.id) && matches(w));
+    const listed = wines.filter((w) => !pendingDelete.has(w.id) && matches(w));
+    // Wines added since the page opened come first, newest at the top (adding to a list = a new row at the top);
+    // the rest by name. After a reload every wine is in its place by name.
+    const shown = [...onTop.map((id) => listed.find((w) => w.id === id)).filter((w): w is AdminWine => !!w),
+      ...listed.filter((w) => !onTop.includes(w.id))];
     renderFilters(shown.length);
     const noMatch = document.getElementById('wine-no-match');
     if (noMatch) noMatch.hidden = !wines.length || shown.length > 0;
@@ -861,6 +902,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       abv: parseAmount(field<HTMLInputElement>('wf-abv').value),
       bottle_cl: bottleNow,
       retail_price_dkk: parseAmount(field<HTMLInputElement>('wf-retail').value),
+      // Kept while the price is the converted one; another price typed by the host drops it (also in the database)
+      retail_foreign: retailStillForeign() ? retailFrom!.foreign : null,
       offer_price_dkk: parseAmount(field<HTMLInputElement>('wf-offer-price').value),
       offer_quantity: (() => {
         const n = Math.round(Number(field<HTMLInputElement>('wf-offer-qty').value.trim()));
@@ -898,6 +941,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     setLoading(save, false);
     if (error) { toast(t('admin.wineNotSaved'), { kind: 'error' }); return; }
     const newId = (saved as { id: number } | null)?.id;
+    if (!before && newId) addedOnTop(newId);
     // The producer's facts belong to every wine by the producer: the account's other wines get the ones they miss
     await shareProducer(row.producer, { website: row.producer_website, address: row.producer_address,
       ...(fresh && fresh.lat != null ? { lat: fresh.lat, lon: fresh.lon, source: fresh.source } : {}) }, newId);
@@ -1169,5 +1213,5 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
     return highlightRow(list.querySelector(`li[data-id="${id}"]`));
   }
 
-  return { load, edit, paths, deleteLater, highlight, wines: () => wines.filter((w) => !pendingDelete.has(w.id)) };
+  return { load, edit, paths, deleteLater, highlight, addedOnTop, wines: () => wines.filter((w) => !pendingDelete.has(w.id)) };
 }

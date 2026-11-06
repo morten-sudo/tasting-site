@@ -129,6 +129,8 @@ begin
   update wine_regions set name = 'hacked' where id = 'pt-douro'; get diagnostics n = row_count;           assert n = 0, 'a host can change the wine regions';
   failed := false; begin perform link_participant_guest(); exception when others then failed := true; end;
   assert failed, 'a host can call the linking trigger function';
+  failed := false; begin perform wines_retail_foreign(); exception when others then failed := true; end;
+  assert failed, 'a host can call the converted-price trigger function';
   -- The guest page of another host's tasting stays closed
   assert host_guest_code('selftest-b') is null, 'host A gets a guest code for host B''s tasting';
   -- Hosts are managed only by the owner of the tasting
