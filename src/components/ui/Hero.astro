@@ -1,6 +1,6 @@
 ---
 // Component 44 – the one hero.
-//   image="cellar" (default): the cellar photo with white text – an eyebrow, the title, a lead and on-photo buttons
+//   variant="photo" (default): the long table set for a tasting (public/img/hero-*) with white text – an eyebrow, the title, a lead and on-photo buttons
 //     (slot "actions", .btn.on-photo / .on-photo-2); the default slot goes after them. size "full" (the front page)
 //     or "fill" (fills its box – the sign-in page's photo side). titleTag: "p" when the page's <h1> is elsewhere.
 //   variant="tasting": the guest's tasting – the countdown chip, the title and the when / where lines with their
@@ -32,8 +32,8 @@ const T = titleTag;
 ) : (
   <section class:list={['hero', size, cls]}>
     <picture>
-      <source type="image/webp" srcset="/img/cellar-800.webp 800w, /img/cellar-1200.webp 1200w" sizes={sizes} />
-      <img src="/img/cellar-1200.jpg" srcset="/img/cellar-800.jpg 800w, /img/cellar-1200.jpg 1200w" sizes={sizes}
+      <source type="image/webp" srcset="/img/hero-800.webp 800w, /img/hero-1200.webp 1200w" sizes={sizes} />
+      <img src="/img/hero-1200.jpg" srcset="/img/hero-800.jpg 800w, /img/hero-1200.jpg 1200w" sizes={sizes}
            width="1200" height="800" alt={tr(alt)} data-i18n-attr={i18n(alt) ? `alt=${alt}` : undefined} fetchpriority={size === 'full' ? 'high' : undefined} />
     </picture>
     <div class="hero-in wrap">

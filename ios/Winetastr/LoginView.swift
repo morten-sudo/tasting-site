@@ -1,7 +1,7 @@
 import SwiftUI
 import Supabase
 
-/// The site's /login/: the cellar photo with the claim, and the card with the two steps.
+/// The site's /login/: the hero photo of the long table set for a tasting (the site's public/img/hero-1200.jpg) with the claim, and the card with the two steps.
 struct LoginView: View {
     @Environment(AppModel.self) private var model
     /// Opened from a page (the wine book, the profile) to sign in with the email: a way back
@@ -46,7 +46,7 @@ struct LoginView: View {
 
     private var hero: some View {
         ZStack(alignment: .bottomLeading) {
-            Image("Cellar").resizable().scaledToFill().frame(height: 232).frame(maxWidth: .infinity).clipped()
+            Image("Hero").resizable().scaledToFill().frame(height: 232).frame(maxWidth: .infinity).clipped()
                 .overlay(LinearGradient(colors: [Color.black.opacity(0.15), Color.black.opacity(0.65)], startPoint: .top, endPoint: .bottom))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 8) {

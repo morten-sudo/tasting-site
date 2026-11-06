@@ -499,7 +499,7 @@ const opts = [
 
         <section id="c44" class="dv-comp">
           <SectionTitle level="h3" text="44 Hero" />
-          <p class="help">Hero.astro – the cellar photo (front page, sign-in) and the guest's tasting</p>
+          <p class="help">Hero.astro – the long table photo (front page, sign-in) and the guest's tasting</p>
           <div class="dv-hero"><Hero size="fill" eyebrow="Winetastr" title="loginx.claim" titleTag="p" sizes="40rem"><Fragment slot="actions"><Actions><a class="btn on-photo" href="#c44">Get started</a><a class="btn on-photo-2" href="#c44">Sign in</a><a class="btn on-photo is-hover" href="#c44">Hover</a><a class="btn on-photo-2 is-focus" href="#c44">Focus</a></Actions></Fragment></Hero></div>
           <div class="dv-gap"></div>
           <Hero variant="tasting" title="Portvin 2026" titleTag="p" countdownId="dv-count">
@@ -773,8 +773,8 @@ const opts = [
     initAddress('dva');
 
     const p1 = imagePicker({ onFile: () => {} });
-    const p2 = imagePicker({ onFile: () => {} }); p2.setImage('/img/cellar-800.jpg', 'kopke-label.jpg', 'Read from the label');
-    const p3 = imagePicker({ onFile: () => {} }); p3.setImage('/img/cellar-800.jpg', 'kopke-label.jpg'); p3.setBusy(true, 'Reading the label …');
+    const p2 = imagePicker({ onFile: () => {} }); p2.setImage('/img/hero-800.jpg', 'kopke-label.jpg', 'Read from the label');
+    const p3 = imagePicker({ onFile: () => {} }); p3.setImage('/img/hero-800.jpg', 'kopke-label.jpg'); p3.setBusy(true, 'Reading the label …');
     const p4 = imagePicker({ onFile: () => {} }); p4.el.classList.add('drag');
     const p5 = imagePicker({ onFile: () => {} }); p5.el.classList.add('err');
     for (const [p, l] of [[p1, 'Empty'], [p2, 'With a picture'], [p3, 'Busy'], [p4, 'A picture held over it'], [p5, 'Error']] as const) {
@@ -797,7 +797,7 @@ const opts = [
     $('chip-tones').append(chip('Neutral'), chip('Coming', 'ok'), chip('Waiting list', 'wait'), chip('No price', 'warn'), chip('Not paid', 'err'), chip('Owner', 'strong'), chip('Not coming', 'neutral', { dashed: true }), chip('A link chip', 'neutral', { href: '#c18' }), starsRo(4, '', { chip: true }));
     $('chip-status').append(...(Object.keys(STATUS) as StatusName[]).map((n) => statusChip(n)));
     $('thumbs').append(avatar('Morten Hansen', { size: 'small' }), avatar('Morten Hansen'), avatar('Morten Hansen', { size: 'large' }), avatar('Anne Berg', { host: true }), avatar('', { add: true }),
-      wineThumb('/img/cellar-800.jpg', { size: 'small' }), wineThumb(null), wineThumb(null, { blind: true }), wineThumb('/img/cellar-800.jpg', { size: 'large' }));
+      wineThumb('/img/hero-800.jpg', { size: 'small' }), wineThumb(null), wineThumb(null, { blind: true }), wineThumb('/img/hero-800.jpg', { size: 'large' }));
     $('prices').append(price({ amount: 149.95 }), price({ amount: 129.95, was: 159.95, tiers: ['From 6 bottles: 119,95 kr. each'] }), price({ amount: null }), price({ amount: 595, size: 'large', was: 695 }), price({ amount: 89.5, align: 'right' }));
     setFact($('fs-1'), 'Saturday 14 November 2026, 19:00');
     setFact($('fs-2'), '11 wines');
@@ -839,7 +839,7 @@ const opts = [
     const edit = () => iconButton('edit', 'Edit');
     const remove = () => iconButton('trash', 'Remove', { quiet: true });
     $('rows').append(
-      listRow({ id: 1, grip: { label: 'Move Kopke Colheita 2008' }, no: 1, pic: wineThumb('/img/cellar-800.jpg'), title: 'Kopke Colheita 2008', onOpen: () => {},
+      listRow({ id: 1, grip: { label: 'Move Kopke Colheita 2008' }, no: 1, pic: wineThumb('/img/hero-800.jpg'), title: 'Kopke Colheita 2008', onOpen: () => {},
         meta: [['Port', 'Douro, Portugal']], chips: [{ text: 'Shown', tone: 'ok' }, { text: 'Can be ordered' }], aside: price({ amount: 449.95, align: 'right', tiers: ['6+: 419,95 kr.'] }), actions: [iconButton('reveal', 'Reveal'), edit(), remove()] }),
       listRow({ id: 2, grip: { label: 'Move Blind wine' }, no: 2, pic: wineThumb(null, { blind: true }), title: 'Blind wine', meta: [['Red wine']], chips: [{ text: 'Blind', tone: 'strong' }, { text: 'Hidden', dashed: true }], aside: price({ amount: null, align: 'right' }), actions: [edit(), remove()] }),
       personRow({ id: 'p0', name: 'Mette Kjær', href: '#c25', meta: ['mette@example.dk', 'signed in 2 days ago'], chips: [{ text: 'Portvin 2026 · Coming', tone: 'ok', href: '#c25' }], actions: [edit(), remove()] }),
@@ -858,7 +858,7 @@ const opts = [
     );
     $('row-cards').append(
       listRow({ variant: 'card', cardHref: '#c25', title: 'Portvin 2026', meta: ['Saturday 14 November at 19:00', 'Strandvejen 12, Hellerup'], chips: [statusChip('guest.yes')], foot: [mk('span', '', '11 wines'), mk('b', '', '22 guests')] }),
-      listRow({ variant: 'card', small: true, pic: wineThumb('/img/cellar-800.jpg'), title: 'Order 14 November', meta: ['3 bottles'], aside: price({ amount: 1049.7, align: 'right' }), chips: [statusChip('order.unpaid')] }),
+      listRow({ variant: 'card', small: true, pic: wineThumb('/img/hero-800.jpg'), title: 'Order 14 November', meta: ['3 bottles'], aside: price({ amount: 1049.7, align: 'right' }), chips: [statusChip('order.unpaid')] }),
     );
     const go = $<HTMLButtonElement>('dv-ar-go');
     addRow({ id: 'dv-ar', button: $<HTMLButtonElement>('dv-add-toggle'), fields: [$<HTMLInputElement>('dv-ar-name')], go, onSubmit: () => {
@@ -867,7 +867,7 @@ const opts = [
       const row = listRow({ id: Date.now(), no: '+', pic: wineThumb(null), title: name, actions: [edit()] });
       $('ar-list').prepend(row); highlight(row); toast(`${name} is added`);
     } });
-    $('ar-list').append(listRow({ id: 11, no: 1, pic: wineThumb('/img/cellar-800.jpg'), title: 'Kopke Colheita 2008', actions: [edit()] }));
+    $('ar-list').append(listRow({ id: 11, no: 1, pic: wineThumb('/img/hero-800.jpg'), title: 'Kopke Colheita 2008', actions: [edit()] }));
     $('dv-add-toggle').click();
     const hl = listRow({ id: 21, pic: wineThumb(null), title: 'Graham’s Six Grapes', meta: ['Saved just now'], actions: [edit()] });
     $('hl-list').append(hl);
