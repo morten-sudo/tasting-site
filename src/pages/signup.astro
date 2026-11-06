@@ -181,6 +181,8 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
       email,
       options: { emailRedirectTo: location.origin + '/signup/', shouldCreateUser: true, data: { lang: lang() } },
     });
+    // Supabase's own check of the address (e.g. an invisible character): said under the field, not as a send error
+    if (error?.code === 'validation_failed') { bad('email', t('common.invalidEmail')); return false; }
     if (error?.status === 429) { failed(t('login.tooManyMails')); return false; }
     if (error) { failed(t('login.sendFailed')); return false; }
     // Counted for the superadmin's Usage page (the code is sent through Resend)
