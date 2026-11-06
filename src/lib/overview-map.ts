@@ -177,7 +177,8 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
   const near = (lon: number, lat: number) => { const [x, y] = xy(lon, lat); return Math.min(...at.map(([px, py]) => Math.hypot(px - x, py - y)), Infinity); };
   const order = inView.map((t, i) => ({ t, i, a: about(t[0], t[1]) ? 0 : 1, d: near(t[0], t[1]) }))
     .sort((p, o) => p.a - o.a || p.t[3] - o.t[3] || o.t[4] - p.t[4] || p.d - o.d || p.i - o.i).map((o) => o.t);
-  /** Draws the town when its name finds a free spot; `onPin`: its dot may lie under a pin (the main town). */
+  /** Draws the town when its name finds a free spot; `onPin`: the main town – its dot and name may lie on pins, which
+   *  are then moved aside a little (nudge()); its name takes the spot with the least pin under it. */
   const placeTown = (town: Town, onPin = false) => {
     const [lon, lat, , , cap] = town;
     const name = townName(town);
@@ -201,14 +202,49 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
       [[x - tw / 2, y - u * (1.6 + d) - fs * 1.08, x + tw / 2, y - u * (1.4 + d)], 0, y - u * (1.6 + d) - fs * 0.22, ' text-anchor="middle"'],
       [[x - tw / 2, y + u * (1.4 + d), x + tw / 2, y + u * (1.6 + d) + fs * 1.08], 0, y + u * (1.6 + d) + fs * 0.74, ' text-anchor="middle"'],
     );
-    const spot = spots.find(([b]) => inside(b) && !meets(b, buttons) && ![...names, ...marks].some((t) => meets(b, t)));
+    const open = spots.filter(([b]) => inside(b) && !meets(b, buttons) && !names.some((t) => meets(b, t)));
+    // A free spot; for the main town else the spot that needs the smallest moves of the pins on it
+    let spot = open.find(([b]) => !marks.some((m) => meets(b, m)) && !(onPin && marks.some((m) => meets(dot, m))));
+    let plan: [number, [number, number]][] = [];
+    if (!spot && onPin) {
+      const ranked = open.map((sp) => ({ sp, ...nudgePlan([sp[0], dot]) })).sort((a, b) => a.cost - b.cost);
+      if (ranked.length) { spot = ranked[0].sp; plan = ranked[0].plan; }
+    }
     if (!spot) return false;
     const [box, tx, ty, anchor] = spot;
+    nudge(plan);
     names.push(box, dot);
     townSvg.push(anchored(x, y, sc(`<circle r="${q(r)}"/><text x="${q(tx)}" y="${q(ty - y)}"${anchor} style="font-size:${q(fs)}px;stroke-width:${q(fs * 0.24)}px">${esc(name)}</text>`), `rm-town${cap ? ' big' : ''}`));
     return true;
   };
-  // The main town (the capital or the biggest town of the area) always comes first, even before the pins' names
+  /** How to move the pins on these boxes just clear of them: for each, the shortest move (at most 8 % of the map's
+   *  width) that also keeps clear of the other pins and the zoom buttons, else the shortest that clears the boxes. The
+   *  cost adds the moves up, with a penalty for a pin left on another one. */
+  const moves: [number, number][] = [];
+  for (let step = 1; step <= 16; step++) for (let a = 0; a < 16; a++) moves.push([Math.cos(a * Math.PI / 8) * step * u * 0.5, Math.sin(a * Math.PI / 8) * step * u * 0.5]);
+  const moved = (m: Rect, [dx, dy]: [number, number]): Rect => [m[0] + dx, m[1] + dy, m[2] + dx, m[3] + dy];
+  const nudgePlan = (boxes: Rect[]) => {
+    const plan: [number, [number, number]][] = [];
+    let cost = 0;
+    const now = [...marks];
+    for (let i = 0; i < now.length; i++) {
+      if (!boxes.some((b) => meets(now[i], b))) continue;
+      const clear = (m: Rect) => inside(m, 0) && !meets(m, buttons) && !boxes.some((b) => meets(m, b));
+      const alone = (m: Rect) => !now.some((o, j) => j !== i && meets(m, o));
+      let best = moves.find((mv) => { const m = moved(now[i], mv); return clear(m) && alone(m); });
+      if (!best) { best = moves.find((mv) => clear(moved(now[i], mv))); cost += u * 100; }
+      if (!best) { cost += u * 1000; continue; }
+      now[i] = moved(now[i], best);
+      plan.push([i, best]);
+      cost += Math.hypot(...best);
+    }
+    return { plan, cost };
+  };
+  const nudge = (plan: [number, [number, number]][]) => {
+    for (const [i, mv] of plan) { at[i] = [at[i][0] + mv[0], at[i][1] + mv[1]]; marks[i] = moved(marks[i], mv); }
+  };
+  // The main town (the capital or the biggest town of the area, e.g. Wien) always comes first, even before the pins'
+  // names, and is always shown: pins on its name are moved aside a little (WIN-259)
   const main = order.find((town) => placeTown(town, true));
   // The pins' names: the places with the most wines first, to the right of the pin or else to the left – never on
   // another pin or name, nor outside the map (the number stays; the legend and the list name every wine)
@@ -236,7 +272,9 @@ export function drawOverview(map: OverviewMap, pins: Pin[], focus: Box, mode: 'f
     if (town !== main && placeTown(town)) n++;
   }
   parts.push(...townSvg);
-  for (const [i, p] of pins.entries()) {
+  // The places with the most wines drawn last, on top: where pins touch (also after a nudge), their number shows
+  for (const i of pins.map((_, j) => j).sort((a, b) => (pins[a].n ?? 1) - (pins[b].n ?? 1) || a - b)) {
+    const p = pins[i];
     const [x, y] = at[i];
     const r = mode === 'inset' ? u * 3.2 : u * 1.6;
     // Drawn around 0 0 at the place (anchored): the zoom keeps pins, numbers and names their size on screen

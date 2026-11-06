@@ -4,6 +4,7 @@
 // labels stay sharp; names, numbers, pins and line widths keep their size on screen at every zoom. Call it again after the map is redrawn (it reads the new SVG).
 import { t } from '../../i18n';
 import { iconButton } from './icon-button';
+import { fitTowns } from '../region-map';
 
 const MAX = 6;      // at most 6× the starting view
 const STEP = 1.6;   // one press of + or −
@@ -54,6 +55,17 @@ export function mapZoom(box: HTMLElement) {
   bar.append(zin, out);
   box.append(bar);
   set(home);
+  // Town names readable on this screen (detailed region maps), again when the map changes width – not while zoomed in
+  fitTowns(svg, home.w);
+  // Again once the site's fonts are in: the names' widths change
+  document.fonts?.ready.then(() => { if (!box.classList.contains('zoomed')) fitTowns(svg, home.w); });
+  let width = svg.getBoundingClientRect().width;
+  new ResizeObserver(() => {
+    const now = svg.getBoundingClientRect().width;
+    if (Math.abs(now - width) < 1 || box.classList.contains('zoomed')) return;
+    width = now;
+    fitTowns(svg, home.w);
+  }).observe(svg);
 
   svg.addEventListener('dblclick', (e) => { e.preventDefault(); const [fx, fy] = share(e); zoom(STEP, fx, fy); });
   // Pinch on a trackpad arrives as ctrl + wheel; a plain wheel scrolls the page

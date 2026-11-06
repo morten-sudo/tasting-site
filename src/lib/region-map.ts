@@ -161,15 +161,17 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
       taken.push(box(spot));
       titleSvg.push(anchored(b.x, b.y, `<text class="rm-badge-title" x="${(spot[0] - b.x).toFixed(0)}" y="${(spot[1] - b.y).toFixed(0)}" text-anchor="${spot[2]}">${esc(title)}</text>`));
     }
-    // Towns, unless they would clash with a label or repeat an appellation's name
+    // Towns, unless they repeat an appellation's name. Drawn here at the map's own sizes; fitTowns() (called by
+    // mapZoom() once the map is on screen) then makes the names at least 11px and leaves out those without room
     const named = [...titles.values()].map((t) => normOrigin(t));
     for (const t of map.towns) {
+      if (named.some((n) => n.includes(normOrigin(t.name).split(' ')[0]))) continue;
       const r = t.size === 'big' ? 4.5 : t.size === 'mid' ? 3.5 : 2.6;
-      const fs = t.size === 'big' ? 22 : t.size === 'mid' ? 17 : 14;
+      const fs = TOWN_FS[t.size];
       const tb = { x0: t.x - 4, y0: t.y - 6 - fs, x1: t.x + 7 + t.name.length * fs * 0.48, y1: t.y + 4 };
-      if (t.size !== 'big' && (hits(tb) || named.some((n) => n.includes(normOrigin(t.name).split(' ')[0])))) continue;
-      taken.push(tb);
-      parts.push(anchored(t.x, t.y, `<circle r="${r}"/><text x="7" y="-6" font-size="${fs}">${esc(t.name)}</text>`, `rm-town ${t.size}`));
+      const off = t.size !== 'big' && hits(tb);
+      if (!off) taken.push(tb);
+      parts.push(anchored(t.x, t.y, `<circle r="${r}" data-r="${r}"/><text x="7" y="-6" font-size="${fs}" data-fs="${fs}">${esc(t.name)}</text>`, `rm-town ${t.size}${off ? ' rm-off' : ''}`));
     }
     // The whole region lit (e.g. port from the Douro): name its parts quietly
     if (wholeRegion && !badges.length) {
@@ -190,6 +192,85 @@ export function drawMap(map: RegionMap, opts: DrawOptions = {}): string {
   }
   parts.push('</svg>');
   return parts.join('');
+}
+
+/** Town names' sizes in map units, before fitTowns() makes them big enough on screen */
+const TOWN_FS = { big: 22, mid: 17, small: 14 } as const;
+/** The smallest name on screen, in px (WIN-259: also on a 390px phone) */
+const MIN_PX = 11;
+
+/** Once the map is on screen (mapZoom() calls it, also when the map changes width): town and area names at least
+ *  11px on screen, the towns in the wine areas first (the main towns before the small ones), then the rest; a name
+ *  goes above right of its dot, else above left, below right, below left, above or below, and a town whose name has no free spot
+ *  is left out rather than drawn smaller. `homeW`: the width of the starting view in map units. */
+export function fitTowns(svg: SVGSVGElement, homeW: number) {
+  if (svg.classList.contains('overview') || !svg.classList.contains('full')) return;
+  const px = svg.getBoundingClientRect().width;
+  if (!px || !homeW) return;
+  const k = px / homeW; // screen px per map unit in the starting view
+  const f = Math.max(1, MIN_PX / (TOWN_FS.small * k));
+  // The quiet area names (the whole region lit) – the same smallest size
+  for (const p of svg.querySelectorAll<SVGTextElement>('.rm-part')) {
+    const fs = Math.max(15, MIN_PX / k);
+    p.style.fontSize = `${fs.toFixed(1)}px`;
+    p.style.strokeWidth = `${(fs / 5).toFixed(1)}px`;
+  }
+  type R = { l: number; t: number; r: number; b: number };
+  const rect = (e: Element, pad = 0): R => { const b = e.getBoundingClientRect(); return { l: b.left - pad, t: b.top - pad, r: b.right + pad, b: b.bottom + pad }; };
+  const meets = (a: R, b: R) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t;
+  const gap = (a: R, b: R) => Math.hypot(Math.max(0, b.l - a.r, a.l - b.r), Math.max(0, b.t - a.b, a.t - b.b));
+  const frame = rect(svg);
+  const taken: R[] = [...svg.querySelectorAll('.rm-badge, .rm-badge-title, .rm-pin, .rm-part')].map((e) => rect(e, 1));
+  const buttons = svg.parentElement?.querySelector('.map-zoom');
+  if (buttons) taken.push(rect(buttons, 4));
+  const areas = [...svg.querySelectorAll<SVGPathElement>('.rm-area')];
+  const rank = { big: 0, mid: 1, small: 2 } as Record<string, number>;
+  const towns = [...svg.querySelectorAll<SVGGElement>('.rm-town')].map((g, i) => {
+    const [x, y] = (g.getAttribute('transform')?.match(/-?[\d.]+/g) ?? ['0', '0']).map(Number);
+    // In or right by a wine area (Pinhão lies on the river between two)
+    const near = [[0, 0], [6, 0], [-6, 0], [0, 6], [0, -6]].map(([dx, dy]) => new DOMPoint(x + dx, y + dy));
+    const inArea = areas.some((a) => near.some((pt) => a.isPointInFill(pt)));
+    const size = ['big', 'mid', 'small'].find((c) => g.classList.contains(c)) ?? 'small';
+    return { g, i, inArea, size };
+  }).sort((a, b) => Number(b.inArea) - Number(a.inArea) || rank[a.size] - rank[b.size] || a.i - b.i);
+  // Every town's dot at its new size first: a name keeps clear of the dots of the towns still to come where it can
+  const dots = new Map<SVGGElement, R>(), placed = new Set<SVGGElement>();
+  for (const { g } of towns) {
+    const dot = g.querySelector('circle');
+    if (!dot) continue;
+    g.classList.remove('rm-off');
+    dot.setAttribute('r', (Number(dot.dataset.r) * Math.sqrt(f)).toFixed(1));
+    dots.set(g, rect(dot, 1));
+  }
+  for (const { g } of towns) {
+    const text = g.querySelector('text'), d = dots.get(g);
+    if (!text || !d) continue;
+    const fs = Number(text.dataset.fs) * f;
+    text.setAttribute('font-size', fs.toFixed(1));
+    text.style.strokeWidth = `${(3 * f).toFixed(1)}px`;
+    const dx = 7 * f, up = -6 * f, down = 6 * f + fs * 0.75;
+    const spots: [number, number, string][] = [[dx, up, 'start'], [-dx, up, 'end'], [dx, down, 'start'], [-dx, down, 'end'],
+      [0, up - 3 * f, 'middle'], [0, down + 3 * f, 'middle']];
+    const others = [...dots].filter(([o]) => o !== g && !placed.has(o)).map(([, r]) => r);
+    const near = [...placed].map((o) => dots.get(o)!);
+    const fits = ([x, y, anchor]: [number, number, string], spare: boolean) => {
+      text.setAttribute('x', x.toFixed(1));
+      text.setAttribute('y', y.toFixed(1));
+      text.setAttribute('text-anchor', anchor);
+      const box = rect(text, 1);
+      const all = { l: Math.min(box.l, d.l), t: Math.min(box.t, d.t), r: Math.max(box.r, d.r), b: Math.max(box.b, d.b) };
+      return all.l >= frame.l && all.r <= frame.r && all.t >= frame.t && all.b <= frame.b
+        && !taken.some((o) => meets(box, o) || meets(d, o)) && !(spare && others.some((o) => meets(box, o)))
+        // Clearly its own dot's name: no other town's dot as close to it
+        && ![...near, ...(spare ? others : [])].some((o) => gap(box, o) < gap(box, d) + 6);
+    };
+    // A spot that leaves the other towns' dots free, else one that covers a town still to come (it is then left out)
+    const free = spots.find((sp) => fits(sp, true)) ?? spots.find((sp) => fits(sp, false));
+    if (free) fits(free, false);
+    if (!free) { g.classList.add('rm-off'); dots.delete(g); continue; }
+    taken.push(rect(text, 1), d);
+    placed.add(g);
+  }
 }
 
 /** After drawing: zoom to the filled areas (with room around them) when they cover a small part of the map. */
