@@ -740,7 +740,7 @@ end $$;
 reset role;
 delete from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
 
--- ---------- Leaderboard names (A01-001): first names for everyone but the tasting's hosts ----------
+-- ---------- Leaderboard names (A01-001): short names for everyone (also hosts), full names only in tasting_standings ----------
 insert into tastings (id, host_id, slug, title, quiz_open) values
   ('00000000-0000-4000-b000-0000000000b1', '00000000-0000-4000-a000-00000000000a', 'selftest-lb', 'Test board', true);
 insert into participants (id, tasting_id, name, invite_code, status) values
@@ -757,7 +757,8 @@ insert into quiz_questions (id, tasting_id, sort_order, question, options, corre
 insert into quiz_answers (participant_id, question_id, answer_key) values
   ('00000000-0000-4000-d000-0000000000b1', -3101, 'a'),
   ('00000000-0000-4000-d000-0000000000b2', -3101, 'b');
--- ("  anna   Holm " is shown as typed, tidied: "anna H."; first names are compared without case)
+-- ("  anna   Holm " is shown as typed, tidied; first names are compared without case. Hansen and Holm share an H, so
+-- both get two letters; Madsen needs one. The two identical Carls: "Carl" and "Carl 2".)
 -- Not signed in (the TV, and a guest with only the invite code)
 select set_config('request.jwt.claims', '', true);
 set local role anon;
@@ -765,12 +766,12 @@ do $$
 declare names text; failed boolean;
 begin
   select string_agg(name, '|' order by name) into names from tasting_leaderboard(null, 'selftest-lb');
-  assert names = 'anna H.|Anna H.|Anna M.|Bo|Carl|Carl|Dorte', 'the TV board does not show first names only: ' || coalesce(names, 'nothing');
-  assert (select points from tasting_leaderboard(null, 'selftest-lb') where name = 'Anna H.' order by points desc limit 1) = 1, 'the board lost the points';
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'the TV board does not show first names only: ' || coalesce(names, 'nothing');
+  assert (select points from tasting_leaderboard(null, 'selftest-lb') where name = 'Anna Ha.' order by points desc limit 1) = 1, 'the board lost the points';
   select string_agg(name, '|' order by name) into names from tasting_leaderboard('selftestb2', 'selftest-lb');
-  assert names = 'anna H.|Anna H.|Anna M.|Bo|Carl|Carl|Dorte', 'a guest with a code sees more than first names: ' || coalesce(names, 'nothing');
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a guest with a code sees more than first names: ' || coalesce(names, 'nothing');
   select string_agg(name, '|' order by name) into names from tasting_leaderboard('selftestb2', null);
-  assert names = 'anna H.|Anna H.|Anna M.|Bo|Carl|Carl|Dorte', 'the code alone does not give the first names board';
+  assert names = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'the code alone does not give the first names board';
   assert (select string_agg(name, '|') from tasting_board('selftestb2', null) where mine) = 'Anna M.', 'the guest''s own line is not marked (only)';
   assert not exists (select 1 from tasting_board(null, 'selftest-lb') where mine), 'a line is marked without a code';
   failed := false; begin perform get_leaderboard(); exception when others then failed := true; end;
@@ -783,15 +784,32 @@ reset role;
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
 set local role authenticated;
 do $$ begin
-  assert (select string_agg(name, '|' order by name) from tasting_leaderboard(null, 'selftest-lb')) = 'anna H.|Anna H.|Anna M.|Bo|Carl|Carl|Dorte', 'a signed-in guest sees full names on the board';
+  assert (select string_agg(name, '|' order by name) from tasting_leaderboard(null, 'selftest-lb')) = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a signed-in guest sees full names on the board';
 end $$;
 reset role;
--- The tasting's host still sees full names
+-- A signed-in guest gets nothing from the host's standings, and anon may not call them
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-0000000000ff","email":"guest-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  assert not exists (select 1 from tasting_standings('selftest-lb')), 'a guest gets the host''s standings with full names';
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$ declare failed boolean := false; begin
+  begin perform tasting_standings('selftest-lb'); exception when others then failed := true; end;
+  assert failed, 'anon can call tasting_standings';
+end $$;
+reset role;
+-- The tasting's host gets the same short names on the board (the TV may be signed in as the host) and full names only
+-- in the standings
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
 set local role authenticated;
 do $$ begin
-  assert (select count(*) from tasting_leaderboard(null, 'selftest-lb') where name in ('Anna Hansen', 'Anna Madsen', 'Dorte Kjær Nielsen')) = 3, 'the host does not see full names';
-  assert (select count(*) from tasting_leaderboard(null, 'selftest-lb')) = 7, 'the host board does not have every guest who comes';
+  assert (select string_agg(name, '|' order by name) from tasting_board(null, 'selftest-lb')) = 'Anna Ha.|anna Ho.|Anna M.|Bo|Carl|Carl 2|Dorte', 'a signed-in host gets full names on the board';
+  assert (select count(*) from tasting_standings('selftest-lb') where name in ('Anna Hansen', 'Anna Madsen', 'Dorte Kjær Nielsen')) = 3, 'the host does not see full names in the standings';
+  assert (select count(*) from tasting_standings('selftest-lb')) = 7, 'the host standings do not have every guest who comes';
+  assert (select points from tasting_standings('selftest-lb') where name = 'Anna Hansen') = 1, 'the standings lost the points';
 end $$;
 reset role;
 select set_config('request.jwt.claims', '', true);

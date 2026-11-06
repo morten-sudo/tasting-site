@@ -4,9 +4,9 @@ import { supabase } from './supabase';
 import { t } from '../i18n';
 import { mk } from './ui/dom';
 
-/** A line on the board. Only the tasting's hosts get full names; everyone else gets the first name (plus the first
- *  letter of the surname when the first name occurs twice) – the database decides (tasting_board, WIN-173).
- *  `mine` is the line of the invite code the call was made with. */
+/** A line on the board. The board (TV, guests, app) always shows short names – the first name, plus as many letters of
+ *  the surname as it takes to tell two apart ("Anna Ha.", "Anna Ho.") – also when a host is signed in on the device;
+ *  the database decides (tasting_board, WIN-173). `mine` is the line of the invite code the call was made with. */
 export type Row = { name: string; points: number; answered: number; mine?: boolean };
 
 export async function fetchLeaderboard(opts: { code?: string | null; slug?: string | null } = {}): Promise<Row[] | null> {
@@ -14,6 +14,13 @@ export async function fetchLeaderboard(opts: { code?: string | null; slug?: stri
     code: opts.code ?? null,
     slug: opts.slug ?? null,
   });
+  if (error) return null;
+  return data as Row[];
+}
+
+/** The host's standings in the admin: full names, only for the tasting's hosts (tasting_standings). */
+export async function fetchStandings(slug: string): Promise<Row[] | null> {
+  const { data, error } = await supabase.rpc('tasting_standings', { slug });
   if (error) return null;
   return data as Row[];
 }
