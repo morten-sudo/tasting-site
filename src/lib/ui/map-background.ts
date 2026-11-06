@@ -24,7 +24,7 @@ export async function winesBackground(box: HTMLElement, wines: W[], corner = fal
 
 /** Every page (Base.astro): a faint region map in the top right corner – picked from the page's address, so a page
  *  always gets the same one and pages differ. Left out where the page has a map of its own already behind its heading, or the
- *  cellar photo. */
+ *  hero photo of the long table (Hero.astro). */
 export async function pageBackground(box: HTMLElement) {
   // A map inside a card (the overview's next tasting) does not count: the page still gets its own
   if (document.querySelector('.hero-bg:not(.page-bg):not(.card > .hero-bg), .hero')) return;

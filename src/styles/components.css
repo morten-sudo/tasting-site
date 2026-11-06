@@ -1201,10 +1201,11 @@ html.side-locked main { z-index: 60; }
   .side-shell:has(#denied:not([hidden])) > .side-content { grid-column: 1 / -1; }
 }
 
-/* ---------- 44 Hero (Hero.astro): the cellar photo with white text and on-photo buttons; "tasting": the guest's tasting ---------- */
+/* ---------- 44 Hero (Hero.astro): the photo of the long table with white text and on-photo buttons; "tasting": the guest's tasting ---------- */
 .hero { position: relative; overflow: hidden; color: #fff; background: #241014; display: flex; align-items: flex-end; min-width: 0; }
 .hero > picture img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 52% 50%; }
-.hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(36, 10, 16, 0.93) 0%, rgba(36, 10, 16, 0.6) 45%, rgba(36, 10, 16, 0.18) 100%); }
+/* The shade under the white text: at least 4.5:1 against the lightest part of the photo behind any text (WIN-304) */
+.hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(36, 10, 16, 0.94) 0%, rgba(36, 10, 16, 0.72) 45%, rgba(36, 10, 16, 0.4) 100%); }
 .hero > .hero-in { position: relative; z-index: 1; width: 100%; padding-top: 5rem; padding-bottom: 2.5rem; box-sizing: border-box; }
 .hero .eyebrow { color: rgba(255, 255, 255, 0.85); }
 .hero .hero-title { font-family: var(--display); font-weight: 400; font-size: clamp(2.5rem, 7vw, 4.6rem); line-height: 1; margin: 0; max-width: 17ch; color: #fff; overflow-wrap: anywhere; }
@@ -1212,6 +1213,15 @@ html.side-locked main { z-index: 60; }
 .hero .actions { margin-top: 1.6rem; }
 .hero a:not(.btn) { color: #fff; }
 .hero.full { min-height: min(78vh, 40rem); }
+/* Wide screens (the photo is cropped top and bottom): lift the photo so the glasses' bowls sit above the heading – the
+   lowest crop the photo allows (box height − image height, the image being 2/3 of the width tall), but never higher
+   than 20.5vw from its top (the tallest glass's rim). Phones and tablets crop at the sides and keep the centred photo. */
+@media (min-width: 64rem) {
+  .hero.full > picture img { object-position: 52% max(calc(min(78vh, 40rem) - 66.667vw), -20.5vw); }
+  /* The text keeps to the left: shade that side, so the glasses on the right stay bright */
+  .hero.full::after { background: linear-gradient(to right, rgba(36, 10, 16, 0.7) 0%, rgba(36, 10, 16, 0.55) 35%, rgba(36, 10, 16, 0) 62%),
+    linear-gradient(to top, rgba(36, 10, 16, 0.93) 0%, rgba(36, 10, 16, 0.6) 45%, rgba(36, 10, 16, 0.2) 100%); }
+}
 /* The tasting (guest pages): the countdown, the title and when / where with their links; a faint map behind */
 .hero-light { position: relative; isolation: isolate; display: grid; gap: 0.6rem; justify-items: start; margin: 0 0 2rem; min-width: 0; }
 .hero-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; margin-bottom: 0.2rem; }
