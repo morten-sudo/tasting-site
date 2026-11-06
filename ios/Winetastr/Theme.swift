@@ -25,6 +25,9 @@ extension Color {
     static let errBg = hex(0xFBF0F1)
     static let errLine = hex(0xE3C4C9)
     static let placeholder = hex(0x9B8F8B)
+    static let warnText = hex(0x7A5200)
+    static let warnBg = hex(0xFDF6DF)
+    static let warnLine = hex(0xEAD48F)
     static func styleTone(_ key: String?) -> Color {
         switch key {
         case "Red": return hex(0x861530)
@@ -199,6 +202,23 @@ struct Chip: View {
     }
 }
 
+/// .chip.warn.tb-env (TopBar.astro): "Test" by the logo on the test build, which talks to the test database
+/// (AppDatabase in Backend.swift). Nothing on the real build.
+struct EnvChip: View {
+    var body: some View {
+        if AppDatabase.isTest {
+            Text("Test".uppercased()).font(.semibold(12.5, relativeTo: .caption)).tracking(0.75)
+                .foregroundStyle(Color.warnText)
+                .padding(.horizontal, 9.6).padding(.vertical, 5)
+                .background(Color.warnBg, in: Capsule())
+                .overlay(Capsule().strokeBorder(Color.warnLine))
+                .fixedSize()
+                .accessibilityLabel("Test")
+                .accessibilityIdentifier("env-test")
+        }
+    }
+}
+
 /// .eyebrow
 struct Eyebrow: View {
     let text: String
@@ -286,6 +306,7 @@ struct TopBar: View {
                 }
             }
             .buttonStyle(.plain)
+            EnvChip().padding(.leading, 2)
             Spacer()
             if let tasting, model.cartCount(tasting.slug) > 0 {
                 let n = model.cartCount(tasting.slug)

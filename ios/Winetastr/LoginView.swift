@@ -31,6 +31,7 @@ struct LoginView: View {
             HStack(spacing: 10) {
                 Image("Logo").resizable().frame(width: 30, height: 30)
                 Text("Winetastr").font(.medium(17)).foregroundStyle(Color.paper)
+                EnvChip().padding(.leading, -2)
                 Spacer()
                 if onClose == nil { MenuButton(id: .account, accessibilityLabel: L("nav.userMenu")) { SiteIcon("user", size: 23).foregroundStyle(Color.paper) } }
                 if let onClose {

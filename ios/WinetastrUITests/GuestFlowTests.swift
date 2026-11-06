@@ -1,6 +1,6 @@
 import XCTest
 
-/// Runs against the real database with the "App-test" tasting. Danish UI.
+/// Runs the test build against the test database (winetastr-test) with its "App-test" tasting. Danish UI.
 final class GuestFlowTests: XCTestCase {
     // Invite codes for the test tasting come from ios/.env.local (the repo is public), see tools/simtest.sh
     private let code = ProcessInfo.processInfo.environment["APP_TEST_CODE"] ?? ""

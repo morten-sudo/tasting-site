@@ -38,12 +38,13 @@ final class AppModel {
     var currentTasting: String?
     /// The open tasting has a quiz: its tab shows
     var tastingHasQuiz = false
-    /// The carts on this device, per tasting: wine → bottles
+    /// The carts on this device, per tasting: wine → bottles (the test build keeps its own, as with the codes)
+    private static let cartsKey = AppDatabase.isTest ? "carts_test" : "carts"
     var carts: [String: [Int: Int]] = {
-        guard let data = UserDefaults.standard.data(forKey: "carts"), let c = try? JSONDecoder().decode([String: [Int: Int]].self, from: data) else { return [:] }
+        guard let data = UserDefaults.standard.data(forKey: AppModel.cartsKey), let c = try? JSONDecoder().decode([String: [Int: Int]].self, from: data) else { return [:] }
         return c
     }()
-    func saveCarts() { UserDefaults.standard.set(try? JSONEncoder().encode(carts), forKey: "carts") }
+    func saveCarts() { UserDefaults.standard.set(try? JSONEncoder().encode(carts), forKey: AppModel.cartsKey) }
     /// The language shown; changing it redraws every screen in place (the stack of screens is kept)
     private(set) var language = AppLanguage.code
     private let monitor = NWPathMonitor()
