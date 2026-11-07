@@ -23,11 +23,11 @@ NAMES: dict[str, dict[str, str]] = {
     'St.  Petersburg': {'en': 'St. Petersburg', 'da': 'Sankt Petersborg', 'is': 'Sankti Pétursborg'},
     'Granada‎': {'en': 'Granada', 'da': 'Granada', 'is': 'Granada'},
     'København': {'en': 'Copenhagen', 'is': 'Kaupmannahöfn'},
-    'Göteborg': {'en': 'Gothenburg', 'is': 'Gautaborg'},
+    'Göteborg': {'en': 'Gothenburg', 'da': 'Göteborg', 'is': 'Gautaborg'},
     'Århus': {'en': 'Aarhus', 'da': 'Aarhus', 'is': 'Árósar'},
-    'Antwerpen': {'en': 'Antwerp'},
-    'Nürnberg': {'en': 'Nuremberg'},
-    'Brugge': {'en': 'Bruges'},
+    'Antwerpen': {'en': 'Antwerp', 'da': 'Antwerpen', 'is': 'Antwerpen'},
+    'Nürnberg': {'en': 'Nuremberg', 'da': 'Nürnberg', 'is': 'Nürnberg'},
+    'Brugge': {'en': 'Bruges', 'da': 'Brugge', 'is': 'Brugge'},
     'Pizen': {'en': 'Plzeň', 'da': 'Plzeň', 'is': 'Plzeň'},
     # Europe
     'London': {'is': 'Lundúnir'},
@@ -166,6 +166,17 @@ MORE: dict[str, dict[str, str]] = {
     'Tehran': {'de': 'Teheran', 'es': 'Teherán', 'fr': 'Téhéran', 'it': 'Teheran', 'nl': 'Teheran', 'pl': 'Teheran'},
     'Baghdad': {'de': 'Bagdad', 'es': 'Bagdad', 'fr': 'Bagdad', 'nl': 'Bagdad', 'pl': 'Bagdad'},
     'Damascus': {'de': 'Damaskus', 'es': 'Damasco', 'fr': 'Damas', 'it': 'Damasco', 'pl': 'Damaszek'},
+    # Towns near the wine regions (wine maps show them often)
+    'Strasbourg': {'de': 'Straßburg', 'es': 'Estrasburgo', 'it': 'Strasburgo', 'nl': 'Straatsburg', 'pl': 'Strasburg'},
+    'Frankfurt': {'fr': 'Francfort', 'es': 'Fráncfort', 'it': 'Francoforte'},
+    'Zürich': {'fr': 'Zurich', 'es': 'Zúrich', 'it': 'Zurigo', 'pl': 'Zurych'},
+    'Basel': {'fr': 'Bâle', 'es': 'Basilea', 'it': 'Basilea', 'pl': 'Bazylea'},
+    'Bern': {'fr': 'Berne', 'it': 'Berna', 'es': 'Berna', 'pl': 'Berno'},
+    'Lyon': {'it': 'Lione'},
+    'Marseille': {'es': 'Marsella', 'it': 'Marsiglia', 'pl': 'Marsylia'},
+    'Bordeaux': {'es': 'Burdeos'},
+    'Porto': {'es': 'Oporto'},
+    'Freiburg': {'es': 'Friburgo', 'it': 'Friburgo'},
     'Havana': {'de': 'Havanna', 'es': 'La Habana', 'fr': 'La Havane', 'it': "L'Avana", 'pl': 'Hawana'},
 }
 
