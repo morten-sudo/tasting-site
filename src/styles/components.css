@@ -323,6 +323,11 @@ dialog .dd.full { max-width: none; }
 .cc.busy > label { cursor: progress; }
 /* Long answers (the quiz): text wraps inside the card */
 .cc > label > span > b { overflow-wrap: anywhere; }
+/* Check cards (checkCards() in src/lib/ui/checkbox.ts): choose several – a checkbox per card, content under the name */
+.cc.checks { gap: 0.5rem; }
+.cc.checks > label { padding: 0.75rem 0.9rem; }
+.cc.checks > label > span { gap: 0.3rem; flex: 1; }
+.cc.checks > label > span > :is(ul, ol, p) { margin: 0; }
 
 /* ---------- 11 Switch: something that is on or off; saves straight away (src/lib/ui/switch.ts, src/components/ui/Switch.astro) ---------- */
 .sw-row { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.85rem 0; border-top: 1px solid var(--lodge-3); cursor: pointer; margin: 0; min-width: 0; font: 400 1rem/1.35 var(--body); color: var(--paper); letter-spacing: 0; text-transform: none; }
@@ -1453,6 +1458,10 @@ body:has(.cartbar:not([hidden])) { padding-bottom: calc(max(1rem, env(safe-area-
 .qr > svg { display: block; width: 100%; height: 100%; }
 
 /* ---------- 52 Quiz: the answers are choice cards (10), the progress is the bar (38) ---------- */
+/* A question's answers read-only, the right one marked (the host's quiz list, the AI suggestions' check cards) */
+.q-options { margin: 0.3rem 0 0; padding-left: 1.2rem; list-style: circle; color: var(--muted); font-size: 0.9rem; }
+.q-options li.correct { color: var(--ok); }
+.q-options li.correct::after { content: ' ✓'; }
 .quiz-q { font-family: var(--display); font-weight: 400; font-size: 1.7rem; line-height: 1.15; margin: 0.6rem 0 0.9rem; overflow-wrap: anywhere; }
 .cc.locked > label { color: var(--paper); background: var(--lodge-2); cursor: default; }
 .cc > label.right, .cc > label.right:has(input:checked) { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); background: var(--ok-bg); }

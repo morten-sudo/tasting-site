@@ -41,9 +41,6 @@
 .admin-page .qf-option { display: grid; grid-template-columns: auto 1fr auto; gap: 0.6rem; align-items: center; }
 .admin-page .qf-option input[type='radio'] { width: 1.25rem; height: 1.25rem; accent-color: var(--ok); margin: 0; padding: 0; }
 .admin-page .qf-fieldset .text-btn { justify-self: start; }
-.admin-page .q-options { margin: 0.3rem 0 0; padding-left: 1.2rem; color: var(--muted); font-size: 0.9rem; }
-.admin-page .q-options li.correct { color: var(--ok); }
-.admin-page .q-options li.correct::after { content: ' ✓'; }
 .admin-page .q-warn { margin: 0.3rem 0 0; color: var(--error); font-size: 0.85rem; }
 
 .admin-page .link-row input { min-width: 0; }
@@ -261,11 +258,12 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .ai-draft-label { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; }
 .admin-page .ai-text p { margin: 0 0 0.6rem; line-height: 1.5; }
 /* Quiz suggestions from AI */
-.admin-page .ai-quiz { margin: 0.75rem 0 1.25rem; }
-.admin-page .ai-quiz-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
-.admin-page .ai-quiz .ai-level { flex: 1 1 18rem; max-width: 24rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.admin-page .ai-suggestions { list-style: none; margin: 0.75rem 0 0.5rem; padding: 0; display: grid; gap: 0.6rem; }
-.admin-page .ai-quiz > .notice { margin-top: 0.6rem; }
+.admin-page .ai-quiz-step { display: grid; gap: 1.1rem; }
+.admin-page .ai-quiz-step[hidden] { display: none; }
+.admin-page .ai-quiz-step > .hint { margin: 0; }
+.admin-page .ai-count { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 20rem; }
+.admin-page .ai-quiz-more { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; }
+.admin-page .ai-quiz-form .status { margin-top: 1rem; }
 
 /* Picture choices: the chosen one marked, an × to remove one from the row */
 .admin-page .image-cell { position: relative; }
@@ -400,6 +398,7 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .ph:has(+ section > .tasting-cards) { max-width: 40rem; }
 
 /* The quiz tab: resetting the quiz, quiet at the bottom */
+.admin-page .quiz-board { margin-top: 2rem; }
 .admin-page .quiz-reset { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--lodge-3); }
 .admin-page .quiz-reset h3 { margin: 0 0 0.25rem; font-family: var(--body); font-size: 0.95rem; font-weight: 600; color: var(--paper); }
 
