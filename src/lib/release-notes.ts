@@ -8,6 +8,35 @@ export type Release = { date: string; lines: Lines };
 
 export const RELEASES: Release[] = [
   {
+    date: '2026-11-07',
+    lines: {
+      da: [
+        'MobilePay sættes op på hver smagning under Indstillinger: slå det til, og skriv nummer og navn på den, der får pengene.',
+        'Gæsten ser kun MobilePay-nummer, modtager og beløb, så pengene går til den rigtige.',
+        'Overblikket viser gæster og vine som almindelige rækker med links videre.',
+        'Kortet, når du redigerer en vin, er det samme som på vinens side, med byer.',
+        'En blyant betyder Rediger, et tandhjul betyder Administrer.',
+        '"Nye spørgsmål fra AI" i quizzen: vælg sværhed og antal, og vælg derefter, hvilke forslag der kommer med.',
+      ],
+      en: [
+        'MobilePay is set up on each tasting under Settings: turn it on and enter the number and the name of the person who gets the money.',
+        'Guests see only the MobilePay number, the recipient and the amount, so the money goes to the right person.',
+        'The overview shows guests and wines as plain rows with links onwards.',
+        'The map when you edit a wine is the same as on the wine’s page, with towns.',
+        'A pencil means Edit, a gear means Manage.',
+        '"New questions from AI" in the quiz: choose difficulty and number, then choose which suggestions to add.',
+      ],
+      is: [
+        'MobilePay er sett upp á hverri smökkun undir Stillingar: kveiktu á því og skrifaðu númerið og nafn þess sem fær peningana.',
+        'Gestir sjá aðeins MobilePay-númerið, viðtakandann og upphæðina, svo peningarnir fari til rétts aðila.',
+        'Yfirlitið sýnir gesti og vín sem venjulegar línur með tenglum áfram.',
+        'Kortið þegar þú breytir víni er það sama og á síðu vínsins, með bæjum.',
+        'Blýantur þýðir Breyta, tannhjól þýðir Stjórna.',
+        '„Nýjar spurningar frá gervigreind“ í spurningakeppninni: veldu erfiðleika og fjölda, og veldu síðan hvaða tillögur fara inn.',
+      ],
+    },
+  },
+  {
     date: '2026-11-06',
     lines: {
       da: ['Forsiden har fået sit eget billede: et langbord dækket til vinsmagning.'],
