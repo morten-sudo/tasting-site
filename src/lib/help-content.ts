@@ -330,7 +330,7 @@ export const HELP: HelpSection[] = [
 export const TIPS: Record<string, { text: Text; more: string }> = {
   blind: { more: 'blind', text: {
     da: 'Alle vine bliver blinde: gæsterne ser kun vinens nummer, til du trykker <i>Afslør</i> ved vinen. Nye vine starter blinde.',
-    en: 'All wines become blind: guests see only the wine's number until you press <i>Reveal</i> on the wine. New wines start blind.' } },
+    en: 'All wines become blind: guests see only the wine’s number until you press <i>Reveal</i> on the wine. New wines start blind.' } },
   'guests-see': { more: 'blind', text: {
     da: '<b>Vinen</b>: alt vises. <b>Blind</b>: kun nummeret, til du afslører den. <b>Intet</b>: vinen er skjult for gæsterne.',
     en: '<b>The wine</b>: everything is shown. <b>Blind</b>: only the number until you reveal it. <b>Nothing</b>: the wine is hidden from the guests.' } },
