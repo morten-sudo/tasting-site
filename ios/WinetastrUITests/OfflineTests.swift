@@ -97,6 +97,8 @@ final class OfflineTests: XCTestCase {
         XCTAssertTrue(blind.isHittable, "a blind card")
         // "11, VINTAGE, Vin 11, Blind – afsløres senere, Blind": the number, the style the database gives, "Vin 11"
         XCTAssertTrue(blind.label.range(of: #"Vin \d+"#, options: .regularExpression) != nil, "no name: \(blind.label)")
+        blind.tap()
+        XCTAssertTrue(a.buttons["4 stjerner"].waitForExistence(timeout: 10), "the blind wine's page")
         shot("offline-blind.png")
     }
 

@@ -36,6 +36,8 @@ struct WinesView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         head
+                        // Above the carousel, not in it, so the cards keep the screen's height also at the largest text
+                        if stale { NoticeBox(text: L("app.winesStale")).padding(.horizontal, 16).padding(.top, 14) }
                         content.containerRelativeFrame(.vertical)
                     }
                 }
@@ -62,7 +64,6 @@ struct WinesView: View {
             VStack(alignment: .leading, spacing: 4) {
                 SectionHeading(text: L("nav.wines"))
                 Text(L(ordersOpen ? "wines.introOrder" : "wines.intro")).font(.body()).foregroundStyle(Color.muted)
-                if stale { NoticeBox(text: L("app.winesStale")).padding(.top, 8).accessibilityIdentifier("wines-stale") }
             }
             .padding(.horizontal, 16).padding(.top, 14)
 

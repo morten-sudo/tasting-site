@@ -203,6 +203,8 @@ struct RootView: View {
                     .background(Color.paper, in: RoundedRectangle(cornerRadius: 8))
                     // Under the top bar (54 + its line), so it never covers the logo or the "Test" chip
                     .padding(.top, 63)
+                    // A short note over the page: it grows with the text size, but not to cover the page
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .allowsHitTesting(false)
             }
         }
