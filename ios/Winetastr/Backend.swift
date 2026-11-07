@@ -211,7 +211,23 @@ enum Backend {
         return rows.first
     }
     static func tasting(_ code: String) async throws -> TastingInfo? {
-        let data = try await supabase.rpc("get_tasting", params: CodeParam(code: code)).execute().data
+        var data = try await supabase.rpc("get_tasting", params: CodeParam(code: code)).execute().data
+        #if DEBUG
+        // Screenshots of states the test tasting is not in, without changing the test data: -tastingPatch
+        // "quiz_open=true,fee_shared=false,mobilepay='12345678'" replaces those keys of get_tasting's answer
+        // (true/false/null, a whole number, or text in single quotes)
+        if let patch = UserDefaults.standard.string(forKey: "tastingPatch"),
+           var obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
+            for pair in patch.split(separator: ",") {
+                let kv = pair.split(separator: "=", maxSplits: 1).map(String.init)
+                guard kv.count == 2 else { continue }
+                let v = kv[1]
+                obj[kv[0]] = v == "true" ? true : v == "false" ? false : v == "null" ? NSNull()
+                    : v.hasPrefix("'") && v.hasSuffix("'") && v.count >= 2 ? String(v.dropFirst().dropLast()) : Int(v).map { $0 as Any } ?? v
+            }
+            if let d = try? JSONSerialization.data(withJSONObject: obj) { data = d }
+        }
+        #endif
         return try? decode(data)
     }
     static func wines(_ code: String) async throws -> [Wine] {
@@ -247,8 +263,22 @@ enum Backend {
     }
     static func linkMe() async { _ = try? await supabase.rpc("link_me_tastings").execute() }
     /// Sends the order; returns its number
+    #if DEBUG
+    /// -sendMock failOnce (DEBUG): the first order or quiz answer fails as if the connection was lost, the next one
+    /// works – without reaching the database (WIN-314: the error goes when a new try works)
+    private static var sendMockCalls = 0
+    private static func mockSend() throws -> Bool {
+        guard UserDefaults.standard.string(forKey: "sendMock") == "failOnce" else { return false }
+        sendMockCalls += 1
+        if sendMockCalls == 1 { throw URLError(.notConnectedToInternet) }
+        return true
+    }
+    #endif
     static func placeOrder(_ code: String, _ items: [(Int, Int)]) async throws -> Int {
-        try decode(try await supabase.rpc("place_order", params: PlaceOrder(code: code, items: items.map { OrderItem(wine_id: $0.0, qty: $0.1) })).execute().data)
+        #if DEBUG
+        if try mockSend() { return 9001 }
+        #endif
+        return try decode(try await supabase.rpc("place_order", params: PlaceOrder(code: code, items: items.map { OrderItem(wine_id: $0.0, qty: $0.1) })).execute().data)
     }
     static func chat(_ code: String, after: Int) async throws -> [ChatMessage] {
         try decode(try await supabase.rpc("get_chat", params: ChatAfter(code: code, after_id: after)).execute().data)
@@ -265,6 +295,9 @@ enum Backend {
         return Dictionary(rows.map { ($0.question_id, $0.answer_key) }, uniquingKeysWith: { $1 })
     }
     static func submitAnswer(_ code: String, question: Int, key: String) async throws {
+        #if DEBUG
+        if try mockSend() { return }
+        #endif
         try await supabase.rpc("submit_answer", params: Answer(code: code, q_id: question, a_key: key)).execute()
     }
     static func leaderboard(_ code: String) async throws -> [BoardRow] {
@@ -272,6 +305,10 @@ enum Backend {
     }
     /// The tasting's own price for the guest, when the host has set one
     static func payment(_ code: String) async throws -> TastingPayment? {
+        #if DEBUG
+        // -paymentMock 150 (DEBUG): the guest owes the tasting that price, unpaid (the test tasting has no fee)
+        if let s = UserDefaults.standard.string(forKey: "paymentMock"), let v = Double(s) { return TastingPayment(amount: v, paid: false) }
+        #endif
         let rows: [TastingPayment] = try decode(try await supabase.rpc("get_tasting_payment", params: CodeParam(code: code)).execute().data)
         return rows.first
     }

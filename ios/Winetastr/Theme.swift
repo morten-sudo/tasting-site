@@ -231,7 +231,9 @@ struct Eyebrow: View {
 struct StyleEyebrow: View {
     let wine: Wine
     var body: some View {
-        if let name = styleName(wine.style) {
+        // An unrevealed blind wine shows only its number: no style and no colour line – also from a database that
+        // still sends the style (WIN-320)
+        if !wine.isBlind, let name = styleName(wine.style) {
             HStack(spacing: 8) {
                 RoundedRectangle(cornerRadius: 2).fill(Color.styleTone(wine.style)).frame(width: 24, height: 3)
                 Text(name.uppercased()).font(.medium(11.5, relativeTo: .caption)).tracking(2.2).foregroundStyle(Color.muted)
