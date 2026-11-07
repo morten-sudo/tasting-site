@@ -497,7 +497,7 @@ const opts = [
 
         <section id="c43" class="dv-comp">
           <SectionTitle level="h3" text="43 Navigation" />
-          <p class="help">TopBar.astro (the top of this page, every page) · SideMenu.astro (the menu at the left of this page; "Menu" on phones) · the tasting switcher in TopBar</p>
+          <p class="help">TopBar.astro (the top of this page, every page) · SideMenu.astro (the menu at the left of this page; "Menu" on phones) · the tasting switcher in TopBar. On the site's pages (front page, plans, about …: TopBar front) the bar knows nothing about signing in: the languages (globe), "Sign in" and "Create account" for everyone – see winetastr.com</p>
           <p class="help">SideSwitch.astro · sideSwitcher() in src/lib/ui/side-menu.ts – the account choice at the top of the menu, only for a host on more than one account (one account: not shown); open, it is the dropdown of component 7 with the role under each name</p>
           <div class="dv-states">
             <span class="dv-lab">Closed</span><div class="dv-side"><SideSwitch id="dv-switch" label="ws.label" /></div>
@@ -509,6 +509,9 @@ const opts = [
           <SectionTitle level="h3" text="44 Hero" />
           <p class="help">Hero.astro – the long table photo (front page, sign-in) and the guest's tasting</p>
           <div class="dv-hero"><Hero size="fill" eyebrow="Winetastr" title="loginx.claim" titleTag="p" sizes="40rem"><Fragment slot="actions"><Actions><a class="btn on-photo" href="#c44">Get started</a><a class="btn on-photo-2" href="#c44">Sign in</a><a class="btn on-photo is-hover" href="#c44">Hover</a><a class="btn on-photo-2 is-focus" href="#c44">Focus</a></Actions></Fragment></Hero></div>
+          <p class="help">The front page's start of "Create account" (.hero-signup): the email and the on-photo button; on a small phone under each other. Second: with the error under the field</p>
+          <div class="dv-hero"><Hero size="fill" eyebrow="Winetastr" title="loginx.claim" titleTag="p" sizes="40rem"><form slot="actions" class="hero-signup" novalidate><label for="dv-hs">Your email</label><div class="field-row"><input class="input" id="dv-hs" type="email" /><button class="btn on-photo" type="button">Create your free account</button></div></form></Hero></div>
+          <div class="dv-hero"><Hero size="fill" eyebrow="Winetastr" title="loginx.claim" titleTag="p" sizes="40rem"><form slot="actions" class="hero-signup" novalidate><label for="dv-hs2">Your email</label><div class="field-row"><input class="input" id="dv-hs2" type="email" value="anne@" aria-invalid="true" aria-describedby="dv-hs2-error" /><button class="btn on-photo" type="button">Create your free account</button></div><p id="dv-hs2-error" class="field-error">Enter a valid email.</p></form></Hero></div>
           <div class="dv-gap"></div>
           <Hero variant="tasting" title="Portvin 2026" titleTag="p" countdownId="dv-count">
             <li><Icon name="calendar" /><span>Saturday 14 November at 19:00</span></li>

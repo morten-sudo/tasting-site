@@ -1,28 +1,17 @@
 ---
-// Features and plans – also for signed-in hosts (the sign-up page sends them on to their admin).
+// Features and plans – on the site (winetastr.com); "Get started" goes to the sign-up on the app's address. The site
+// does not know about signing in (WIN-195), so it is the same for everyone.
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/ui/PageHeader.astro';
 import PlansAndFeatures from '../components/PlansAndFeatures.astro';
+import { appUrl } from '../lib/hosts';
 ---
 <Base title="page.plans">
   <section class="wrap plans-page">
     <PageHeader title="plans.title" lead="plans.lead" />
-    <PlansAndFeatures cta="/signup/" />
+    <PlansAndFeatures cta={appUrl('/signup/')} />
   </section>
 </Base>
-
-<script>
-  import { supabase } from '../lib/supabase';
-  import { iconSvg } from '../lib/ui/icons';
-  import { i18nReady, t } from '../i18n';
-  await i18nReady;
-  // Signed in: "Get started" goes to your own pages instead of the sign-up
-  const { data } = await supabase.auth.getSession();
-  if (data.session) {
-    const a = document.getElementById('plan-free-cta') as HTMLAnchorElement | null;
-    if (a) { a.href = '/home/'; delete a.dataset.i18n; a.textContent = t('landing.goHome'); a.insertAdjacentHTML('beforeend', iconSvg('right')); }
-  }
-</script>
 
 <style>
   .plans-page { padding-top: 2.5rem; padding-bottom: 4rem; }

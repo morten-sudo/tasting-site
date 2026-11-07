@@ -1094,7 +1094,7 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-bottom: 1px solid var(--lodge-3);
 }
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.4rem; }
-.logo { flex: 1 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 0.6rem; color: var(--paper); text-decoration: none; font-weight: 500; letter-spacing: 0.01em; }
+.logo { flex: 1 1 auto; min-width: 1.9rem; display: inline-flex; align-items: center; gap: 0.6rem; color: var(--paper); text-decoration: none; font-weight: 500; letter-spacing: 0.01em; }
 .logo:hover { color: var(--paper); }
 .logo > svg { flex: none; display: block; width: 1.9rem; height: 1.9rem; }
 .logo > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1109,6 +1109,25 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .tb-flag { display: grid; }
 .tb-flag .flag { width: 1.1rem; height: auto; aspect-ratio: 3 / 2; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); opacity: 0.85; }
 .tb-name { white-space: nowrap; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; }
+/* The site's top bar (front page and public pages): the languages, "Sign in" and "Create account" for everyone */
+.tb-lang { gap: 0.4rem; }
+.tb-lang > .tb-lang-i { width: 1.3rem; height: 1.3rem; stroke-width: 1.6; }
+.tb-right > .tb-signin { padding-inline: 0.6rem; white-space: nowrap; }
+.tb-right > .tb-signup { margin-left: 0.25rem; white-space: nowrap; }
+@media (max-width: 40rem) {
+  .tb-lang { padding: 0 0.2rem; }
+  .tb-lang > .tb-name { display: none; }
+}
+/* Small phones: the logo's mark alone, so "Sign in" and "Create account" fit beside it */
+@media (max-width: 26rem) {
+  .topbar.front { gap: 0.5rem; }
+  .topbar.front .logo { flex: none; }
+  .topbar.front .logo > span { display: none; }
+  .topbar.front .tb-env { margin-left: 0; }
+  .topbar.front .tb-right > .tb-signin { padding-inline: 0.45rem; }
+  .topbar.front .tb-right > .tb-signup { padding-inline: 0.75rem; margin-left: 0; }
+  .topbar.front .tb-lang > .chev { display: none; }
+}
 .tb-user > .tb-user-i { display: none; width: 1.45rem; height: 1.45rem; stroke-width: 1.6; }
 .tb-user[aria-current='page'] { color: var(--paper); }
 /* Not signed in: the person icon, also on large screens */
@@ -1216,6 +1235,19 @@ html.side-locked main { z-index: 60; }
 .hero .hero-title { font-family: var(--display); font-weight: 400; font-size: clamp(2.5rem, 7vw, 4.6rem); line-height: 1; margin: 0; max-width: 17ch; color: #fff; overflow-wrap: anywhere; }
 .hero .hero-lead { font-size: clamp(1.05rem, 2.6vw, 1.25rem); line-height: 1.5; max-width: 34rem; margin: 1.1rem 0 0; color: rgba(255, 255, 255, 0.9); }
 .hero .actions { margin-top: 1.6rem; }
+/* The front page's start of "Create account" (WIN-195): the email and the on-photo button on one line, under each
+   other on phones; the error under them in a light red that reads on the photo */
+.hero-signup { margin-top: 1.6rem; max-width: 34rem; }
+.hero-signup > label { color: rgba(255, 255, 255, 0.9); }
+.hero-signup .field-row { flex-wrap: nowrap; gap: 0.6rem; }
+.hero-signup .input { flex: 1 1 auto; border-color: #fff; }
+.hero-signup .btn { flex: none; }
+.hero-signup .field-error { color: #ffc9c2; }
+.hero-signup .input[aria-invalid='true'] { border-color: #ffc9c2; box-shadow: 0 0 0 1px #ffc9c2; }
+@media (max-width: 30rem) {
+  .hero-signup .field-row { flex-direction: column; align-items: stretch; }
+  .hero-signup .btn { width: 100%; }
+}
 .hero a:not(.btn) { color: #fff; }
 .hero.full { min-height: min(78vh, 40rem); }
 /* Wide screens (the photo is cropped top and bottom): lift the photo so the glasses' bowls sit above the heading – the

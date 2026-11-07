@@ -1,8 +1,10 @@
 ---
 // "Not found". Having this page also makes Cloudflare Pages answer a missing file with a real 404 instead of
 // the front page – otherwise a browser that asks for a script during a deploy can keep a page as that script.
+// It is shown on both addresses (the same build), so "To the front page" is the site's full address.
 import TextPage from '../components/TextPage.astro';
+import { siteUrl } from '../lib/hosts';
 ---
 <TextPage title="notFound.title" body="notFound.text">
-  <a class="btn" href="/" data-i18n="notFound.home">To the front page</a>
+  <a class="btn" href={siteUrl('/')} data-i18n="notFound.home">To the front page</a>
 </TextPage>

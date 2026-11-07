@@ -1,15 +1,17 @@
 ---
-// Component 45 – the footer on every page; in a tasting the date and place come first (filled in by Base.astro)
+// Component 45 – the footer on every page; in a tasting the date and place come first (filled in by Base.astro).
+// The links are the site's pages, so on the app's pages they are full addresses (WIN-195, src/lib/hosts.ts).
+import { siteUrl } from '../../lib/hosts';
 ---
 <footer class="foot wrap">
   <p id="footer-when" class="foot-when"></p>
   <div class="foot-row">
     <span>Winetastr · © 2026</span>
     <nav aria-label="Winetastr">
-      <a href="/about/" data-i18n="footer.about">About</a>
-      <a href="/contact/" data-i18n="footer.contact">Contact</a>
-      <a href="/privacy/" data-i18n="footer.privacy">Privacy</a>
-      <a href="/terms/" data-i18n="footer.terms">Terms</a>
+      <a href={siteUrl('/about/')} data-i18n="footer.about">About</a>
+      <a href={siteUrl('/contact/')} data-i18n="footer.contact">Contact</a>
+      <a href={siteUrl('/privacy/')} data-i18n="footer.privacy">Privacy</a>
+      <a href={siteUrl('/terms/')} data-i18n="footer.terms">Terms</a>
     </nav>
   </div>
 </footer>

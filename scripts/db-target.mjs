@@ -1,6 +1,8 @@
 // Picks the database for this build (runs before `astro build`, see package.json).
 // Cloudflare Pages sets CF_PAGES_BRANCH: main → the live database, any other branch → the test database.
 // Locally: DB=test npm run build (or dev) for the test database; nothing set → live, as before.
+// The same target also picks the pair of addresses the links between the front page and the app use
+// (SITE_ORIGIN / APP_ORIGIN in src/lib/config.ts).
 import fs from 'node:fs';
 
 const branch = process.env.CF_PAGES_BRANCH;
