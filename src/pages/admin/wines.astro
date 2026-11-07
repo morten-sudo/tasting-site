@@ -185,8 +185,9 @@ import '../../styles/admin.css';
           <label for="wf-appellation"><span data-i18n="origin.appellation">Appellation</span> <span class="opt" data-i18n="origin.appellationHint">(e.g. Saint-Émilion Grand Cru, Porto, Barolo)</span></label>
           <input class="input" id="wf-appellation" type="text" autocomplete="off" />
           <p id="wf-app-status" class="status" hidden aria-live="polite"></p>
+          <!-- The same map as under "Origin" on the wine's page (WIN-298): full width, towns, zoom; the credit and how it was placed under it -->
           <div id="wf-map" class="wf-map" hidden>
-            <div class="wf-map-col"><div id="wf-map-svg" class="map-box"></div></div>
+            <div id="wf-map-svg" class="map-box"></div>
             <p id="wf-map-note" class="hint"></p>
           </div>
           <!-- The producer's website and address: found as soon as the producer is known (link, label or typed), or typed here -->

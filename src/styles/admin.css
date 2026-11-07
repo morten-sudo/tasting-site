@@ -144,10 +144,10 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .host-add input { flex: 1 1 12rem; min-width: 0; }
 
 /* The wine's map in the wine form */
-.wf-map { display: flex; gap: 0.8rem; align-items: center; margin: 0.3rem 0 0.4rem; }
+/* The wine's map in the panel: the panel's full width, as big as under "Origin" on the wine's page (WIN-298) */
+.wf-map { margin: 0.3rem 0 0.6rem; }
 .wf-map[hidden] { display: none; }
-.wf-map-col { flex: 0 0 11rem; min-width: 0; }
-.wf-map .hint { margin: 0; }
+.wf-map .hint { margin: 0.3rem 0 0; }
 
 /* A tasting's admin: its name and the guest page, then its tabs */
 .admin-page .ta-head { margin-bottom: 0.9rem; }
