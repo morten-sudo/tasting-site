@@ -1122,8 +1122,10 @@ begin
   assert hook_before_user_created('{"user":{"email":"new-host@selftest.invalid"}}') ? 'error', 'an old sign-up still lets a user be created';
 end $$;
 
--- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
+-- ---------- Blind tasting: a blind wine shows only its number (no style, WIN-320), nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
+-- The wine has a style, so the check below means something
+update wines set style = 'Vintage' where id = -1001;
 select set_config('request.jwt.claims', '', true);
 set local role anon;
 do $$
@@ -1132,7 +1134,9 @@ begin
   select * into w from get_wines('selftestaa') x where x.id = -1001;
   assert w.blind and w.name is null and w.producer is null and w.vintage is null and w.image_url is null
     and w.region is null and w.producer_lat is null and w.price_dkk is null and w.description is null
-    and w.grapes is null and w.bottle_cl is null and not w.orderable, 'a blind wine shows more than its number and style';
+    and w.grapes is null and w.bottle_cl is null and not w.orderable, 'a blind wine shows more than its number';
+  -- WIN-320: not even its style (the style gives the colour – and for port, a lot of the answer)
+  assert w.style is null, 'a blind wine shows its style';
   failed := false; begin perform place_order('selftestaa', '[{"wine_id":-1001,"qty":1}]'); exception when others then failed := true; end;
   assert failed, 'a blind wine can be ordered';
   assert not exists (select 1 from my_wine_book(array['selftestaa']) b where b.wine_id = -1001), 'the wine book shows a blind wine';

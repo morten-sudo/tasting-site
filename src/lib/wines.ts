@@ -9,7 +9,7 @@ export type Wine = {
   country?: string | null; region?: string | null; appellation?: string | null; appellation_id?: string | null;
   producer_website?: string | null; producer_address?: string | null; producer_lat?: number | null; producer_lon?: number | null;
   grapes?: string | null; food_pairing?: string | null; serving?: string | null;
-  /** Blind: the guests see only its number and style until the host reveals it */
+  /** Blind: the guests see only its number until the host reveals it – the database sends no style either (WIN-320) */
   blind?: boolean;
   /** Bottle size in cl (get_wines' last column; null for a blind wine, missing from an older database) */
   bottle_cl?: number | null;

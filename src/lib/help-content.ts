@@ -131,13 +131,13 @@ export const HELP: HelpSection[] = [
     id: 'blind',
     title: { da: 'Blindsmagning', en: 'Blind tasting' },
     body: {
-      da: `<p>En blind vin vises for gæsterne som "Vin 3" med en flaskesilhuet i vinens farve (rød, hvid, rosé, mousserende …). Navn, producent, årgang, oprindelse, billede, pris og noter vises ikke – de sendes slet ikke til gæsternes telefoner. Gæsterne kan give karakter og skrive noter, men ikke bestille vinen.</p>
+      da: `<p>En blind vin vises for gæsterne kun som sit nummer – "Vin 3" med et neutralt billede. Stil, farve, navn, producent, årgang, oprindelse, billede, pris og noter vises ikke – de sendes slet ikke til gæsternes telefoner. Når du afslører vinen, ser gæsterne det hele. Gæsterne kan give karakter og skrive noter, men ikke bestille vinen.</p>
 <ul>
 <li><b>Hele smagningen:</b> slå <a href="t:settings/#controls">Blindsmagning</a> til under kontakterne. Alle vine bliver blinde, og vine du tilføjer senere starter blinde.</li>
 <li><b>Enkelte vine:</b> tryk på blyanten (<i>Rediger</i>) ved vinen under <a href="t:wines/">Vine</a>, og vælg <i>Blind</i> under <i>Gæsterne ser</i>.</li>
 <li><b>Afslør:</b> tryk <i>Afslør</i> ved vinen under <a href="t:wines/">Vine</a> – i den rækkefølge, der passer aftenen. Gæsternes skærme skifter selv til den rigtige vin inden for ca. 15 sekunder.</li>
 </ul>`,
-      en: `<p>Guests see a blind wine as "Wine 3" with a bottle silhouette in the wine's colour (red, white, rosé, sparkling …). Name, producer, vintage, origin, picture, price and notes are not shown – they are not even sent to the guests' phones. Guests can rate it and write notes, but cannot order it.</p>
+      en: `<p>Guests see a blind wine only as its number – "Wine 3" with a neutral picture. Style, colour, name, producer, vintage, origin, picture, price and notes are not shown – they are not even sent to the guests' phones. When you reveal the wine, the guests see all of it. Guests can rate it and write notes, but cannot order it.</p>
 <ul>
 <li><b>The whole tasting:</b> turn on <a href="t:settings/#controls">Blind tasting</a> under the controls. All wines become blind, and wines you add later start blind.</li>
 <li><b>Single wines:</b> press the pencil (<i>Edit</i>) by the wine under <a href="t:wines/">Wines</a> and choose <i>Blind</i> under <i>Guests see</i>.</li>
@@ -329,11 +329,11 @@ export const HELP: HelpSection[] = [
 // t: links go to the tasting chosen at the top of the help (its admin), g: links to its guest page
 export const TIPS: Record<string, { text: Text; more: string }> = {
   blind: { more: 'blind', text: {
-    da: 'Alle vine bliver blinde: gæsterne ser kun nummer og farve, til du trykker <i>Afslør</i> ved vinen. Nye vine starter blinde.',
-    en: 'All wines become blind: guests see only the number and colour until you press <i>Reveal</i> on the wine. New wines start blind.' } },
+    da: 'Alle vine bliver blinde: gæsterne ser kun vinens nummer, til du trykker <i>Afslør</i> ved vinen. Nye vine starter blinde.',
+    en: 'All wines become blind: guests see only the wine's number until you press <i>Reveal</i> on the wine. New wines start blind.' } },
   'guests-see': { more: 'blind', text: {
-    da: '<b>Vinen</b>: alt vises. <b>Blind</b>: kun nummer og farve, til du afslører den. <b>Intet</b>: vinen er skjult for gæsterne.',
-    en: '<b>The wine</b>: everything is shown. <b>Blind</b>: only number and colour until you reveal it. <b>Nothing</b>: the wine is hidden from the guests.' } },
+    da: '<b>Vinen</b>: alt vises. <b>Blind</b>: kun nummeret, til du afslører den. <b>Intet</b>: vinen er skjult for gæsterne.',
+    en: '<b>The wine</b>: everything is shown. <b>Blind</b>: only the number until you reveal it. <b>Nothing</b>: the wine is hidden from the guests.' } },
   'max-guests': { more: 'max-guests', text: {
     da: 'Når smagningen er fuld, kommer nye ja-svar på venteliste. Melder nogen fra, rykker den første på listen op af sig selv.',
     en: 'When the tasting is full, new yes replies go on the waiting list. When someone drops out, the first on the list moves up by itself.' } },
