@@ -26,6 +26,22 @@ struct Projection: Decodable {
 
 struct OverviewMap: Decodable { let id: String; let w: Double; let h: Double; let proj: Projection; let land: String; let border: String }
 
+/// A town for orientation on the overview maps: Natural Earth's populated places (public/maps/places.json: [lon, lat, name,
+/// scalerank, capital, names?], the bigger first). The optional sixth item holds the names that differ per language
+/// ({ da: "Wien", is: "Vín" }); without one the English name is used.
+struct MapTown: Decodable {
+    let lon: Double, lat: Double, name: String, rank: Int, capital: Bool
+    let names: [String: String]?
+    init(from decoder: Decoder) throws {
+        var c = try decoder.unkeyedContainer()
+        lon = try c.decode(Double.self); lat = try c.decode(Double.self); name = try c.decode(String.self)
+        rank = Int(try c.decode(Double.self)); capital = (try c.decode(Double.self)) != 0
+        names = c.isAtEnd ? nil : try? c.decode([String: String].self)
+    }
+    /// townName() in overview-map.ts: the name in the app's language, else the English name
+    func localName(_ l: String = AppLanguage.code) -> String { names?[l] ?? names?["en"] ?? name }
+}
+
 struct Appellation: Decodable { let id: String; let name: String; let region: String?; let country: String?; let aliases: [String]?; let lat: Double?; let lon: Double?; let subregion: String? }
 struct WineRegion: Decodable { let id: String; let name: String; let country: String; let aliases: [String]?; let lat: Double?; let lon: Double? }
 struct PlaceGuess: Decodable { let key: String; let name: String; let country: String; let lat: Double; let lon: Double }
@@ -89,6 +105,7 @@ actor MapStore {
     private var countries: Task<[String: CountryBox], Never>?
     private var tileIndex: Task<TileIndex?, Never>?
     private var tiles: [String: Task<Tile?, Never>] = [:]
+    private var townList: Task<[MapTown]?, Never>?
 
     private static func json<T: Decodable>(_ path: String) async -> T? {
         guard let url = URL(string: "https://winetastr.com" + path),
@@ -124,6 +141,11 @@ actor MapStore {
     func countryList() async -> [String: CountryBox] {
         if countries == nil { countries = Task { await Self.json("/maps/countries.json") ?? [:] } }
         return await countries!.value
+    }
+    /// loadTowns(): the overview maps' towns
+    func towns() async -> [MapTown]? {
+        if townList == nil { townList = Task { await Self.json("/maps/places.json") } }
+        return await townList!.value
     }
     func index() async -> TileIndex? {
         if tileIndex == nil { tileIndex = Task { await Self.json("/maps/tiles/index.json") } }
@@ -474,9 +496,10 @@ struct RegionDrawing {
         func placeParts() {
             let fs = 15 * S
             for (_, a) in map.areas.sorted(by: { $0.key < $1.key }) {
-                guard let title = a.title?.uppercased() else { continue }
+                // The site writes the names as they are (body font, no capitals since the maps' lettering was made one style)
+                guard let title = a.title else { continue }
                 let area = SVGPath.parse(a.d)
-                let w = Double(title.count) * fs * 0.95, h = fs * 1.3
+                let w = Double(title.count) * fs * 0.6, h = fs * 1.3
                 func box(_ x: Double, _ y: Double) -> Box { Box(x0: x - w / 2, y0: y - fs * 0.36 - h / 2, x1: x + w / 2, y1: y - fs * 0.36 + h / 2) }
                 var spots: [(Double, Double)] = []
                 for dy in [0.0, -0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -2.5, 2.5, -3, 3] {
@@ -541,8 +564,13 @@ private enum MapColor {
 /// Draws text with the halo the site gets from paint-order: stroke
 private func haloText(_ ctx: inout GraphicsContext, _ text: Text, _ halo: Text, at p: CGPoint, anchor: UnitPoint, width: Double) {
     let r = width / 2
-    for (dx, dy) in [(-r, 0), (r, 0), (0, -r), (0, r), (-r * 0.7, -r * 0.7), (r * 0.7, -r * 0.7), (-r * 0.7, r * 0.7), (r * 0.7, r * 0.7)] {
-        ctx.draw(halo, at: CGPoint(x: p.x + dx, y: p.y + dy), anchor: anchor)
+    // 16 directions at the stroke's edge and 8 halfway: a smooth halo also around the thin upright letters
+    let resolved = ctx.resolve(halo)
+    for (d, steps) in [(r, 16), (r / 2, 8)] {
+        for i in 0..<steps {
+            let a: Double = Double(i) / Double(steps) * 2 * Double.pi
+            ctx.draw(resolved, at: CGPoint(x: p.x + cos(a) * d, y: p.y + sin(a) * d), anchor: anchor)
+        }
     }
     ctx.draw(text, at: p, anchor: anchor)
 }
@@ -596,18 +624,21 @@ extension RegionDrawing {
             switch l.kind {
             case .town(let sz):
                 let fs = w(sz == "big" ? 22.0 : sz == "mid" ? 17.0 : 15.0)
-                haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.town),
-                         Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.land),
+                // The site's .rm-town: the body font, upright
+                let font = Font.custom("Inter-Regular", fixedSize: fs)
+                haloText(&ctx, Text(l.text).font(font).foregroundStyle(MapColor.town), Text(l.text).font(font).foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: l.anchor, width: w(3))
             case .part:
                 let fs = w(15)
-                haloText(&ctx, Text(l.text).font(.custom("Inter-SemiBold", fixedSize: fs)).tracking(fs / 4).foregroundStyle(MapColor.bordeaux.opacity(0.75)),
-                         Text(l.text).font(.custom("Inter-SemiBold", fixedSize: fs)).tracking(fs / 4).foregroundStyle(MapColor.land),
+                // .rm-part: body font, weight 500, the towns' colour, no capitals or letter-spacing
+                let font = Font.custom("Inter-Medium", fixedSize: fs)
+                haloText(&ctx, Text(l.text).font(font).foregroundStyle(MapColor.town), Text(l.text).font(font).foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: .center, width: w(3))
             case .badgeTitle:
                 let fs = w(17)
-                haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.bordeaux),
-                         Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.land),
+                // .rm-badge-title: body font, weight 600
+                let font = Font.custom("Inter-SemiBold", fixedSize: fs)
+                haloText(&ctx, Text(l.text).font(font).foregroundStyle(MapColor.bordeaux), Text(l.text).font(font).foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: l.anchor, width: w(4))
             }
         }
@@ -639,14 +670,20 @@ private func drawPin(_ ctx: inout GraphicsContext, at p: CGPoint, scale s: Doubl
 
 struct OverviewDrawing {
     struct Pin { let lon: Double; let lat: Double; var label: String? = nil; var n: Int? = nil }
+    /// A town placed on the map: its dot at `at`, the name's baseline at `at` + `text` (map units at the starting view)
+    struct TownLabel { let name: String; let at: CGPoint; let r: Double; let capital: Bool; let text: CGPoint; let anchor: UnitPoint }
     let map: OverviewMap
     let land: Path, border: Path
     let pins: [Pin]
     let view: CGRect
     let inset: Bool
     var detail: (land: [Path], lakes: Path?, rivers: Path?, coast: Path?, border: Path?)?
+    var towns: [TownLabel] = []
+    /// The pins whose name has room, and on which side (the others keep their number; the legend names every wine)
+    var sides: [Int: Bool] = [:]
 
-    init(_ map: OverviewMap, pins: [Pin], focus: GeoBox, inset: Bool = false, detail: Detail? = nil) {
+    /// drawOverview() in overview-map.ts. `towns`: places.json; `boxWidth`: the map box's width on screen (the zoom buttons)
+    init(_ map: OverviewMap, pins: [Pin], focus: GeoBox, inset: Bool = false, detail: Detail? = nil, towns townList: [MapTown]? = nil, boxWidth: Double = 358) {
         self.map = map; self.pins = pins; self.inset = inset
         land = SVGPath.parse(map.land); border = SVGPath.parse(map.border)
         let a = map.proj.xy(focus.lon0, focus.lat1), b = map.proj.xy(focus.lon1, focus.lat0)
@@ -672,6 +709,85 @@ struct OverviewDrawing {
                            detail.rivers.isEmpty ? nil : path(detail.rivers, close: false), detail.coast.isEmpty ? nil : path(detail.coast, close: false),
                            detail.border.isEmpty ? nil : path(detail.border, close: false))
         }
+        guard !inset else { return }
+
+        // The names, placed at the starting view as the site does (one unit ≈ 1 % of the width)
+        let u = w / 100
+        struct Box { var x0, y0, x1, y1: Double }
+        func meets(_ a: Box, _ b: Box) -> Bool { a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0 }
+        func inside(_ b: Box, _ m: Double) -> Bool { b.x0 >= x0 + m && b.x1 <= x0 + w - m && b.y0 >= y0 + m && b.y1 <= y0 + h - m }
+        // The zoom buttons (MapBox: 2 × 44 pt with 8 pt padding, top right): no names there
+        let k = boxWidth / w
+        let buttons = Box(x0: x0 + w - 52 / k, y0: y0, x1: x0 + w, y1: y0 + 102 / k)
+        let at = pins.map { map.proj.xy($0.lon, $0.lat) }
+        let marks: [Box] = pins.enumerated().map { i, p in let r = p.n != nil ? u * 2.8 : u * 1.9; return Box(x0: at[i].x - r, y0: at[i].y - r, x1: at[i].x + r, y1: at[i].y + r) }
+        var names: [Box] = []
+        // Towns for orientation: the biggest in the area the map is about first, then the rest of the view. The name goes
+        // right of the dot, else left, above or below – never on a pin, a pin's name, the zoom buttons or another town.
+        // All names have one size (3.4 % of the map's width, as the pins' names); a town without room is left out
+        let fs = u * 3.4
+        func about(_ t: MapTown) -> Bool { t.lon >= focus.lon0 && t.lon <= focus.lon1 && t.lat >= focus.lat0 && t.lat <= focus.lat1 }
+        let inView = (townList ?? []).filter { t in
+            let p = map.proj.xy(t.lon, t.lat)
+            return p.x > x0 + u * 1.5 && p.x < x0 + w - u * 1.5 && p.y > y0 + u * 1.5 && p.y < y0 + h - u * 1.5
+        }
+        // Within the same size, a capital first, then the town nearest the wines
+        func near(_ t: MapTown) -> Double { let p = map.proj.xy(t.lon, t.lat); return at.map { hypot($0.x - p.x, $0.y - p.y) }.min() ?? .infinity }
+        let order = inView.enumerated().map { (i: $0.offset, t: $0.element, a: about($0.element) ? 0 : 1, d: near($0.element)) }
+            .sorted { p, o in (p.a, p.t.rank, o.t.capital ? 1 : 0, p.d, p.i) < (o.a, o.t.rank, p.t.capital ? 1 : 0, o.d, o.i) }.map(\.t)
+        var placed: [TownLabel] = []
+        /// Draws the town when its name finds a free spot; `onPin`: its dot may lie under a pin (the main town)
+        func placeTown(_ town: MapTown, onPin: Bool = false) -> Bool {
+            let name = town.localName()
+            let p = map.proj.xy(town.lon, town.lat), x = p.x, y = p.y
+            let r = u * (town.capital ? 0.95 : 0.75)
+            let dot = Box(x0: x - r * 1.6, y0: y - r * 1.6, x1: x + r * 1.6, y1: y + r * 1.6)
+            if meets(dot, buttons) || names.contains(where: { meets(dot, $0) }) || (!onPin && marks.contains(where: { meets(dot, $0) })) { return false }
+            let tw = Double(name.count) * fs * (town.capital ? 0.58 : 0.57)
+            let base = y - u * 1.1, top = base - fs * 0.86, bottom = base + fs * 0.28
+            // Each spot: the name's box, the text's start (x offset, baseline) and its anchor
+            var spots: [(Box, Double, Double, UnitPoint)] = []
+            // Right, left, above and below the dot first; for the main town among pins also a little further out
+            for d in onPin ? [0.0, 3, 6] : [0.0] {
+                spots += [
+                    (Box(x0: x + u * (1.1 + d), y0: top, x1: x + u * (1.3 + d) + tw, y1: bottom), u * (1.3 + d), base, .leading),
+                    (Box(x0: x - u * (1.3 + d) - tw, y0: top, x1: x - u * (1.1 + d), y1: bottom), -u * (1.3 + d), base, .trailing),
+                    (Box(x0: x - tw / 2, y0: y - u * (1.6 + d) - fs * 1.08, x1: x + tw / 2, y1: y - u * (1.4 + d)), 0, y - u * (1.6 + d) - fs * 0.22, .center),
+                    (Box(x0: x - tw / 2, y0: y + u * (1.4 + d), x1: x + tw / 2, y1: y + u * (1.6 + d) + fs * 1.08), 0, y + u * (1.6 + d) + fs * 0.74, .center),
+                ]
+            }
+            spots += [
+                (Box(x0: x - tw, y0: y + u * 1.4, x1: x, y1: y + u * 1.6 + fs), 0, y + u * 1.6 + fs * 0.74, .trailing),
+                (Box(x0: x, y0: y + u * 1.4, x1: x + tw, y1: y + u * 1.6 + fs), 0, y + u * 1.6 + fs * 0.74, .leading),
+                (Box(x0: x - tw, y0: y - u * 1.6 - fs, x1: x, y1: y - u * 1.4), 0, y - u * 1.6 - fs * 0.22, .trailing),
+                (Box(x0: x, y0: y - u * 1.6 - fs, x1: x + tw, y1: y - u * 1.4), 0, y - u * 1.6 - fs * 0.22, .leading),
+            ]
+            guard let spot = spots.first(where: { s in inside(s.0, u * 0.8) && !meets(s.0, buttons) && !(names + marks).contains { meets(s.0, $0) } }) else { return false }
+            names += [spot.0, dot]
+            placed.append(TownLabel(name: name, at: p, r: r, capital: town.capital, text: CGPoint(x: spot.1, y: spot.2 - y), anchor: spot.3))
+            return true
+        }
+        // The main town (the capital or the biggest town of the area) always comes first, even before the pins' names
+        let main = order.firstIndex { placeTown($0, onPin: true) }
+        // The pins' names: the places with the most wines first, to the right of the pin or else to the left – never on
+        // another pin or name, nor outside the map (the number stays; the legend names every wine)
+        let pfs = u * 3.4
+        for i in pins.indices.sorted(by: { ((pins[$0].n ?? 1), -$0) > ((pins[$1].n ?? 1), -$1) }) {
+            guard let label = pins[i].label, !label.isEmpty else { continue }
+            let x = at[i].x, y = at[i].y
+            let tw = Double(label.count) * pfs * 0.6, top = y - u * 1.2 - pfs * 0.86, bottom = y - u * 1.2 + pfs * 0.28
+            func free(_ b: Box) -> Bool {
+                inside(b, u * 0.4) && !meets(b, buttons) && !names.contains { meets(b, $0) } && !marks.enumerated().contains { $0.offset != i && meets(b, $0.element) }
+            }
+            let right = Box(x0: x + u * 3.1, y0: top, x1: x + u * 3.4 + tw, y1: bottom), left = Box(x0: x - u * 3.4 - tw, y0: top, x1: x - u * 3.1, y1: bottom)
+            if free(right) { sides[i] = false; names.append(right) } else if free(left) { sides[i] = true; names.append(left) }
+        }
+        // Then the other towns, at most seven in all
+        var n = main == nil ? 0 : 1
+        for (j, town) in order.enumerated() where n < 7 && j != main {
+            if placeTown(town) { n += 1 }
+        }
+        towns = placed
     }
 
     func draw(_ ctx: inout GraphicsContext, view v: CGRect, size: CGSize) {
@@ -681,6 +797,8 @@ struct OverviewDrawing {
         ctx.translateBy(x: -v.minX, y: -v.minY)
         // One unit ≈ 1 % of the width on screen, so pins, text and lines keep their size at any zoom
         let u = v.width / 100
+        // Sizes and distances worked out at the starting view, kept the same on screen when zooming
+        let f = v.width / view.width
         ctx.fill(Path(view), with: .color(MapColor.sea))
         let dash = StrokeStyle(lineWidth: u * 0.18, dash: [u * 1.2, u * 0.6])
         if let d = detail {
@@ -694,7 +812,18 @@ struct OverviewDrawing {
             ctx.stroke(land, with: .color(MapColor.coastLine), lineWidth: u * 0.12)
             ctx.stroke(border, with: .color(MapColor.border), style: dash)
         }
-        for p in pins {
+        // Towns (the site's .rm-town: body font, a capital a little heavier). On a map narrower than 20rem their names would
+        // be smaller than 11 pt, so they are left out there (as the site's container rule)
+        if size.width >= 320 {
+            for t in towns {
+                let r = t.r * f
+                ctx.fill(Path(ellipseIn: CGRect(x: t.at.x - r, y: t.at.y - r, width: r * 2, height: r * 2)), with: .color(MapColor.town))
+                let fs = u * 3.4, font = Font.custom(t.capital ? "Inter-Medium" : "Inter-Regular", fixedSize: fs)
+                haloText(&ctx, Text(t.name).font(font).foregroundStyle(MapColor.town), Text(t.name).font(font).foregroundStyle(MapColor.land),
+                         at: baseline(CGPoint(x: t.at.x + t.text.x * f, y: t.at.y + t.text.y * f), fs), anchor: t.anchor, width: fs * 0.24)
+            }
+        }
+        for (i, p) in pins.enumerated() {
             let at = map.proj.xy(p.lon, p.lat)
             let r = inset ? u * 3.2 : u * 1.6
             ctx.fill(Path(ellipseIn: CGRect(x: at.x - r * 2.6, y: at.y - r * 2.6, width: r * 5.2, height: r * 5.2)), with: .color(MapColor.bordeaux.opacity(0.14)))
@@ -707,11 +836,11 @@ struct OverviewDrawing {
                 let c = Path(ellipseIn: CGRect(x: at.x - r, y: at.y - r, width: r * 2, height: r * 2))
                 ctx.fill(c, with: .color(MapColor.bordeaux)); ctx.stroke(c, with: .color(.white), lineWidth: u * 0.5)
             }
-            if let label = p.label, !inset {
-                let fs = u * 3.4
-                haloText(&ctx, Text(label).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.bordeaux),
-                         Text(label).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.land),
-                         at: baseline(CGPoint(x: at.x + u * 3.4, y: at.y - u * 1.2), fs), anchor: .leading, width: fs * 0.25)
+            // The site's .rm-badge-title: body font, semibold
+            if let label = p.label, let left = sides[i] {
+                let fs = u * 3.4, font = Font.custom("Inter-SemiBold", fixedSize: fs)
+                haloText(&ctx, Text(label).font(font).foregroundStyle(MapColor.bordeaux), Text(label).font(font).foregroundStyle(MapColor.land),
+                         at: baseline(CGPoint(x: at.x + (left ? -fs : fs), y: at.y - u * 1.2), fs), anchor: left ? .trailing : .leading, width: fs * 0.25)
             }
         }
     }
