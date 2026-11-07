@@ -46,7 +46,7 @@ final class FixesTests: XCTestCase {
         XCTAssertTrue(error.waitForExistence(timeout: 3), "the first try fails")
         shot("win314-quiz-error-da")
         lock.tap()
-        // The toast would otherwise stay two seconds: it goes at once
+        // The error would otherwise stay until it is closed (WIN-336): it goes at once
         XCTAssertTrue(error.waitForNonExistence(timeout: 1), "the error goes when the answer is saved")
         XCTAssertTrue(a.staticTexts["Hvad betyder LBV?"].waitForExistence(timeout: 3), "on to the next question")
         shot("win314-quiz-ok-da")

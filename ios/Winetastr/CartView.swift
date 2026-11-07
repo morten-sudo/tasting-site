@@ -103,7 +103,7 @@ struct CartView: View {
     @State private var loaded = false
     @State private var sending = false
     @State private var confirm: (id: Int, total: Double)?
-    @State private var toast: String?
+    @State private var toast: Toast?
     @State private var asking: Wine?
     @State private var undo: (wine: Wine, n: Int)?
 
@@ -293,13 +293,13 @@ struct CartView: View {
             let id = try await Backend.placeOrder(tasting.code, list.map { ($0.0.id, $0.1) })
             let sum = total(list)
             // A new try worked: the error from the last one goes (WIN-314)
-            toast = nil
+            toast.clearError()
             model.clearCart(tasting.slug)
             withAnimation { confirm = (id, sum) }
             await load()
         } catch {
             let m = dbMessage(error)
-            toast = L(m.contains("lukket") ? "cart.errClosed" : m.contains("kan ikke bestilles") ? "cart.errWine" : "cart.errSend")
+            toast = .error(L(m.contains("lukket") ? "cart.errClosed" : m.contains("kan ikke bestilles") ? "cart.errWine" : "cart.errSend"))
         }
     }
 }

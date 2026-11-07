@@ -16,7 +16,7 @@ struct QuizView: View {
     @State private var busy = false
     @State private var board: [BoardRow] = []
     @State private var myName = ""
-    @State private var toast: String?
+    @State private var toast: Toast?
     @State private var failed = false
 
     private var current: Int { questions.firstIndex { answers[$0.id] == nil } ?? questions.count }
@@ -231,12 +231,12 @@ struct QuizView: View {
         do {
             try await Backend.submitAnswer(tasting.code, question: q.id, key: key)
             // A new try worked: the error from the last one goes (WIN-314)
-            toast = nil
+            toast.clearError()
             answers[q.id] = key; selected = nil
             board = (try? await Backend.leaderboard(tasting.code)) ?? board
         } catch {
             let closed = dbMessage(error).contains("ikke åben")
-            toast = L(closed ? "quiz.closedForAnswers" : "quiz.notSaved")
+            toast = .error(L(closed ? "quiz.closedForAnswers" : "quiz.notSaved"))
             if closed { await start(force: true) }
         }
     }

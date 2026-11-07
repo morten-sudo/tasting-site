@@ -258,7 +258,7 @@ struct PayBox: View {
     let mobilepay: String?
     let recipient: String?
     let amount: Double
-    @Binding var toast: String?
+    @Binding var toast: Toast?
 
     private var number: String { (mobilepay ?? "").replacingOccurrences(of: " ", with: "") }
     private var name: String { (recipient ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -279,7 +279,7 @@ struct PayBox: View {
                     factRow(L("pay.number"), pretty, oneLine: true) {
                         Button {
                             UIPasteboard.general.string = number
-                            toast = "\(L("pay.copied")): \(pretty)"
+                            toast = .ok("\(L("pay.copied")): \(pretty)")
                         } label: {
                             SiteIcon("copy", size: 18).foregroundStyle(Color.muted).frame(width: 44, height: 44)
                         }
@@ -317,7 +317,7 @@ struct FeeCard: View {
     let recipient: String?
     /// Shared from what the evening cost, or a fixed price (nil: not known – nothing is said)
     var shared: Bool? = nil
-    @Binding var toast: String?
+    @Binding var toast: Toast?
     var body: some View {
         Card {
             Text(L("guest.feeTitle")).font(.semibold(17)).foregroundStyle(Color.paper).accessibilityAddTraits(.isHeader)

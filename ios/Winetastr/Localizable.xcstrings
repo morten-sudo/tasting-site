@@ -3213,6 +3213,28 @@
     }
    }
   },
+  "admin.close": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Luk"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Close"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Loka"
+     }
+    }
+   }
+  },
   "rating.saved": {
    "localizations": {
     "da": {

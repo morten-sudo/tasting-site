@@ -259,28 +259,70 @@ struct LoadingState: View {
     var body: some View { ProgressView().tint(Color.bordeaux).frame(maxWidth: .infinity, maxHeight: .infinity) }
 }
 
-/// toast()
+/// One toast (src/lib/ui/toast.ts): a message goes by itself after 4 s; an error stays until it is closed or a new
+/// try works (WIN-314, WIN-336), so it can be read.
+struct Toast: Equatable {
+    let text: String
+    let error: Bool
+    /// A new toast with the same text starts its time again
+    private let id = UUID()
+    static func ok(_ text: String) -> Toast { Toast(text: text, error: false) }
+    static func error(_ text: String) -> Toast { Toast(text: text, error: true) }
+}
+
+extension Optional where Wrapped == Toast {
+    /// hideErrorToast(): a new try worked, so the error from the last one goes; a message stays
+    mutating func clearError() { if self?.error == true { self = nil } }
+}
+
+/// toast() – .toast in components.css: dark (an error red), the check or warning icon, the text and the close button
 struct ToastModifier: ViewModifier {
-    @Binding var text: String?
+    @Binding var toast: Toast?
     func body(content: Content) -> some View {
         content.overlay(alignment: .bottom) {
-            if let text {
-                Text(text).font(.medium(14.4)).foregroundStyle(Color.white)
-                    .padding(.horizontal, 16).padding(.vertical, 11)
-                    .background(Color.paper, in: RoundedRectangle(cornerRadius: 8))
-                    .padding(.bottom, 24)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .task {
-                        UIAccessibility.post(notification: .announcement, argument: text)
-                        try? await Task.sleep(for: .seconds(2))
-                        withAnimation { self.text = nil }
+            if let toast {
+                HStack(spacing: 12) {
+                    SiteIcon(toast.error ? "warn" : "check", size: 17.6)
+                        .foregroundStyle(toast.error ? Color.white : Color.okLine)
+                    Text(toast.text).font(.body(15.2)).foregroundStyle(Color.white)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    // The site's close icon (closeButton(t('admin.close'), 'small') on a dark surface)
+                    Button { withAnimation { self.toast = nil } } label: {
+                        SiteIcon("x", size: 19.2).foregroundStyle(Color.white.opacity(0.8)).frame(width: 32, height: 32)
+                            .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L("admin.close"))
+                    .accessibilityIdentifier("toast-close")
+                }
+                .padding(.leading, 16).padding(.trailing, 6).padding(.vertical, 6)
+                .frame(minHeight: 44)
+                .background(toast.error ? Color.errorText : Color.paper, in: RoundedRectangle(cornerRadius: 8))
+                .shadow(color: .black.opacity(0.22), radius: 12, y: 8)
+                .frame(maxWidth: 544)
+                .padding(.horizontal, 16).padding(.bottom, 20)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier(toast.error ? "toast-error" : "toast")
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .task(id: toast) {
+                    // Read out as on the site (role="alert" / role="status"); an error is queued after what VoiceOver is
+                    // saying, so it is not cut off
+                    try? await Task.sleep(for: .milliseconds(100))
+                    let said = NSAttributedString(string: toast.text, attributes: [.accessibilitySpeechQueueAnnouncement: toast.error])
+                    UIAccessibility.post(notification: .announcement, argument: said)
+                    guard !toast.error else { return }
+                    // As on the site: 4 s
+                    try? await Task.sleep(for: .seconds(4))
+                    guard !Task.isCancelled, self.toast == toast else { return }
+                    withAnimation { self.toast = nil }
+                }
             }
         }
-        .animation(.easeOut(duration: 0.2), value: text)
+        .animation(.easeOut(duration: 0.2), value: toast)
     }
 }
-extension View { func toast(_ text: Binding<String?>) -> some View { modifier(ToastModifier(text: text)) } }
+extension View { func toast(_ toast: Binding<Toast?>) -> some View { modifier(ToastModifier(toast: toast)) } }
 
 /// The bars are the app's own (like the site's), and swiping back must keep working without the system bar.
 extension UINavigationController: @retroactive UIGestureRecognizerDelegate {

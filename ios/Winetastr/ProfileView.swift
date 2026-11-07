@@ -9,7 +9,7 @@ struct ProfileView: View {
     @State private var loaded = false
     @State private var editing = false
     @State private var pending: String?
-    @State private var toast: String?
+    @State private var toast: Toast?
     @State private var signIn = false
 
     var body: some View {
@@ -30,7 +30,7 @@ struct ProfileView: View {
         .sheet(isPresented: $editing) {
             ProfileSheet(signedIn: model.signedInEmail != nil, name: name ?? "", email: email ?? "") { result in
                 switch result {
-                case .saved(let n, let e): name = n ?? name; email = e; toast = L("common.saved")
+                case .saved(let n, let e): name = n ?? name; email = e; toast = .ok(L("common.saved"))
                 case .pending(let e): pending = L("profile.emailConfirm", ["email": e])
                 }
             }
