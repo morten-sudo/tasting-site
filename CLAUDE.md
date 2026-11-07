@@ -89,6 +89,9 @@ The site and the native SwiftUI guest app are one product, developed together by
 - **App tests: targeted while fixing, full once.** A full `simtest.sh` takes 8–10 minutes. While building or fixing, run only
   the tests that cover the change (`tools/simtest.sh -only-testing:WinetastrUITests/<TestClass>`); run the full suite exactly
   once, at the end. Brief every agent that builds the app with this rule.
+- **Two simulators may run at once** (Morten, 7 November 2026): `SIM=6FB2F2B7-FE7A-425E-A7E7-B52F31B2AC51` (default) and
+  `SIM=D145F3CB-09AD-499B-AA8B-DCDFBCD9F6F8` for `tools/simbuild.sh` / `tools/simtest.sh`, each job in its own worktree on the
+  Mac (its own `ios/build/`). Give each agent its simulator and worktree in the brief.
 - **The site is the standard for look and words.** The app uses the site's fonts, colours, logo and icons (`ios/Winetastr/Theme.swift` mirrors `global.css` and `components.css`) and its dictionaries (`ios/tools/make_strings.py`). Change a shared colour, component or wording on both. No new icons, logos or styles in the app that the site does not have, unless Morten asks.
 - **Database calls are a contract.** Calls the app uses (`supabase/tests/app_contract.sql`) must not change name, arguments, columns or meaning: apps in people's phones cannot be updated with the database. Add optional arguments or new functions; remove old ones only when no app version in use needs them. Run `app_contract.sql` after every database change along with `security.sql`, and add new calls the app starts using.
 - **Order:** database first, then site, then app. Nothing may depend on the site and the app being released at the same moment.
