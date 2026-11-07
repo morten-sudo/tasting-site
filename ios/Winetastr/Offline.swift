@@ -70,7 +70,7 @@ final class RatingOutbox {
     static let shared = RatingOutbox()
     struct Pending: Codable, Equatable { var stars: Int?; var note: String? }
     /// code → wine → what is not saved yet
-    private(set) var pending: [String: [Int: Pending]] = [:]
+    private(set) var waiting: [String: [Int: Pending]] = [:]
     private var flushing: Task<Void, Never>?
 
     func pending(_ code: String, _ wine: Int) -> Pending? { load(code)[wine] }
@@ -78,13 +78,13 @@ final class RatingOutbox {
     func prepare(_ code: String) { _ = load(code) }
 
     private func load(_ code: String) -> [Int: Pending] {
-        if let p = pending[code] { return p }
+        if let p = waiting[code] { return p }
         let p = WineCache.pending(code).flatMap { try? JSONDecoder().decode([Int: Pending].self, from: $0) } ?? [:]
-        pending[code] = p
+        waiting[code] = p
         return p
     }
     private func store(_ code: String, _ p: [Int: Pending]) {
-        pending[code] = p
+        waiting[code] = p
         WineCache.savePending(p.isEmpty ? nil : try? JSONEncoder().encode(p), code: code)
     }
 
@@ -120,13 +120,13 @@ final class RatingOutbox {
         flushing = nil
     }
 
-    func clearAll() { pending = [:] }
+    func clearAll() { waiting = [:] }
 }
 
 /// The guest's stars with what is not saved yet on top
-func shownRatings(_ ratings: [Int: MyRating], code: String) -> [Int: MyRating] {
+@MainActor func shownRatings(_ ratings: [Int: MyRating], code: String) -> [Int: MyRating] {
     var out = ratings
-    for (wine, p) in RatingOutbox.shared.pending[code] ?? [:] { out[wine] = MyRating(wine_id: wine, rating: p.stars, note: p.note) }
+    for (wine, p) in RatingOutbox.shared.waiting[code] ?? [:] { out[wine] = MyRating(wine_id: wine, rating: p.stars, note: p.note) }
     return out
 }
 
@@ -152,7 +152,7 @@ struct CachedImage<Placeholder: View>: View {
         var policies: [URLRequest.CachePolicy] = [.returnCacheDataDontLoad]
         if model.online { policies.insert(.useProtocolCachePolicy, at: 0) }
         for policy in policies {
-            if let (data, _) = try? await URLSession.shared.data(for: URLRequest(url: url, cachePolicy: policy)), let ui = UIImage(data: data) {
+            if let got = try? await URLSession.shared.data(for: URLRequest(url: url, cachePolicy: policy)), let ui = UIImage(data: got.0) {
                 image = ui; failed = false; return
             }
         }
