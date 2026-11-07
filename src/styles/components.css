@@ -1387,7 +1387,10 @@ dialog.confirm .actions { justify-content: flex-end; }
 .bubble > .icon-act { width: 2rem; height: 2rem; }
 .msg time { font-size: 0.7rem; color: var(--muted); padding: 0 0.6rem; }
 .chat-form { display: flex; gap: 0.5rem; align-items: flex-end; }
-.chat-form > .input { flex: 1; resize: none; min-height: var(--h); height: var(--h); max-width: none; padding-block: 0.65rem; line-height: 1.4; }
+/* One line fits exactly in the field's height (no 1 px scroll bar while it is empty, WIN-316); the bar comes only
+   once the text is taller than the field can grow (.scrolls, set by chat.ts) */
+.chat-form > .input { flex: 1; resize: none; min-height: var(--h); height: var(--h); max-width: none; padding-block: calc((var(--h) - 1.4em - 2px) / 2); line-height: 1.4; overflow-y: hidden; }
+.chat-form > .input.scrolls { overflow-y: auto; }
 .chat-form > .chat-send { width: var(--h); padding: 0; }
 .chat-form > .field-error { flex-basis: 100%; }
 

@@ -84,7 +84,14 @@ export function initChat({ prefix, load, send, remove }: Options) {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') poll(); schedule(); });
 
   // Grow the box with the text; Enter sends, Shift+Enter makes a new line
-  input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 160) + 'px'; });
+  // (the height includes the border, so the text never sits 2 px short and shows a scroll bar – WIN-316)
+  const grow = () => {
+    input.style.height = 'auto';
+    const full = input.scrollHeight + (input.offsetHeight - input.clientHeight);
+    input.style.height = Math.min(full, 160) + 'px';
+    input.classList.toggle('scrolls', full > 160);
+  };
+  input.addEventListener('input', grow);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $<HTMLFormElement>('form').requestSubmit(); }
   });
@@ -99,7 +106,7 @@ export function initChat({ prefix, load, send, remove }: Options) {
     input.disabled = false;
     if (res === 'ok') {
       input.value = '';
-      input.style.height = 'auto';
+      grow();
       await poll();
       list.scrollTop = list.scrollHeight;
     } else {
