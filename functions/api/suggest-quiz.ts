@@ -1,4 +1,4 @@
-// Cloudflare Pages Function: POST /api/suggest-quiz { tasting_id, lang?, level?: 'easy'|'medium'|'expert', existing?: string[] }
+// Cloudflare Pages Function: POST /api/suggest-quiz { tasting_id, lang?, level?: 'easy'|'medium'|'expert', count?: 3|5|8, existing?: string[] }
 // Suggests multiple-choice quiz questions for a tasting with Cloudflare Workers AI, from its wines: country and
 // region, the wine itself, grapes, how it is made, classifications and terms, odd one out. Blind wines are
 // asked about by their number (a guessing question), without giving them away in the question.
@@ -20,6 +20,7 @@ const LEVELS: Record<string, string> = {
   medium: 'MEDIUM – for interested guests: appellations within regions, main grapes of a blend, how a style is made, common classifications. Wrong options close enough to need some knowledge.',
   expert: 'EXPERT – for wine nerds: hard because the options are close (neighbouring appellations, related grapes, nearby ages and vintages), not because of obscure facts. Every fact must come from the list or be textbook-certain; no questions about which areas border each other, legal minimums or percentages unless the list states them. Do not put the answer in the options as a wine name (e.g. "Wine 9 – … 20 Years")',
 };
+const COUNTS = [3, 5, 8];
 export type Suggestion = { question: string; options: string[]; correct: number; explanation: string | null };
 
 function answerText(out: Record<string, unknown>): string {
@@ -34,7 +35,7 @@ function answerText(out: Record<string, unknown>): string {
 export const onRequestPost = async ({ request, env }: { request: Request; env: AiEnv }) => {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return json({ error: 'not_signed_in' }, 401);
-  let body: { tasting_id?: unknown; lang?: unknown; level?: unknown; existing?: unknown };
+  let body: { tasting_id?: unknown; lang?: unknown; level?: unknown; count?: unknown; existing?: unknown };
   try { body = await request.json(); } catch { return json({ error: 'bad_request' }, 400); }
   const id = str(body.tasting_id) ?? '';
   if (!/^[0-9a-f-]{36}$/i.test(id)) return json({ error: 'bad_request' }, 400);
@@ -56,6 +57,8 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: A
   const lang = [str(body.lang), tasting.language].find((l) => l && LANGS[l]) ?? 'da';
   const blindCount = rows.filter((r) => r.blind).length;
   const level = LEVELS[String(body.level)] ? String(body.level) : 'medium';
+  // How many new questions the host asked for (5 when not given, as before)
+  const count = COUNTS.includes(Number(body.count)) ? Number(body.count) : 5;
   const list = rows.map((r, i) => {
     const w = r.wines;
     const facts = [w.style, w.appellation, w.region, w.country, w.grapes ? `grapes: ${w.grapes}` : null, w.abv ? `${w.abv}% abv` : null].filter(Boolean).join(', ');
@@ -70,7 +73,7 @@ The wines, in the order they are poured:
 ${list}
 ${existing.length ? `\nThe quiz already has these questions – do not repeat them or ask the same thing:\n${existing.map((q) => `- ${q}`).join('\n')}\n` : ''}
 Difficulty: ${LEVELS[level]}
-Write 5 questions in ${LANGS[lang]}, each with 4 answer options of which exactly one is right, and a one-sentence explanation shown after the quiz.
+Write ${count} questions in ${LANGS[lang]}, each with 4 answer options of which exactly one is right, and a one-sentence explanation shown after the quiz.
 ${blindCount === 0
   ? `This is NOT a blind tasting: the guests can see each wine's name, producer, vintage, region and grapes on their phones. So do not ask what can simply be read off the wine (e.g. "where does wine 1 come from", "how old is wine 4"). Ask about the knowledge AROUND the wines instead, and name the wine (not "wine N"):`
   : blindCount === rows.length
@@ -92,7 +95,7 @@ Answer with JSON only, no other text:
 
   let answer: Record<string, unknown> | null = null;
   try {
-    const out = await meteredAi(env, request, 'quiz').run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: 3000, temperature: 0.5 }) as Record<string, unknown>;
+    const out = await meteredAi(env, request, 'quiz').run(MODEL, { messages: [{ role: 'user', content: prompt }], max_tokens: count > 5 ? 4800 : 3000, temperature: 0.5 }) as Record<string, unknown>;
     answer = parseAnswer(answerText(out));
   } catch {
     return json({ error: 'model_failed' }, 502);
@@ -108,5 +111,5 @@ Answer with JSON only, no other text:
     return [{ question, options, correct, explanation: str(x.explanation)?.slice(0, 1000) ?? null }];
   });
   if (!questions.length) return json({ error: 'unreadable' }, 502);
-  return json({ questions, lang, level });
+  return json({ questions: questions.slice(0, count), lang, level });
 };

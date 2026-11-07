@@ -17,6 +17,7 @@ import Loading from '../../components/ui/Loading.astro';
 import Actions from '../../components/ui/Actions.astro';
 import Facts from '../../components/ui/Facts.astro';
 import Progress from '../../components/ui/Progress.astro';
+import Steps from '../../components/ui/Steps.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import AddressFields from '../../components/AddressFields.astro';
 import DateTimeFields from '../../components/DateTimeFields.astro';
@@ -355,6 +356,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <PageHeader size="section" title="page.quiz">
           <Fragment slot="actions">
           <button id="q-add-toggle" class="btn small secondary" type="button" data-i18n="aq.add">Add question</button>
+          <button id="q-ai-open" class="btn small secondary" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.open">New questions from AI</span></button>
           </Fragment>
         </PageHeader>
         <!-- What the guests can do in the quiz (saves at once) and the link for the TV -->
@@ -368,18 +370,30 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         </div>
         <Notice id="q-open-note" hidden><p data-i18n="aq.openNote">The quiz is open – changes reach the guests right away.</p></Notice>
 
-        <!-- Suggestions from AI: shown here, added one by one only when the host chooses -->
-        <div class="ai-quiz">
-          <div class="ai-quiz-bar" data-help="ai-quiz">
-            <ChoiceCards name="q-ai-level" legend="aiQuiz.level" srLegend compact class="ai-level" options={[
-              { value: 'easy', label: 'aiQuiz.easy' }, { value: 'medium', label: 'aiQuiz.medium', checked: true }, { value: 'expert', label: 'aiQuiz.expert' }]} />
-            <button id="q-ai" class="btn small secondary" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.suggest">Suggestions from AI</span></button>
+        <!-- New questions from AI: a flow in the side panel – 1 how hard (and how many), 2 tick the ones to add. The questions
+             already in the quiz are never touched. -->
+        <Sheet id="q-ai-panel" title="aiQuiz.open" wide form="q-ai-form" formClass="ai-quiz-form">
+          <Steps id="q-ai-steps" items={[{ label: 'aiQuiz.level' }, { label: 'aiQuiz.step2' }]} labelKey="aiQuiz.open" />
+          <div id="q-ai-step1" class="ai-quiz-step">
+            <p class="hint" data-i18n="aiQuiz.intro">AI writes new questions from the tasting's wines. You choose which ones go into the quiz – the questions you already have stay as they are.</p>
+            <ChoiceCards name="q-ai-level" legend="aiQuiz.levelQ" options={[
+              { value: 'easy', label: 'aiQuiz.easy', hint: 'aiQuiz.easyHint' }, { value: 'medium', label: 'aiQuiz.medium', hint: 'aiQuiz.mediumHint', checked: true },
+              { value: 'expert', label: 'aiQuiz.expert', hint: 'aiQuiz.expertHint' }]}><span slot="legend" data-help="ai-quiz"></span></ChoiceCards>
+            <ChoiceCards name="q-ai-count" legend="aiQuiz.count" compact class="ai-count" options={[
+              { value: '3', label: 'aiQuiz.n3' }, { value: '5', label: 'aiQuiz.n5', checked: true }, { value: '8', label: 'aiQuiz.n8' }]} />
+          </div>
+          <div id="q-ai-step2" class="ai-quiz-step" hidden>
+            <p id="q-ai-summary" class="hint"></p>
+            <Notice tone="warn"><p data-i18n="aiQuiz.warn">AI can be wrong – especially on Expert. Check the marked answer (✓) before you add.</p></Notice>
+            <div id="q-ai-cards"></div>
+            <div class="ai-quiz-more">
+              <button id="q-ai-more" class="text-btn" type="button"><Icon name="plus" /><span data-i18n="aiQuiz.more">More suggestions</span></button>
+              <button id="q-ai-back" class="text-btn" type="button"><Icon name="left" /><span data-i18n="aiQuiz.back">Change difficulty</span></button>
+            </div>
           </div>
           <p id="q-ai-status" class="status" aria-live="polite" hidden></p>
-          <Notice id="q-ai-warn" tone="warn" hidden><p data-i18n="aiQuiz.warn">AI can be wrong – especially on Expert. Always check the marked answer before you press Add.</p></Notice>
-          <ol id="q-ai-list" class="list ai-suggestions" hidden></ol>
-          <button id="q-ai-more" class="text-btn" type="button" hidden data-i18n="aiQuiz.more">More suggestions</button>
-        </div>
+          <button slot="foot" id="q-ai-go" class="btn" type="submit" data-i18n="aiQuiz.make">Make suggestions</button>
+        </Sheet>
 
         <!-- New / edit question: side panel -->
         <Sheet id="q-panel" title="aq.newQuestion" titleId="qf-title" wide form="q-form" formClass="quiz-form">
@@ -399,10 +413,11 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <ol id="q-admin-list" class="list"></ol>
         <EmptyState id="q-empty" icon="question" title="aq.emptyTitle" text="aq.emptyText" hidden>
           <button id="q-empty-add" class="btn small" type="button"><Icon name="plus" /><span data-i18n="aq.add">Add question</span></button>
+          <button id="q-empty-ai" class="btn small secondary" type="button"><span aria-hidden="true">✦</span> <span data-i18n="aiQuiz.open">New questions from AI</span></button>
         </EmptyState>
 
         <!-- Standings only once the quiz has questions -->
-        <div id="board-block" hidden>
+        <div id="board-block" class="quiz-board" hidden>
           <h3 data-i18n="quiz.standings">Standings</h3>
           <ol id="board" class="board"></ol>
           <p id="board-empty" class="help" data-i18n="board.noAnswers" hidden>No one has answered yet.</p>
