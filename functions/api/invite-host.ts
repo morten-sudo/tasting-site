@@ -8,6 +8,7 @@ import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
 import { json, str, logUsage, overDailyLimit } from '../../src/server/wine-ai';
 import { sendMail, isMailAddress, type MailEnv } from '../../src/server/smtp';
 import { inviteHostMail, inviteWorkspaceMail } from '../../src/server/mail-texts';
+import { mailOrigin } from '../../src/server/mail-links';
 
 type HostRow = { email: string; name: string | null; owner: boolean; pending: boolean; me: boolean };
 
@@ -26,7 +27,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
 
   // Everything is read as the signed-in host, so the database decides what they may see
   const headers = { apikey: SUPABASE_KEY, authorization: `Bearer ${token}`, 'content-type': 'application/json' };
-  const origin = new URL(request.url).origin;
+  const origin = mailOrigin(request.url);   // the app address (WIN-197)
   if (!tastingId) return inviteToWorkspace(request, env, headers, { tenantId, email, givenName, lang, origin });
 
   const [hostsRes, tastingRes] = await Promise.all([

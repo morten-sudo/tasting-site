@@ -7,6 +7,7 @@ import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
 import { json, logUsage } from '../../src/server/wine-ai';
 import { sendMail, isMailAddress, type MailEnv } from '../../src/server/smtp';
 import { updatesMail } from '../../src/server/mail-texts';
+import { mailOrigin } from '../../src/server/mail-links';
 import { formatKr } from '../../src/lib/ui/kr';
 
 type Env = MailEnv;
@@ -25,7 +26,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: E
   });
   if (!res.ok) return json({ error: 'claim_failed' }, 502);
   const batches = (await res.json()) as Batch[];
-  const origin = new URL(request.url).origin;
+  const origin = mailOrigin(request.url);   // the app address (WIN-197), also when the database calls winetastr.com
   let sent = 0;
   for (const b of batches) {
     if (!isMailAddress(b.to)) { console.log('notify: not a plain address, skipped'); continue; }

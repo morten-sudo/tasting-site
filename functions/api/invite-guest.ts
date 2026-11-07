@@ -7,6 +7,7 @@ import { SUPABASE_URL, SUPABASE_KEY, SITE_NAME } from '../../src/lib/config';
 import { json, str, logUsage, overDailyLimit } from '../../src/server/wine-ai';
 import { sendMail, isMailAddress, type MailEnv } from '../../src/server/smtp';
 import { inviteGuestMail, INVITE_LANGS } from '../../src/server/mail-texts';
+import { mailOrigin } from '../../src/server/mail-links';
 
 type Guest = { id: string; name: string; email: string | null; invite_code: string; invite_mailed_at: string | null;
   tastings: { id: string; slug: string; title: string; starts_at: string | null; place: string | null; language: string | null } };
@@ -40,7 +41,7 @@ export const onRequestPost = async ({ request, env }: { request: Request; env: M
   const when = t.starts_at
     ? new Intl.DateTimeFormat(lang, { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Copenhagen' }).format(new Date(t.starts_at))
     : null;
-  const link = `${new URL(request.url).origin}/t/${t.slug}/?k=${guest.invite_code}`;
+  const link = `${mailOrigin(request.url)}/t/${t.slug}/?k=${guest.invite_code}`;
   const texts = inviteGuestMail(lang, { name: guest.name, tasting: t.title, link, inviter: me?.name ?? null, when, where: t.place });
   try {
     const sent = await sendMail(env, (hostname, port) => connect({ hostname, port }, { secureTransport: 'on', allowHalfOpen: false }), {
