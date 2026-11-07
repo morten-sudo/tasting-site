@@ -40,6 +40,14 @@ Agents: start with `AGENTS.md` (paths, commands and pitfalls), then the rules be
 
 ## Work and requirements: claude/work (Projects)
 
+- **Who builds.** When Morten asks a chat in this project to build an issue, that chat builds it (database, site and app) –
+  it does not hand it to another chat. Several development chats may run at once, one per epic or work round. Only the chat
+  Morten uses as product manager works in the issue files without touching code. "Website" / "Website-chatten" in issue
+  texts means whichever development chat builds the issue.
+- **Several chats at once.** Each chat works on its own branch per issue, changes only its own rows in INDEX.md (read it right
+  before writing), and merges into `dev` / `review` one at a time: `git fetch` first, merge, build, push; if the push is
+  refused, fetch and merge again. Only two app test jobs at once (two simulators, see below).
+
 - Work, requirements, decisions and status live in the Project files under `claude/work/`. Read
   `claude/work/README.md` for the rules. Jira and Discovery are no longer used: do not read or write them.
   `claude/roadmap.md` and `claude/jira-workflow.md` are archives. Background is in Confluence (space WT), read only.
@@ -72,7 +80,7 @@ Agents: start with `AGENTS.md` (paths, commands and pitfalls), then the rules be
   (Supabase project `winetastr-test`, `piiuhgzsnphhuceojldz`); `main` uses the live one (`ydvdhhdpygzwalosbjcc`).
   A test build shows a "Test" chip by the logo. Locally: `DB=test npm run build`.
 - **Approval address.** Branches waiting for Morten's approval are merged into the branch `review`
-  (`review.tasting-site.pages.dev`, rebuilt from `dev`), where Morten is signed in. Website takes the screenshots
+  (`review.tasting-site.pages.dev`, rebuilt from `dev`), where Morten is signed in. The development chat takes the screenshots
   there and shows them to Morten; he only approves.
 - **Database changes.** A migration is applied to the test database first, with the track. It goes to the live
   database only when its release goes live – database first, then the merge to `main`. Every migration must keep the
@@ -84,7 +92,7 @@ Agents: start with `AGENTS.md` (paths, commands and pitfalls), then the rules be
 
 ## The iOS app (`ios/`)
 
-The site and the native SwiftUI guest app are one product, developed together by one chat. Read `ios/README.md`.
+The site and the native SwiftUI guest app are one product: the chat that builds an issue builds both, in the same go. Read `ios/README.md`.
 
 - **Every change is decided for both.** A new feature or general fix that touches guests or the database is planned once and built in the same go in the database, on the site and in the app, unless the issue has the label `kun-web` or `app-senere`. Host and superadmin pages are web only (the app has no admin).
 - **Not done until both are checked.** A guest change is not finished before the site and the app (`ios/tools/simbuild.sh`, `ios/tools/simtest.sh`) have been looked at. Building the app needs a session linked to Morten's Mac.
