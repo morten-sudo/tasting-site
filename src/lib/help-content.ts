@@ -1,6 +1,11 @@
 // The hosts' help: the sections of /admin/help/ and the short tips behind the "?" buttons in admin.
 // Written in Danish and English; the other languages show the English text until they are translated.
 import { lang } from '../i18n';
+import { APP_ORIGIN, SITE_ORIGIN } from './config';
+
+// The two addresses as they are written in the text (app.winetastr.com / winetastr.com; the test addresses on a test build)
+const APP_HOST = new URL(APP_ORIGIN).host;
+const SITE_HOST = new URL(SITE_ORIGIN).host;
 
 type Text = { da: string; en: string };
 export type HelpSection = { id: string; title: Text; body: Text };
@@ -281,7 +286,9 @@ export const HELP: HelpSection[] = [
     id: 'faq',
     title: { da: 'Spørgsmål og svar', en: 'Questions and answers' },
     body: {
-      da: `<h2>Gæsten har ikke fået invitationen</h2>
+      da: `<h2 id="addresses">Hvor ligger hvad?</h2>
+<p>Alt, du logger ind til, ligger på <b>${APP_HOST}</b>: admin og hjælpen, dine smagninger, vinbogen, din profil og gæsternes sider for hver smagning. <a href="/">${SITE_HOST}</a> er forsiden med funktioner og planer – den viser <i>Log ind</i> og <i>Opret konto</i> til alle, også når du er logget ind. Gem et bogmærke til <a href="/admin/">admin</a> eller <a href="/home/">din side</a>, så kommer du direkte ind.</p>
+<h2>Gæsten har ikke fået invitationen</h2>
 <p>Tjek at gæsten har den rigtige e-mail, og bed gæsten kigge i uønsket post. Tryk <i>Send igen</i> under <a href="t:guests/">Gæster</a>, eller kopier linket og send det på sms.</p>
 <h2>Gæsten kan ikke bestille en vin</h2>
 <p>Tjek at <a href="t:orders/">Bestillinger → Bestille vin</a> er slået til, og under <a href="t:wines/">Vine</a> at vinen kan bestilles og ikke er blind.</p>
@@ -294,14 +301,16 @@ export const HELP: HelpSection[] = [
 <h2>Jeg kan ikke se en smagning, jeg er inviteret til</h2>
 <p>Når du er logget ind, ser du kun invitationer til den e-mail, du er logget ind med. Er du inviteret med en anden e-mail, så åbn invitationslinket og vælg <i>Log ud og åbn invitationen</i> – eller bed værten rette din e-mail på gæstelisten.</p>
 <h2>Gæsten har mistet sit link</h2>
-<p>Send invitationen igen, eller lad gæsten logge ind på winetastr.com med sin e-mail.</p>
+<p>Send invitationen igen, eller lad gæsten <a href="/login/">logge ind på ${APP_HOST}</a> med sin e-mail.</p>
 <h2 id="signup-existing">Jeg har oprettet mig igen med en mail, der allerede har en konto</h2>
 <p>Det gør ikke noget. Siden <a href="/signup/">Opret konto</a> siger det samme til alle, så ingen kan se, om en e-mail har en konto. Har mailen allerede en konto, logger koden dig ind på den – der oprettes ikke en ny, og du mister intet.</p>
 <h2 id="no-login-code">En gæst får ingen kode ved login</h2>
 <p>Login siger det samme til alle: at koden er sendt, hvis vi kender mailen. Siden fortæller ikke, om en e-mail står på en gæsteliste – så ingen kan prøve sig frem. Tjek gæstens e-mail under <a href="t:guests/">Gæster</a>, og bed gæsten kigge i spam eller logge ind med linket fra invitationen (kopier det i gæstens række, og send det på sms).</p>
 <h2>"Kontoen har brugt dagens …"</h2>
 <p>Hver konto kan sende 300 mails og lave 500 automatiske opslag om dagen (læse links og etiketter, finde billeder og producenter, AI-tekster og quizforslag) – langt mere end en smagning bruger. Når grænsen er nået, kan du stadig udfylde vinene selv og <a href="t:guests/">kopiere gæsternes links</a> og sende dem selv. Grænsen nulstilles ved midnat (UTC).</p>`,
-      en: `<h2>The guest has not received the invitation</h2>
+      en: `<h2 id="addresses">Where is what?</h2>
+<p>Everything you sign in to is at <b>${APP_HOST}</b>: admin and the help, your tastings, the wine book, your profile and the guests' pages for each tasting. <a href="/">${SITE_HOST}</a> is the front page with the features and plans – it shows <i>Sign in</i> and <i>Create account</i> to everyone, also when you are signed in. Bookmark <a href="/admin/">admin</a> or <a href="/home/">your home</a> to go straight in.</p>
+<h2>The guest has not received the invitation</h2>
 <p>Check the guest's email, and ask the guest to look in their junk mail. Press <i>Send again</i> under <a href="t:guests/">Guests</a>, or copy the link and send it by text message.</p>
 <h2>A guest cannot order a wine</h2>
 <p>Check that <a href="t:orders/">Orders → Order wine</a> is on, and under <a href="t:wines/">Wines</a> that the wine can be ordered and is not blind.</p>
@@ -314,7 +323,7 @@ export const HELP: HelpSection[] = [
 <h2>I cannot see a tasting I am invited to</h2>
 <p>When you are signed in, you only see invitations to the email you are signed in with. If you were invited with another email, open the invitation link and choose <i>Sign out and open the invitation</i> – or ask the host to correct your email on the guest list.</p>
 <h2>A guest has lost their link</h2>
-<p>Send the invitation again, or let the guest sign in at winetastr.com with their email.</p>
+<p>Send the invitation again, or let the guest <a href="/login/">sign in at ${APP_HOST}</a> with their email.</p>
 <h2 id="signup-existing">I signed up again with an email that already has an account</h2>
 <p>That is fine. The <a href="/signup/">sign-up page</a> says the same to everyone, so nobody can tell whether an email has an account. If the email already has one, the code signs you in to it – no new account is made, and you lose nothing.</p>
 <h2 id="no-login-code">A guest gets no code when signing in</h2>

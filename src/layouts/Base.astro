@@ -5,6 +5,7 @@ import TopBar from '../components/ui/TopBar.astro';
 import TastingHead from '../components/ui/TastingHead.astro';
 import Footer from '../components/ui/Footer.astro';
 import { SITE_NAME } from '../lib/config';
+import { isFrontPath, siteUrl, appUrl } from '../lib/hosts';
 import { en } from '../i18n/en';
 
 // title: a translation key for the page title
@@ -18,14 +19,18 @@ const path = Astro.url.pathname;
 // that it is an invitation; the tasting's name is not known until the page runs)
 const shareText = tasting ? en['meta.invite'] : en['meta.description'];
 const shareTitle = tasting ? `${en['meta.inviteTitle']} – ${SITE_NAME}` : pageTitle;
-const site = 'https://winetastr.com';
+// The site (front page and public pages) or the app (WIN-195): the page's own address in the shared links, and the
+// top bar – the site's top bar does not know about signing in, it shows "Sign in" and "Create account" to everyone
+const front = isFrontPath(path);
+const here = front ? siteUrl : appUrl;
 ---
 <!doctype html>
 <html lang="en" class="i18n-pending">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
+    <!-- No robots meta: the same build is on every address, so "noindex" for the app and test addresses is an
+         X-Robots-Tag header from a Cloudflare rule (WIN-195, WIN-290, WIN-291); winetastr.com may be found -->
     <meta name="theme-color" content="#ffffff" />
     <title>{pageTitle}</title>
     <meta name="description" content={shareText} />
@@ -33,8 +38,8 @@ const site = 'https://winetastr.com';
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={shareTitle} />
     <meta property="og:description" content={shareText} />
-    {!tasting && <meta property="og:url" content={`${site}${path}`} />}
-    <meta property="og:image" content={`${site}/img/hero-1200.jpg`} />
+    {!tasting && <meta property="og:url" content={here(path)} />}
+    <meta property="og:image" content={here('/img/hero-1200.jpg')} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="800" />
     <meta property="og:image:alt" content={en['meta.imageAlt']} />
@@ -51,8 +56,8 @@ const site = 'https://winetastr.com';
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500&display=swap"
     />
   </head>
-  <body data-tasting={tasting ? '1' : undefined} data-admin={adminTasting ? '1' : undefined} data-title={title}>
-    <TopBar tasting={tasting} path={path} />
+  <body data-tasting={tasting ? '1' : undefined} data-admin={adminTasting ? '1' : undefined} data-front={front ? '1' : undefined} data-title={title}>
+    <TopBar tasting={tasting} front={front} path={path} />
     <main>
       <div id="page-bg" class="hero-bg page-bg" aria-hidden="true"></div>
       {tasting && <TastingHead path={path}><slot name="t-chips" slot="chips" /></TastingHead>}
@@ -75,6 +80,11 @@ const site = 'https://winetastr.com';
       import { initTabs } from '../lib/ui/tabs';
       import { setEmpty } from '../lib/ui/empty';
       import { setEditWhat } from '../lib/ui/icon-button';
+      import { fixHostLinks, hostHref } from '../lib/hosts';
+
+      // Links between the site and the app point to the right address (also links added later)
+      fixHostLinks();
+      const front = document.body.dataset.front === '1';
 
       // "Sign in" in the not-signed-in state comes back to this page
       document.querySelectorAll<HTMLAnchorElement>('a[data-login]').forEach((a) => { a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); });
@@ -83,31 +93,41 @@ const site = 'https://winetastr.com';
       const titleKey = document.body.dataset.title as Key | undefined;
       if (titleKey) document.title = `${t(titleKey)} – Winetastr`;
 
-      // ---------- The account menu (the one menu, src/lib/ui/menu.ts): the places, and the language as a second view ----------
-      const umMain = document.getElementById('um-main')!;
-      const umLangs = document.getElementById('um-langs')!;
-      const showView = (langs: boolean) => { umMain.hidden = langs; umLangs.hidden = !langs; };
-      const account = bindMenu(document.getElementById('user-btn')!, document.getElementById('user-menu')!, { onOpen: () => showView(false) });
-      const current = LANGS.find((l) => l.code === lang());
-      document.getElementById('um-lang-now')!.textContent = current?.name ?? '';
+      // ---------- The languages: the account menu's second view (app) or the site's own language menu ----------
       const langMenu = document.getElementById('lang-menu')!;
+      const current = LANGS.find((l) => l.code === lang());
+      let closeLangs = () => {};
+      if (front) {
+        // The site's top bar: a menu with only the languages
+        const langs = bindMenu(document.getElementById('lang-btn')!, document.getElementById('lang-only')!);
+        closeLangs = () => langs.close();
+        document.getElementById('lang-now')!.textContent = current?.name ?? '';
+      } else {
+        // ---------- The account menu (the one menu, src/lib/ui/menu.ts): the places, and the language as a second view ----------
+        const umMain = document.getElementById('um-main')!;
+        const umLangs = document.getElementById('um-langs')!;
+        const showView = (langs: boolean) => { umMain.hidden = langs; umLangs.hidden = !langs; };
+        const account = bindMenu(document.getElementById('user-btn')!, document.getElementById('user-menu')!, { onOpen: () => showView(false) });
+        closeLangs = () => account.close();
+        document.getElementById('um-lang-now')!.textContent = current?.name ?? '';
+        // "Language ›" shows the languages in the same menu; "‹ Back" (or ←) goes back to the places
+        // (the focus follows only with the keys – a tap leaves no focus ring)
+        document.getElementById('um-lang')!.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showView(true);
+          if (e.detail === 0) langMenu.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true });
+        });
+        const back = (keys: boolean) => { showView(false); if (keys) document.getElementById('um-lang')!.focus({ preventScroll: true }); };
+        document.getElementById('um-back')!.addEventListener('click', (e) => { e.stopPropagation(); back(e.detail === 0); });
+        umLangs.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); back(true); } });
+        umMain.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' && document.activeElement?.id === 'um-lang') { e.preventDefault(); (document.activeElement as HTMLElement).click(); } });
+      }
       for (const l of LANGS) {
         const b = menuItem(l.name, { role: 'menuitemradio', check: true, selected: l.code === lang(), lead: FLAGS[l.code] });
         b.lang = l.code;
-        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else account.close(); });
+        b.addEventListener('click', () => { if (l.code !== lang()) setLang(l.code); else closeLangs(); });
         langMenu.append(b);
       }
-      // "Language ›" shows the languages in the same menu; "‹ Back" (or ←) goes back to the places
-      // (the focus follows only with the keys – a tap leaves no focus ring)
-      document.getElementById('um-lang')!.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showView(true);
-        if (e.detail === 0) langMenu.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true });
-      });
-      const back = (keys: boolean) => { showView(false); if (keys) document.getElementById('um-lang')!.focus({ preventScroll: true }); };
-      document.getElementById('um-back')!.addEventListener('click', (e) => { e.stopPropagation(); back(e.detail === 0); });
-      umLangs.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft') { e.preventDefault(); back(true); } });
-      umMain.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight' && document.activeElement?.id === 'um-lang') { e.preventDefault(); (document.activeElement as HTMLElement).click(); } });
 
       // Every static dropdown on the page works, also before a page's own script asks for it
       initDropdowns();
@@ -140,7 +160,7 @@ const site = 'https://winetastr.com';
       window.addEventListener('cart-change', sync);
       sync();
 
-      const userName = document.getElementById('user-name')!;
+      const userName = document.getElementById('user-name') as HTMLElement;
       // Signed in: the places and "Sign out"; not signed in: "Sign in" (the language is there either way)
       function signedIn(yes: boolean) {
         document.querySelectorAll<HTMLElement>('#user-menu .um-in').forEach((el) => { el.hidden = !yes; });
@@ -236,15 +256,18 @@ const site = 'https://winetastr.com';
           showRoles(who.signedIn, who.isHost);
         } else { signedIn(false); }
       }
-      initUser();
-
-      document.getElementById('logout')!.addEventListener('click', () => {
-        signOut();
-        try {
-          Object.keys(localStorage).filter((k) => k.startsWith('cart:')).forEach((k) => localStorage.removeItem(k));
-        } catch {}
-        location.href = '/';
-      });
+      // The site's pages do not know about signing in (WIN-195): the same top bar for everyone
+      if (!front) {
+        initUser();
+        document.getElementById('logout')!.addEventListener('click', () => {
+          signOut();
+          try {
+            Object.keys(localStorage).filter((k) => k.startsWith('cart:')).forEach((k) => localStorage.removeItem(k));
+          } catch {}
+          // Back to the front page (on the site's address)
+          location.href = hostHref('/');
+        });
+      }
     </script>
     <Footer />
   </body>

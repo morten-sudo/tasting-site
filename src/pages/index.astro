@@ -3,19 +3,21 @@ import Icon from '../components/ui/Icon.astro';
 import Base from '../layouts/Base.astro';
 import Hero from '../components/ui/Hero.astro';
 import SectionTitle from '../components/ui/SectionTitle.astro';
+import { appUrl } from '../lib/hosts';
 ---
 <Base>
   <!-- Hero: what Winetastr is, with the two ways in -->
   <Hero eyebrow="home.eyebrow" title="landing.title" lead="landing.lead" alt="home.heroAlt">
-    <!-- Signed out: start or sign in. Signed in: go home -->
-    <div slot="actions" id="cta-out" class="actions">
-      <a class="btn on-photo" href="/signup/" data-i18n="signup.formTitle">Create your free account</a>
-      <a class="btn on-photo-2" href="/login/" data-i18n="nav.signIn">Sign in</a>
-    </div>
-    <div slot="actions" id="cta-in" class="actions" hidden>
-      <a class="btn on-photo" href="/home/"><span data-i18n="landing.goHome">Go to your home</span><Icon name="right" /></a>
-    </div>
-    <p id="invited-note" class="hero-note"><span data-i18n="landing.invited">Invited to a tasting?</span> <a href="/login/" data-i18n="home.signInHere">Sign in here</a> – <span data-i18n="landing.invitedText">or open the link in your invitation.</span></p>
+    <!-- The same for everyone (WIN-195: the site does not know about signing in): the email starts "Create account",
+         which goes on to the app's sign-up with the email after # (never in the query, so it is not in any log) -->
+    <form slot="actions" id="start-form" class="hero-signup" novalidate>
+      <label for="start-email" data-i18n="landing.emailLabel">Your email</label>
+      <div class="field-row">
+        <input class="input" id="start-email" type="email" autocomplete="email" inputmode="email" required />
+        <button class="btn on-photo" type="submit" data-i18n="signup.formTitle">Create your free account</button>
+      </div>
+    </form>
+    <p class="hero-note"><span data-i18n="landing.invited">Invited to a tasting?</span> <a href={appUrl('/login/')} data-i18n="home.signInHere">Sign in here</a> – <span data-i18n="landing.invitedText">or open the link in your invitation.</span></p>
   </Hero>
 
   <!-- How it works -->
@@ -67,36 +69,29 @@ import SectionTitle from '../components/ui/SectionTitle.astro';
   <!-- Closing call to action -->
   <section class="wrap ld-final">
     <SectionTitle text="signup.finalTitle" />
-    <p id="final-text" data-i18n="landing.finalText">It takes two minutes to create an account and your first tasting.</p>
-    <div id="final-out" class="actions ld-final-ctas">
-      <a class="btn" href="/signup/" data-i18n="signup.formTitle">Create your free account</a>
-      <a class="text-btn" href="/login/" data-i18n="landing.haveAccount">I already have an account</a>
-    </div>
-    <div id="final-in" class="actions ld-final-ctas" hidden>
-      <a class="btn" href="/home/"><span data-i18n="landing.goHome">Go to your home</span><Icon name="right" /></a>
+    <p data-i18n="landing.finalText">It takes two minutes to create an account and your first tasting.</p>
+    <div class="actions ld-final-ctas">
+      <a class="btn" href={appUrl('/signup/')} data-i18n="signup.formTitle">Create your free account</a>
+      <a class="text-btn" href={appUrl('/login/')} data-i18n="landing.haveAccount">I already have an account</a>
     </div>
   </section>
 </Base>
 
 <script>
-  import { supabase } from '../lib/supabase';
-  import { getCodes } from '../lib/guest';
+  import { fieldError } from '../lib/field-error';
+  import { hostHref } from '../lib/hosts';
   import { i18nReady, t } from '../i18n';
 
   await i18nReady;
-  const { data } = await supabase.auth.getSession();
-  // Signed in (or with an invitation on this device): one button home instead of sign-up / sign-in
-  if (data.session || Object.keys(getCodes()).length > 0) {
-    document.getElementById('cta-out')!.hidden = true;
-    document.getElementById('cta-in')!.hidden = false;
-    document.getElementById('invited-note')!.hidden = true;
-    document.getElementById('final-out')!.hidden = true;
-    document.getElementById('final-in')!.hidden = false;
-    // …and no talk of creating an account (WIN-119)
-    const ft = document.getElementById('final-text')!;
-    ft.dataset.i18n = 'landing.finalTextIn';
-    ft.textContent = t('landing.finalTextIn');
-  }
+  const form = document.getElementById('start-form') as HTMLFormElement;
+  const input = document.getElementById('start-email') as HTMLInputElement;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = input.value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { fieldError(input, t('common.invalidEmail')); input.focus(); return; }
+    // After #: the browser never sends it to a server; the sign-up page reads it and takes it out of the address
+    location.href = hostHref('/signup/') + '#' + encodeURIComponent(email);
+  });
 </script>
 
 <style>

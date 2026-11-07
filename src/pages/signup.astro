@@ -8,6 +8,7 @@ import Loading from '../components/ui/Loading.astro';
 import Steps from '../components/ui/Steps.astro';
 import MapBackground from '../components/ui/MapBackground.astro';
 import PlansAndFeatures from '../components/PlansAndFeatures.astro';
+import { siteUrl } from '../lib/hosts';
 ---
 <Base title="page.signup">
   <section class="wrap signup-page">
@@ -39,7 +40,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
           </div>
           <button class="btn" type="submit" id="start-btn" data-i18n="login.sendCode">Send code</button>
           <p class="hint su-fine" data-i18n="signup.noPassword">We send you a code by email – no password needed.</p>
-          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
+          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href={siteUrl('/terms/')} target="_blank" rel="noopener">terms ↗</a> and the <a href={siteUrl('/privacy/')} target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
         </form>
 
         <!-- Step 2: code from the email -->
@@ -52,7 +53,7 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
                  pattern="[0-9]*" maxlength="10" required />
           <button class="btn" type="submit" id="otp-btn" data-i18n="signup.continue">Continue</button>
           <p class="hint su-fine" data-i18n="signup.codeSignsIn">If you already have an account, the code signs you in to it.</p>
-          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href="/terms/" target="_blank" rel="noopener">terms ↗</a> and the <a href="/privacy/" target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
+          <p class="hint su-fine su-terms" data-i18n-html="signup.terms">By creating an account you accept the <a href={siteUrl('/terms/')} target="_blank" rel="noopener">terms ↗</a> and the <a href={siteUrl('/privacy/')} target="_blank" rel="noopener">privacy policy ↗</a>. You must be at least 18.</p>
           <p class="hint">
             <button id="back" class="text-btn" type="button" data-i18n="host.back">Change name or email</button>
           </p>
@@ -146,10 +147,25 @@ import PlansAndFeatures from '../components/PlansAndFeatures.astro';
   $('guest-go').addEventListener('click', () => { try { localStorage.removeItem(NAME_KEY); } catch {} });
   $('guest-host').addEventListener('click', () => finish(remembered() || (($('name') as HTMLInputElement).value.trim()), true));
 
+  // The email from the front page's "Create account" comes after # (app…/signup/#<email>, WIN-195): filled in, and
+  // taken out of the address straight away, so it is not left in the history or a shared link. "#signup" (the button
+  // at the bottom of this page) is not an email.
+  function emailFromHash() {
+    let value = '';
+    try { value = decodeURIComponent(location.hash.slice(1)).trim().toLowerCase(); } catch {}
+    if (!value.includes('@')) return;
+    history.replaceState(history.state, '', location.pathname + location.search);
+    ($('email') as HTMLInputElement).value = value;
+    return true;
+  }
+
   async function start() {
+    const fromHash = emailFromHash();
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       ($('name') as HTMLInputElement).value = remembered();
+      // The email is there: the name is what is missing
+      if (fromHash) ($('name') as HTMLInputElement).focus();
       return;
     }
     // Already a host? Go straight to admin.

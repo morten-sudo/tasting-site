@@ -2,16 +2,19 @@
 // Component 43 – the one top bar on every page: the logo, the cart (in a tasting) and the account menu (the one
 // menu, src/lib/ui/menu.ts) – with the language as its second view, and "Sign in" when not signed in. A tasting's
 // name and tabs are in the page under it (TastingHead.astro). On a test build (IS_TEST) a "Test" chip sits by the logo. Base.astro's script fills it in.
+// front: the site's pages (winetastr.com, WIN-195) know nothing about signing in – the languages, "Sign in" and
+// "Create account" (on the app's address) for everyone.
 import Badge from './Badge.astro';
 import Icon from './Icon.astro';
 import { SITE_NAME, IS_TEST } from '../../lib/config';
-interface Props { tasting?: boolean; path: string }
-const { tasting = false, path } = Astro.props;
+import { appUrl, siteUrl } from '../../lib/hosts';
+interface Props { tasting?: boolean; front?: boolean; path: string }
+const { tasting = false, front = false, path } = Astro.props;
 const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><defs><clipPath id="logo-bowl"><path transform="translate(4.3 4.3) rotate(-45 50 50)" d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /></clipPath></defs><rect width="100" height="100" rx="22" fill="#6e0f1f" /><g transform="translate(50 50) scale(0.84) translate(-50 -50)"><rect x="0" y="43" width="100" height="100" fill="#fff" clip-path="url(#logo-bowl)" /><g transform="translate(4.3 4.3) rotate(-45 50 50)" fill="none" stroke="#fff" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 14 C30 21 27 30 27.5 37 C28.5 50 39 58 50 58 C61 58 71.5 50 72.5 37 C73 30 70 21 63 14 Z" /><path d="M50 58 V79 M38 80 H62" /></g></g></svg>`;
 ---
 <header class="site-header">
-  <div class="wrap topbar">
-    <a href={tasting ? '/home/' : '/'} class="logo" id="mark"><Fragment set:html={LOGO} /><span>{SITE_NAME}</span></a>
+  <div class:list={['wrap topbar', front && 'front']}>
+    <a href={tasting ? '/home/' : front ? '/' : siteUrl('/')} class="logo" id="mark"><Fragment set:html={LOGO} /><span>{SITE_NAME}</span></a>
     {IS_TEST && <span class="chip warn tb-env" title="Test version on the test database – nothing here is live">Test</span>}
     <div class="tb-right">
       {tasting && (
@@ -20,8 +23,25 @@ const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="tru
           <Badge id="nav-cart-count" hidden />
         </a>
       )}
-      <!-- The account menu, signed in or not: the person's places, the language (a second view of the same menu) and
-           signing in or out. Signed in, the name (phones: the person icon) opens it. -->
+      {front ? (
+        <>
+          {/* The languages: the same menu, with only the languages in it */}
+          <div class="dd">
+            <button id="lang-btn" type="button" class="dd-btn bare tb-lang" aria-haspopup="menu" aria-label="Language" data-tip-text="Language" data-i18n-attr="aria-label=profile.language;data-tip-text=profile.language">
+              <Icon name="globe" class="tb-lang-i" />
+              <span id="lang-now" class="tb-name"></span>
+              <Icon name="chev" class="chev" />
+            </button>
+            <div id="lang-only" class="menu right" role="menu" hidden>
+              <div id="lang-menu" role="group" aria-label="Language" data-i18n-attr="aria-label=profile.language"></div>
+            </div>
+          </div>
+          <a class="text-btn tb-signin" href={appUrl('/login/')} data-i18n="nav.signIn">Sign in</a>
+          <a class="btn small tb-signup" href={appUrl('/signup/')} data-i18n="nav.signUp">Create account</a>
+        </>
+      ) : (
+      /* The account menu, signed in or not: the person's places, the language (a second view of the same menu) and
+         signing in or out. Signed in, the name (phones: the person icon) opens it. */
       <div id="user-in" class="dd">
         <button id="user-btn" type="button" class="dd-btn bare tb-user" aria-current={path.startsWith('/profile') ? 'page' : undefined} aria-haspopup="menu" aria-label="Account menu" data-tip-text="Account menu" data-i18n-attr="aria-label=nav.userMenu;data-tip-text=nav.userMenu">
           <span id="user-name" class="tb-name" hidden></span>
@@ -50,6 +70,7 @@ const LOGO = `<svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="tru
           </div>
         </div>
       </div>
+      )}
     </div>
   </div>
 </header>
