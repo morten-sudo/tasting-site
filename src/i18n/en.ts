@@ -121,7 +121,7 @@ export const en = {
   "guest.answerNotSaved": "Your answer was not saved. Check your connection and try again.",
   "guest.signupClosed": "Sign-up is closed. Contact the host if you need to change anything.",
   "pay.orderComment": "Order {id}",
-  "pay.noNumber": "The amount of {amount} is paid with MobilePay. The host will tell you how.",
+  "pay.hostTells": "The host will tell you how to pay.",
   "pay.copied": "Copied",
   "pay.number": "MobilePay number",
   "pay.amount": "Amount",

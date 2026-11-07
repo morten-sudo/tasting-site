@@ -270,8 +270,10 @@ struct PayBox: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12.8) {
             // Never a number without the recipient's name
+            // Without both (or with MobilePay switched off): only the amount and that the host tells how – MobilePay is not named (WIN-318)
             if number.isEmpty || name.isEmpty {
-                Text(L("pay.noNumber", ["amount": krText(amount)])).font(.body()).foregroundStyle(Color.paper)
+                factRow(L("pay.amount"), krText(amount), last: true) { EmptyView() }
+                Text(L("pay.hostTells")).font(.body()).foregroundStyle(Color.paper)
             } else {
                 VStack(spacing: 0) {
                     factRow(L("pay.number"), pretty) {

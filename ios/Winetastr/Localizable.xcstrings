@@ -2839,24 +2839,24 @@
     }
    }
   },
-  "pay.noNumber": {
+  "pay.hostTells": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Beløbet på {amount} betales med MobilePay. Værten fortæller dig hvordan."
+      "value": "Værten fortæller dig, hvordan du betaler."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "The amount of {amount} is paid with MobilePay. The host will tell you how."
+      "value": "The host will tell you how to pay."
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Upphæðin {amount} er greidd með MobilePay. Gestgjafinn segir þér hvernig."
+      "value": "Gestgjafinn segir þér hvernig þú greiðir."
      }
     }
    }

@@ -122,7 +122,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guest.answerNotSaved": "Svarið þitt var ekki vistað. Athugaðu tenginguna og reyndu aftur.",
   "guest.signupClosed": "Skráningu er lokið. Hafðu samband við gestgjafann ef þú þarft að breyta einhverju.",
   "pay.orderComment": "Pöntun {id}",
-  "pay.noNumber": "Upphæðin {amount} er greidd með MobilePay. Gestgjafinn segir þér hvernig.",
+  "pay.hostTells": "Gestgjafinn segir þér hvernig þú greiðir.",
   "pay.copied": "Afritað",
   "pay.number": "MobilePay-númer",
   "pay.amount": "Upphæð",

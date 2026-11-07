@@ -122,7 +122,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "guest.answerNotSaved": "Je antwoord is niet opgeslagen. Controleer je verbinding en probeer opnieuw.",
   "guest.signupClosed": "De aanmelding is gesloten. Neem contact op met de gastheer als je iets moet wijzigen.",
   "pay.orderComment": "Bestelling {id}",
-  "pay.noNumber": "Het bedrag van {amount} wordt betaald met MobilePay. De gastheer vertelt je hoe.",
+  "pay.hostTells": "De gastheer vertelt je hoe je betaalt.",
   "pay.copied": "Gekopieerd",
   "pay.number": "MobilePay-nummer",
   "pay.amount": "Bedrag",
