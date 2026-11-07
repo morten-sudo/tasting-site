@@ -13,6 +13,7 @@ begin
   end if;
   return new;
 end $$;
+revoke all on function public.tasting_wines_tier_not_above() from public, anon, authenticated;
 
 create or replace trigger tasting_wines_tier_not_above before insert or update of price_dkk, price_tiers on public.tasting_wines
   for each row execute function public.tasting_wines_tier_not_above();
