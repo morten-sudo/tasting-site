@@ -86,4 +86,37 @@ final class OfflineTests: XCTestCase {
         XCTAssertTrue(a.staticTexts["Kunne ikke hentes"].waitForExistence(timeout: 10), "nothing kept after log out")
         XCTAssertFalse(a.buttons["wine-card-1"].exists)
     }
+
+    /// A blind wine stays blind in the stored list: its card has no name, only "Vin N" and the blind chip
+    func testBlindWineStaysBlindWithoutNetwork() {
+        fetchWinesOnline()
+        let a = winesWhenOffline()
+        XCTAssertTrue(a.buttons["wine-card-1"].waitForExistence(timeout: 10), "the list from last time")
+        let blind = a.buttons.containing(NSPredicate(format: "label CONTAINS 'Blind – afsløres senere'")).firstMatch
+        for _ in 0..<15 where !blind.isHittable { a.buttons["Næste"].firstMatch.tap(); sleep(1) }
+        XCTAssertTrue(blind.isHittable, "a blind card")
+        XCTAssertTrue(blind.label.hasPrefix("Vin "), "no name: \(blind.label)")
+        shot("offline-blind.png")
+    }
+
+    /// English and Icelandic at the largest text size, for a look at the notices (screenshots only)
+    func testOfflineNoticesInOtherLanguagesAtLargestText() {
+        for (lang, tab, back) in [("en", "Wines", "All wines"), ("is", "Vínin", "Öll vínin")] {
+            let setup = ["-AppleLanguages", "(\(lang))", "-appLanguage", lang, "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL", "-inviteCode", code]
+            var a = XCUIApplication(); a.launchArguments = setup + ["-route", "wines"]; a.launch()
+            XCTAssertTrue(a.buttons["wine-card-1"].waitForExistence(timeout: 20)); a.terminate()
+            a = XCUIApplication(); a.launchArguments = setup + ["-route", "tasting", "-offlineAfter", "12", "-onlineAfter", "300"]; a.launch()
+            let tabButton = a.buttons[tab].firstMatch
+            XCTAssertTrue(tabButton.waitForExistence(timeout: 12))
+            sleep(14)
+            tabButton.tap()
+            XCTAssertTrue(a.buttons["wine-card-1"].waitForExistence(timeout: 10))
+            a.swipeUp()
+            shot("offline-list-\(lang)-xxxl.png")
+            a.buttons["wine-card-1"].tap()
+            XCTAssertTrue(a.buttons[back].firstMatch.waitForExistence(timeout: 10))
+            shot("offline-wine-\(lang)-xxxl.png")
+            a.terminate()
+        }
+    }
 }
