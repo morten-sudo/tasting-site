@@ -206,7 +206,9 @@ export const HELP: HelpSection[] = [
 </ul>
 <p>Når grænsen er nået, gælder den billige pris for alle flasker – også dem ud over 6. Betalte bestillinger beholder deres pris.</p>
 <p>Under fanen <a href="t:orders/">Bestillinger</a> ser du alle bestillinger – én række pr. bestilling med <i>Betalt</i> eller <i>Ikke betalt</i>. Fluebenet i rækken markerer den betalt (pilen tilbage gør den ikke betalt igen), og du kan <a href="t:orders/#csv">hente dem som CSV</a> til leverandøren – med vin, flaskestørrelse i cl, antal og pris.</p>
-<p>Under <a href="/admin/payments/#mp-number">Betaling</a> skriver du dit MobilePay-nummer. Gæsterne ser så dit nummer, beløbet og en besked, hver med en kopiknap, og betaler selv i MobilePay – både til bestillinger og deltagergebyr.</p>`,
+<h2 id="mobilepay">MobilePay</h2>
+<p>MobilePay sættes op for hver smagning under <a href="t:settings/?open=mp-edit">Indstillinger → MobilePay → Rediger</a>: én kontakt, ét MobilePay-nummer og ét navn – navnet på den, der får pengene. Når MobilePay er slået til, skal både nummer og navn udfyldes. Nummeret er et dansk mobilnummer med 8 cifre (fx 12 34 56 78) eller et MobilePay Box-nummer. Gæsterne ser så tre ting: nummeret (med en kopiknap), navnet og beløbet – både til bestillinger og deltagergebyr – og betaler selv i MobilePay. Du finder betalingen ud fra gæstens navn og beløbet og markerer den selv som betalt.</p>
+<p>En ny smagning starter med MobilePay slået fra og tomme felter – du udfylder nummer og navn for netop den smagning, når du opretter den, eller senere under Indstillinger. Vil du ikke bruge MobilePay i en smagning, slår du kontakten fra. Så ser gæsterne ingen MobilePay, kun beløbet og at du fortæller, hvordan de betaler. Nummer og navn bliver gemt, så de er der igen, når du slår det til.</p>`,
       en: `<p>When <a href="t:orders/">Orders → Order wine</a> is on, guests can put the wines that can be ordered in the cart and send the order. On a wine's page the guest chooses the number of bottles with − and + and presses <i>Add to cart</i>; a bar at the bottom shows how many bottles are in the cart and what they cost, with the way to the cart. Quantity prices apply automatically. Every amount is written the same way in all languages, e.g. 1.393,90 kr.</p>
 <h2 id="bulk">Quantity prices – each guest or everyone together</h2>
 <p>When a wine has a quantity price (e.g. "from 6 bottles 359.95 kr."), you choose under <a href="t:orders/#bulk-mode">Orders → Order wine</a> who counts – the choice only shows when a wine in the tasting has a quantity price. You must choose before you can open ordering:</p>
@@ -216,7 +218,9 @@ export const HELP: HelpSection[] = [
 </ul>
 <p>Once the quantity is reached, the lower price applies to every bottle – also those beyond 6. Paid orders keep their price.</p>
 <p>On the <a href="t:orders/">Orders</a> tab you see all orders – one row per order with <i>Paid</i> or <i>Not paid</i>. The tick in the row marks it paid (the arrow back marks it not paid again), and you can <a href="t:orders/#csv">download them as CSV</a> for the supplier – with wine, bottle size in cl, quantity and price.</p>
-<p>Under <a href="/admin/payments/#mp-number">Payments</a> you enter your MobilePay number. Guests then see your number, the amount and a message, each with a copy button, and pay in MobilePay themselves – for orders and the tasting fee.</p>`,
+<h2 id="mobilepay">MobilePay</h2>
+<p>MobilePay is set up for each tasting under <a href="t:settings/?open=mp-edit">Settings → MobilePay → Edit</a>: one switch, one MobilePay number and one name – the name of the person who gets the money. While MobilePay is on, both the number and the name are required. The number is a Danish mobile number with 8 digits (e.g. 12 34 56 78) or a MobilePay Box number. Guests then see three things: the number (with a copy button), the name and the amount – for orders and the tasting fee – and pay in MobilePay themselves. You find the payment by the guest's name and the amount and mark it paid yourself.</p>
+<p>A new tasting starts with MobilePay off and empty fields – you fill in the number and name for that tasting when you create it, or later under Settings. If you do not want to use MobilePay in a tasting, turn the switch off. Guests then see no MobilePay, only the amount and that you will tell them how to pay. The number and name are kept, so they are back when you turn it on again.</p>`,
     },
   },
   {
@@ -348,6 +352,9 @@ export const TIPS: Record<string, { text: Text; more: string }> = {
   quiz: { more: 'evening', text: {
     da: '<b>Svare på quizzen</b>: gæsterne kan svare. <b>Se quizzens facit</b>: de rigtige svar og stillingen vises.',
     en: '<b>Answer the quiz</b>: guests can answer. <b>See the quiz answers</b>: the right answers and the standings are shown.' } },
+  mobilepay: { more: 'mobilepay', text: {
+    da: 'Gæsterne ser nummeret, navnet og beløbet. Slået fra ser de kun beløbet – nummer og navn bliver gemt.',
+    en: 'Guests see the number, the name and the amount. Off, they see only the amount – the number and name are kept.' } },
   fee: { more: 'fee', text: {
     da: 'Skriv det samlede indkøb, så foreslås et gebyr pr. gæst, der kommer. Du markerer selv, hvem der har betalt.',
     en: 'Enter the total purchase and a fee per guest who is coming is suggested. You mark yourself who has paid.' } },

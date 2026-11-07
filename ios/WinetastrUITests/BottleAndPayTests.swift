@@ -1,8 +1,9 @@
 import XCTest
 
 /// A bottle size that is not 75 cl in the list, on the wine's page and in the cart's order lines, and the payment box
-/// (how to pay, then number, amount and message to copy – no button into MobilePay). The test tasting has only 75 cl
-/// bottles, no MobilePay number and no orders, so the debug switches -bottleMock and -payMock fill them in. Danish UI.
+/// (WIN-278: the MobilePay number with one copy button, the recipient and the amount – nothing else, no button into
+/// MobilePay). The test tasting has only 75 cl bottles, no MobilePay number and no orders, so the debug switches
+/// -bottleMock and -payMock fill them in (number 12 34 56 78, recipient Morten Kruse). Danish UI.
 final class BottleAndPayTests: XCTestCase {
     private let code = ProcessInfo.processInfo.environment["APP_TEST_CODE"] ?? ""
 
@@ -32,19 +33,28 @@ final class BottleAndPayTests: XCTestCase {
         shot("bottle-wine")
     }
 
-    func testPayBoxHasNoMobilePayButton() {
+    func testPayBoxShowsNumberRecipientAndAmountOnly() {
         let a = app(["-route", "cart", "-payMock", "YES", "-bottleMock", "150"])
         let how = a.buttons["Sådan betaler du"]
         XCTAssertTrue(how.waitForExistence(timeout: 20), "the unpaid order")
         XCTAssertTrue(text(a, containing: "· 150 cl").exists, "the order line has the bottle size")
         how.tap()
-        XCTAssertTrue(text(a, containing: "vælg Send").waitForExistence(timeout: 5), "how to pay")
+        let box = a.otherElements["payFacts"]
+        XCTAssertTrue(box.waitForExistence(timeout: 5), "the payment box")
         a.swipeUp(); a.swipeUp()
+        for label in ["MobilePay-nummer", "Modtager", "Beløb"] { XCTAssertTrue(box.staticTexts[label].exists, label) }
+        XCTAssertTrue(box.staticTexts["12 34 56 78"].exists, "the number")
+        XCTAssertTrue(box.staticTexts["Morten Kruse"].exists, "the recipient")
+        XCTAssertTrue(box.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "kr.")).firstMatch.exists, "the amount")
+        // Nothing else: no how-to, no message, no button into MobilePay, and only one copy button
+        XCTAssertFalse(text(a, containing: "vælg Send").exists, "no how-to text")
+        XCTAssertFalse(box.staticTexts["Besked"].exists, "no message")
         XCTAssertFalse(a.buttons["Åbn MobilePay"].exists, "no button into MobilePay")
         XCTAssertFalse(a.links["Åbn MobilePay"].exists, "no link into MobilePay")
-        for what in ["nummer", "beløb", "besked"] { XCTAssertTrue(a.buttons["Kopiér \(what)"].exists, "copy \(what)") }
+        XCTAssertEqual(box.buttons.count, 1, "one copy button")
+        XCTAssertTrue(box.buttons["Kopiér nummer"].exists, "copy the number")
         shot("pay-box")
-        a.buttons["Kopiér nummer"].tap()
-        XCTAssertTrue(text(a, containing: "Kopieret").waitForExistence(timeout: 3), "the toast says what was copied")
+        box.buttons["Kopiér nummer"].tap()
+        XCTAssertTrue(text(a, containing: "Kopieret").waitForExistence(timeout: 3), "the toast says the number was copied")
     }
 }

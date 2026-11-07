@@ -154,8 +154,6 @@ import Disclosure from '../../components/ui/Disclosure.astro';
   const current = $('h-answer');
   const submit = $<HTMLButtonElement>('submit');
 
-  let guestName = '';
-
   // The answer as the status chip (one word and tone, as everywhere) beside the countdown in the heading
   let answered = false;
   function showCurrent(status: string) {
@@ -294,7 +292,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
       supabase.rpc('get_tasting', { code }),
     ]);
     const info = (tastingRes.data ?? {}) as Record<string, unknown>;
-    setPayee(info.mobilepay ?? null);
+    setPayee(info.mobilepay, info.mobilepay_name);
     showHeader(info);
     const row = Array.isArray(data) ? data[0] : null;
     const amount = row ? Number(row.amount) : 0;
@@ -302,7 +300,7 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     if (!row || amount <= 0) return;
     $('fee-paid').hidden = !row.paid;
     $('fee-due').hidden = row.paid;
-    if (!row.paid) $('fee-pay').replaceChildren(payBox(amount, t('pay.feeComment', { name: guestName })));
+    if (!row.paid) $('fee-pay').replaceChildren(payBox(amount));
   }
 
   async function load() {
@@ -318,7 +316,6 @@ import Disclosure from '../../components/ui/Disclosure.astro';
       $('invalid').hidden = false;
       return;
     }
-    guestName = row.name;
     if (row.status === 'yes' || row.status === 'no' || row.status === 'waitlist') {
       (form.querySelector(`input[value="${row.status === 'no' ? 'no' : 'yes'}"]`) as HTMLInputElement).checked = true;
     }

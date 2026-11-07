@@ -1,4 +1,5 @@
-// New tasting: one form with its details (title, date and times, max guests, place, introduction).
+// New tasting: one form with its details (title, date and times, max guests, place, introduction) and MobilePay – empty
+// and off; nothing is taken over from the host's last tasting (WIN-278, Morten 6 Nov).
 // "Create tasting" creates it and goes to its page, where the "Get started" card leads on to wines, guests and payment.
 import { setLoading } from './ui/button';
 import { supabase } from './supabase';
@@ -9,6 +10,7 @@ import { initWhen, readWhen, readEnd, writeWhen, futureOnly, checkWhen } from '.
 import { fieldError, focusField } from './field-error';
 import { toast } from './ui/toast';
 import { confirmModal } from './ui/confirm';
+import { mobilePayForm } from './mobilepay-form';
 
 type Tasting = { id: string; slug: string } & Record<string, unknown>;
 
@@ -20,11 +22,12 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
   initWhen('wz');
   const val = (id: string) => $<HTMLInputElement>(id).value;
   const FIELDS = ['wz-title-input', 'wz-date-show', 'wz-time', 'wz-end', 'wz-max'];
-
+  const mp = mobilePayForm('wz');
+  let empty = '';
 
   /** Has anything been typed? Then closing asks first. */
-  const typed = () => [...dialog.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[type=text], input[type=hidden], textarea')]
-    .some((x) => x.value.trim() && !x.readOnly);
+  const typed = () => [...dialog.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input[type=text]:not(#wz-mp-name), input[type=hidden], textarea')]
+    .some((x) => x.value.trim() && !x.readOnly) || JSON.stringify(mp.read()) !== empty;
 
   function reset() {
     created = null;
@@ -35,6 +38,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     $<HTMLTextAreaElement>('wz-intro').value = '';
     writeAddress('wz', {});
     for (const id of FIELDS) fieldError($(id), null);
+    mp.set({ on: false, number: '', name: '' });
+    empty = JSON.stringify(mp.read());
   }
 
   async function create() {
@@ -46,7 +51,8 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     const max = maxText ? Number(maxText) : null;
     const maxOk = max == null || (Number.isInteger(max) && max >= 1 && max <= 10000);
     if (!maxOk) fieldError($('wz-max'), t('wizard.maxBad'));
-    if (!title || !whenOk || !maxOk) {
+    const mpOk = mp.check() && await mp.checkNumber();
+    if (!title || !whenOk || !maxOk || !mpOk) {
       const bad = dialog.querySelector<HTMLElement>('[aria-invalid]');
       if (bad) focusField(bad);
       return;
@@ -59,8 +65,10 @@ export function initWizard(host: Host, onClose: (slug: string | null) => void) {
     // What create_tasting does not take
     const intro = $<HTMLTextAreaElement>('wz-intro').value.trim() || null;
     const ends = readEnd('wz');
-    const extra = { ...(intro ? { intro } : {}), ...(ends ? { ends_at: ends } : {}), ...(max ? { max_guests: max } : {}) };
-    if (Object.keys(extra).length) await supabase.from('tastings').update(extra).eq('id', tasting.id);
+    const extra = { ...(intro ? { intro } : {}), ...(ends ? { ends_at: ends } : {}), ...(max ? { max_guests: max } : {}), ...mp.patch() };
+    const { error: e2 } = await supabase.from('tastings').update(extra).eq('id', tasting.id);
+    // The tasting is there; what did not save can be changed on its page
+    if (e2) toast(t('admin.changesNotSaved'), { kind: 'error' });
     created = tasting.slug;
     dialog.close();
   }

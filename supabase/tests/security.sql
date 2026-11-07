@@ -13,10 +13,16 @@ insert into hosts (id, email, name) values
 insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
   ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', null, true, true, true),
   ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', null, true, true, true);
--- Each tasting has a MobilePay number. Where the database has a recipient's name (WIN-278, on the test database before
--- its release), the number gets one too, so this file runs on both the test and the live database.
+-- Each tasting has a MobilePay number, so this file runs on every database the release passes through:
+--   * with WIN-278's switch (tastings.mobilepay_on): MobilePay off in both, a number without a name (the WIN-278
+--     sections below start from that);
+--   * with only a recipient's name (WIN-278's first migration): the number gets a name too;
+--   * before WIN-278: only the number.
 do $$ begin
-  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_on') then
+    execute $q$update tastings set mobilepay_on = false, mobilepay_name = null,
+      mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b')$q$;
+  elsif exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
     execute $q$update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end,
       mobilepay_name = case slug when 'selftest-a' then 'Host A' else 'Host B' end where slug in ('selftest-a', 'selftest-b')$q$;
   else
@@ -763,6 +769,138 @@ end $$;
 reset role;
 delete from wine_ratings where participant_id = '00000000-0000-4000-d000-00000000000a' and wine_id = -1001;
 
+-- ---------- Payment recipient (WIN-278): a guest sees the tasting's MobilePay number only with its name, when it is on ----------
+-- MobilePay lives on each tasting: one switch, one number, one name. The fixtures give tasting A a number (11111111)
+-- with MobilePay off and no name; host A's own MobilePay (hosts.mobilepay) no longer decides what guests see.
+select set_config('request.jwt.claims', '', true);
+set local role anon;
+do $$
+declare j jsonb; failed boolean; n int;
+begin
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' is null and j ->> 'mobilepay_name' is null, 'MobilePay off: a guest sees the tasting''s number';
+  failed := false; begin perform tasting_payee('00000000-0000-4000-b000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can call tasting_payee';
+  failed := false; begin perform last_payee('00000000-0000-4000-a000-00000000000a'); exception when others then failed := true; end;
+  assert failed, 'anyone can read a host''s last used MobilePay';
+  failed := false; begin perform my_last_payee(); exception when others then failed := true; end;
+  assert failed, 'a guest can call my_last_payee';
+  begin update tastings set mobilepay_on = true, mobilepay_name = 'X' where slug = 'selftest-a'; exception when others then null; end;
+end $$;
+reset role;
+do $$ begin
+  assert (select not mobilepay_on and mobilepay_name is null from tastings where slug = 'selftest-a'), 'a guest can turn MobilePay on or write its name';
+end $$;
+-- Host B cannot change tasting A's MobilePay
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000b","email":"host-b@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$ begin
+  begin update tastings set mobilepay_on = true, mobilepay = '87654321', mobilepay_name = 'B' where slug = 'selftest-a'; exception when others then null; end;
+end $$;
+reset role;
+do $$ begin
+  assert (select not mobilepay_on and mobilepay = '11111111' from tastings where slug = 'selftest-a'), 'another host can change a tasting''s MobilePay';
+end $$;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare j jsonb; failed boolean; e text;
+begin
+  -- On needs both a number and a name
+  e := null; begin update tastings set mobilepay_on = true where slug = 'selftest-a'; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_name_missing', 'MobilePay can be turned on without a name';
+  update tastings set mobilepay_on = true, mobilepay_name = '  Anne Jensen ' where slug = 'selftest-a';
+  assert (select mobilepay_name from tastings where slug = 'selftest-a') = 'Anne Jensen', 'the name is not trimmed';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '11111111' and j ->> 'mobilepay_name' = 'Anne Jensen', 'MobilePay on: guests do not see the number and name';
+  e := null; begin update tastings set mobilepay_name = '   ' where slug = 'selftest-a'; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_name_missing', 'the name can be blank while MobilePay is on';
+  e := null; begin update tastings set mobilepay_name = null where slug = 'selftest-a'; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_name_missing', 'the name can be removed while MobilePay is on';
+  e := null; begin update tastings set mobilepay = null where slug = 'selftest-a'; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_number_missing', 'the number can be removed while MobilePay is on';
+  e := null; begin update tastings set mobilepay = ' ' where slug = 'selftest-a'; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_number_missing', 'the number can be blank while MobilePay is on';
+  -- A new number must be a Danish MobilePay number: 8 digits (optionally +45/0045) or a 4–6 digit Box/MyShop number
+  foreach e in array array['12ab', '123', '1234567', '123456789', '+46 12345678', '45-12-34-56'] loop
+    failed := false; begin update tastings set mobilepay = e where slug = 'selftest-a'; exception when others then failed := sqlerrm = 'mobilepay_number_bad'; end;
+    assert failed, format('a MobilePay number like %s can be saved', e);
+  end loop;
+  update tastings set mobilepay = '+45 44 44 55 55', mobilepay_name = 'Bo Holm' where slug = 'selftest-a';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '+4544445555' and j ->> 'mobilepay_name' = 'Bo Holm', 'a +45 number and a new name are not shown';
+  update tastings set mobilepay = '1234' where slug = 'selftest-a';
+  update tastings set mobilepay = '0045 12 34 56 78' where slug = 'selftest-a';
+  -- The host's own MobilePay no longer changes what guests see
+  update hosts set mobilepay = '99998888' where email = 'host-a@selftest.invalid';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '004512345678' and j ->> 'mobilepay_name' = 'Bo Holm', 'the host''s own number changes what guests see';
+  update hosts set mobilepay_on = false where email = 'host-a@selftest.invalid';
+  assert get_tasting('selftestaa', null) ->> 'mobilepay' = '004512345678', 'the host''s old switch hides the tasting''s MobilePay';
+  update hosts set mobilepay = null, mobilepay_on = true where email = 'host-a@selftest.invalid';
+  update tastings set mobilepay = '11111111', mobilepay_name = 'Anne Jensen' where slug = 'selftest-a';
+end $$;
+reset role;
+
+-- ---------- MobilePay off (WIN-278): with the tasting's switch off guests see no MobilePay, and nothing is lost ----------
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare j jsonb;
+begin
+  update tastings set mobilepay_on = false where slug = 'selftest-a';
+  -- Off: no number and no name (older apps get mobilepay = null too, and hide it)
+  j := get_tasting('selftestaa', null);
+  assert j ? 'mobilepay' and j ? 'mobilepay_name', 'get_tasting lost a payment key';
+  assert j ->> 'mobilepay' is null and j ->> 'mobilepay_name' is null, 'MobilePay off: guests still see a number';
+  assert (select mobilepay = '11111111' and mobilepay_name = 'Anne Jensen' from tastings where slug = 'selftest-a'), 'MobilePay off loses the number or name';
+  -- Off: the number and name may be incomplete, and a wrong number is still refused
+  update tastings set mobilepay_name = null where slug = 'selftest-a';
+  begin update tastings set mobilepay = '12ab' where slug = 'selftest-a'; assert false, 'MobilePay off: a wrong number can be saved'; exception when others then assert sqlerrm = 'mobilepay_number_bad', sqlerrm; end;
+  update tastings set mobilepay_name = 'Anne Jensen' where slug = 'selftest-a';
+  -- On again: everything is back
+  update tastings set mobilepay_on = true where slug = 'selftest-a';
+  j := get_tasting('selftestaa', null);
+  assert j ->> 'mobilepay' = '11111111' and j ->> 'mobilepay_name' = 'Anne Jensen', 'MobilePay on again does not restore the number and name';
+  -- Tasting B (another host's, off) is untouched
+  assert get_tasting('selftestbb', null) ->> 'mobilepay' is null, 'one tasting''s switch changes another''s';
+end $$;
+reset role;
+
+-- ---------- New tasting's MobilePay (WIN-278): a new tasting starts empty, with MobilePay off ----------
+-- Tasting A is on with 11111111 / Anne Jensen (from the section above) – a new tasting does not take them over
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000a","email":"host-a@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare t tastings; e text;
+begin
+  -- create_tasting without a number (as the site calls it): no number, no name, MobilePay off
+  t := create_tasting('Selftest pay');
+  assert t.mobilepay is null and t.mobilepay_name is null and not t.mobilepay_on, 'a new tasting does not start with empty MobilePay fields';
+  -- The new site's next step: the form's number and name with MobilePay on
+  update tastings set mobilepay_on = true, mobilepay = '87654321', mobilepay_name = 'Bo Holm' where id = t.id;
+  assert (select mobilepay = '87654321' and mobilepay_name = 'Bo Holm' and mobilepay_on from tastings where id = t.id), 'a new tasting cannot get its own number';
+  -- Turning it on without a number is refused
+  t := create_tasting('Selftest pay off');
+  e := null; begin update tastings set mobilepay_on = true where id = t.id; exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_number_missing', 'MobilePay can be turned on without a number';
+  -- Inserting a number without a name while on is refused
+  e := null; begin insert into tastings (host_id, slug, title, mobilepay) values ('00000000-0000-4000-a000-00000000000a', 'selftest-pay-x', 'x', '12345678'); exception when others then e := sqlerrm; end;
+  assert e = 'mobilepay_name_missing', 'a tasting can be created with a number and no name';
+end $$;
+reset role;
+-- Host B: a new tasting starts empty too, and B never sees A's number (my_last_payee stays, unused by the site)
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-e000-00000000000b","email":"host-b@selftest.invalid","role":"authenticated"}', true);
+set local role authenticated;
+do $$
+declare p record; t tastings;
+begin
+  select * into p from my_last_payee();
+  assert p.number is null and p.recipient is null, 'a host sees another host''s last used number';
+  t := create_tasting('Selftest B pay');
+  assert t.mobilepay is null and not t.mobilepay_on, 'a new tasting without a last used number has MobilePay on';
+end $$;
+reset role;
 -- ---------- Bottle size (WIN-170): every call that names a wine gives its size; guests never see a blind wine's size ----------
 -- Wine A is a magnum, ordered (2 bottles) and rated by guest A
 update wines set bottle_cl = 150 where id = -1001;
