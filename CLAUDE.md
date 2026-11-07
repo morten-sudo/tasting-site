@@ -69,6 +69,9 @@
   (`<branch>.tasting-site.pages.dev`). `scripts/db-target.mjs` (prebuild) points those builds at the **test database**
   (Supabase project `winetastr-test`, `piiuhgzsnphhuceojldz`); `main` uses the live one (`ydvdhhdpygzwalosbjcc`).
   A test build shows a "Test" chip by the logo. Locally: `DB=test npm run build`.
+- **Approval address.** Branches waiting for Morten's approval are merged into the branch `review`
+  (`review.tasting-site.pages.dev`, rebuilt from `dev`), where Morten is signed in. Website takes the screenshots
+  there and shows them to Morten; he only approves.
 - **Database changes.** A migration is applied to the test database first, with the track. It goes to the live
   database only when its release goes live – database first, then the merge to `main`. Every migration must keep the
   live site and every app version working (add, never change; see the app contract), because tracks share the test
