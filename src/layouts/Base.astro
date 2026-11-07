@@ -72,7 +72,7 @@ const site = 'https://winetastr.com';
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
       import { initDropdowns } from '../lib/ui/dropdown';
-      import { initTabs } from '../lib/ui/tabs';
+      import { initTabs, selectTab, currentTab } from '../lib/ui/tabs';
       import { setEmpty } from '../lib/ui/empty';
       import { setEditWhat } from '../lib/ui/icon-button';
 
@@ -155,6 +155,10 @@ const site = 'https://winetastr.com';
         if (!info) return;
         // The Quiz tab only when the tasting has questions – on every page, also the quiz's own (WIN-315)
         document.getElementById('t-quiz-tab')!.hidden = !(Number(info.quiz_count ?? 0) > 0);
+        // The tabs moved: the chosen one is brought into view again on a phone (WIN-323)
+        const tBar = document.getElementById('t-tabs');
+        const tNow = tBar && currentTab(tBar);
+        if (tBar && tNow) selectTab(tBar, tNow);
         if (info.title) {
           document.getElementById('t-title')!.textContent = info.title;
           const tAdmin = document.getElementById('t-admin');

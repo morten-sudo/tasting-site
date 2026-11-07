@@ -1078,11 +1078,13 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .tabs > :is([aria-selected='true'], [aria-current='page']) { color: var(--amber); border-bottom-color: var(--amber); font-weight: 500; }
 .tabs > :focus-visible { outline-offset: -2px; border-radius: 4px; }
 .tabs > [hidden] { display: none; }
-/* Phones: one line that scrolls sideways (never two rows of tabs); the edges fade where there is more */
+/* Phones: one line that scrolls sideways (never two rows of tabs); an edge fades only while there are more tabs that
+   way (.more-start / .more-end from tabs.ts), and the chosen tab is scrolled into view (WIN-323) */
 @media (max-width: 40rem) {
-  .tabs { column-gap: 1.1rem; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent); }
-  .tabs.scrolled { -webkit-mask-image: linear-gradient(90deg, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(90deg, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent); }
+  .tabs { column-gap: 1.1rem; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .tabs.more-end { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent); }
+  .tabs.more-start { -webkit-mask-image: linear-gradient(90deg, transparent, #000 2.5rem); mask-image: linear-gradient(90deg, transparent, #000 2.5rem); }
+  .tabs.more-start.more-end { -webkit-mask-image: linear-gradient(90deg, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent); mask-image: linear-gradient(90deg, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent); }
   .tabs::-webkit-scrollbar { display: none; }
   .tabs > :is(a, button) { margin-bottom: 0; flex: none; }
   .tabs > :last-child { margin-right: 1.5rem; }
