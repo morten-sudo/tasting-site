@@ -48,9 +48,25 @@ final class GuestFlowTests: XCTestCase {
         XCTAssertTrue(a.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Koden blev ikke fundet'")).firstMatch.waitForExistence(timeout: 15), "wrong code")
         field.tap()
         field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 20))
-        field.typeText("https://winetastr.com/t/app-test/?k=\(code)")
+        // The test build's app address (AppDatabase.web, WIN-307)
+        field.typeText("https://test-app.winetastr.com/t/app-test/?k=\(code)")
         a.buttons["Fortsæt"].tap()
         XCTAssertTrue(a.buttons["App-test"].firstMatch.waitForExistence(timeout: 15), "in after pasting")
+    }
+
+    /// WIN-307: a link from before the app address (winetastr.com) still opens the tasting
+    func testPasteOldInviteLink() {
+        let a = app(["-resetData", "YES"])
+        let disclosure = a.buttons["Har du dit invitationslink i stedet?"].firstMatch
+        XCTAssertTrue(disclosure.waitForExistence(timeout: 15))
+        disclosure.tap()
+        let field = a.textFields["Invitationslink"]
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        field.tap(); field.typeText("https://winetastr.com/t/app-test/?k=\(code)")
+        a.buttons["Fortsæt"].tap()
+        XCTAssertTrue(a.buttons["App-test"].firstMatch.waitForExistence(timeout: 15), "in after pasting an old link")
+        openTasting(a)
+        XCTAssertTrue(a.buttons["Ret svar"].waitForExistence(timeout: 15) || a.buttons["Svar på invitationen"].exists, "the tasting opens")
     }
 
     func testAnswerInvitation() {

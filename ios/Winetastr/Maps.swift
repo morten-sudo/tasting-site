@@ -1,7 +1,7 @@
 import SwiftUI
 
 // The site's maps (src/lib/region-map.ts, overview-map.ts, wine-map.ts, ui/map-background.ts): the same map data
-// from winetastr.com/maps/, drawn natively with the same colours (components.css, component 23).
+// from the site's /maps/ (on AppDatabase.web), drawn natively with the same colours (components.css, component 23).
 
 // MARK: - Data
 
@@ -108,7 +108,7 @@ actor MapStore {
     private var townList: Task<[MapTown]?, Never>?
 
     private static func json<T: Decodable>(_ path: String) async -> T? {
-        guard let url = URL(string: "https://winetastr.com" + path),
+        guard let url = AppDatabase.webURL(path),
               let (data, response) = try? await URLSession.shared.data(from: url),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
         return try? JSONDecoder().decode(T.self, from: data)

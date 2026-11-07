@@ -63,7 +63,7 @@ struct TastingView: View {
         .sheet(isPresented: $addToCalendar) {
             if let info, let start = info.start {
                 CalendarSheet(title: info.title, start: start, end: info.end, place: info.place,
-                              url: URL(string: "https://winetastr.com/t/\(info.slug)/")) { addToCalendar = false }
+                              url: AppDatabase.webURL("/t/\(info.slug)/")) { addToCalendar = false }
                     .ignoresSafeArea()
             }
         }

@@ -23,7 +23,21 @@ enum SelfTest {
         await step("respond yes") { try await Backend.respond(code, attending: true, note: "selftest") }
         await step("respond no") { try await Backend.respond(code, attending: false, note: nil) }
         await step("invite_is_mine") { "\(await Backend.inviteIsMine(code))" }
-        await step("extract") { "\(extractInviteCode("https://winetastr.com/t/x/?k=abc123") ?? "nil") \(extractInviteCode(" abc123 ") ?? "nil") \(extractInviteCode("not a code") ?? "nil")" }
+        // WIN-307: links on the app address and old links from before it all give the code
+        await step("extract") {
+            let links = [AppDatabase.web, "https://app.winetastr.com", "https://test-app.winetastr.com",
+                         "https://winetastr.com", "https://test.winetastr.com"].map { "\($0)/t/x/?k=abc123" }
+            return (links.map { extractInviteCode($0) ?? "nil" } + [extractInviteCode(" abc123 ") ?? "nil", extractInviteCode("not a code") ?? "nil"]).joined(separator: " ")
+        }
+        // WIN-307: maps and wine images come from the app address that goes with the build
+        await step("web") {
+            let map = await MapStore.shared.map("douro") != nil
+            var img = "nil"
+            if let u = AppDatabase.webURL("/img/hero-800.jpg"), let (_, r) = try? await URLSession.shared.data(from: u) {
+                img = "\(u.absoluteString) \((r as? HTTPURLResponse)?.statusCode ?? -1)"
+            }
+            return "web=\(AppDatabase.web) map=\(map) image=\(img) calendar=\(AppDatabase.webURL("/t/x/")?.absoluteString ?? "nil") profile=\(AppDatabase.webURL("/profile/")?.absoluteString ?? "nil")"
+        }
         await step("texts") { "\(appLanguageCode): \(L("guest.coming")) / \(L("app.winesSub", ["n": "3"]))" }
         print(out.joined(separator: "\n"))
     }
