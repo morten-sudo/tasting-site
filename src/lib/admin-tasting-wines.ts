@@ -70,9 +70,11 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
     list.replaceChildren(...rows.map((r, i) => {
       const w = r.wines;
       const vis = visOf(r);
+      // "Can be ordered" only when the guests really can: a blind or hidden wine cannot be ordered, whatever its switch
+      // says (WIN-321) – its "Blind"/"Hidden" chip says enough; it can be ordered once it is shown
       const chips: HTMLElement[] = [
         statusChip(vis === 'shown' ? 'wine.shown' : vis === 'blind' ? 'wine.blind' : 'wine.hidden'),
-        statusChip(r.orderable ? 'wine.orderable' : 'wine.notOrderable'),
+        ...(r.orderable && vis !== 'shown' ? [] : [statusChip(r.orderable ? 'wine.orderable' : 'wine.notOrderable')]),
       ];
       const rating = ratings.get(r.wine_id);
       if (rating) {
