@@ -168,7 +168,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
         <h2><span>MobilePay</span><span data-help="mobilepay"></span></h2>
         <div class="set-row">
           <span><b id="mp-view"></b><small id="mp-summary"></small></span>
-          <button id="mp-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+          <EditButton id="mp-edit" />
         </div>
       </section>
 
@@ -462,7 +462,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { initTastingWines } from '../../lib/admin-tasting-wines';
   let tastingWines: ReturnType<typeof initTastingWines> | null = null;
   import { requireHost, sheetPanel, toNumber, iconButton, editButton, type Host } from '../../lib/admin-common';
-  import { iconSpacer } from '../../lib/ui/icon-button';
+  import { iconSpacer, setEditWhat } from '../../lib/ui/icon-button';
   import { personRow, listRow, missing, type RowChip } from '../../lib/ui/list-row';
   import { avatar } from '../../lib/ui/thumb';
   import { addRow, hitButton } from '../../lib/ui/add-row';
@@ -842,6 +842,8 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   const mpPanel = sheetPanel($('mp-panel') as HTMLDialogElement, { dirty: 'form' });
   const mpForm = mobilePayForm('set');
   $('mp-title').textContent = 'MobilePay';
+  // The pencil like every other row (WIN-324): "Edit: MobilePay" for screen readers
+  setEditWhat($('mp-edit'), 'MobilePay');
   const mpNow = () => ({
     on: tasting?.mobilepay_on !== false,
     number: String(tasting?.mobilepay ?? '').replace(/\s/g, ''),
