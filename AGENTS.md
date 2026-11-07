@@ -3,9 +3,11 @@
 Everything an agent needs to start work in minutes. CLAUDE.md has the rules; this file has the paths and commands.
 
 ## Where things are
-- Cloud repo: `/home/claude/tasting-site`. Fixed worktrees: `/home/claude/wt-site` (site work) and `/home/claude/wt-app`
-  (app work). Start a task with `git fetch origin && git checkout -B <branch> origin/dev`. `node_modules` is a symlink to
-  `/home/claude/tasting-site/node_modules` (`ln -s` it if missing).
+- Status and next work: `claude/work/INDEX.md` (Projects). Releases: `claude/work/udgivelser.md`. dev = next release.
+- Cloud repo: `/home/claude/tasting-site` (a new session starts with only this; run `npm ci` there once if `node_modules`
+  is missing). One worktree per task: `git -C /home/claude/tasting-site fetch origin && git -C /home/claude/tasting-site
+  worktree add /home/claude/wt-<key> -b <branch> origin/dev && ln -s /home/claude/tasting-site/node_modules
+  /home/claude/wt-<key>/node_modules`. Reuse it for the next task with `git fetch origin && git checkout -B <branch> origin/dev`.
 - Build the site: `DB=test npm run build`, then `git checkout src/lib/db-target.ts`. `npm run check:ui` alone is fast.
 - Requirements: Projects tool, `claude/work/INDEX.md` and the epic file. Don't edit Project files unless asked.
 
