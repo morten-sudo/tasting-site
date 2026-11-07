@@ -327,6 +327,9 @@ struct ToastView: View {
                 .shadow(color: .black.opacity(0.22), radius: 12, y: 8)
                 .frame(maxWidth: 544)
                 .padding(.horizontal, 16).padding(.bottom, bottom)
+                // At the largest text sizes a toast would cover most of the screen (and an error stays): it grows no
+                // further than the first accessibility size
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier(toast.error ? "toast-error" : "toast")
                 .transition(.move(edge: .bottom).combined(with: .opacity))

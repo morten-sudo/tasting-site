@@ -86,4 +86,30 @@ final class ToastTests: XCTestCase {
             }
         }
     }
+
+    // A message stands above the cart bar (never over "Gå til kurven"), and the cart's Undo is a toast with an action
+    func testAddedToastAboveTheCartBarAndUndoToast() {
+        let a = XCUIApplication()
+        a.launchArguments = ["-AppleLanguages", "(da)", "-AppleLocale", "da_DK", "-appLanguage", "da", "-inviteCode", code,
+                             "-resetData", "YES", "-route", "wine", "-ordersOpen", "YES"]
+        a.launch()
+        let add = a.buttons["Læg i kurv"]
+        XCTAssertTrue(add.waitForExistence(timeout: 20), "add to cart")
+        add.tap()
+        let toast = a.otherElements["toast"]
+        XCTAssertTrue(toast.waitForExistence(timeout: 3), "the toast")
+        let toCart = a.buttons["Gå til kurven"]
+        XCTAssertTrue(toCart.exists && toCart.isHittable, "the cart bar's button is not covered")
+        XCTAssertLessThanOrEqual(toast.frame.maxY, toCart.frame.minY, "the toast is above the cart bar")
+        shot("win336-added-above-cartbar-da")
+        toCart.tap()
+        XCTAssertTrue(a.buttons["Send bestilling"].waitForExistence(timeout: 15), "the cart")
+        a.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Fjern:'")).firstMatch.tap()
+        a.buttons["Fjern"].tap()
+        XCTAssertTrue(a.buttons["Fortryd"].waitForExistence(timeout: 3), "Undo in the toast")
+        XCTAssertTrue(a.otherElements["toast"].exists, "as a toast")
+        shot("win336-cart-undo-da")
+        a.buttons["Fortryd"].tap()
+        XCTAssertTrue(a.buttons["Send bestilling"].waitForExistence(timeout: 5), "back after Undo")
+    }
 }
