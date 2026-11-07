@@ -496,9 +496,10 @@ struct RegionDrawing {
         func placeParts() {
             let fs = 15 * S
             for (_, a) in map.areas.sorted(by: { $0.key < $1.key }) {
-                guard let title = a.title?.uppercased() else { continue }
+                // The site writes the names as they are (body font, no capitals since the maps' lettering was made one style)
+                guard let title = a.title else { continue }
                 let area = SVGPath.parse(a.d)
-                let w = Double(title.count) * fs * 0.95, h = fs * 1.3
+                let w = Double(title.count) * fs * 0.6, h = fs * 1.3
                 func box(_ x: Double, _ y: Double) -> Box { Box(x0: x - w / 2, y0: y - fs * 0.36 - h / 2, x1: x + w / 2, y1: y - fs * 0.36 + h / 2) }
                 var spots: [(Double, Double)] = []
                 for dy in [0.0, -0.5, 0.5, -1, 1, -1.5, 1.5, -2, 2, -2.5, 2.5, -3, 3] {
@@ -618,18 +619,21 @@ extension RegionDrawing {
             switch l.kind {
             case .town(let sz):
                 let fs = w(sz == "big" ? 22.0 : sz == "mid" ? 17.0 : 15.0)
-                haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.town),
-                         Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).italic().foregroundStyle(MapColor.land),
+                // The site's .rm-town: the body font, upright
+                let font = Font.custom("Inter-Regular", fixedSize: fs)
+                haloText(&ctx, Text(l.text).font(font).foregroundStyle(MapColor.town), Text(l.text).font(font).foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: l.anchor, width: w(3))
             case .part:
                 let fs = w(15)
-                haloText(&ctx, Text(l.text).font(.custom("Inter-SemiBold", fixedSize: fs)).tracking(fs / 4).foregroundStyle(MapColor.bordeaux.opacity(0.75)),
-                         Text(l.text).font(.custom("Inter-SemiBold", fixedSize: fs)).tracking(fs / 4).foregroundStyle(MapColor.land),
+                // .rm-part: body font, weight 500, the towns' colour, no capitals or letter-spacing
+                let font = Font.custom("Inter-Medium", fixedSize: fs)
+                haloText(&ctx, Text(l.text).font(font).foregroundStyle(MapColor.town), Text(l.text).font(font).foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: .center, width: w(3))
             case .badgeTitle:
                 let fs = w(17)
-                haloText(&ctx, Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.bordeaux),
-                         Text(l.text).font(.custom("CormorantGaramond-Regular", fixedSize: fs)).fontWeight(.semibold).italic().foregroundStyle(MapColor.land),
+                // .rm-badge-title: body font, weight 600
+                let font = Font.custom("Inter-SemiBold", fixedSize: fs)
+                haloText(&ctx, Text(l.text).font(font).foregroundStyle(MapColor.bordeaux), Text(l.text).font(font).foregroundStyle(MapColor.land),
                          at: baseline(p, fs), anchor: l.anchor, width: w(4))
             }
         }
