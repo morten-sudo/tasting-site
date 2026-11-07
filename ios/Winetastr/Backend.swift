@@ -248,7 +248,7 @@ enum Backend {
     }
     static func myTastings() async throws -> [MyTasting] {
         try NetHook.check()
-        try decode(try await supabase.rpc("my_tastings").execute().data)
+        return try decode(try await supabase.rpc("my_tastings").execute().data)
     }
     static func inviteIsMine(_ code: String) async -> Bool {
         guard let data = try? await supabase.rpc("invite_is_mine", params: CodeParam(code: code)).execute().data else { return true }
@@ -305,7 +305,7 @@ enum Backend {
     /// A shared list the site reads straight from its table (the appellations, regions and places for the maps)
     static func table<T: Decodable>(_ name: String, _ columns: String) async throws -> [T] {
         try NetHook.check()
-        try decode(try await supabase.from(name).select(columns).execute().data)
+        return try decode(try await supabase.from(name).select(columns).execute().data)
     }
     static func logLogin() async { _ = try? await supabase.rpc("log_usage", params: Usage(feature: "login")).execute() }
 }
