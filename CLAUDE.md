@@ -1,4 +1,5 @@
 # Winetastr – notes for working in this repo
+\nAgents: start with `AGENTS.md` (paths, commands and pitfalls), then the rules below.
 
 - Code, file names, routes and comments in English. The UI is Danish, English and Icelandic (`src/i18n`).
 - Astro static site on Cloudflare Pages (auto-deploys from `main`); Pages Functions in `functions/api/`.
