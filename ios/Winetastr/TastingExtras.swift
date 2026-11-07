@@ -276,7 +276,7 @@ struct PayBox: View {
                 Text(L("pay.hostTells")).font(.body()).foregroundStyle(Color.paper)
             } else {
                 VStack(spacing: 0) {
-                    factRow(L("pay.number"), pretty) {
+                    factRow(L("pay.number"), pretty, oneLine: true) {
                         Button {
                             UIPasteboard.general.string = number
                             toast = "\(L("pay.copied")): \(pretty)"
@@ -295,10 +295,12 @@ struct PayBox: View {
     }
 
     /// .facts: the label and the value (the number has its quiet copy icon after it)
-    private func factRow<Trailing: View>(_ label: String, _ shown: String, last: Bool = false, @ViewBuilder trailing: () -> Trailing) -> some View {
+    private func factRow<Trailing: View>(_ label: String, _ shown: String, last: Bool = false, oneLine: Bool = false, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
             Text(label).font(.body(14.4)).foregroundStyle(Color.muted).frame(width: 130, alignment: .leading)
-            Text(shown).font(.medium(15.2)).foregroundStyle(Color.paper).frame(maxWidth: .infinity, alignment: .leading)
+            // The MobilePay number stays on one line, also on a small phone (WIN-319)
+            Text(shown).font(.medium(15.2)).foregroundStyle(Color.paper).lineLimit(oneLine ? 1 : nil).minimumScaleFactor(oneLine ? 0.8 : 1)
+                .frame(maxWidth: .infinity, alignment: .leading)
             trailing()
         }
         .frame(minHeight: 44)
