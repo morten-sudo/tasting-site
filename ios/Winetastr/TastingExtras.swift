@@ -203,9 +203,12 @@ struct OriginsBlock: View {
 struct LegendNumber: View {
     let kind: LegendItem.Kind
     let n: Int
+    /// 1.6rem on the site: it grows with the text size, so the number always fits
+    @ScaledMetric(relativeTo: .caption) private var size = 25.6
     var body: some View {
-        Text("\(n)").font(.semibold(12.5)).foregroundStyle(kind == .other ? Color.bordeaux : Color.white)
-            .frame(width: 25.6, height: 25.6)
+        Text("\(n)").font(.semibold(12.5, relativeTo: .caption)).foregroundStyle(kind == .other ? Color.bordeaux : Color.white)
+            .lineLimit(1).fixedSize()
+            .frame(width: size, height: size)
             .background(kind == .inMap ? Color.bordeaux : kind == .whole ? Color(red: 0x9A / 255, green: 0x5F / 255, blue: 0x6C / 255) : Color.clear, in: Circle())
             .overlay(Circle().strokeBorder(kind == .other ? Color.bordeaux : Color.clear, lineWidth: 1.5))
     }
