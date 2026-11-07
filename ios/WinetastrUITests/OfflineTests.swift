@@ -120,4 +120,28 @@ final class OfflineTests: XCTestCase {
             a.terminate()
         }
     }
+
+    /// A cold start without network (Morten, 7 Nov 2026): the home page, the tasting and its wines as last fetched, each
+    /// with the quiet notice; all of it is fetched again when the network is back
+    func testColdStartWithoutNetwork() {
+        fetchWinesOnline()
+        let a = app(["-inviteCode", code, "-offlineAfter", "0", "-onlineAfter", "45"])
+        let page = a.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Siden kunne ikke opdateres'")).firstMatch
+        XCTAssertTrue(page.waitForExistence(timeout: 15), "the home page from last time, with the notice")
+        XCTAssertTrue(a.staticTexts["Ingen forbindelse"].exists, "no network")
+        shot("cold-home.png")
+        a.buttons["App-test"].firstMatch.tap()
+        XCTAssertTrue(a.buttons["Vinene"].waitForExistence(timeout: 10), "the tasting from last time")
+        XCTAssertTrue(page.waitForExistence(timeout: 5), "the notice on the tasting")
+        shot("cold-tasting.png")
+        a.buttons["Vinene"].tap()
+        XCTAssertTrue(a.buttons["wine-card-1"].waitForExistence(timeout: 10), "the wines from last time")
+        XCTAssertTrue(a.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Vinene kunne ikke opdateres'")).firstMatch.exists, "the wines' notice")
+        shot("cold-wines.png")
+        // Back online 45 seconds after the start: the wines are fetched again and the notice goes
+        expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: a.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Vinene kunne ikke opdateres'")).firstMatch)
+        waitForExpectations(timeout: 50)
+        a.buttons["Smagningen"].tap()
+        XCTAssertFalse(page.waitForExistence(timeout: 5), "the tasting is fetched again too")
+    }
 }

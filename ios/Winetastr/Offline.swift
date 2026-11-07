@@ -3,8 +3,9 @@ import Foundation
 import SwiftUI
 import UIKit
 
-/// WIN-287: the last fetched wine list and the guest's own ratings, kept on the device so the wines show without network.
-/// One folder per invite code (named by a hash of it, so the code itself is never written to a file) – a guest only ever
+/// WIN-287: the last fetched tasting list, tasting, invitation, wine list and the guest's own ratings, kept on the device
+/// so the app shows them without network, also from a cold start. One folder per invite code (the signed-in email's
+/// tasting list in a folder of its own) (named by a hash of it, so the code itself is never written to a file) – a guest only ever
 /// sees what was fetched with their own code. The wines are stored exactly as get_wines returned them, so a blind wine
 /// holds no more than the database gave (no name, picture or details). Everything is deleted at log out.
 enum WineCache {
@@ -32,6 +33,14 @@ enum WineCache {
         } catch {}
     }
     private static func read(_ name: String, _ code: String) -> Data? { try? Data(contentsOf: folder(code).appendingPathComponent(name)) }
+
+    /// An answer as it came (get_tasting, get_invite, my_tastings)
+    static func save(_ data: Data, _ name: String, code: String) { write(data, name, code) }
+    static func tasting(_ code: String) -> TastingInfo? { read("tasting.json", code).flatMap { try? JSONDecoder().decode(TastingInfo.self, from: $0) } }
+    static func invite(_ code: String) -> Invite? { read("invite.json", code).flatMap { try? JSONDecoder().decode([Invite].self, from: $0) }?.first }
+    static func myTastings(_ email: String) -> [MyTasting]? {
+        read("my_tastings.json", "email:" + email.lowercased()).flatMap { try? JSONDecoder().decode([MyTasting].self, from: $0) }
+    }
 
     /// get_wines' answer as it came
     static func saveWines(_ data: Data, code: String) { write(data, "wines.json", code) }

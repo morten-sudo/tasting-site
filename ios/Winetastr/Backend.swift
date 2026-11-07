@@ -204,14 +204,18 @@ enum Backend {
         return lines
     }
 
-    static func invite(_ code: String) async throws -> Invite? {
+    /// keep (here and below): the answer is also stored on the phone as it came, for a start without network (WIN-287)
+    static func invite(_ code: String, keep: Bool = false) async throws -> Invite? {
         try NetHook.check()
-        let rows: [Invite] = try decode(try await supabase.rpc("get_invite", params: CodeParam(code: code)).execute().data)
+        let data = try await supabase.rpc("get_invite", params: CodeParam(code: code)).execute().data
+        let rows: [Invite] = try decode(data)
+        if keep { WineCache.save(data, "invite.json", code: code) }
         return rows.first
     }
-    static func tasting(_ code: String) async throws -> TastingInfo? {
+    static func tasting(_ code: String, keep: Bool = false) async throws -> TastingInfo? {
         try NetHook.check()
         let data = try await supabase.rpc("get_tasting", params: CodeParam(code: code)).execute().data
+        if keep { WineCache.save(data, "tasting.json", code: code) }
         return try? decode(data)
     }
     /// keep: the answer is also stored as it came, for showing the wines without network (WIN-287)
@@ -246,9 +250,13 @@ enum Backend {
     static func setEmail(_ code: String, _ email: String) async throws {
         try await supabase.rpc("set_my_email", params: SetEmail(code: code, e: email)).execute()
     }
-    static func myTastings() async throws -> [MyTasting] {
+    /// keep: stored for the signed-in email (my_tastings is the email's, not one code's)
+    static func myTastings(keepFor email: String? = nil) async throws -> [MyTasting] {
         try NetHook.check()
-        return try decode(try await supabase.rpc("my_tastings").execute().data)
+        let data = try await supabase.rpc("my_tastings").execute().data
+        let list: [MyTasting] = try decode(data)
+        if let email { WineCache.save(data, "my_tastings.json", code: "email:" + email.lowercased()) }
+        return list
     }
     static func inviteIsMine(_ code: String) async -> Bool {
         guard let data = try? await supabase.rpc("invite_is_mine", params: CodeParam(code: code)).execute().data else { return true }

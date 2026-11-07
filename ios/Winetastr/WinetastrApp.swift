@@ -131,16 +131,45 @@ final class AppModel {
     }
 
     /// Every tasting on this device: the signed-in email's invitations and the codes from pasted links.
+    /// Without network: the list from what was stored last time (WIN-287), and tastingsStale says so; the call throws
+    /// only when something was never stored
     func loadTastings() async throws -> [MyTasting] {
+        do {
+            let list = try await fetchTastings()
+            tastingsStale = false
+            return list
+        } catch {
+            guard let kept = keptTastings() else { throw error }
+            tastingsStale = true
+            return kept
+        }
+    }
+    /// The tasting list came from the phone, not the database (WIN-287)
+    private(set) var tastingsStale = false
+
+    private func fetchTastings() async throws -> [MyTasting] {
         var list: [MyTasting] = []
-        if signedInEmail != nil {
-            list = try await Backend.myTastings()
+        if let email = signedInEmail {
+            list = try await Backend.myTastings(keepFor: email)
             for t in list { CodeStore.set(slug: t.slug, code: t.code) }
         }
         for (slug, code) in CodeStore.all() where !list.contains(where: { $0.slug == slug }) {
-            guard let info = try await Backend.tasting(code) else { continue }
-            let invite = try await Backend.invite(code)
+            guard let info = try await Backend.tasting(code, keep: true) else { continue }
+            let invite = try await Backend.invite(code, keep: true)
             list.append(MyTasting(code: code, slug: info.slug, title: info.title, starts_at: info.starts_at, place: info.place, status: invite?.status))
+        }
+        return list
+    }
+
+    private func keptTastings() -> [MyTasting]? {
+        var list: [MyTasting] = []
+        if let email = signedInEmail {
+            guard let kept = WineCache.myTastings(email) else { return nil }
+            list = kept
+        }
+        for (slug, code) in CodeStore.all() where !list.contains(where: { $0.slug == slug }) {
+            guard let info = WineCache.tasting(code) else { return nil }
+            list.append(MyTasting(code: code, slug: info.slug, title: info.title, starts_at: info.starts_at, place: info.place, status: WineCache.invite(code)?.status))
         }
         return list
     }

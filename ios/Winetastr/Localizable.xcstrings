@@ -6117,6 +6117,28 @@
     }
    }
   },
+  "app.pageStale": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Siden kunne ikke opdateres, så du ser den, som den var sidst. Den opdateres af sig selv, når forbindelsen er tilbage."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The page could not be updated, so you are seeing it as it was last time. It updates by itself when the connection is back."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki tókst að uppfæra síðuna, svo þú sérð hana eins og hún var síðast. Hún uppfærist sjálfkrafa þegar tengingin kemst aftur á."
+     }
+    }
+   }
+  },
   "app.wineStale": {
    "localizations": {
     "da": {

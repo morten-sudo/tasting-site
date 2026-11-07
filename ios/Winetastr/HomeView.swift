@@ -54,7 +54,7 @@ struct HomeView: View {
             }
         }
         .task { await load() }
-        .onChange(of: model.online) { if model.online && failed { Task { await load() } } }
+        .onChange(of: model.online) { if model.online && (failed || model.tastingsStale) { Task { await load() } } }
         .onChange(of: model.path) { if model.path.isEmpty && loaded { Task { await load() } } }
     }
 
@@ -67,6 +67,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 40) {
                     PageTitle(text: L("home2.hello") + (firstName.isEmpty ? "" : ", \(firstName)"))
+                    if model.tastingsStale { NoticeBox(text: L("app.pageStale")).padding(.top, -24) }
                     if tastings.isEmpty {
                         Card {
                             Text(L("app.noTastingsTitle")).font(.semibold(17)).foregroundStyle(Color.paper)
@@ -242,7 +243,7 @@ struct HomeView: View {
             async let o = model.loadOrders(list)
             async let name = firstNameNow()
             var info: [String: TastingInfo] = [:]
-            for t in upcoming { if let i = try? await Backend.tasting(t.code) { info[t.slug] = i } }
+            for t in upcoming { if let i = (try? await Backend.tasting(t.code, keep: true)) ?? WineCache.tasting(t.code) { info[t.slug] = i } }
             infos = info
             book = await b ?? []; orders = await o; firstName = await name
             loaded = true
@@ -275,7 +276,7 @@ struct HomeView: View {
                 waiting.append(WaitingItem(icon: "cart", title: L("home3.payOrder", ["title": "Barolo and friends"]), meta: L("home3.toPay", ["total": krText(812.5)]), label: L("home3.pay")) {})
             }
             #endif
-            if let next = upcoming.first, let wines = try? await Backend.wines(next.code), !wines.isEmpty {
+            if let next = upcoming.first, let wines = (try? await Backend.wines(next.code)) ?? WineCache.wines(next.code), !wines.isEmpty {
                 nextWines = wines
                 nextMap = await cornerMap(wines)
             } else { nextMap = nil }
@@ -295,7 +296,7 @@ struct HomeView: View {
             if case .string(let n)? = user?.userMetadata["name"], !n.isEmpty { name = n }
             if name == nil { name = (try? await Backend.profile())?.name }
         } else if let code = CodeStore.all().values.first {
-            name = (try? await Backend.invite(code))?.name
+            name = (try? await Backend.invite(code))?.name ?? WineCache.invite(code)?.name
         }
         return name.map { String($0.split(separator: " ").first ?? "") } ?? ""
     }
