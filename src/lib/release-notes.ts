@@ -10,6 +10,14 @@ export const RELEASES: Release[] = [
   {
     date: '2026-11-07',
     lines: {
+      da: ['Svarer en gæst ja til en fuld smagning, får hun at vide, at hun står på ventelisten.'],
+      en: ['A guest who says yes to a full tasting is told that she is on the waiting list.'],
+      is: ['Gestur sem segir já við fullri smökkun fær að vita að hún sé á biðlista.'],
+    },
+  },
+  {
+    date: '2026-11-07',
+    lines: {
       da: [
         'Alt, du logger ind til, ligger nu på app.winetastr.com. Gamle links, invitationer og bogmærker sender dig videre, og du er stadig logget ind.',
         'Kontoen står i adressen, så et link til en af dine konti åbner den rigtige.',
