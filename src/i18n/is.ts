@@ -111,6 +111,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "guest.feeTitle": "Greiðsla fyrir smökkunina",
   "guest.feePaid": "Takk, greiðslan þín fyrir smökkunina hefur borist.",
   "guest.feeText": "Verðið fyrir kvöldið miðast við innkaup og fjölda gesta.",
+  "guest.feeFixed": "Allir gestir greiða sama verð.",
   "guest.statusYes": "Þú mætir. Sjáumst!",
   "guest.statusNo": "Þú hefur afboðað.",
   "guest.emailBad": "Netfangið virðist ekki rétt. Leiðréttu það og reyndu aftur.",

@@ -111,6 +111,7 @@ export const es: Partial<Record<keyof typeof en, string>> = {
   "guest.feeTitle": "Precio de la cata",
   "guest.feePaid": "Gracias, hemos recibido tu pago de la cata.",
   "guest.feeText": "El precio de la velada depende de las compras y del número de invitados.",
+  "guest.feeFixed": "Todos los invitados pagan el mismo precio.",
   "guest.statusYes": "Vienes. ¡Nos vemos!",
   "guest.statusNo": "Has dicho que no vienes.",
   "guest.emailBad": "El correo no parece correcto. Corrígelo e inténtalo de nuevo.",

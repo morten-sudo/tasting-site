@@ -88,7 +88,8 @@ import Disclosure from '../../components/ui/Disclosure.astro';
             <SectionTitle level="h3" as="h2" text="guest.feeTitle" />
             <Notice id="fee-paid" tone="ok" hidden><p data-i18n="guest.feePaid">Thank you, your payment for the tasting has been received.</p></Notice>
             <div id="fee-due" hidden>
-              <p data-i18n="guest.feeText">The price for the evening is based on purchases and the number of guests.</p>
+              <!-- How the price was found: shared from what the evening cost, or the same fixed price for all (WIN-317) -->
+              <p id="fee-how" hidden></p>
               <div id="fee-pay"></div>
             </div>
           </section>
@@ -300,6 +301,9 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     if (!row || amount <= 0) return;
     $('fee-paid').hidden = !row.paid;
     $('fee-due').hidden = row.paid;
+    const shared = info.fee_shared;
+    $('fee-how').hidden = typeof shared !== 'boolean';
+    $('fee-how').textContent = shared === true ? t('guest.feeText') : shared === false ? t('guest.feeFixed') : '';
     if (!row.paid) $('fee-pay').replaceChildren(payBox(amount));
   }
 

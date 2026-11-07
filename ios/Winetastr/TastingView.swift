@@ -130,7 +130,7 @@ struct TastingView: View {
                             VStack(spacing: 16) {
                                 if !done { answerCard(info, open: open) }
                                 if let payment, payment.amount > 0 {
-                                    FeeCard(amount: payment.amount, paid: payment.paid, mobilepay: info.mobilepay, recipient: info.mobilepay_name, toast: $toast)
+                                    FeeCard(amount: payment.amount, paid: payment.paid, mobilepay: info.mobilepay, recipient: info.mobilepay_name, shared: info.fee_shared, toast: $toast)
                                 }
                             }
                         }

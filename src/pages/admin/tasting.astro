@@ -824,7 +824,9 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const amount = amountTyped ?? (total && coming ? Math.ceil(total / coming) : 0);
     const open = ($('fee-open') as HTMLInputElement).checked;
     const { error } = await supabase.from('tastings')
-      .update({ tasting_total: total ?? 0, tasting_fee: amount, tasting_fee_open: open && amount > 0 }).eq('id', tasting.id);
+      .update({ tasting_total: total ?? 0, tasting_fee: amount, tasting_fee_open: open && amount > 0,
+        // What the guests are told (WIN-317): shared from the total when no price was typed, else a fixed price
+        fee_shared: amountTyped == null && !!total }).eq('id', tasting.id);
     if (error) { toast(t('admin.couldNotSave'), { kind: 'error' }); return; }
     feeTotal = total ?? 0;
     feeAmount = amount;

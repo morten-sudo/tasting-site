@@ -315,6 +315,8 @@ struct FeeCard: View {
     let paid: Bool
     let mobilepay: String?
     let recipient: String?
+    /// Shared from what the evening cost, or a fixed price (nil: not known – nothing is said)
+    var shared: Bool? = nil
     @Binding var toast: String?
     var body: some View {
         Card {
@@ -322,7 +324,8 @@ struct FeeCard: View {
             if paid {
                 NoticeBox(text: L("guest.feePaid"), tone: .ok)
             } else {
-                Text(L("guest.feeText")).font(.body(14.7)).foregroundStyle(Color.muted)
+                // The text matches how the price was found (WIN-317)
+                if let shared { Text(L(shared ? "guest.feeText" : "guest.feeFixed")).font(.body(14.7)).foregroundStyle(Color.muted) }
                 PayBox(mobilepay: mobilepay, recipient: recipient, amount: amount, toast: $toast)
             }
         }

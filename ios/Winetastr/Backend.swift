@@ -37,6 +37,8 @@ struct TastingInfo: Decodable {
     let orders_open: Bool?; let mobilepay: String?; let bulk_mode: String?
     /// The name of the person who gets the money; the database gives mobilepay only together with it (WIN-278)
     let mobilepay_name: String?
+    /// How the tasting's fee was found: shared from what the evening cost (true) or one fixed price for all (false) – WIN-317
+    let fee_shared: Bool?
     /// The language the host writes the tasting in (the site marks its name and introduction with it)
     let language: String?
     var start: Date? { parseDate(starts_at) }

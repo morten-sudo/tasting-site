@@ -110,6 +110,7 @@ export const en = {
   "guest.feeTitle": "Tasting fee",
   "guest.feePaid": "Thank you, your payment for the tasting has been received.",
   "guest.feeText": "The price for the evening is based on purchases and the number of guests.",
+  "guest.feeFixed": "Every guest pays the same price.",
   "guest.statusYes": "You're coming. See you there!",
   "guest.statusNo": "You have declined.",
   "guest.emailBad": "The email doesn't look right. Correct it and try again.",

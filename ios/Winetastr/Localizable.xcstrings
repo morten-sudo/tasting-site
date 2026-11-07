@@ -2817,6 +2817,28 @@
     }
    }
   },
+  "guest.feeFixed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Prisen er den samme for alle gæster."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Every guest pays the same price."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Allir gestir greiða sama verð."
+     }
+    }
+   }
+  },
   "guest.feePaid": {
    "localizations": {
     "da": {

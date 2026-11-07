@@ -111,6 +111,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "guest.feeTitle": "Bijdrage voor de proeverij",
   "guest.feePaid": "Bedankt, je betaling voor de proeverij is ontvangen.",
   "guest.feeText": "De prijs voor de avond hangt af van de aankopen en het aantal gasten.",
+  "guest.feeFixed": "Alle gasten betalen dezelfde prijs.",
   "guest.statusYes": "Je komt. Tot dan!",
   "guest.statusNo": "Je hebt je afgemeld.",
   "guest.emailBad": "Het e-mailadres lijkt niet te kloppen. Verbeter het en probeer opnieuw.",
