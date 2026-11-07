@@ -172,6 +172,9 @@ struct RootView: View {
                     .font(.medium(13.6)).foregroundStyle(Color.white)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(Color.paper, in: RoundedRectangle(cornerRadius: 8))
+                    // Under the top bar (54 + its line), so it never covers the logo or the "Test" chip
+                    .padding(.top, 63)
+                    .allowsHitTesting(false)
             }
         }
     }
