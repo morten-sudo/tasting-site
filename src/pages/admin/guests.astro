@@ -109,6 +109,7 @@ import '../../styles/admin.css';
   import { fieldError } from '../../lib/field-error';
   import { toast } from '../../lib/toast';
   import { t, formatDate } from '../../i18n';
+  import { wsHref } from '../../lib/workspace';
   import { ago } from '../../lib/ui/ago';
   import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
@@ -265,7 +266,7 @@ import '../../styles/admin.css';
     const g = editing;
     // On the guest's own page: asked here, then back to the list, which deletes the guest (with Undo)
     if (pageId) {
-      if (await confirmModal({ ...deleteQuestion(g), danger: true })) { panel.close(); location.href = `/admin/guests/?deleted=${g.id}`; }
+      if (await confirmModal({ ...deleteQuestion(g), danger: true })) { panel.close(); location.href = wsHref(`/admin/guests/?deleted=${g.id}`); }
       return;
     }
     if (await deleteGuest(g)) panel.close();
@@ -302,7 +303,7 @@ import '../../styles/admin.css';
   async function showPage() {
     // The address follows the guest's name (also after a rename, or from the address with the guest's id)
     const path = paths.get(pageId!);
-    if (path && path !== location.pathname) history.replaceState(null, '', path);
+    if (path && wsHref(path) !== location.pathname) history.replaceState(null, '', wsHref(path));
     const g = guests.find((x) => x.id === pageId);
     await showGuestPage(g ? g.id : '', { edit: () => { if (g) openForm(g); }, lastLogin: () => (g ? lastLogins.get(g.id) ?? null : null), owner: host!.tenant_owner });
   }

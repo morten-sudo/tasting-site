@@ -1520,6 +1520,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "pics.noMisses": "Allir tenglar gáfu mynd",
   "wineAdmin.notes": "Um vínið",
   "ws.label": "Þú vinnur í",
+  "ws.notMine": "Tengillinn vísar ekki á einn af reikningunum þínum. Þú vinnur í: {account}.",
   "ws.yours": "Þinn reikningur",
   "ws.ofName": "Reikningur {name}",
   "ws.shared": "Deilt með mér",

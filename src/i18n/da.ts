@@ -1518,6 +1518,7 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "pics.noMisses": "Alle links gav et billede",
   "wineAdmin.notes": "Om vinen",
   "ws.label": "Du arbejder i",
+  "ws.notMine": "Linket peger ikke på en af dine konti. Du arbejder i: {account}.",
   "ws.yours": "Din konto",
   "ws.ofName": "{name}s konto",
   "ws.shared": "Delt med mig",

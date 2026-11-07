@@ -11,6 +11,7 @@ import { $, mk } from './ui/dom';
 import { closeButton } from './ui/icon-button';
 import { STYLES, styleName, withoutYear } from './wines';
 import { t, lang, locale } from '../i18n';
+import { wsHref } from './workspace';
 import { STANDARD_CL, bottleIn, wineMeta, withoutBottle } from './bottle';
 import { WINE_COUNTRIES, normOrigin, originLine } from './origin';
 import { shrinkImage, labelDataUrl, locateAppellation, retailForeign, retailForeignNote, retailForeignToast, type LabelResult, type LinkResult } from './wine-read';
@@ -316,7 +317,7 @@ export function initQuickAdd(o: Opts) {
       say(li, t(here ? 'qa.twinHere' : 'qa.twin'), 'warn');
       const actions: [string, () => void, string?][] = [];
       if (o.pick && !here) actions.push([t('qa.useTwin'), async () => { if (await o.pick!(twin)) drop(li); }]);
-      else if (!o.pick) actions.push([t('wineLib.open'), () => { location.href = o.href(twin); }]);
+      else if (!o.pick) actions.push([t('wineLib.open'), () => { location.href = wsHref(o.href(twin)); }]);
       actions.push(['×', () => drop(li)]);
       buttons(li, ...actions);
       return;

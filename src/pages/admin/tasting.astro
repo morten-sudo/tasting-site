@@ -480,6 +480,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
   import { amountText } from '../../lib/wine-validate';
   import { initChat, type ChatMessage } from '../../lib/chat';
   import { i18nReady, t, lang, locale, formatWhen, formatDate, type Key } from '../../i18n';
+  import { wsHref } from '../../lib/workspace';
   import { ago } from '../../lib/ui/ago';
   import { loadGuestSeen, seenText, type Seen } from '../../lib/guest-seen';
   import { tooltip } from '../../lib/ui/tooltip';
@@ -1456,7 +1457,7 @@ const TABS: { id: string; path: string; key: keyof typeof en }[] = [
     const { error, count } = await supabase.from('tastings').delete({ count: 'exact' }).eq('id', tasting.id);
     setLoading(btn, false);
     if (error || !count) { toast(t('tastingDelete.failed'), { kind: 'error' }); return; }
-    location.href = `/admin/tastings/?deleted=${encodeURIComponent(tasting.title)}`;
+    location.href = wsHref(`/admin/tastings/?deleted=${encodeURIComponent(tasting.title)}`);
   });
 
   // ---------- Startup ----------

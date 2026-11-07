@@ -12,7 +12,7 @@ import { SITE_ORIGIN, APP_ORIGIN } from './config';
 /** The site's pages (everything else that is a page belongs to the app). */
 const FRONT = new Set(['/', '/plans/', '/about/', '/privacy/', '/terms/', '/contact/', '/404/']);
 /** The app's pages (assets, /api/ and the like are on both and are left alone). */
-const APP = /^\/(login|signup|home|my|profile|admin|superadmin|tasting|dev|move)(\/|$)|^\/t\//;
+const APP = /^\/(login|signup|home|my|profile|admin|superadmin|tasting|dev|move)(\/|$)|^\/[tw]\//;
 
 const slashed = (path: string) => (path.endsWith('/') || /\.[a-z0-9]+$/i.test(path) ? path : path + '/');
 export const isFrontPath = (path: string) => FRONT.has(slashed(path)) || path === '/404.html';
@@ -32,11 +32,18 @@ export function hostHref(path: string): string {
   return origin === location.origin ? path : origin + path;
 }
 
+/** A page's own rewrite of its links, applied first (the host admin: /admin/… → /w/<account>/…, WIN-253) */
+let mapPath: ((path: string) => string) | null = null;
+export function setPathMapper(map: (path: string) => string) {
+  mapPath = map;
+  if (typeof document !== 'undefined') document.querySelectorAll<HTMLAnchorElement>('a[href]').forEach(fixOne);
+}
+
 function fixOne(a: HTMLAnchorElement) {
   const raw = a.getAttribute('href');
   if (!raw) return;
   let next = raw;
-  if (raw.startsWith('/') && !raw.startsWith('//')) next = hostHref(raw);
+  if (raw.startsWith('/') && !raw.startsWith('//')) next = hostHref(mapPath ? mapPath(raw) : raw);
   else if (!onPair()) {
     // Not on the pair (a preview, localhost): the pair's full addresses become this address's own pages
     for (const o of [SITE_ORIGIN, APP_ORIGIN]) if (raw === o || raw.startsWith(o + '/')) next = raw.slice(o.length) || '/';

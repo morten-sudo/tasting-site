@@ -33,19 +33,20 @@ import '../../styles/admin.css';
   import { supabase } from '../../lib/supabase';
   import { getDropdown } from '../../lib/ui/dropdown';
   import { requireHost, $ } from '../../lib/admin-common';
+  import { tastingRoles, visibleRoles } from '../../lib/admin-side';
   import { HELP, pick } from '../../lib/help-content';
   import { formatWhen } from '../../i18n';
 
   // Links in the help: "t:guests/" is that part of a tasting's admin, "g:wines/" its guest page.
-  // They go to the tasting chosen at the top – by default the next one – or, without tastings, to creating one.
+  // They go to the tasting chosen at the top (of the account shown) – by default the next one – or, without tastings, to creating one.
   type T = { id: string; slug: string; title: string; starts_at: string | null };
   let tastings: T[] = [];
   let slug: string | null = null;
   const KEY = 'wt-help-tasting';
 
   async function loadTastings() {
-    const { data: roles } = await supabase.rpc('my_tasting_roles');
-    const ids = ((roles ?? []) as { tasting_id: string }[]).map((r) => r.tasting_id);
+    // The tastings of the account in the address (and those shared with me), as in the menu
+    const ids = visibleRoles(await tastingRoles()).map((r) => r.tasting_id);
     if (!ids.length) return;
     const { data } = await supabase.from('tastings').select('id, slug, title, starts_at').in('id', ids);
     const soon = Date.now() - 12 * 3600e3;

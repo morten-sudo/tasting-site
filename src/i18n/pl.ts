@@ -1497,6 +1497,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "pics.noMisses": "Każdy link dał zdjęcie",
   "wineAdmin.notes": "O winie",
   "ws.label": "Pracujesz w",
+  "ws.notMine": "Link nie prowadzi do żadnego z Twoich kont. Pracujesz w: {account}.",
   "ws.yours": "Twoje konto",
   "ws.ofName": "Konto: {name}",
   "ws.shared": "Udostępnione mi",

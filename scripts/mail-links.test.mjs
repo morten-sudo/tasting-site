@@ -75,7 +75,7 @@ for (const target of ['test', 'live']) {
     r = await call(fns.host, '/api/invite-host', { tasting_id: T_ID, email: 'bo@example.dk' });
     check(`co-host invitation – ${where}`, r.mail && links(r.mail).includes(`${want}/login/?next=%2Ft%2Fportvin-2026%2Fadmin%2F`), r.mail ? links(r.mail).join(' ') : `status ${r.res.status}`);
     r = await call(fns.host, '/api/invite-host', { tenant_id: TN_ID, email: 'bo@example.dk' });
-    check(`account host invitation – ${where}`, r.mail && links(r.mail).includes(`${want}/login/?next=${encodeURIComponent(`/admin/?ws=${TN_ID}`)}`), r.mail ? links(r.mail).join(' ') : `status ${r.res.status}`);
+    check(`account host invitation – ${where}`, r.mail && links(r.mail).includes(`${want}/login/?next=${encodeURIComponent(`/w/${TN_ID}/`)}`), r.mail ? links(r.mail).join(' ') : `status ${r.res.status}`);
     r = await call(fns.notify, '/api/notify', { token: '44444444-4444-4444-4444-444444444444' }, false);
     const nl = r.mail ? links(r.mail) : [];
     check(`notice – ${where}`, nl.includes(`${want}/t/portvin-2026/admin/orders/`) && nl.includes(`${want}/profile/#notify`), nl.join(' ') || `status ${r.res.status}`);

@@ -70,7 +70,7 @@ async function inviteToWorkspace(request: Request, env: MailEnv, headers: Record
   if (!info) return json({ error: 'not_owner' }, 403);
   const limited = await overDailyLimit(request, 'mail', { tn: v.tenantId });
   if (limited) return limited;
-  const link = `${v.origin}/login/?next=${encodeURIComponent(`/admin/?ws=${v.tenantId}`)}`;
+  const link = `${v.origin}/login/?next=${encodeURIComponent(`/w/${v.tenantId}/`)}`;
   const texts = inviteWorkspaceMail(v.lang, { name: v.givenName || info.invitee, account: info.name, link, inviter: info.owner_name });
   try {
     return await send(request, env, { to: v.email, fromName: info.owner_name, replyTo: info.owner_email, texts });

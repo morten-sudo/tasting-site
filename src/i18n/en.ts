@@ -1518,6 +1518,7 @@ export const en = {
   "pics.noMisses": "Every link gave a picture",
   "wineAdmin.notes": "About the wine",
   "ws.label": "Working in",
+  "ws.notMine": "The link is not to one of your accounts. You are working in: {account}.",
   "ws.yours": "Your account",
   "ws.ofName": "{name}'s account",
   "ws.shared": "Shared with me",
