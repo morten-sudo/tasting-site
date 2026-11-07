@@ -196,14 +196,12 @@ struct RootView: View {
             await model.start()
         }
         .overlay(alignment: .top) {
-            if !model.online {
+            // Signed in, the top bar has the strip (TopBar); before that, the note over the sign-in page
+            if !model.online && !(model.ready && model.isIn) {
                 Label(L("app.offline"), systemImage: "wifi.slash")
                     .font(.medium(13.6)).foregroundStyle(Color.white)
                     .padding(.horizontal, 14).padding(.vertical, 8)
                     .background(Color.paper, in: RoundedRectangle(cornerRadius: 8))
-                    // Under the top bar (54 + its line), so it never covers the logo or the "Test" chip
-                    .padding(.top, 63)
-                    // A short note over the page: it grows with the text size, but not to cover the page
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     .allowsHitTesting(false)
             }
