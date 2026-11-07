@@ -48,6 +48,9 @@ const here = front ? siteUrl : appUrl;
     <!-- Hidden until the translations are applied; shown anyway after 2 s -->
     <style is:inline>html.i18n-pending body { visibility: hidden; }</style>
     <script is:inline src="/i18n-reveal.js"></script>
+    <!-- WIN-196, until Morten turns Cloudflare rule 1 on: an app page on the site's address moves what the browser has
+         stored to the app address once (src/lib/move.ts). The first script of the page, before Supabase starts -->
+    <script>import '../lib/move';</script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

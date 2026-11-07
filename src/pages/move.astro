@@ -1,0 +1,62 @@
+---
+// WIN-196: the app address's end of the one-time move (src/lib/move.ts does the work in the page's <head>; this page
+// only says what happened). REMOVED TOGETHER WITH src/lib/move.ts WHEN MORTEN SAYS SO.
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/ui/PageHeader.astro';
+import Notice from '../components/ui/Notice.astro';
+import Loading from '../components/ui/Loading.astro';
+import Actions from '../components/ui/Actions.astro';
+---
+<Base title="page.move">
+  <article class="wrap move-page" id="move" hidden>
+    <PageHeader title="move.title" />
+    <p class="move-lead" id="move-lead"></p>
+    <!-- The login came along: who you are signed in as -->
+    <Notice id="moved" tone="ok" title="move.signedIn" hidden>
+      <p id="moved-who"></p>
+    </Notice>
+    <!-- Already signed in here: that login is not changed -->
+    <Notice id="kept" title="move.keptTitle" hidden>
+      <p id="kept-who"></p>
+      <p data-i18n="move.kept">We have not changed your sign-in. Your invitations and cart came along.</p>
+    </Notice>
+    <Loading id="going" text="move.going" hidden />
+    <Actions>
+      <a class="btn" id="go" href="/home/" data-i18n="move.continue">Continue</a>
+    </Actions>
+  </article>
+</Base>
+
+<script>
+  import { moveResult } from '../lib/move';
+  import { i18nReady, t } from '../i18n';
+  import { $ } from '../lib/ui/dom';
+  await i18nReady;
+  const r = moveResult;
+  // "plain" (nothing to confirm) has gone on already
+  if (r && r.kind !== 'plain') {
+    const whoText = r.name && r.email ? `${r.name} (${r.email})` : r.name || r.email || '';
+    $('move-lead').textContent = t('move.lead', { host: location.host });
+    ($('go') as HTMLAnchorElement).href = r.to;
+    if (r.kind === 'moved') {
+      $('moved-who').textContent = whoText;
+      $('moved').hidden = false;
+      $('going').hidden = false;
+      // A moment to read who you are signed in as, then on to the page you opened
+      setTimeout(() => location.replace(r.to), 2500);
+    } else {
+      $('kept-who').textContent = whoText;
+      $('kept').hidden = false;
+    }
+    $('move').hidden = false;
+    $('go').focus({ preventScroll: true });
+  }
+</script>
+
+<style>
+  .move-page { max-width: 36rem; padding-top: 2.5rem; padding-bottom: 2rem; }
+  .move-page :global(.ph) { margin-bottom: 0.75rem; }
+  .move-lead { margin: 0 0 1.25rem; line-height: 1.6; }
+  .move-page :global(.notice) { margin-bottom: 1rem; }
+  .move-page :global(.page-loading) { justify-content: flex-start; padding: 0.25rem 0 0.5rem; }
+</style>
