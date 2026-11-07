@@ -3,7 +3,7 @@
 import { formatKr } from './ui/kr';
 import { starsRo } from './ui/stars';
 import { listRow } from './ui/list-row';
-import { iconButton } from './ui/icon-button';
+import { iconButton, setEditWhat } from './ui/icon-button';
 import { supabase } from './supabase';
 import { t, formatWhen, locale } from '../i18n';
 import { styleName, wineSlug, wineFacts } from './wines';
@@ -57,6 +57,7 @@ export async function showWinePage(id: number, actions: { edit: () => void; refr
   $('wd-name').textContent = w.name;
   $('wd-meta').textContent = wineMeta(w, locale(), styleName).join(' · ');
   $('wd-edit').onclick = actions.edit;
+  setEditWhat($('wd-edit'), w.name);
 
   // Facts
   const facts: Fact[] = [];

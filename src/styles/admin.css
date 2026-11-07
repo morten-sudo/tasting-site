@@ -383,7 +383,8 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 .admin-page .wf-in-tastings { display: grid; gap: 0.35rem; margin-top: 0.6rem; max-width: 36rem; }
 .admin-page .wf-in-tastings .flabel { margin: 0; }
 .admin-page .wf-in-tastings ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--lodge-3); border-radius: var(--radius); background: #fff; }
-.admin-page .wf-in-tastings li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem; padding: 0.6rem 0.8rem; }
+.admin-page .wf-in-tastings li { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.75rem; padding: 0.35rem 0.4rem 0.35rem 0.8rem; }
+.admin-page .wf-in-tastings li > .icon-act { margin-left: auto; }
 .admin-page .wf-in-tastings li + li { border-top: 1px solid var(--lodge-2); }
 .admin-page .wf-it-name { font-weight: 500; }
 .admin-page .wf-it-price { color: var(--muted); font-variant-numeric: tabular-nums; }

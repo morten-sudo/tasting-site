@@ -14,6 +14,7 @@ import { formatKr } from './ui/kr';
 import { ago } from './ui/ago';
 import { tooltip } from './ui/tooltip';
 import { textButton } from './ui/text-button';
+import { setEditWhat } from './ui/icon-button';
 
 export type PathGuest = { id: string; name: string; created_at?: string | null };
 
@@ -104,6 +105,7 @@ export async function showGuestPage(id: string, actions: GuestPageActions) {
     meta.append(' · ', el);
   }
   $('gd-edit').onclick = actions.edit;
+  setEditWhat($('gd-edit'), p.name);
 
   // Tastings: one row each – the status as on the tasting's guest list, diet, note, the invitation and the fee
   $('gd-tastings').replaceChildren(...p.tastings.map((x) => {

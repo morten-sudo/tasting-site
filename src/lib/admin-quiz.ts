@@ -2,7 +2,7 @@
 import { supabase } from './supabase';
 import { $ } from './ui/dom';
 import { t } from '../i18n';
-import { sheetPanel, iconButton } from './admin-common';
+import { sheetPanel, iconButton, editButton } from './admin-common';
 import { confirmModal } from './ui/confirm';
 import { toast } from './ui/toast';
 import { setStatus } from './ui/status-line';
@@ -118,8 +118,7 @@ export function initQuizAdmin(tastingId: string, onChange: (questions: AdminQues
     $('q-empty').hidden = questions.length > 0;
     list.hidden = !questions.length;
     list.replaceChildren(...questions.map((q, i) => {
-      const edit = iconButton('edit', `${t('admin.edit')}: ${q.question}`);
-      edit.dataset.tip = t('admin.edit');
+      const edit = editButton(q.question);
       edit.addEventListener('click', () => openForm(q));
       const body: Node[] = [answers(q.options.map((o) => o.text), q.options.findIndex((o) => o.key === q.correct_key))];
       if (!q.correct_key) body.push(mk('p', 'q-warn', t('aq.noCorrect')));

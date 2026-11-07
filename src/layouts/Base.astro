@@ -74,6 +74,7 @@ const site = 'https://winetastr.com';
       import { initDropdowns } from '../lib/ui/dropdown';
       import { initTabs } from '../lib/ui/tabs';
       import { setEmpty } from '../lib/ui/empty';
+      import { setEditWhat } from '../lib/ui/icon-button';
 
       // "Sign in" in the not-signed-in state comes back to this page
       document.querySelectorAll<HTMLAnchorElement>('a[data-login]').forEach((a) => { a.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search); });
@@ -155,6 +156,8 @@ const site = 'https://winetastr.com';
         if (Number(info.quiz_count ?? 0) > 0) document.getElementById('t-quiz-tab')!.hidden = false;
         if (info.title) {
           document.getElementById('t-title')!.textContent = info.title;
+          const tAdmin = document.getElementById('t-admin');
+          if (tAdmin) setEditWhat(tAdmin, info.title);
           document.title = `${info.title} – ${document.title.split(' – ').pop()}`;
         }
         const when = document.getElementById('footer-when')!;
