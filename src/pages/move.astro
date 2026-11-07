@@ -36,7 +36,12 @@ import Actions from '../components/ui/Actions.astro';
   // "plain" (nothing to confirm) has gone on already
   if (r && r.kind !== 'plain') {
     const whoText = r.name && r.email ? `${r.name} (${r.email})` : r.name || r.email || '';
-    $('move-lead').textContent = t('move.lead', { host: location.host });
+    // The address in the line stays on one line (it has a hyphen a phone would break at)
+    const [before, after = ''] = t('move.lead').split('{host}');
+    const host = document.createElement('span');
+    host.className = 'move-host';
+    host.textContent = location.host;
+    $('move-lead').replaceChildren(before, host, after);
     ($('go') as HTMLAnchorElement).href = r.to;
     if (r.kind === 'moved') {
       $('moved-who').textContent = whoText;
@@ -57,6 +62,7 @@ import Actions from '../components/ui/Actions.astro';
   .move-page { max-width: 36rem; padding-top: 2.5rem; padding-bottom: 2rem; }
   .move-page :global(.ph) { margin-bottom: 0.75rem; }
   .move-lead { margin: 0 0 1.25rem; line-height: 1.6; }
+  .move-lead :global(.move-host) { white-space: nowrap; }
   .move-page :global(.notice) { margin-bottom: 1rem; }
   .move-page :global(.page-loading) { justify-content: flex-start; padding: 0.25rem 0 0.5rem; }
 </style>
