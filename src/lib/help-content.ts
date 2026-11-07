@@ -288,6 +288,8 @@ export const HELP: HelpSection[] = [
     body: {
       da: `<h2 id="addresses">Hvor ligger hvad?</h2>
 <p>Alt, du logger ind til, ligger på <b>${APP_HOST}</b>: admin og hjælpen, dine smagninger, vinbogen, din profil og gæsternes sider for hver smagning. <a href="/">${SITE_HOST}</a> er forsiden med funktioner og planer – den viser <i>Log ind</i> og <i>Opret konto</i> til alle, også når du er logget ind. Gem et bogmærke til <a href="/admin/">admin</a> eller <a href="/home/">din side</a>, så kommer du direkte ind.</p>
+<h2 id="old-links">Virker gamle links og bogmærker?</h2>
+<p>Ja. Invitationer, der allerede er sendt, og gamle bogmærker til ${SITE_HOST} sender dig videre til samme side på ${APP_HOST}, med invitationskoden i behold. Første gang tager vi også det med, din browser havde gemt – dit login, dine invitationer, din kurv og dit sprog – så du ikke skal logge ind igen. Var du allerede logget ind på ${APP_HOST}, ændrer vi ikke dit login. Nye invitationer og beskeder på mail linker direkte til ${APP_HOST}.</p>
 <h2>Gæsten har ikke fået invitationen</h2>
 <p>Tjek at gæsten har den rigtige e-mail, og bed gæsten kigge i uønsket post. Tryk <i>Send igen</i> under <a href="t:guests/">Gæster</a>, eller kopier linket og send det på sms.</p>
 <h2>Gæsten kan ikke bestille en vin</h2>
@@ -310,6 +312,8 @@ export const HELP: HelpSection[] = [
 <p>Hver konto kan sende 300 mails og lave 500 automatiske opslag om dagen (læse links og etiketter, finde billeder og producenter, AI-tekster og quizforslag) – langt mere end en smagning bruger. Når grænsen er nået, kan du stadig udfylde vinene selv og <a href="t:guests/">kopiere gæsternes links</a> og sende dem selv. Grænsen nulstilles ved midnat (UTC).</p>`,
       en: `<h2 id="addresses">Where is what?</h2>
 <p>Everything you sign in to is at <b>${APP_HOST}</b>: admin and the help, your tastings, the wine book, your profile and the guests' pages for each tasting. <a href="/">${SITE_HOST}</a> is the front page with the features and plans – it shows <i>Sign in</i> and <i>Create account</i> to everyone, also when you are signed in. Bookmark <a href="/admin/">admin</a> or <a href="/home/">your home</a> to go straight in.</p>
+<h2 id="old-links">Do old links and bookmarks still work?</h2>
+<p>Yes. Invitations already sent and old bookmarks to ${SITE_HOST} take you to the same page on ${APP_HOST}, with the invitation code kept. The first time, we also bring along what your browser had saved – your sign-in, invitations, cart and language – so you do not have to sign in again. If you were already signed in on ${APP_HOST}, we do not change your sign-in. New invitations and email notices link straight to ${APP_HOST}.</p>
 <h2>The guest has not received the invitation</h2>
 <p>Check the guest's email, and ask the guest to look in their junk mail. Press <i>Send again</i> under <a href="t:guests/">Guests</a>, or copy the link and send it by text message.</p>
 <h2>A guest cannot order a wine</h2>

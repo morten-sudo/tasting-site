@@ -9,6 +9,7 @@
     "build": "astro build",
     "check:ui": "node scripts/check-ui.mjs",
     "test:check-ui": "node scripts/check-ui.test.mjs",
+    "test:mail-links": "node scripts/mail-links.test.mjs",
     "preview": "astro preview",
     "postbuild": "node scripts/check-csp.mjs",
     "check:csp": "node scripts/check-csp.mjs"

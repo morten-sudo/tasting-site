@@ -5,13 +5,14 @@
 //   - In the browser: fixHostLinks() makes every link right for the address the page is open on. On the build's own
 //     pair, a relative link to the other half gets that half's full address; anywhere else (a *.pages.dev preview,
 //     localhost) the pair's addresses become relative again, so a preview keeps working as one site.
-// Cloudflare rules send a page opened on the wrong address to the right one (WIN-196, WIN-290, WIN-291).
+// Cloudflare rules send a page opened on the wrong address to the right one (WIN-196, WIN-290, WIN-291); while rule 1
+// is off, src/lib/move.ts does it for the app's pages (and moves what the browser has stored).
 import { SITE_ORIGIN, APP_ORIGIN } from './config';
 
 /** The site's pages (everything else that is a page belongs to the app). */
 const FRONT = new Set(['/', '/plans/', '/about/', '/privacy/', '/terms/', '/contact/', '/404/']);
 /** The app's pages (assets, /api/ and the like are on both and are left alone). */
-const APP = /^\/(login|signup|home|my|profile|admin|superadmin|tasting|dev)(\/|$)|^\/t\//;
+const APP = /^\/(login|signup|home|my|profile|admin|superadmin|tasting|dev|move)(\/|$)|^\/t\//;
 
 const slashed = (path: string) => (path.endsWith('/') || /\.[a-z0-9]+$/i.test(path) ? path : path + '/');
 export const isFrontPath = (path: string) => FRONT.has(slashed(path)) || path === '/404.html';
