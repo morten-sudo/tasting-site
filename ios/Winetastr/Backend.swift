@@ -213,10 +213,11 @@ enum Backend {
     static func tasting(_ code: String) async throws -> TastingInfo? {
         var data = try await supabase.rpc("get_tasting", params: CodeParam(code: code)).execute().data
         #if DEBUG
-        // Screenshots of states the test tasting is not in, without changing the test data: -tastingPatch
-        // "quiz_open=true,fee_shared=false,mobilepay='12345678'" replaces those keys of get_tasting's answer
-        // (true/false/null, a whole number, or text in single quotes)
-        if let patch = UserDefaults.standard.string(forKey: "tastingPatch"),
+        // Screenshots of states the test tasting is not in, without changing the test data: the environment variable
+        // TASTING_PATCH="quiz_open=true,fee_shared=false,mobilepay='12345678'" replaces those keys of get_tasting's
+        // answer (true/false/null, a whole number, or text in single quotes). An environment variable, as a launch
+        // argument's value is read as a property list.
+        if let patch = ProcessInfo.processInfo.environment["TASTING_PATCH"], !patch.isEmpty,
            var obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] {
             for pair in patch.split(separator: ",") {
                 let kv = pair.split(separator: "=", maxSplits: 1).map(String.init)

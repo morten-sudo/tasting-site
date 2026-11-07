@@ -2,7 +2,7 @@ import XCTest
 
 /// The guest fixes WIN-314 to WIN-320 in the app, as on the site. The test tasting's own state is the default one (no
 /// quiz questions, the quiz closed, no fee, MobilePay off, one blind wine – number 11), so the other states come from
-/// the debug switches -tastingPatch (keys of get_tasting replaced), -paymentMock (an unpaid fee) and -sendMock (the
+/// the debug switches TASTING_PATCH (keys of get_tasting replaced; an environment variable), -paymentMock (an unpaid fee) and -sendMock (the
 /// first order or answer fails, the next works – without reaching the database). With REAL_DB=1 the switches that
 /// stand in for the database are left out, for a run against the test tasting put in that state by hand; the
 /// screenshots then end in "-db".
@@ -10,8 +10,9 @@ final class FixesTests: XCTestCase {
     private let code = ProcessInfo.processInfo.environment["APP_TEST_CODE"] ?? ""
     private let realDB = ProcessInfo.processInfo.environment["REAL_DB"] == "1"
 
-    private func app(_ args: [String], lang: String = "da", mock: [String] = []) -> XCUIApplication {
+    private func app(_ args: [String], lang: String = "da", mock: [String] = [], patch: String? = nil) -> XCUIApplication {
         let a = XCUIApplication()
+        if let patch, !realDB { a.launchEnvironment["TASTING_PATCH"] = patch }
         let locale = ["da": "da_DK", "en": "en_GB", "is": "is_IS"][lang] ?? "da_DK"
         a.launchArguments = ["-AppleLanguages", "(\(lang))", "-AppleLocale", locale, "-appLanguage", lang, "-inviteCode", code]
             + args + (realDB ? [] : mock)
@@ -72,7 +73,7 @@ final class FixesTests: XCTestCase {
     // MARK: WIN-315 – a quiz open without questions
 
     private func checkEmptyQuiz(_ lang: String, title: String, tabs: [String], patch: String, shotName: String) {
-        let a = app(["-route", "quiz"], lang: lang, mock: ["-tastingPatch", patch])
+        let a = app(["-route", "quiz"], lang: lang, patch: patch)
         XCTAssertTrue(a.staticTexts[title].waitForExistence(timeout: 15), "the empty state")
         XCTAssertFalse(a.buttons["Lås svar"].exists, "nothing to answer")
         for t in ["Stillingen lige nu", "Standings right now", "Staðan núna", "Slutstilling", "Final standings", "Lokastaða"] {
@@ -94,7 +95,7 @@ final class FixesTests: XCTestCase {
     }
 
     func testTastingHasNoQuizTileWithoutQuestions() {
-        let a = app(["-route", "tasting"], mock: ["-tastingPatch", "quiz_open=true"])
+        let a = app(["-route", "tasting"], patch: "quiz_open=true")
         XCTAssertTrue(a.buttons["Smagningen"].waitForExistence(timeout: 15))
         XCTAssertFalse(a.buttons["Quiz"].exists, "no Quiz tab")
         let wines = a.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Vinene,'")).firstMatch
@@ -116,7 +117,7 @@ final class FixesTests: XCTestCase {
     // MARK: WIN-317 / WIN-318 / WIN-319 – the tasting fee and the payment box
 
     private func feeCard(_ lang: String, patch: String, expect: [String], absent: [String], shotName: String, extra: [String] = []) -> XCUIApplication {
-        let a = app(["-route", "tasting"] + extra, lang: lang, mock: ["-tastingPatch", patch, "-paymentMock", "150"])
+        let a = app(["-route", "tasting"] + extra, lang: lang, mock: ["-paymentMock", "150"], patch: patch)
         let first = a.staticTexts[expect[0]]
         XCTAssertTrue(a.buttons.firstMatch.waitForExistence(timeout: 15))
         scrollTo(a, first, swipes: 10)
@@ -161,8 +162,12 @@ final class FixesTests: XCTestCase {
         let next = a.buttons["Næste"]
         XCTAssertTrue(next.waitForExistence(timeout: 20))
         let card = a.buttons.matching(NSPredicate(format: "label CONTAINS 'Vin 11'")).firstMatch
-        for _ in 0..<12 where !(card.exists && card.isHittable) { next.tap(); usleep(400_000) }
+        // On to the last card (the blind wine is number 11 of 11), so it is the one in the middle of the screenshot
+        let last = a.staticTexts["11 af 11"]
+        for _ in 0..<12 where !last.exists { next.tap(); usleep(400_000) }
+        XCTAssertTrue(last.waitForExistence(timeout: 5), "the last card")
         XCTAssertTrue(card.waitForExistence(timeout: 5), "the blind wine's card")
+        sleep(1)
         XCTAssertFalse(card.label.localizedCaseInsensitiveContains("vintage"), "no style on the card: \(card.label)")
         shot("win320-blind-list-da")
         a.terminate()
