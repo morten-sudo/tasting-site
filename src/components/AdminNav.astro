@@ -5,7 +5,7 @@ import EmptyState from './ui/EmptyState.astro';
 import SideMenu, { type SideGroup } from './ui/SideMenu.astro';
 // The host admin's shell: the one side menu (SideMenu.astro) with the host's groups and accounts (the choice at the
 // top, shown when the host is on more than one), and the "not a host" notice.
-interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'account' | 'help' }
+interface Props { active?: 'overview' | 'tastings' | 'wines' | 'guests' | 'account' | 'help' | 'news' }
 const { active } = Astro.props;
 const groups: SideGroup[] = [
   { icon: 'grid', label: 'adminNav.overview', href: '/admin/', current: active === 'overview' },
@@ -17,7 +17,9 @@ const groups: SideGroup[] = [
     { href: '/admin/guests/', label: 'adminNav.guests', current: active === 'guests' }] },
   { icon: 'gear', label: 'adminNav.settings', links: [
     { href: '/admin/account/', label: 'account.navLink', current: active === 'account' }] },
-  { icon: 'question', label: 'adminNav.help', href: '/admin/help/', current: active === 'help' },
+  // What's new: the releases in plain words, under the help (WIN-305)
+  { icon: 'question', label: 'adminNav.help', href: '/admin/help/', current: active === 'help', links: [
+    { href: '/admin/news/', label: 'news.title', current: active === 'news' }] },
 ];
 ---
 <SideMenu label="Admin" groups={groups} switcher={{ label: 'ws.label' }}>

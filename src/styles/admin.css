@@ -252,6 +252,14 @@ dialog.wizard[open] { display: flex; flex-direction: column; animation: sheet-up
 
 .admin-page .help-target { margin: 0 0 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .admin-page .help-target label { margin: 0; }
+
+/* ---------- What's new: one card per day, its lines as a short list ---------- */
+.admin-page .news-list { display: grid; gap: 0.75rem; max-width: 44rem; margin-top: 1rem; }
+.admin-page .news-list[hidden] { display: none; }
+.admin-page .news-empty { max-width: 44rem; margin-top: 1rem; }
+.admin-page .news-day ul { margin: 0; padding-left: 1.2rem; }
+.admin-page .news-day li { margin: 0.35rem 0; }
+.admin-page .news-day li:last-child { margin-bottom: 0; }
 /* Introduction drafted by AI: beside the host's own text */
 .admin-page .ai-intro { margin: 0.35rem 0 0.9rem; }
 .admin-page .ai-draft { margin-top: 0.6rem; padding: 0.85rem 1rem; border: 1px dashed var(--amber); border-radius: var(--radius); background: #fffaf2; }
