@@ -50,6 +50,8 @@ struct ScrollingTabs: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 17.6) { bar.items }.padding(.trailing, 24)
             }
+            // Not the room a staying error toast gives the page's own scrolling (ToastModifier)
+            .contentMargins(.bottom, 0, for: .scrollContent)
             .onAppear { proxy.scrollTo(selection, anchor: .leading) }
             .onChange(of: selection) { withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(selection, anchor: .center) } }
         }

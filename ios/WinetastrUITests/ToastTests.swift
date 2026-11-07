@@ -82,6 +82,11 @@ final class ToastTests: XCTestCase {
                 let frame = a.otherElements["toast-error"].frame
                 XCTAssertLessThanOrEqual(frame.maxX, a.frame.maxX, "inside the screen: \(w.lang) \(large)")
                 shot("win336-cart-error-\(w.lang)\(large ? "-xxxl" : "")")
+                // While the error stays, the end of the page can be scrolled out from under it
+                let (send, toast) = (a.buttons[w.send], a.otherElements["toast-error"])
+                for _ in 0..<5 { a.swipeUp() }
+                XCTAssertLessThanOrEqual(send.frame.maxY, toast.frame.minY, "\(w.send) is not under the error: \(w.lang) \(large)")
+                if large { shot("win336-cart-error-\(w.lang)-xxxl-scrolled") }
                 a.terminate()
             }
         }

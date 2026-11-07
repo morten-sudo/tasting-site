@@ -280,17 +280,35 @@ extension Optional where Wrapped == Toast {
     mutating func clearError() { if self?.error == true { self = nil } }
 }
 
-/// toast() – .toast in components.css: dark (an error red), the check or warning icon, the text and the close button
-struct ToastModifier: ViewModifier {
+/// toast() – .toast in components.css: dark (an error red), the check or warning icon, the text and the close button.
+/// Under the toast a page can put its cart bar, so the toast stands above the bar and never covers it (as on the site:
+/// .toast-host is lifted while .cartbar shows). While an error stays, the page's scrolling gets room for it, so the end
+/// of the page (e.g. "Send bestilling") can be scrolled out from under it.
+struct ToastModifier<Bar: View>: ViewModifier {
     @Binding var toast: Toast?
+    var bottom: CGFloat = 20
+    @ViewBuilder var bar: () -> Bar
+    @State private var height: CGFloat = 0
     func body(content: Content) -> some View {
-        content.overlay(alignment: .bottom) { ToastView(toast: $toast) }
+        content
+            .contentMargins(.bottom, toast?.error == true ? height : 0, for: .scrollContent)
+            .overlay(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    ToastView(toast: $toast, bottom: bottom)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+                    bar()
+                }
+            }
     }
 }
-extension View { func toast(_ toast: Binding<Toast?>) -> some View { modifier(ToastModifier(toast: toast)) } }
+extension View {
+    func toast(_ toast: Binding<Toast?>) -> some View { modifier(ToastModifier(toast: toast) { EmptyView() }) }
+    func toast<Bar: View>(_ toast: Binding<Toast?>, bottom: CGFloat, @ViewBuilder above bar: @escaping () -> Bar) -> some View {
+        modifier(ToastModifier(toast: toast, bottom: bottom, bar: bar))
+    }
+}
 
-/// The toast itself. Under it a page can put its cart bar, so the toast shows above the bar and never covers it
-/// (as on the site: .toast-host is lifted while .cartbar shows).
+/// The toast itself
 struct ToastView: View {
     @Binding var toast: Toast?
     var bottom: CGFloat = 20
@@ -301,6 +319,7 @@ struct ToastView: View {
                     SiteIcon(toast.error ? "warn" : "check", size: 17.6)
                         .foregroundStyle(toast.error ? Color.white : Color.okLine)
                     Text(toast.text).font(.body(15.2)).foregroundStyle(Color.white)
+                        .padding(.vertical, 4)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
                     // .t-act: the action replaces the toast
@@ -459,6 +478,8 @@ struct TastingHead<Chips: View>: View {
                 .padding(.trailing, 24)
             }
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            // Not the room a staying error toast gives the page's own scrolling (ToastModifier)
+            .contentMargins(.bottom, 0, for: .scrollContent)
             .fixedSize(horizontal: false, vertical: true)
             .modifier(TabsScrolled(scrolled: $tabsScrolled))
             .mask {

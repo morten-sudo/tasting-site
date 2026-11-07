@@ -81,6 +81,7 @@ struct WinesView: View {
                 .scrollTargetLayout()
             }
             .contentMargins(.horizontal, 16, for: .scrollContent)
+            .contentMargins(.bottom, 0, for: .scrollContent)
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: $current)
 
@@ -315,12 +316,8 @@ struct WineDetailView: View {
         }
         .background(Color.lodge)
         // The toast above the cart bar, so "Gå til kurven" is never under it
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 0) {
-                ToastView(toast: $toast, bottom: model.cartCount(tasting.slug) > 0 ? 10 : 20)
-                CartBar(tasting: tasting, wines: wines)
-            }
-            .animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug))
+        .toast($toast, bottom: model.cartCount(tasting.slug) > 0 ? 10 : 20) {
+            CartBar(tasting: tasting, wines: wines).animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug))
         }
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
