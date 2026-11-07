@@ -19,6 +19,7 @@ import { fetchedWhen, type AdminWine } from './admin-wines';
 import { tooltip } from './ui/tooltip';
 import { wineMeta } from './bottle';
 import { retailForeignNote } from './wine-read';
+import { adminPath } from './workspace';
 
 type Detail = Omit<AdminWine, 'tasting_wines'> & {
   tasting_wines: { price_dkk: number | null; tastings: { id: string; slug: string; title: string; starts_at: string | null } | null }[];
@@ -27,8 +28,8 @@ type Detail = Omit<AdminWine, 'tasting_wines'> & {
 
 export { winePaths, type PathWine } from './wine-paths';
 
-/** The wine on this address: by its path, or by an old numeric address (/admin/wines/49/). */
-export function wineIdFromPath(paths: Map<number, string>, path = location.pathname): number | null {
+/** The wine on this address (/w/<account>/wines/… read as /admin/wines/…): by its path, or by an old numeric address (/admin/wines/49/). */
+export function wineIdFromPath(paths: Map<number, string>, path = adminPath()): number | null {
   const p = path.replace(/\/?$/, '/');
   if (p === '/admin/wines/') return null;
   const old = p.match(/^\/admin\/wines\/(\d+)\/$/);
@@ -38,7 +39,7 @@ export function wineIdFromPath(paths: Map<number, string>, path = location.pathn
 }
 
 /** True on any address below /admin/wines/ (a wine's page, found or not). */
-export const onWinePage = (path = location.pathname) => path.replace(/\/?$/, '/') !== '/admin/wines/';
+export const onWinePage = (path = adminPath()) => path.replace(/\/?$/, '/') !== '/admin/wines/';
 
 export async function showWinePage(id: number, actions: { edit: () => void; refresh: () => void; fill?: () => void }) {
   const { data } = await supabase.from('wines')

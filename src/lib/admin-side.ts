@@ -6,7 +6,7 @@ import { $, mk } from './ui/dom';
 import { t, type Key } from '../i18n';
 import { tooltip } from './ui/tooltip';
 import { initSideMenu, setSideOpen, sideSwitcher } from './ui/side-menu';
-import { currentWorkspace, rememberWorkspace, workspaceLabel, type Workspace } from './workspace';
+import { currentWorkspace, rememberWorkspace, workspaceLabel, adminPath, wsHref, type Workspace } from './workspace';
 
 /** The parts of a tasting's admin, each with its own address /t/<slug>/admin/<path> */
 export const SECTIONS: { id: string; path: string; label: Key }[] = [
@@ -95,12 +95,13 @@ export async function initSide(email: string, onSignOut: () => void, workspaces:
   if (current) markSection(current.section);
 }
 
-/** Shows another of my accounts: remembered on this device; a tasting of the old account gives way to the overview */
+/** Shows another of my accounts at its own address, the same page there (WIN-253), remembered on this device.
+ *  A tasting, a wine or a guest of the old account gives way to the overview or the list. */
 export function switchWorkspace(id: string) {
   if (id === currentWorkspace()) return;
   rememberWorkspace(id);
-  if (currentAdmin()) location.href = '/admin/';
-  else location.reload();
+  const page = currentAdmin() ? '/admin/' : adminPath().match(/^\/admin\/(?:[a-z]+\/)?/)?.[0] ?? '/admin/';
+  location.href = wsHref(page, id);
 }
 
 /** The tastings to show: those of the chosen account, and those shared with me (whatever account is chosen) */

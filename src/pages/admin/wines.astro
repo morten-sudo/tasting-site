@@ -249,6 +249,7 @@ import '../../styles/admin.css';
   import { initQuickAdd } from '../../lib/wine-quick-add';
   import { toast } from '../../lib/toast';
   import { t } from '../../i18n';
+  import { wsHref } from '../../lib/workspace';
 
   const host = await requireHost();
   if (host) {
@@ -258,13 +259,13 @@ import '../../styles/admin.css';
     const show = async () => {
       // The address follows the wine (also after a rename or an old numeric link)
       const path = admin.paths().get(wineId!);
-      if (path && path !== location.pathname) history.replaceState(null, '', path);
+      if (path && wsHref(path) !== location.pathname) history.replaceState(null, '', wsHref(path));
       await showWinePage(wineId!, { edit: () => admin.edit(wineId!), refresh: () => admin.edit(wineId!, true),
         // The panel opens at the link field (a photo can be chosen right under it)
         fill: () => { admin.edit(wineId!); document.getElementById('wf-link')?.focus(); } });
     };
     const admin = initWineAdmin(host.id, host.tenant_id, onWinePage()
-      ? { onSaved: () => { show(); }, onDeleted: (id) => { location.href = `/admin/wines/?deleted=${id}`; } } : {});
+      ? { onSaved: () => { show(); }, onDeleted: (id) => { location.href = wsHref(`/admin/wines/?deleted=${id}`); } } : {});
     await admin.load();
     followHelpLink();
     const params = new URLSearchParams(location.search);

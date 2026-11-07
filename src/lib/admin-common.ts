@@ -3,7 +3,10 @@ import { supabase } from './supabase';
 import { parseAmount } from './wine-validate';
 import { i18nReady, t } from '../i18n';
 import { initSide, currentAdmin, tastingRoles } from './admin-side';
-import { storedWorkspace, rememberWorkspace, setCurrentWorkspace, type Workspace } from './workspace';
+import { storedWorkspace, rememberWorkspace, setCurrentWorkspace, workspaceInPath, adminPath, isWorkspacePage, wsHref,
+  workspaceLabel, type Workspace } from './workspace';
+import { setPathMapper } from './hosts';
+import { toast } from './ui/toast';
 import { linkMe, takeCohostWelcome } from './link-me';
 
 /** The signed-in host, with the account (tenant) the admin shows and whether they own it, and all their accounts */
@@ -45,9 +48,18 @@ export async function requireHost(): Promise<Host | null> {
   ]);
   const workspaces = (list ?? []) as Workspace[];
   if (!host || !workspaces.length) { $('not-host').hidden = false; return null; }
-  const ws = await pickWorkspace(workspaces);
+  const { ws, notMine } = await pickWorkspace(workspaces);
   setCurrentWorkspace(ws.id);
   if (workspaces.length > 1) rememberWorkspace(ws.id);
+  // The address always names the account shown (WIN-253): an old /admin/… address, or one naming an account that is
+  // not mine, becomes this account's address; links to the account pages get it too
+  if (isWorkspacePage()) {
+    const here = wsHref(adminPath()) + location.search + location.hash;
+    if (here !== location.pathname + location.search + location.hash) history.replaceState(history.state, '', here);
+  }
+  setPathMapper((path) => wsHref(path));
+  // The same words whether the account does not exist or is someone else's (the address must not tell which)
+  if (notMine) toast(t('ws.notMine', { account: workspaceLabel(ws) }), { kind: 'error' });
 
   initSide(data.session.user.email ?? '', signOut, workspaces);
   enableImageZoom(t('admin.close'));
@@ -56,24 +68,27 @@ export async function requireHost(): Promise<Host | null> {
 }
 
 /**
- * The account the admin shows: the one a link names (?ws=, from an invitation), else the account of the tasting
- * that is open, else the one chosen last on this device, else the default one. Only ever one of my own.
+ * The account the admin shows: the one the address names (/w/<id>/…), else the one an old invitation link names
+ * (?ws=), else the account of the tasting that is open, else the one chosen last on this device, else the default
+ * one. Only ever one of my own; notMine when the address named another (or none that exists).
  */
-async function pickWorkspace(list: Workspace[]): Promise<Workspace> {
-  const mine = (id: string | null | undefined) => list.find((w) => w.id === id);
+async function pickWorkspace(list: Workspace[]): Promise<{ ws: Workspace; notMine: boolean }> {
+  const mine = (id: string | null | undefined) => list.find((w) => w.id.toLowerCase() === id?.toLowerCase());
   const params = new URLSearchParams(location.search);
-  const asked = mine(params.get('ws'));
+  const inPath = workspaceInPath();
+  const asked = params.get('ws');
   if (params.has('ws')) {
     params.delete('ws');
     history.replaceState(null, '', location.pathname + (params.size ? '?' + params : '') + location.hash);
   }
-  if (asked) return asked;
+  const named = inPath ?? asked;
+  if (named != null && mine(named)) return { ws: mine(named)!, notMine: false };
   const here = currentAdmin();
   if (here && list.length > 1) {
     const role = (await tastingRoles()).find((r) => r.slug === here.slug);
-    if (role && !role.shared && mine(role.tenant_id)) return mine(role.tenant_id)!;
+    if (role && !role.shared && mine(role.tenant_id)) return { ws: mine(role.tenant_id)!, notMine: named != null };
   }
-  return mine(storedWorkspace()) ?? list.find((w) => w.is_default) ?? list[0];
+  return { ws: mine(storedWorkspace()) ?? list.find((w) => w.is_default) ?? list[0], notMine: named != null };
 }
 
 /** A typed amount: "144,95", "144.95", "1.234,50" or "149 kr." – null when empty or not a number. */

@@ -15,6 +15,7 @@ import { ago } from './ui/ago';
 import { tooltip } from './ui/tooltip';
 import { textButton } from './ui/text-button';
 import { setEditWhat } from './ui/icon-button';
+import { adminPath } from './workspace';
 
 export type PathGuest = { id: string; name: string; created_at?: string | null };
 
@@ -42,7 +43,7 @@ export function guestPaths(guests: PathGuest[]): Map<string, string> {
 const UUID = /^\/admin\/guests\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\/$/i;
 
 /** The guest on this address: by name, or by the guest's id (/admin/guests/<uuid>/, an address that never changes) */
-export function guestIdFromPath(paths: Map<string, string>, path = location.pathname): string | null {
+export function guestIdFromPath(paths: Map<string, string>, path = adminPath()): string | null {
   const p = path.replace(/\/?$/, '/');
   if (p === '/admin/guests/') return null;
   const id = p.match(UUID)?.[1]?.toLowerCase();
@@ -53,7 +54,7 @@ export function guestIdFromPath(paths: Map<string, string>, path = location.path
 }
 
 /** True on any address below /admin/guests/ (a guest's page, found or not). */
-export const onGuestPage = (path = location.pathname) => path.replace(/\/?$/, '/') !== '/admin/guests/';
+export const onGuestPage = (path = adminPath()) => path.replace(/\/?$/, '/') !== '/admin/guests/';
 
 type Tasting = { tasting_id: string; slug: string; title: string; starts_at: string | null; status: string; diet: string | null;
   note: string | null; invite_mailed_at: string | null; invited_at: string; tasting_paid: boolean; has_fee: boolean; waitlist_place: number };

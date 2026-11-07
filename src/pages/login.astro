@@ -152,7 +152,7 @@ import Disclosure from '../components/ui/Disclosure.astro';
       return u.origin === location.origin ? u.pathname + u.search + u.hash : '';
     } catch { return ''; }
   })();
-  const wantsAdmin = /^\/(t\/[a-z0-9-]+\/)?admin\//.test(next);
+  const wantsAdmin = /^\/((t\/[a-z0-9-]+\/)?admin|w\/[^/]+)\//.test(next);
 
   let email = '';
 

@@ -45,6 +45,7 @@ import '../../styles/admin.css';
   import { initWizard } from '../../lib/tasting-wizard';
   import { toast } from '../../lib/toast';
   import { tastingRoles, visibleRoles } from '../../lib/admin-side';
+  import { wsHref } from '../../lib/workspace';
 
   type Row = { id: string; slug: string; title: string; starts_at: string | null; place: string | null;
     participants: { status: string }[]; tasting_wines: { count: number }[] };
@@ -119,10 +120,10 @@ import '../../styles/admin.css';
     wizard = initWizard(host, (slug) => { if (slug) location.href = adminUrl(slug); });
     await load();
     // "+ New tasting" in the menu links here with ?new=1
-    if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', '/admin/tastings/'); }
+    if (new URLSearchParams(location.search).has('new')) { openNew(); history.replaceState(null, '', wsHref('/admin/tastings/')); }
     // Just deleted on its own page: say so here
     const deleted = new URLSearchParams(location.search).get('deleted');
-    if (deleted) { history.replaceState(null, '', '/admin/tastings/'); toast(t('tastingDelete.done', { title: deleted }), { kind: 'ok' }); }
+    if (deleted) { history.replaceState(null, '', wsHref('/admin/tastings/')); toast(t('tastingDelete.done', { title: deleted }), { kind: 'ok' }); }
   }
 </script>
 

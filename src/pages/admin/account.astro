@@ -162,7 +162,7 @@ import '../../styles/admin.css';
   });
   const say = (text: string) => { fieldError(emailInput, text); emailInput.focus(); };
   // The link an invited host opens: sign in, then straight to this account
-  const linkFor = () => `${location.origin}/login/?next=${encodeURIComponent(`/admin/?ws=${host!.tenant_id}`)}`;
+  const linkFor = () => `${location.origin}/login/?next=${encodeURIComponent(`/w/${host!.tenant_id}/`)}`;
   $('member-link-copy').addEventListener('click', () => copyText($<HTMLInputElement>('member-link-url').value, t('hosts.linkCopied'), $<HTMLInputElement>('member-link-url')));
 
   async function sendInvite(email: string, name: string) {

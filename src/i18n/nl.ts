@@ -1498,6 +1498,7 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "pics.noMisses": "Elke link gaf een afbeelding",
   "wineAdmin.notes": "Over de wijn",
   "ws.label": "Je werkt in",
+  "ws.notMine": "De link leidt niet naar een van je accounts. Je werkt in: {account}.",
   "ws.yours": "Jouw account",
   "ws.ofName": "Account van {name}",
   "ws.shared": "Met mij gedeeld",
