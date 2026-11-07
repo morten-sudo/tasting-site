@@ -14,6 +14,5 @@ begin
   return new;
 end $$;
 
-drop trigger if exists tasting_wines_tier_not_above on public.tasting_wines;
-create trigger tasting_wines_tier_not_above before insert or update of price_dkk, price_tiers on public.tasting_wines
+create or replace trigger tasting_wines_tier_not_above before insert or update of price_dkk, price_tiers on public.tasting_wines
   for each row execute function public.tasting_wines_tier_not_above();
