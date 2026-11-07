@@ -270,11 +270,13 @@ struct PayBox: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12.8) {
             // Never a number without the recipient's name
+            // Without both (or with MobilePay switched off): only the amount and that the host tells how – MobilePay is not named (WIN-318)
             if number.isEmpty || name.isEmpty {
-                Text(L("pay.noNumber", ["amount": krText(amount)])).font(.body()).foregroundStyle(Color.paper)
+                factRow(L("pay.amount"), krText(amount), last: true) { EmptyView() }
+                Text(L("pay.hostTells")).font(.body()).foregroundStyle(Color.paper)
             } else {
                 VStack(spacing: 0) {
-                    factRow(L("pay.number"), pretty) {
+                    factRow(L("pay.number"), pretty, oneLine: true) {
                         Button {
                             UIPasteboard.general.string = number
                             toast = "\(L("pay.copied")): \(pretty)"
@@ -293,10 +295,12 @@ struct PayBox: View {
     }
 
     /// .facts: the label and the value (the number has its quiet copy icon after it)
-    private func factRow<Trailing: View>(_ label: String, _ shown: String, last: Bool = false, @ViewBuilder trailing: () -> Trailing) -> some View {
+    private func factRow<Trailing: View>(_ label: String, _ shown: String, last: Bool = false, oneLine: Bool = false, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 12) {
             Text(label).font(.body(14.4)).foregroundStyle(Color.muted).frame(width: 130, alignment: .leading)
-            Text(shown).font(.medium(15.2)).foregroundStyle(Color.paper).frame(maxWidth: .infinity, alignment: .leading)
+            // The MobilePay number stays on one line, also on a small phone (WIN-319)
+            Text(shown).font(.medium(15.2)).foregroundStyle(Color.paper).lineLimit(oneLine ? 1 : nil).minimumScaleFactor(oneLine ? 0.8 : 1)
+                .frame(maxWidth: .infinity, alignment: .leading)
             trailing()
         }
         .frame(minHeight: 44)
@@ -311,6 +315,8 @@ struct FeeCard: View {
     let paid: Bool
     let mobilepay: String?
     let recipient: String?
+    /// Shared from what the evening cost, or a fixed price (nil: not known – nothing is said)
+    var shared: Bool? = nil
     @Binding var toast: String?
     var body: some View {
         Card {
@@ -318,7 +324,8 @@ struct FeeCard: View {
             if paid {
                 NoticeBox(text: L("guest.feePaid"), tone: .ok)
             } else {
-                Text(L("guest.feeText")).font(.body(14.7)).foregroundStyle(Color.muted)
+                // The text matches how the price was found (WIN-317)
+                if let shared { Text(L(shared ? "guest.feeText" : "guest.feeFixed")).font(.body(14.7)).foregroundStyle(Color.muted) }
                 PayBox(mobilepay: mobilepay, recipient: recipient, amount: amount, toast: $toast)
             }
         }

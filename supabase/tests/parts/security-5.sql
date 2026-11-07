@@ -202,6 +202,13 @@ begin
   failed := false; begin perform set_tenant_name('x'); exception when others then failed := true; end;
   assert not failed, 'the owner cannot name the account';
   select count(*) into n from my_tasting_roles() where hosting and can_manage;                              assert n = 1, 'host A''s roles are wrong';
+  -- WIN-326: a quantity price above the normal price (100) is refused; equal to it is fine
+  failed := false; begin update tasting_wines set price_tiers = '[{"qty":6,"price":180}]' where wine_id = -1001; exception when others then failed := true; end;
+  assert failed, 'a quantity price above the normal price is accepted';
+  update tasting_wines set price_tiers = '[{"qty":6,"price":100}]' where wine_id = -1001; get diagnostics n = row_count; assert n = 1, 'a quantity price equal to the normal price is refused';
+  failed := false; begin update tasting_wines set price_dkk = 90 where wine_id = -1001; exception when others then failed := true; end;
+  assert failed, 'the normal price can go below a quantity price';
+  update tasting_wines set price_tiers = '[]' where wine_id = -1001;
 end $$;
 reset role;
 
@@ -479,8 +486,10 @@ begin
   assert t.mobilepay is null and not t.mobilepay_on, 'a new tasting without a last used number has MobilePay on';
 end $$;
 reset role;
--- ---------- Blind tasting: a blind wine shows its number and style, nothing else, and cannot be ordered ----------
+-- ---------- Blind tasting: a blind wine shows only its number (no style, WIN-320), nothing else, and cannot be ordered ----------
 update tastings set blind = true where slug = 'selftest-a';
+-- The wine has a style, so the check below means something
+update wines set style = 'Vintage' where id = -1001;
 select set_config('request.jwt.claims', '', true);
 set local role anon;
 do $$
@@ -489,7 +498,9 @@ begin
   select * into w from get_wines('selftestaa') x where x.id = -1001;
   assert w.blind and w.name is null and w.producer is null and w.vintage is null and w.image_url is null
     and w.region is null and w.producer_lat is null and w.price_dkk is null and w.description is null
-    and w.grapes is null and w.bottle_cl is null and not w.orderable, 'a blind wine shows more than its number and style';
+    and w.grapes is null and w.bottle_cl is null and not w.orderable, 'a blind wine shows more than its number';
+  -- WIN-320: not even its style (the style gives the colour – and for port, a lot of the answer)
+  assert w.style is null, 'a blind wine shows its style';
   failed := false; begin perform place_order('selftestaa', '[{"wine_id":-1001,"qty":1}]'); exception when others then failed := true; end;
   assert failed, 'a blind wine can be ordered';
   assert not exists (select 1 from my_wine_book(array['selftestaa']) b where b.wine_id = -1001), 'the wine book shows a blind wine';

@@ -17,7 +17,7 @@ export interface ToastOptions {
   onTimeout?: () => void;
 }
 
-let current: { host: HTMLElement; el: HTMLElement; timer: number; done?: () => void } | null = null;
+let current: { host: HTMLElement; el: HTMLElement; timer: number; done?: () => void; error?: boolean } | null = null;
 
 // A toast shown while a panel is open lives in that dialog (the top layer); when the panel then closes – e.g.
 // "Remove from the tasting" closes the panel right after the toast with Undo – the toast moves out with it
@@ -67,7 +67,7 @@ export function toast(text: string, opts: ToastOptions = {}) {
   ([...document.querySelectorAll('dialog[open]')].pop() ?? document.body).append(host);
   requestAnimationFrame(() => el.classList.add('shown'));
   window.setTimeout(() => { msg.textContent = text; }, 60);
-  const me = { host, el, timer: 0, done: opts.onTimeout };
+  const me = { host, el, timer: 0, done: opts.onTimeout, error };
   current = me;
   if (error) return;
   let left = opts.duration ?? (opts.action ? 8000 : 4000);
@@ -92,4 +92,9 @@ export function hideToast(finish = true) {
   if (finish) done?.();
   el.classList.remove('shown');
   setTimeout(() => host.remove(), 250);
+}
+
+/** Hides the toast only if it is an error (which stays until closed): call it when a new try worked (WIN-314). */
+export function hideErrorToast() {
+  if (current?.error) hideToast();
 }

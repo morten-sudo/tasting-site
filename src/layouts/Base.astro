@@ -80,7 +80,7 @@ const here = front ? siteUrl : appUrl;
       import { FLAGS } from '../i18n/flags';
       import { bindMenu, menuItem } from '../lib/ui/menu';
       import { initDropdowns } from '../lib/ui/dropdown';
-      import { initTabs } from '../lib/ui/tabs';
+      import { initTabs, selectTab, currentTab } from '../lib/ui/tabs';
       import { setEmpty } from '../lib/ui/empty';
       import { setEditWhat } from '../lib/ui/icon-button';
       import { fixHostLinks, hostHref } from '../lib/hosts';
@@ -176,7 +176,12 @@ const here = front ? siteUrl : appUrl;
         const { data } = await supabase.rpc('get_tasting', { code: c });
         const info = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null; quiz_count?: number } | null;
         if (!info) return;
-        if (Number(info.quiz_count ?? 0) > 0) document.getElementById('t-quiz-tab')!.hidden = false;
+        // The Quiz tab only when the tasting has questions – on every page, also the quiz's own (WIN-315)
+        document.getElementById('t-quiz-tab')!.hidden = !(Number(info.quiz_count ?? 0) > 0);
+        // The tabs moved: the chosen one is brought into view again on a phone (WIN-323)
+        const tBar = document.getElementById('t-tabs');
+        const tNow = tBar && currentTab(tBar);
+        if (tBar && tNow) selectTab(tBar, tNow);
         if (info.title) {
           document.getElementById('t-title')!.textContent = info.title;
           const tAdmin = document.getElementById('t-admin');

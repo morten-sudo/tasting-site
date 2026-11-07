@@ -22,19 +22,34 @@ export function selectTab(bar: HTMLElement, id: string) {
   }
 }
 
-/** On a phone the bar scrolls sideways: the chosen tab is brought into view (the page itself does not move) –
- *  also when the bar is still hidden and gets its size later. */
+/** On a phone the bar is one line that scrolls sideways. Each edge fades only while there are more tabs that way
+ *  (.more-start / .more-end), so a tab cut off at the edge reads as "there is more" (WIN-323). Watched as the bar
+ *  scrolls and as it or its tabs change size (a tab shown or hidden later, the language, the screen turned). */
+function watchEdges(bar: HTMLElement) {
+  if (bar.dataset.edges) return;
+  bar.dataset.edges = '1';
+  const update = () => {
+    const over = bar.scrollWidth - bar.clientWidth > 1;
+    bar.classList.toggle('more-start', over && bar.scrollLeft > 4);
+    bar.classList.toggle('more-end', over && bar.scrollLeft < bar.scrollWidth - bar.clientWidth - 4);
+  };
+  bar.addEventListener('scroll', update, { passive: true });
+  const ro = new ResizeObserver(update);
+  ro.observe(bar);
+  for (const b of bar.querySelectorAll(':scope > [data-tab]')) ro.observe(b);
+  update();
+}
+
+/** The chosen tab is brought into view (the page itself does not move) – also when the bar is still hidden and gets
+ *  its size later. */
 function showChosen(bar: HTMLElement, b: HTMLElement) {
-  // Scrolled from the start: the left edge fades too (CSS .tabs.scrolled)
-  if (!bar.dataset.edges) {
-    bar.dataset.edges = '1';
-    bar.addEventListener('scroll', () => bar.classList.toggle('scrolled', bar.scrollLeft > 4), { passive: true });
-  }
+  watchEdges(bar);
   const go = () => {
     if (!bar.clientWidth || bar.scrollWidth <= bar.clientWidth) return false;
     const x = b.getBoundingClientRect().left - bar.getBoundingClientRect().left + bar.scrollLeft;
-    bar.scrollLeft = Math.max(0, x - 16);
-    bar.classList.toggle('scrolled', bar.scrollLeft > 4);
+    // The whole tab in view with a little of the one before it, so it is clear the bar goes on both ways
+    const right = x + b.offsetWidth + 40 - bar.clientWidth;
+    bar.scrollLeft = Math.max(0, Math.max(right, Math.min(x - 40, bar.scrollLeft)));
     return true;
   };
   if (go() || bar.clientWidth) return;
@@ -113,7 +128,13 @@ export function tabs(bar: HTMLElement, opts: TabsOptions = {}) {
   });
 }
 
-/** Every static tab bar of buttons on the page */
+/** Every static tab bar on the page: wired, the edges watched, and the chosen tab in view (also a bar of links,
+ *  e.g. a tasting's tabs, so the last tab is not left cut off on a phone – WIN-323) */
 export function initTabs(root: ParentNode = document) {
-  root.querySelectorAll<HTMLElement>('[data-tabs]').forEach((bar) => tabs(bar));
+  root.querySelectorAll<HTMLElement>('[data-tabs]').forEach((bar) => {
+    tabs(bar);
+    watchEdges(bar);
+    const chosen = bar.querySelector<HTMLElement>(':scope > [aria-selected="true"], :scope > [aria-current="page"]');
+    if (chosen) showChosen(bar, chosen);
+  });
 }

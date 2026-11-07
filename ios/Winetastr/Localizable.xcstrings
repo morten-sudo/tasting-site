@@ -2817,6 +2817,28 @@
     }
    }
   },
+  "guest.feeFixed": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Prisen er den samme for alle gæster."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Every guest pays the same price."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Allir gestir greiða sama verð."
+     }
+    }
+   }
+  },
   "guest.feePaid": {
    "localizations": {
     "da": {
@@ -2839,24 +2861,24 @@
     }
    }
   },
-  "pay.noNumber": {
+  "pay.hostTells": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Beløbet på {amount} betales med MobilePay. Værten fortæller dig hvordan."
+      "value": "Værten fortæller dig, hvordan du betaler."
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "The amount of {amount} is paid with MobilePay. The host will tell you how."
+      "value": "The host will tell you how to pay."
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Upphæðin {amount} er greidd með MobilePay. Gestgjafinn segir þér hvernig."
+      "value": "Gestgjafinn segir þér hvernig þú greiðir."
      }
     }
    }
@@ -3605,6 +3627,50 @@
      "stringUnit": {
       "state": "translated",
       "value": "Spurningakeppnin opnast meðan á smökkuninni stendur. Hafðu síðuna opna – hún byrjar sjálfkrafa þegar gestgjafinn opnar."
+     }
+    }
+   }
+  },
+  "quiz.noQuestions": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Værten har ikke lagt spørgsmål ind endnu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The host hasn’t added any questions yet"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Gestgjafinn hefur ekki sett inn spurningar enn"
+     }
+    }
+   }
+  },
+  "quiz.noQuestionsHelp": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hold siden åben – spørgsmålene kommer af sig selv, når værten lægger dem ind."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Keep this page open – the questions appear by themselves when the host adds them."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Hafðu síðuna opna – spurningarnar birtast sjálfkrafa þegar gestgjafinn setur þær inn."
      }
     }
    }

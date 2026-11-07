@@ -56,11 +56,61 @@ function browserLang(): Lang {
 }
 
 export const lang = () => current;
-// Fall back to English formats in browsers without data for the locale (e.g. Icelandic)
+// Fall back to English formats in browsers without data for the locale (e.g. Icelandic) – dates do not: they use the
+// site's own month and day names then (ownDate below, WIN-322)
 export const locale = () => {
   const wanted = LANGS.find((l) => l.code === current)!.locale;
   return Intl.DateTimeFormat.supportedLocalesOf(wanted).length ? wanted : 'en-GB';
 };
+/** Whether the browser has date (and relative-time) data for the page's language */
+export const hasDateData = () => {
+  const wanted = LANGS.find((l) => l.code === current)!.locale;
+  return Intl.DateTimeFormat.supportedLocalesOf(wanted).length > 0;
+};
+export const hasRelativeData = () => {
+  const wanted = LANGS.find((l) => l.code === current)!.locale;
+  return typeof Intl.RelativeTimeFormat === 'function' && Intl.RelativeTimeFormat.supportedLocalesOf(wanted).length > 0;
+};
+
+export interface DateOpts { weekday?: 'long' | 'short'; day?: boolean; month?: 'long' | 'short'; year?: boolean; time?: boolean; timeZone?: string }
+const EN_WD = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const names = (key: Key) => t(key).split(',').map((x) => x.trim());
+/** A date in the page's language from the site's own month and day names (date.months …) – for browsers without
+ *  date data for the language. "fimmtudagur 3. desember 2026, 19:00" / "Thursday 3 December 2026, 19:00". */
+export function ownDate(when: Date, o: DateOpts): string {
+  // The numbers in the right time zone (English data is always there)
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    ...(o.timeZone ? { timeZone: o.timeZone } : {}),
+  }).formatToParts(when).map((x) => [x.type, x.value]));
+  const wd = EN_WD.indexOf(p.weekday);
+  const mon = Number(p.month) - 1;
+  const dot = current === 'da' || current === 'is' || current === 'de';
+  const out: string[] = [];
+  let date = '';
+  if (o.day !== false && o.month) {
+    const m = names(o.month === 'short' ? 'date.monthsShort' : 'date.months')[mon] ?? '';
+    date = current === 'es' ? `${p.day} de ${m}` : `${p.day}${dot ? '.' : ''} ${m}`;
+  } else if (o.month) date = names('date.months')[mon] ?? '';
+  if (o.year) date += current === 'es' ? ` de ${p.year}` : ` ${p.year}`;
+  if (o.weekday) {
+    const w = names(o.weekday === 'short' ? 'date.weekdaysShort' : 'date.weekdays')[wd] ?? '';
+    out.push(date ? w + (current === 'de' || current === 'es' || current === 'pl' ? ',' : '') : w);
+  }
+  if (date) out.push(date);
+  let text = out.join(' ');
+  if (o.time) text += (text ? ', ' : '') + `${p.hour}:${p.minute}`;
+  return text;
+}
+/** The one way to write a date: the browser's data for the language, else the site's own names */
+export function dateText(when: Date, o: DateOpts): string {
+  if (!hasDateData()) return ownDate(when, o);
+  return new Intl.DateTimeFormat(locale(), {
+    ...(o.weekday ? { weekday: o.weekday } : {}), ...(o.day !== false && o.month ? { day: 'numeric' } : {}),
+    ...(o.month ? { month: o.month } : {}), ...(o.year ? { year: 'numeric' } : {}),
+    ...(o.time ? { hour: '2-digit', minute: '2-digit' } : {}), ...(o.timeZone ? { timeZone: o.timeZone } : {}),
+  }).format(when);
+}
 
 /** Translate a key; {name} placeholders are filled from vars. */
 // Which plural form a number takes in the page's language ("one", "few", "other" …)
@@ -139,24 +189,15 @@ const withYear = (d: Date, year?: boolean) => year ?? yearOf(d) !== yearOf(new D
 /** "3. november", "3. nov. 2025", "3. nov., 09.40" – a date, short or long month, optionally with the time */
 export function formatDate(iso: string | Date, o: { month?: 'long' | 'short'; time?: boolean; year?: boolean; weekday?: boolean } = {}) {
   const d = new Date(iso);
-  return new Intl.DateTimeFormat(locale(), {
-    ...(o.weekday ? { weekday: 'long' } : {}), day: 'numeric', month: o.month ?? 'long',
-    ...(withYear(d, o.year) ? { year: 'numeric' } : {}),
-    ...(o.time ? { hour: '2-digit', minute: '2-digit' } : {}), timeZone: TZ,
-  }).format(d);
+  return dateText(d, { weekday: o.weekday ? 'long' : undefined, month: o.month ?? 'long', year: withYear(d, o.year), time: o.time, timeZone: TZ });
 }
 /** "09.40" – the time of day */
-export const formatTime = (iso: string | Date) =>
-  new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: TZ }).format(new Date(iso));
+export const formatTime = (iso: string | Date) => dateText(new Date(iso), { time: true, timeZone: TZ });
 
 export function formatWhen(iso: string, opts: { year?: boolean; end?: string | null } = {}) {
   const d = new Date(iso);
-  const day = new Intl.DateTimeFormat(locale(), {
-    weekday: 'long', day: 'numeric', month: 'long', ...(withYear(d, opts.year) ? { year: 'numeric' } : {}),
-    timeZone: TZ,
-  }).format(d);
-  const hm = new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', timeZone: TZ });
+  const day = dateText(d, { weekday: 'long', month: 'long', year: withYear(d, opts.year), timeZone: TZ });
   // With an end: "19:00–23:00"
-  const time = hm.format(d) + (opts.end ? `–${hm.format(new Date(opts.end))}` : '');
+  const time = formatTime(d) + (opts.end ? `–${formatTime(opts.end)}` : '');
   return t('when.at', { day: day[0].toUpperCase() + day.slice(1), time });
 }

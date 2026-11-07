@@ -53,6 +53,11 @@ begin
         and p.prosrc like '%''mobilepay''%' and p.prosrc like '%''mobilepay_name''%' and p.prosrc like '%''host_name''%') <> 1 then
     raise exception 'app contract broken: get_tasting payment keys';
   end if;
+  -- WIN-317 on: the fee card reads get_tasting's fee_shared (optional in the app, but keep the key)
+  if (select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.proname = 'get_tasting' and p.prosrc like '%''fee_shared''%') <> 1 then
+    raise exception 'app contract broken: get_tasting fee_shared key';
+  end if;
   -- WIN-303: get_chat's `mine` is never null, also for the host's messages (no participant_id). A host message is
   -- added in a sub-block that is always rolled back, so this stays read-only.
   select p.invite_code, p.tasting_id into v_code, v_t from participants p where p.invite_code is not null limit 1;

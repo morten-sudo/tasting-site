@@ -1,6 +1,6 @@
 // Shared by the superadmin pages: the administrator check, the menu and small helpers.
 import { supabase } from './supabase';
-import { i18nReady, t, locale, type Key } from '../i18n';
+import { i18nReady, t, dateText, type Key } from '../i18n';
 import { initSideMenu, setSideOpen } from './ui/side-menu';
 
 export { $, mk } from './ui/dom';
@@ -9,8 +9,9 @@ export function cell(text: string, cls = '') {
   const td = mk('td', cls, text);
   return td;
 }
-export const dateFmt = () => new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric' });
-export const timeFmt = () => new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+// (through dateText, so Icelandic gets the site's own month names in a browser without Icelandic data – WIN-322)
+export const dateFmt = () => ({ format: (d: Date) => dateText(d, { month: 'short', year: true }) });
+export const timeFmt = () => ({ format: (d: Date) => dateText(d, { month: 'short', year: true, time: true }) });
 
 /** The parts of one tenant, each with its address /superadmin/tenants/<slug>/<path> */
 export const TENANT_SECTIONS: { id: string; label: Key }[] = [

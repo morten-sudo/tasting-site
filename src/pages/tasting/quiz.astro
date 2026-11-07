@@ -5,6 +5,7 @@ import Loading from '../../components/ui/Loading.astro';
 import Notice from '../../components/ui/Notice.astro';
 import SignInState from '../../components/ui/SignInState.astro';
 import Progress from '../../components/ui/Progress.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
 ---
 <Base title="page.quiz" tasting>
   <section class="wrap page-pad quiz-page">
@@ -15,6 +16,9 @@ import Progress from '../../components/ui/Progress.astro';
     <SignInState id="no-code" title="gate.quizTitle" />
 
     <Notice id="closed" hidden><p data-i18n="quiz.closed">The quiz opens during the tasting. Keep this page open – it starts by itself when the host opens it.</p></Notice>
+
+    <!-- Open (or over) without questions: nothing to answer and no standings (WIN-315) -->
+    <EmptyState id="no-questions" icon="question" title="quiz.noQuestions" text="quiz.noQuestionsHelp" hidden />
 
     <!-- Quiz in progress -->
     <div id="play" hidden>
@@ -50,7 +54,7 @@ import Progress from '../../components/ui/Progress.astro';
   import { listRow } from '../../lib/ui/list-row';
   import { chip } from '../../lib/ui/status';
   import { $, mk } from '../../lib/ui/dom';
-  import { toast } from '../../lib/ui/toast';
+  import { toast, hideErrorToast } from '../../lib/ui/toast';
   import { setLoading } from '../../lib/ui/button';
   import { choiceCards } from '../../lib/ui/choice-cards';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
@@ -148,6 +152,8 @@ import Progress from '../../components/ui/Progress.astro';
       if (error.message.includes('ikke åben')) start();
       return;
     }
+    // A new try worked: the error from the last one goes (WIN-314)
+    hideErrorToast();
     answers.set(q.id, selected);
     current = firstUnanswered();
     renderQuestion();
@@ -192,17 +198,25 @@ import Progress from '../../components/ui/Progress.astro';
   // ---------- Start ----------
   async function start() {
     const next = await readSettings();
-    if (next === mode) return;
+    // The same state – unless the quiz had no questions and the host has added some since (WIN-315)
+    if (next === mode && !(mode !== 'closed' && questions.length === 0 && quizTotal > 0)) return;
     mode = next;
     $('loading').hidden = true;
 
     show('closed', mode === 'closed');
     show('play', false);
     show('results', false);
-    show('board-wrap', mode !== 'closed');
+    show('no-questions', false);
+    show('board-wrap', false);
 
     if (mode === 'closed') return;
     await loadQuestions();
+    // Opened without questions: an empty state, no standings and no "all your answers are locked"
+    if (questions.length === 0) {
+      show('no-questions', true);
+      return;
+    }
+    show('board-wrap', true);
 
     if (mode === 'open') {
       current = firstUnanswered();
@@ -234,7 +248,7 @@ import Progress from '../../components/ui/Progress.astro';
     await start();
     // Poll for quiz open/close and the standings
     setInterval(start, 10000);
-    setInterval(() => { if (mode !== 'closed') refreshBoard(); }, 5000);
+    setInterval(() => { if (mode !== 'closed' && questions.length > 0) refreshBoard(); }, 5000);
   }
 
   init();

@@ -50,6 +50,13 @@ import '../../styles/components.css';
         const s = (data ?? {}) as Record<string, unknown>;
         if (typeof s.title === 'string') document.getElementById('tv-title')!.textContent = s.title;
         const TOTAL = Number(s.quiz_count) || 0;
+        // Open without questions: say so, and no standings of guests who cannot answer anything (WIN-315)
+        if (TOTAL === 0 && (s.quiz_open === true || s.quiz_finished === true)) {
+          board.replaceChildren();
+          main.classList.remove('cols-2', 'cols-3');
+          status.textContent = t('quiz.noQuestions');
+          return;
+        }
         const rows = await fetchLeaderboard({ slug });
         if (!rows) return;
         renderLeaderboard(board, rows, TOTAL);

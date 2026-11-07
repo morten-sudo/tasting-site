@@ -292,6 +292,8 @@ struct CartView: View {
         do {
             let id = try await Backend.placeOrder(tasting.code, list.map { ($0.0.id, $0.1) })
             let sum = total(list)
+            // A new try worked: the error from the last one goes (WIN-314)
+            toast = nil
             model.clearCart(tasting.slug)
             withAnimation { confirm = (id, sum) }
             await load()

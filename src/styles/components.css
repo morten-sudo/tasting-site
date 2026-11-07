@@ -1078,11 +1078,13 @@ h3, .h3 { font-family: var(--body); font-weight: 600; font-size: 1rem; line-heig
 .tabs > :is([aria-selected='true'], [aria-current='page']) { color: var(--amber); border-bottom-color: var(--amber); font-weight: 500; }
 .tabs > :focus-visible { outline-offset: -2px; border-radius: 4px; }
 .tabs > [hidden] { display: none; }
-/* Phones: one line that scrolls sideways (never two rows of tabs); the edges fade where there is more */
+/* Phones: one line that scrolls sideways (never two rows of tabs); an edge fades only while there are more tabs that
+   way (.more-start / .more-end from tabs.ts), and the chosen tab is scrolled into view (WIN-323) */
 @media (max-width: 40rem) {
-  .tabs { column-gap: 1.1rem; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent); }
-  .tabs.scrolled { -webkit-mask-image: linear-gradient(90deg, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(90deg, transparent, #000 1.5rem, #000 calc(100% - 1.5rem), transparent); }
+  .tabs { column-gap: 1.1rem; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .tabs.more-end { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent); }
+  .tabs.more-start { -webkit-mask-image: linear-gradient(90deg, transparent, #000 2.5rem); mask-image: linear-gradient(90deg, transparent, #000 2.5rem); }
+  .tabs.more-start.more-end { -webkit-mask-image: linear-gradient(90deg, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent); mask-image: linear-gradient(90deg, transparent, #000 2.5rem, #000 calc(100% - 2.5rem), transparent); }
   .tabs::-webkit-scrollbar { display: none; }
   .tabs > :is(a, button) { margin-bottom: 0; flex: none; }
   .tabs > :last-child { margin-right: 1.5rem; }
@@ -1419,7 +1421,10 @@ dialog.confirm .actions { justify-content: flex-end; }
 .bubble > .icon-act { width: 2rem; height: 2rem; }
 .msg time { font-size: 0.7rem; color: var(--muted); padding: 0 0.6rem; }
 .chat-form { display: flex; gap: 0.5rem; align-items: flex-end; }
-.chat-form > .input { flex: 1; resize: none; min-height: var(--h); height: var(--h); max-width: none; padding-block: 0.65rem; line-height: 1.4; }
+/* One line fits exactly in the field's height (no 1 px scroll bar while it is empty, WIN-316); the bar comes only
+   once the text is taller than the field can grow (.scrolls, set by chat.ts) */
+.chat-form > .input { flex: 1; resize: none; min-height: var(--h); height: var(--h); max-width: none; padding-block: calc((var(--h) - 1.4em - 2px) / 2); line-height: 1.4; overflow-y: hidden; }
+.chat-form > .input.scrolls { overflow-y: auto; }
 .chat-form > .chat-send { width: var(--h); padding: 0; }
 .chat-form > .field-error { flex-basis: 100%; }
 
@@ -1445,7 +1450,7 @@ dialog.confirm .actions { justify-content: flex-end; }
 .wine-card > .llead .lno { position: absolute; top: 0.6rem; left: 0.85rem; min-width: 0; text-align: left; }
 .wine-card > .lmain { padding: 0.5rem 1.2rem 0; flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
 .wine-card .lc-top { margin-top: 0.15rem; }
-.wine-card .lfoot { margin-top: auto; padding-top: 0.9rem; align-items: flex-end; flex-wrap: nowrap; }
+.wine-card .lfoot { margin-top: auto; padding-top: 0.9rem; align-items: flex-end; flex-wrap: wrap; column-gap: 0.75rem; row-gap: 0.5rem; }
 .wine-card .lfoot > .go { flex: none; margin-left: auto; }
 a.lcard.wine-card:hover .go { text-decoration: underline; text-underline-offset: 0.22em; }
 .lcard .go { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--amber); font-weight: 500; font-size: 0.92rem; white-space: nowrap; }
@@ -1485,6 +1490,8 @@ body:has(.cartbar:not([hidden])) { padding-bottom: calc(max(1rem, env(safe-area-
 /* ---------- 51 Payment box (src/lib/pay.ts: payBox()) ---------- */
 .pay { display: grid; gap: 0.8rem; min-width: 0; }
 .pay > p { margin: 0; }
+/* The MobilePay number (the value with the copy button) stays on one line, also on a phone (WIN-319) */
+.pay .facts dd > span { white-space: nowrap; }
 /* 54 QR code (src/lib/ui/qr.ts): white with room around it, so a phone camera reads it */
 .qr { width: 9.5rem; aspect-ratio: 1; background: #fff; color: var(--paper); border: 1px solid var(--lodge-3); border-radius: var(--radius); padding: 0.25rem; box-sizing: border-box; flex: none; }
 .qr > svg { display: block; width: 100%; height: 100%; }

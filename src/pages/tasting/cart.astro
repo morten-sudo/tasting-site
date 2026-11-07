@@ -48,7 +48,7 @@ import SignInState from '../../components/ui/SignInState.astro';
   import { iconButton } from '../../lib/ui/icon-button';
   import { deleteWithUndo } from '../../lib/ui/delete-undo';
   import { setLoading } from '../../lib/ui/button';
-  import { toast } from '../../lib/ui/toast';
+  import { toast, hideErrorToast } from '../../lib/ui/toast';
   import { price as priceBox } from '../../lib/ui/price';
   import { disclosure } from '../../lib/ui/disclosure';
   import { $, mk } from '../../lib/ui/dom';
@@ -188,6 +188,8 @@ import SignInState from '../../components/ui/SignInState.astro';
       btn.disabled = false;
       return;
     }
+    // A new try worked: the error from the last one goes (WIN-314)
+    hideErrorToast();
 
     const total = items.reduce((s, i) => {
       const w = wines.get(i.wine_id);
