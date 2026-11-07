@@ -2,6 +2,13 @@
 import type { en } from './en';
 export const da: Partial<Record<keyof typeof en, string>> = {
   "when.at": "{day} kl. {time}",
+  "date.months": "januar,februar,marts,april,maj,juni,juli,august,september,oktober,november,december",
+  "date.monthsShort": "jan.,feb.,mar.,apr.,maj,jun.,jul.,aug.,sep.,okt.,nov.,dec.",
+  "date.weekdays": "mandag,tirsdag,onsdag,torsdag,fredag,lørdag,søndag",
+  "date.weekdaysShort": "man,tir,ons,tor,fre,lør,søn",
+  "date.today": "I dag",
+  "date.tomorrow": "I morgen",
+  "date.inDays": "Om {n} dage",
   "nav.cart": "Indkøbskurv",
   "nav.myTastings": "Mine smagninger",
   "nav.signOut": "Log ud",

@@ -3,7 +3,7 @@
 // own format (mm/dd/yyyy, AM/PM). Ids: <prefix>-date (hidden, yyyy-mm-dd), <prefix>-date-show (the button),
 // <prefix>-cal (the calendar), <prefix>-time and <prefix>-end (hh:mm).
 import { iconButton } from './ui/icon-button';
-import { t, locale } from '../i18n';
+import { t, dateText } from '../i18n';
 import { fieldError } from './field-error';
 
 const el = <E extends HTMLElement = HTMLInputElement>(prefix: string, name: string) => document.getElementById(`${prefix}-${name}`) as E;
@@ -27,7 +27,7 @@ function showDate(prefix: string) {
   const b = el<HTMLButtonElement>(prefix, 'date-show');
   const text = b.querySelector('span') ?? b;
   if (!v) { text.textContent = t('dt.choose'); b.classList.add('empty'); return; }
-  const s = new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(fromYmd(v));
+  const s = dateText(fromYmd(v), { weekday: 'long', month: 'long', year: true });
   text.textContent = s[0].toUpperCase() + s.slice(1);
   b.classList.remove('empty');
 }
@@ -56,7 +56,7 @@ export function initWhen(prefix: string) {
     const prev = iconButton('left', t('dt.prevMonth'), { tip: false });
     const next = iconButton('right', t('dt.nextMonth'), { tip: false });
     const title = document.createElement('b');
-    const mt = new Intl.DateTimeFormat(locale(), { month: 'long', year: 'numeric' }).format(new Date(y, m, 1));
+    const mt = dateText(new Date(y, m, 1), { day: false, month: 'long', year: true });
     title.textContent = mt[0].toUpperCase() + mt.slice(1);
     title.setAttribute('aria-live', 'polite');
     prev.disabled = !!min && new Date(y, m, 1) <= new Date(min.getFullYear(), min.getMonth(), 1);
@@ -68,11 +68,11 @@ export function initWhen(prefix: string) {
     grid.className = 'dt-grid';
     grid.setAttribute('role', 'grid');
     // Weekday names, Monday first
-    const wd = new Intl.DateTimeFormat(locale(), { weekday: 'short' });
+    // (in the site's own names when the browser has no data for the language – WIN-322)
     for (let i = 0; i < 7; i++) {
       const s = document.createElement('span');
       s.className = 'dt-wd';
-      s.textContent = wd.format(new Date(2024, 0, 1 + i)).replace('.', ''); // 1 Jan 2024 was a Monday
+      s.textContent = dateText(new Date(2024, 0, 1 + i), { weekday: 'short' }).replace('.', ''); // 1 Jan 2024 was a Monday
       grid.append(s);
     }
     const first = new Date(y, m, 1);
@@ -88,7 +88,7 @@ export function initWhen(prefix: string) {
       b.className = 'dt-day';
       b.textContent = String(d);
       b.dataset.day = ymd(date);
-      b.setAttribute('aria-label', new Intl.DateTimeFormat(locale(), { weekday: 'long', day: 'numeric', month: 'long' }).format(date));
+      b.setAttribute('aria-label', dateText(date, { weekday: 'long', month: 'long' }));
       if (ymd(date) === today) b.classList.add('today');
       if (chosen && ymd(date) === ymd(chosen)) { b.classList.add('chosen'); b.setAttribute('aria-pressed', 'true'); }
       if (min && date < min) b.disabled = true;

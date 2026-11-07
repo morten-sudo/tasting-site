@@ -1,6 +1,13 @@
 // English (source language). Generated alongside da.ts and is.ts; keep keys in sync.
 export const en = {
   "when.at": "{day} at {time}",
+  "date.months": "January,February,March,April,May,June,July,August,September,October,November,December",
+  "date.monthsShort": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sept,Oct,Nov,Dec",
+  "date.weekdays": "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday",
+  "date.weekdaysShort": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+  "date.today": "Today",
+  "date.tomorrow": "Tomorrow",
+  "date.inDays": "In {n} days",
   "nav.cart": "Cart",
   "nav.myTastings": "My tastings",
   "nav.signOut": "Sign out",
