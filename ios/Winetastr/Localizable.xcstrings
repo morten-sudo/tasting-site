@@ -309,6 +309,28 @@
     }
    }
   },
+  "tastingHome.coming#one": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} kommer indtil nu"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} is coming so far"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} mætir hingað til"
+     }
+    }
+   }
+  },
   "tastingHome.host": {
    "localizations": {
     "da": {
@@ -811,6 +833,50 @@
      "stringUnit": {
       "state": "translated",
       "value": "Þínar athugasemdir"
+     }
+    }
+   }
+  },
+  "rating.starOne": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stjerne"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} star"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stjarna"
+     }
+    }
+   }
+  },
+  "rating.starMany": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stjerner"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stars"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} stjörnur"
      }
     }
    }
@@ -1761,6 +1827,28 @@
     }
    }
   },
+  "book.statWines#one": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "vin smagt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "wine tasted"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "vín smakkað"
+     }
+    }
+   }
+  },
   "book.statTastings": {
    "localizations": {
     "da": {
@@ -1783,6 +1871,28 @@
     }
    }
   },
+  "book.statTastings#one": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "smagning"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "tasting"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "smökkun"
+     }
+    }
+   }
+  },
   "book.statBottles": {
    "localizations": {
     "da": {
@@ -1801,6 +1911,28 @@
      "stringUnit": {
       "state": "translated",
       "value": "flöskur pantaðar"
+     }
+    }
+   }
+  },
+  "book.statBottles#one": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "flaske bestilt"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "bottle ordered"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "flaska pöntuð"
      }
     }
    }
@@ -2109,6 +2241,28 @@
      "stringUnit": {
       "state": "translated",
       "value": "{n} flöskur alls, {total}"
+     }
+    }
+   }
+  },
+  "book.ordersSum#one": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flaske i alt, {total}"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} bottle in all, {total}"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} flaska alls, {total}"
      }
     }
    }
@@ -2587,6 +2741,28 @@
      "stringUnit": {
       "state": "translated",
       "value": "{n} wines – read, rate and order"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vín – lestu, gefðu einkunn og pantaðu"
+     }
+    }
+   }
+  },
+  "tastingHome.winesSub#one": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} vin – læs, bedøm og bestil"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "{n} wine – read, rate and order"
      }
     },
     "is": {
@@ -6091,28 +6267,6 @@
      "stringUnit": {
       "state": "translated",
       "value": "Vín {n}"
-     }
-    }
-   }
-  },
-  "app.starsLabel": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "{n} stjerner"
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "{n} stars"
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "{n} stjörnur"
      }
     }
    }

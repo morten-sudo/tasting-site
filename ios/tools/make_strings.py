@@ -6,7 +6,7 @@ SITE = '''common.email common.save common.saved common.cancel common.continue na
 home.upcomingMany tastings.past tastingHome.about tastingHome.yourAnswer tastingHome.change tastingHome.coming tastingHome.host tastingHome.hosts
 tastingHome.closedHint guest.fullHint guest.coming guest.note guest.canChange
 guest.welcome guest.emailLead guest.yourEmail guest.emailBad guest.emailMissing guest.emailTaken guest.emailLocked guest.emailNotSaved
-guest.chooseYesNo guest.answerNotSaved guest.signupClosed status.yes status.no status.waitlist rating.title rating.note blind.blind blind.hint
+guest.chooseYesNo guest.answerNotSaved guest.signupClosed status.yes status.no status.waitlist rating.title rating.note rating.starOne rating.starMany blind.blind blind.hint
 login.mailLead login.sendCode login.sentIfKnown login.noCodeTitle login.noCodeHelp login.codeLabel login.submit login.resend login.otherEmail login.inviteSummary
 login.inviteHelp login.inviteLabel login.tooManyMails login.sendFailed login.wholeCode login.tooManyTries login.wrongCode
 login.resent login.pasteCode login.codeNotFound login.otherInvite
@@ -41,7 +41,6 @@ APP = {
  'app.winesSub': ('{n} vine – læs og bedøm','{n} wines – read and rate','{n} vín – lestu og gefðu einkunn'),
  'app.noWines': ('Ingen vine endnu','No wines yet','Engin vín enn'),
  'app.blindName': ('Vin {n}','Wine {n}','Vín {n}'),
- 'app.starsLabel': ('{n} stjerner','{n} stars','{n} stjörnur'),
  'app.ratingNotePlaceholder': ('Kun du kan se dem','Only you can see them','Aðeins þú sérð þær'),
  'app.notSaved': ('Ikke gemt','Not saved','Ekki vistað'),
  'app.winesStale': ('Vinene kunne ikke opdateres, så du ser dem, som de var sidst. De opdateres af sig selv, når forbindelsen er tilbage.','The wines could not be updated, so you are seeing them as they were last time. They update by themselves when the connection is back.','Ekki tókst að uppfæra vínin, svo þú sérð þau eins og þau voru síðast. Þau uppfærast sjálfkrafa þegar tengingin kemst aftur á.'),
@@ -71,6 +70,9 @@ for k in SITE:
         if k in d: vals[l] = re.sub(r'<[^>]+>', '', d[k])
         else: missing.append(l + ':' + k)
     add(k, vals)
+    # The singular as on the site: "<key>#one", which L() uses when the language's plural rule says "one" for {n}
+    one = {l: re.sub(r'<[^>]+>', '', d[k + '#one']) for l, d in (('da', da), ('en', en), ('is', is_)) if k + '#one' in d}
+    if one: add(k + '#one', one)
 for k, (a, b, c) in APP.items(): add(k, {'da': a, 'en': b, 'is': c})
 json.dump({'sourceLanguage': 'en', 'strings': strings, 'version': '1.0'}, open('Winetastr/Localizable.xcstrings', 'w'), ensure_ascii=False, indent=1)
 print(len(strings), 'strings; missing:', missing)

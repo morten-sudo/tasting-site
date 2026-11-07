@@ -225,7 +225,7 @@ struct SmallStars: View {
                 Image(systemName: "star.fill").font(.caption2).foregroundStyle(n <= value ? Color.tawny : Color.rule)
             }
         }
-        .accessibilityElement().accessibilityLabel(L("app.starsLabel", ["n": "\(value)"]))
+        .accessibilityElement().accessibilityLabel(L(value == 1 ? "rating.starOne" : "rating.starMany", ["n": "\(value)"]))
     }
 }
 
@@ -385,7 +385,7 @@ struct WineDetailView: View {
                             .frame(width: 46, height: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(L("app.starsLabel", ["n": "\(n)"]))
+                    .accessibilityLabel(L(n == 1 ? "rating.starOne" : "rating.starMany", ["n": "\(n)"]))
                     .accessibilityAddTraits(n == stars ? .isSelected : [])
                 }
             }

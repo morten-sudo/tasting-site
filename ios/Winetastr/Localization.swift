@@ -24,10 +24,28 @@ enum AppLanguage {
 }
 
 /// A text from Localizable.xcstrings. Keys match the website's dictionaries where the text exists there.
+/// With a whole number {n}, the form for that number is used when there is one, as t() on the site (WIN-335):
+/// "<key>#one" when the language's plural rule says "one" ("1 is coming so far"), else the key itself.
 func L(_ key: String, _ values: [String: String] = [:]) -> String {
-    var text = AppLanguage.bundle.localizedString(forKey: key, value: nil, table: nil)
+    let bundle = AppLanguage.bundle
+    var text = bundle.localizedString(forKey: key, value: nil, table: nil)
+    if let s = values["n"], let n = Int(s), s.allSatisfy(\.isASCII), s.allSatisfy(\.isNumber),
+       pluralForm(n, appLanguageCode) == "one" {
+        let missing = "\u{0}"
+        let one = bundle.localizedString(forKey: key + "#one", value: missing, table: nil)
+        if one != missing, one != key + "#one" { text = one }
+    }
     for (name, value) in values { text = text.replacingOccurrences(of: "{\(name)}", with: value) }
     return text
+}
+
+/// The plural form of a whole number in one of the app's languages, as Intl.PluralRules on the site (CLDR):
+/// Danish and English "one" only for 1, Icelandic for numbers ending in 1 but not 11 (1, 21, 31, 101 – not 11, 111).
+func pluralForm(_ n: Int, _ lang: String) -> String {
+    switch lang {
+    case "is": return n % 10 == 1 && n % 100 != 11 ? "one" : "other"
+    default: return n == 1 ? "one" : "other"
+    }
 }
 
 var appLocale: Locale { Locale(identifier: appLanguageCode) }

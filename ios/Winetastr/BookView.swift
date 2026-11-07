@@ -236,9 +236,9 @@ struct StatTiles: View {
     let bottles: Int
     var body: some View {
         HStack(spacing: 9.6) {
-            tile(wines, L("book.statWines"))
-            tile(tastings, L("book.statTastings"))
-            tile(bottles, L("book.statBottles"))
+            tile(wines, L("book.statWines", ["n": "\(wines)"]))
+            tile(tastings, L("book.statTastings", ["n": "\(tastings)"]))
+            tile(bottles, L("book.statBottles", ["n": "\(bottles)"]))
         }
         .fixedSize(horizontal: false, vertical: true)
     }

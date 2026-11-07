@@ -39,6 +39,16 @@ enum SelfTest {
             return "web=\(AppDatabase.web) map=\(map) image=\(img) calendar=\(AppDatabase.webURL("/t/x/")?.absoluteString ?? "nil") profile=\(AppDatabase.webURL("/profile/")?.absoluteString ?? "nil")"
         }
         await step("texts") { "\(appLanguageCode): \(L("guest.coming")) / \(L("app.winesSub", ["n": "3"]))" }
+        // WIN-335: the singular "#one" form when the language's plural rule says "one", as t() on the site
+        await step("plurals") {
+            let before = AppLanguage.chosen
+            defer { AppLanguage.chosen = before }
+            return appLanguages.map { lang in
+                AppLanguage.chosen = lang.code
+                return [1, 3, 11, 21].map { L("tastingHome.coming", ["n": "\($0)"]) }.joined(separator: " | ")
+                    + " | " + L("book.statWines", ["n": "1"]) + " | " + L("book.statWines", ["n": "2"])
+            }.joined(separator: " ; ")
+        }
         print(out.joined(separator: "\n"))
     }
 }
