@@ -793,6 +793,28 @@
     }
    }
   },
+  "guest.statusWaitlist": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Du står på ventelisten. Bliver der en plads, rykker du automatisk op – det kan du se her."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "You are on the waiting list. If a place becomes free, you move up automatically – you will see it here."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Þú ert á biðlistanum. Ef pláss losnar færist þú sjálfkrafa upp – þú sérð það hér."
+     }
+    }
+   }
+  },
   "rating.title": {
    "localizations": {
     "da": {

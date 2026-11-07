@@ -417,7 +417,8 @@ import Disclosure from '../../components/ui/Disclosure.astro';
     showCurrent(data as string);
     editing = false;
     updateRsvpView();
-    toast(t('common.saved'), { kind: 'ok' });
+    // A yes to a full tasting: say it went on the waiting list, not just "Saved" (WIN-156)
+    toast(data === 'waitlist' ? t('guest.statusWaitlist') : t('common.saved'), { kind: 'ok' });
     loadFee();
   });
 

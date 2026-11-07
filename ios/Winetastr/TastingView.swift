@@ -377,8 +377,9 @@ struct AnswerSheet: View {
         guard let attending else { error = L("guest.chooseYesNo"); return }
         busy = true; error = nil; defer { busy = false }
         do {
-            _ = try await Backend.respond(code, attending: attending, note: note)
-            done(L("common.saved")); dismiss()
+            // A yes to a full tasting: say it went on the waiting list, not just "Saved" (WIN-156, as on the site)
+            let status = try await Backend.respond(code, attending: attending, note: note)
+            done(status == "waitlist" ? L("guest.statusWaitlist") : L("common.saved")); dismiss()
         } catch {
             self.error = dbMessage(error).contains("lukket") ? L("guest.signupClosed") : L("guest.answerNotSaved")
         }

@@ -6,7 +6,7 @@ SITE = '''common.email common.save common.saved common.cancel common.continue na
 home.upcomingMany tastings.past tastingHome.about tastingHome.yourAnswer tastingHome.change tastingHome.coming tastingHome.host tastingHome.hosts
 tastingHome.closedHint guest.fullHint guest.coming guest.note guest.canChange
 guest.welcome guest.emailLead guest.yourEmail guest.emailBad guest.emailMissing guest.emailTaken guest.emailLocked guest.emailNotSaved
-guest.chooseYesNo guest.answerNotSaved guest.signupClosed status.yes status.no status.waitlist rating.title rating.note rating.starOne rating.starMany blind.blind blind.hint
+guest.chooseYesNo guest.answerNotSaved guest.signupClosed status.yes status.no status.waitlist guest.statusWaitlist rating.title rating.note rating.starOne rating.starMany blind.blind blind.hint
 login.mailLead login.sendCode login.sentIfKnown login.noCodeTitle login.noCodeHelp login.codeLabel login.submit login.resend login.otherEmail login.inviteSummary
 login.inviteHelp login.inviteLabel login.tooManyMails login.sendFailed login.wholeCode login.tooManyTries login.wrongCode
 login.resent login.pasteCode login.codeNotFound login.otherInvite
