@@ -4,7 +4,7 @@ import { formatKr } from './ui/kr';
 import { statusChip } from './ui/status';
 import { starsRo } from './ui/stars';
 import { supabase } from './supabase';
-import { $, mk, sheetPanel, iconButton } from './admin-common';
+import { $, mk, sheetPanel, iconButton, editButton } from './admin-common';
 import { listRow } from './ui/list-row';
 import { price } from './ui/price';
 import { wineThumb } from './ui/thumb';
@@ -85,8 +85,7 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
         });
         actions.push(reveal);
       }
-      const editBtn = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
-      editBtn.dataset.tip = t('admin.edit');
+      const editBtn = editButton(w.name);
       editBtn.addEventListener('click', () => edit(r));
       // Remove from the tasting (not from the library): a quiet trash icon, asked first, with Undo
       const del = iconButton('trash', `${t('twe.remove')}: ${w.name}`, { quiet: true });

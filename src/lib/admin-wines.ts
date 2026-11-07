@@ -15,7 +15,7 @@ import { boxWidth } from './region-map';
 import { mapZoom } from './ui/map-zoom';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
-import { iconButton, closeButton, sheetPanel } from './admin-common';
+import { iconButton, closeButton, sheetPanel, editButton } from './admin-common';
 import { wineChecks, parseAmount, amountText } from './wine-validate';
 import { toast } from './ui/toast';
 import { tooltip } from './ui/tooltip';
@@ -536,8 +536,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       const name = mk('span', 'wf-it-name', x.tastings!.title);
       const tiers = (x.price_tiers ?? []).map((y) => t('twe.tierLine', { n: y.qty, price: formatKr(Number(y.price)) }));
       const price = mk('span', 'wf-it-price', [x.price_dkk != null ? formatKr(Number(x.price_dkk)) : t('twe.noPrice'), ...tiers].join(' · '));
-      const go = mk('a', 'text-btn', t('wineLib.changeInTasting'));
-      go.href = `/t/${x.tastings!.slug}/admin/wines/?edit=${w.id}`;
+      const go = editButton(x.tastings!.title, { href: `/t/${x.tastings!.slug}/admin/wines/?edit=${w.id}` });
       li.append(name, price, go);
       return li;
     }));
@@ -688,8 +687,7 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
         const p = (w.tasting_wines ?? []).find((x) => x.tastings?.slug === tt.slug)?.price_dkk;
         return { text: p != null ? `${tt.title} · ${formatKr(Number(p))}` : tt.title, href: `/t/${tt.slug}/admin/` };
       });
-      const edit = iconButton('edit', `${t('admin.edit')}: ${w.name}`);
-      edit.dataset.tip = t('admin.edit');
+      const edit = editButton(w.name);
       edit.addEventListener('click', () => openForm(w));
       return listRow({
         id: w.id, pic: wineThumb(w), title: w.name, href: paths().get(w.id) ?? '/admin/wines/',

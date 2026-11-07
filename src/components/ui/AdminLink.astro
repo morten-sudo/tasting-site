@@ -1,0 +1,11 @@
+---
+// Component 3 – the one way to an area that is managed (WIN-299): the gear, a link, with the tip "Manage"; screen readers
+// hear "Manage: <what>". adminLink() in src/lib/ui/icon-button.ts builds the same markup. Changing things here is the
+// pencil (EditButton.astro). what: an i18n key – or leave it out and fill it in from the script (setEditWhat()).
+import Icon from './Icon.astro';
+import { en } from '../../i18n/en';
+interface Props { id?: string; href: string; what?: string; size?: 'small' | 'normal'; class?: string; [attr: string]: unknown }
+const { id, href, what, size = 'small', class: cls, ...rest } = Astro.props;
+const tr = (k: string) => (en as Record<string, string>)[k] ?? k;
+---
+<a id={id} href={href} class:list={['icon-act', { md: size === 'normal' }, cls]} data-tip={tr('admin.manage')} data-i18n-attr="data-tip=admin.manage" {...rest}><Icon name="gear" /><span class="sr"><span data-i18n="admin.manage">{tr('admin.manage')}</span><span class="eb-what">{what && <Fragment>: <span data-i18n={what}>{tr(what)}</span></Fragment>}</span></span></a>

@@ -13,7 +13,7 @@ export type Host = { id: string; email: string; name: string | null; language: s
 export { $, mk } from './ui/dom';
 import { $, mk } from './ui/dom';
 
-export { iconButton, closeButton, type IconName } from './icons';
+export { iconButton, closeButton, editButton, adminLink, setEditWhat, type IconName } from './icons';
 import { closeButton } from './ui/icon-button';
 
 async function signOut() {

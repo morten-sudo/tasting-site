@@ -7,6 +7,7 @@ import Sheet from '../../components/ui/Sheet.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import Base from '../../layouts/Base.astro';
 import PageHeader from '../../components/ui/PageHeader.astro';
+import EditButton from '../../components/ui/EditButton.astro';
 import SectionTitle from '../../components/ui/SectionTitle.astro';
 import AdminNav from '../../components/AdminNav.astro';
 import WineQuickAdd from '../../components/WineQuickAdd.astro';
@@ -28,7 +29,7 @@ import '../../styles/admin.css';
             <PageHeader id="wd-name" class="wd-ph">
               <p id="wd-meta" class="wd-meta"></p>
               <p id="wd-overall" class="wd-overall" hidden></p>
-              <button slot="actions" id="wd-edit" class="btn small secondary" type="button" data-i18n="admin.edit">Edit</button>
+              <EditButton slot="actions" id="wd-edit" size="normal" />
             </PageHeader>
           </div>
           <!-- A wine with only a name: a way forward -->
