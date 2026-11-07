@@ -10,7 +10,7 @@ final class FixesTests: XCTestCase {
     private let code = ProcessInfo.processInfo.environment["APP_TEST_CODE"] ?? ""
     private let realDB = ProcessInfo.processInfo.environment["REAL_DB"] == "1"
 
-    private func app(_ lang: String = "da", _ args: [String], mock: [String] = []) -> XCUIApplication {
+    private func app(_ args: [String], lang: String = "da", mock: [String] = []) -> XCUIApplication {
         let a = XCUIApplication()
         let locale = ["da": "da_DK", "en": "en_GB", "is": "is_IS"][lang] ?? "da_DK"
         a.launchArguments = ["-AppleLanguages", "(\(lang))", "-AppleLocale", locale, "-appLanguage", lang, "-inviteCode", code]
@@ -72,7 +72,7 @@ final class FixesTests: XCTestCase {
     // MARK: WIN-315 – a quiz open without questions
 
     private func checkEmptyQuiz(_ lang: String, title: String, tabs: [String], patch: String, shotName: String) {
-        let a = app(lang, ["-route", "quiz"], mock: ["-tastingPatch", patch])
+        let a = app(["-route", "quiz"], lang: lang, mock: ["-tastingPatch", patch])
         XCTAssertTrue(a.staticTexts[title].waitForExistence(timeout: 15), "the empty state")
         XCTAssertFalse(a.buttons["Lås svar"].exists, "nothing to answer")
         for t in ["Stillingen lige nu", "Standings right now", "Staðan núna", "Slutstilling", "Final standings", "Lokastaða"] {
@@ -116,7 +116,7 @@ final class FixesTests: XCTestCase {
     // MARK: WIN-317 / WIN-318 / WIN-319 – the tasting fee and the payment box
 
     private func feeCard(_ lang: String, patch: String, expect: [String], absent: [String], shotName: String, extra: [String] = []) -> XCUIApplication {
-        let a = app(lang, ["-route", "tasting"] + extra, mock: ["-tastingPatch", patch, "-paymentMock", "150"])
+        let a = app(["-route", "tasting"] + extra, lang: lang, mock: ["-tastingPatch", patch, "-paymentMock", "150"])
         let first = a.staticTexts[expect[0]]
         XCTAssertTrue(a.buttons.firstMatch.waitForExistence(timeout: 15))
         scrollTo(a, first, swipes: 10)
