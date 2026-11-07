@@ -11,6 +11,35 @@ export const RELEASES: Release[] = [
     date: '2026-11-07',
     lines: {
       da: [
+        'Alt, du logger ind til, ligger nu på app.winetastr.com. Gamle links, invitationer og bogmærker sender dig videre, og du er stadig logget ind.',
+        'Kontoen står i adressen, så et link til en af dine konti åbner den rigtige.',
+        'En blind vin viser kun sit nummer, indtil du afslører den.',
+        'Betalingsboksen siger, om prisen er fast eller delt, og uden MobilePay står kun beløbet.',
+        'En mængdepris kan ikke være højere end gæsteprisen.',
+        'Kortene har bynavne på alle ni sprog.',
+      ],
+      en: [
+        'Everything you sign in to is now on app.winetastr.com. Old links, invitations and bookmarks take you there, and you stay signed in.',
+        'The account is in the address, so a link to one of your accounts opens the right one.',
+        'A blind wine shows only its number until you reveal it.',
+        'The payment box says whether the price is fixed or shared, and without MobilePay it shows only the amount.',
+        'A quantity price cannot be higher than the guest price.',
+        'The maps have town names in all nine languages.',
+      ],
+      is: [
+        'Allt sem þú skráir þig inn í er nú á app.winetastr.com. Gamlir tenglar, boð og bókamerki vísa þér þangað og þú ert áfram innskráð(ur).',
+        'Reikningurinn stendur í slóðinni, svo tengill á einn af reikningunum þínum opnar þann rétta.',
+        'Blint vín sýnir aðeins númerið sitt þar til þú afhjúpar það.',
+        'Greiðsluboxið segir hvort verðið er fast eða deilt, og án MobilePay sýnir það aðeins upphæðina.',
+        'Magnverð getur ekki verið hærra en verðið fyrir gesti.',
+        'Kortin eru með bæjarnöfnum á öllum níu tungumálum.',
+      ],
+    },
+  },
+  {
+    date: '2026-11-07',
+    lines: {
+      da: [
         'MobilePay sættes op på hver smagning under Indstillinger: slå det til, og skriv nummer og navn på den, der får pengene.',
         'Gæsten ser kun MobilePay-nummer, modtager og beløb, så pengene går til den rigtige.',
         'Overblikket viser gæster og vine som almindelige rækker med links videre.',
