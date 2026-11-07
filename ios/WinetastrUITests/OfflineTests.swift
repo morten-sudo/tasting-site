@@ -95,7 +95,8 @@ final class OfflineTests: XCTestCase {
         let blind = a.buttons.containing(NSPredicate(format: "label CONTAINS 'Blind – afsløres senere'")).firstMatch
         for _ in 0..<15 where !blind.isHittable { a.buttons["Næste"].firstMatch.tap(); sleep(1) }
         XCTAssertTrue(blind.isHittable, "a blind card")
-        XCTAssertTrue(blind.label.hasPrefix("Vin "), "no name: \(blind.label)")
+        // "11, VINTAGE, Vin 11, Blind – afsløres senere, Blind": the number, the style the database gives, "Vin 11"
+        XCTAssertTrue(blind.label.range(of: #"Vin \d+"#, options: .regularExpression) != nil, "no name: \(blind.label)")
         shot("offline-blind.png")
     }
 
