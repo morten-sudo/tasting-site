@@ -205,6 +205,13 @@ begin
   failed := false; begin perform set_tenant_name('x'); exception when others then failed := true; end;
   assert not failed, 'the owner cannot name the account';
   select count(*) into n from my_tasting_roles() where hosting and can_manage;                              assert n = 1, 'host A''s roles are wrong';
+  -- WIN-326: a quantity price above the normal price (100) is refused; equal to it is fine
+  failed := false; begin update tasting_wines set price_tiers = '[{"qty":6,"price":180}]' where wine_id = -1001; exception when others then failed := true; end;
+  assert failed, 'a quantity price above the normal price is accepted';
+  update tasting_wines set price_tiers = '[{"qty":6,"price":100}]' where wine_id = -1001; get diagnostics n = row_count; assert n = 1, 'a quantity price equal to the normal price is refused';
+  failed := false; begin update tasting_wines set price_dkk = 90 where wine_id = -1001; exception when others then failed := true; end;
+  assert failed, 'the normal price can go below a quantity price';
+  update tasting_wines set price_tiers = '[]' where wine_id = -1001;
 end $$;
 reset role;
 
