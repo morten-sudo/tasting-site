@@ -375,7 +375,7 @@ struct HomeView: View {
         guard let ov = await MapStore.shared.overview(overviewFor(places)) else { return nil }
         let focus = await focusFor(places)
         let pins = clusterPins(ov, list.map { (lon: $0.p.lon, lat: $0.p.lat, n: $0.n, label: $0.p.label, region: $0.region) }, focus: focus)
-        return OverviewDrawing(ov, pins: pins, focus: focus, detail: await detailFor(focus))
+        return OverviewDrawing(ov, pins: pins, focus: focus, detail: await detailFor(focus), towns: await MapStore.shared.towns())
     }
 }
 

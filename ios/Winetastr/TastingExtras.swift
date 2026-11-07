@@ -106,7 +106,7 @@ private func groupForMap(_ map: RegionMap, _ wines: [Wine]) async -> Grouped {
 func buildOrigins(_ tab: RegionTab, all: [Wine], width: Double = 358) async -> Origins? {
     let numbers = Dictionary(uniqueKeysWithValues: all.enumerated().map { ($0.element.id, $0.offset + 1) })
     func nums(_ ids: [Int]) -> String { L("map.wineNumbers", ["list": numberRanges(ids.compactMap { numbers[$0] })]) }
-    guard let id = mapIdFor(tab.name), let map = await MapStore.shared.map(id) else { return await overviewOrigins(tab, nums) }
+    guard let id = mapIdFor(tab.name), let map = await MapStore.shared.map(id) else { return await overviewOrigins(tab, nums, width: width) }
     let g = await groupForMap(map, tab.wines)
     let hero = RegionDrawing(map, mode: .background, counts: g.counts, wholeRegion: g.wholeRegion)
     // Producers with an exact place get a pin (one per producer)
@@ -125,7 +125,7 @@ func buildOrigins(_ tab: RegionTab, all: [Wine], width: Double = 358) async -> O
     return Origins(map: .region(full), legend: legend, sources: map.sources, osm: !pins.isEmpty, hero: hero)
 }
 
-private func overviewOrigins(_ tab: RegionTab, _ nums: ([Int]) -> String) async -> Origins? {
+private func overviewOrigins(_ tab: RegionTab, _ nums: ([Int]) -> String, width: Double) async -> Origins? {
     var groups: [String: (p: Place, wines: [Wine])] = [:]; var order: [String] = []; var unplaced: [Wine] = []
     for w in tab.wines {
         guard let p = await placeOf(w) else { unplaced.append(w); continue }
@@ -139,7 +139,8 @@ private func overviewOrigins(_ tab: RegionTab, _ nums: ([Int]) -> String) async 
     if !places.isEmpty, let ov = await MapStore.shared.overview(overviewFor(places)) {
         let focus = await focusFor(places)
         // A small area (one country, an island): the detailed tiles, so Madeira is land under its pin
-        drawing = OverviewDrawing(ov, pins: list.map { .init(lon: $0.p.lon, lat: $0.p.lat, label: $0.p.label, n: $0.wines.count) }, focus: focus, detail: await detailFor(focus))
+        drawing = OverviewDrawing(ov, pins: list.map { .init(lon: $0.p.lon, lat: $0.p.lat, label: $0.p.label, n: $0.wines.count) }, focus: focus, detail: await detailFor(focus),
+                                 towns: await MapStore.shared.towns(), boxWidth: width)
     }
     var legend: [LegendItem] = []
     if drawing != nil {

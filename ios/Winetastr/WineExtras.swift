@@ -29,7 +29,9 @@ func wineMap(_ w: Wine, width: Double = 358) async -> WineMap? {
     guard let place = await placeOf(w, appellationId: aid), let ov = await MapStore.shared.overview(overviewFor([place])) else { return nil }
     let focus = await focusFor([place], close: true)
     let detail = await detailFor(focus)
-    let d = OverviewDrawing(ov, pins: [.init(lon: place.lon, lat: place.lat, label: place.label)], focus: focus, detail: detail)
+    // Towns for orientation, as on the detailed region maps
+    let d = OverviewDrawing(ov, pins: [.init(lon: place.lon, lat: place.lat, label: place.label)], focus: focus, detail: detail,
+                            towns: await MapStore.shared.towns(), boxWidth: width)
     return WineMap(drawing: .overview(d), sources: "Natural Earth", osm: place.how == "producer")
 }
 
