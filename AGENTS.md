@@ -27,7 +27,8 @@ Everything an agent needs to start work in minutes. CLAUDE.md has the rules; thi
   (simulator 2). Update with `git fetch origin <branch> && git checkout --detach FETCH_HEAD`.
 - From `ios/`: `tools/simbuild.sh`, `tools/simtest.sh` (log `ios/build/test.log`, shots `ios/build/shots`). Simulator via
   `SIM=6FB2F2B7-FE7A-425E-A7E7-B52F31B2AC51` (1, default) or `SIM=D145F3CB-09AD-499B-AA8B-DCDFBCD9F6F8` (2).
-- While working: `tools/simtest.sh -only-testing:WinetastrUITests/<Class>/<test>`. Full suite once at the end (8–10 min).
+- An issue runs only its tests: `tools/simtest.sh -only-testing:WinetastrUITests/<Class>/<test>`. The full suite runs on `dev`
+  before a release. Test rules/logic without the screen; UI tests only for what must be seen or tapped.
 - Test codes are in the untracked `ios/.env.local` on the Mac. Never in commits or reports.
 - Strings: `ios/tools/make_strings.py` reads GitHub main; `python3 ios/tools/make_strings_local.py <repo root>` reads the
   local `src/i18n` instead.
@@ -37,7 +38,8 @@ Everything an agent needs to start work in minutes. CLAUDE.md has the rules; thi
 
 ## Testing
 - Danish and English, phone (390) and large screen (1440). Icelandic is not tested.
-- Site screenshots with mocked Supabase: Playwright with `page.route` on the Supabase URL (Chromium is preinstalled).
+- Site tests run locally against a build with mocked Supabase (Playwright `page.route`; Chromium is preinstalled). The real
+  test addresses only for a short check before a release.
 - Real test addresses: `test.winetastr.com` (front page) and `test-app.winetastr.com` (app pages), branch `dev`.
 
 ## Commits

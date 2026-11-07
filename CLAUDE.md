@@ -88,9 +88,10 @@ The site and the native SwiftUI guest app are one product, developed together by
 
 - **Every change is decided for both.** A new feature or general fix that touches guests or the database is planned once and built in the same go in the database, on the site and in the app, unless the issue has the label `kun-web` or `app-senere`. Host and superadmin pages are web only (the app has no admin).
 - **Not done until both are checked.** A guest change is not finished before the site and the app (`ios/tools/simbuild.sh`, `ios/tools/simtest.sh`) have been looked at. Building the app needs a session linked to Morten's Mac.
-- **App tests: targeted while fixing, full once.** A full `simtest.sh` takes 8–10 minutes. While building or fixing, run only
-  the tests that cover the change (`tools/simtest.sh -only-testing:WinetastrUITests/<TestClass>`); run the full suite exactly
-  once, at the end. Brief every agent that builds the app with this rule.
+- **App tests: an issue runs its own tests; the full suite runs before each release** (Morten, 7 November 2026). An issue
+  runs only the tests that cover it (`tools/simtest.sh -only-testing:WinetastrUITests/<TestClass>`), new and existing. The
+  full suite runs once on `dev` before it goes to `main`. Rules and logic (texts, plurals, addresses, blind wines) are tested
+  without the screen (unit tests / `SelfTest.swift`); UI tests only for what must be seen or tapped. Brief every agent with this.
 - **Tests in Danish and English only** (Morten, 7 November 2026). Icelandic stays on the site and in the app, but it is not
   tested or screenshotted any more, also where an issue's test cases say "dansk, engelsk og islandsk".
 - **Two simulators may run at once** (Morten, 7 November 2026): `SIM=6FB2F2B7-FE7A-425E-A7E7-B52F31B2AC51` (default) and
