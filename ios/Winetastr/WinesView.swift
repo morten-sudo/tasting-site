@@ -314,10 +314,16 @@ struct WineDetailView: View {
             #endif
         }
         .background(Color.lodge)
-        .overlay(alignment: .bottom) { CartBar(tasting: tasting, wines: wines).animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug)) }
+        // The toast above the cart bar, so "Gå til kurven" is never under it
+        .overlay(alignment: .bottom) {
+            VStack(spacing: 0) {
+                ToastView(toast: $toast, bottom: model.cartCount(tasting.slug) > 0 ? 10 : 20)
+                CartBar(tasting: tasting, wines: wines)
+            }
+            .animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug))
+        }
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
-        .toast($toast)
         .task(id: wine.id) { await load() }
         .task(id: wine.id) { await watchBlind() }
         .onDisappear { flush() }

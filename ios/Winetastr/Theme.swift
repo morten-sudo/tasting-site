@@ -28,6 +28,8 @@ extension Color {
     static let warnText = hex(0x7A5200)
     static let warnBg = hex(0xFDF6DF)
     static let warnLine = hex(0xEAD48F)
+    /// .toast .t-act
+    static let toastAction = hex(0xF3D9A4)
     static func styleTone(_ key: String?) -> Color {
         switch key {
         case "Red": return hex(0x861530)
@@ -261,13 +263,16 @@ struct LoadingState: View {
 
 /// One toast (src/lib/ui/toast.ts): a message goes by itself after 4 s; an error stays until it is closed or a new
 /// try works (WIN-314, WIN-336), so it can be read.
+/// With an action (Undo) it stays 8 s, as on the site.
 struct Toast: Equatable {
     let text: String
     let error: Bool
+    var action: (label: String, run: @MainActor () -> Void)? = nil
     /// A new toast with the same text starts its time again
     private let id = UUID()
-    static func ok(_ text: String) -> Toast { Toast(text: text, error: false) }
+    static func ok(_ text: String, action: (label: String, run: @MainActor () -> Void)? = nil) -> Toast { Toast(text: text, error: false, action: action) }
     static func error(_ text: String) -> Toast { Toast(text: text, error: true) }
+    static func == (a: Toast, b: Toast) -> Bool { a.id == b.id }
 }
 
 extension Optional where Wrapped == Toast {
@@ -279,7 +284,18 @@ extension Optional where Wrapped == Toast {
 struct ToastModifier: ViewModifier {
     @Binding var toast: Toast?
     func body(content: Content) -> some View {
-        content.overlay(alignment: .bottom) {
+        content.overlay(alignment: .bottom) { ToastView(toast: $toast) }
+    }
+}
+extension View { func toast(_ toast: Binding<Toast?>) -> some View { modifier(ToastModifier(toast: toast)) } }
+
+/// The toast itself. Under it a page can put its cart bar, so the toast shows above the bar and never covers it
+/// (as on the site: .toast-host is lifted while .cartbar shows).
+struct ToastView: View {
+    @Binding var toast: Toast?
+    var bottom: CGFloat = 20
+    var body: some View {
+        Group {
             if let toast {
                 HStack(spacing: 12) {
                     SiteIcon(toast.error ? "warn" : "check", size: 17.6)
@@ -287,6 +303,15 @@ struct ToastModifier: ViewModifier {
                     Text(toast.text).font(.body(15.2)).foregroundStyle(Color.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fixedSize(horizontal: false, vertical: true)
+                    // .t-act: the action replaces the toast
+                    if let action = toast.action {
+                        Button { action.run(); withAnimation { self.toast = nil } } label: {
+                            Text(action.label).font(.semibold(15.2)).underline()
+                                .foregroundStyle(toast.error ? Color.white : Color.toastAction)
+                                .padding(.horizontal, 6).frame(minHeight: 32).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
                     // The site's close icon (closeButton(t('admin.close'), 'small') on a dark surface)
                     Button { withAnimation { self.toast = nil } } label: {
                         SiteIcon("x", size: 19.2).foregroundStyle(Color.white.opacity(0.8)).frame(width: 32, height: 32)
@@ -301,7 +326,7 @@ struct ToastModifier: ViewModifier {
                 .background(toast.error ? Color.errorText : Color.paper, in: RoundedRectangle(cornerRadius: 8))
                 .shadow(color: .black.opacity(0.22), radius: 12, y: 8)
                 .frame(maxWidth: 544)
-                .padding(.horizontal, 16).padding(.bottom, 20)
+                .padding(.horizontal, 16).padding(.bottom, bottom)
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier(toast.error ? "toast-error" : "toast")
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -312,8 +337,8 @@ struct ToastModifier: ViewModifier {
                     let said = NSAttributedString(string: toast.text, attributes: [.accessibilitySpeechQueueAnnouncement: toast.error])
                     UIAccessibility.post(notification: .announcement, argument: said)
                     guard !toast.error else { return }
-                    // As on the site: 4 s
-                    try? await Task.sleep(for: .seconds(4))
+                    // As on the site: 4 s, 8 s with an action
+                    try? await Task.sleep(for: .seconds(toast.action == nil ? 4 : 8))
                     guard !Task.isCancelled, self.toast == toast else { return }
                     withAnimation { self.toast = nil }
                 }
@@ -322,7 +347,6 @@ struct ToastModifier: ViewModifier {
         .animation(.easeOut(duration: 0.2), value: toast)
     }
 }
-extension View { func toast(_ toast: Binding<Toast?>) -> some View { modifier(ToastModifier(toast: toast)) } }
 
 /// The bars are the app's own (like the site's), and swiping back must keep working without the system bar.
 extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
