@@ -307,7 +307,6 @@ struct TopBar: View {
                     .frame(maxWidth: .infinity).padding(.vertical, 6)
                     .background(Color.paper)
                     .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    .accessibilityElement(children: .combine)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
