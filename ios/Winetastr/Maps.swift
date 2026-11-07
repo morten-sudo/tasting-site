@@ -564,8 +564,13 @@ private enum MapColor {
 /// Draws text with the halo the site gets from paint-order: stroke
 private func haloText(_ ctx: inout GraphicsContext, _ text: Text, _ halo: Text, at p: CGPoint, anchor: UnitPoint, width: Double) {
     let r = width / 2
-    for (dx, dy) in [(-r, 0), (r, 0), (0, -r), (0, r), (-r * 0.7, -r * 0.7), (r * 0.7, -r * 0.7), (-r * 0.7, r * 0.7), (r * 0.7, r * 0.7)] {
-        ctx.draw(halo, at: CGPoint(x: p.x + dx, y: p.y + dy), anchor: anchor)
+    // 16 directions at the stroke's edge and 8 halfway: a smooth halo also around the thin upright letters
+    let resolved = ctx.resolve(halo)
+    for (d, steps) in [(r, 16), (r / 2, 8)] {
+        for i in 0..<steps {
+            let a: Double = Double(i) / Double(steps) * 2 * Double.pi
+            ctx.draw(resolved, at: CGPoint(x: p.x + cos(a) * d, y: p.y + sin(a) * d), anchor: anchor)
+        }
     }
     ctx.draw(text, at: p, anchor: anchor)
 }
