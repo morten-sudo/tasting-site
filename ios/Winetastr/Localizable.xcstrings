@@ -2839,28 +2839,6 @@
     }
    }
   },
-  "pay.feeComment": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Smagning {name}"
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Tasting {name}"
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Smökkun {name}"
-     }
-    }
-   }
-  },
   "pay.noNumber": {
    "localizations": {
     "da": {
@@ -2879,72 +2857,6 @@
      "stringUnit": {
       "state": "translated",
       "value": "Upphæðin {amount} er greidd með MobilePay. Gestgjafinn segir þér hvernig."
-     }
-    }
-   }
-  },
-  "pay.lead": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Betal {amount} med MobilePay"
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Pay {amount} with MobilePay"
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Greiddu {amount} með MobilePay"
-     }
-    }
-   }
-  },
-  "pay.how": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Åbn MobilePay på din telefon, vælg Send, og brug nummer, beløb og besked herunder – hver har en kopiknap."
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Open MobilePay on your phone, choose Send, and use the number, amount and message below – each has a copy button."
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Opnaðu MobilePay í símanum, veldu Senda og notaðu númerið, upphæðina og skilaboðin hér fyrir neðan – hvert hefur afritunarhnapp."
-     }
-    }
-   }
-  },
-  "pay.copyLabel": {
-   "localizations": {
-    "da": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Kopiér {what}"
-     }
-    },
-    "en": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Copy {what}"
-     }
-    },
-    "is": {
-     "stringUnit": {
-      "state": "translated",
-      "value": "Afrita {what}"
      }
     }
    }
@@ -2976,19 +2888,41 @@
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Nummer"
+      "value": "MobilePay-nummer"
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "Number"
+      "value": "MobilePay number"
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Númer"
+      "value": "MobilePay-númer"
+     }
+    }
+   }
+  },
+  "pay.recipient": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Modtager"
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Recipient"
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Viðtakandi"
      }
     }
    }
@@ -3015,24 +2949,24 @@
     }
    }
   },
-  "pay.message": {
+  "pay.copyNumber": {
    "localizations": {
     "da": {
      "stringUnit": {
       "state": "translated",
-      "value": "Besked"
+      "value": "Kopiér nummer"
      }
     },
     "en": {
      "stringUnit": {
       "state": "translated",
-      "value": "Message"
+      "value": "Copy number"
      }
     },
     "is": {
      "stringUnit": {
       "state": "translated",
-      "value": "Skilaboð"
+      "value": "Afrita númer"
      }
     }
    }

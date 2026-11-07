@@ -1,0 +1,18 @@
+---
+// A tasting's MobilePay (WIN-278): one switch, one number and one name – both required while it is on (the database's
+// rule, tastings_payee_named). Used in the tasting's settings panel and in the new-tasting form; the behaviour is in
+// src/lib/mobilepay-form.ts. Off: the fields stay visible but cannot be changed, and what is saved is kept.
+// The slot comes right after the switch (e.g. where the proposal comes from).
+import Switch from './ui/Switch.astro';
+import { en } from '../i18n/en';
+interface Props { prefix: string }
+const { prefix } = Astro.props;
+---
+<Switch title="mp.on" hint="mp.onHint" id={`${prefix}-mp-on`} />
+<slot />
+<label for={`${prefix}-mp-number`} data-i18n="admin.mobilepay">{en['admin.mobilepay']}</label>
+<input class="input" id={`${prefix}-mp-number`} type="tel" inputmode="tel" autocomplete="off" placeholder="12 34 56 78" />
+<p class="help" data-i18n="mp.numberHint">{en['mp.numberHint']}</p>
+<label for={`${prefix}-mp-name`} data-i18n="pay.recipient">{en['pay.recipient']}</label>
+<input class="input" id={`${prefix}-mp-name`} type="text" autocomplete="name" maxlength="120" />
+<p class="help" data-i18n="mp.nameHint">{en['mp.nameHint']}</p>

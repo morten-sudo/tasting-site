@@ -1,4 +1,4 @@
--- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 2 of 4.
+-- Generated from supabase/tests/security.sql by scripts/security-parts.mjs – do not edit; part 2 of 5.
 -- Sections: Fixtures, Host D, Host A removes D, Host E, Host C, A signed-in guest, Sign-up gate. Rolled back at the end.
 begin;
 
@@ -10,10 +10,16 @@ insert into hosts (id, email, name) values
 insert into tastings (id, host_id, slug, title, place, intro, mobilepay, orders_open, quiz_open, signup_open) values
   ('00000000-0000-4000-b000-00000000000a', '00000000-0000-4000-a000-00000000000a', 'selftest-a', 'Test A', 'Secret street A', 'Intro A', null, true, true, true),
   ('00000000-0000-4000-b000-00000000000b', '00000000-0000-4000-a000-00000000000b', 'selftest-b', 'Test B', 'Secret street B', 'Intro B', null, true, true, true);
--- Each tasting has a MobilePay number. Where the database has a recipient's name (WIN-278, on the test database before
--- its release), the number gets one too, so this file runs on both the test and the live database.
+-- Each tasting has a MobilePay number, so this file runs on every database the release passes through:
+--   * with WIN-278's switch (tastings.mobilepay_on): MobilePay off in both, a number without a name (the WIN-278
+--     sections below start from that);
+--   * with only a recipient's name (WIN-278's first migration): the number gets a name too;
+--   * before WIN-278: only the number.
 do $$ begin
-  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_on') then
+    execute $q$update tastings set mobilepay_on = false, mobilepay_name = null,
+      mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end where slug in ('selftest-a', 'selftest-b')$q$;
+  elsif exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'tastings' and column_name = 'mobilepay_name') then
     execute $q$update tastings set mobilepay = case slug when 'selftest-a' then '11111111' else '22222222' end,
       mobilepay_name = case slug when 'selftest-a' then 'Host A' else 'Host B' end where slug in ('selftest-a', 'selftest-b')$q$;
   else

@@ -41,3 +41,6 @@
 # The personas page is gone (the personas live in Confluence)
 /superadmin/dev/personas  /superadmin/dev/components/   301
 /superadmin/dev/personas/ /superadmin/dev/components/   301
+# WIN-278: MobilePay moved to each tasting's settings; the old Payments page goes to the tastings
+/admin/payments           /admin/tastings/           301
+/admin/payments/          /admin/tastings/           301

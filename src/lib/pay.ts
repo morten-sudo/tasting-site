@@ -1,39 +1,36 @@
-// Component 51 – the payment box: how to pay, then the number, the amount and the message as a facts list (22) with a
-// copy button each (the toast says what was copied). Used in the cart, the wine book and for the tasting's own price on
-// the guest's page. No button or QR code into MobilePay: its mobilepay://send link is refused on real phones ("Vi kan
-// ikke genkende QR-koden"); a button comes back only for a link that has been tested on a real phone (roadmap 1.8).
+// Component 51 – the payment box: the MobilePay number (with a copy button), the recipient's name and the amount as a
+// facts list (22) – nothing else (WIN-278). Used in the cart (the receipt and unpaid orders) and for the tasting's own
+// price on the guest's page. The database gives the number only together with the recipient's name (get_tasting:
+// mobilepay and mobilepay_name); without both the guest sees the amount and that the host tells how to pay.
+// No button or QR code into MobilePay: its mobilepay://send link is refused on real phones.
 import { t } from '../i18n';
 import { formatKr } from './ui/kr';
 import { facts } from './ui/facts';
 import { mk } from './ui/dom';
 
-// Host's MobilePay number, set from the tasting (setPayee).
+// The tasting's MobilePay number and the name of the person who gets the money (setPayee, from get_tasting)
 let mobilepay = '';
-export function setPayee(number: unknown) {
-  if (typeof number === 'string') mobilepay = number.replace(/\s/g, '');
-  else if (number === null) mobilepay = '';
+let recipient = '';
+export function setPayee(number: unknown, name?: unknown) {
+  mobilepay = typeof number === 'string' ? number.replace(/\s/g, '') : '';
+  recipient = typeof name === 'string' ? name.trim() : '';
 }
 
-export function payBox(amount: number, comment: string) {
-  const pretty = mobilepay.replace(/(\d{2})(?=\d)/g, '$1 ');
-  const box = mk('div', 'pay');
-  const amountStr = amount.toFixed(2);
+/** "12345678" → "12 34 56 78" */
+export const prettyNumber = (n: string) => n.replace(/\s/g, '').replace(/(\d{2})(?=\d)/g, '$1 ');
 
-  if (!mobilepay) {
+export function payBox(amount: number) {
+  const box = mk('div', 'pay');
+  // Never a number without the recipient's name
+  if (!mobilepay || !recipient) {
     box.append(mk('p', '', t('pay.noNumber', { amount: formatKr(amount) })));
     return box;
   }
-
-  box.append(mk('p', 'pay-lead', t('pay.lead', { amount: formatKr(amount) })));
-
-  box.append(mk('p', 'help', t('pay.how')));
-
-  const row = (label: string, shown: string, copy: string) =>
-    ({ label, value: shown, copy: { text: copy, label: t('pay.copyLabel', { what: label.toLowerCase() }), done: `${t('pay.copied')}: ${shown}` } });
+  const pretty = prettyNumber(mobilepay);
   box.append(facts([
-    row(t('pay.number'), pretty, mobilepay),
-    row(t('pay.amount'), formatKr(amount), amountStr.replace('.', ',')),
-    row(t('pay.message'), comment, comment),
+    { label: t('pay.number'), value: pretty, copy: { text: mobilepay, label: t('pay.copyNumber'), done: `${t('pay.copied')}: ${pretty}` } },
+    { label: t('pay.recipient'), value: recipient },
+    { label: t('pay.amount'), value: formatKr(amount) },
   ])!);
   return box;
 }

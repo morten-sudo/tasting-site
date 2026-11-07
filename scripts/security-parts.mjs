@@ -29,6 +29,7 @@ const parts = [
   ['Host D', 'Host A removes D', 'Host E', 'Host C', 'A signed-in guest', 'Sign-up gate'],
   ['Host A', 'Not signed in', 'Bottle size', 'Blind tasting'],
   ['Host A', 'Not signed in', 'Leaderboard names', 'Blind tasting'],
+  ['Host A', 'Not signed in', 'Payment recipient', 'MobilePay off', "New tasting's MobilePay", 'Blind tasting'],
 ];
 // Every section of security.sql must be in a part (Fixtures goes into all of them)
 const missing = names.filter((n) => n !== names[0] && !parts.some((list) => list.some((s) => n.startsWith(s))));
