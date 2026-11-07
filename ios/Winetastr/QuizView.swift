@@ -226,6 +226,8 @@ struct QuizView: View {
         busy = true; defer { busy = false }
         do {
             try await Backend.submitAnswer(tasting.code, question: q.id, key: key)
+            // A new try worked: the error from the last one goes (WIN-314)
+            toast = nil
             answers[q.id] = key; selected = nil
             board = (try? await Backend.leaderboard(tasting.code)) ?? board
         } catch {

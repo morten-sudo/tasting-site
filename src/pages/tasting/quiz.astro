@@ -50,7 +50,7 @@ import Progress from '../../components/ui/Progress.astro';
   import { listRow } from '../../lib/ui/list-row';
   import { chip } from '../../lib/ui/status';
   import { $, mk } from '../../lib/ui/dom';
-  import { toast } from '../../lib/ui/toast';
+  import { toast, hideErrorToast } from '../../lib/ui/toast';
   import { setLoading } from '../../lib/ui/button';
   import { choiceCards } from '../../lib/ui/choice-cards';
   import { resolveGuestCode, tastingUrl, currentSlug } from '../../lib/guest';
@@ -148,6 +148,8 @@ import Progress from '../../components/ui/Progress.astro';
       if (error.message.includes('ikke åben')) start();
       return;
     }
+    // A new try worked: the error from the last one goes (WIN-314)
+    hideErrorToast();
     answers.set(q.id, selected);
     current = firstUnanswered();
     renderQuestion();
