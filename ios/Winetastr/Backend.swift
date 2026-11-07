@@ -153,7 +153,7 @@ struct BoardRow: Decodable { let name: String; let points: Int; let answered: In
 
 struct TastingPayment: Decodable { let amount: Double; let paid: Bool }
 
-struct MyRating: Decodable { let wine_id: Int; let rating: Int?; let note: String? }
+struct MyRating: Codable { let wine_id: Int; let rating: Int?; let note: String? }
 struct Profile: Decodable { let email: String?; let name: String?; let is_host: Bool? }
 
 /// A wine in "My wine book" (my_wine_book)
@@ -204,16 +204,26 @@ enum Backend {
         return lines
     }
 
-    static func invite(_ code: String) async throws -> Invite? {
-        let rows: [Invite] = try decode(try await supabase.rpc("get_invite", params: CodeParam(code: code)).execute().data)
+    /// keep (here and below): the answer is also stored on the phone as it came, for a start without network (WIN-287)
+    static func invite(_ code: String, keep: Bool = false) async throws -> Invite? {
+        try NetHook.check()
+        let data = try await supabase.rpc("get_invite", params: CodeParam(code: code)).execute().data
+        let rows: [Invite] = try decode(data)
+        if keep { WineCache.save(data, "invite.json", code: code) }
         return rows.first
     }
-    static func tasting(_ code: String) async throws -> TastingInfo? {
+    static func tasting(_ code: String, keep: Bool = false) async throws -> TastingInfo? {
+        try NetHook.check()
         let data = try await supabase.rpc("get_tasting", params: CodeParam(code: code)).execute().data
+        if keep { WineCache.save(data, "tasting.json", code: code) }
         return try? decode(data)
     }
-    static func wines(_ code: String) async throws -> [Wine] {
-        var list: [Wine] = try decode(try await supabase.rpc("get_wines", params: CodeParam(code: code)).execute().data)
+    /// keep: the answer is also stored as it came, for showing the wines without network (WIN-287)
+    static func wines(_ code: String, keep: Bool = false) async throws -> [Wine] {
+        try NetHook.check()
+        let data = try await supabase.rpc("get_wines", params: CodeParam(code: code)).execute().data
+        var list: [Wine] = try decode(data)
+        if keep { WineCache.saveWines(data, code: code) }
         #if DEBUG
         // Screenshots of a size that is not 75 cl, without changing the test data: -bottleMock 150 sets the first wine's
         if let s = UserDefaults.standard.string(forKey: "bottleMock"), let v = Double(s), let i = list.firstIndex(where: { !$0.isBlind }) {
@@ -222,11 +232,15 @@ enum Backend {
         #endif
         return list
     }
-    static func ratings(_ code: String) async throws -> [Int: MyRating] {
+    static func ratings(_ code: String, keep: Bool = false) async throws -> [Int: MyRating] {
+        try NetHook.check()
         let rows: [MyRating] = try decode(try await supabase.rpc("get_my_ratings", params: CodeParam(code: code)).execute().data)
-        return Dictionary(uniqueKeysWithValues: rows.map { ($0.wine_id, $0) })
+        let out = Dictionary(uniqueKeysWithValues: rows.map { ($0.wine_id, $0) })
+        if keep { WineCache.saveRatings(out, code: code) }
+        return out
     }
     static func rate(_ code: String, wine: Int, stars: Int?, note: String?) async throws {
+        try NetHook.check()
         try await supabase.rpc("rate_wine", params: Rate(code: code, w_id: wine, stars: stars, note: note)).execute()
     }
     /// Returns the guest's new status: yes, waitlist or no.
@@ -236,8 +250,13 @@ enum Backend {
     static func setEmail(_ code: String, _ email: String) async throws {
         try await supabase.rpc("set_my_email", params: SetEmail(code: code, e: email)).execute()
     }
-    static func myTastings() async throws -> [MyTasting] {
-        try decode(try await supabase.rpc("my_tastings").execute().data)
+    /// keep: stored for the signed-in email (my_tastings is the email's, not one code's)
+    static func myTastings(keepFor email: String? = nil) async throws -> [MyTasting] {
+        try NetHook.check()
+        let data = try await supabase.rpc("my_tastings").execute().data
+        let list: [MyTasting] = try decode(data)
+        if let email { WineCache.save(data, "my_tastings.json", code: "email:" + email.lowercased()) }
+        return list
     }
     static func inviteIsMine(_ code: String) async -> Bool {
         guard let data = try? await supabase.rpc("invite_is_mine", params: CodeParam(code: code)).execute().data else { return true }
@@ -293,7 +312,8 @@ enum Backend {
     }
     /// A shared list the site reads straight from its table (the appellations, regions and places for the maps)
     static func table<T: Decodable>(_ name: String, _ columns: String) async throws -> [T] {
-        try decode(try await supabase.from(name).select(columns).execute().data)
+        try NetHook.check()
+        return try decode(try await supabase.from(name).select(columns).execute().data)
     }
     static func logLogin() async { _ = try? await supabase.rpc("log_usage", params: Usage(feature: "login")).execute() }
 }

@@ -7,6 +7,8 @@ struct TastingView: View {
     @State private var info: TastingInfo?
     @State private var invite: Invite?
     @State private var failed = false
+    /// The tasting from the phone, as it was last fetched (WIN-287)
+    @State private var stale = false
     @State private var editing = false
     @State private var toast: String?
     @State private var wines: [Wine] = []
@@ -50,7 +52,7 @@ struct TastingView: View {
         .task { model.currentTasting = tasting.slug; await load() }
         .task { await watchBlind() }
         .onChange(of: region) { Task { await drawRegion() } }
-        .onChange(of: model.online) { if model.online && failed { Task { await load() } } }
+        .onChange(of: model.online) { if model.online && (failed || stale) { Task { await load() } } }
         .sheet(isPresented: $editing) {
             if let invite, let info {
                 AnswerSheet(code: tasting.code, invite: invite, full: info.full ?? false) { message in
@@ -112,6 +114,7 @@ struct TastingView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     head
                     VStack(alignment: .leading, spacing: 36) {
+                        if stale { NoticeBox(text: L("app.pageStale")) }
                         VStack(alignment: .leading, spacing: 9.6) {
                             if let d = info.start {
                                 factLine("calendar", whenText(d)) { Button(L("tastingHome.calendar")) { addToCalendar = true }.buttonStyle(TextButton(size: 14.4, minHeight: 20)) }
@@ -239,13 +242,13 @@ struct TastingView: View {
 
     private func load() async {
         do {
-            async let i = Backend.tasting(tasting.code)
-            async let v = Backend.invite(tasting.code)
+            async let i = Backend.tasting(tasting.code, keep: true)
+            async let v = Backend.invite(tasting.code, keep: true)
             let (a, b) = try await (i, v)
-            info = a; invite = b; failed = a == nil || b == nil
+            info = a; invite = b; failed = a == nil || b == nil; stale = false
             model.tastingHasQuiz = (a?.quiz_count ?? 0) > 0
             payment = try? await Backend.payment(tasting.code)
-            if let w = try? await Backend.wines(tasting.code) {
+            if let w = (try? await Backend.wines(tasting.code)) ?? WineCache.wines(tasting.code) {
                 wines = w
                 if regions.isEmpty { await showOrigins(w) }
             }
@@ -253,7 +256,13 @@ struct TastingView: View {
             if UserDefaults.standard.string(forKey: "route") == "rsvp", b?.email != nil { editing = true }
             #endif
         } catch {
-            if info == nil { failed = true }
+            // Without network: the tasting and the invitation as get_tasting and get_invite last gave them (WIN-287);
+            // the price of the tasting (get_tasting_payment) is not stored, so no payment box shows
+            if info == nil, let a = WineCache.tasting(tasting.code), let b = WineCache.invite(tasting.code) {
+                info = a; invite = b; stale = true; failed = false
+                model.tastingHasQuiz = (a.quiz_count ?? 0) > 0
+                if let w = WineCache.wines(tasting.code) { wines = w; if regions.isEmpty { await showOrigins(w) } }
+            } else if info == nil { failed = true } else { stale = true }
         }
     }
 }

@@ -6095,6 +6095,72 @@
     }
    }
   },
+  "app.winesStale": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vinene kunne ikke opdateres, så du ser dem, som de var sidst. De opdateres af sig selv, når forbindelsen er tilbage."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The wines could not be updated, so you are seeing them as they were last time. They update by themselves when the connection is back."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki tókst að uppfæra vínin, svo þú sérð þau eins og þau voru síðast. Þau uppfærast sjálfkrafa þegar tengingin kemst aftur á."
+     }
+    }
+   }
+  },
+  "app.pageStale": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Siden kunne ikke opdateres, så du ser den, som den var sidst. Den opdateres af sig selv, når forbindelsen er tilbage."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The page could not be updated, so you are seeing it as it was last time. It updates by itself when the connection is back."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki tókst að uppfæra síðuna, svo þú sérð hana eins og hún var síðast. Hún uppfærist sjálfkrafa þegar tengingin kemst aftur á."
+     }
+    }
+   }
+  },
+  "app.wineStale": {
+   "localizations": {
+    "da": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Vinen kunne ikke opdateres, så du ser den, som den var sidst. Den opdateres af sig selv, når forbindelsen er tilbage."
+     }
+    },
+    "en": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "The wine could not be updated, so you are seeing it as it was last time. It updates by itself when the connection is back."
+     }
+    },
+    "is": {
+     "stringUnit": {
+      "state": "translated",
+      "value": "Ekki tókst að uppfæra vínið, svo þú sérð það eins og það var síðast. Það uppfærist sjálfkrafa þegar tengingin kemst aftur á."
+     }
+    }
+   }
+  },
   "app.aboutWine": {
    "localizations": {
     "da": {

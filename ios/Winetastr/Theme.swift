@@ -298,6 +298,23 @@ struct TopBar: View {
     var tasting: MyTasting? = nil
 
     var body: some View {
+        VStack(spacing: 0) {
+            bar
+            // No network: a thin strip under the bar that moves the page down, so it never covers the page (WIN-287)
+            if !model.online {
+                Label(L("app.offline"), systemImage: "wifi.slash")
+                    .font(.medium(13.6)).foregroundStyle(Color.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 6)
+                    .background(Color.paper)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: model.online)
+        .zIndex(10)
+    }
+
+    private var bar: some View {
         HStack(spacing: 6) {
             Button { model.openMenu = nil; model.path = [] } label: {
                 HStack(spacing: 10) {
@@ -329,7 +346,6 @@ struct TopBar: View {
         // The bar grows with the text up to the first accessibility size, so the logo, the chip and the menu fit a phone
         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
         .background(Color.surface)
-        .zIndex(10)
     }
 }
 
