@@ -10,6 +10,8 @@ struct WinesView: View {
     @State private var ratings: [Int: MyRating] = [:]
     @State private var loaded = false
     @State private var failed = false
+    /// Shown from the device because the wines could not be fetched (WIN-287)
+    @State private var stale = false
     @State private var current: Int?
     @State private var debugDone = false
     @State private var ordersOpen = false
@@ -41,15 +43,26 @@ struct WinesView: View {
         }
         .overlay(alignment: .bottom) { CartBar(tasting: tasting, wines: wines) }
         .task { await load() }
-        .onChange(of: model.online) { if model.online && failed { Task { await load() } } }
-        .onChange(of: model.path) { Task { ratings = (try? await Backend.ratings(tasting.code)) ?? ratings } }
+        // While the wines are the stored ones: fetched again when the network is back, and every 30 seconds in case
+        // the network is there but the fetch still failed
+        .task(id: stale) {
+            while stale && !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(30))
+                if stale && model.online && !Task.isCancelled { await load() }
+            }
+        }
+        .onChange(of: model.online) { if model.online && (failed || stale) { Task { await RatingOutbox.shared.flushAll(); await load() } } }
+        .onChange(of: model.path) { Task { ratings = (try? await Backend.ratings(tasting.code, keep: true)) ?? ratings } }
     }
+
+    private var stars: [Int: MyRating] { shownRatings(ratings, code: tasting.code) }
 
     private var content: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 SectionHeading(text: L("nav.wines"))
                 Text(L(ordersOpen ? "wines.introOrder" : "wines.intro")).font(.body()).foregroundStyle(Color.muted)
+                if stale { NoticeBox(text: L("app.winesStale")).padding(.top, 8).accessibilityIdentifier("wines-stale") }
             }
             .padding(.horizontal, 16).padding(.top, 14)
 
@@ -57,9 +70,10 @@ struct WinesView: View {
                 LazyHStack(spacing: 12) {
                     ForEach(Array(wines.enumerated()), id: \.element.id) { i, wine in
                         NavigationLink(value: Route.wine(tasting, wine, i + 1)) {
-                            WineCard(wine: wine, number: i + 1, stars: ratings[wine.id]?.rating)
+                            WineCard(wine: wine, number: i + 1, stars: stars[wine.id]?.rating)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("wine-card-\(i + 1)")
                         .containerRelativeFrame(.horizontal) { w, _ in w - 56 }
                     }
                 }
@@ -92,13 +106,14 @@ struct WinesView: View {
     }
 
     private func load() async {
+        RatingOutbox.shared.prepare(tasting.code)
         do {
-            async let w = Backend.wines(tasting.code)
-            async let r = Backend.ratings(tasting.code)
+            async let w = Backend.wines(tasting.code, keep: true)
+            async let r = Backend.ratings(tasting.code, keep: true)
             (wines, ratings) = try await (w, r)
             ordersOpen = (try? await Backend.tasting(tasting.code))?.orders_open == true || debugOrdersOpen
-            failed = false; loaded = true
-            if current == nil { current = wines.first?.id }
+            failed = false; stale = false; loaded = true
+            if current == nil || !wines.contains(where: { $0.id == current }) { current = wines.first?.id }
             #if DEBUG
             if !debugDone {
                 debugDone = true
@@ -108,7 +123,17 @@ struct WinesView: View {
             }
             #endif
         } catch {
-            failed = true; loaded = true
+            // Without network: the list as it was last fetched with this code, if it ever was (WIN-287)
+            if let kept = WineCache.wines(tasting.code) {
+                wines = kept; ratings = WineCache.ratings(tasting.code) ?? ratings
+                stale = true; failed = false
+                if current == nil || !wines.contains(where: { $0.id == current }) { current = wines.first?.id }
+            } else if wines.isEmpty {
+                failed = true
+            } else {
+                stale = true
+            }
+            loaded = true
         }
     }
 }
@@ -120,11 +145,7 @@ struct WineImage: View {
             if wine.isBlind {
                 Image("Glass").resizable().scaledToFit().frame(width: 72, height: 72).foregroundStyle(Color.rule)
             } else if let url = wine.imageURL {
-                AsyncImage(url: url) { phase in
-                    if let image = phase.image { image.resizable().scaledToFit() }
-                    else if phase.error != nil { placeholder }
-                    else { ProgressView().tint(Color.bordeaux) }
-                }
+                CachedImage(url: url) { placeholder }
             } else { placeholder }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -220,6 +241,8 @@ struct WineDetailView: View {
     @State private var didLoad = false
     @State private var saveTask: Task<Void, Never>?
     @State private var needsFlush = false
+    /// Shown from the device because the wine could not be fetched (WIN-287)
+    @State private var stale = false
     @State private var toast: String?
     @State private var descOpen = false
     @State private var descLong = false
@@ -246,6 +269,10 @@ struct WineDetailView: View {
                         HStack(spacing: 6) { SiteIcon("left", size: 17); Text(L("wine.all")) }
                     }
                     .buttonStyle(TextButton()).padding(.horizontal, 16).padding(.vertical, 2)
+                    if stale {
+                        NoticeBox(text: L("app.wineStale")).padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 12)
+                            .accessibilityIdentifier("wine-stale")
+                    }
 
                     // The picture on white, edge to edge, with the wine's number in the corner
                     ZStack(alignment: .topLeading) {
@@ -293,6 +320,16 @@ struct WineDetailView: View {
         .task(id: wine.id) { await load() }
         .task(id: wine.id) { await watchBlind() }
         .onDisappear { flush() }
+        .onChange(of: model.online) {
+            guard model.online else { return }
+            Task {
+                // What waited is sent first, so the page and the list show it; a toast when this wine's rating went
+                let waited = RatingOutbox.shared.pending(tasting.code, wine.id) != nil && !needsFlush
+                await RatingOutbox.shared.flushAll()
+                if waited && RatingOutbox.shared.pending(tasting.code, wine.id) == nil { toast = L("rating.saved") }
+                if stale { await load() }
+            }
+        }
     }
 
     // MARK: Price (component 21): ours, the regular one struck through, the quantity prices and how far the guests are
@@ -430,13 +467,19 @@ struct WineDetailView: View {
     // MARK: Loading and saving
 
     private func load() async {
-        async let all = try? Backend.wines(tasting.code)
+        RatingOutbox.shared.prepare(tasting.code)
+        async let all = try? Backend.wines(tasting.code, keep: true)
         async let t = try? Backend.tasting(tasting.code)
-        async let r = try? Backend.ratings(tasting.code)
-        let (list, settings, mine) = await (all, t, r)
-        if let list { wines = list; if let fresh = list.first(where: { $0.id == wine.id }) { wine = fresh } }
+        async let r = try? Backend.ratings(tasting.code, keep: true)
+        let (list, settings, fetched) = await (all, t, r)
+        // Without network: the wines and the guest's own stars as they were last fetched with this code (WIN-287)
+        stale = list == nil
+        if let shown = list ?? (wines.isEmpty ? WineCache.wines(tasting.code) : nil) {
+            wines = shown; if let fresh = shown.first(where: { $0.id == wine.id }) { wine = fresh }
+        }
         info = settings ?? info
-        if !didLoad, let m = mine?[wine.id] { stars = m.rating; note = m.note ?? "" }
+        let mine = shownRatings(fetched ?? WineCache.ratings(tasting.code) ?? [:], code: tasting.code)
+        if !didLoad, let m = mine[wine.id] { stars = m.rating; note = m.note ?? "" }
         didLoad = true
         if !wine.isBlind { map = await wineMap(wine) }
     }
@@ -445,30 +488,31 @@ struct WineDetailView: View {
     private func watchBlind() async {
         while !Task.isCancelled && wine.isBlind {
             try? await Task.sleep(for: .seconds(15))
-            if let list = try? await Backend.wines(tasting.code), let fresh = list.first(where: { $0.id == wine.id }), fresh.isBlind != wine.isBlind {
+            if let list = try? await Backend.wines(tasting.code, keep: true), let fresh = list.first(where: { $0.id == wine.id }), fresh.isBlind != wine.isBlind {
                 wines = list; wine = fresh
                 map = await wineMap(fresh)
             }
         }
     }
 
+    /// Leaving the page (or going to the next wine): what is not saved is sent now; if that fails it waits in the
+    /// outbox and goes when the network is back (WIN-232, WIN-287)
     private func flush() {
         saveTask?.cancel()
-        if needsFlush { needsFlush = false; Task { [stars, note, code = tasting.code, id = wine.id] in try? await Backend.rate(code, wine: id, stars: stars, note: note) } }
+        if needsFlush { needsFlush = false; Task { [code = tasting.code, id = wine.id] in await RatingOutbox.shared.send(code, wine: id) } }
     }
 
     private func scheduleSave(after seconds: Double) {
         saveTask?.cancel(); needsFlush = true
+        // Kept on the device straight away, so nothing is lost if the page closes or the network is gone
+        RatingOutbox.shared.stage(tasting.code, wine: wine.id, stars: stars, note: note)
         saveTask = Task {
             if seconds > 0 { try? await Task.sleep(for: .seconds(seconds)) }
             guard !Task.isCancelled else { return }
-            do {
-                try await Backend.rate(tasting.code, wine: wine.id, stars: stars, note: note)
-                guard !Task.isCancelled else { return }
-                needsFlush = false; toast = L("rating.saved")
-            } catch {
-                toast = L("rating.notSaved")
-            }
+            let saved = await RatingOutbox.shared.send(tasting.code, wine: wine.id)
+            guard !Task.isCancelled else { return }
+            needsFlush = false
+            toast = L(saved ? "rating.saved" : "rating.notSaved")
         }
     }
 }

@@ -6,7 +6,11 @@ import Supabase
 struct WinetastrApp: App {
     @State private var model = AppModel()
 
-    init() { WTFonts.register() }
+    init() {
+        WTFonts.register()
+        // Room for the wines' pictures, so they also show without network (WIN-287)
+        URLCache.shared = URLCache(memoryCapacity: 20_000_000, diskCapacity: 200_000_000)
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -28,7 +32,11 @@ final class AppModel {
     private(set) var ready = false
     private(set) var signedInEmail: String?
     private(set) var hasCodes = false
-    private(set) var online = true
+    /// The network as the phone sees it; when it comes back, stars and notes that could not be saved are sent (WIN-287)
+    private(set) var online = true {
+        didSet { if online && !oldValue { Task { await RatingOutbox.shared.flushAll() } } }
+    }
+    private var pathOnline = true
     var path: [Route] = [] { didSet { if path.isEmpty { tastingTab = .home } } }
     var tastingTab = TastingTab.home
     /// The menu open in the top bar or on the page (one at a time, as on the site)
@@ -60,22 +68,41 @@ final class AppModel {
 
     init() {
         monitor.pathUpdateHandler = { [weak self] p in
-            Task { @MainActor in self?.online = p.status == .satisfied }
+            Task { @MainActor in self?.pathOnline = p.status == .satisfied; self?.updateOnline() }
         }
         monitor.start(queue: DispatchQueue(label: "network"))
+        #if DEBUG
+        // -offlineAfter / -onlineAfter (NetHook): the pretend flight mode follows the clock
+        if UserDefaults.standard.object(forKey: "offlineAfter") != nil {
+            _ = NetHook.started
+            Task { @MainActor [weak self] in
+                while let self { self.updateOnline(); try? await Task.sleep(for: .milliseconds(500)) }
+            }
+        }
+        #endif
+    }
+
+    private func updateOnline() {
+        var on = pathOnline
+        #if DEBUG
+        if NetHook.forcedOffline { on = false }
+        #endif
+        if on != online { online = on }
     }
 
     var isIn: Bool { signedInEmail != nil || hasCodes }
 
     func start() async {
         #if DEBUG
-        if UserDefaults.standard.bool(forKey: "resetData") { CodeStore.save([:]); carts = [:]; saveCarts(); try? await supabase.auth.signOut(scope: .local) }
+        if UserDefaults.standard.bool(forKey: "resetData") { CodeStore.save([:]); carts = [:]; saveCarts(); WineCache.clearAll(); RatingOutbox.shared.clearAll(); try? await supabase.auth.signOut(scope: .local) }
         if let code = UserDefaults.standard.string(forKey: "inviteCode"), let info = try? await Backend.tasting(code) {
             CodeStore.save([info.slug: code])
         }
         #endif
         signedInEmail = (try? await supabase.auth.session)?.user.email
         hasCodes = !CodeStore.all().isEmpty
+        // Stars and notes left unsaved last time (WIN-287)
+        Task { await RatingOutbox.shared.flushAll() }
         #if DEBUG
         if let r = UserDefaults.standard.string(forKey: "route"), ["wines", "wine", "blind"].contains(r) { tastingTab = .wines }
         if UserDefaults.standard.string(forKey: "route") == "quiz" { tastingTab = .quiz }
@@ -95,6 +122,9 @@ final class AppModel {
     }
 
     func signOut() async {
+        // What is not saved yet gets one last try; then the guest's copy of the wines goes with the codes (WIN-287)
+        await RatingOutbox.shared.flushAll()
+        WineCache.clearAll(); RatingOutbox.shared.clearAll()
         CodeStore.save([:])
         try? await supabase.auth.signOut(scope: .local)
         signedInEmail = nil; hasCodes = false; path = []
