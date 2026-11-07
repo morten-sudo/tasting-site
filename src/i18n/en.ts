@@ -203,6 +203,8 @@ export const en = {
   "quiz.locking": "Locking …",
   "quiz.done": "All your answers are locked. Follow the standings below – answers and explanations come when the host closes the quiz.",
   "quiz.over": "The quiz is over. Here are the answers and explanations.",
+  "quiz.noQuestions": "The host hasn’t added any questions yet",
+  "quiz.noQuestionsHelp": "Keep this page open – the questions appear by themselves when the host adds them.",
   "quiz.standings": "Standings",
   "quiz.standingsNow": "Standings right now",
   "quiz.final": "Final standings",

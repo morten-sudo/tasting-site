@@ -204,6 +204,8 @@ export const de: Partial<Record<keyof typeof en, string>> = {
   "quiz.locking": "Wird gesperrt …",
   "quiz.done": "Alle Ihre Antworten sind gesperrt. Verfolgen Sie unten den Stand – Lösungen und Erklärungen kommen, wenn der Gastgeber das Quiz schließt.",
   "quiz.over": "Das Quiz ist vorbei. Hier sind die Lösungen und Erklärungen.",
+  "quiz.noQuestions": "Der Gastgeber hat noch keine Fragen hinzugefügt",
+  "quiz.noQuestionsHelp": "Lassen Sie diese Seite offen – die Fragen erscheinen von selbst, sobald der Gastgeber sie hinzufügt.",
   "quiz.standings": "Stand",
   "quiz.standingsNow": "Aktueller Stand",
   "quiz.final": "Endstand",

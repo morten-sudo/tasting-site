@@ -204,6 +204,8 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "quiz.locking": "Zatwierdzanie …",
   "quiz.done": "Wszystkie odpowiedzi zatwierdzone. Śledź ranking poniżej – rozwiązania i wyjaśnienia pojawią się, gdy gospodarz zamknie quiz.",
   "quiz.over": "Quiz zakończony. Oto odpowiedzi i wyjaśnienia.",
+  "quiz.noQuestions": "Gospodarz nie dodał jeszcze pytań",
+  "quiz.noQuestionsHelp": "Nie zamykaj tej strony – pytania pojawią się same, gdy gospodarz je doda.",
   "quiz.standings": "Ranking",
   "quiz.standingsNow": "Aktualny ranking",
   "quiz.final": "Ranking końcowy",

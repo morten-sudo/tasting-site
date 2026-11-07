@@ -153,7 +153,8 @@ const site = 'https://winetastr.com';
         const { data } = await supabase.rpc('get_tasting', { code: c });
         const info = (data ?? null) as { title?: string; starts_at?: string | null; place?: string | null; quiz_count?: number } | null;
         if (!info) return;
-        if (Number(info.quiz_count ?? 0) > 0) document.getElementById('t-quiz-tab')!.hidden = false;
+        // The Quiz tab only when the tasting has questions – on every page, also the quiz's own (WIN-315)
+        document.getElementById('t-quiz-tab')!.hidden = !(Number(info.quiz_count ?? 0) > 0);
         if (info.title) {
           document.getElementById('t-title')!.textContent = info.title;
           const tAdmin = document.getElementById('t-admin');

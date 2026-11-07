@@ -204,6 +204,8 @@ export const da: Partial<Record<keyof typeof en, string>> = {
   "quiz.locking": "Låser …",
   "quiz.done": "Alle dine svar er låst. Følg stillingen herunder – facit og forklaringer kommer, når værten lukker quizzen.",
   "quiz.over": "Quizzen er slut. Her er facit og forklaringerne.",
+  "quiz.noQuestions": "Værten har ikke lagt spørgsmål ind endnu",
+  "quiz.noQuestionsHelp": "Hold siden åben – spørgsmålene kommer af sig selv, når værten lægger dem ind.",
   "quiz.standings": "Stillingen",
   "quiz.standingsNow": "Stillingen lige nu",
   "quiz.final": "Slutstilling",

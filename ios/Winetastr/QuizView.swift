@@ -40,6 +40,9 @@ struct QuizView: View {
                     SectionHeading(text: L("page.quiz"))
                     switch mode {
                     case .closed: NoticeBox(text: L("quiz.closed"))
+                    // Open (or over) without questions: an empty state and no standings (WIN-315)
+                    case .open where questions.isEmpty, .finished where questions.isEmpty:
+                        EmptyBox(icon: "question", title: L("quiz.noQuestions"), text: L("quiz.noQuestionsHelp")) { EmptyView() }
                     case .open: play
                     case .finished:
                         Text(L("quiz.over")).font(.body()).foregroundStyle(Color.paper)
@@ -47,7 +50,7 @@ struct QuizView: View {
                         results.padding(.top, 24)
                     default: EmptyView()
                     }
-                    if mode == .open { boardBlock(L("quiz.standingsNow")).padding(.top, 24) }
+                    if mode == .open && !questions.isEmpty { boardBlock(L("quiz.standingsNow")).padding(.top, 24) }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
@@ -184,7 +187,7 @@ struct QuizView: View {
             #if DEBUG
             if UserDefaults.standard.string(forKey: "quizMock") != nil { continue }
             #endif
-            if mode != .closed { board = (try? await Backend.leaderboard(tasting.code)) ?? board }
+            if mode != .closed && !questions.isEmpty { board = (try? await Backend.leaderboard(tasting.code)) ?? board }
         }
     }
 
@@ -210,7 +213,8 @@ struct QuizView: View {
         failed = false
         let next: Mode = info.quiz_finished == true ? .finished : info.quiz_open == true ? .open : .closed
         total = info.quiz_count ?? questions.count
-        guard force || next != mode else { return }
+        // The same state – unless the quiz had no questions and the host has added some since (WIN-315)
+        guard force || next != mode || (next != .closed && questions.isEmpty && total > 0) else { return }
         if next != .closed {
             questions = (try? await Backend.quiz(tasting.code)) ?? []
             answers = (try? await Backend.myAnswers(tasting.code)) ?? answers

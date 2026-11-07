@@ -204,6 +204,8 @@ export const nl: Partial<Record<keyof typeof en, string>> = {
   "quiz.locking": "Bezig met vastzetten …",
   "quiz.done": "Al je antwoorden staan vast. Volg hieronder de stand – antwoorden en uitleg komen als de gastheer de quiz sluit.",
   "quiz.over": "De quiz is voorbij. Hier zijn de antwoorden en de uitleg.",
+  "quiz.noQuestions": "De gastheer heeft nog geen vragen toegevoegd",
+  "quiz.noQuestionsHelp": "Houd deze pagina open – de vragen verschijnen vanzelf zodra de gastheer ze toevoegt.",
   "quiz.standings": "Stand",
   "quiz.standingsNow": "Huidige stand",
   "quiz.final": "Eindstand",

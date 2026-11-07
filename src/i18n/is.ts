@@ -204,6 +204,8 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "quiz.locking": "Læsi …",
   "quiz.done": "Öll svörin þín eru læst. Fylgstu með stöðunni hér fyrir neðan – rétt svör og skýringar birtast þegar gestgjafinn lokar keppninni.",
   "quiz.over": "Keppninni er lokið. Hér eru rétt svör og skýringar.",
+  "quiz.noQuestions": "Gestgjafinn hefur ekki sett inn spurningar enn",
+  "quiz.noQuestionsHelp": "Hafðu síðuna opna – spurningarnar birtast sjálfkrafa þegar gestgjafinn setur þær inn.",
   "quiz.standings": "Staðan",
   "quiz.standingsNow": "Staðan núna",
   "quiz.final": "Lokastaða",
