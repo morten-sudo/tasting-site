@@ -81,6 +81,7 @@ struct WinesView: View {
                 .scrollTargetLayout()
             }
             .contentMargins(.horizontal, 16, for: .scrollContent)
+            .contentMargins(.bottom, 0, for: .scrollContent)
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: $current)
 
@@ -244,7 +245,7 @@ struct WineDetailView: View {
     @State private var needsFlush = false
     /// Shown from the device because the wine could not be fetched (WIN-287)
     @State private var stale = false
-    @State private var toast: String?
+    @State private var toast: Toast?
     @State private var descOpen = false
     @State private var descLong = false
     @State private var map: WineMap?
@@ -314,10 +315,12 @@ struct WineDetailView: View {
             #endif
         }
         .background(Color.lodge)
-        .overlay(alignment: .bottom) { CartBar(tasting: tasting, wines: wines).animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug)) }
+        // The toast above the cart bar, so "Gå til kurven" is never under it
+        .toast($toast, bottom: model.cartCount(tasting.slug) > 0 ? 10 : 20) {
+            CartBar(tasting: tasting, wines: wines).animation(.easeOut(duration: 0.2), value: model.cartCount(tasting.slug))
+        }
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
-        .toast($toast)
         .task(id: wine.id) { await load() }
         .task(id: wine.id) { await watchBlind() }
         .onDisappear { flush() }
@@ -327,7 +330,7 @@ struct WineDetailView: View {
                 // What waited is sent first, so the page and the list show it; a toast when this wine's rating went
                 let waited = RatingOutbox.shared.pending(tasting.code, wine.id) != nil && !needsFlush
                 await RatingOutbox.shared.flushAll()
-                if waited && RatingOutbox.shared.pending(tasting.code, wine.id) == nil { toast = L("rating.saved") }
+                if waited && RatingOutbox.shared.pending(tasting.code, wine.id) == nil { toast = .ok(L("rating.saved")) }
                 if stale { await load() }
             }
         }
@@ -366,7 +369,7 @@ struct WineDetailView: View {
         model.addToCart(tasting.slug, wine.id, qty)
         qty = 1
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        toast = L("wine.added")
+        toast = .ok(L("wine.added"))
     }
 
     // MARK: The guest's own rating (ratingBox in src/lib/rating.ts): saved by itself, the toast says so
@@ -513,7 +516,7 @@ struct WineDetailView: View {
             let saved = await RatingOutbox.shared.send(tasting.code, wine: wine.id)
             guard !Task.isCancelled else { return }
             needsFlush = false
-            toast = L(saved ? "rating.saved" : "rating.notSaved")
+            toast = saved ? .ok(L("rating.saved")) : .error(L("rating.notSaved"))
         }
     }
 }

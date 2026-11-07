@@ -10,7 +10,7 @@ struct TastingView: View {
     /// The tasting from the phone, as it was last fetched (WIN-287)
     @State private var stale = false
     @State private var editing = false
-    @State private var toast: String?
+    @State private var toast: Toast?
     @State private var wines: [Wine] = []
     @State private var origins: Origins?
     /// The map's region tabs (WIN-256), the chosen one and the faint map behind the heading
@@ -56,7 +56,7 @@ struct TastingView: View {
         .sheet(isPresented: $editing) {
             if let invite, let info {
                 AnswerSheet(code: tasting.code, invite: invite, full: info.full ?? false) { message in
-                    toast = message; Task { await load() }
+                    toast = .ok(message); Task { await load() }
                 }
             }
         }

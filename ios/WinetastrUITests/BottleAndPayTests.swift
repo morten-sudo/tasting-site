@@ -56,5 +56,9 @@ final class BottleAndPayTests: XCTestCase {
         shot("pay-box")
         box.buttons["Kopiér nummer"].tap()
         XCTAssertTrue(text(a, containing: "Kopieret").waitForExistence(timeout: 3), "the toast says the number was copied")
+        // A message, not an error: it goes by itself after 4 s, as on the site (WIN-336)
+        XCTAssertTrue(a.otherElements["toast"].exists, "an ordinary toast")
+        shot("win336-copied-da")
+        XCTAssertTrue(text(a, containing: "Kopieret").waitForNonExistence(timeout: 6), "\"Kopieret\" goes by itself")
     }
 }

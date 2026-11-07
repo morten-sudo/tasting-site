@@ -28,6 +28,8 @@ extension Color {
     static let warnText = hex(0x7A5200)
     static let warnBg = hex(0xFDF6DF)
     static let warnLine = hex(0xEAD48F)
+    /// .toast .t-act
+    static let toastAction = hex(0xF3D9A4)
     static func styleTone(_ key: String?) -> Color {
         switch key {
         case "Red": return hex(0x861530)
@@ -259,28 +261,114 @@ struct LoadingState: View {
     var body: some View { ProgressView().tint(Color.bordeaux).frame(maxWidth: .infinity, maxHeight: .infinity) }
 }
 
-/// toast()
-struct ToastModifier: ViewModifier {
-    @Binding var text: String?
+/// One toast (src/lib/ui/toast.ts): a message goes by itself after 4 s; an error stays until it is closed or a new
+/// try works (WIN-314, WIN-336), so it can be read.
+/// With an action (Undo) it stays 8 s, as on the site.
+struct Toast: Equatable {
+    let text: String
+    let error: Bool
+    var action: (label: String, run: @MainActor () -> Void)? = nil
+    /// A new toast with the same text starts its time again
+    private let id = UUID()
+    static func ok(_ text: String, action: (label: String, run: @MainActor () -> Void)? = nil) -> Toast { Toast(text: text, error: false, action: action) }
+    static func error(_ text: String) -> Toast { Toast(text: text, error: true) }
+    static func == (a: Toast, b: Toast) -> Bool { a.id == b.id }
+}
+
+extension Optional where Wrapped == Toast {
+    /// hideErrorToast(): a new try worked, so the error from the last one goes; a message stays
+    mutating func clearError() { if self?.error == true { self = nil } }
+}
+
+/// toast() – .toast in components.css: dark (an error red), the check or warning icon, the text and the close button.
+/// Under the toast a page can put its cart bar, so the toast stands above the bar and never covers it (as on the site:
+/// .toast-host is lifted while .cartbar shows). While an error stays, the page's scrolling gets room for it, so the end
+/// of the page (e.g. "Send bestilling") can be scrolled out from under it.
+struct ToastModifier<Bar: View>: ViewModifier {
+    @Binding var toast: Toast?
+    var bottom: CGFloat = 20
+    @ViewBuilder var bar: () -> Bar
+    @State private var height: CGFloat = 0
     func body(content: Content) -> some View {
-        content.overlay(alignment: .bottom) {
-            if let text {
-                Text(text).font(.medium(14.4)).foregroundStyle(Color.white)
-                    .padding(.horizontal, 16).padding(.vertical, 11)
-                    .background(Color.paper, in: RoundedRectangle(cornerRadius: 8))
-                    .padding(.bottom, 24)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .task {
-                        UIAccessibility.post(notification: .announcement, argument: text)
-                        try? await Task.sleep(for: .seconds(2))
-                        withAnimation { self.text = nil }
-                    }
+        content
+            .contentMargins(.bottom, toast?.error == true ? height : 0, for: .scrollContent)
+            .overlay(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    ToastView(toast: $toast, bottom: bottom)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+                    bar()
+                }
             }
-        }
-        .animation(.easeOut(duration: 0.2), value: text)
     }
 }
-extension View { func toast(_ text: Binding<String?>) -> some View { modifier(ToastModifier(text: text)) } }
+extension View {
+    func toast(_ toast: Binding<Toast?>) -> some View { modifier(ToastModifier(toast: toast) { EmptyView() }) }
+    func toast<Bar: View>(_ toast: Binding<Toast?>, bottom: CGFloat, @ViewBuilder above bar: @escaping () -> Bar) -> some View {
+        modifier(ToastModifier(toast: toast, bottom: bottom, bar: bar))
+    }
+}
+
+/// The toast itself
+struct ToastView: View {
+    @Binding var toast: Toast?
+    var bottom: CGFloat = 20
+    var body: some View {
+        Group {
+            if let toast {
+                HStack(spacing: 12) {
+                    SiteIcon(toast.error ? "warn" : "check", size: 17.6)
+                        .foregroundStyle(toast.error ? Color.white : Color.okLine)
+                    Text(toast.text).font(.body(15.2)).foregroundStyle(Color.white)
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    // .t-act: the action replaces the toast
+                    if let action = toast.action {
+                        Button { action.run(); withAnimation { self.toast = nil } } label: {
+                            Text(action.label).font(.semibold(15.2)).underline()
+                                .foregroundStyle(toast.error ? Color.white : Color.toastAction)
+                                .padding(.horizontal, 6).frame(minHeight: 32).contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    // The site's close icon (closeButton(t('admin.close'), 'small') on a dark surface)
+                    Button { withAnimation { self.toast = nil } } label: {
+                        SiteIcon("x", size: 19.2).foregroundStyle(Color.white.opacity(0.8)).frame(width: 32, height: 32)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L("admin.close"))
+                    .accessibilityIdentifier("toast-close")
+                }
+                .padding(.leading, 16).padding(.trailing, 6).padding(.vertical, 6)
+                .frame(minHeight: 44)
+                .background(toast.error ? Color.errorText : Color.paper, in: RoundedRectangle(cornerRadius: 8))
+                .shadow(color: .black.opacity(0.22), radius: 12, y: 8)
+                .frame(maxWidth: 544)
+                .padding(.horizontal, 16).padding(.bottom, bottom)
+                // At the largest text sizes a toast would cover most of the screen (and an error stays): it grows no
+                // further than the first accessibility size
+                .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier(toast.error ? "toast-error" : "toast")
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .task(id: toast) {
+                    // Read out as on the site (role="alert" / role="status"); an error is queued after what VoiceOver is
+                    // saying, so it is not cut off
+                    try? await Task.sleep(for: .milliseconds(100))
+                    let said = NSAttributedString(string: toast.text, attributes: [.accessibilitySpeechQueueAnnouncement: toast.error])
+                    UIAccessibility.post(notification: .announcement, argument: said)
+                    guard !toast.error else { return }
+                    // As on the site: 4 s, 8 s with an action
+                    try? await Task.sleep(for: .seconds(toast.action == nil ? 4 : 8))
+                    guard !Task.isCancelled, self.toast == toast else { return }
+                    withAnimation { self.toast = nil }
+                }
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: toast)
+    }
+}
 
 /// The bars are the app's own (like the site's), and swiping back must keep working without the system bar.
 extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
@@ -390,6 +478,8 @@ struct TastingHead<Chips: View>: View {
                 .padding(.trailing, 24)
             }
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            // Not the room a staying error toast gives the page's own scrolling (ToastModifier)
+            .contentMargins(.bottom, 0, for: .scrollContent)
             .fixedSize(horizontal: false, vertical: true)
             .modifier(TabsScrolled(scrolled: $tabsScrolled))
             .mask {

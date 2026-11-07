@@ -103,9 +103,8 @@ struct CartView: View {
     @State private var loaded = false
     @State private var sending = false
     @State private var confirm: (id: Int, total: Double)?
-    @State private var toast: String?
+    @State private var toast: Toast?
     @State private var asking: Wine?
-    @State private var undo: (wine: Wine, n: Int)?
 
     private var open: Bool { info?.orders_open == true || debugOrdersOpen }
     /// Pooled quantity prices can still fall while ordering is open, so paying waits until the host closes it
@@ -125,7 +124,6 @@ struct CartView: View {
         .siteMenus()
         .toolbar(.hidden, for: .navigationBar)
         .toast($toast)
-        .overlay(alignment: .bottom) { undoBar }
         .task { await load() }
         .confirmationDialog(asking.map { L("cart.removeQ", ["name": wineTitle($0, number: nil)]) } ?? "", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }), titleVisibility: .visible) {
             Button(L("cart.remove"), role: .destructive) { if let w = asking { remove(w) } }
@@ -245,25 +243,10 @@ struct CartView: View {
         let n = model.cart(tasting.slug)[w.id] ?? 0
         model.setQty(tasting.slug, w.id, 0)
         asking = nil
-        withAnimation { undo = (w, n) }
-        Task { try? await Task.sleep(for: .seconds(5)); withAnimation { if undo?.wine.id == w.id { undo = nil } } }
-    }
-
-    @ViewBuilder private var undoBar: some View {
-        if let undo {
-            HStack(spacing: 12) {
-                Text(L("cart.removed", ["name": wineTitle(undo.wine, number: nil)])).font(.medium(14.4)).foregroundStyle(.white)
-                Spacer(minLength: 4)
-                Button(L("wineLib.undo")) {
-                    model.setQty(tasting.slug, undo.wine.id, undo.n); withAnimation { self.undo = nil }
-                }
-                .font(.semibold(14.4)).foregroundStyle(.white)
-            }
-            .padding(.horizontal, 16).padding(.vertical, 11)
-            .background(Color.paper, in: RoundedRectangle(cornerRadius: 8))
-            .padding(.horizontal, 16).padding(.bottom, 24)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-        }
+        // As deleteWithUndo() on the site: a toast with Undo, 8 s
+        toast = .ok(L("cart.removed", ["name": wineTitle(w, number: nil)]), action: (L("wineLib.undo"), { [model, slug = tasting.slug] in
+            model.setQty(slug, w.id, n)
+        }))
     }
 
     // MARK: Loading and sending
@@ -293,13 +276,13 @@ struct CartView: View {
             let id = try await Backend.placeOrder(tasting.code, list.map { ($0.0.id, $0.1) })
             let sum = total(list)
             // A new try worked: the error from the last one goes (WIN-314)
-            toast = nil
+            toast.clearError()
             model.clearCart(tasting.slug)
             withAnimation { confirm = (id, sum) }
             await load()
         } catch {
             let m = dbMessage(error)
-            toast = L(m.contains("lukket") ? "cart.errClosed" : m.contains("kan ikke bestilles") ? "cart.errWine" : "cart.errSend")
+            toast = .error(L(m.contains("lukket") ? "cart.errClosed" : m.contains("kan ikke bestilles") ? "cart.errWine" : "cart.errSend"))
         }
     }
 }
