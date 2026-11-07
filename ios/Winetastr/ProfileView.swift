@@ -156,7 +156,7 @@ struct ProfileSheet: View {
             // The sign-in address changes once the confirmation link has been opened
             if e != (user?.email ?? "").lowercased() {
                 do {
-                    try await supabase.auth.update(user: UserAttributes(email: e), redirectTo: URL(string: "https://winetastr.com/profile/"))
+                    try await supabase.auth.update(user: UserAttributes(email: e), redirectTo: AppDatabase.webURL("/profile/"))
                     done(.saved(n, user?.email ?? "")); done(.pending(e)); dismiss()
                 } catch {
                     failed = L("profile.emailNotChanged")

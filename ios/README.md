@@ -11,6 +11,9 @@ Native SwiftUI app for guests. Same database and access rules as the website; ad
     `tools/simbuild.sh`, `tools/simtest.sh` and `tools/shots.sh` all use it.
   - **Real build** – Release (Archive), bundle id `com.winetastr.app`, kept for the App Store: talks to the live
     database and shows no chip. A Release build with `DB_TEST` does not compile.
+  - Each build also has its own site address (`AppDatabase.web`, WIN-307): the test build `https://test-app.winetastr.com`,
+    the real build `https://app.winetastr.com`. Maps, wine images, the calendar link and the email-change link use it;
+    no other fixed address. Invitation links on any address (also old `winetastr.com` links) still give the code.
   - Each build keeps its own invite codes and carts on the device, so codes from one database are never sent to the other.
 - `tools/simbuild.sh`: build and install the test build on the simulator. `tools/simtest.sh`: UI tests against the test
   database. `tools/shots.sh`: screenshots.

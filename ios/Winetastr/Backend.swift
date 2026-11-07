@@ -6,16 +6,22 @@ import Supabase
 /// the test build (Debug, com.winetastr.app.dev) uses the test database `winetastr-test` and shows a "Test" chip by
 /// the logo; the real build (Release, com.winetastr.app) uses the live one. DB_TEST is set only in the app target's
 /// Debug configuration (Winetastr.xcodeproj). Only the public (publishable) keys are here: access is enforced in the database.
+/// `web` is the site's app address that goes with the database (APP_ORIGIN in src/lib/config.ts, WIN-195/WIN-307): maps,
+/// wine images, the calendar link and the email-change link all use it, never a fixed address.
 enum AppDatabase {
 #if DB_TEST
     static let isTest = true
     static let url = URL(string: "https://piiuhgzsnphhuceojldz.supabase.co")!
     static let key = "sb_publishable_fgw-aZhF7pXyTjdG-AgDjg_Pfqd_SIW"
+    static let web = "https://test-app.winetastr.com"
 #else
     static let isTest = false
     static let url = URL(string: "https://ydvdhhdpygzwalosbjcc.supabase.co")!
     static let key = "sb_publishable_J1p_UQdBFtKyEiT57AlZ2Q_2f9t38XC"
+    static let web = "https://app.winetastr.com"
 #endif
+    /// A page or file on the site's app address, e.g. webURL("/maps/countries.json")
+    static func webURL(_ path: String) -> URL? { URL(string: web + path) }
 }
 #if DB_TEST && !DEBUG
 #error("The test database is for the test build (Debug) only: a release build must use the live database")
@@ -76,7 +82,7 @@ struct Wine: Decodable, Hashable, Identifiable {
     var bottleLine: String? { bottleText(bottle_cl?.value) }
     var imageURL: URL? {
         guard let image_url, !image_url.isEmpty else { return nil }
-        return URL(string: image_url.hasPrefix("/") ? "https://winetastr.com" + image_url : image_url)
+        return image_url.hasPrefix("/") ? AppDatabase.webURL(image_url) : URL(string: image_url)
     }
     /// As originLine on the site: appellation and region, without repeating a name.
     var originLine: String? {
@@ -168,7 +174,7 @@ struct BookWine: Decodable, Identifiable {
     var id: String { "\(slug)-\(wine_id)" }
     var imageURL: URL? {
         guard let image_url, !image_url.isEmpty else { return nil }
-        return URL(string: image_url.hasPrefix("/") ? "https://winetastr.com" + image_url : image_url)
+        return image_url.hasPrefix("/") ? AppDatabase.webURL(image_url) : URL(string: image_url)
     }
 }
 
@@ -386,6 +392,8 @@ enum CodeStore {
 }
 
 /// The code from a pasted invitation link, or the code itself.
+/// Reads the code from an invitation link on any of the site's addresses – also an old winetastr.com/test.winetastr.com
+/// link from before the app address (WIN-307) – or from the bare code.
 func extractInviteCode(_ text: String) -> String? {
     let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !t.isEmpty else { return nil }
