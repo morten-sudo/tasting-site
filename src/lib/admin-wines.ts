@@ -12,6 +12,7 @@ import { STYLES, styleName } from './wines';
 import { t, lang, locale, formatDate } from '../i18n';
 import { wineMap, showMapCredit } from './wine-map';
 import { boxWidth } from './region-map';
+import { mapZoom } from './ui/map-zoom';
 import { withoutYear } from './wines';
 import { winePaths } from './admin-wine-page';
 import { iconButton, closeButton, sheetPanel } from './admin-common';
@@ -247,6 +248,8 @@ export function initWineAdmin(hostId: string, tenantId: string, hooks: { onSaved
       box.hidden = !m;
       if (!m) return;
       $('wf-map-svg').innerHTML = m.svg;
+      // Zoom as on the wine's page (the buttons are drawn again for each new map)
+      mapZoom($('wf-map-svg'));
       // How the wine was placed; an unknown appellation is looked up when the wine is saved
       const pending = (m.how === 'country' || m.how === 'regionCentre') && !!origin.appellation && !knownApp();
       $('wf-map-note').textContent = t(pending ? 'wineMap.pending' : `wineMap.${m.how}`);
