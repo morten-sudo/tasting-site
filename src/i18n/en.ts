@@ -1490,7 +1490,7 @@ export const en = {
   "super.noTenantMatch": "No accounts match the search",
   "super.showAll": "Show all accounts",
   "twe.tierTwice": "There is already a price for this number of bottles",
-  "twe.tierAbove": "A quantity price cannot be higher than the normal price ({price})",
+  "twe.tierAbove": "A quantity price cannot be higher than the guest price ({price})",
   "board.noAnswers": "No one has answered yet.",
   "map.zoomIn": "Zoom in",
   "map.zoomOut": "Zoom out",

@@ -1492,7 +1492,7 @@ export const is: Partial<Record<keyof typeof en, string>> = {
   "super.noTenantMatch": "Engir reikningar passa við leitina",
   "super.showAll": "Sýna alla reikninga",
   "twe.tierTwice": "Það er þegar verð fyrir þennan fjölda flaskna",
-  "twe.tierAbove": "Magnverð má ekki vera hærra en venjulegt verð ({price})",
+  "twe.tierAbove": "Magnverð má ekki vera hærra en verðið fyrir gesti ({price})",
   "board.noAnswers": "Enginn hefur svarað enn.",
   "map.zoomIn": "Þysja inn",
   "map.zoomOut": "Þysja út",

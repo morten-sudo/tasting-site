@@ -1469,7 +1469,7 @@ export const pl: Partial<Record<keyof typeof en, string>> = {
   "super.noTenantMatch": "Brak kont pasujących do wyszukiwania",
   "super.showAll": "Pokaż wszystkie konta",
   "twe.tierTwice": "Dla tej liczby butelek jest już cena",
-  "twe.tierAbove": "Cena ilościowa nie może być wyższa niż cena zwykła ({price})",
+  "twe.tierAbove": "Cena ilościowa nie może być wyższa niż cena dla gości ({price})",
   "board.noAnswers": "Nikt jeszcze nie odpowiedział.",
   "map.zoomIn": "Powiększ",
   "map.zoomOut": "Pomniejsz",
