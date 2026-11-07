@@ -47,6 +47,12 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   async function update(r: Row, patch: Partial<Pick<Row, 'price_dkk' | 'orderable' | 'revealed' | 'blind' | 'sort_order' | 'price_tiers'>>) {
     const { error } = await supabase.from('tasting_wines').update(patch)
       .eq('tasting_id', tastingId).eq('wine_id', r.wine_id);
+    // The database refuses a quantity price above the normal price (WIN-326): say so under the field, as the form does
+    if (error && error.hint === 'tier_above_price' && editing === r) {
+      const price = parseAmount($<HTMLInputElement>('twe-price').value);
+      const bad = tierRows.find((x) => { const p = parseAmount(x.price.value.trim()); return p != null && price != null && p > price; });
+      if (bad) { fieldError(bad.price, t('twe.tierAbove', { price: formatKr(price!) }), bad.price.closest('.twe-tier')!); bad.price.focus(); return false; }
+    }
     if (error) { toast(t('admin.changeNotSaved'), { kind: 'error' }); return false; }
     Object.assign(r, patch);
     emit();
@@ -207,6 +213,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       if (p == null || Number.isNaN(p) || p < 0) { fieldError(x.price, t('wineCheck.price'), row); ok = false; continue; }
       // Two prices for the same number of bottles: the host chooses – one is never dropped silently
       if (tiers.has(q)) { fieldError(x.price, t('twe.tierTwice'), row); ok = false; continue; }
+      // A quantity price is never above the normal price (the database refuses it too, WIN-326)
+      if (price != null && !Number.isNaN(price) && p > price) { fieldError(x.price, t('twe.tierAbove', { price: formatKr(price) }), row); ok = false; continue; }
       fieldError(x.price, null, row);
       tiers.set(q, p);
     }
@@ -261,6 +269,12 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   // ---------- Adding: the line above the list (wine-quick-add.ts) ----------
   /** The guest price a wine starts with: the shop's offer when it is on a single bottle, else the regular price */
   const startPrice = (w: LibWine) => (w.offer_quantity === 1 && w.offer_price_dkk != null ? Number(w.offer_price_dkk) : w.retail_price_dkk);
+  /** The shop's offer on several bottles as the first quantity price – not when it is above the starting price (WIN-326) */
+  const offerTiers = (w: LibWine): Tier[] => {
+    if (w.offer_quantity == null || w.offer_quantity < 2 || w.offer_price_dkk == null) return [];
+    const start = startPrice(w);
+    return start != null && Number(w.offer_price_dkk) > Number(start) ? [] : [{ qty: w.offer_quantity, price: Number(w.offer_price_dkk) }];
+  };
   /** A new wine goes first in the list – where the host just added it – and the others move one down.
    *  One at a time (move down, then insert), so wines saved at the same moment do not take the same place. */
   let topQueue: Promise<unknown> = Promise.resolve();
@@ -279,10 +293,9 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
   /** Puts a library wine first in the tasting, with the shop's prices as a start. */
   async function addWine(w: LibWine) {
     // Start from the regular price, and the shop's offer as quantity price when it is for several bottles
-    const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
     const row = {
       tasting_id: tastingId, wine_id: w.id, sort_order: 1, price_dkk: startPrice(w),
-      price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [],
+      price_tiers: offerTiers(w),
     };
     // (a blind tasting makes the new wine blind; the answer says so)
     const { data: saved, error } = await atTop((sort) => supabase.from('tasting_wines').insert({ ...row, sort_order: sort }).select('orderable, revealed, blind').single());
@@ -307,9 +320,8 @@ export function initTastingWines(tastingId: string, hostId: string, tenantId: st
       if (!data) return;
       const w = data as LibWine;
       library.push(w);
-      const fromOffer = w.offer_quantity != null && w.offer_quantity >= 2 && w.offer_price_dkk != null;
       await atTop((sort) => supabase.from('tasting_wines').insert({ tasting_id: tastingId, wine_id: id, sort_order: sort, price_dkk: startPrice(w),
-        price_tiers: fromOffer ? [{ qty: w.offer_quantity!, price: Number(w.offer_price_dkk) }] : [] }));
+        price_tiers: offerTiers(w) }));
     },
     done: async (id, name, note) => {
       await load();

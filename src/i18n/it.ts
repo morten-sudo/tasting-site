@@ -1463,6 +1463,7 @@ export const it: Partial<Record<keyof typeof en, string>> = {
   "super.noTenantMatch": "Nessun account corrisponde alla ricerca",
   "super.showAll": "Mostra tutti gli account",
   "twe.tierTwice": "Esiste già un prezzo per questo numero di bottiglie",
+  "twe.tierAbove": "Un prezzo quantità non può superare il prezzo normale ({price})",
   "board.noAnswers": "Nessuno ha ancora risposto.",
   "map.zoomIn": "Ingrandisci",
   "map.zoomOut": "Riduci",
