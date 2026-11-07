@@ -89,6 +89,8 @@ The site and the native SwiftUI guest app are one product, developed together by
 - **App tests: targeted while fixing, full once.** A full `simtest.sh` takes 8–10 minutes. While building or fixing, run only
   the tests that cover the change (`tools/simtest.sh -only-testing:WinetastrUITests/<TestClass>`); run the full suite exactly
   once, at the end. Brief every agent that builds the app with this rule.
+- **Tests in Danish and English only** (Morten, 7 November 2026). Icelandic stays on the site and in the app, but it is not
+  tested or screenshotted any more, also where an issue's test cases say "dansk, engelsk og islandsk".
 - **Two simulators may run at once** (Morten, 7 November 2026): `SIM=6FB2F2B7-FE7A-425E-A7E7-B52F31B2AC51` (default) and
   `SIM=D145F3CB-09AD-499B-AA8B-DCDFBCD9F6F8` for `tools/simbuild.sh` / `tools/simtest.sh`, each job in its own worktree on the
   Mac (its own `ios/build/`). Give each agent its simulator and worktree in the brief.
